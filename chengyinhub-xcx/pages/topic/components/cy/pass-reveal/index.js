@@ -47,6 +47,12 @@ Component({
       this._at(5100, () => this.setData({ phase: 'blur card landed dark', sub: chars(this.data.durationLine) }));
       this._at(6300, () => this.setData({ btns: true }));
     },
+    /* 点任意处直接落终态(动画 6 秒,付完款最想玩的人不必干等);已落定、已飞走则不动 */
+    onSkip() {
+      if (this.data.btns || this.data.fly || this.data.reducedMotion) return;
+      this._stop();
+      this.setData({ phase: 'blur card landed dark', title: chars('通行证已到账'), sub: chars(this.data.durationLine), tierColor: TIERS[3], btns: true, fly: false });
+    },
     onWallet() {
       if (this.data.fly) return;
       this.setData({ fly: true, btns: false });

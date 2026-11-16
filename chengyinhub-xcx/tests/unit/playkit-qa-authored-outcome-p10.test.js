@@ -30,6 +30,30 @@ function qa(def, props) {
   return inst
 }
 
+test('u2 accepted own input survives result observers read-only; next question starts empty', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const def = loadQa();
+  const c = Object.assign(qa(def, { sessionId: 42, nodeId: 1, show: true, reducedMotion: true }), def.methods,
+    { selectComponent: () => null, triggerEvent() {} });
+  const fields = Object.keys(def.observers).find(k => k.startsWith('show, options'));
+  const update = patch => { Object.assign(c.data, patch); def.observers[fields].apply(c, fields.split(',').map(k => c.data[k.trim()])); };
+  update({}); c.data.typed = '本人提交的答案'; c.data.ctaDisabled = false; c.onCta();
+  c.data.typed = ''; update({ passed: true, attempts: 1 });
+  assert.equal(c.data.typed, '本人提交的答案');
+  let submitted = 0; c.triggerEvent = () => { submitted++; }; c.onInput({ detail: { value: '改写' } });
+  assert.equal(c.data.typed, '本人提交的答案');
+  update({ sessionId: 43, nodeId: 2, passed: false, attempts: 0 });
+  assert.equal(c.data.typed, ''); assert.equal(submitted, 0);
+});
+
+test('u4 question image previews full original; missing image does nothing', () => {
+  const def = loadQa(), calls = [];
+  global.wx = Object.assign({}, global.wx, { previewImage: value => calls.push(value) });
+  def.methods.onPreviewQuestion.call({ data: { imageUrl: 'https://fixture.invalid/question.jpg' } });
+  def.methods.onPreviewQuestion.call({ data: { imageUrl: '' } });
+  assert.deepEqual(calls, [{ current: 'https://fixture.invalid/question.jpg', urls: ['https://fixture.invalid/question.jpg'] }]);
+});
+
 test('服务端判完给 outcomeFeedback → kit.authoredOutcome;没给时为空串', () => {
   const base = { sessionId: 1, version: 2, status: 'RUNNING', playKit: { qa: { mode: 'TYPE', title: '江的另一个名字', attempts: 1 } } }
   assert.equal(pickPlayKit(base, new Date()).authoredOutcome, '')
@@ -82,3 +106,20 @@ test('第四轮:作者的结果反馈比 attempts 晚到一拍,先写上的兜�
   def.observers.authoredOutcome.call(d, 'FAIL')
   assert.equal(d.data.feedback, '石碑上刻着呢')
 })
+
+test('文字提交只在非空输入时启用，答错清空后重新禁用', () => {
+  const def = loadQa(); const c = qa(def); const events = [];
+  c.triggerEvent = (name, detail) => events.push({ name, detail });
+  c._answerIndex = def.methods._answerIndex;
+  c.selectComponent = () => ({ miss: () => false, nudge() {} });
+  assert.equal(c.data.ctaDisabled, true);
+  def.methods.onInput.call(c, { detail: { value: '  ' } });
+  def.methods.onCta.call(c);
+  assert.equal(c.data.ctaDisabled, true); assert.equal(events.length, 0);
+  def.methods.onInput.call(c, { detail: { value: 'C02、B04' } });
+  assert.equal(c.data.ctaDisabled, false);
+  def.methods.onCta.call(c);
+  assert.deepEqual(events, [{ name: 'submit', detail: { mode: 'type', input: 'C02、B04' } }]);
+  def.methods.settle.call(c, false, {});
+  assert.equal(c.data.typed, ''); assert.equal(c.data.ctaDisabled, true);
+});

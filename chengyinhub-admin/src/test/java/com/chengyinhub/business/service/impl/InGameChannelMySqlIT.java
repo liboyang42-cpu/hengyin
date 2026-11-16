@@ -157,6 +157,10 @@ class InGameChannelMySqlIT
         ReflectionTestUtils.setField(inGameTarget, "cmsTopicMapper", cmsTopicMapper);
         ReflectionTestUtils.setField(inGameTarget, "playTeamMapper", session.getMapper(PlayTeamMapper.class));
         ReflectionTestUtils.setField(inGameTarget, "cityGameMapper", session.getMapper(CityGameMapper.class));
+        // HIGH-S9: roam events only post for members who opted into presence; PLAYER_A has.
+        com.chengyinhub.business.mapper.RoamMapper presence = mock(com.chengyinhub.business.mapper.RoamMapper.class);
+        when(presence.countPresenceVisibleSessions(PLAYER_A)).thenReturn(1);
+        ReflectionTestUtils.setField(inGameTarget, "roamMapper", presence);
 
         im = (IImService) transactional(imTarget, txManager);
         ReflectionTestUtils.setField(inGameTarget, "imService", im);

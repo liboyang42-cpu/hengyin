@@ -221,7 +221,7 @@ class ClubTopicSettingServiceImplTest {
                 .thenReturn(refunded(2, 0))
                 .thenThrow(new ServiceException("场次已失效，无法取消"));
         when(teamGroupService.cancelActivityByClubOperator(eq(32L), anyLong(), anyLong(), any()))
-                .thenThrow(new RuntimeException("活动已取消,请勿重复操作"));
+                .thenThrow(new RuntimeException("活动已取消，请勿重复操作"));
 
         Map<String, Object> out = service.endTopic(1L, "林岸", CLUB_ID, TOPIC_ID, null);
 

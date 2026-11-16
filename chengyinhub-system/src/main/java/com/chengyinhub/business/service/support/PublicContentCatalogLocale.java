@@ -38,7 +38,7 @@ public final class PublicContentCatalogLocale {
         }
         String value = raw.trim().replace('_', '-').toLowerCase(Locale.ROOT);
         if (!value.matches("[a-z]{2,3}(-[a-z0-9]{2,8})*")) {
-            throw new ServiceException("locale 格式无效，示例: zh-CN / en / ja", 400);
+            throw new ServiceException("locale 格式无效，示例： zh-CN / en / ja", 400);
         }
         return value;
     }

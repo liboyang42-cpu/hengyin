@@ -68,6 +68,20 @@ class ChannelMessageServiceTest
         assertEquals("CHANNEL_READ_ONLY", readOnly.getDetailMessage());
     }
 
+    /** C1 channels-structure: the server refuses member posts in announcement channels; owners and admins post. */
+    @Test void announcementChannelRefusesMemberPostsButNotOwnerOrAdmin()
+    {
+        channel.setKind(2);
+        ServiceException denied = assertThrows(ServiceException.class, () -> service.requireSend(MEMBER, CH));
+        assertEquals(403, denied.getCode());
+        assertEquals("MESSAGE_FORBIDDEN", denied.getDetailMessage());
+        assertThrows(ServiceException.class, () -> service.requireAttach(MEMBER, CH));
+        service.requireRead(MEMBER, CH);
+        service.requireSend(OWNER, CH);
+        when(channels.countClubAdmin(CLUB, OTHER)).thenReturn(1);
+        service.requireSend(OTHER, CH);
+    }
+
     @Test void slowmodeAppliesToMembersButNotOwner()
     {
         channel.setSlowmodeSec(60);
@@ -176,4 +190,52 @@ class ChannelMessageServiceTest
         assertEquals("22", v.get("senderId"));
         assertFalse(v.containsKey("content"));
     }
+
+    /** SOC-3: a reply snapshot carries the quoted head; recalled and foreign quotes keep only a state. */
+    @Test void snapshotCarriesReplyQuoteVisibleRecalledAndForeign()
+    {
+        Map<String, Object> reply = new HashMap<>(Map.of("id", 5002L, "conversationId", CH, "senderId", OWNER, "msgType", 1,
+                "content", "re", "status", 0, "checkStatus", 1, "version", 1, "extraJson", "{\"reply_to_id\":\"5001\"}"));
+        Map<String, Object> quoted = new HashMap<>(message);
+        quoted.put("content", "x".repeat(100));
+        when(messages.selectMessages(anyList())).thenAnswer(i -> {
+            List<Long> ids = i.getArgument(0);
+            List<Map<String, Object>> out = new ArrayList<>();
+            if (ids.contains(5002L)) out.add(reply);
+            if (ids.contains(MSG)) out.add(quoted);
+            return out;
+        });
+        when(messages.selectPinnedIds(anyLong(), anyList())).thenReturn(List.of());
+        Map<String, Object> v = service.snapshot(CH, 5002L);
+        @SuppressWarnings("unchecked") Map<String, Object> q = (Map<String, Object>) v.get("replyTo");
+        assertEquals("5001", q.get("id"));
+        assertEquals("VISIBLE", q.get("state"));
+        assertEquals("22", q.get("senderId"));
+        assertEquals(81, ((String) q.get("summary")).codePointCount(0, ((String) q.get("summary")).length()));
+
+        quoted.put("status", 1);
+        q = castQuote(service.snapshot(CH, 5002L));
+        assertEquals("RECALLED", q.get("state"));
+        assertFalse(q.containsKey("summary"));
+        assertFalse(q.containsKey("senderId"));
+
+        quoted.put("status", 0);
+        quoted.put("conversationId", 999L);
+        assertEquals("UNAVAILABLE", castQuote(service.snapshot(CH, 5002L)).get("state"));
+
+        quoted.put("conversationId", CH);
+        quoted.put("checkStatus", 0);
+        assertEquals("UNAVAILABLE", castQuote(service.snapshot(CH, 5002L)).get("state"));
+    }
+
+    @Test void replyToIdReadsOnlyServerDecimalIds()
+    {
+        assertEquals(42L, ChannelMessageService.replyToId("{\"reply_to_id\":\"42\"}"));
+        assertEquals(0L, ChannelMessageService.replyToId("{\"reply_to_id\":\"042\"}"));
+        assertEquals(0L, ChannelMessageService.replyToId("not json reply_to_id"));
+        assertEquals(0L, ChannelMessageService.replyToId(null));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> castQuote(Map<String, Object> v) { return (Map<String, Object>) v.get("replyTo"); }
 }

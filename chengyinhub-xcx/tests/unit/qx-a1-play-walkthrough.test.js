@@ -112,11 +112,11 @@ test('V3-06:城市定向地点卡底部不再有「在地图中查看路线」;�
   assert.match(wxml, /class="sheet-nav" wx:if="\{\{mode==2 && !sheet\.node\.done && sheet\.node\.lat[^"]*\}\}" bindtap="sheetNav"/)
 })
 
-test('V3-13/14:雷达收起箭头展开时朝上;雷达用漫游同一套深色底图', () => {
+test('V3-13/14:雷达收起箭头展开时朝上;雷达底图跟主题外观(2026-11-14)', () => {
   assert.match(read('pages/play/play-topbar.wxss'), /\.radar__fold\{[^}]*transform:rotate\(90deg\)/)
   const wxml = read('pages/play/index.wxml')
-  assert.match(wxml, /class="fx-story__radar-map"[\s\S]*?subkey="\{\{radarMap\.subkey\}\}" layer-style="\{\{radarMap\.layerStyle\}\}"/)
-  assert.match(read('pages/play/index.js'), /radarMap: \{ subkey: MAP_DARK\.subkey, layerStyle: MAP_DARK\.layerStyle \}/)
+  assert.match(wxml, /class="fx-story__radar-map"[\s\S]*?subkey="\{\{fmSubkey\}\}" layer-style="\{\{fmLayerStyle\}\}" tone="\{\{fmTone\}\}"/)
+  assert.doesNotMatch(read('pages/play/index.js'), /radarMap/)
 })
 
 test('V3-16:背包装载一格一块;没有物品时下面是同一张底的空态', () => {

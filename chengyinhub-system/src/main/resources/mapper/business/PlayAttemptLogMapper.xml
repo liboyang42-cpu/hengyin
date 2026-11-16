@@ -73,4 +73,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
           order by created_at, id
     </select>
 
+    <!-- x-template-games R1:偏好题组按结果码计数,只回人数,不回玩家。 -->
+    <select id="selectPreferenceTallyByTemplate" resultType="map">
+        select json_unquote(json_extract(l.result_json, '$.evaluation.resultCode')) as resultCode,
+               count(*) as responses
+          from play_attempt_log l
+          join cms_topic_node n on n.id = l.node_id
+         where n.template_id = #{templateId} and l.attempt_type = 6 and l.result = 1
+         group by json_unquote(json_extract(l.result_json, '$.evaluation.resultCode'))
+    </select>
+
 </mapper>

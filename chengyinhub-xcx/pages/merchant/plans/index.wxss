@@ -1,0 +1,15 @@
+@import '../../../style/merchant-light.wxss';
+@import '../style/merchant-finance.wxss';
+
+/* S3a 商家套餐:结构照 pages/merchant/payout-account(浅色商家域,fin-card 行)。 */
+page { background: var(--cy-bg-page); }
+.mp-page { min-height: 100vh; box-sizing: border-box; background: var(--cy-bg-page); display: flex; flex-direction: column; }
+.mp-shell { flex: 1; box-sizing: border-box; padding: 0 var(--cy-page-x) var(--cy-space-8); display: flex; flex-direction: column; }
+.mp-section { display: block; margin: var(--cy-space-5) var(--cy-space-1) var(--cy-space-2); color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
+.mp-row { min-height: var(--cy-btn-h); }
+.mp-row + .mp-row { margin-top: 0; }
+.mp-card + .mp-card { margin-top: var(--cy-space-3); }
+.mp-name { font-weight: 600; }
+.mp-badge { display: block; margin: 0 var(--cy-space-1) var(--cy-space-2); color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
+.mp-desc { display: block; margin: var(--cy-space-3) var(--cy-space-1) 0; color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
+.mp-action { margin-top: var(--cy-space-3); }

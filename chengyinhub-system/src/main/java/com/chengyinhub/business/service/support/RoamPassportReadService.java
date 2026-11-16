@@ -55,14 +55,18 @@ public class RoamPassportReadService {
         out.put("finishedAt", row.getFinishedAt() == null ? null : row.getFinishedAt().getTime());
         out.put("distanceM", row.getDistanceM());
         Object shops = null;
+        String zone = null;
         if (row.getFinishResultJson() != null) {
             try {
                 Map<String, Object> result = JSON.parseObject(row.getFinishResultJson());
+                Object rawZone = result == null ? null : result.get("zone");
+                if (rawZone instanceof String name && !name.isBlank()) zone = name.trim();
                 Object raw = result == null ? null : result.get("sessionShops");
                 if (raw instanceof Number n && n.longValue() >= 0 && n.doubleValue() == n.longValue()) shops = n.longValue();
             } catch (RuntimeException ignored) { /* Legacy missing/corrupt optional statistic stays unknown. */ }
         }
         out.put("shops", shops);
+        out.put("zone", zone);
         // 2026-10-31 P-7:简化轨迹(30 天后随详细位置清空,之后为 null,卡片退回只画区域)
         out.put("track", RoamTrackSimplifier.parse(row.getTrackJson()));
         return out;

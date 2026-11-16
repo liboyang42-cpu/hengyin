@@ -27,6 +27,7 @@ import com.chengyinhub.business.domain.dto.CmsActivityPublishRequest;
 import com.chengyinhub.business.mapper.channel.platform.ChannelPlatformMapper;
 import com.chengyinhub.business.moneyswitch.MoneyArea;
 import com.chengyinhub.business.moneyswitch.MoneySwitchService;
+import com.chengyinhub.business.service.IImRealtimePublisher;
 import com.chengyinhub.business.service.IPushFanoutService;
 import com.chengyinhub.business.service.channel.platform.ChannelCapability;
 import com.chengyinhub.business.service.channel.platform.ChannelGuildAccess;
@@ -84,8 +85,15 @@ public class ChannelEventService
     private AppMediaAssetService media;
     @Autowired(required = false)
     private com.chengyinhub.business.mapper.AppMediaAssetMapper mediaAssets;
+    /** W7 SOC-7: open chats learn about a new card at once, like any other new message. */
+    @Autowired(required = false)
+    @Lazy
+    private IImRealtimePublisher realtime;
 
     public ChannelEventService() { }
+
+    /** Tests: the real-time publisher is optional and injected lazily in the app. */
+    void setRealtime(IImRealtimePublisher realtime) { this.realtime = realtime; }
 
     ChannelEventService(ChannelEventMapper mapper, ChannelPlatformMapper channels, ChannelGuildAccess access,
             MoneySwitchService moneySwitch, InGameChannelService inGameChannels, AppMediaAssetService media)
@@ -98,8 +106,22 @@ public class ChannelEventService
         this.media = media;
     }
 
-    /** Where an accepted post goes: the channel and its club. */
-    public record PostTarget(long channelId, long clubId) { }
+    /**
+     * Where an accepted post goes: the channel, its club, and the member who hosts the activity. The host is the
+     * poster when the poster owns the club; for an admin or a role holding {@code CREATE_EVENT} it is the club owner
+     * (W7 SOC-6, owner decision option A: quota, settlement and refunds stay the owner's; the real poster is kept in
+     * {@code channel_event.poster_member_id}). {@code hostMemberId} 0 means "the poster".
+     */
+    public record PostTarget(long channelId, long clubId, long hostMemberId)
+    {
+        public PostTarget(long channelId, long clubId) { this(channelId, clubId, 0L); }
+
+        /** The member the activity is published for: the club owner when someone else posts. */
+        public long hostFor(long poster) { return hostMemberId > 0 ? hostMemberId : poster; }
+
+        /** True when the activity is hosted by the club owner on the poster's behalf. */
+        public boolean hostedForOwner(long poster) { return hostMemberId > 0 && hostMemberId != poster; }
+    }
 
     // ------------------------------------------------------------------ posting
 
@@ -116,18 +138,31 @@ public class ChannelEventService
         if (!ChannelPermissionCalculator.has(bits, ChannelCapability.SEND_MESSAGE))
             throw new ChannelRejection(403, "EVENT_POST_FORBIDDEN", "你在这个频道不能发消息");
         if (!mayPostEvents(standing, bits))
-            throw new ChannelRejection(403, "EVENT_POST_FORBIDDEN", "只有俱乐部主理人可以在频道发活动");
+            throw new ChannelRejection(403, "EVENT_POST_FORBIDDEN", "你暂时不能在这个频道发活动，可以联系主理人或管理员");
+        if (draft.paid() && !mayPostPaidEvents(standing))
+            throw new ChannelRejection(403, "EVENT_POST_FORBIDDEN", "收费活动只能由俱乐部主理人发布，可以先发免费活动");
         if (draft.paid() && !paidEventsOpen())
             throw new ChannelRejection(409, "PAID_EVENTS_OFF", "收费活动暂未开放，可以先发免费活动");
-        return new PostTarget(row.getId(), row.getGuildId());
+        if (standing == GuildStanding.OWNER) return new PostTarget(row.getId(), row.getGuildId(), me);
+        long owner = access.clubOwnerId(row.getGuildId());
+        if (owner <= 0) throw new ChannelRejection(409, "EVENT_HOST_MISSING", "俱乐部暂时没有主理人，暂不能发活动");
+        return new PostTarget(row.getId(), row.getGuildId(), owner);
     }
 
     /**
-     * Only the club owner may post: the event is a club activity, and the existing activity publish path accepts only
-     * the club's owner as its host (quota, settlement and refunds are the owner's). C1's roles decide who may send in
-     * the channel ({@code SEND_MESSAGE}); letting a role host events needs the owner to decide who carries the activity.
+     * W7 SOC-6 (owner decision option A): the club owner, and anyone whose effective channel permissions hold
+     * {@code CREATE_EVENT} (admins by default, plus roles and channel overwrites that grant it). Events posted by
+     * someone other than the owner are free only and are hosted under the club owner ({@link PostTarget}).
      */
     static boolean mayPostEvents(GuildStanding standing, long bits)
+    {
+        if (standing == GuildStanding.OWNER) return true;
+        if (standing == GuildStanding.NONE) return false;
+        return ChannelPermissionCalculator.has(bits, ChannelCapability.CREATE_EVENT);
+    }
+
+    /** Whether this member may post a paid event (owner only, whatever the money switch says). */
+    static boolean mayPostPaidEvents(GuildStanding standing)
     {
         return standing == GuildStanding.OWNER;
     }
@@ -187,7 +222,7 @@ public class ChannelEventService
         ChannelEventRow existing = mapper.selectByActivity(activityId);
         if (existing != null) return view(existing, me, true);
         Map<String, Object> state = mapper.selectActivityState(activityId);
-        if (state == null || toLong(state.get("memberId")) != me || toLong(state.get("clubId")) != target.clubId())
+        if (state == null || toLong(state.get("memberId")) != target.hostFor(me) || toLong(state.get("clubId")) != target.clubId())
             throw new ChannelRejection(409, "EVENT_ACTIVITY_MISMATCH", "活动与频道不匹配");
         ChannelEventRow row = new ChannelEventRow();
         row.setClubId(target.clubId());
@@ -221,6 +256,29 @@ public class ChannelEventService
         }
     }
 
+    /**
+     * W7 SOC-7: the review decision on an activity posts its held channel card (approved) or closes it (refused,
+     * removed). Called after the decision commits, so it runs in its own transaction. Idempotent: only a row still
+     * waiting is touched, and {@code markPosted ... AND status = 0} refuses a second post.
+     *
+     * @return true when a card was posted
+     */
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+    public boolean syncByActivity(long activityId)
+    {
+        if (activityId <= 0) return false;
+        ChannelEventRow row = mapper.selectByActivity(activityId);
+        if (row == null || !Integer.valueOf(ChannelEventRow.STATUS_WAITING_REVIEW).equals(row.getStatus())) return false;
+        Map<String, Object> state = mapper.selectActivityState(activityId);
+        if (activityVisible(state))
+        {
+            postCard(row);
+            return Integer.valueOf(ChannelEventRow.STATUS_POSTED).equals(row.getStatus());
+        }
+        if (activityGone(state)) mapper.markCancelled(row.getId());
+        return false;
+    }
+
     static boolean activityVisible(Map<String, Object> state)
     {
         return state != null && toLong(state.get("status")) == 1 && toLong(state.get("publishStatus")) == 1
@@ -252,20 +310,38 @@ public class ChannelEventService
         row.setStatus(ChannelEventRow.STATUS_POSTED);
         mapper.touchConversation(conversationId, text.length() > 200 ? text.substring(0, 200) : text);
         mapper.fanOutUnread(conversationId, row.getPosterMemberId());
-        pushAfterCommit(messageId);
+        pushAfterCommit(conversationId, messageId, row.getPosterMemberId());
     }
 
-    private void pushAfterCommit(long messageId)
+    private void pushAfterCommit(long conversationId, long messageId, long posterMemberId)
     {
-        if (pushFanout == null) return;
+        if (pushFanout == null && realtime == null) return;
         Runnable push = () -> {
-            try
+            if (pushFanout != null)
             {
-                pushFanout.chatMessageSent(messageId);
+                try
+                {
+                    pushFanout.chatMessageSent(messageId);
+                }
+                catch (RuntimeException e)
+                {
+                    log.warn("频道活动卡片推送登记失败 messageId={}", messageId);
+                }
             }
-            catch (RuntimeException e)
+            if (realtime != null)
             {
-                log.warn("频道活动卡片推送登记失败 messageId={}", messageId);
+                // W7 SOC-7: only the "new message" hint, as for any message; clients read the card through their own reads.
+                Map<String, Object> hint = new LinkedHashMap<>();
+                hint.put("message_id", String.valueOf(messageId));
+                hint.put("sender_id", String.valueOf(posterMemberId));
+                try
+                {
+                    realtime.publish(conversationId, IImRealtimePublisher.MESSAGE_CREATED, hint);
+                }
+                catch (RuntimeException e)
+                {
+                    log.warn("频道活动卡片实时提示失败 messageId={}", messageId);
+                }
             }
         };
         if (TransactionSynchronizationManager.isSynchronizationActive())
@@ -321,6 +397,7 @@ public class ChannelEventService
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("channel_id", String.valueOf(row.getId()));
         data.put("can_post", canPost(me, row));
+        data.put("can_post_paid", canPostPaid(me, row));
         data.put("paid_events_open", paidEventsOpen());
         data.put("events", items);
         return data;
@@ -339,6 +416,20 @@ public class ChannelEventService
             GuildStanding standing = access.standing(row.getGuildKind(), row.getGuildId(), me);
             long bits = access.effective(row, me);
             return ChannelPermissionCalculator.has(bits, ChannelCapability.SEND_MESSAGE) && mayPostEvents(standing, bits);
+        }
+        catch (ChannelRejection e)
+        {
+            return false;
+        }
+    }
+
+    /** W7 SOC-6: paid events stay with the club owner. */
+    boolean canPostPaid(long me, ChannelRow row)
+    {
+        try
+        {
+            GuildStanding standing = access.standing(row.getGuildKind(), row.getGuildId(), me);
+            return mayPostPaidEvents(standing) && canPost(me, row);
         }
         catch (ChannelRejection e)
         {

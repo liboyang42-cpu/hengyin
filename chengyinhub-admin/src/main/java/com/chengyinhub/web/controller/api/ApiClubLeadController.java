@@ -208,7 +208,7 @@ public class ApiClubLeadController extends BaseController {
         upd.setStatus(2);
         if (first != null) upd.setCurrentChapterId(first.getId());
         clubLeadMapper.updateClubLeadState(upd);
-        return AjaxResult.success("出发!");
+        return AjaxResult.success("出发！");
     }
 
     @Operation(summary = "队长放行下一章")
@@ -264,7 +264,7 @@ public class ApiClubLeadController extends BaseController {
         if (clubLeadMapper.unlockChapterCas(actId, st.getLeaderMemberId(), memberId, expected, targetChapterId) != 1) throw new IllegalStateException("章节状态已变化，命令未执行");
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("commandId", commandId); result.put("expectedChapterId", expectedChapterId); result.put("targetChapterId", targetChapterId);
-        AjaxResult response = AjaxResult.success("已开启:" + target.getName(), result);
+        AjaxResult response = AjaxResult.success("已开启：" + target.getName(), result);
         claim.setOutcome("APPLIED"); claim.setResultJson(commandJson(response)); claim.setUpdateTime(new Date());
         if (commandReceiptMapper.completeReceipt(claim) != 1) throw new IllegalStateException("章节回执保存失败");
         // 首响也使用已保存回执的表示，避免 Long ID 经无类型 JSON 回放变为 Integer 后不等价。
@@ -649,7 +649,7 @@ public class ApiClubLeadController extends BaseController {
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("settled", settled);
-        return AjaxResult.success("全团结算完成,共 " + settled + " 人", data);
+        return AjaxResult.success("全团结算完成，共 " + settled + " 人", data);
     }
 
     // ---------- helpers ----------

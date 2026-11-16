@@ -191,22 +191,22 @@ public class PointsGovernanceService {
     public int updateCap(Long eventType, Integer dailyCapPoints, String status, String updateBy) {
         if (eventType == null) throw new ServiceException("缺少积分来源");
         if (dailyCapPoints != null && (dailyCapPoints < 0 || dailyCapPoints > 1_000_000)) {
-            throw new ServiceException("每日上限必须是 0 到 1000000 的整数,留空表示不设上限");
+            throw new ServiceException("每日上限必须是 0 到 1000000 的整数，留空表示不设上限");
         }
         String s = normaliseStatus(status);
         int rows = mapper.updateCap(eventType, dailyCapPoints, s, updateBy, Date.from(clock.instant()));
-        if (rows != 1) throw new ServiceException("积分来源不存在:" + eventType);
+        if (rows != 1) throw new ServiceException("积分来源不存在：" + eventType);
         return rows;
     }
 
     public int updateBudget(String programme, Long monthlyBudgetPoints, String status, String updateBy) {
         if (programme == null || programme.isBlank()) throw new ServiceException("缺少奖励项目");
         if (monthlyBudgetPoints != null && (monthlyBudgetPoints < 0 || monthlyBudgetPoints > 10_000_000_000L)) {
-            throw new ServiceException("月度预算必须是 0 到 10000000000 的整数,留空表示未设预算");
+            throw new ServiceException("月度预算必须是 0 到 10000000000 的整数，留空表示未设预算");
         }
         String s = normaliseStatus(status);
         int rows = mapper.updateBudget(programme.trim(), monthlyBudgetPoints, s, updateBy, Date.from(clock.instant()));
-        if (rows != 1) throw new ServiceException("奖励项目不存在:" + programme);
+        if (rows != 1) throw new ServiceException("奖励项目不存在：" + programme);
         return rows;
     }
 

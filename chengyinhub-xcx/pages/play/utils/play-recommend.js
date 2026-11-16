@@ -32,7 +32,7 @@ function scoreCandidates(nodes, pts, undone, loc, nowMinutes) {
       const m = Math.sqrt(v1x * v1x + v1y * v1y) * Math.sqrt(v2x * v2x + v2y * v2y);
       if (m > 0) dirScore = 0.25 * ((v1x * v2x + v1y * v2y) / m);
     }
-    const reason = biz === false ? '可能不在营业时间 · 看看别处?'
+    const reason = biz === false ? '可能不在营业时间 · 看看别处？'
       : (dm != null ? ('离你约 ' + geo.distanceText(dm) + (biz === true ? ' · 营业中' : ''))
         : '顺路的下一处发现');
     return { x: o.x, i: o.i, score: distScore + bizScore + dirScore, reason };

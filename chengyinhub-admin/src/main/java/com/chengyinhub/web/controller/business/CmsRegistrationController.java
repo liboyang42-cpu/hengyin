@@ -177,7 +177,7 @@ public class CmsRegistrationController extends BaseController
         if (!reversed)
         {
             // 条件置位拿 0 行 = 已被撤销过。幂等不报成功:运维需要知道这次点击没有产生新动作。
-            return error("该核销已被撤销,无需重复撤销");
+            return error("该核销已被撤销，无需重复撤销");
         }
         return success("已撤销");
     }
@@ -270,6 +270,6 @@ public class CmsRegistrationController extends BaseController
     {
         // A3-1(P0):报名承载支付事实(金额/交易号/核销),删除即抹掉交易记录。
         // 一律禁止后台裸删;确需取消报名应走退款/取消流程(留痕、可对账)。
-        return AjaxResult.error(HttpStatus.FORBIDDEN, "报名含支付事实,不支持删除;如需取消请走退款/取消流程");
+        return AjaxResult.error(HttpStatus.FORBIDDEN, "报名含支付事实，不支持删除；如需取消请走退款/取消流程");
     }
 }

@@ -93,7 +93,7 @@ class MerchantReferralBountyReviewTest
 
     private void moneySwitch(boolean open)
     {
-        ReflectionTestUtils.setField(service, "cashPayoutSwitch", new CashPayoutSwitch(open, open));
+        ReflectionTestUtils.setField(service, "cashPayoutSwitch", new CashPayoutSwitch(open, open, com.chengyinhub.business.moneyswitch.MoneyGateTestSupport.openGate()));
     }
 
     @Test

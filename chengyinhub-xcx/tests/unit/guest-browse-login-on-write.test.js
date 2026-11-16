@@ -132,11 +132,26 @@ test('C app.ensureLoginFor:已登录同步放行;游客返回 false 并在登录
   const exchange = g.requests.find(r => r.url.endsWith('/api/login/code'));
   assert.ok(exchange, '「微信登录」才换 token 建号');
   exchange.success({ statusCode: 200, data: { token: 'NEW', data: { id: '8', userType: 1, role: 'player' } } }); await settle();
+  // SEC-14:新登录先读 18 周岁状态;已确认的账号不再问,原动作随后恢复
+  const age = g.requests.find(r => r.url.endsWith('/api/compliance/age/status'));
+  assert.ok(age, '新登录读一次年龄确认状态'); assert.equal(resumed, 0, '年龄状态未回来前不恢复原动作');
+  age.success({ statusCode: 200, data: { code: 200, data: { confirmed: true } } }); await settle();
+  assert.equal(shown.length, 1, '已确认的账号不再问');
   assert.equal(shown[0].title, '登录后继续'); assert.equal(resumed, 1); assert.equal(g.app.getUserID(), '8');
 });
 
 // 写入口清单:每个都在函数体第一行先过闸(登录后 resume 原函数恰好一次)。
 const WRITE_ENTRIES = [
+  // 2026-11-14：公开附近与商店的写入仍使用原登录弹窗。
+  ['subpackageRoam/nearby/index.js', 'apply', 'team'],
+  ['subpackageRoam/nearby/index.js', '_startChallenge', 'roam'],
+  ['subpackageRoam/nearby/index.js', 'onSpotShot', 'roam'],
+  ['subpackageRoam/nearby/index.js', 'onReviewSubmit', 'post'],
+  ['subpackageMember/market/pass/index.js', 'onBuy', 'checkout'],
+  ['subpackageMember/market/pass/index.js', 'goCheckout', 'signup'],
+  ['subpackageMember/market/membership/index.js', 'onBuy', 'checkout'],
+  ['pages/play/poi-challenge/index.js', 'onShoot', 'roam'],
+  ['pages/play/poi-challenge/index.js', '_submit', 'roam'],
   ['pages/activity/baoming/baoming.js', 'handlePayment', 'checkout'],
   ['pages/activity/baoming/baoming.js', 'joinWaitlist', 'signup'],
   ['pages/activity/official-detail/index.js', 'doSignup', 'signup'],

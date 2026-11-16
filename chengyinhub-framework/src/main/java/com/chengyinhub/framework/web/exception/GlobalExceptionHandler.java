@@ -17,6 +17,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingPathVariableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartException;
@@ -215,6 +216,28 @@ public class GlobalExceptionHandler
         String typeName = e.getRequiredType() == null ? "" : e.getRequiredType().getSimpleName();
         return AjaxResult.error(userSafeMessage(String.format("请求参数类型不匹配，参数[%s]要求类型为：'%s'，但输入值为：'%s'",
                 e.getName(), typeName, value))).withErrorCode(ErrorCode.BAD_REQUEST);
+    }
+
+    /**
+     * 请求体 JSON / 反序列化失败属于客户端入参错误，不计入系统故障告警。
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseStatus(org.springframework.http.HttpStatus.BAD_REQUEST)
+    public AjaxResult handleHttpMessageNotReadableException(HttpMessageNotReadableException e,
+            HttpServletRequest request)
+    {
+        log.warn("请求地址'{}',请求体解析失败:{}", request.getRequestURI(), e.getMessage());
+        return AjaxResult.error(HttpStatus.BAD_REQUEST, "请求参数格式有误");
+    }
+
+    /**
+     * 显式参数校验异常属于客户端入参错误，不计入系统故障告警。
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public AjaxResult handleIllegalArgumentException(IllegalArgumentException e, HttpServletRequest request)
+    {
+        log.warn("请求地址'{}',参数校验失败:{}", request.getRequestURI(), e.getMessage());
+        return AjaxResult.error(HttpStatus.BAD_REQUEST, UserSafeMessage.of(e.getMessage(), "请求参数有误"));
     }
 
     /**

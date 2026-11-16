@@ -4,9 +4,8 @@ const fs = require('node:fs')
 const pathFor = relative => require('node:path').resolve(__dirname, '../..', relative)
 const os = require('node:os')
 const path = require('node:path')
-const { buildLedger, discoverExternalHelperNames, targetsForHandler } = require('../../scripts/uiaudit/build-action-ledger')
-let currentLedger
-const ledger = () => currentLedger || (currentLedger = buildLedger())
+const { discoverExternalHelperNames, targetsForHandler } = require('../../scripts/uiaudit/build-action-ledger')
+const ledger = () => require('../../scripts/uiaudit/action-ledger.json')
 
 test('队间交换真实方法进入台账，预览与核对不写入，发起确认只写一条命令', () => {
   for (const [handler, actionClass, apis] of [
@@ -423,7 +422,10 @@ test('基础玩法后的投影只增加真实可达归零恢复写入，不混�
       assert.ok(row.targets.primaryApis.includes('/api/game/session/command'), row.id)
       assert.ok(row.targets.primaryApis.includes('/api/play/theme/gameplay-action'), row.id)
       assert.ok(row.targets.writeApis.includes('/api/play/theme/action'), '章节发放是实际可达的主题写入')
-      assert.equal(row.targets.writeApis.filter(api => !['/api/play/theme/action', '/api/play/theme/gameplay-action', '/api/game/session/command'].includes(api)).length, 1, row.id)
+      // 2026-11-14 play-wave-1114:「核对一次」(verifyArrivalWrite)弹窗确认后重走原打卡命令,闭包里多出 /api/play/checkin;
+      // 它不是这些点击自己的第二个写入口(扫码两个入口自己的主写入就是 checkin,不在此例外内)。
+      const own = ['scanGame', 'onScanArrive'].includes(name) ? [] : ['/api/play/checkin']
+      assert.equal(row.targets.writeApis.filter(api => !['/api/play/theme/action', '/api/play/theme/gameplay-action', '/api/game/session/command', ...own].includes(api)).length, 1, row.id)
     }
   }
   assert.ok(rows.some(row => row.targets.writeApis.includes('/api/game/session/command')),
@@ -545,7 +547,11 @@ test('PlayKit parent delegates real advanced retry and scopes photo consent to i
   const consentGuard = /const consentCurrent = \(\) => !operation\.isAborted\(\) && this\._kitPhotoIntent === intent && contextCurrent\(\) && sameQuestion\(\);/;
   assert.match(parent, consentGuard);
   // 2026-10-30 A23:同账号同一局(路线局,页面重进仍算同一局)已同意过就走 photo-existing-consent(不再弹),否则仍先单独同意
-  assert.match(parent, /if \(option\.name === 'SUBMIT_PHOTO_CHECK'\) \{\s*const consentCurrent = [^\n]+;[\s\S]{0,1400}this\._photoConsentScope === consentScope \|\| storedScope === consentScope \? Promise\.resolve\(\) : app\.requestSeparateConsent\('photo', consentCurrent\)/);
+  assert.match(parent, /if \(option\.name === 'SUBMIT_PHOTO_CHECK'\) \{\s*const consentCurrent = [^\n]+;\s*this\._ensurePhotoConsent\(consentCurrent\)\.then/);
+  const helper = parent.slice(parent.indexOf('  _ensurePhotoConsent(current) {'), parent.indexOf('  onAdvancedActionFail(e) {'));
+  assert.match(helper, /if \(!runId\) return Promise\.reject/);
+  assert.match(helper, /this\._photoConsentScope === scope \|\| stored === scope/);
+  assert.match(helper, /return app\.requestSeparateConsent\('photo', current\)\.then/);
   assert.match(album, /game\.action\('SUBMIT_ALBUM'/);
   const source = fs.readFileSync(path.join(root, 'scripts/uiaudit/build-action-ledger.js'), 'utf8');
   const plan = source.slice(source.indexOf("['pages/play/index.js:onPlayKitAction'"), source.indexOf("['pages/play/index.js:retryGameSubmission'"));
@@ -568,6 +574,18 @@ test('PlayKit parent delegates real advanced retry and scopes photo consent to i
   assert.throws(() => assert.match(parent.replace('contextCurrent() && sameQuestion();', 'contextCurrent();'), consentGuard));
 });
 
+
+test('photo receipt retry records consent then original action, never uploads a new photo', () => {
+  const control = ledger().controls.find(item => item.entry.js === 'pages/play/components/advanced-game/index.js'
+    && item.control.handler === 'retryOriginalPhoto');
+  assert.ok(control);
+  assert.deepEqual(control.requiredRequestsByBranch['unavailable-or-declined'], []);
+  assert.deepEqual(control.requiredRequestsByBranch['consent-accepted-original-retry'].map(r => r.urlTemplate),
+    ['/api/compliance/consents', '/api/play/advanced/action']);
+  assert.deepEqual(control.requiredRequestsByBranch['original-retry-result-unknown'].map(r => r.urlTemplate),
+    ['/api/compliance/consents', '/api/play/advanced/action', '/api/play/advanced/receipt']);
+  assert.ok(!control.targets.primaryApis.includes('/api/common/uploadOSS'));
+});
 
 test('真实 roleGuard.clear 只清缓存；load 仍保留 Controller POST，未知别名不裁剪', () => {
   const { namespaceDependencySource, extractTargets } = require('../../scripts/uiaudit/build-action-ledger')

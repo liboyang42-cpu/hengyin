@@ -331,7 +331,7 @@ const BUILDERS = {
     return {
       type: 'blindtaste', eyebrow: '闭眼味觉师 · 盲品', title: txt(c.title) || '闭上眼，尝一口，猜猜是哪一种',
       // 与 playkit-steps 的 blindtaste 图标行同一句读屏文案(分包之间不能 require,只能各写一份)
-      steps: txt(c.steps) || '玩法步骤:1 领小样,2 闭眼尝,3 作答',
+      steps: txt(c.steps) || '玩法步骤：1 领小样，2 闭眼尝，3 作答',
       hint: txt(c.hint), options: options.length >= 2 ? options : [{ key: 'A', label: '桂花乌龙' }, { key: 'B', label: '茉莉绿茶' }],
       xpLabel: num(c.xp, 0) > 0 ? '答对 +' + num(c.xp, 0) + ' XP' : '', selectedKey: '', locked: false,
     };

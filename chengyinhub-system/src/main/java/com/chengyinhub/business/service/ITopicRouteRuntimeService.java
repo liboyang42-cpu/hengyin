@@ -71,6 +71,12 @@ public interface ITopicRouteRuntimeService {
 
     TopicRouteState state(Long memberId, Long topicId, Long activityId,
             com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration declaration);
+
+    /** Player entry always has a run identity, including linear topics without journey rules. */
+    default TopicRouteState personalRun(Long memberId, Long topicId,
+            com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration declaration) {
+        return state(memberId, topicId, 0L, declaration);
+    }
     /** Pure current-run projection; null means no initialized session. Never initializes or refreshes state. */
     TopicRouteState queryState(Long memberId, Long topicId, Long activityId);
     TopicRouteState completeOpening(Long memberId, Long topicId, Long activityId, Long chapterId, Integer expectedVersion);
@@ -269,4 +275,28 @@ public interface ITopicRouteRuntimeService {
                 + String.valueOf(activityId == null ? 0L : activityId);
     }
 
+
+    default com.chengyinhub.business.domain.TopicRouteSession requireNpcDialogueSession(
+            Long memberId, Long topicId, Long activityId, Long runId) {
+        throw new UnsupportedOperationException("npc dialogue session lookup unavailable");
+    }
+
+    default Map<String, Object> findNpcDialogueReplay(
+            com.chengyinhub.business.domain.TopicRouteSession session, Long memberId, String actionId) {
+        return null;
+    }
+
+    default java.util.List<com.chengyinhub.business.domain.ThemeStateKey> allowedNpcDialogueKeys(
+            com.chengyinhub.business.domain.TopicRouteSession session) {
+        return java.util.Collections.emptyList();
+    }
+
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
+    default Map<String, Object> commitNpcDialogue(
+            com.chengyinhub.business.domain.TopicRouteSession session,
+            Long memberId, Long npcId, String npcName, String npcRelationKey,
+            String actionId, String routeActionId, String reply,
+            java.util.List<Map<String, Object>> candidateEffects) {
+        throw new UnsupportedOperationException("npc dialogue commit unavailable");
+    }
 }

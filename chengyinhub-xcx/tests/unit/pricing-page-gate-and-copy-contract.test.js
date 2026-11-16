@@ -61,7 +61,7 @@ test('有人带:成团人数为空或 0 时不得确认终价,并当场说明理
   const page = loadPage()
   page.setData({ topicId: 8, subType: 'guided', leadCost: '120', teamSize: '4' })
   previewWith(page, { priceMin: '35.30', canConfirm: true })
-  assert.equal(page.data.floor, 35.3)
+  assert.equal(page._floor, 35.3)
   assert.equal(page.data.canConfirmPrice, true, '4 人是有效成团人数')
   assert.equal(page.data.teamSizeError, '')
 
@@ -72,7 +72,7 @@ test('有人带:成团人数为空或 0 时不得确认终价,并当场说明理
 
   page.recalculate()
   requests[requests.length - 1].success({ code: '200', data: { priceMin: '0.00', canConfirm: true } })
-  assert.equal(page.data.floor, 0)
+  assert.equal(page._floor, 0)
   assert.equal(page.data.canConfirmPrice, false, 'floor=0 时 0>=0 恒真，必须由人数这道闸兜住')
 })
 

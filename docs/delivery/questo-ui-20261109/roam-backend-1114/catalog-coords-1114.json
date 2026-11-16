@@ -1,0 +1,318 @@
+{
+ "sh-shanyin-road": {
+  "gcj02": [
+   31.266219,
+   121.484749
+  ],
+  "coordSystem": "GCJ-02",
+  "precision": "poi",
+  "source": "OSM 山阴路, 横浜桥, 四川北路街道, 虹口区, 上海市, 200081, 中国",
+  "verifiedOn": "2026-11-14"
+ },
+ "sh-luxun-park": {
+  "gcj02": [
+   31.272035,
+   121.482673
+  ],
+  "coordSystem": "GCJ-02",
+  "precision": "poi",
+  "source": "OSM 鲁迅公园, 欧阳路街道, 虹口区, 上海市, 中国",
+  "verifiedOn": "2026-11-14"
+ },
+ "sh-uchiyama-books": {
+  "gcj02": [
+   31.264767,
+   121.483726
+  ],
+  "coordSystem": "GCJ-02",
+  "precision": "poi",
+  "source": "OSM 1927·鲁迅与内山纪念书局, 山阴路, 横浜桥, 四川北路街道, 虹口区, 上",
+  "verifiedOn": "2026-11-14"
+ },
+ "bj-zhuanta-hutong": {
+  "gcj02": [
+   39.922122,
+   116.369181
+  ],
+  "coordSystem": "GCJ-02",
+  "precision": "poi",
+  "source": "OSM 砖塔胡同, 金融街街道, 首都功能核心区, 西城区, 北京市, 100032, ",
+  "verifiedOn": "2026-11-14"
+ },
+ "bj-wanshou-park": {
+  "gcj02": [
+   39.879523,
+   116.368018
+  ],
+  "coordSystem": "GCJ-02",
+  "precision": "poi",
+  "source": "OSM 万寿公园, 自新路社区, 首都功能核心区, 西城区, 北京市, 100032, ",
+  "verifiedOn": "2026-11-14"
+ },
+ "bj-zhengyang-books": {
+  "gcj02": [
+   39.922055,
+   116.373253
+  ],
+  "coordSystem": "GCJ-02",
+  "precision": "poi",
+  "source": "OSM shop/books 正阳书局",
+  "verifiedOn": "2026-11-14"
+ },
+ "hz-mantoushan": {
+  "gcj02": [
+   30.218706,
+   120.169521
+  ],
+  "coordSystem": "GCJ-02",
+  "precision": "street",
+  "source": "OSM 凤凰山脚路(馒头山园区段)",
+  "verifiedOn": "2026-11-14"
+ },
+ "hz-chengbei-park": {
+  "gcj02": [
+   30.312998,
+   120.162583
+  ],
+  "coordSystem": "GCJ-02",
+  "precision": "poi",
+  "source": "OSM 城北体育公园, 东新街道, 拱墅区, 杭州市, 浙江省, 中国",
+  "verifiedOn": "2026-11-14"
+ },
+ "hz-silk-museum": {
+  "gcj02": [
+   30.222808,
+   120.151223
+  ],
+  "coordSystem": "GCJ-02",
+  "precision": "poi",
+  "source": "OSM 中国丝绸博物馆, 73-1, 玉皇山路, 南山村, 西湖街道, 西湖区, 杭州市",
+  "verifiedOn": "2026-11-14"
+ },
+ "cd-tangba-street": {
+  "gcj02": [
+   30.647663,
+   104.082585
+  ],
+  "coordSystem": "GCJ-02",
+  "precision": "poi",
+  "source": "OSM 镋钯街, 锦官驿街道, 锦江区, 成都市, 四川省, 610014, 中国",
+  "verifiedOn": "2026-11-14"
+ },
+ "cd-wangjiang-park": {
+  "gcj02": [
+   30.629642,
+   104.092525
+  ],
+  "coordSystem": "GCJ-02",
+  "precision": "poi",
+  "source": "OSM 望江楼公园, 望江路街道, 武侯区, 成都市, 四川省, 中国",
+  "verifiedOn": "2026-11-14"
+ },
+ "cd-a4-museum": {
+  "missing": true
+ },
+ "xa-banpo-art": {
+  "gcj02": [
+   34.270733,
+   109.058051
+  ],
+  "coordSystem": "GCJ-02",
+  "precision": "poi",
+  "source": "OSM 半坡国际艺术区, 向阳坊社区, 纺织城街道, 灞桥区, 西安市, 陕西省, 中国",
+  "verifiedOn": "2026-11-14"
+ },
+ "xa-xicheng-park": {
+  "gcj02": [
+   34.264494,
+   108.92353
+  ],
+  "coordSystem": "GCJ-02",
+  "precision": "poi",
+  "source": "OSM 环城西苑, 环城西路街道, 莲湖区, 西安市, 陕西省, 中国",
+  "verifiedOn": "2026-11-14"
+ },
+ "xa-shaanxi-art": {
+  "gcj02": [
+   34.231105,
+   108.944309
+  ],
+  "coordSystem": "GCJ-02",
+  "precision": "poi",
+  "source": "OSM 陕西省美术博物馆, 14, 长安北路, 新西里社区, 南稍门社区, 长安路街道,",
+  "verifiedOn": "2026-11-14"
+ },
+ "cq-sujia-trail": {
+  "gcj02": [
+   29.537139,
+   106.551481
+  ],
+  "coordSystem": "GCJ-02",
+  "precision": "start",
+  "source": "OSM 铜元局站(步道起点)",
+  "verifiedOn": "2026-11-14"
+ },
+ "cq-pingdingshan-park": {
+  "gcj02": [
+   29.547569,
+   106.474991
+  ],
+  "coordSystem": "GCJ-02",
+  "precision": "poi",
+  "source": "OSM 平顶山文化公园, 联芳街道, 覃家岗街道, 沙坪坝区, 九龙坡区, 重庆市, 中",
+  "verifiedOn": "2026-11-14"
+ },
+ "cq-jiaotong-tea": {
+  "gcj02": [
+   29.496153,
+   106.536744
+  ],
+  "coordSystem": "GCJ-02",
+  "precision": "approx",
+  "source": "OSM 黄桷坪站(近黄桷坪正街,非门牌)",
+  "verifiedOn": "2026-11-14"
+ },
+ "sz-oct-loft": {
+  "gcj02": [
+   22.53832,
+   113.993588
+  ],
+  "coordSystem": "GCJ-02",
+  "precision": "poi",
+  "source": "OSM 华侨城创意文化园, 香山街社区, 沙河街道, 南山区, 深圳市, 广东省, 51",
+  "verifiedOn": "2026-11-14"
+ },
+ "sz-xiangmi-park": {
+  "gcj02": [
+   22.547029,
+   114.021655
+  ],
+  "coordSystem": "GCJ-02",
+  "precision": "poi",
+  "source": "OSM 香蜜公园, 30, 香蜜湖街道, 福田区, 深圳市, 广东省, 518000, ",
+  "verifiedOn": "2026-11-14"
+ },
+ "sz-hexiangning-art": {
+  "gcj02": [
+   22.533046,
+   113.981705
+  ],
+  "coordSystem": "GCJ-02",
+  "precision": "poi",
+  "source": "OSM 何香凝美术馆, 9013, 深南大道, 东方社区, 沙河街道, 南山区, 深圳市",
+  "verifiedOn": "2026-11-14"
+ },
+ "gz-xinhepu": {
+  "gcj02": [
+   23.118987,
+   113.293534
+  ],
+  "coordSystem": "GCJ-02",
+  "precision": "street",
+  "source": "OSM 新河浦路",
+  "verifiedOn": "2026-11-14"
+ },
+ "gz-xiaogang-park": {
+  "gcj02": [
+   23.096758,
+   113.280595
+  ],
+  "coordSystem": "GCJ-02",
+  "precision": "poi",
+  "source": "OSM 晓港公园, 江南中街道, 海珠区, 广州市, 广东省, 中国",
+  "verifiedOn": "2026-11-14"
+ },
+ "gz-kuiyuan-art": {
+  "gcj02": [
+   23.119955,
+   113.296722
+  ],
+  "coordSystem": "GCJ-02",
+  "precision": "approx",
+  "source": "OSM 恤孤院路(9号所在路,非门牌)",
+  "verifiedOn": "2026-11-14"
+ },
+ "wh-qingdao-road": {
+  "gcj02": [
+   30.581551,
+   114.298443
+  ],
+  "coordSystem": "GCJ-02",
+  "precision": "street",
+  "source": "OSM 青岛路 江岸区",
+  "verifiedOn": "2026-11-14"
+ },
+ "wh-jiefang-park": {
+  "gcj02": [
+   30.608193,
+   114.299267
+  ],
+  "coordSystem": "GCJ-02",
+  "precision": "poi",
+  "source": "OSM 解放公园, 劳动街道, 江岸区, 武汉市, 湖北省, 中国",
+  "verifiedOn": "2026-11-14"
+ },
+ "wh-united-art": {
+  "gcj02": [
+   30.470365,
+   114.323764
+  ],
+  "coordSystem": "GCJ-02",
+  "precision": "poi",
+  "source": "OSM 合美术馆, 野芷湖西路, 狮子山街道, 洪山区, 武汉市, 湖北省, 43006",
+  "verifiedOn": "2026-11-14"
+ },
+ "hk-tai-nan-street": {
+  "gcj02": [
+   22.32707,
+   114.163404
+  ],
+  "coordSystem": "WGS84(HK,no offset)",
+  "precision": "poi",
+  "source": "OSM 大南街 Tai Nan Street, 塘尾 Tong Mi, 深水埗 Sham",
+  "verifiedOn": "2026-11-14"
+ },
+ "hk-cattle-depot-park": {
+  "gcj02": [
+   22.320491,
+   114.19121
+  ],
+  "coordSystem": "WGS84(HK,no offset)",
+  "precision": "poi",
+  "source": "OSM 牛棚藝術公園 Cattle Depot Art Park, 39, 馬頭角 Ma",
+  "verifiedOn": "2026-11-14"
+ },
+ "hk-aco-books": {
+  "missing": true
+ },
+ "xm-huaxin-road": {
+  "gcj02": [
+   24.459889,
+   118.087448
+  ],
+  "coordSystem": "GCJ-02",
+  "precision": "street",
+  "source": "OSM 华新路 思明区",
+  "verifiedOn": "2026-11-14"
+ },
+ "xm-zhonglun-park": {
+  "gcj02": [
+   24.481547,
+   118.148764
+  ],
+  "coordSystem": "GCJ-02",
+  "precision": "poi",
+  "source": "OSM 忠仑公园, 江头街道, 湖里区, 厦门市, 福建省, 中国",
+  "verifiedOn": "2026-11-14"
+ },
+ "xm-three-shadows": {
+  "gcj02": [
+   24.593595,
+   118.064481
+  ],
+  "coordSystem": "GCJ-02",
+  "precision": "poi",
+  "source": "OSM 杏林湾商务营运中心",
+  "verifiedOn": "2026-11-14"
+ }
+}

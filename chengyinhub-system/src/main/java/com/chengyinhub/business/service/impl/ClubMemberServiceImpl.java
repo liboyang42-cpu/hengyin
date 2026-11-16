@@ -67,6 +67,17 @@ public class ClubMemberServiceImpl implements IClubMemberService
     @Autowired
     private IImService imService;
 
+    /** W7 x-channel-reach (SOC-2): a new member gets rows in the club channels they can see (after commit). */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.channel.platform.ChannelMembershipSync channelMembership;
+
+    private void enrollInClubChannels(Long clubId, Long memberId)
+    {
+        if (channelMembership == null || clubId == null || memberId == null) return;
+        channelMembership.memberJoinedAfterCommit(
+                com.chengyinhub.business.service.channel.platform.ChannelGuildAccess.GUILD_CLUB, clubId, memberId);
+    }
+
     @Override
     public boolean topicHasOrganizer(Long topicId) {
         if (topicId == null) {
@@ -355,6 +366,7 @@ public class ClubMemberServiceImpl implements IClubMemberService
             clubMemberMapper.insertClubMember(clubMember);
         }
         clubMapper.updateMemberCount(clubMember.getClubId(), 1);
+        enrollInClubChannels(clubMember.getClubId(), clubMember.getMemberId());
         return true;
     }
 
@@ -431,6 +443,7 @@ public class ClubMemberServiceImpl implements IClubMemberService
 
         if (!approvalRequired) {
             clubMapper.updateMemberCount(clubId, 1);
+            enrollInClubChannels(clubId, memberId);
             return JOIN_STATE_JOINED;
         }
         return JOIN_STATE_PENDING;
@@ -472,6 +485,7 @@ public class ClubMemberServiceImpl implements IClubMemberService
             clubParticipationGuard.requireAllowed(clubId, memberId);
             clubMemberMapper.updateMembershipState(pending.getId(), 1, 0, new java.util.Date());
             clubMapper.updateMemberCount(clubId, 1);
+            enrollInClubChannels(clubId, memberId);
         } else {
             clubMemberMapper.updateMembershipState(pending.getId(), 2, 0, null);
         }

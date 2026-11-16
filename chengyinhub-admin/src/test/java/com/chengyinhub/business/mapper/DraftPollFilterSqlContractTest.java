@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -184,11 +185,18 @@ class DraftPollFilterSqlContractTest {
         BoundSql activities = boundSql("CmsActivity", activityXml, "selectPublicCmsActivityList", activity);
         CmsTopic topic = new CmsTopic();
         topic.setCityKeyword("上海");
+        topic.setName("黄浦");
         BoundSql topics = boundSql("CmsTopic", topicXml, "selectPublicCmsTopicList", topic);
         BoundSql count = boundSql("CmsTopic", topicXml, "selectPublicCmsTopicList_COUNT", topic);
         assertCityMapping(activities, "addressName");
         assertCityMapping(topics, "cityKeyword");
         assertCityMapping(count, "cityKeyword");
+        for (BoundSql query : java.util.Arrays.asList(topics, count)) {
+            String statement = normalized(query.getSql());
+            assertTrue(Pattern.compile("and \\(name like.*? or address_name like.*? or city_code like.*?\\)")
+                    .matcher(statement).find(), "公开主题名称搜索也匹配地址与城市，OR 必须括起来");
+            assertEquals(3L, query.getParameterMappings().stream().filter(p -> "name".equals(p.getProperty())).count());
+        }
         assertNoTopicExpiryGate(normalized(topics.getSql()));
         assertNoTopicExpiryGate(normalized(count.getSql()));
         assertTrue(hasParameter(activities, "distanceMeters"), "显式半径必须进入主查询参数");

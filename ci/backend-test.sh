@@ -24,6 +24,11 @@ export APPLE_IAP_TEST_FIXTURE_DIR="$APPLE_IAP_INPUTS"
 
 # 全量编译 + 跑测试。首次接入若命中历史遗留失败用例,
 # 先在此收敛或用 -pl 缩到改动模块,再逐步扩全。
+if [[ -n "${CI_BACKEND_MODULES:-}" ]]; then
+  [[ "$CI_BACKEND_MODULES" =~ ^chengyinhub-(common|system|framework|quartz|generator|admin)(,chengyinhub-(common|system|framework|quartz|generator|admin))*$ ]] || exit 1
+  mvn -B -pl "$CI_BACKEND_MODULES" -am clean test
+  exit 0
+fi
 mvn -B clean test
 
 # ---- 真库集成测试(*IT):必须点名跑 ----

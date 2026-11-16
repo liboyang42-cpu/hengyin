@@ -251,6 +251,45 @@ class ImServiceImplTest {
     }
 
     @Test
+    void channelSendFansOutUnreadWithOneSetBasedUpdate() {
+        // SOC-13: a group/channel message no longer loads every member or runs one UPDATE per member.
+        ImServiceImpl service = service();
+        com.chengyinhub.business.service.IChannelConversationGate gate = mock(com.chengyinhub.business.service.IChannelConversationGate.class);
+        when(gate.isChannel(100L)).thenReturn(true);
+        ReflectionTestUtils.setField(service, "channelGate", gate);
+        ImConversation channel = new ImConversation();
+        channel.setId(100L);
+        channel.setType(com.chengyinhub.business.service.IChannelConversationGate.CONVERSATION_TYPE_CHANNEL);
+        channel.setStatus(0);
+        when(conversationMapper.selectImConversationById(100L)).thenReturn(channel);
+        when(conversationMapper.selectImConversationByIdForUpdate(100L)).thenReturn(channel);
+        when(memberMapper.selectByConvAndMember(100L, 1L)).thenReturn(member(1L));
+        when(blockMapper.existsBetween(anyLong(), anyLong())).thenReturn(0);
+        when(wxContentSecurityService.checkText(eq("hi"), any())).thenReturn(null);
+
+        ImMessage msg = service.send(1L, 100L, null, ImMessage.MSG_TEXT, "hi", null);
+
+        assertEquals(0L, msg.getReceiverId());
+        verify(memberMapper).addUnreadForActiveMembersExcept(100L, 1L, 1);
+        verify(memberMapper, never()).addUnreadForActiveMember(anyLong(), anyLong(), anyInt());
+        verify(memberMapper, never()).selectByConversation(anyLong());
+    }
+
+    @Test
+    void singleChatStillLooksUpTheReceiverAndAddsOneUnread() {
+        ImServiceImpl service = service();
+        when(memberMapper.selectByConvAndMember(100L, 1L)).thenReturn(member(1L));
+        when(memberMapper.selectByConversation(100L)).thenReturn(Arrays.asList(member(1L), member(2L)));
+        when(blockMapper.existsBetween(anyLong(), anyLong())).thenReturn(0);
+        when(wxContentSecurityService.checkText(eq("hi"), any())).thenReturn(null);
+
+        service.send(1L, 100L, null, ImMessage.MSG_TEXT, "hi", null);
+
+        verify(memberMapper).addUnread(100L, 2L, 1);
+        verify(memberMapper, never()).addUnreadForActiveMembersExcept(anyLong(), anyLong(), anyInt());
+    }
+
+    @Test
     void userCannotSendToSystemConversation() {
         ImServiceImpl service = service();
         ImConversation system = new ImConversation();
@@ -1059,4 +1098,90 @@ class ImServiceImplTest {
         return row;
     }
 
+    // ===== SOC-4 / SOC-10 =====
+
+    private ImConversation conversationOfType(int type) {
+        ImConversation c = new ImConversation();
+        c.setId(100L);
+        c.setType(type);
+        c.setStatus(0);
+        return c;
+    }
+
+    @Test
+    void channelPageNeverReportsAPairBlockAndFlagsOnlyBlockedSenders() {
+        ImServiceImpl service = service();
+        when(conversationMapper.selectImConversationById(100L)).thenReturn(conversationOfType(5));
+        when(memberMapper.selectByConvAndMember(100L, 1L)).thenReturn(member(1L));
+        // The first other member row used to be taken as "the other person".
+        when(memberMapper.selectByConversation(100L)).thenReturn(Arrays.asList(member(2L), member(1L), member(3L)));
+        when(blockMapper.existsBetween(1L, 2L)).thenReturn(1);
+        when(blockMapper.selectOne(1L, 2L)).thenReturn(new ImBlock());
+        when(messageMapper.selectVisiblePage(anyLong(), anyLong(), any(), anyInt()))
+                .thenReturn(Arrays.asList(message(13L, 100L, 1L), message(12L, 100L, 3L), message(11L, 100L, 2L)));
+        when(blockMapper.selectBlockedAmong(eq(1L), any())).thenReturn(List.of(2L));
+
+        Map<String, Object> page = service.listMessages(1L, 100L, null, 20);
+
+        assertEquals(Boolean.FALSE, page.get("blocked"));
+        assertEquals(Boolean.FALSE, page.get("blockedByMe"));
+        @SuppressWarnings("unchecked") List<ImMessage> rows = (List<ImMessage>) page.get("list");
+        assertEquals(3, rows.size());
+        for (ImMessage m : rows) {
+            assertEquals(m.getSenderId() == 2L ? Boolean.TRUE : null, m.getSenderBlocked(), "message " + m.getId());
+        }
+    }
+
+    @Test
+    void singleChatPageDoesNotRunTheBlockedSenderQuery() {
+        ImServiceImpl service = service();
+        when(conversationMapper.selectImConversationById(100L)).thenReturn(conversationOfType(ImConversation.TYPE_SINGLE));
+        when(memberMapper.selectByConvAndMember(100L, 1L)).thenReturn(member(1L));
+        when(memberMapper.selectByConversation(100L)).thenReturn(Arrays.asList(member(1L), member(2L)));
+        when(messageMapper.selectVisiblePage(anyLong(), anyLong(), any(), anyInt())).thenReturn(Arrays.asList(message(11L, 100L, 2L)));
+        service.listMessages(1L, 100L, null, 20);
+        verify(blockMapper, never()).selectBlockedAmong(anyLong(), any());
+    }
+
+    @Test
+    void sendableGateRefusesRestrictedAccountsBlockedPairsAndNonMembers() {
+        ImServiceImpl service = service();
+        when(conversationMapper.selectImConversationById(100L)).thenReturn(conversationOfType(ImConversation.TYPE_SINGLE));
+        when(memberMapper.selectByConvAndMember(100L, 1L)).thenReturn(member(1L));
+        when(memberMapper.selectByConversation(100L)).thenReturn(Arrays.asList(member(1L), member(2L)));
+
+        service.requireSendable(1L, 100L);
+
+        when(blockMapper.existsBetween(1L, 2L)).thenReturn(1);
+        com.chengyinhub.common.exception.ServiceException blocked = assertThrows(
+                com.chengyinhub.common.exception.ServiceException.class, () -> service.requireSendable(1L, 100L));
+        assertEquals(403, blocked.getCode());
+        assertEquals("对方暂不可联系", blocked.getMessage());
+
+        when(blockMapper.existsBetween(0L, 1L)).thenReturn(1);
+        com.chengyinhub.common.exception.ServiceException restricted = assertThrows(
+                com.chengyinhub.common.exception.ServiceException.class, () -> service.requireSendable(1L, 100L));
+        assertEquals(403, restricted.getCode());
+        assertEquals("账号已被限制发言", restricted.getMessage());
+
+        when(blockMapper.existsBetween(0L, 1L)).thenReturn(0);
+        when(memberMapper.selectByConvAndMember(100L, 1L)).thenReturn(null);
+        assertEquals(403, assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> service.requireSendable(1L, 100L)).getCode());
+    }
+
+    @Test
+    void sendableGateIgnoresUnrelatedBlocksInsideAChannel() {
+        ImServiceImpl service = service();
+        when(conversationMapper.selectImConversationById(100L)).thenReturn(conversationOfType(5));
+        when(memberMapper.selectByConvAndMember(100L, 1L)).thenReturn(member(1L));
+        when(memberMapper.selectByConversation(100L)).thenReturn(Arrays.asList(member(2L), member(1L)));
+        when(blockMapper.existsBetween(1L, 2L)).thenReturn(1);
+
+        service.requireSendable(1L, 100L);
+
+        when(conversationMapper.selectImConversationById(100L)).thenReturn(conversationOfType(ImConversation.TYPE_SYSTEM));
+        assertEquals(403, assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> service.requireSendable(1L, 100L)).getCode());
+    }
 }

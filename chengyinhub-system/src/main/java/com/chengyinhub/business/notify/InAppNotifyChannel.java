@@ -41,6 +41,21 @@ public class InAppNotifyChannel implements NotifyChannel {
         if (message.event() == NotifyEvent.REFUND) {
             return sendRefund(message);
         }
+        if (message.event() == NotifyEvent.MERCHANT_REVIEW) {
+            return sendMerchantReview(message);
+        }
+        if (message.event() == NotifyEvent.GAME_DUEL) {
+            try {
+                JSONObject extra = new JSONObject();
+                extra.put("cardType", "gameDuel");
+                extra.put("duelId", message.get("duelId"));
+                Long id = imService.sendSystem(message.memberId(), ImMessage.MSG_CARD, message.get("text"), extra.toJSONString());
+                return id != null && id > 0;
+            } catch (Throwable t) {
+                log.error("[通知] 对决站内信异常 memberId={} reason={}", message.memberId(), t.getClass().getSimpleName());
+                return false;
+            }
+        }
         if (message.event() != NotifyEvent.TEAM_STATUS) return false;
         try {
             JSONObject extra = new JSONObject();
@@ -85,6 +100,29 @@ public class InAppNotifyChannel implements NotifyChannel {
                     message.memberId(), t.getClass().getSimpleName(), t);
             return false;
         }
+    }
+
+    /** MERCHANT-14:入驻审核结果写进消息列表,告诉商家结果和下一步。 */
+    private boolean sendMerchantReview(NotifyMessage message) {
+        try {
+            Long id = imService.sendSystem(message.memberId(), ImMessage.MSG_TEXT,
+                    merchantReviewText("1".equals(message.get("approved")), message.get("reason")), null);
+            return id != null && id > 0;
+        } catch (Throwable t) {
+            log.error("[通知] 商家入驻审核站内信异常 memberId={} reason={}",
+                    message.memberId(), t.getClass().getSimpleName());
+            return false;
+        }
+    }
+
+    static String merchantReviewText(boolean approved, String reason) {
+        if (approved) {
+            return "你的商家入驻申请已通过。下一步：在「我的店铺」里设置据点、小游戏和优惠券。";
+        }
+        String trimmed = reason == null ? "" : reason.trim();
+        if (trimmed.length() > 120) trimmed = trimmed.substring(0, 120);
+        return "你的商家入驻申请未通过。" + (trimmed.isEmpty() ? "" : "原因：" + trimmed + "。")
+                + "请完善资料后重新申请。";
     }
 
     /** 售后超时转平台:发一条系统文本消息,玩家在消息列表里能看到完整一句。 */

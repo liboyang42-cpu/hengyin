@@ -363,7 +363,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
             if (asrHandoff) refundDialogueFailure(memberId, bizType, reservation);
             if (!playerThemeDraft && !asrHandoff) refundQuota(memberId, bizType, reservation);
             throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
-                    "AI 服务配置缺失,请联系管理员(traceId=" + traceId + ")", e);
+                    "AI 服务配置缺失，请联系管理员(traceId=" + traceId + ")", e);
         }
         if (client == null)
         {
@@ -576,7 +576,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
         if (used > limit) {
             if(quotaRecovery!=null) quotaRecovery.retain(receipt,"RATE_LIMITED");
             throw new AiServiceException(AiServiceException.Reason.RATE_LIMITED,
-                    "今日AI次数已用完(" + limit + "/天),明天再来吧");
+                    "今日AI次数已用完(" + limit + "/天)，明天再来吧");
         }
         return reservation;
     }
@@ -639,7 +639,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
     }
 
     private static boolean isDialogue(String bizType) {
-        return "npc_chat".equals(bizType) || "npc_shop_chat".equals(bizType) || "merchant_npc_chat".equals(bizType);
+        return "npc_chat".equals(bizType) || "npc_shop_chat".equals(bizType) || "merchant_npc_chat".equals(bizType) || "npc_dialogue".equals(bizType);
     }
 
     private void refundDialogueFailure(Long memberId, String bizType, String reservation) {
@@ -670,7 +670,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
     {
         // npc_event 刻意不在此列:它是 cache-only(不调模型),且今天并不经本网关
         //  (ApiAiNpcController /event 直连 NpcEventService)。真要收编时再单独判。
-        if ("npc_chat".equals(bizType))
+        if ("npc_chat".equals(bizType) || "npc_dialogue".equals(bizType))
         {
             return RATE_GROUP_NPC;
         }

@@ -10,6 +10,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +21,8 @@ import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
 import com.chengyinhub.business.merchantgap.MerchantGapException;
 import com.chengyinhub.business.merchantgap.MerchantGapSupport;
+import com.chengyinhub.business.merchantplans.MerchantPlan;
+import com.chengyinhub.business.merchantplans.MerchantPlanService;
 import com.chengyinhub.business.merchantproof.MerchantWeeklyProof.Kind;
 import com.chengyinhub.business.merchantproof.MerchantWeeklyProof.Touch;
 
@@ -34,8 +39,12 @@ import com.chengyinhub.business.merchantproof.MerchantWeeklyProof.Touch;
  */
 @Service
 public class MerchantWeeklyProofService {
+    private static final Logger log = LoggerFactory.getLogger(MerchantWeeklyProofService.class);
     private final JdbcTemplate jdbc;
     private final IMerchantAccessService access;
+    /** S3a plans; absent (tests, or before the plans migration) means Free: the summary only, as today. */
+    @Autowired(required = false)
+    private MerchantPlanService plans;
 
     public MerchantWeeklyProofService(JdbcTemplate jdbc, IMerchantAccessService access) {
         this.jdbc = jdbc;
@@ -55,7 +64,22 @@ public class MerchantWeeklyProofService {
         for (Touch t : touches(owner, merchant, lookback, start)) earlier.add(t.memberId());
         Map<String, Object> out = MerchantWeeklyProof.compute(weekStart, week, earlier, hasNode(merchant));
         out.put("merchantId", merchant);
+        if (detailIncluded(merchant)) out.put("daily", MerchantWeeklyProof.daily(weekStart, week));
         return out;
+    }
+
+    /** T5: plan feature {@code weeklyProofDetail}. Free, a missing plan or an unreadable plan = summary only (today). */
+    boolean detailIncluded(long merchant) {
+        try {
+            return plans != null && Boolean.TRUE.equals(plans.feature(merchant, MerchantPlan.F_WEEKLY_PROOF_DETAIL));
+        } catch (Exception e) {
+            log.warn("shop {} plan unreadable; weekly proof summary only (Free)", merchant);
+            return false;
+        }
+    }
+
+    void plans(MerchantPlanService plans) {
+        this.plans = plans;
     }
 
     /** {@code weekStart} is optional ("yyyy-MM-dd", any day of the week); missing means this week. No future weeks. */

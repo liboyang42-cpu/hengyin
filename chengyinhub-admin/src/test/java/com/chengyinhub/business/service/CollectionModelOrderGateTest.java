@@ -128,11 +128,13 @@ class CollectionModelOrderGateTest {
                 new Facts(ProductKind.ACTIVITY_TICKET, false, SellerType.CLUB, 3L, "AUDITING", null));
     }
 
-    private void model(boolean ceiling) {
+    /** {@code on}: the S2 model flag (W7 MERCHANT-3: its own flag, no longer the money ceiling). */
+    private void model(boolean on) {
         PayoutSwitches rails = new PayoutSwitches(true, true, true, "1900000001", "wx_mini", "", 30, false, "none");
-        CollectionModelService model = new CollectionModelService(new MoneySwitchService(mock(MoneySwitchMapper.class), ceiling),
+        CollectionModelService model = new CollectionModelService(new MoneySwitchService(mock(MoneySwitchMapper.class), false),
                 rails, sellers, activityMapper, mock(ISettlementRuleService.class), mock(CollectionModelMapper.class),
                 "SPLIT", "SPLIT", "SPLIT");
+        model.setModelEnabled(on);
         ReflectionTestUtils.setField(service, "collectionModel", model);
     }
 

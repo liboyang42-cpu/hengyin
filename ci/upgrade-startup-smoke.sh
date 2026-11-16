@@ -424,7 +424,7 @@ if [ "${CHENGYIN_CI_POOL_RECOVERY:-false}" = true ]; then
   docker exec "$RUN_NAME-app" java /fixture/HealthProbe.java "$APP_PID" > "$OUT/pool-recovery-health.log"
   cat "$OUT/pool-recovery-health.log"
 fi
-test "$(docker exec "$RUN_NAME-app" curl --noproxy '*' -s -o /tmp/auth-response -w '%{http_code}' http://127.0.0.1:8080/api/city/nodes)" = 401
+test "$(docker exec "$RUN_NAME-app" curl --noproxy '*' -s -o /tmp/auth-response -w '%{http_code}' http://127.0.0.1:8080/api/city/nodes/favorites)" = 401
 test "$(docker exec "$RUN_NAME-app" curl --noproxy '*' -s -X POST -o /tmp/auth-response -w '%{http_code}' http://127.0.0.1:8080/api/official/events)" = 401
 docker exec "$RUN_NAME-redis" redis-cli --raw GET sys_config:startup.synthetic.probe > "$OUT/config-cache"
 grep -q 'cache-roundtrip' "$OUT/config-cache"

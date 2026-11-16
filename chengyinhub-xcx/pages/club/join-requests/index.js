@@ -160,7 +160,7 @@ Page({
   askRejectReason(memberId, name) {
     const that = this
     modal.show({
-      title: '拒绝「' + (name || '城瘾玩家') + '」的入会申请?',
+      title: '拒绝「' + (name || '城瘾玩家') + '」的入会申请？',
       editable: true,
       // PR10 F-L3-09:500 字原因用多行框,不再挤在单行 input 里
       multiline: true,

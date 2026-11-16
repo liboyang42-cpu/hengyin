@@ -405,6 +405,7 @@ const RAW = [
   ['C60', 'C60-coop-finance-content.png', '/pages/coop/finance/index', 'merchant', 'normal', { loaded: true, loadErr: false, statItems: [{ label: '已入账分润', value: '¥128.00' }], myIncomeTotal: '128.00', canWithdraw: true, pendingCount: 1, topics: [{ topicId: 1, topicName: '外滩夜行', settled: true, incomeText: '128.00', incomeDisplay: '¥128.00', merchantStatus: '已打款', statusText: '已入账', badgeVariant: 'success' }] }, undefined, { selector: '.stat-grid, .fc-card', min: 2 }, 'identity+setData', 'P0', '', '已入账金额卡通栏；个人入账状态、主题已结算徽章和商家打款状态分开呈现', '#merchantProfit'],
   ['C61', 'C61-merchant-verify-records.png', '/pages/merchant/verify-records/index', 'merchant', 'normal', { pageState: 'ready', bucket: 'all', groups: [{ key: '2026-10-18', label: '10月18日', items: [{ id: 1, nameText: '外滩夜行 · 成人票', statusText: '已核销', statusTone: 'positive', timeText: '19:42', methodText: '扫码核销', registrationText: '报名 #1024' }] }] }, undefined, { selector: '.vrl-row', min: 1 }, 'setData', 'P1', '', 'BL-76 核销记录(只读):按日分组,状态与核销方式同排'],
   ['C62', 'C62-merchant-crm-campaigns.png', '/pages/merchant/crm-campaigns/index', 'merchant', 'normal', { pageState: 'ready', items: [{ id: 3, titleText: '会员回访 · 十月', statusText: '已完成', statusTone: 'positive', timeText: '10月16日', channelText: '订阅消息', summaryText: '送达 42 / 目标 45' }], detailOpen: false }, undefined, { selector: '.ccl-row', min: 1 }, 'setData', 'P1', '', 'BL-100 触达记录(只读):任务列表与送达概况'],
+  ['C63', 'C63-merchant-bundle-reservations.png', '/pages/merchant/bundle-reservations/index', 'merchant', 'normal', { pageState: 'ready', rows: [{ id: '7', timeText: '11月16日 19:30', status: 'BOOKED', statusText: '待到店', canNoShow: false }] }, undefined, { selector: '.bres-row', min: 1 }, 'setData', 'P1', '', '套票到店预约列表'],
   // 2026-08-18 并入 master #738 的双向覆盖率体检时补:本页是这条线新加的(俱乐部自报四类工时+证据),
   //   app.json 里有、矩阵里一行都没有 ⇒ 全量复核会静默漏拍它。断言取页面自己的 .cer-card,
   //   不用恒真的 view —— 空壳也能有 view,有卡片才说明这一页真渲染出来了。
@@ -691,10 +692,10 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-11-12 club-payout-binding:新增 F315 个人收款页(missing-param 一行),total 366→367、P1 217→218、actionable P1 210→211 / total 342→343、F 112→113、real-data 59→60。
 // 2026-11-13 pass-mini:新增 F316 通行证订单详情页(missing-param 一行),total 367→368、P1 218→219、actionable P1 211→212 / total 343→344、F 113→114、real-data 60→61。
 const STATS = {
-  "total": 368,
+  "total": 369,
   "byPriority": {
     "P0": 139,
-    "P1": 219,
+    "P1": 220,
     "P2": 10
   },
   "blockedByPriority": {
@@ -704,21 +705,21 @@ const STATS = {
   },
   "actionable": {
     "P0": 130,
-    "P1": 212,
+    "P1": 213,
     "P2": 2,
-    "total": 344
+    "total": 345
   },
   "blocked": 24,
   "domains": {
     "A": 48,
     "B": 72,
-    "C": 56,
+    "C": 57,
     "D": 52,
     "E": 26,
     "F": 114
   },
   "control": {
-    "setData": 185,
+    "setData": 186,
     "identity+setData": 115,
     "real-data": 61,
     "real-device": 7

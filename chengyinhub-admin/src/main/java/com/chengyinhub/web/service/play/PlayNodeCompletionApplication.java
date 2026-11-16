@@ -292,6 +292,21 @@ public class PlayNodeCompletionApplication {
             String routeActionId, Integer expectedRouteVersion, String trustedOutcomeCode,
             Long approvedProgressId, PlayOriginalRun originalRun)
     {
+        return advanceProgress(memberId, node, actId, picUrl, puzzleScore, completionMode, rewardPolicy,
+                routeActionId, expectedRouteVersion, trustedOutcomeCode, approvedProgressId, originalRun, false);
+    }
+
+    /**
+     * @param remoteCompletion GAME-2:调用方判定这次完成不在这一站附近(且开关为安全值),
+     *                         rewardPolicy 已按此降为 XP_BADGE_ONLY。首次完成时在进度行上记一笔,
+     *                         通关时据此把通关奖同样降为探索值与徽章。
+     */
+    public Map<String, Object> advanceProgress(Long memberId, CmsTopicNode node, Long actId, String picUrl,
+            Integer puzzleScore, String completionMode, RewardPolicy rewardPolicy,
+            String routeActionId, Integer expectedRouteVersion, String trustedOutcomeCode,
+            Long approvedProgressId, PlayOriginalRun originalRun, boolean remoteCompletion)
+    {
+        boolean remoteCapped = remoteCompletion && rewardPolicy == RewardPolicy.XP_BADGE_ONLY;
         com.chengyinhub.business.domain.TopicRouteSession originalSession = originalRun == null ? null : originalRun.session();
         String progressInstance = originalRun == null ? "default" : originalRun.progressInstance();
         // 共享局的任务结算由其权威引擎处理，不能借普通节点完成创建或推进个人局。
@@ -461,7 +476,8 @@ public class PlayNodeCompletionApplication {
             if (dailyLoopRecorder != null) dailyLoopRecorder.afterNodePlayed(memberId);
             // M6 随机掉落:首次完成掷骰(内部 uk 幂等,重放/并发不多掉);命中即入账(granting)
             // ③ 整块跳过:dropType=3 会再发一张真金券,dropType=1 的翻倍探索值也不在 B5 的「纯体验」里。
-            if (shopDay || rewardPolicy == RewardPolicy.XP_BADGE_ONLY) dropResult = null;
+            // GAME-3:拍照完成同 C5 不发券的口径,掉落(type 3 就是一张券)也不掷。
+            if (shopDay || rewardPolicy == RewardPolicy.XP_BADGE_ONLY || StringUtils.isNotBlank(picUrl)) dropResult = null;
             else dropResult = rewardDropService.rollDrop(memberId, node.getTopicId(), node.getId(), actId, earnedXp > 0 ? earnedXp : 12L);
             if (dropResult != null) {
                 Integer dt = (Integer) dropResult.get("dropType");
@@ -475,7 +491,12 @@ public class PlayNodeCompletionApplication {
             }
             // 名次奖牌:放发奖链最后一行。抢不到(档位被占 / 三档满 / 短暂写失败 / 表尚未建)都是正常结果,不影响打卡;
             // 行锁到底持有多久、什么时候才需要改,见 claimNodeMedal 的方法注释(已量化 + 写了触发阈值)。
-            medalRank = claimNodeMedal(node.getId(), memberId, actId, node.getTopicId(), p.getId());
+            // GAME-2(业主 2026-11-16「进度免费,奖品要到场」):名次奖牌与积分/券/掉落同一道闸 ——
+            // 只有 FULL 才抢名次;③ 自由收集的到店事实由店内扫码证明,维持原口径。
+            if (rewardPolicy == RewardPolicy.FULL || shopDay) {
+                medalRank = claimNodeMedal(node.getId(), memberId, actId, node.getTopicId(), p.getId());
+            }
+            if (remoteCapped && p.getId() != null) playerNodeProgressService.markRemoteCompletion(p.getId());
         }
 
         // 进度统计 + 通关判定
@@ -524,6 +545,12 @@ public class PlayNodeCompletionApplication {
                     && (rewardCapped || (advancedGameRuntimeService != null
                         && advancedGameRuntimeService.anyNodeRewardCappedToXpBadge(memberId, actId,
                                 node.getTopicId(), doneNodeIds)));
+            // GAME-2:本局任一站不在现场完成 ⇒ 通关奖同样只发探索值、徽章与通关勋章。
+            if (!shopDay && (remoteCapped || (topicRewardPolicy == RewardPolicy.FULL
+                    && playerNodeProgressService.countRemoteCompletions(memberId, actId == null ? 0L : actId,
+                            node.getTopicId(), progressInstance) > 0))) {
+                topicRewardCapped = true;
+            }
             RewardPolicy completionPolicy = topicRewardCapped ? RewardPolicy.XP_BADGE_ONLY : topicRewardPolicy;
             com.chengyinhub.business.domain.vo.TopicCompletionAwardVO award = completionPolicy == RewardPolicy.FULL
                     ? topicCompletionAwardService.grantOnce(memberId, node.getTopicId(), actId, null)
@@ -545,7 +572,9 @@ public class PlayNodeCompletionApplication {
         data.put("nodeId", node.getId());
         data.put("firstTime", firstTime);
         // 界面据此说清「这一站只记探索值与徽章」,不自行补发或换旧路径领奖
-        if (rewardCapped) data.put("rewardCeiling", RewardPolicy.XP_BADGE_ONLY.name());
+        if (rewardCapped || remoteCapped) data.put("rewardCeiling", RewardPolicy.XP_BADGE_ONLY.name());
+        // GAME-2:说清是「不在这一站附近」封的顶(界面据此给 ux.verdict.earned.remote 的说明)
+        if (remoteCapped) data.put("rewardCeilingReason", com.chengyinhub.business.service.support.RewardPresencePolicy.REASON_REMOTE);
         if (topicRewardCapped) data.put("topicRewardCeiling", RewardPolicy.XP_BADGE_ONLY.name());
         data.put("done", done);
         data.put("total", total);

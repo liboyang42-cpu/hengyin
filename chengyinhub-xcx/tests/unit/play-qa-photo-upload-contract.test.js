@@ -99,6 +99,7 @@ function loadPage() {
   delete require.cache[require.resolve(PLAY_PAGE)]
   require(PLAY_PAGE)
   const page = Object.assign({}, pageConfig, { data: JSON.parse(JSON.stringify(pageConfig.data)) })
+  page._routeState = { sessionId: '901' }
   page.setData = (patch, cb) => {
     Object.keys(patch || {}).forEach((key) => setByPath(page.data, key, patch[key]))
     if (cb) cb()

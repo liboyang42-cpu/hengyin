@@ -686,7 +686,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         }
         // 幂等闸:已取消不得重复取消,否则会对已退款的报名再走一遍退款链路
         if (!replayAllowed && act.getCancelTime() != null) {
-            throw new ServiceException("活动已取消,请勿重复操作");
+            throw new ServiceException("活动已取消，请勿重复操作");
         }
 
         return act;
@@ -848,7 +848,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
                 // 上面已在锁内判过「无已核销」,不该走到转人工分支;真走到了说明快照与锁内事实不一致
                 if (!refundResolvingOrder(orderSnapshot.payer, orderSnapshot.payer.getTicketName(),
                         "主办方取消活动,全额退款", actorMemberId, true)) {
-                    throw new ServiceException("订单核销状态已变化,请刷新后重试", HttpStatus.CONFLICT);
+                    throw new ServiceException("订单核销状态已变化，请刷新后重试", HttpStatus.CONFLICT);
                 }
                 refundedOrders++;
             }
@@ -1716,7 +1716,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
                 throw new RuntimeException("同单存在已核销的票,不能整单退");
             }
             if (payer != null) {
-                throw new ServiceException("整单退款状态已变化,请刷新后重试", HttpStatus.CONFLICT);
+                throw new ServiceException("整单退款状态已变化，请刷新后重试", HttpStatus.CONFLICT);
             }
         }
         // 只有 claim winner 才能通过库存回补闸；后续任意异常仍由外层事务一起回滚。
@@ -1754,11 +1754,11 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         if (Long.valueOf(1L).equals(seed.getOwnerType())) {
             CmsTopic topic = cmsTopicMapper.selectCmsTopicById(seed.getOwnerId());
             if (topic == null || topic.getId() == null || topic.getMemberId() == null) {
-                throw new ServiceException("主题不存在,请人工核对", HttpStatus.CONFLICT);
+                throw new ServiceException("主题不存在，请人工核对", HttpStatus.CONFLICT);
             }
             PaidOrderSnapshot snapshot = inspectPaidOrderForCancellation(seed, 1L, topic.getId(), paidIds);
             if (!snapshot.hasVerified || !snapshot.hasUnverified) {
-                throw new ServiceException("订单核销状态已变化,请刷新后重试", HttpStatus.CONFLICT);
+                throw new ServiceException("订单核销状态已变化，请刷新后重试", HttpStatus.CONFLICT);
             }
             recordTopicManualRefundCaseOnce(topic, actorMemberId, seed.getParentOrderNo(), snapshot);
             logger.warn("[退款转人工] 主题票整单部分核销,未核销成员已记人工退款工单 topicId={} parentOrderNo={} actorMemberId={}",
@@ -1766,15 +1766,15 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
             return;
         }
         if (!Long.valueOf(2L).equals(seed.getOwnerType())) {
-            throw new ServiceException("父订单归属不明,请人工核对", HttpStatus.CONFLICT);
+            throw new ServiceException("父订单归属不明，请人工核对", HttpStatus.CONFLICT);
         }
         com.chengyinhub.business.domain.CmsActivity act = cmsActivityMapper.selectCmsActivityById(seed.getOwnerId());
         if (act == null || act.getId() == null) {
-            throw new ServiceException("场次不存在,请人工核对", HttpStatus.CONFLICT);
+            throw new ServiceException("场次不存在，请人工核对", HttpStatus.CONFLICT);
         }
         PaidOrderSnapshot snapshot = inspectPaidOrderForCancellation(seed, 2L, act.getId(), paidIds);
         if (!snapshot.hasVerified || !snapshot.hasUnverified) {
-            throw new ServiceException("订单核销状态已变化,请刷新后重试", HttpStatus.CONFLICT);
+            throw new ServiceException("订单核销状态已变化，请刷新后重试", HttpStatus.CONFLICT);
         }
         recordManualRefundCaseOnce(act, actorMemberId, seed.getParentOrderNo(), snapshot);
         logger.warn("[退款转人工] 整单部分核销,未核销成员已记人工退款工单 activityId={} parentOrderNo={} actorMemberId={}",

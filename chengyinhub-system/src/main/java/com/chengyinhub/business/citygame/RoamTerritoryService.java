@@ -65,6 +65,8 @@ public class RoamTerritoryService {
         this.cityNotify = cityNotify;
     }
 
+    private CityMonopolyService monopoly;
+
     @Autowired
     public RoamTerritoryService(JdbcTemplate jdbc, CityGameMapper mapper,
                                 @Autowired(required = false) UgcSubmissionSafety submissionSafety) {
@@ -77,6 +79,28 @@ public class RoamTerritoryService {
         this.mapper = mapper;
         this.submissionSafety = submissionSafety;
         this.clock = clock;
+    }
+
+    /**
+     * City Monopoly numbers (CITY-MONOPOLY-SPEC). When present and {@code city.monopoly.enabled}, the legacy
+     * client-priced claim is closed and every visitor rent goes through the capped, anti-abuse rent engine.
+     */
+    @Autowired(required = false)
+    public void setMonopoly(CityMonopolyService monopoly) {
+        this.monopoly = monopoly;
+        if (monopoly != null) monopoly.setTerritories(this);
+    }
+
+    private boolean monopolyActive(String boardId) {
+        return monopoly != null && monopoly.enabled(boardId);
+    }
+
+    /**
+     * CITY-7 (owner decision 2026-11-16): City Monopoly pays 积分 only, so its boards say POINTS; classic territory keeps
+     * the non-cashable city coin ({@link #REVENUE_MODE}).
+     */
+    String revenueModeFor(String boardId) {
+        return monopolyActive(boardId) ? "POINTS" : REVENUE_MODE;
     }
 
     /** Plausibility evaluation outcome for GPS coordinates and speed jumps. */
@@ -213,7 +237,8 @@ public class RoamTerritoryService {
                                       String boardId, String regionId, String seasonId) {
         CityGameSupport.requireMember(memberId);
         if (!validCoord(lat, lng)) throw new CityGameException(400, "INVALID_COORDINATES", "无效的坐标");
-        int radius = radiusM == null || radiusM <= 0 ? 3000 : Math.min(radiusM, 50_000);
+        // CITY-12: a player read covers the walk around them, not a whole city.
+        int radius = radiusM == null || radiusM <= 0 ? 3000 : Math.min(radiusM, MAX_NEARBY_RADIUS_M);
         Map<String, Object> board = resolveBoard(boardId, regionId);
         String resolvedBoardId = board == null ? null : (String) board.get("boardId");
         String resolvedSeasonId = seasonId != null && !seasonId.isEmpty() ? seasonId
@@ -234,7 +259,9 @@ public class RoamTerritoryService {
                             + "t.territory_id AS territoryId, t.owner_member_id AS ownerMemberId, t.claim_photo_url AS claimPhotoUrl, "
                             + "t.checkin_toll_points AS checkinTollPoints, t.owner_revenue_points AS ownerRevenuePoints, "
                             + "t.checkin_count AS checkinCount, t.revenue_total_points AS revenueTotalPoints, t.status AS territoryStatus, "
-                            + "t.protected_until AS territoryProtectedUntil, m.nickname AS ownerNickname "
+                            + "t.protected_until AS territoryProtectedUntil, m.nickname AS ownerNickname, "
+                            + "t.rules_kind AS rulesKind, COALESCE(t.tier, pt.tier) AS tier, t.upgrade_level AS upgradeLevel, "
+                            + "t.decay_state AS decayState, COALESCE(t.district_id, pt.district_id) AS districtId "
                             + "FROM city_game_point pt "
                             + "JOIN city_game_board b ON b.board_id = pt.board_id "
                             + "LEFT JOIN city_game_property pr ON pr.board_id = pt.board_id AND pr.point_id = pt.point_id "
@@ -246,7 +273,7 @@ public class RoamTerritoryService {
                     resolvedBoardId, lat - dLat, lat + dLat, lng - dLng, lng + dLng);
             for (Map<String, Object> row : boardSpaces) {
                 if (row.get("poiId") instanceof Number) seenPoiIds.add(((Number) row.get("poiId")).longValue());
-                items.add(wireSpaceItem(row, lat, lng, now));
+                items.add(wireSpaceItem(row, lat, lng, now, memberId));
             }
         }
 
@@ -257,7 +284,9 @@ public class RoamTerritoryService {
                         + "t.point_id AS pointId, t.owner_member_id AS ownerMemberId, t.claim_photo_url AS claimPhotoUrl, "
                         + "t.checkin_toll_points AS checkinTollPoints, t.owner_revenue_points AS ownerRevenuePoints, "
                         + "t.checkin_count AS checkinCount, t.revenue_total_points AS revenueTotalPoints, t.status AS territoryStatus, "
-                        + "t.protected_until AS territoryProtectedUntil, m.nickname AS ownerNickname "
+                        + "t.protected_until AS territoryProtectedUntil, m.nickname AS ownerNickname, "
+                        + "t.rules_kind AS rulesKind, t.tier AS tier, t.upgrade_level AS upgradeLevel, "
+                        + "t.decay_state AS decayState, t.district_id AS districtId "
                         + "FROM roam_poi poi "
                         + "LEFT JOIN roam_territory t ON t.poi_id = poi.id AND t.status = 'ACTIVE' "
                         + "LEFT JOIN ums_member m ON m.id = t.owner_member_id "
@@ -267,20 +296,23 @@ public class RoamTerritoryService {
         for (Map<String, Object> row : roamPois) {
             Long pid = row.get("poiId") instanceof Number ? ((Number) row.get("poiId")).longValue() : null;
             if (pid != null && seenPoiIds.contains(pid)) continue;
-            items.add(wireSpaceItem(row, lat, lng, now));
+            items.add(wireSpaceItem(row, lat, lng, now, memberId));
         }
 
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("boardId", resolvedBoardId);
         out.put("regionId", board == null ? regionId : board.get("regionId"));
         out.put("seasonId", resolvedSeasonId);
-        out.put("revenueMode", REVENUE_MODE);
+        out.put("revenueMode", revenueModeFor(resolvedBoardId));
         out.put("items", items);
         out.put("territories", items);
         return out;
     }
 
-    private Map<String, Object> wireSpaceItem(Map<String, Object> r, double curLat, double curLng, long now) {
+    /** CITY-12: largest radius a player's nearby read may cover. */
+    static final int MAX_NEARBY_RADIUS_M = 5000;
+
+    private Map<String, Object> wireSpaceItem(Map<String, Object> r, double curLat, double curLng, long now, long viewer) {
         double pLat = dbl(r.get("latitude"));
         double pLng = dbl(r.get("longitude"));
         double distM = GeoDistanceUtils.haversineMeters(curLat, curLng, pLat, pLng);
@@ -298,19 +330,32 @@ public class RoamTerritoryService {
         item.put("latitude", pLat);
         item.put("longitude", pLng);
         item.put("radiusM", r.get("poiRadiusM") instanceof Number ? ((Number) r.get("poiRadiusM")).intValue() : DEFAULT_RADIUS_M);
-        item.put("ownerMemberId", r.get("ownerMemberId"));
-        item.put("ownerNickname", r.get("ownerNickname"));
+        // CITY-12: other players are visible only by opt-in. Another holder is shown masked, like the City Monopoly
+        // reads; the keys stay (null) for older clients. The viewer sees their own place in full.
+        Long owner = r.get("ownerMemberId") instanceof Number ? ((Number) r.get("ownerMemberId")).longValue() : null;
+        boolean mine = owner != null && owner == viewer;
+        item.put("ownerMemberId", mine ? owner : null);
+        item.put("ownerNickname", mine ? r.get("ownerNickname") : null);
+        item.put("holderMasked", owner == null ? null : CityMonopolyService.mask(owner));
+        item.put("isMine", mine);
         item.put("holderTeamId", r.get("holderTeamId"));
         item.put("claimed", r.get("territoryId") != null || r.get("ownerMemberId") != null);
         item.put("status", r.get("territoryId") != null ? (isProtected ? "PROTECTED" : "CLAIMED") : (r.get("propStatus") != null ? r.get("propStatus") : "UNCLAIMED"));
         item.put("protectedUntilMillis", protMillis);
         item.put("isProtected", isProtected);
-        item.put("claimPhotoUrl", r.get("claimPhotoUrl"));
+        item.put("claimPhotoUrl", mine ? r.get("claimPhotoUrl") : null);
         item.put("checkinTollPoints", r.get("checkinTollPoints") instanceof Number ? ((Number) r.get("checkinTollPoints")).longValue() : DEFAULT_TOLL_POINTS);
         item.put("ownerRevenuePoints", r.get("ownerRevenuePoints") instanceof Number ? ((Number) r.get("ownerRevenuePoints")).longValue() : DEFAULT_REVENUE_POINTS);
         item.put("checkinCount", r.get("checkinCount") instanceof Number ? ((Number) r.get("checkinCount")).longValue() : 0L);
         item.put("revenueTotalPoints", r.get("revenueTotalPoints") instanceof Number ? ((Number) r.get("revenueTotalPoints")).longValue() : 0L);
         item.put("distanceM", Math.round(distM * 10.0) / 10.0);
+        // CITY-1: which claim flow the app must run for this place, plus the City Monopoly facts it shows.
+        item.put("claimFlow", monopolyActive((String) r.get("boardId")) ? "MONOPOLY" : "LEGACY");
+        item.put("rulesKind", r.get("rulesKind"));
+        item.put("tier", r.get("tier") instanceof Number ? ((Number) r.get("tier")).intValue() : null);
+        item.put("upgradeLevel", r.get("upgradeLevel") instanceof Number ? ((Number) r.get("upgradeLevel")).intValue() : null);
+        item.put("decayState", r.get("decayState"));
+        item.put("districtId", r.get("districtId"));
         return item;
     }
 
@@ -322,6 +367,11 @@ public class RoamTerritoryService {
     public Map<String, Object> claim(Long memberId, Map<String, Object> body) {
         CityGameSupport.requireMember(memberId);
         if (body == null) throw new CityGameException(400, "TERRITORY_INVALID", "请求体不能为空");
+        if (monopolyActive(str(body, "boardId"))) {
+            // Legacy claim let the client set its own toll/revenue; City Monopoly claims are quoted and evidence-checked.
+            throw new CityGameException(409, "CLAIM_USE_MONOPOLY", "请使用城市大富翁占领流程",
+                    Map.of("quotePath", "/api/city-game/territory/claim/quote", "commandPath", "/api/city-game/territory/claim/command"));
+        }
         String requestId = str(body, "requestId");
         String photoUrl = str(body, "photoUrl");
         Double lat = dbl(body.get("lat"));
@@ -395,8 +445,8 @@ public class RoamTerritoryService {
         }
 
         if (targetLat == null || targetLng == null) {
-            targetLat = lat;
-            targetLng = lng;
+            // MED-S8:没有 POI / 棋盘格目标时不再把玩家自己的定位(可能是住址)存成领地坐标。
+            throw new CityGameException(400, "TERRITORY_TARGET_REQUIRED", "请选择要占领的地点");
         }
         if (title == null || title.trim().isEmpty()) title = "漫游领地";
         if (title.length() > 160) title = title.substring(0, 160);
@@ -485,14 +535,32 @@ public class RoamTerritoryService {
         return out;
     }
 
-    private void syncBoardPropertyOnClaim(String boardId, String propertyId, String pointId, long memberId,
+    void syncBoardPropertyOnClaim(String boardId, String propertyId, String pointId, long memberId,
                                           String territoryId, String photoUrl, Timestamp protectedUntilTs) {
+        projectBoardHolder(boardId, propertyId, pointId, memberId, territoryId, photoUrl, protectedUntilTs, null);
+    }
+
+    /**
+     * CITY-10: writes the holder's team onto the board property. A team holding that is not the projection of the
+     * former City Monopoly holder ({@code formerHolder}) is left alone and logged as BOARD_HELD_BY_TEAM.
+     */
+    void projectBoardHolder(String boardId, String propertyId, String pointId, long memberId,
+                            String territoryId, String photoUrl, Timestamp protectedUntilTs, Long formerHolder) {
         Map<String, Object> board = mapper.selectBoardForUpdate(boardId);
         if (board == null || !"OPEN".equals(board.get("lifecycle"))) return;
         Map<String, Object> prop = mapper.selectPropertyForUpdate(boardId, propertyId);
         if (prop == null) return;
         Map<String, Object> participation = mapper.selectParticipation(boardId, memberId);
         String teamId = participation == null ? null : (String) participation.get("teamId");
+        // CITY-10: the board row is a projection of who holds the place. Never overwrite another team's holding.
+        Object currentTeam = prop.get("holderTeamId");
+        Map<String, Object> former = formerHolder == null ? null : mapper.selectParticipation(boardId, formerHolder);
+        boolean projectionOfFormer = former != null && currentTeam != null && currentTeam.equals(former.get("teamId"));
+        if (currentTeam != null && !currentTeam.equals(teamId) && !projectionOfFormer) {
+            org.slf4j.LoggerFactory.getLogger(RoamTerritoryService.class).warn(
+                    "event=BOARD_HELD_BY_TEAM board={} property={} team={} territory={}", boardId, propertyId, currentTeam, territoryId);
+            return;
+        }
         long expectedVer = ((Number) prop.get("stateVersion")).longValue();
         mapper.updateProperty(boardId, propertyId, expectedVer, "PROTECTED", teamId,
                 new Date(protectedUntilTs.getTime() - 1000L), new Date(protectedUntilTs.getTime()), null);
@@ -527,9 +595,8 @@ public class RoamTerritoryService {
         List<Map<String, Object>> existing = jdbc.queryForList(
                 "SELECT * FROM roam_territory_checkin WHERE member_id = ? AND request_id = ? LIMIT 1", memberId, requestId);
         if (!existing.isEmpty()) {
-            Map<String, Object> out = new LinkedHashMap<>(existing.get(0));
-            out.put("idempotentReplay", true);
-            return out;
+            // CITY-4: a replay answers in the same camelCase shape as the first answer.
+            return checkinReplay(existing.get(0), memberId);
         }
 
         long now = clock.getAsLong();
@@ -554,6 +621,33 @@ public class RoamTerritoryService {
 
         long ownerId = ((Number) territory.get("owner_member_id")).longValue();
         boolean selfVisit = ownerId == memberId;
+        if (monopolyActive((String) territory.get("board_id"))) {
+            Map<String, Object> rent = monopoly.onVisit(memberId, territory, lat, lng, accuracyM, "TERR_CHECKIN:" + requestId, str(body, "deviceKey"));
+            long granted = rent.get("yield") instanceof Number ? ((Number) rent.get("yield")).longValue() : 0L;
+            String checkinId = UUID.randomUUID().toString();
+            jdbc.update("INSERT INTO roam_territory_checkin(checkin_id, territory_id, member_id, owner_member_id, request_id, checkin_kind, "
+                            + "latitude, longitude, accuracy_m, distance_m, photo_url, points_spent, owner_revenue_points, revenue_mode, plausibility_status, plausibility_reason, implied_speed_mps, create_time) "
+                            + "VALUES (?,?,?,?,?,'VISIT',?,?,?,?,?,0,?,'POINTS',?,?,?,?)",
+                    checkinId, territoryId, memberId, ownerId, requestId, lat, lng, accuracyM, distM, photoUrl, granted,
+                    plausibility.status, plausibility.reasonCode, plausibility.impliedSpeedMps, new Timestamp(now));
+            Map<String, Object> out = new LinkedHashMap<>();
+            out.put("idempotentReplay", false);
+            out.put("checkinId", checkinId);
+            out.put("territoryId", territoryId);
+            out.put("ownerMemberId", ownerId);
+            out.put("selfVisit", selfVisit);
+            out.put("cooldownActive", false);
+            out.put("visitorPointsSpent", 0L);
+            out.put("ownerRevenuePoints", granted);
+            out.put("revenueMode", "POINTS");
+            out.put("rentState", rent.get("yieldEventId") != null ? "PENDING" : "NONE");
+            out.put("ineligibleReason", rent.get("ineligibleReason"));
+            out.put("visitorPoints", rent.get("visitorPoints") instanceof Number ? ((Number) rent.get("visitorPoints")).longValue() : 0L);
+            out.put("territory", rent);
+            out.put("plausibilityStatus", plausibility.status);
+            out.put("distanceM", Math.round(distM * 10.0) / 10.0);
+            return out;
+        }
         boolean cooldownHit = !selfVisit && hasRecentRevenueCheckin(territoryId, memberId, now);
         long tollPoints = 0L;
         long ownerRevenue = 0L;
@@ -610,6 +704,14 @@ public class RoamTerritoryService {
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> rewardExternalCheckin(long visitorMemberId, Long poiId, String boardId, String pointId,
                                                      Double lat, Double lng, String sourceKey, String checkinKind) {
+        return rewardExternalCheckin(visitorMemberId, poiId, boardId, pointId, lat, lng, null, null, sourceKey, checkinKind);
+    }
+
+    /** Same hook with the client's horizontal accuracy and device key (alt-account rule); see {@link CityMonopolyService#onVisit}. */
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> rewardExternalCheckin(long visitorMemberId, Long poiId, String boardId, String pointId,
+                                                     Double lat, Double lng, Double accuracyM, String deviceKey,
+                                                     String sourceKey, String checkinKind) {
         if (visitorMemberId <= 0 || sourceKey == null || sourceKey.isEmpty()) return Map.of("credited", false);
         List<Map<String, Object>> dup = jdbc.queryForList(
                 "SELECT checkin_id AS checkinId, owner_revenue_points AS ownerRevenuePoints FROM roam_territory_checkin WHERE member_id = ? AND request_id = ? LIMIT 1",
@@ -638,6 +740,32 @@ public class RoamTerritoryService {
         long ownerId = ((Number) territory.get("owner_member_id")).longValue();
         String territoryId = (String) territory.get("territory_id");
         long now = clock.getAsLong();
+        if (monopolyActive((String) territory.get("board_id"))) {
+            boolean staffVerified = "CITY_ARRIVAL".equals(checkinKind) && lat == null && lng == null;
+            // A staff-confirmed CITY arrival is in-store evidence: it stands in for the GPS fix.
+            double useLat = staffVerified ? dbl(territory.get("latitude")) : (lat == null ? Double.NaN : lat);
+            double useLng = staffVerified ? dbl(territory.get("longitude")) : (lng == null ? Double.NaN : lng);
+            Double acc = staffVerified ? Double.valueOf(0.0) : accuracyM;
+            Map<String, Object> rent = monopoly.onVisit(visitorMemberId, territory, Double.isNaN(useLat) ? null : useLat,
+                    Double.isNaN(useLng) ? null : useLng, acc, sourceKey, deviceKey);
+            long granted = rent.get("yield") instanceof Number ? ((Number) rent.get("yield")).longValue() : 0L;
+            boolean recorded = rent.get("yieldEventId") != null;
+            if (recorded) {
+                jdbc.update("INSERT INTO roam_territory_checkin(checkin_id, territory_id, member_id, owner_member_id, request_id, checkin_kind, "
+                                + "latitude, longitude, accuracy_m, distance_m, photo_url, points_spent, owner_revenue_points, revenue_mode, plausibility_status, create_time) "
+                                + "VALUES (?,?,?,?,?,?,?,?,?,?,NULL,0,?,'POINTS','PASS',?)",
+                        UUID.randomUUID().toString(), territoryId, visitorMemberId, ownerId, sourceKey, checkinKind,
+                        Double.isNaN(useLat) ? dbl(territory.get("latitude")) : useLat, Double.isNaN(useLng) ? dbl(territory.get("longitude")) : useLng,
+                        acc, 0.0, granted, new Timestamp(now));
+            }
+            Map<String, Object> out = new LinkedHashMap<>();
+            out.put("credited", recorded);
+            out.put("territoryId", territoryId);
+            out.put("ownerRevenuePoints", granted);
+            out.put("revenueMode", "POINTS");
+            out.put("territory", rent);
+            return out;
+        }
         if (ownerId == visitorMemberId || hasRecentRevenueCheckin(territoryId, visitorMemberId, now)) {
             return Map.of("credited", false, "territoryId", territoryId, "reason", ownerId == visitorMemberId ? "SELF_VISIT" : "COOLDOWN");
         }
@@ -664,6 +792,13 @@ public class RoamTerritoryService {
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> rewardExternalCheckinByCoords(long visitorMemberId, Double poiLat, Double poiLng,
                                                              Double curLat, Double curLng, String sourceKey) {
+        return rewardExternalCheckinByCoords(visitorMemberId, poiLat, poiLng, curLat, curLng, null, null, sourceKey);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> rewardExternalCheckinByCoords(long visitorMemberId, Double poiLat, Double poiLng,
+                                                             Double curLat, Double curLng, Double accuracyM, String deviceKey,
+                                                             String sourceKey) {
         if (visitorMemberId <= 0 || !validCoord(poiLat, poiLng)) return Map.of("credited", false);
         double dLat = 200.0 / 111320.0;
         double dLng = 200.0 / (111320.0 * Math.max(0.2, Math.cos(Math.toRadians(poiLat))));
@@ -685,10 +820,52 @@ public class RoamTerritoryService {
         Map<String, Object> row = jdbc.queryForMap("SELECT * FROM roam_territory WHERE territory_id = ?", matchedId);
         return rewardExternalCheckin(visitorMemberId,
                 row.get("poi_id") instanceof Number ? ((Number) row.get("poi_id")).longValue() : null,
-                (String) row.get("board_id"), (String) row.get("point_id"), curLat, curLng, sourceKey, "ROAM_CHECKIN");
+                (String) row.get("board_id"), (String) row.get("point_id"), curLat, curLng, accuracyM, deviceKey, sourceKey, "ROAM_CHECKIN");
     }
 
-    /** Season/board leaderboard ranking territory owners by total points revenue and holdings. */
+    /**
+     * CITY-12: the player leaderboard. Every holder except the viewer is masked (no real id or nickname); the viewer's own
+     * rows say {@code isMine}. The admin console keeps {@link #leaderboard(String, String, String, Integer)}.
+     */
+    public Map<String, Object> leaderboard(Long viewer, String boardId, String regionId, String seasonId, Integer limit) {
+        Map<String, Object> raw = leaderboard(boardId, regionId, seasonId, limit);
+        long me = viewer == null ? 0L : viewer;
+        Map<String, Object> out = new LinkedHashMap<>(raw);
+        for (String key : List.of("leaders", "topTerritories")) {
+            List<Map<String, Object>> masked = new ArrayList<>();
+            Object rows = raw.get(key);
+            if (rows instanceof List<?> list) {
+                for (Object o : list) {
+                    if (!(o instanceof Map<?, ?> m)) continue;
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    for (Map.Entry<?, ?> e : m.entrySet()) row.put(String.valueOf(e.getKey()), e.getValue());
+                    // Leaders keep a distinct number (their rank) so older clients that require the key still decode.
+                    maskHolder(row, me, "leaders".equals(key) ? masked.size() + 1L : 0L);
+                    masked.add(row);
+                }
+            }
+            out.put(key, masked);
+        }
+        return out;
+    }
+
+    /**
+     * Masks another holder on a leaderboard row. {@code ownerMemberId} and {@code ownerNickname} stay present (older
+     * clients decode them as required): the id becomes {@code substituteId} (rank, or 0), the nickname the masked name.
+     */
+    static void maskHolder(Map<String, Object> row, long viewer, long substituteId) {
+        Long owner = row.get("ownerMemberId") instanceof Number ? ((Number) row.get("ownerMemberId")).longValue() : null;
+        boolean mine = owner != null && viewer > 0 && owner == viewer;
+        String masked = owner == null ? null : CityMonopolyService.mask(owner);
+        row.put("holderMasked", masked);
+        row.put("isMine", mine);
+        if (!mine) {
+            row.put("ownerMemberId", substituteId);
+            row.put("ownerNickname", masked);
+        }
+    }
+
+    /** Season/board leaderboard ranking territory owners by total points revenue and holdings (admin console). */
     public Map<String, Object> leaderboard(String boardId, String regionId, String seasonId, Integer limit) {
         int capped = limit == null ? 20 : Math.max(1, Math.min(limit, 100));
         Map<String, Object> board = resolveBoard(boardId, regionId);
@@ -724,7 +901,7 @@ public class RoamTerritoryService {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("boardId", useBoardId);
         out.put("seasonId", useSeasonId);
-        out.put("revenueMode", REVENUE_MODE);
+        out.put("revenueMode", revenueModeFor(useBoardId));
         out.put("leaders", leaders);
         out.put("topTerritories", topTerritories);
         return out;
@@ -858,6 +1035,28 @@ public class RoamTerritoryService {
             return rows.isEmpty() ? null : rows.get(0);
         }
         return findActiveTerritoryForUpdate(poiId, boardId, propertyId);
+    }
+
+    /** CITY-4: rebuilds the check-in answer from the stored row (same keys as the first answer). */
+    static Map<String, Object> checkinReplay(Map<String, Object> row, long memberId) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        long owner = row.get("owner_member_id") instanceof Number ? ((Number) row.get("owner_member_id")).longValue() : 0L;
+        boolean points = "POINTS".equals(row.get("revenue_mode"));
+        long granted = row.get("owner_revenue_points") instanceof Number ? ((Number) row.get("owner_revenue_points")).longValue() : 0L;
+        out.put("idempotentReplay", true);
+        out.put("checkinId", row.get("checkin_id"));
+        out.put("territoryId", row.get("territory_id"));
+        out.put("ownerMemberId", owner);
+        out.put("selfVisit", owner == memberId);
+        out.put("cooldownActive", false);
+        out.put("visitorPointsSpent", row.get("points_spent") instanceof Number ? ((Number) row.get("points_spent")).longValue() : 0L);
+        out.put("ownerRevenuePoints", granted);
+        out.put("revenueMode", row.get("revenue_mode"));
+        if (points) out.put("rentState", granted > 0 ? "PENDING" : "NONE");
+        out.put("plausibilityStatus", row.get("plausibility_status"));
+        Object d = row.get("distance_m");
+        out.put("distanceM", d instanceof Number ? Math.round(((Number) d).doubleValue() * 10.0) / 10.0 : null);
+        return out;
     }
 
     private boolean hasRecentRevenueCheckin(String territoryId, long visitorMemberId, long nowMillis) {

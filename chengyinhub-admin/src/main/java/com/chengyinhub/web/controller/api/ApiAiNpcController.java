@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.chengyinhub.business.domain.dto.ai.NpcChatReq;
+import com.chengyinhub.business.domain.dto.ai.NpcDialogueReq;
+import com.chengyinhub.business.service.INpcDialogueService;
 import com.chengyinhub.business.domain.vo.ai.NpcLineVO;
 import com.chengyinhub.business.domain.vo.ai.NpcProfileVO;
 import com.chengyinhub.business.service.impl.NpcChatDataService;
@@ -65,6 +67,9 @@ public class ApiAiNpcController extends BaseController
     private NpcChatService npcChatService;
 
     @Autowired
+    private INpcDialogueService npcDialogueService;
+
+    @Autowired
     private NpcChatDataService npcChatDataService;
 
     @Autowired
@@ -72,6 +77,12 @@ public class ApiAiNpcController extends BaseController
 
     @Autowired
     private ICmsTopicNodeService cmsTopicNodeService;
+
+    @Autowired
+    private com.chengyinhub.business.service.ICmsTopicService cmsTopicService;
+
+    @Autowired
+    private com.chengyinhub.business.service.ICmsActivityService cmsActivityService;
 
     @Autowired
     private ICmsMemberTemplateService cmsMemberTemplateService;
@@ -110,6 +121,8 @@ public class ApiAiNpcController extends BaseController
             }
             else if ("activity".equals(scope) && activityId != null)
             {
+                if (anonymousViewer() && !publicNpcActivity(activityId))
+                    return success(new NpcProfileList(Collections.emptyList()));
                 List<NpcProfileVO> vos = npcProfileService.resolveForActivity(activityId);
                 return success(new NpcProfileList(vos));
             }
@@ -119,7 +132,8 @@ public class ApiAiNpcController extends BaseController
                 // 节点还没过审就先把 NPC 文本放出去,等于绕过主办方那一段;② NPC 自身走已过审读闸。
                 CmsTopicNode node = cmsTopicNodeService.selectCmsTopicNodeById(nodeId);
                 boolean nodeVisible = node != null && node.getMerchantMemberId() != null
-                        && Integer.valueOf(1).equals(node.getNodeAuditStatus());
+                        && Integer.valueOf(1).equals(node.getNodeAuditStatus())
+                        && (!anonymousViewer() || publicNpcTopic(node.getTopicId()));
                 NpcProfileVO vo = nodeVisible ? npcProfileService.resolveForNode(nodeId) : null;
                 return success(new NpcProfileList(vo != null ? Collections.singletonList(vo) : Collections.<NpcProfileVO>emptyList()));
             }
@@ -131,6 +145,23 @@ public class ApiAiNpcController extends BaseController
                     scope, activityId, nodeId, e.getClass().getName());
             return success(new NpcProfileList(Collections.<NpcProfileVO>emptyList()));
         }
+    }
+
+    private boolean anonymousViewer() {
+        try { Long id = getAppUserId(); return id == null || id <= 0; }
+        catch (Exception ignored) { return true; }
+    }
+
+    private boolean publicNpcTopic(Long topicId) {
+        return topicId != null && topicId > 0 && cmsTopicService.selectCmsTopicDetailById(topicId, 0L) != null;
+    }
+
+    private boolean publicNpcActivity(Long activityId) {
+        com.chengyinhub.business.domain.CmsActivity activity = cmsActivityService.selectCmsActivityById(activityId);
+        return activity != null && Long.valueOf(1).equals(activity.getStatus())
+                && Long.valueOf(1).equals(activity.getPublishStatus())
+                && Integer.valueOf(0).equals(activity.getDelFlag()) && activity.getCancelTime() == null
+                && (activity.getTopicId() == null || activity.getTopicId() <= 0 || publicNpcTopic(activity.getTopicId()));
     }
 
     /**
@@ -466,6 +497,14 @@ public class ApiAiNpcController extends BaseController
      * 把 principal 强转 LoginUser,而 app 侧是 LoginAppUser,异常被 handleLog 吞掉,
      * sys_oper_log 零产出),挂了只会制造「已有审计」的假象;修切面属全仓治理任务。
      */
+    @Operation(summary = "主题AI NPC对话与状态效果")
+    @RateLimiter(time = 60, count = 30, limitType = LimitType.MEMBER)
+    @PostMapping("/dialogue")
+    public AjaxResult dialogue(@RequestBody NpcDialogueReq req)
+    {
+        return success(npcDialogueService.dialogue(getAppUserId(), req));
+    }
+
     @Operation(summary = "导出我的NPC聊天记录")
     @GetMapping("/chat/data/export")
     public AjaxResult exportChatData()

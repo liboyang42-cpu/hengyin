@@ -248,6 +248,8 @@ public final class AdvancedActionJudgement {
         // ===== Figma v5.1 新玩法 =====
         // 少查一个 = 纯该玩法的模板开局即可通关(打卡前置的 completeGate 恒放行)。
         // musicCorner / silentOrder 按 #857 拍板不判定通关;timeWindow 的闸在 start() 已把守。
+        // G2:作者显式打开 scored 时才计入通关(旧模板不受影响)。
+        if (!AmbientKitJudgement.ready(config, state)) return false;
         if (enabled(config.get("blindTaste"))
                 && !state.path("blindTaste").path("solved").asBoolean(false)) return false;
         if (enabled(config.get("diyName"))
@@ -356,6 +358,8 @@ public final class AdvancedActionJudgement {
      * 宁可不扣血也不误扣、更不给非判定动作凭空记成败。
      */
     ObjectNode serverGameplayDecision(String action, JsonNode config, ObjectNode state) {
+        if ("SKIP_SENSOR_STATION".equals(action) && skippedSensorSection(state) != null)
+            return objectMapper.createObjectNode().put("outcome", "SKIPPED");
         Boolean passed = judgedOutcome(action, state);
         if (passed == null) passed = passedFact(action, state);
         String kit = null;
@@ -767,9 +771,9 @@ public final class AdvancedActionJudgement {
                             .of(config.path(com.chengyinhub.business.service.support.AnswerPolicy.FIELD));
             correct = policy.isEmpty()
                     ? com.chengyinhub.business.service.support.AnswerPolicy
-                            .matchesLegacyAdvancedType(cfg.path("answerText").asText(""), input)
+                            .matchesAdvancedType(cfg.path("answerText").asText(""), input)
                     : policy.matchesAny(com.chengyinhub.business.service.support.AnswerPolicy
-                            .legacyAnswerTextCandidates(cfg.path("answerText").asText("")), input);
+                            .answerTextCandidates(cfg.path("answerText").asText("")), input);
             node.put("lastInput", input);
         } else if ("PICK".equals(mode)) {
             boolean judge = cfg.path("judge").asBoolean(true);
@@ -1176,6 +1180,13 @@ public final class AdvancedActionJudgement {
         String target = cfg.path("target").asText("");
         boolean same = cfg.path("caseSensitive").asBoolean(false)
                 ? typed.equals(target) : typed.equalsIgnoreCase(target);
+        // E-A5:目标与输入两边 trim + 共享归一器,只放宽(目标带尾空格、全角、NBSP 不再永远判错)。
+        // 区分大小写时只放宽空白/全角,不折叠大小写。
+        if (!same) {
+            same = cfg.path("caseSensitive").asBoolean(false)
+                    ? com.chengyinhub.business.service.support.AnswerNormalizer.equivalentKeepCase(target, typed)
+                    : com.chengyinhub.business.service.support.AnswerNormalizer.equivalent(target, typed);
+        }
         int attempts = node.path("attempts").asInt(0) + 1;
         node.put("attempts", attempts);
         node.remove("startedAtMs");     // 重来要重新开表,老表不留给下一次

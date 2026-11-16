@@ -137,6 +137,11 @@ withdrawal:
 # 故用 property 引用而非另配一把 —— 两把钥匙会让加密与解密对不上,数据永久打不开。
 # 缺本段则 chengyin.pii.key 取 @Value 默认空值,加密静默不启用且报名写入被 fail-closed 拒。
 chengyin:
+  # K2 discovery (MKT-10): "near you" order. false (default) = nearest first, today's pin order.
+  # true = closeness + the player's own interest profile + your club + new. No paid input exists in either order.
+  discovery:
+    scoring:
+      enabled: ${CHENGYIN_DISCOVERY_SCORING_ENABLED:false}
   pii:
     key: ${withdrawal.pii.key}
   # SEC-12:没有小程序 openid 的作者(手机号 / Apple 账号)的机审 = 腾讯云文本(TMS)与图片(IMS)审核。
@@ -163,9 +168,9 @@ chengyin:
     server-ceiling: ${CHENGYIN_MONEY_SWITCH_SERVER_CEILING:false}
   # T2 maps-backend 读缓存(docs/roadmap/maps-backend/RESULT.md):只缓存公共只读数据(漫游地点按图块、功能开关公共部分、
   # 首页轮播、分类),不缓存任何按会员或涉及资金的数据。对源表的写入提交后立即失效;TTL 只兜底库外改动。
-  # 置 CHENGYIN_READ_CACHE_ENABLED=false 即全部回到直读 MySQL(行为与改动前相同)。
+  # 默认关闭(CHENGYIN_READ_CACHE_ENABLED 未设即 false,全部直读 MySQL,行为与改动前相同);压测/灰度确认后再置 true。
   read-cache:
-    enabled: ${CHENGYIN_READ_CACHE_ENABLED:true}
+    enabled: ${CHENGYIN_READ_CACHE_ENABLED:false}
     ttl:
       poi-seconds: ${CHENGYIN_READ_CACHE_POI_TTL:60}
       features-seconds: ${CHENGYIN_READ_CACHE_FEATURES_TTL:30}
@@ -174,10 +179,13 @@ chengyin:
     poi:
       max-tiles: ${CHENGYIN_READ_CACHE_POI_MAX_TILES:64}
       tile-cap: ${CHENGYIN_READ_CACHE_POI_TILE_CAP:3000}
-  # S2 收款模式(docs/roadmap/collection-model/RESULT.md)。只在上面的 server-ceiling 为 true 时生效;为 false(生产)时现状不变。
+  # S2 收款模式(docs/roadmap/collection-model/RESULT.md)。W7 MERCHANT-3 起由自己的开关 enabled 控制,不再跟 App 资金上限绑定;
+  # 默认 false(生产值):第三方票务保持现状。何时在生产为小程序打开,等律师答复(LEGAL-QUESTIONS.md)后由业主决定。
+  # 俱乐部会费(MERCHANT-1)例外:平台账户在任何模式下都不代收会费;会费需 enabled=true、资金开关 tickets 区域打开、且俱乐部子商户可分账。
   # 官方票恒为平台收款;第三方卖家只能 SPLIT(卖家自己的子商户号收款 + 服务商分账)或 REFUSE,写 PLATFORM 或其他值一律按 REFUSE。
   # 微信支付服务商的商户号、APIv3 密钥、证书、子商户号只从 payout.ecommerce.* 的环境变量/服务器配置读,不进仓库。
   collection-model:
+    enabled: ${CHENGYIN_COLLECTION_MODEL_ENABLED:false}
     policy:
       merchant: ${CHENGYIN_COLLECTION_POLICY_MERCHANT:SPLIT}
       club: ${CHENGYIN_COLLECTION_POLICY_CLUB:SPLIT}

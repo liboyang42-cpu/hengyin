@@ -510,14 +510,14 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         clubTopic.setId(newTopicId);
         clubTopic.setClubId(clubId);
         if (updateCmsTopic(clubTopic) != 1) {
-            throw new ServiceException("移交失败:新主题绑定俱乐部失败");
+            throw new ServiceException("移交失败：新主题绑定俱乐部失败");
         }
 
         CmsTopic originalOffline = new CmsTopic();
         originalOffline.setId(id);
         originalOffline.setUserStatus(0);
         if (updateCmsTopic(originalOffline) != 1) {
-            throw new ServiceException("移交失败:原主题下架失败");
+            throw new ServiceException("移交失败：原主题下架失败");
         }
         // [6-09] 原主题下架 = 不公开,同步帖一起收起来。
         syncCreativeSquarePostVisibility(id, false);

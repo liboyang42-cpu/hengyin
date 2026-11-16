@@ -98,11 +98,14 @@ public class LocationTrustService {
         if (!cfg.scoring() || memberId == null || memberId <= 0L || fix == null) return Assessment.legacy();
         long now = System.currentTimeMillis();
         LocationTrustPolicy.Baseline baseline = null;
+        LocationTrustPolicy.Baseline windowStart = null;
         int identical = 0;
         if (mapper != null && fix.validCoordinates()) {
             try {
                 Date since = new Date(now - cfg.speedBaselineWindowSeconds() * 1000L);
                 baseline = baseline(mapper.selectLastCleanFix(memberId, since));
+                windowStart = baseline == null ? null
+                        : baseline(mapper.selectFirstCleanFix(memberId, new Date(now - cfg.windowMinutes() * 60_000L)));
                 identical = mapper.countIdenticalSince(memberId, scale6(fix.lat()), scale6(fix.lng()),
                         accuracy(fix), new Date(now - 3_600_000L));
             } catch (RuntimeException e) {
@@ -110,7 +113,7 @@ public class LocationTrustService {
                         memberId, kind, e.getClass().getSimpleName());
             }
         }
-        LocationTrustPolicy.Verdict verdict = LocationTrustPolicy.evaluate(kind, fix, baseline, identical, now, cfg);
+        LocationTrustPolicy.Verdict verdict = LocationTrustPolicy.evaluate(kind, fix, baseline, windowStart, identical, now, cfg);
         LocationTrustDecision applied = cfg.enforcing() ? verdict.decision() : LocationTrustDecision.ACCEPT;
         Long fixId = fix.validCoordinates() ? record(memberId, sessionId, kind, refId, fix, verdict, applied, now, detail) : null;
         if (verdict.flagged() || verdict.decision() != LocationTrustDecision.ACCEPT) {
@@ -295,7 +298,7 @@ public class LocationTrustService {
         Double lat = number(row.get("lat")), lng = number(row.get("lng"));
         Long at = millis(row.get("receivedAt"));
         if (lat == null || lng == null || at == null) return null;
-        return new LocationTrustPolicy.Baseline(lat, lng, at, millis(row.get("clientTs")));
+        return new LocationTrustPolicy.Baseline(lat, lng, at, millis(row.get("clientTs")), number(row.get("accuracyM")));
     }
 
     static BigDecimal scale6(double v) {

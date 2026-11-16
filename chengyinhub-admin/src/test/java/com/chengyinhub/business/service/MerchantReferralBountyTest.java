@@ -97,7 +97,8 @@ class MerchantReferralBountyTest {
         // default is covered by MerchantReferralBountyReviewTest.
         org.springframework.test.util.ReflectionTestUtils.setField(service, "autoPay", true);
         org.springframework.test.util.ReflectionTestUtils.setField(service, "cashPayoutSwitch",
-                new com.chengyinhub.business.service.rewardpledge.CashPayoutSwitch(true, true));
+                new com.chengyinhub.business.service.rewardpledge.CashPayoutSwitch(true, true,
+                        com.chengyinhub.business.moneyswitch.MoneyGateTestSupport.openGate()));
         org.mockito.Mockito.when(umsMemberMapper.selectBalanceForUpdate(org.mockito.ArgumentMatchers.anyLong()))
                 .thenAnswer(i -> {
                     UmsMember member = umsMemberService.selectUmsMemberById(i.getArgument(0));

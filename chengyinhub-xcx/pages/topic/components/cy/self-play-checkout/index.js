@@ -18,7 +18,22 @@ Component({
     consentError: { type: String, value: '' },
     loading: { type: Boolean, value: false },
   },
+  data: { footerHeight: 0 },
+  lifetimes: { ready() { this.measureFooter(); } },
+  observers: {
+    'show, consentHint, consentError, view': function (show) {
+      if (show) wx.nextTick(() => this.measureFooter());
+    },
+  },
   methods: {
+    measureFooter() {
+      if (!this.data.show) return;
+      const epoch = this._footerMeasureEpoch = (this._footerMeasureEpoch || 0) + 1;
+      this.createSelectorQuery().select('.ck__bar').boundingClientRect(rect => {
+        if (epoch !== this._footerMeasureEpoch || !this.data.show || !rect || !(rect.height > 0)) return;
+        if (this.data.footerHeight !== rect.height) this.setData({ footerHeight: rect.height });
+      }).exec();
+    },
     onBack() { if (!this.data.loading) this.triggerEvent('back'); },
     onProfile() { this.triggerEvent('profile'); },
     onPass(e) { this.triggerEvent('pass', { id: e.currentTarget.dataset.id }); },
@@ -26,6 +41,7 @@ Component({
     onPay() {
       const v = this.data.view || {};
       if (this.data.loading || v.loading || v.refused) return;
+      if (v.failed) { this.triggerEvent('requote'); return; }
       this.triggerEvent('pay');
     },
     noop() {},

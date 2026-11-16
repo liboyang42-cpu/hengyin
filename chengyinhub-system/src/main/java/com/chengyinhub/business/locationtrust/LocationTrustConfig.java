@@ -38,12 +38,18 @@ public record LocationTrustConfig(
         int claimFixWindowMinutes,
         int claimPhashRejectHamming,
         int claimPhashReviewHamming,
-        int claimDuplicateWindowDays) {
+        int claimDuplicateWindowDays,
+        JitterMode jitterMode,
+        int windowMinutes,
+        boolean checkinRequiresFix) {
 
     public static final String PREFIX = "location.trust.";
 
     /** ENFORCE applies decisions; SHADOW scores and logs but always lets the write through; OFF skips scoring. */
     public enum Mode { ENFORCE, SHADOW, OFF }
+
+    /** GAME-4: ACCURACY (default) judges hops beyond both accuracies + 50 m; FLAT is the old fixed {@code minMoveMeters}. */
+    public enum JitterMode { ACCURACY, FLAT }
 
     public static LocationTrustConfig defaults() {
         return read(key -> null);
@@ -78,7 +84,11 @@ public record LocationTrustConfig(
                 (int) r.lng("claim.fixWindowMinutes", 15L, 1L, 1440L),
                 (int) r.lng("claim.phashRejectHamming", 3L, 0L, 16L),
                 (int) r.lng("claim.phashReviewHamming", 8L, 0L, 24L),
-                (int) r.lng("claim.duplicateWindowDays", 365L, 1L, 3650L));
+                (int) r.lng("claim.duplicateWindowDays", 365L, 1L, 3650L),
+                r.jitterMode("jitterMode", JitterMode.ACCURACY),
+                (int) r.lng("windowMinutes", 10L, 1L, 120L),
+                // GAME-4: off until the fixed mini-program (real fix + locAccuracy/locTimestamp) is live; then turn on.
+                r.bool("checkinRequiresFix", false));
     }
 
     public boolean scoring() {
@@ -135,6 +145,16 @@ public record LocationTrustConfig(
 
         LocationTrustAction action(String key, LocationTrustAction def) {
             return LocationTrustAction.parse(raw(key), def);
+        }
+
+        JitterMode jitterMode(String key, JitterMode def) {
+            String v = raw(key);
+            if (v == null) return def;
+            try {
+                return JitterMode.valueOf(v.toUpperCase(Locale.ROOT));
+            } catch (IllegalArgumentException e) {
+                return def;
+            }
         }
 
         Mode mode(String key, Mode def) {

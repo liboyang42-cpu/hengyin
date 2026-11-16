@@ -179,7 +179,8 @@ public class ApiOrientController extends BaseController {
     }
 
     private AjaxResult fail(OrientRejection e) {
-        AjaxResult result = error(e.getMessage());
+        AjaxResult result = AjaxResult.error(
+                OrientRejection.httpStatusForErrorCode(e.getErrorCode()), e.getMessage());
         result.put("errorCode", e.getErrorCode());
         return result;
     }

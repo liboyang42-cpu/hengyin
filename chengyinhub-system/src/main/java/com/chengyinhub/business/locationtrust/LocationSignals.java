@@ -31,6 +31,16 @@ public final class LocationSignals {
                 param(request, SIMULATED), param(request, ACCESSORY));
     }
 
+    /**
+     * CITY-5: the request's {@code locAccuracy} in metres, or {@code fallback} when the route already sent its own
+     * accuracy field. Null when neither is a usable non-negative number.
+     */
+    public static Double accuracy(Double fallback) {
+        if (fallback != null && !fallback.isNaN() && !fallback.isInfinite() && fallback >= 0) return fallback;
+        Double v = parseDouble(param(request(), ACCURACY));
+        return v == null || v.isNaN() || v.isInfinite() || v < 0 ? null : v;
+    }
+
     public static LocationFix current(double lat, double lng) {
         return current(lat, lng, null, null);
     }

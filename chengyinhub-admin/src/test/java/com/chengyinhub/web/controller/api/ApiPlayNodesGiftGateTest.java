@@ -176,6 +176,28 @@ class ApiPlayNodesGiftGateTest {
     }
 
     @Test
+    void everySelfPlayModeEntersThePersonalRunAndReturnsItsStableKey() {
+        var runtime = mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        var state = new com.chengyinhub.business.domain.route.TopicRouteState();
+        state.setSessionId(901L); state.setRouteMode("LINEAR");
+        when(runtime.personalRun(eq(BUYER), eq(TOPIC), any())).thenReturn(state);
+        PlayNodeAccessTestFixtures.setField(controller, "topicRouteRuntimeService", runtime);
+        buyerRows();
+        for (int mode : new int[]{1, 2}) {
+            topic.setProductType(mode);
+            OmsTicket ticket = new OmsTicket(); ticket.setMode(mode);
+            when(ticketService.selectOmsTicketList(any())).thenReturn(List.of(ticket));
+            AjaxResult result = controller.nodes(null, TOPIC);
+            assertEquals(200, result.get(AjaxResult.CODE_TAG));
+            Map<?, ?> data = (Map<?, ?>) result.get(AjaxResult.DATA_TAG);
+            assertEquals("901", data.get("runKey"));
+            assertEquals(mode, data.get("mode"));
+        }
+        org.mockito.Mockito.verify(runtime, org.mockito.Mockito.times(2)).personalRun(eq(BUYER), eq(TOPIC), any());
+        verify(runtime, never()).state(any(), any(), any());
+    }
+
+    @Test
     void nodesProjectsFreeExploreProductTypeOverContradictoryTicketMode() {
         assertNodesProductType(2, 1, 2);
     }

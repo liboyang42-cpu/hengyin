@@ -120,4 +120,7 @@
     <update id="unlinkChannelEventPoster">
         update channel_event set poster_member_id = 0 where poster_member_id = #{memberId}
     </update>
+    <update id="revokeClubInvitesByCreator">
+        update club_invite set revoked_at = coalesce(revoked_at, now()), creator_member_id = 0 where creator_member_id = #{memberId}
+    </update>
 </mapper>

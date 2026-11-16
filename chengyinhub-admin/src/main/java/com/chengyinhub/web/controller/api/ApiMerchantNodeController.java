@@ -270,14 +270,14 @@ public class ApiMerchantNodeController extends BaseController {
         if (lat == null || lng == null) {
             Double shopLat = merchant.getLocationLat();
             Double shopLng = merchant.getLocationLng();
-            if (shopLat == null || shopLng == null) return error("你的店铺资料里还没有坐标,请先在地图上标注店址");
+            if (shopLat == null || shopLng == null) return error("你的店铺资料里还没有坐标，请先在地图上标注店址");
             lat = shopLat;
             lng = shopLng;
             if (address == null || address.trim().isEmpty()) address = merchant.getAddress();
         }
         int max = maxCityNodes(ownerMemberId);
         int used = roamMapper.countActiveNodesByMerchant(access.getMerchantId());
-        if (used >= max) return error("在架据点已达上限(" + max + "),请先下线其他据点");
+        if (used >= max) return error("在架据点已达上限(" + max + ")，请先下线其他据点");
 
         RoamPoiApplicationRequest request = new RoamPoiApplicationRequest();
         request.setName((name != null && !name.trim().isEmpty()) ? name.trim() : merchant.getName());

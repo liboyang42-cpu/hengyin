@@ -130,7 +130,7 @@ class ApiPlayBranchNodeVisibilityTest {
         AjaxResult response = controller.nodes(ACTIVITY, null);
 
         assertEquals(500, response.get("code"));
-        assertEquals("路线状态暂时不可用,请重试", response.get("msg"));
+        assertEquals("路线状态暂时不可用，请重试", response.get("msg"));
         assertFalse(response.containsKey("data"));
     }
 

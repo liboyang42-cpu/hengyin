@@ -14,6 +14,7 @@ function environment(owner = '', token = '') {
     getUserID: () => owner, getAuthorization: () => token, getUserRole: () => 'player', getUserType: () => 1,
     getPageSize: () => 8, getTotalPage: (n, size) => Math.ceil(n / size), canUseCommunity: () => false,
     setUserRole: value => roleWrites.push(value), sendRequest: value => requests.push(value),
+    getUsageConsent: () => ({ ensure: () => Promise.resolve() }),
     firstLogin: () => new Promise(resolve => logins.push(resolve)), reLogin: () => new Promise(resolve => logins.push(resolve)) }
   global.getApp = () => app
   let stopped = 0
@@ -58,16 +59,23 @@ for (const [owner, token] of [['', ''], ['7', ''], ['', 'Bearer unit'], ['0', 'B
   })
 }
 test('normal host login is single-flight and refusal retains guest entry', async () => {
-  const h = host(); h.page.onShow(); h.page.loginToRead(); h.page.loginToRead()
+  const h = host(); h.page.onShow(); h.page.loginToRead(); h.page.loginToRead(); assert.equal(h.logins.length, 0); assert.equal(h.page.data.privacyGateShow, true)
+  h.page.onPrivacyGateSettled({ detail: { event: 'agree' } }); await flush()
   assert.equal(h.logins.length, 1); h.logins[0]({ ok: false }); await flush()
-  assert.deepEqual(h.page.data.profileMounts, []); h.page.loginToRead()
+  assert.deepEqual(h.page.data.profileMounts, []); h.page.loginToRead(); h.page.onPrivacyGateSettled({ detail: { event: 'agree' } }); await flush()
   h.identity('7', 'Bearer new'); h.logins[1]({ ok: true }); await flush()
   assert.equal(h.page.data.profileMounts.length, 1); assert.equal(h.requests.length, 0)
   assert.equal(JSON.stringify(h.page.data).includes('Bearer new'), false)
 })
+test('cached consent still shows the My privacy step; hide before agreement cannot authenticate', async () => {
+  const h=host();h.page.onShow();h.page.loginToRead();
+  assert.equal(h.page.data.privacyGateShow,true);assert.equal(h.logins.length,0);
+  h.page.onHide();h.page.onPrivacyGateSettled({detail:{event:'agree'}});await flush();
+  assert.equal(h.logins.length,0);assert.equal(h.page.data.profileMounts.length,0);
+});
 test('host hide/unload and old account login completions cannot mount a stale profile', async () => {
   for (const end of ['onHide', 'onUnload']) {
-    const h = host(); h.page.onShow(); h.page.loginToRead(); h.page[end]()
+    const h = host(); h.page.onShow(); h.page.loginToRead(); h.page.onPrivacyGateSettled({ detail: { event: 'agree' } }); await flush(); h.page[end]()
     h.identity('7', 'Bearer new'); h.logins[0]({ ok: true }); await flush()
     assert.deepEqual(h.page.data.profileMounts, [])
   }

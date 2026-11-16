@@ -151,7 +151,7 @@ public class SettlementDebtLedger {
     /** 到期未补足的欠款 ⇒ 不能发布新活动 / 开新场次。 */
     public void requireNoOverdueDebt(Long memberId) {
         if (hasOverdueDebt(memberId)) {
-            throw new ServiceException("SETTLEMENT_DEBT_OVERDUE:你有逾期未补足的欠款,暂不能发布新活动,请联系平台客服处理");
+            throw new ServiceException("SETTLEMENT_DEBT_OVERDUE：你有逾期未补足的欠款，暂不能发布新活动，请联系平台客服处理");
         }
     }
 }

@@ -370,7 +370,7 @@ public class ApiCouponController extends BaseController {
             return CouponCommandReceipts.Outcome.rejected("COUPON_MANUALLY_INVALIDATED", couponId, 3, "该优惠券已被平台手动失效");
         }
         if (Integer.valueOf(4).equals(coupon.getStatus())) {
-            return CouponCommandReceipts.Outcome.rejected("COUPON_ALREADY_STOPPED", couponId, 4, "该优惠券已停发,无需重复操作");
+            return CouponCommandReceipts.Outcome.rejected("COUPON_ALREADY_STOPPED", couponId, 4, "该优惠券已停发，无需重复操作");
         }
         if (!Integer.valueOf(0).equals(coupon.getStatus()) && !Integer.valueOf(1).equals(coupon.getStatus())) {
             return CouponCommandReceipts.Outcome.rejected("COUPON_ENDED", couponId, coupon.getStatus(), "已结束的优惠券无法停发");
@@ -381,7 +381,7 @@ public class ApiCouponController extends BaseController {
             return CouponCommandReceipts.Outcome.rejected("STOP_CAS_NOT_APPLIED", couponId,
                     current == null ? null : current.getStatus(),
                     current != null && Integer.valueOf(4).equals(current.getStatus())
-                            ? "该优惠券已停发,无需重复操作" : "停发失败,请刷新后重试");
+                            ? "该优惠券已停发，无需重复操作" : "停发失败，请刷新后重试");
         }
         logger.info("商家停发优惠券 couponId={} ownerMemberId={} actor={}",
                 couponId, operation.ownerMemberId, member_id);

@@ -164,7 +164,7 @@ public final class StoryVocabulary {
                 return;
             }
             default:
-                throw fail(path, "op 不支持:" + op);
+                throw fail(path, "op 不支持：" + op);
         }
     }
 
@@ -215,7 +215,7 @@ public final class StoryVocabulary {
                 integer(effect, "value", 1, effect.path("max").asInt(), path);
                 return;
             default:
-                throw fail(path, "op 不支持:" + op);
+                throw fail(path, "op 不支持：" + op);
         }
     }
 
@@ -225,7 +225,7 @@ public final class StoryVocabulary {
             throw fail(path, "nodeId 必须是正整数");
         }
         if (nodeIds != null && !nodeIds.contains(nodeId.asLong())) {
-            throw fail(path, "nodeId 引用的节点不属于本主题:nodeId=" + nodeId.asLong());
+            throw fail(path, "nodeId 引用的节点不属于本主题：nodeId=" + nodeId.asLong());
         }
     }
 
@@ -247,7 +247,7 @@ public final class StoryVocabulary {
     private static void fields(JsonNode row, String path, String... allowed) {
         Set<String> names = set(allowed);
         row.fieldNames().forEachRemaining(name -> {
-            if (!names.contains(name)) throw fail(path, "不支持的字段:" + name);
+            if (!names.contains(name)) throw fail(path, "不支持的字段：" + name);
         });
     }
 

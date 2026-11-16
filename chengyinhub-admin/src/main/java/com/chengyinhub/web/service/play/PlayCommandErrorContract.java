@@ -1,6 +1,7 @@
 package com.chengyinhub.web.service.play;
 
 import com.chengyinhub.common.core.domain.AjaxResult;
+import com.chengyinhub.common.exception.ErrorCode;
 
 /**
  * 玩家基础命令的「拒绝可解释 + 原请求可恢复」回包契约。
@@ -29,6 +30,12 @@ import com.chengyinhub.common.core.domain.AjaxResult;
  *
  * <p>不变量:只加字段,不改既有 body code、不改既有 msg 文案、不放宽 50m 围栏与 80m 精度闸、
  * 不改幂等键(仍由 routeActionId 派生)与结算语义。回执重放**不加任何字段**:重放体与首次逐字一致。
+ *
+ * <p>GAME-10(x-journey-app):本类构造的拒绝(rejected / retryable / retryableUncertain / unresolvedEffect /
+ * conflict / refresh / arriveFirst)一律带有类型的 {@link ErrorCode#REFUSED}(409 两种为 {@link ErrorCode#CONFLICT}),
+ * 让 v2 契约({@code X-Error-Contract: 2},App 打开)按「业务拒绝 4xx」回,不再按文案推断——
+ * 「这次定位暂不计入,稍后再试」「请稍后再试」之类含「稍后」的拒绝过去会被判成系统故障 5xx,App 只能当结果未知。
+ * 旧契约(小程序)body 逐字不变。pending / unresolved(520)不是拒绝,不在此列。
  */
 public final class PlayCommandErrorContract
 {
@@ -126,7 +133,7 @@ public final class PlayCommandErrorContract
      */
     public static AjaxResult rejected(String message, String errorCode)
     {
-        return AjaxResult.error(message)
+        return AjaxResult.refuse(ErrorCode.REFUSED, message)
                 .put("errorCode", errorCode)
                 .put("retryable", false)
                 .put("refreshRequired", false)
@@ -139,7 +146,7 @@ public final class PlayCommandErrorContract
      */
     public static AjaxResult unresolvedEffect(String message, String errorCode)
     {
-        return AjaxResult.error(message)
+        return AjaxResult.refuse(ErrorCode.REFUSED, message)
                 .put("errorCode", errorCode)
                 .put("retryable", false)
                 .put("refreshRequired", false);
@@ -150,7 +157,7 @@ public final class PlayCommandErrorContract
      */
     public static AjaxResult conflict(String message, String errorCode)
     {
-        return new AjaxResult(409, message)
+        return AjaxResult.refuse(409, ErrorCode.CONFLICT, message)
                 .put("errorCode", errorCode)
                 .put("retryable", false)
                 .put("refreshRequired", false)

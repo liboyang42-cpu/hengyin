@@ -234,7 +234,7 @@ const SELECTED_COLOR = '#1A1A1A'; // 列表↔地图联动选中态(去紫,与 r
 const MAP_DEFAULT_CENTER = routeMapView.MAP_DEFAULT_CENTER;
 const UNDO_CAP = 20; // 撤销栈上限
 const IMG_ARR_MAX = 9; // 横版封面张数上限(与门店相册一致)
-// AI 频控超限文案前缀:后端运行时拼上限数字(`今日AI次数已用完(20/天),明天再来吧`),只能前缀匹配
+// AI 频控超限文案前缀:后端运行时拼上限数字(`今日AI次数已用完(20/天)，明天再来吧`),只能前缀匹配
 const AI_QUOTA_HINT = '今日AI次数已用完';
 // AI 预检的输入(_buildPrecheckReq)里根本没有这些字段 ⇒ 模型的判断是凭空猜测,不能拿来阻断发布
 const AI_BLIND_ISSUE_TYPES = ['missing_cover'];
@@ -2307,7 +2307,7 @@ Page({
         if (!host) throw new Error('未找到要插入的段落');
         const result = this._storyCommand({ type: 'moveBlockInto', blockKey: key, targetKey: host.key, at: Number(split.at), tailKey: this._genLocalId() },
           { storyDrag: reset, storyScrollTop: scrollTop, 'storyEditor.selectedBlockKey': key });
-        this._storyUndoBar('已插到第 ' + (result.hostIndex + 1) + ' 段中间,段落拆成两段');
+        this._storyUndoBar('已插到第 ' + (result.hostIndex + 1) + ' 段中间，段落拆成两段');
         return;
       }
       this._storyCommand({ type: 'moveBlock', blockKey: key, index: drag.to }, { storyDrag: reset, storyScrollTop: scrollTop, 'storyEditor.selectedBlockKey': key });

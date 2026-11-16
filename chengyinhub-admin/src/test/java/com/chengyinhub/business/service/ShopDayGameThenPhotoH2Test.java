@@ -68,6 +68,8 @@ class ShopDayGameThenPhotoH2Test {
                     + "latitude varchar(64),"
                     + "puzzle_score smallint,"
                     + "completion_mode varchar(16),"
+                    + "start_verified tinyint not null default 0,"
+                    + "remote_completion tinyint not null default 0,"
                     + "del_flag tinyint not null default 0,"
                     + "create_time datetime,"
                     + "constraint uk_progress unique (member_id, activity_id, topic_id, node_id))";
@@ -114,10 +116,33 @@ class ShopDayGameThenPhotoH2Test {
     /** 2026-11-13 走查:自助玩法 activityId 恒为 0,玩过别的路线不能让本路线跳过开局 300 米闸。 */
     @Test
     void runStartedOnlyCountsProgressOfTheSameTopic() {
-        jdbc.update("insert into player_node_progress(member_id,activity_id,topic_id,node_id,status,checkin_time) values(?,?,?,?,0,now())",
+        jdbc.update("insert into player_node_progress(member_id,activity_id,topic_id,node_id,status,checkin_time,start_verified) values(?,?,?,?,0,now(),1)",
                 MEMBER, 0L, TOPIC, NODE);
         assertTrue(service.runStarted(MEMBER, 0L, TOPIC), "同一主题已有进度即已开局");
         assertFalse(service.runStarted(MEMBER, 0L, TOPIC + 1), "别的主题的进度不能算本路线已开局");
+    }
+
+    /** GAME-2 RunStartedRequiresVerifiedStart:没坐标的答题站留下的进度行不算开局,开局校验通过后才算。 */
+    @Test
+    void runStartedRequiresAVerifiedStart() {
+        jdbc.update("insert into player_node_progress(member_id,activity_id,topic_id,node_id,status,checkin_time) values(?,?,?,?,1,now())",
+                MEMBER, 0L, TOPIC, NODE);
+        assertFalse(service.runStarted(MEMBER, 0L, TOPIC), "没过开局校验的进度行不能让本局跳过 300 米开局闸");
+        service.markStartVerified(MEMBER, 0L, TOPIC, NODE);
+        assertTrue(service.runStarted(MEMBER, 0L, TOPIC), "开局校验通过后即已开局");
+        assertEquals(1, mapper.countStartVerified(MEMBER, 0L, TOPIC));
+    }
+
+    /** GAME-2:不在现场完成的站单独记一笔,通关奖据此只发探索值与徽章。 */
+    @Test
+    void remoteCompletionsAreCountedPerRun() {
+        jdbc.update("insert into player_node_progress(member_id,activity_id,topic_id,node_id,status,checkin_time) values(?,?,?,?,1,now())",
+                MEMBER, 0L, TOPIC, NODE);
+        Long id = jdbc.queryForObject("select id from player_node_progress where node_id=?", Long.class, NODE);
+        assertEquals(0, mapper.countRemoteCompletions(MEMBER, 0L, TOPIC, "default"));
+        assertEquals(1, mapper.markRemoteCompletion(id));
+        assertEquals(1, mapper.countRemoteCompletions(MEMBER, 0L, TOPIC, "default"));
+        assertEquals(0, mapper.countRemoteCompletions(MEMBER, 0L, TOPIC, "replay-2"));
     }
 
     /**

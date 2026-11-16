@@ -64,3 +64,11 @@ test('打卡回包里的小游戏会告诉玩家,没配好时如实说明', () =
   assert.match(roam, /今天这家店的小游戏/);
   assert.match(roam, /这家店的小游戏还在准备中/);
 });
+
+test('W7 GAME-8:店铺小游戏未开放(NOT_OPEN)时打卡不提示小游戏', () => {
+  const roam = read('pages/roam/index.js');
+  const notOpen = roam.indexOf("sg.reason === 'NOT_OPEN'");
+  const toast = roam.indexOf('今天这家店的小游戏');
+  assert.ok(notOpen > 0 && notOpen < toast, 'NOT_OPEN is handled before the game toast');
+  assert.match(roam, /else if \(sg\.available && sg\.game && sg\.game\.nameZh\)/);
+});

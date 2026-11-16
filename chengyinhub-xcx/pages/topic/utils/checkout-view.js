@@ -8,15 +8,10 @@
 //   有效期写在单次购买卡上,沿用 topic-motion.passWindow(与建单同口径),信任行不重复。
 
 const { chapterCountText } = require('../../../utils/chapter-count.js');
+const { yuan } = require('../../../utils/money-format.js');
 
 function isNum(v) {
   return v !== null && v !== undefined && v !== '' && Number.isFinite(Number(v));
-}
-
-function yuan(v) {
-  if (!isNum(v)) return '';
-  const n = Math.round(Number(v) * 100) / 100;
-  return '¥' + (Number.isInteger(n) ? String(n) : n.toFixed(2));
 }
 
 function headPills(info) {
@@ -76,7 +71,7 @@ function checkoutView(o) {
   const info = opt.info || {};
   const quote = opt.quoteState === 'ready' ? (opt.quote || null) : null;
   const listed = isNum(info.selfPlayPrice) ? Number(info.selfPlayPrice) : null;
-  const pay = quote && isNum(quote.payAmount) ? Number(quote.payAmount) : (opt.quoteState === 'refused' ? null : listed);
+  const pay = quote && isNum(quote.payAmount) ? Number(quote.payAmount) : (opt.quoteState === 'refused' || opt.quoteState === 'failed' ? null : listed);
   // l-pass:通行证覆盖(服务端 platformPassCovered === true)时报价已是 ¥0,减免额 = 原价,不是俱乐部会员减免。
   const member = !!(quote && quote.platformPassCovered === true && pay !== null && !(pay > 0));
   const discount = !member && quote && isNum(quote.memberDiscountYuan) && Number(quote.memberDiscountYuan) > 0 ? Number(quote.memberDiscountYuan) : 0;
@@ -97,6 +92,8 @@ function checkoutView(o) {
 
   const free = pay !== null && !(pay > 0);
   const refused = opt.quoteState === 'refused';
+  // E-B9:报价请求失败不退回标价(会员减免/通行证覆盖时应付可能是 ¥0),支付置灰,改给「重新获取价格」。
+  const failed = opt.quoteState === 'failed';
   return {
     pills: headPills(info),
     single: {
@@ -112,9 +109,10 @@ function checkoutView(o) {
     trust,
     loading: opt.quoteState === 'loading',
     refused,
+    failed,
     refusal: refused ? playerText(opt.refusal) : '',
     free,
-    payLabel: refused ? '暂不可购买' : (free ? '免费领取' : (pay === null ? '支付' : '支付 ' + yuan(pay)))
+    payLabel: refused ? '暂不可购买' : (failed ? '重新获取价格' : (free ? '免费领取' : (pay === null ? '支付' : '支付 ' + yuan(pay))))
   };
 }
 

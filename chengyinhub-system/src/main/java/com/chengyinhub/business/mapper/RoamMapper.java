@@ -142,6 +142,9 @@ public interface RoamMapper {
     int countPoisBySession(@Param("sessionId") Long sessionId);
     /** 该 member 今日新点亮格子数(日限 200 用) */
     int countTilesTodayByMember(@Param("memberId") Long memberId);
+
+    /** GAME-4: first-visit XP ("点亮地点") credited to this member since midnight, net of revocations. */
+    int sumVisitXpToday(@Param("memberId") Long memberId);
     /** 该 member 累计点亮格子数(里程碑勋章用) */
     int countTilesEverByMember(@Param("memberId") Long memberId);
     /** 该 member 历史点亮格子(供小程序换设备/清缓存后恢复迷雾状态) */
@@ -246,6 +249,9 @@ public interface RoamMapper {
     RoamSession selectLatestPresenceFix(@Param("memberId") Long memberId, @Param("sessionId") Long sessionId,
                                         @Param("since") Date since);
 
+    /** 本人未结束且已开启附近位置分享(roam-presence-v1)的会话数。 */
+    int countPresenceVisibleSessions(@Param("memberId") Long memberId);
+
     int updatePresenceVisibility(@Param("id") Long id, @Param("memberId") Long memberId,
                                  @Param("visible") Boolean visible);
 
@@ -271,7 +277,19 @@ public interface RoamMapper {
                                              @Param("minLng") double minLng, @Param("maxLng") double maxLng,
                                              @Param("originLat") double originLat, @Param("originLng") double originLng,
                                              @Param("keyword") String keyword, @Param("categoryId") Integer categoryId,
-                                             @Param("tag") String tag, @Param("cityRole") String cityRole);
+                                             @Param("tag") String tag, @Param("cityRole") String cityRole,
+                                             @Param("limit") int limit);
+
+    /** 目录地点公开只读详情(type=1 + 种子标签 + 已上架);不含模板/券/答案。 */
+    com.chengyinhub.business.domain.vo.CatalogPlaceVO selectCatalogPlaceById(@Param("id") Long id);
+
+    /** 后台批量上/下架目录地点的命中数(范围口径同 updateCatalogBatchStatus)。 */
+    int countCatalogBatchTargets(@Param("cityCode") String cityCode, @Param("seedTag") String seedTag,
+                                 @Param("status") int status);
+
+    /** 后台批量上/下架目录地点:仅 type=1、无商家/模板/申请、同城、带种子标签;上架要求有坐标。 */
+    int updateCatalogBatchStatus(@Param("cityCode") String cityCode, @Param("seedTag") String seedTag,
+                                 @Param("status") int status);
     /** 单个商家节点详情(type=2) */
     CityNodeVO selectMerchantNodeDetail(@Param("id") Long id);
     /** 玩家详情：公开内容，或本人已有打卡记录的下线内容；memberId=0 仅查公开。 */

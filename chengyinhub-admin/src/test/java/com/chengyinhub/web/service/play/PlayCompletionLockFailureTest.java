@@ -98,7 +98,7 @@ class PlayCompletionLockFailureTest {
         Boundary boundary = photoBoundary(false);
         var result = boundary.controller().photo("500", "401", "media-asset:71", null, "photo-original", 4, 91L, null, null);
         assertEquals(200, result.get("code"));
-        assertEquals("已提交,打卡成功", result.get("msg"));
+        assertEquals("已提交，打卡成功", result.get("msg"));
         assertEquals(Map.of("firstTime", true, "nodeId", 401L), result.get("data"));
         assertEquals(1, boundary.downstreamEffects().get(), "no progress/reward leaf after the failed audit attempt");
         assertEquals(List.of("identity", "begin1", "audit1", "rollback1", "close1", "identity", "begin2",

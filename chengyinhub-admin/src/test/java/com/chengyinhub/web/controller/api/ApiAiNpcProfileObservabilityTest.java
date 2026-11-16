@@ -50,6 +50,14 @@ class ApiAiNpcProfileObservabilityTest
         ApiAiNpcController controller = new ApiAiNpcController();
         ReflectionTestUtils.setField(controller, "npcProfileService", npcProfileService);
         ReflectionTestUtils.setField(controller, "cmsTopicNodeService", cmsTopicNodeService);
+        com.chengyinhub.business.service.ICmsActivityService activities = mock(com.chengyinhub.business.service.ICmsActivityService.class);
+        com.chengyinhub.business.service.ICmsTopicService topics = mock(com.chengyinhub.business.service.ICmsTopicService.class);
+        ReflectionTestUtils.setField(controller, "cmsActivityService", activities);
+        ReflectionTestUtils.setField(controller, "cmsTopicService", topics);
+        com.chengyinhub.business.domain.CmsActivity published = new com.chengyinhub.business.domain.CmsActivity();
+        published.setStatus(1L); published.setPublishStatus(1L); published.setDelFlag(0);
+        when(activities.selectCmsActivityById(ACTIVITY_ID)).thenReturn(published);
+        when(topics.selectCmsTopicDetailById(10L, 0L)).thenReturn(new com.chengyinhub.business.domain.CmsTopic());
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
 
         originalLogLevel = controllerLogger.getLevel();
@@ -123,6 +131,7 @@ class ApiAiNpcProfileObservabilityTest
     {
         CmsTopicNode approved = new CmsTopicNode();
         approved.setId(31L);
+        approved.setTopicId(10L);
         approved.setMerchantMemberId(501L);
         approved.setNodeAuditStatus(1);
         when(cmsTopicNodeService.selectCmsTopicNodeById(31L)).thenReturn(approved);
@@ -137,6 +146,18 @@ class ApiAiNpcProfileObservabilityTest
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.npcs[0].name").value("阿福"));
+    }
+
+    @Test
+    void guestCannotReadNpcOfUnpublishedActivityOrMemberOnlyTopic() throws Exception {
+        mockMvc.perform(get("/api/ai/npc/profile").param("scope", "activity").param("activityId", "999"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.npcs", empty()));
+        CmsTopicNode node = new CmsTopicNode();
+        node.setId(32L); node.setTopicId(999L); node.setMerchantMemberId(501L); node.setNodeAuditStatus(1);
+        when(cmsTopicNodeService.selectCmsTopicNodeById(32L)).thenReturn(node);
+        mockMvc.perform(get("/api/ai/npc/profile").param("scope", "node").param("nodeId", "32"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.npcs", empty()));
+        org.mockito.Mockito.verifyNoInteractions(npcProfileService);
     }
 
     private void assertWarnContains(String scope, String activityId, RuntimeException failure)

@@ -47,16 +47,55 @@ public class CityGameActionService {
     private com.chengyinhub.business.service.impl.InGameChannelService inGameChannelService;
     private final IntUnaryOperator random;
     private final LongSupplier clock;
+    private final boolean customRandom;
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.impl.GameRandom gameRandom;
+    /** CITY-10: on LIVE City Monopoly boards places are held by individuals; the team game no longer takes them. */
+    @Autowired(required = false)
+    private CityMonopolyService monopoly;
+
+    void setMonopoly(CityMonopolyService monopoly) { this.monopoly = monopoly; }
 
     @Autowired
     public CityGameActionService(CityGameMapper mapper) {
-        this(mapper, new SecureRandom()::nextInt, System::currentTimeMillis);
+        this.mapper = mapper;
+        this.random = new SecureRandom()::nextInt;
+        this.clock = System::currentTimeMillis;
+        this.customRandom = false;
     }
 
     CityGameActionService(CityGameMapper mapper, IntUnaryOperator random, LongSupplier clock) {
         this.mapper = mapper;
         this.random = random;
         this.clock = clock;
+        this.customRandom = true;
+    }
+
+    private IntUnaryOperator effectiveRandom(String actionTag, String requestId, Long memberId, String boardId, String diceId) {
+        if (!customRandom && gameRandom != null) {
+            return gameRandom.scoped(
+                    com.chengyinhub.business.service.IGameRandomService.DOMAIN_CITY_DICE,
+                    cityDiceReceipt(boardId, memberId, requestId, actionTag),
+                    memberId,
+                    "city_board",
+                    boardId + ":" + (diceId == null ? "" : diceId))::nextInt;
+        }
+        return random;
+    }
+
+    /**
+     * 城市骰子凭据：{@code city:{memberId}:{sha256(boardId:requestId)}:{tag}}，按需缩短摘要以保证
+     * 整串（含 scoped 的 ":N" 序号）不超过 game_random_audit.receipt_id 的 64 字符，绝不截断。
+     * boardId 最长 96 字符，放不进 64 字符，所以与 requestId 一起进摘要；成员 id 明文绑定。
+     */
+    static String cityDiceReceipt(String boardId, Long memberId, String requestId, String actionTag) {
+        String head = "city:" + memberId + ":";
+        String tail = ":" + actionTag;
+        int digestLength = Math.min(40, com.chengyinhub.business.service.impl.GameRandom.MAX_RECEIPT_LENGTH - 2
+                - head.length() - tail.length());
+        if (digestLength < 16) throw new IllegalArgumentException("city dice receipt tag too long: " + actionTag);
+        String digest = CityGameRules.sha256(boardId + ":" + requestId);
+        return head + digest.substring(0, digestLength) + tail;
     }
 
     // ---- snapshot / deltas ----
@@ -173,6 +212,9 @@ public class CityGameActionService {
         Map<String, Object> board = mapper.selectBoard(boardId);
         if (board == null) throw new CityGameException(404, "CITY_BOARD_NOT_FOUND", "城市棋盘不存在");
         if (!"OPEN".equals(board.get("lifecycle"))) throw new CityGameException(409, "BOARD_NOT_OPEN", "棋盘未开放");
+        if ((action == Action.ACQUIRE_PROPERTY || action == Action.START_CHALLENGE) && monopoly != null && monopoly.liveBoard(boardId)) {
+            throw new CityGameException(409, "PROPERTY_IS_CITY_MONOPOLY", "这里由个人持有，请用城市大富翁占领或挑战。");
+        }
         Membership m = membership(mapper, boardId, memberId);
         if (!m.joined()) throw new CityGameException(409, "NOT_JOINED", "尚未加入队伍");
         Long cost = price(action, board, targetId);
@@ -304,6 +346,10 @@ public class CityGameActionService {
 
         // Point-spending actions: quote and explicit payer consent.
         if (neutral) return a.close("REJECTED", "NEUTRAL_GOAL");
+        if ((action == CityGameRules.Action.ACQUIRE_PROPERTY || action == CityGameRules.Action.START_CHALLENGE)
+                && monopoly != null && monopoly.liveBoard(boardId)) {
+            return a.close("REJECTED", "PROPERTY_IS_CITY_MONOPOLY");
+        }
         Map<String, Object> quote = mapper.selectQuoteForUpdate(str(body, "quoteId"));
         String quoteIssue = quoteIssue(quote, body, memberId, action, boardId, targetId, now);
         if (quoteIssue != null) return a.close("REJECTED", quoteIssue);
@@ -363,7 +409,8 @@ public class CityGameActionService {
                 return a.apply(units, "SERVICE_VISITED", propertyId);
             default: {
                 CityGameRules.Dice dice = CityGameRules.dice((String) board.get("diceFaces"), (String) board.get("diceWeights"));
-                int attack = dice.roll(random), defence = dice.roll(random);
+                int attack = dice.roll(effectiveRandom("CHALLENGE_ATK", requestId, memberId, boardId, (String) board.get("diceId")));
+                int defence = dice.roll(effectiveRandom("CHALLENGE_DEF", requestId, memberId, boardId, (String) board.get("diceId")));
                 mapper.insertRoll(boardId, a.teamId, roundSeq, memberId, requestId, "CHALLENGE", (String) board.get("diceId"), attack);
                 mapper.insertRoll(boardId, holder, roundSeq, memberId, requestId, "DEFENCE", (String) board.get("diceId"), defence);
                 a.diceFace = attack;
@@ -529,7 +576,8 @@ public class CityGameActionService {
         if (before < cost) throw new CityGameException(409, "ACTION_BUDGET_EXHAUSTED", "本回合行动力不足");
         CityGameRules.Dice dice = CityGameRules.dice((String) board.get("diceFaces"), (String) board.get("diceWeights"));
         int totalWeight = dice.totalWeight();
-        int ticket = Math.floorMod(random.applyAsInt(totalWeight), totalWeight);
+        IntUnaryOperator diceRandom = effectiveRandom(purpose, requestId, memberId, boardId, (String) board.get("diceId"));
+        int ticket = Math.floorMod(diceRandom.applyAsInt(totalWeight), totalWeight);
         int index = dice.indexForTicket(ticket);
         int face = dice.face(index);
         int previousPosition = ((Number) team.get("trackPosition")).intValue();

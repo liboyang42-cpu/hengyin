@@ -61,6 +61,14 @@ public class CmsActivityController extends BaseController
      * 查询活动列表
      */
     @PreAuthorize("@ss.hasPermi('business:activity:list')")
+    @GetMapping("/stranded-free-explore")
+    public AjaxResult strandedFreeExplore()
+    {
+        // D-19:结算待处理的自由探索场次(只读;分钱规则待业主拍板,不动钱)
+        return success(cmsActivityService.listStrandedFreeExploreSettlements(null));
+    }
+
+    @PreAuthorize("@ss.hasPermi('business:activity:list')")
     @GetMapping("/list")
     public TableDataInfo list(CmsActivity cmsActivity)
     {
@@ -302,10 +310,10 @@ public class CmsActivityController extends BaseController
         for (int i = 0; i < ids.length; i++) {
             Long cid = ids[i];
             if (cmsActivityService.countPaidRegistrations(cid) > 0) {
-                return error("该活动已有用户付费报名,不能直接删除。请先「取消活动」(将全额退款给所有未核销报名),再删除。");
+                return error("该活动已有用户付费报名，不能直接删除。请先「取消活动」(将全额退款给所有未核销报名)，再删除。");
             }
             if (cmsActivityService.countPendingRegistrations(cid) > 0) {
-                return error("该活动有用户的报名待支付,此刻删除会导致「钱收了、活动没了」。未支付的单会在支付窗口过期后由系统自动关单(约 30 分钟),届时即可删除。");
+                return error("该活动有用户的报名待支付，此刻删除会导致「钱收了、活动没了」。未支付的单会在支付窗口过期后由系统自动关单(约 30 分钟)，届时即可删除。");
             }
         }
         for (int i = 0; i < ids.length; i++) {

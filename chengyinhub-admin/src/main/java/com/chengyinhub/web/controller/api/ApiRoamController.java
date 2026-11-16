@@ -28,6 +28,9 @@ import com.chengyinhub.business.service.RoamAiContentService;
 import com.chengyinhub.business.service.impl.RoamSessionWriteService;
 import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.core.controller.BaseController;
+import com.chengyinhub.common.annotation.RateLimiter;
+import com.chengyinhub.common.enums.LimitType;
+import com.chengyinhub.business.service.support.RoamPoiTags;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.core.text.Convert;
 import com.chengyinhub.common.utils.StringUtils;
@@ -61,6 +64,8 @@ import java.util.Map;
 public class ApiRoamController extends BaseController {
 
     static final int DAILY_TILE_XP_LIMIT = 200;   // 1格=1XP,日限
+    /** GAME-4:首访点亮探索值日限(20/个 ⇒ 每天 10 个新地点);超出照常点亮,只是不再加探索值。 */
+    static final int ROAM_VISIT_XP_DAILY_LIMIT = 200;
     static final int[] TILE_MILESTONES = { 50, 200, 1000 };  // 版图里程碑勋章阈值
 
     /** 三店连亮的勋章 code。★ 阈值不进 code:改阈值=改 code 会让已发的章变孤儿
@@ -75,6 +80,7 @@ public class ApiRoamController extends BaseController {
     /** T2 maps-backend read cache for /pois; optional so hand-built controllers in tests keep the SQL read. */
     @Autowired(required = false)
     private com.chengyinhub.business.readcache.MapPoiTileCache poiTileCache;
+    @Autowired private com.chengyinhub.business.service.IMapGeocodeService mapGeocodeService;
     @Autowired private com.chengyinhub.business.service.impl.RoamLocationConsentService locationConsent;
     @Autowired
     private com.chengyinhub.business.service.IConsentRecordService consentRecordService;
@@ -90,6 +96,8 @@ public class ApiRoamController extends BaseController {
     private IGrowthService growthService;
     @Autowired(required = false)
     private com.chengyinhub.business.service.impl.InGameChannelService inGameChannelService;
+    @Autowired(required = false)
+    private com.chengyinhub.common.core.redis.RedisCache redisCache;
     @Autowired
     private PlayerBadgeMapper playerBadgeMapper;
     @Autowired
@@ -159,6 +167,8 @@ public class ApiRoamController extends BaseController {
     private com.chengyinhub.business.citygame.RoamTerritoryService roamTerritoryService;
     @Autowired(required = false)
     private com.chengyinhub.business.shopgames.ShopGamePlayService shopGamePlays;
+    @Autowired(required = false)
+    private com.chengyinhub.business.citygame.MemberAttributeService memberAttributeService;
 
     /** 包级可见 + 非 final:测试用子类覆写它注入身份,好直调真入口(见 RoamPresenceControllerTest)。 */
     Long uid() {
@@ -187,15 +197,47 @@ public class ApiRoamController extends BaseController {
         String kw = boundedFilter(keyword, 40);
         String tg = boundedFilter(tag, 20);
         Long cat = categoryId != null && categoryId > 0 ? categoryId : null;
-        // T2 maps-backend: the unfiltered read is served from shared per-tile cache entries (same rows and order;
-        // found / pendingRedeem still read per member). Filtered reads and a missing cache bean go to MySQL.
+        // A5.2:多取 1 条用来判断是否被截断;data 仍是数组(向后兼容),truncated 作为同级字段下发。
+        // T2 maps-backend:不带筛选的读可由按图块的共享缓存供数(同样的行、同样的顺序、同样多取 1 条;found /
+        // pendingRedeem 仍按会员现查)。缓存开关默认关,关着或缓存 bean 不在时与直读 MySQL 完全相同。
         List<RoamPoi> list = kw == null && tg == null && cat == null
                 ? (poiTileCache != null
-                    ? poiTileCache.near(lat - dLat, lat + dLat, lng - dLng, lng + dLng, uid(), POIS_NEAR_LIMIT)
-                    : roamMapper.selectPoisNear(lat - dLat, lat + dLat, lng - dLng, lng + dLng, uid(), POIS_NEAR_LIMIT))
-                : roamMapper.selectPoisNearFiltered(lat - dLat, lat + dLat, lng - dLng, lng + dLng, uid(), POIS_NEAR_LIMIT,
+                    ? poiTileCache.near(lat - dLat, lat + dLat, lng - dLng, lng + dLng, uid(), POIS_NEAR_LIMIT + 1)
+                    : roamMapper.selectPoisNear(lat - dLat, lat + dLat, lng - dLng, lng + dLng, uid(), POIS_NEAR_LIMIT + 1))
+                : roamMapper.selectPoisNearFiltered(lat - dLat, lat + dLat, lng - dLng, lng + dLng, uid(), POIS_NEAR_LIMIT + 1,
                         kw, cat, tg);
-        return success(list);
+        boolean truncated = list.size() > POIS_NEAR_LIMIT;
+        if (truncated) list = new java.util.ArrayList<>(list.subList(0, POIS_NEAR_LIMIT));
+        // A5.1:相册只下发前 3 张预览,完整相册走目录详情读口。
+        for (RoamPoi poi : list) poi.setGalleryJson(RoamPoiTags.galleryHead(poi.getGalleryJson(), RoamPoiTags.GALLERY_PREVIEW));
+        AjaxResult result = success(uid() <= 0 ? list.stream().map(this::publicPoi).toList() : list);
+        result.put("truncated", truncated);
+        return result;
+    }
+
+    private Map<String, Object> publicPoi(RoamPoi poi) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("id", poi.getId());
+        out.put("name", poi.getName());
+        out.put("type", poi.getType());
+        out.put("lat", poi.getLat());
+        out.put("lng", poi.getLng());
+        out.put("radiusM", poi.getRadiusM());
+        out.put("address", poi.getAddress());
+        out.put("description", poi.getDescription());
+        out.put("xp", poi.getXp());
+        out.put("cityCode", poi.getCityCode());
+        out.put("nodeLevel", poi.getNodeLevel());
+        out.put("tags", poi.getTags());
+        out.put("coverImg", poi.getCoverImg());
+        out.put("galleryJson", poi.getGalleryJson());
+        out.put("quotesJson", poi.getQuotesJson());
+        out.put("photoCredit", poi.getPhotoCredit());
+        out.put("badgeCode", poi.getBadgeCode());
+        out.put("merchantId", poi.getMerchantId());
+        out.put("merchantName", poi.getMerchantName());
+        out.put("npcAvatar", poi.getNpcAvatar());
+        return out;
     }
 
     @Operation(summary = "首次发现商家后的合规自由探索活动壳")
@@ -209,7 +251,6 @@ public class ApiRoamController extends BaseController {
     @Operation(summary = "漫游入口附近活动")
     @GetMapping("/entry/nearby")
     public AjaxResult entryNearby(Double lat, Double lng, Integer radius) {
-        if (uid() <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (lat == null || lng == null) return refuse(ErrorCode.LOCATION_REQUIRED, "缺少定位");
         if (!validLat(lat) || !validLng(lng)) return refuse(ErrorCode.LOCATION_INVALID, "定位无效");
         return success(roamHangoutService.nearby(uid(), lat, lng, radius == null ? 0 : radius));
@@ -260,7 +301,7 @@ public class ApiRoamController extends BaseController {
             double prevDist = GeoDistanceUtils.haversineMeters(((Number) last.get("lat")).doubleValue(), ((Number) last.get("lng")).doubleValue(),
                     poi.getLat().doubleValue(), poi.getLng().doubleValue());
             if (prevDist > MIN_MOVE_DIST_M && prevDist / dtSec > MAX_MOVE_SPEED_MPS) {
-                return refuse(ErrorCode.ROAM_MOVING_TOO_FAST, "移动过快,疑似伪造定位");
+                return refuse(ErrorCode.ROAM_MOVING_TOO_FAST, "移动过快，疑似伪造定位");
             }
         }
         com.chengyinhub.business.locationtrust.LocationTrustService.Assessment trusted =
@@ -390,7 +431,7 @@ public class ApiRoamController extends BaseController {
         }
         // address_name 可空(建表 DEFAULT ''、DTO 无 @NotBlank)。无名店没法按店名收敛,直接拒:
         // 落库一个空名会把所有无名店在 count(distinct) 里塌成一家。
-        if (name == null || name.trim().isEmpty()) return error("该商家未设名称,无法计入");
+        if (name == null || name.trim().isEmpty()) return error("该商家未设名称，无法计入");
 
         if (GeoDistanceUtils.haversineMeters(lat, lng, shopLat, shopLng) > SHOP_VISIT_RADIUS_M + ROAM_GPS_TOLERANCE_M) {
             return refuse(ErrorCode.ROAM_TOO_FAR, "还没到该店附近");
@@ -793,7 +834,7 @@ public class ApiRoamController extends BaseController {
                 && lastFix.getLastLat() != null && lastFix.getLastLng() != null) {
             long dtSec = Math.max(1L, (reportAt.getTime() - lastFix.getLastReportAt().getTime()) / 1000L);
             double moved = GeoDistanceUtils.haversineMeters(lat, lng, lastFix.getLastLat().doubleValue(), lastFix.getLastLng().doubleValue());
-            if (moved > MIN_MOVE_DIST_M && moved / dtSec > MAX_MOVE_SPEED_MPS) return refuse(ErrorCode.ROAM_MOVING_TOO_FAST, "移动过快,疑似伪造定位");
+            if (moved > MIN_MOVE_DIST_M && moved / dtSec > MAX_MOVE_SPEED_MPS) return refuse(ErrorCode.ROAM_MOVING_TOO_FAST, "移动过快，疑似伪造定位");
         }
         com.chengyinhub.business.locationtrust.LocationTrustService.Assessment trusted =
                 trust(memberId, sid, com.chengyinhub.business.locationtrust.LocationTrustKind.PRESENCE, null, lat, lng);
@@ -1026,6 +1067,17 @@ public class ApiRoamController extends BaseController {
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("finishedAt", session.getFinishedAt().getTime());
+        data.put("distanceM", session.getDistanceM());
+        // Coarse session metadata comes from the validated track's start, never the finish location or a client label.
+        double[] start = com.chengyinhub.business.service.support.RoamTrackSimplifier.startPoint(track);
+        if (start != null && mapGeocodeService != null) {
+            try {
+                String zone = mapGeocodeService.resolveCity(start[1], start[0]);
+                if (zone != null && !zone.isBlank()) data.put("zone", zone.trim());
+            } catch (RuntimeException e) {
+                logger.warn("漫游地区暂不可用 sessionId={}, reason={}", sid, e.getClass().getSimpleName());
+            }
+        }
         data.put("tileXp", tileXp);
         data.put("poiXp", poiXp);
         data.put("totalXp", totalXp);
@@ -1077,11 +1129,19 @@ public class ApiRoamController extends BaseController {
         return success(data);
     }
 
+    /** Pre-City-Monopoly signature (no accuracy / device key); kept for direct callers. */
+    public AjaxResult checkin(String name, Double poiLat, Double poiLng, Double curLat, Double curLng) {
+        return checkin(name, poiLat, poiLng, curLat, curLng, null, null);
+    }
+
     @Operation(summary = "点到店(bindpoitap):宽松 geo → 参与据点走扫码 / 非参与点亮发探索值")
     @PostMapping("/checkin")
-    @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 30, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
+    @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 20,
+            limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
     @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
-    public AjaxResult checkin(String name, Double poiLat, Double poiLng, Double curLat, Double curLng) {
+    public AjaxResult checkin(String name, Double poiLat, Double poiLng, Double curLat, Double curLng,
+                              @org.springframework.web.bind.annotation.RequestParam(required = false) Double hAcc,
+                              @org.springframework.web.bind.annotation.RequestParam(required = false) String deviceKey) {
         Long memberId = uid();
         if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (poiLat == null || poiLng == null || curLat == null || curLng == null) return refuse(ErrorCode.LOCATION_REQUIRED, "缺少定位");
@@ -1089,7 +1149,20 @@ public class ApiRoamController extends BaseController {
         if (!validLat(poiLat) || !validLng(poiLng) || !validLat(curLat) || !validLng(curLng)) return refuse(ErrorCode.LOCATION_INVALID, "定位无效");
 
         locationConsent.requireCurrentAgreement(memberId);
+        // CITY-5: the app sends its accuracy as locAccuracy (fix signals); rent needs it as hAcc.
+        hAcc = com.chengyinhub.business.locationtrust.LocationSignals.accuracy(hAcc);
         Map<String, Object> data = new LinkedHashMap<>();
+        // GAME-4: with location.trust.checkinRequiresFix on, a check-in without the device's own fix signals
+        // (accuracy + fix time) is recorded as "not credited", never an error, so old clients keep working.
+        if (checkinFixMissing(curLat, curLng)) {
+            data.put("participating", false);
+            data.put("firstVisit", false);
+            data.put("xp", 0);
+            data.put("uncredited", true);
+            data.put("trustCode", "FIX_MISSING");
+            data.put("trustMessage", "需要打开定位才能点亮这里");
+            return AjaxResult.success("需要打开定位才能点亮这里", data);
+        }
         // SEC-06: the player's fix is scored before anything is credited. Poor accuracy / future time = retry;
         // simulated or impossible speed = nothing credited (visit not recorded, so an honest retry later still counts).
         com.chengyinhub.business.locationtrust.LocationTrustService.Assessment trusted =
@@ -1105,14 +1178,14 @@ public class ApiRoamController extends BaseController {
         // ① 宽松 geo:玩家离被点 POI 太远则拒
         if (GeoDistanceUtils.haversineMeters(curLat, curLng, poiLat, poiLng) > CHECKIN_LOOSE_RADIUS_M) {
             data.put("tooFar", true);
-            return AjaxResult.success("离得有点远,走近点", data);
+            return AjaxResult.success("离得有点远，走近点", data);
         }
         // ② 就近匹配参与据点(type=2 status=1):60m 包围盒粗筛 → 精确挑最近 ≤50m
         double dLat = 60 / 111320.0;
         double dLng = 60 / (111320.0 * Math.max(0.2, Math.cos(Math.toRadians(poiLat))));
         List<CityNodeVO> near = roamMapper.selectMerchantNodesNear(
                 poiLat - dLat, poiLat + dLat, poiLng - dLng, poiLng + dLng,
-                poiLat, poiLng, null, null, null, null);
+                poiLat, poiLng, null, null, null, null, 50);
         Long poiId = nearestWithin(near, poiLat, poiLng, NODE_MATCH_RADIUS_M);
         if (poiId != null) {
             data.put("participating", true);
@@ -1122,16 +1195,18 @@ public class ApiRoamController extends BaseController {
             if (shopGamePlays != null) data.put("shopGame", shopGamePlays.launchAfterCheckin(memberId, poiId));
             if (roamTerritoryService != null) {
                 Map<String, Object> terrRev = roamTerritoryService.rewardExternalCheckin(
-                        memberId, poiId, null, null, curLat, curLng,
+                        memberId, poiId, null, null, curLat, curLng, hAcc, deviceKey,
                         "ROAM_CHECKIN:" + java.util.UUID.randomUUID(), "ROAM_CHECKIN");
                 if (Boolean.TRUE.equals(terrRev.get("credited"))) {
                     data.put("territoryReward", terrRev);
                 }
+                if (terrRev.get("territory") != null) data.put("territory", terrRev.get("territory"));
             }
-            if (inGameChannelService != null) {
+            // HIGH-S4:频道里的地点名只取服务端据点标题,客户端 name 不进系统消息;同人同点每天最多一条。
+            if (inGameChannelService != null && firstCheckinEventToday(memberId, poiId)) {
                 inGameChannelService.postRoamEvent(
                         com.chengyinhub.business.service.impl.InGameChannelService.EVENT_CHECKIN,
-                        memberId, null, (name != null && !name.trim().isEmpty()) ? name.trim() : "漫游据点", null);
+                        memberId, null, serverNodeTitle(near, poiId), null);
             }
             return AjaxResult.success(data);
         }
@@ -1152,18 +1227,30 @@ public class ApiRoamController extends BaseController {
             firstVisit = inserted > 0;
         }
         int xp = 0;
-        if (firstVisit) { xp = VISIT_XP; growthService.addExp(memberId, xp, "点亮地点"); }
+        boolean xpCapped = false;
+        if (firstVisit) {
+            // GAME-4:首访探索值每日封顶(roam_visit 日限),防止脚本连点刷探索值榜
+            xp = visitXpWithDailyCap(roamMapper.sumVisitXpToday(memberId), VISIT_XP, ROAM_VISIT_XP_DAILY_LIMIT);
+            xpCapped = xp < VISIT_XP;
+            if (xp > 0) growthService.addExp(memberId, xp, "点亮地点");
+        }
+        if (firstVisit && memberAttributeService != null) {
+            // Attributes v2 探索: first lit POI +10 AXP (idempotent per member + point key).
+            memberAttributeService.grant(memberId, com.chengyinhub.business.citygame.AttributeRules.Source.NEW_POI, "poi:" + geoKey(poiLat, poiLng));
+        }
         if (roamTerritoryService != null) {
             Map<String, Object> terrRev = roamTerritoryService.rewardExternalCheckinByCoords(
-                    memberId, poiLat, poiLng, curLat, curLng,
+                    memberId, poiLat, poiLng, curLat, curLng, hAcc, deviceKey,
                     "ROAM_CHECKIN:" + java.util.UUID.randomUUID());
             if (Boolean.TRUE.equals(terrRev.get("credited"))) {
                 data.put("territoryReward", terrRev);
             }
+            if (terrRev.get("territory") != null) data.put("territory", terrRev.get("territory"));
         }
         data.put("participating", false);
         data.put("firstVisit", firstVisit);
         data.put("xp", xp);
+        if (xpCapped) data.put("capped", true);
         data.put("name", poiName);
         if (firstVisit && inGameChannelService != null) {
             inGameChannelService.postRoamEvent(
@@ -1171,6 +1258,32 @@ public class ApiRoamController extends BaseController {
                     memberId, null, poiName, xp > 0 ? ("+" + xp + " XP") : null);
         }
         return AjaxResult.success(firstVisit ? "点亮 " + poiName : "已点亮过", data);
+    }
+
+    /** 参与据点的频道标题:服务端节点名,截断到 60 字;取不到用通用名,不回退客户端文本。 */
+    static String serverNodeTitle(List<CityNodeVO> nodes, Long poiId) {
+        if (nodes != null && poiId != null) {
+            for (CityNodeVO n : nodes) {
+                if (n != null && poiId.equals(n.getPoiId()) && n.getName() != null && !n.getName().trim().isEmpty()) {
+                    String t = n.getName().trim();
+                    return t.length() > 60 ? t.substring(0, 60) : t;
+                }
+            }
+        }
+        return "漫游据点";
+    }
+
+    /** 同一会员 + 据点 + 自然日只发一条频道动态;Redis 不可用时不发(失败关闭)。 */
+    boolean firstCheckinEventToday(Long memberId, Long poiId) {
+        if (redisCache == null || memberId == null || poiId == null) return false;
+        String day = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Shanghai")).toString();
+        try {
+            return Boolean.TRUE.equals(redisCache.setIfAbsent(
+                    "roam:checkin:evt:" + memberId + ":" + poiId + ":" + day, 1, 26, java.util.concurrent.TimeUnit.HOURS));
+        } catch (RuntimeException e) {
+            logger.warn("漫游打卡频道去重不可用,本次不发动态 reason={}", e.getClass().getSimpleName());
+            return false;
+        }
     }
 
     // ---------- 纯逻辑(单测友好) ----------
@@ -1188,6 +1301,19 @@ public class ApiRoamController extends BaseController {
      * 格子探索值(套今日 200 上限):tilesToday=今日累计新格(含本次),sessionTiles=本会话新格。
      * 本会话应得 = min(tilesToday,limit) 减去 本会话之前今日已达上限部分,保证跨会话每日不超 limit。
      */
+    /** GAME-4:本次首访可得探索值 = min(本次额度, 日限 - 今日已得),不为负。 */
+    static int visitXpWithDailyCap(int earnedToday, int visitXp, int dailyLimit) {
+        return Math.max(0, Math.min(visitXp, dailyLimit - Math.max(0, earnedToday)));
+    }
+
+    /** GAME-4:开关打开且请求缺设备定位精度或定位时间 ⇒ 不计。开关读不到 = 关(旧行为)。 */
+    boolean checkinFixMissing(double curLat, double curLng) {
+        if (locationTrust == null || !locationTrust.config().checkinRequiresFix()) return false;
+        com.chengyinhub.business.locationtrust.LocationFix fix =
+                com.chengyinhub.business.locationtrust.LocationSignals.current(curLat, curLng);
+        return fix == null || fix.accuracyMeters() == null || fix.clientTimestampMs() == null;
+    }
+
     static int tileXpWithDailyCap(int tilesToday, int sessionTiles, int dailyLimit) {
         int session = Math.max(0, sessionTiles);
         int today = Math.max(session, tilesToday);      // 防脏数据:今日至少含本会话

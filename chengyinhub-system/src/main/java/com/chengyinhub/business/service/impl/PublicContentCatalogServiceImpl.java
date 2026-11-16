@@ -506,14 +506,14 @@ public class PublicContentCatalogServiceImpl implements IPublicContentCatalogSer
 
         Integer productType = normalized.getProductType();
         if (productType != null && !PRODUCT_TYPES.contains(productType)) {
-            throw new ServiceException("product_type 枚举无效，支持值: " + PRODUCT_TYPES, 400);
+            throw new ServiceException("product_type 枚举无效，支持值： " + PRODUCT_TYPES, 400);
         }
 
         String deliveryMode = trimToNull(normalized.getDeliveryMode());
         if (deliveryMode != null) {
             deliveryMode = deliveryMode.toUpperCase(java.util.Locale.ROOT);
             if (!DELIVERY_MODES.contains(deliveryMode)) {
-                throw new ServiceException("delivery_mode 枚举无效，支持值: " + DELIVERY_MODES, 400);
+                throw new ServiceException("delivery_mode 枚举无效，支持值： " + DELIVERY_MODES, 400);
             }
         }
         normalized.setDeliveryMode(deliveryMode);
@@ -537,7 +537,7 @@ public class PublicContentCatalogServiceImpl implements IPublicContentCatalogSer
         if (sort != null) {
             sort = sort.toUpperCase(java.util.Locale.ROOT);
             if (!SORTS.contains(sort)) {
-                throw new ServiceException("sort 枚举无效，支持值: " + SORTS, 400);
+                throw new ServiceException("sort 枚举无效，支持值： " + SORTS, 400);
             }
         } else {
             sort = "NEWEST";

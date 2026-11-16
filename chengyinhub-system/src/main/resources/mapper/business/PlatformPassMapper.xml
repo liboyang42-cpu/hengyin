@@ -227,6 +227,15 @@
         update platform_pass_membership set status = 3 where order_id = #{orderId} and status = 1
     </update>
 
+    <update id="reinstateRefundedOrder">
+        update platform_pass_order set status = 1 where id = #{id} and status = 3
+    </update>
+
+    <update id="reopenMembership">
+        update platform_pass_membership set status = 1, valid_from = #{validFrom}, valid_to = #{validTo}
+        where order_id = #{orderId} and status = 3
+    </update>
+
     <update id="shiftLaterMemberships">
         update platform_pass_membership
         set valid_from = date_sub(valid_from, interval #{seconds} second),

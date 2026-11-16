@@ -32,6 +32,8 @@ const { editionEmptyCopy, shapeEditionEmptyReason } = require('../utils/edition-
 // 帖文卡的 variant 判定与广场共用一份,别在这儿复制
 const { isCompletedShare, hasFeedPlayCover } = require('../../../utils/feed-play-card.js');
 const { decodeDisplayText, decodeDisplayFields } = require('../../../utils/display-text.js');
+// W7 SOC-15:邀请逻辑按需加载(只有带 invite= 的链接才用到)。
+function clubInvite() { return require('../../../utils/club-invite.js') }
 // CU-C-60:扫码核销复用全站唯一的路由表(utils/verification-scan)与写闸(防重提/结果未知),
 // 不在本页另写一套解析。
 const { resolveVerificationScan } = require('../../../utils/verification-scan.js');
@@ -351,12 +353,91 @@ function foldLeaderboard(rows, myMemberId) {
   return out.concat(list.slice(tailStart));
 }
 
+// R8 club-ops CLB-13 小程序侧(T6 2026-11-15):公开贡献榜的排序档由服务端说了算。
+// POST /api/club/leaderboard/sorts {id} → { sorts: [...], defaultSort, runningMetrics }。
+//   · 到场场次 / 打卡次数 / 带队场次:所有俱乐部都有;
+//   · 综合 / 里程 / 配速 / 完成用时:只给用里程的俱乐部。
+// 读不到(旧服务端、网络)时保持 data.rankTabs 里今天的三档(综合 / 里程 / 完成用时),不凭空加档。
+// 现有三档文案沿用小程序原文;新档文案与 App(club.gov.sort.*)一致。
+
+const LB_SORT_LABELS = {
+  composite: '综合',
+  mileage: '里程',
+  pace: '配速',
+  duration: '完成用时',
+  events: '到场场次',
+  checkins: '打卡次数',
+  hosted: '带队场次',
+};
+
+const LB_LEGACY_DEFAULT = 'composite';
+
+// 服务端回包 → { tabs, defaultSort } ;不可信返回 null(调用方保留今天的三档)。
+function lbShapeSorts(data) {
+  if (!data || typeof data !== 'object' || !Array.isArray(data.sorts)) return null;
+  const seen = {};
+  const tabs = data.sorts
+    .filter(key => typeof key === 'string' && LB_SORT_LABELS[key] && !seen[key] && (seen[key] = true))
+    .map(key => ({ key, label: LB_SORT_LABELS[key] }));
+  if (!tabs.length) return null;
+  const keys = tabs.map(t => t.key);
+  const defaultSort = keys.indexOf(data.defaultSort) >= 0 ? data.defaultSort : keys[0];
+  return { tabs, defaultSort };
+}
+
+// 当前排序还在可用档里就不动;否则换到服务端默认档。
+function lbPickSort(current, shaped) {
+  if (!shaped) return current || LB_LEGACY_DEFAULT;
+  return shaped.tabs.some(t => t.key === current) ? current : shaped.defaultSort;
+}
+
+function lbLabelOf(key) { return LB_SORT_LABELS[key] || LB_SORT_LABELS[LB_LEGACY_DEFAULT]; }
+
+// 各榜主数值。计数榜写「N 场 / N 次」;配速 min/km 写成「m'ss"/km」;没有配速写 —。
+function lbCountKey(sortBy) {
+  if (sortBy === 'events') return 'attendedCount';
+  if (sortBy === 'checkins') return 'checkinCount';
+  if (sortBy === 'hosted') return 'hostedSessions';
+  return '';
+}
+
+function lbCountText(item, sortBy) {
+  const key = lbCountKey(sortBy);
+  if (!key) return '';
+  const n = Number(item && item[key]);
+  const v = Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+  return v + (sortBy === 'checkins' ? ' 次' : ' 场');
+}
+
+function lbPaceText(value) {
+  const n = Number(value);
+  if (value === null || value === undefined || value === '' || !Number.isFinite(n) || n <= 0) return '—';
+  const total = Math.round(n * 60);
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return m + "'" + (s < 10 ? '0' + s : s) + '"/km';
+}
+
+function lbEmptyTitle(sortBy) {
+  if (sortBy === 'mileage') return '本周还没有人跑出里程';
+  if (sortBy === 'duration') return '本周还没有人跑出用时';
+  if (sortBy === 'pace') return '本周还没有人跑出配速';
+  if (sortBy === 'events') return '本周还没有人到场';
+  if (sortBy === 'checkins') return '本周还没有人打卡';
+  if (sortBy === 'hosted') return '本周还没有人带队';
+  return '本周还没有人产生贡献';
+}
+
+const leaderboardSorts = { shapeSorts: lbShapeSorts, pickSort: lbPickSort, labelOf: lbLabelOf, countKey: lbCountKey,
+  countText: lbCountText, paceText: lbPaceText, emptyTitle: lbEmptyTitle };
+
 // CU-C-72(9-25 裁决:按单个榜剔除):后端每个榜只列该榜成绩>0 的成员,
 // 榜为空 = 真的该榜这一项没人有成绩。空态文案按当前榜各说一句,口径一致。
+// CLB-13:到场/打卡/带队/配速各说一句(lbEmptyTitle),原三档文案不变。
 function leaderboardEmptyTitle(sortBy) {
   if (sortBy === 'mileage') return '本周还没有人跑出里程';
   if (sortBy === 'duration') return '本周还没有人跑出用时';
-  return '本周还没有人产生贡献';
+  return leaderboardSorts.emptyTitle(sortBy);
 }
 
 // 2026-10-27 P-14 owner:已结束的活动不在俱乐部活动列表里显示。
@@ -531,6 +612,7 @@ Page({
   onAddressTap(e) { openAddress().openFromEvent(e); },
   _clubAccessState: 'idle',
   data: {
+    inviteBanner: null,
     // 稿 40:3 末行「★ 减少动态效果兜底」的接线端。index.wxss 里 .cy-motion-reduced 的
     // 折叠面板兜底规则要靠根节点这个类才能匹配到 —— 之前 readReducedMotion 已 import
     // 但从没调用,规则等于死代码(截图实测:开了系统减动效,折叠面板照样播 -4px 位移)。
@@ -763,6 +845,8 @@ Page({
     // 走查 v2 R05(业主 2026-10-30):从主题工作台「主页」进来先落「概览」
     this._requestedTab = opt && (opt.tab === 'manage' || opt.tab === 'overview') ? opt.tab : '';
     this._requestedPostId = opt && opt.postId ? String(opt.postId) : '';
+    // W7 SOC-15:邀请链接带 invite=<邀请码>;落地信息只决定横幅与加入走哪条路,加入规则仍由服务端判。
+    this._inviteCode = opt && opt.invite ? clubInvite().parseInviteCode(opt) : '';
     this.setData({
       myMemberId: app.getUserID && app.getUserID(),
       isMerchantViewer: this._operationScope === 'MERCHANT'
@@ -772,6 +856,7 @@ Page({
     });
     if (id) {
       this.data.clubId = id; this.loadAll();
+      if (this._inviteCode) this.loadInvite();
       // 2026-11-01 业主:活动详情「去核销」带 scan=1 进来直接拉起扫码(核销写闸只在本页一份,权限由核销接口判)
       if (opt.scan === '1') wx.nextTick(() => this.startClubScan());
       return;
@@ -1115,6 +1200,17 @@ Page({
     this.selectGroupCodeActivity();
   },
 
+  // K1 club-dues:付费会员页(成员)与会费设置(主理人,manage=1)。
+  goMembership() {
+    const club = this.data.club;
+    if (!club || !(club.isOwner || club.isJoined) || !this.data.clubId) return;
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/membership/index?clubId=' + this.data.clubId, complete: () => { this._navigating = false; } });
+  },
+  goMembershipSetting() {
+    const club = this.data.club;
+    if (!club || !club.isOwner || !this.data.clubId) return;
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/membership/index?manage=1&clubId=' + this.data.clubId, complete: () => { this._navigating = false; } });
+  },
   goClubNotify() {
     const club = this.data.club;
     // 守卫与显示条件必须同源,否则「看不见但点得到」或反过来
@@ -1752,13 +1848,50 @@ Page({
   // 本团贡献榜(/api/club/leaderboard)
   // sortBy: composite(综合分,默认) / mileage(里程) / duration(完成用时,升序)。排序在后端做,
   // 因为综合分的权重是后端常量 —— 前端自己排会两边口径漂移。
+  // CLB-13:榜照今天的口径马上读;同时问服务端本俱乐部有哪些榜(/api/club/leaderboard/sorts,每个俱乐部问一次)。
+  // 当前榜不在可用档里(例如不跑里程的俱乐部没有「综合」)才换到服务端默认档再读一次。
+  // 读不到(旧服务端/网络)就保持今天的三档,不影响榜单本身。
   loadLeaderboard() {
+    this.loadLeaderboardSorts();
+    this.fetchLeaderboard();
+  },
+
+  loadLeaderboardSorts() {
+    const clubId = this.data.clubId;
+    if (!clubId || this._leaderboardSortsClub === String(clubId)) return;
+    this._leaderboardSortsClub = String(clubId);
+    const that = this;
+    let settled = false;
+    const done = (data) => {
+      if (settled) return; settled = true;
+      if (that._unloaded || String(that.data.clubId) !== String(clubId)) return;
+      const shaped = leaderboardSorts.shapeSorts(data);
+      if (!shaped) { that._leaderboardSortsClub = null; return; }
+      const sortBy = leaderboardSorts.pickSort(that._leaderboardSort, shaped);
+      const changed = sortBy !== that._leaderboardSort;
+      that._leaderboardSort = sortBy;
+      that.setData({ rankTabs: shaped.tabs, leaderboardSortLabel: leaderboardSorts.labelOf(sortBy) });
+      if (changed) { that.setData({ leaderboardLoaded: false }); that.fetchLeaderboard(); }
+    };
+    app.sendRequest({
+      hideLoading: true, silentError: true, url: '/api/club/leaderboard/sorts', method: 'POST',
+      data: jsonBody({ id: clubId }), header: jsonHeader(),
+      success(res) { done(res && res.code == '200' ? res.data : null); },
+      successStatusAbnormal() { done(null); },
+      fail() { done(null); },
+    });
+  },
+
+  fetchLeaderboard() {
     const that = this;
     const sortBy = this._leaderboardSort || 'composite';
+    // 换档后旧档的回包可能后到:只认最新一次请求
+    const seq = this._leaderboardSeq = (this._leaderboardSeq || 0) + 1;
     app.sendRequest({
       hideLoading: true, url: '/api/club/leaderboard', method: 'POST',
       data: jsonBody({ id: this.data.clubId, sortBy }), header: jsonHeader(),
       success(res) {
+        if (seq !== that._leaderboardSeq) return;
         if (res.code != '200') {
           that._leaderboardRows = null;
           that.setData({ leaderboard: [], leaderboardLoaded: true, leaderboardError: (res && res.msg) || '榜单没能加载出来' });
@@ -1769,7 +1902,7 @@ Page({
         that.setData({ leaderboard: that.composeLeaderboard(), leaderboardLoaded: true, leaderboardError: '', leaderboardEmptyTitle: leaderboardEmptyTitle(sortBy) });
       },
       // E-09(2026-09-16):失败渲染成「还没有人通关」= 把不知道说成没有。留错误态+重试。
-      fail() { that._leaderboardRows = null; that.setData({ leaderboardLoaded: true, leaderboardError: '网络异常，榜单加载失败' }); },
+      fail() { if (seq !== that._leaderboardSeq) return; that._leaderboardRows = null; that.setData({ leaderboardLoaded: true, leaderboardError: '网络异常，榜单加载失败' }); },
     });
   },
 
@@ -1806,6 +1939,8 @@ Page({
     const shownDuration = item.zeroFill ? '0分' : durationText;
     if (sortBy === 'mileage') primaryText = mileageText;
     else if (sortBy === 'duration') primaryText = shownDuration;
+    else if (sortBy === 'pace') primaryText = leaderboardSorts.paceText(item.pace);
+    else if (leaderboardSorts.countKey(sortBy)) primaryText = leaderboardSorts.countText(item, sortBy);
     else primaryText = fx(item.score) + ' 分';
     return Object.assign({}, item, { durationText: shownDuration, mileageText, primaryText });
   },
@@ -1856,7 +1991,7 @@ Page({
     if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.onReportPost(e), { owner: this, target: () => [this.data.clubId, e.currentTarget.dataset.id] })) return; // 2026-10-24 游客写前登录
     const id = e.currentTarget.dataset.id;
     modal.show({
-      title: '举报动态', content: '确认举报?平台将尽快处理。', confirmText: '举报',
+      title: '举报动态', content: '确认举报？平台将尽快处理。', confirmText: '举报',
       success(r) {
         if (!r.confirm) return;
         app.sendRequest({ url: '/api/club/post/report', method: 'POST', data: jsonBody({ id: id }), header: jsonHeader(), success(res) { cyToast(res.msg || '已举报'); }, fail() { cyToast('网络异常，请重试'); } });
@@ -2259,10 +2394,6 @@ Page({
         if (opts.preserveSnapshotOnFailure && that.data.club) {
           return;
         }
-        if (isLoginRequired(app, res, statusCode)) {
-          that.setData({ detailLoaded: true, notFound: false, loginRequired: true });
-          return;
-        }
         that.setData({ detailLoaded: true, notFound: true });
       },
       complete() { cb && cb(); },
@@ -2529,8 +2660,8 @@ Page({
   //    现在两个入口都摆明,点哪个去哪个。
   goMemberProfile(e) {
     const memberId = e.currentTarget.dataset.memberId;
-    // 游客的名单 / 榜单是公开投影,不带会员 id:点人先登录,登录后回到本页
-    if (!memberId) { if (!this.data.myMemberId) this.onLoginRetry(); return; }
+    // 2026-11-14：公开投影未提供成员标识时不发起私人读取或登录。
+    if (!memberId) return;
     const that = this;
     const goPublic = () => { if (that._navigating) return; that._navigating = true; wx.navigateTo({ url: '/pages/userinfo/userinfo?userId=' + memberId, complete: () => { that._navigating = false; } }); };
     if (!this.canReadCustomerProfile()) { goPublic(); return; }
@@ -2584,40 +2715,80 @@ Page({
     this.submitJoin('');
   },
 
+  // W7 SOC-15:读邀请落地信息。失败不拦加入:横幅不出,加入照常走原路。
+  loadInvite() {
+    const code = this._inviteCode;
+    if (!code) return;
+    const that = this;
+    app.sendRequest({
+      url: '/api/club/invites/' + code, method: 'GET',
+      success(res) {
+        if (code !== that._inviteCode) return;
+        const banner = res && res.code == '200' ? clubInvite().inviteBanner(res.data) : null;
+        that._inviteValid = !!(banner && banner.valid);
+        that.setData({ inviteBanner: banner });
+      },
+      fail() { that._inviteValid = false; },
+    });
+  },
+
   submitJoin(joinMessage) {
     const that = this;
     this.setData({ joinFx: 'busy' });
+    // W7 SOC-15:有效邀请走接受接口(记一次使用、带去目标频道),服务端内部仍走同一条加入流程。
+    const viaInvite = !!(this._inviteCode && this._inviteValid);
+    const onJoined = function (res) {
+      if (res.code == '200') {
+        if (viaInvite) {
+          that._inviteTarget = clubInvite().afterAcceptUrl(that.data.clubId, res.data);
+          that._inviteValid = false;
+          that.setData({ inviteBanner: null });
+        }
+        if (res.data && res.data.state === 'pending') {
+          that.setData({ joinFx: '' });
+          that.loadDetail();
+          modal.show({
+            title: '申请已提交', content: '等待审核。通过后才能查看成员名单和使用成员功能。',
+            showCancel: false,
+          });
+          return;
+        }
+        // 2026-10-22 owner:点了加入,按钮先变绿再打勾;动效走完再弹「在这里你可以做什么」,同时刷新成员视图。
+        // 群聊入口 2026-09-09 按稿从俱乐部页撤掉,这里也不再引导进群。
+        that.setData({ joinFx: 'done' });
+        const afterFx = function () {
+          that.openWelcome(that.data.club);
+          that.setData({ joinFx: '' });
+          that.loadDetail();
+          // W7 SOC-15:邀请带了目标频道 → 加入后打开频道目录。
+          const target = that._inviteTarget;
+          that._inviteTarget = '';
+          if (target && !that._navigating) {
+            that._navigating = true;
+            wx.navigateTo({ url: target, complete: () => { that._navigating = false; } });
+          }
+        };
+        if (typeof setTimeout !== 'function') { afterFx(); return; }
+        if (typeof clearTimeout === 'function') clearTimeout(that._joinFxTimer);
+        that._joinFxTimer = setTimeout(afterFx, that.data.reducedMotion ? 0 : 900);
+      } else {
+        that.setData({ joinFx: '' });
+        cyToast((res && res.msg) || '加入失败');
+      }
+    };
+    const onFailed = function () { that.setData({ joinFx: '' }); cyToast('加入失败'); };
+    if (viaInvite) {
+      app.sendRequest({
+        url: '/api/club/invites/' + this._inviteCode + '/accept', method: 'POST',
+        data: jsonBody({ message: joinMessage || '' }), header: jsonHeader(),
+        success: onJoined, fail: onFailed,
+      });
+      return;
+    }
     app.sendRequest({
       url: '/api/club/join', method: 'POST',
       data: jsonBody({ id: this.data.clubId, joinMessage: joinMessage || '' }), header: jsonHeader(),
-      success(res) {
-        if (res.code == '200') {
-          if (res.data && res.data.state === 'pending') {
-            that.setData({ joinFx: '' });
-            that.loadDetail();
-            modal.show({
-              title: '申请已提交', content: '等待审核。通过后才能查看成员名单和使用成员功能。',
-              showCancel: false,
-            });
-            return;
-          }
-          // 2026-10-22 owner:点了加入,按钮先变绿再打勾;动效走完再弹「在这里你可以做什么」,同时刷新成员视图。
-          // 群聊入口 2026-09-09 按稿从俱乐部页撤掉,这里也不再引导进群。
-          that.setData({ joinFx: 'done' });
-          const afterFx = function () {
-            that.openWelcome(that.data.club);
-            that.setData({ joinFx: '' });
-            that.loadDetail();
-          };
-          if (typeof setTimeout !== 'function') { afterFx(); return; }
-          if (typeof clearTimeout === 'function') clearTimeout(that._joinFxTimer);
-          that._joinFxTimer = setTimeout(afterFx, that.data.reducedMotion ? 0 : 900);
-        } else {
-          that.setData({ joinFx: '' });
-          cyToast((res && res.msg) || '加入失败');
-        }
-      },
-      fail() { that.setData({ joinFx: '' }); cyToast('加入失败'); },
+      success: onJoined, fail: onFailed,
     });
   },
 
@@ -2689,6 +2860,15 @@ Page({
     if (!club || !(club.isOwner || club.isJoined) || !clubId || this._navigating) return; // 跳转中不响应连点,免得叠两层勋章页
     this._navigating = true;
     wx.navigateTo({ url: '/pages/club/badges/index?clubId=' + clubId, complete: () => { this._navigating = false; } });
+  },
+
+  // C1 channels-structure:俱乐部频道页(成员看目录；主理人/管理员可新建、排序、归档)。
+  goClubChannels() {
+    const clubId = this.data.clubId;
+    if (!clubId || !this.data.club || !(this.data.club.isOwner || this.data.club.isJoined)) return;
+    if (this._navigating) return;
+    this._navigating = true;
+    wx.navigateTo({ url: '/pages/club/channels/index?clubId=' + clubId, complete: () => { this._navigating = false; } });
   },
 
   goClubRoles() {
@@ -2955,7 +3135,7 @@ Page({
     const comment = (this.data.comments || []).find(function (item) { return String(item.id) === String(id); });
     if (comment && String(comment.memberId) === String(this.data.myMemberId)) return;
     modal.show({
-      title: '举报评论', content: '确认举报?平台将尽快处理。', confirmText: '举报',
+      title: '举报评论', content: '确认举报？平台将尽快处理。', confirmText: '举报',
       success(r) {
         if (!r.confirm) return;
         app.sendRequest({ url: '/api/club/post/comment/report', method: 'POST', data: jsonBody({ id: id }), header: jsonHeader(), success(res) { cyToast(res.msg || '已举报'); }, fail() { cyToast('网络异常，请重试'); } });
@@ -3794,7 +3974,7 @@ Page({
     modal.show({
       title: '申请带队「' + name + '」',
       editable: true,
-      placeholderText: '给商家带句话(可选):带队经验、可带人数…',
+      placeholderText: '给商家带句话(可选)：带队经验、可带人数…',
       confirmText: '提交申请',
       success(r) {
         if (!r.confirm) { done(''); return; }

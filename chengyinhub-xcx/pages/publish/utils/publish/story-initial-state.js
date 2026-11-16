@@ -38,8 +38,8 @@ function thoughts(list) {
   const seen = [];
   return list.map((row) => {
     const key = String((row && row.key) || '').trim();
-    if (!THOUGHT_KEY.test(key)) throw new Error('伏笔编号不合法:' + key);
-    if (seen.indexOf(key) >= 0) throw new Error('伏笔编号重复:' + key + ';同一个 key 的进度会互相覆盖');
+    if (!THOUGHT_KEY.test(key)) throw new Error('伏笔编号不合法：' + key);
+    if (seen.indexOf(key) >= 0) throw new Error('伏笔编号重复：' + key + '；同一个 key 的进度会互相覆盖');
     seen.push(key);
     const name = String((row && row.name) || '').trim();
     if (!name || name.length > 20) throw new Error('伏笔要有名字，且不超过 20 字');
@@ -54,7 +54,7 @@ function thoughts(list) {
     }
     const when = conditions(row && row.when, name);
     const doneWhen = conditions(row && row.doneWhen, name);
-    if (!hasNeed && !doneWhen) throw new Error('伏笔「' + name + '」还没有应验方式:填步数，或选一个选项');
+    if (!hasNeed && !doneWhen) throw new Error('伏笔「' + name + '」还没有应验方式：填步数，或选一个选项');
     const item = { key: key, name: name };
     if (hasNeed) item.need = need;
     if (desc) item.desc = desc;
@@ -76,7 +76,7 @@ function conditions(list, name) {
     const op = c && c.op;
     if (op === 'HAS_TAG') {
       const tag = String(c.value || '').trim();
-      if (!STATE_TAG.test(tag)) throw new Error('伏笔「' + name + '」的选项条件要引用 tag. 开头的标签:' + tag);
+      if (!STATE_TAG.test(tag)) throw new Error('伏笔「' + name + '」的选项条件要引用 tag. 开头的标签：' + tag);
       return { op: op, value: tag };
     }
     if (op === 'NODE_COMPLETED') {

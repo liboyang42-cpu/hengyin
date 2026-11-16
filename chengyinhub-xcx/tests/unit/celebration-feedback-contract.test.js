@@ -111,6 +111,7 @@ function preparePlayFinish(page, mode) {
   page.data.nodes = []
   page.data.total = 0
   page.loadEnding = () => {}
+  page._loadLifeEnding = (next) => { page._lifeEndingPendingScope = ''; next() }   // 先看「本局完成」卡的读取不在这条合同里
   page.paintRouteThumb = () => {}
   page.buildReview = () => {}
   page.loadMilestone = () => {}

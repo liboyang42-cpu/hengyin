@@ -52,7 +52,7 @@ test('作者的完成反馈与答对后揭示都保留', () => {
 test('P-10:答错兜底不拿模板文字反馈(那是完成后的话)', () => {
   const js = fs.readFileSync(path.join(__dirname, '../../pages/play/index.js'), 'utf8');
   assert.doesNotMatch(js, /feedback: n\.feedbackText \|\|/);
-  assert.match(js, /feedback: '答案还没咬合,再看看四周……', passText: String\(n\.feedbackText \|\| ''\)\.trim\(\),/);
+  assert.match(js, /feedback: '答案还没咬合，再看看四周……', passText: String\(n\.feedbackText \|\| ''\)\.trim\(\),/);
   assert.match(js, /'game\.feedback': r\.msg \|\| g\.feedback/);
   assert.match(js, /feedback: node\.feedback, passText: node\.passText,/);
 });

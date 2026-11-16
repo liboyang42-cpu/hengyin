@@ -6,6 +6,7 @@ import com.chengyinhub.business.service.IUmsMemberCartService;
 import com.chengyinhub.business.service.IViewMemberCartService;
 import com.chengyinhub.common.core.domain.entity.AppUser;
 import com.chengyinhub.common.core.domain.model.LoginAppUser;
+import com.chengyinhub.common.exception.ServiceException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Collections;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -36,6 +39,7 @@ class ApiCartControllerAppAuthTest {
 
     private IViewMemberCartService viewMemberCartService;
     private IUmsMemberCartService umsMemberCartService;
+    private ApiCartController controller;
     private MockMvc mockMvc;
 
     @BeforeEach
@@ -49,7 +53,7 @@ class ApiCartControllerAppAuthTest {
 
         viewMemberCartService = mock(IViewMemberCartService.class);
         umsMemberCartService = mock(IUmsMemberCartService.class);
-        ApiCartController controller = new ApiCartController();
+        controller = new ApiCartController();
         ReflectionTestUtils.setField(controller, "viewMemberCartService", viewMemberCartService);
         ReflectionTestUtils.setField(controller, "umsMemberCartService", umsMemberCartService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
@@ -104,5 +108,12 @@ class ApiCartControllerAppAuthTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data").value(99));
+    }
+
+    @Test
+    void unauthenticatedCallerThrows401() {
+        SecurityContextHolder.clearContext();
+        ServiceException ex = assertThrows(ServiceException.class, () -> controller.getCartList());
+        assertEquals(401, ex.getCode());
     }
 }

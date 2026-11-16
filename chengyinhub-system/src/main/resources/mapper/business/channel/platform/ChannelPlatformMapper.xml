@@ -120,6 +120,11 @@
                purge_at = #{purgeAt}, delete_reason = #{deleteReason}, update_time = current_timestamp(3)
          where id = #{id} and meta_version = #{expected} and status = #{fromStatus} and del_flag = 0
     </update>
+    <update id="updatePlacement">
+        update im_channel
+           set parent_id = #{parentId}, position = #{position}, meta_version = meta_version + 1, update_time = current_timestamp(3)
+         where id = #{id} and meta_version = #{expected} and status in (0, 1) and del_flag = 0
+    </update>
     <update id="bumpPermissionVersion">
         update im_channel set meta_version = meta_version + 1, perm_version = perm_version + 1, update_time = current_timestamp(3)
          where id = #{id} and meta_version = #{expected} and perm_version = #{expectedPerm} and del_flag = 0
@@ -220,4 +225,50 @@
     <select id="selectConversationType" resultType="java.lang.Integer" useCache="false">
         select type from im_conversation where id = #{id}
     </select>
+
+    <!-- W7 x-channel-reach (SOC-2) -->
+    <select id="selectLatestMessageId" resultType="long" useCache="false">
+        select coalesce(max(id), 0) from im_message where conversation_id = #{conversationId}
+    </select>
+    <insert id="insertIgnoreMembers">
+        insert ignore into im_conversation_member(conversation_id, member_id, role, unread_count, last_read_msg_id, muted, deleted, create_time)
+        values
+        <foreach collection="memberIds" item="m" separator=",">(#{conversationId}, #{m}, 0, 0, #{lastReadMsgId}, 0, 0, now())</foreach>
+    </insert>
+    <insert id="insertIgnoreMemberChannels">
+        insert ignore into im_conversation_member(conversation_id, member_id, role, unread_count, last_read_msg_id, muted, deleted, create_time)
+        select ch.id, #{memberId}, 0, 0,
+               coalesce((select max(msg.id) from im_message msg where msg.conversation_id = ch.id), 0), 0, 0, now()
+          from im_channel ch
+         where ch.del_flag = 0
+           and ch.id in <foreach collection="conversationIds" item="c" open="(" separator="," close=")">#{c}</foreach>
+    </insert>
+    <delete id="deleteGuildMemberships">
+        delete m from im_conversation_member m
+          join im_channel ch on ch.id = m.conversation_id
+         where m.member_id = #{memberId} and ch.guild_kind = #{guildKind} and ch.guild_id = #{guildId}
+    </delete>
+    <select id="selectLiveChannelsAfter" resultType="com.chengyinhub.business.service.channel.platform.ChannelRow" useCache="false">
+        select <include refid="channelColumns"/> from im_channel
+         where del_flag = 0 and status = 0 and kind &lt;&gt; 0 and id &gt; #{afterId}
+         order by id
+         limit #{limit}
+    </select>
+    <select id="selectMentionUnread" resultType="java.util.HashMap" useCache="false">
+        select m.conversation_id as conversationId, count(distinct msg.id) as mentions
+          from im_conversation_member m
+          join im_message msg on msg.conversation_id = m.conversation_id and msg.id &gt; m.last_read_msg_id
+               and msg.status = 0 and msg.sender_id &lt;&gt; #{memberId}
+          join im_message_mention mm on mm.message_id = msg.id
+         where m.member_id = #{memberId} and m.deleted = 0
+           and m.conversation_id in <foreach collection="conversationIds" item="c" open="(" separator="," close=")">#{c}</foreach>
+           and (mm.mention_type = 'EVERYONE'
+                or (mm.mention_type in ('USER', 'REPLY') and mm.target_id = #{memberId})
+                or (mm.mention_type = 'ROLE' and mm.target_id in
+                    (select rm.role_id from im_guild_role_member rm where rm.member_id = #{memberId})))
+         group by m.conversation_id
+    </select>
+    <update id="updateNotifyDefault">
+        update im_channel set notify_default = #{level} where id = #{id}
+    </update>
 </mapper>

@@ -108,7 +108,7 @@ public class BusinessOfficialEventController extends BaseController {
             return AjaxResult.success("V2 资格结算已执行，投递 " + granted + " 人", granted);
         }
         int granted = officialEventService.settle(id);
-        return AjaxResult.success("已结算,发奖 " + granted + " 人", granted);
+        return AjaxResult.success("已结算，发奖 " + granted + " 人", granted);
     }
 
     // ============ V2 制作台与活动 360 ============

@@ -112,4 +112,32 @@ public interface IAdvancedGameRuntimeService {
         return java.util.Collections.emptyMap();
     }
 
+
+    /**
+     * W7 x-shop-game-runner: a template-only session (a shop game played from the place page or a City Monopoly
+     * landing). It has no activity, topic or node, never touches journey state and stores nothing here: the caller
+     * owns persistence (its own table) and locking. Only {@code TemplatePlayRules.SECTIONS} may be enabled.
+     *
+     * @return a new, unsaved running session for {@code memberId} on {@code templateId}'s normalized config
+     * @throws IllegalStateException {@code TEMPLATE_UNSUPPORTED} when the template enables anything else
+     */
+    default com.chengyinhub.business.domain.GameRuntimeSession templateStart(Long memberId, Long templateId, String rawConfig) {
+        throw new UnsupportedOperationException("template sessions are not supported");
+    }
+
+    /** Judges one action on a template-only session with the section engine and returns the updated session. */
+    default com.chengyinhub.business.domain.GameRuntimeSession templateAct(com.chengyinhub.business.domain.GameRuntimeSession session,
+            Long memberId, String action, Map<String, Object> payload) {
+        throw new UnsupportedOperationException("template sessions are not supported");
+    }
+
+    /** The player's view of a template-only session (same projection as a journey session; never retryable). */
+    default Map<String, Object> templateView(com.chengyinhub.business.domain.GameRuntimeSession session, Long memberId) {
+        throw new UnsupportedOperationException("template sessions are not supported");
+    }
+
+    /** Why a template-only session's win may not pay prizes (runtime evidence the server cannot judge). */
+    default List<String> templateUntrustedEvidence(com.chengyinhub.business.domain.GameRuntimeSession session) {
+        return java.util.Collections.emptyList();
+    }
 }

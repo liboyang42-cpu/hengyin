@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -22,6 +23,10 @@ public interface PlatformPassAppleMapper {
 
     @Select("select * from platform_pass_apple_order where order_no = #{orderNo}")
     Map<String, Object> selectByOrderNo(@Param("orderNo") String orderNo);
+
+    /** 只读:ONE_TIME_CHARGE 通知判断「这笔扣款有没有本服务签出的订单」。 */
+    @Select("select * from platform_pass_apple_order where app_account_token = #{token}")
+    Map<String, Object> selectByToken(@Param("token") String token);
 
     @Select("select * from platform_pass_apple_order where app_account_token = #{token} for update")
     Map<String, Object> selectByTokenForUpdate(@Param("token") String token);
@@ -53,6 +58,27 @@ public interface PlatformPassAppleMapper {
     @Update("update platform_pass_order set status = 1, transaction_id = #{transactionId}, paid_time = #{paidTime} "
             + "where id = #{id} and channel = 'APPLE' and status in (0, 2)")
     int markOrderPaid(@Param("id") long id, @Param("transactionId") String transactionId, @Param("paidTime") Date paidTime);
+
+    /** T5 复核页:待复核(或已处理)的 App Store 订单,带订单状态;不含 appAccountToken。 */
+    @Select("select a.order_no, a.member_id, a.plan_code, a.product_id, a.environment, a.transaction_id, "
+            + "a.original_transaction_id, a.price_milliunits, a.currency, a.purchase_date, a.state, a.revoked_at, "
+            + "a.revocation_reason, a.update_time, o.id as order_id, o.status as order_status, o.price_fen, "
+            + "o.valid_days, o.refunded_time "
+            + "from platform_pass_apple_order a left join platform_pass_order o on o.order_no = a.order_no "
+            + "where a.state = #{state} order by a.update_time desc limit #{limit}")
+    List<Map<String, Object>> selectByState(@Param("state") String state, @Param("limit") int limit);
+
+    @Select("select notification_uuid, notification_type, subtype, state, reason_code, create_time, update_time "
+            + "from platform_pass_apple_notification where transaction_id = #{transactionId} order by create_time")
+    List<Map<String, Object>> selectNotificationsByTransaction(@Param("transactionId") String transactionId);
+
+    @Select("select * from platform_pass_apple_order where order_no = #{orderNo} for update")
+    Map<String, Object> selectByOrderNoForUpdate(@Param("orderNo") String orderNo);
+
+    /** 只从 REVIEW 出:GRANTED(重新开通)或 REVOKED(维持退款)。 */
+    @Update("update platform_pass_apple_order set state = #{state}, update_time = now(3) "
+            + "where order_no = #{orderNo} and state = 'REVIEW'")
+    int resolveReview(@Param("orderNo") String orderNo, @Param("state") String state);
 
     @Insert("insert ignore into platform_pass_apple_notification (notification_uuid, notification_type, subtype, "
             + "transaction_id, payload_hash, state, create_time, update_time) values (#{uuid}, #{type}, #{subtype}, "

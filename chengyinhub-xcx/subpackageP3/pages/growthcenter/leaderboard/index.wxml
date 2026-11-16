@@ -35,9 +35,9 @@
     class="gc-error-board"
     fill
     size="lg"
-    title="{{boardAuthRequired ? '登录后查看排行榜' : boardAccessDenied ? '当前账号无法查看排行榜' : '排行榜加载失败'}}"
+    title="{{boardAccessDenied ? '当前内容无法查看' : '排行榜加载失败'}}"
     sub="{{boardAuthRequired || boardAccessDenied ? '' : errorMsg}}"
-    retry="{{boardAuthRequired ? '登录' : '重新加载'}}"
+    retry="重新加载"
     bind:retry="onRetry"
   />
   <!-- ⚠️ 门从 top3.length===0 改成 !top3[0]:首次进来 top3 是 [],但 buildBoard 拿到空榜后

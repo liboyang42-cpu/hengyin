@@ -4,6 +4,7 @@ const shareCard = require('../../utils/share-card.js');
 const motion = require('../../../utils/motion.js');
 const { countIn } = require('../../../utils/page-motion.js');
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
+const { ticketWalletUrl } = require('../../../utils/ticket-wallet-url.js');
 const app = getApp();
 
 /* r2-finish 结算流程 → l-after(2026-11-10)按业主批准的原型改:整局走完后 总览 → 排行榜(导航栏以下的近全屏弹层,只有 全体 / 队内)
@@ -133,7 +134,7 @@ Page({
   // 结算可由分享 / 卡片直接打开(页栈只有本页):没有上一页时回票夹,不留死胡同(同 play 的 goBackDetail)
   _leave() {
     if (getCurrentPages().length > 1) wx.navigateBack({ delta: 1 });
-    else wx.reLaunch({ url: '/subpackageMember/signup/index' });
+    else wx.reLaunch({ url: ticketWalletUrl((this.data.report && this.data.report.topicId) || this._query.topicId) });
   },
   goRank() { this._go('rank'); },
 
@@ -165,9 +166,11 @@ Page({
     const ownerId = report.activityId || report.topicId;
     if (!view.isId(ownerId)) { this.setData({ rateError: '这一局暂时不能评价' }); return; }
     this.setData({ rateBusy: true, rateError: '' });
-    api.rate(app, ownerType, ownerId, this.data.stars, text).then(res => {
+    // E-B13:同一次评价意图复用同一个 request_id,网络失败后重试服务端只落一条;成功后清掉,下一次是新意图。
+    if (!this._rateReqId) this._rateReqId = 'req_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+    api.rate(app, ownerType, ownerId, this.data.stars, text, this._rateReqId).then(res => {
       if (this._gone) return;
-      if (api.ok(res)) { this.setData({ rateBusy: false, thanks: true }); motion.haptic({ type: 'medium' }); return; }
+      if (api.ok(res)) { this._rateReqId = ''; this.setData({ rateBusy: false, thanks: true }); motion.haptic({ type: 'medium' }); return; }
       // 服务端原文(内容安全、频控等)照原样显示在字段下面。
       this.setData({ rateBusy: false, rateError: (res && res.msg) || (res && res.netFail ? '网络异常，星级和文字已保留，请重试' : '评价暂时无法提交') });
     });

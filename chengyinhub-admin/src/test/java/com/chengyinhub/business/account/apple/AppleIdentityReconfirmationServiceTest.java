@@ -6,7 +6,6 @@ import com.chengyinhub.common.core.redis.RedisCache;
 import com.chengyinhub.system.service.ISysConfigService;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -60,8 +59,8 @@ class AppleIdentityReconfirmationServiceTest {
 
     JwtBuilder token() {
         long now = System.currentTimeMillis();
-        return Jwts.builder().setHeaderParam("kid", "k1").setIssuer("https://appleid.apple.com").setAudience(BUNDLE)
-                .setSubject(SUB).setIssuedAt(new Date(now - 5_000)).setExpiration(new Date(now + 600_000));
+        return Jwts.builder().header().keyId("k1").and().issuer("https://appleid.apple.com").audience().single(BUNDLE)
+                .subject(SUB).issuedAt(new Date(now - 5_000)).expiration(new Date(now + 600_000));
     }
 
     Result verify(String token) {
@@ -69,7 +68,7 @@ class AppleIdentityReconfirmationServiceTest {
     }
 
     String signed(JwtBuilder builder) {
-        return builder.signWith(SignatureAlgorithm.RS256, apple.getPrivate()).compact();
+        return builder.signWith(apple.getPrivate(), Jwts.SIG.RS256).compact();
     }
 
     @Test void freshTokenForTheStoredSubjectConfirms() {
@@ -77,33 +76,33 @@ class AppleIdentityReconfirmationServiceTest {
     }
 
     @Test void wrongAudienceIsRejected() {
-        assertEquals(Result.INVALID, verify(signed(token().setAudience("com.other.app"))));
+        assertEquals(Result.INVALID, verify(signed(token().audience().single("com.other.app"))));
     }
 
     @Test void wrongIssuerIsRejected() {
-        assertEquals(Result.INVALID, verify(signed(token().setIssuer("https://evil.example"))));
+        assertEquals(Result.INVALID, verify(signed(token().issuer("https://evil.example"))));
     }
 
     @Test void expiredTokenIsRejected() {
         long now = System.currentTimeMillis();
-        assertEquals(Result.INVALID, verify(signed(token().setIssuedAt(new Date(now - 700_000)).setExpiration(new Date(now - 1_000)))));
+        assertEquals(Result.INVALID, verify(signed(token().issuedAt(new Date(now - 700_000)).expiration(new Date(now - 1_000)))));
     }
 
     @Test void staleIssuedAtIsRejectedEvenIfNotExpired() {
         long now = System.currentTimeMillis();
-        assertEquals(Result.INVALID, verify(signed(token().setIssuedAt(new Date(now - 11 * 60_000)))));
+        assertEquals(Result.INVALID, verify(signed(token().issuedAt(new Date(now - 11 * 60_000)))));
     }
 
     @Test void anotherAppleAccountCannotDeleteThisOne() {
-        assertEquals(Result.INVALID, verify(signed(token().setSubject("009999.someone-else"))));
+        assertEquals(Result.INVALID, verify(signed(token().subject("009999.someone-else"))));
     }
 
     @Test void forgedSignatureIsRejected() {
-        assertEquals(Result.INVALID, verify(token().signWith(SignatureAlgorithm.RS256, attacker.getPrivate()).compact()));
+        assertEquals(Result.INVALID, verify(token().signWith(attacker.getPrivate(), Jwts.SIG.RS256).compact()));
     }
 
     @Test void unknownKeyIdAndMalformedTokensAreRejected() {
-        assertEquals(Result.INVALID, verify(signed(token().setHeaderParam("kid", "unknown"))));
+        assertEquals(Result.INVALID, verify(signed(token().header().keyId("unknown").and())));
         assertEquals(Result.INVALID, verify("not-a-jwt"));
         assertEquals(Result.INVALID, verify(""));
         assertEquals(Result.INVALID, service.verify(1001L, "", signed(token()), "198.51.100.20"));

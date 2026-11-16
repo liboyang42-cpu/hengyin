@@ -281,6 +281,60 @@ class MerchantPlansTest {
                 () -> plans.updatePlan("BASIC", Map.of("monthlyPriceFen", 100), 1L, "ops", " "));
     }
 
+    // ------------------------------------------------------------------ W7 MERCHANT-6: list only what is delivered
+
+    @Test
+    void shopGameAllowanceCannotExceedThePool() {
+        MerchantPlanService plans = new MerchantPlanService(planJdbc(), gate(true), owner(), mock(OpsConsoleAudit.class), false);
+        IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> plans.updatePlan("PRO",
+                Map.of("features", Map.of("weeklyProofDetail", true, "extraNodeGames", 5, "dealsOffersPerMonth", 8)), 1L, "ops", "x"));
+        assertEquals("超过可提供的小游戏数量", e.getMessage());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void planViewShowsWhatIsReallyDeliveredAndWhatIsNotReady() {
+        JdbcTemplate jdbc = planJdbc();
+        when(jdbc.queryForList(org.mockito.ArgumentMatchers.startsWith("SELECT id, merchant_id, plan_code"), any(), any(), any()))
+                .thenReturn(List.of());
+        MerchantPlanService plans = new MerchantPlanService(jdbc, gate(true), owner(), mock(OpsConsoleAudit.class), true)
+                .withConfig(k -> null);
+        Map<String, Object> basic = ((List<Map<String, Object>>) plans.merchantView(7L).get("plans")).get(1);
+        Map<String, Object> eff = (Map<String, Object>) basic.get("effective");
+        assertEquals(3, eff.get("shopGames"));
+        assertEquals(2, eff.get("dealsOffersPerMonth"));
+        assertEquals(Map.of("shopGamesPlayable", false, "dealsSubmission", false), eff.get("ready"));
+        assertEquals(List.of("extraNodeGames", "dealsOffersPerMonth"), basic.get("notReady"));
+    }
+
+    @Test
+    void checkoutAndPaidGrantsAreRefusedWhileAListedFeatureIsNotReady() {
+        JdbcTemplate jdbc = planJdbc();
+        when(jdbc.queryForObject(anyString(), eq(Integer.class), any())).thenReturn(1);
+        OpsConsoleAudit audit = mock(OpsConsoleAudit.class);
+        MerchantPlanService plans = new MerchantPlanService(jdbc, gate(true), owner(), audit, true)
+                .withConfig(k -> MerchantPlanService.KEY_READY_SHOP_GAMES.equals(k) ? "true" : "false");
+        MerchantGapException e = assertThrows(MerchantGapException.class, () -> plans.checkout(7L,
+                Map.of("planCode", "BASIC", "months", 1, "requestId", "abcdefghijklmnop")));
+        assertEquals("PLAN_FEATURE_NOT_READY", e.getErrorCode());
+        IllegalStateException g = assertThrows(IllegalStateException.class, () -> plans.grant(70L, "PRO", 1, 1L, "ops", "pilot"));
+        assertTrue(g.getMessage().startsWith("PLAN_FEATURE_NOT_READY"));
+        verify(jdbc, never()).update(org.mockito.ArgumentMatchers.startsWith("INSERT INTO cy_merchant_plan_order"),
+                any(Object[].class));
+        verifyNoInteractions(audit);
+    }
+
+    @Test
+    void migrationCapsProToThePoolAndSeedsNotReady() throws Exception {
+        java.nio.file.Path base = java.nio.file.Path.of(System.getProperty("user.dir"));
+        if (!java.nio.file.Files.exists(base.resolve("chengyinhub-admin"))) base = base.getParent();
+        String sql = java.nio.file.Files.readString(base.resolve("chengyinhub-admin/sql/migration_20261116_shop_games_judged.sql"));
+        assertTrue(sql.contains("WHERE code = 'PRO' AND JSON_EXTRACT(features_json, '$.extraNodeGames') = 5"));
+        assertTrue(sql.contains("'merchant.plans.ready.shopGames' AS k, 'false'"));
+        assertTrue(sql.contains("'merchant.plans.ready.dealsSubmission', 'false'"));
+        assertFalse(sql.toLowerCase().contains("cy_money_switch"));
+    }
+
     // ------------------------------------------------------------------ verified-visit billing
 
     @Test

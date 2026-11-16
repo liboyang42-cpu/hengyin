@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
@@ -31,6 +32,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.chengyinhub.business.channelevent.mapper.ChannelEventMapper;
 import com.chengyinhub.business.mapper.channel.platform.ChannelPlatformMapper;
 import com.chengyinhub.business.moneyswitch.MoneySwitchService;
+import com.chengyinhub.business.service.IImRealtimePublisher;
 import com.chengyinhub.business.service.channel.platform.ChannelCapability;
 import com.chengyinhub.business.service.channel.platform.ChannelGuildAccess;
 import com.chengyinhub.business.service.channel.platform.ChannelPermissionCalculator;
@@ -167,11 +169,85 @@ class ChannelEventServiceTest
     }
 
     @Test
-    void adminsMembersAndOutsidersMayNotPost()
+    void ownerHostsTheirOwnEvent()
     {
-        assertEquals("EVENT_POST_FORBIDDEN", code(() -> service.preparePost(ADMIN, CHANNEL, draft(null))));
+        ChannelEventService.PostTarget t = service.preparePost(OWNER, CHANNEL, draft(null));
+        assertEquals(OWNER, t.hostFor(OWNER));
+        assertFalse(t.hostedForOwner(OWNER), "the owner publishes through the ordinary path");
+    }
+
+    @Test
+    void anAdminWithCreateEventPostsAFreeEventHostedByTheClubOwner()
+    {
+        when(access.clubOwnerId(CLUB)).thenReturn(OWNER);
+        ChannelEventService.PostTarget t = service.preparePost(ADMIN, CHANNEL, draft(null));
+        assertEquals(CLUB, t.clubId());
+        assertEquals(OWNER, t.hostFor(ADMIN), "SOC-6 option A: the club owner hosts");
+        assertTrue(t.hostedForOwner(ADMIN));
+    }
+
+    @Test
+    void aMemberWhoseRoleGrantsCreateEventMayPostFree()
+    {
+        when(access.clubOwnerId(CLUB)).thenReturn(OWNER);
+        when(access.effective(channel, MEMBER))
+                .thenReturn(ChannelPermissionCalculator.MEMBER_BASE | ChannelCapability.CREATE_EVENT.mask());
+        assertEquals(OWNER, service.preparePost(MEMBER, CHANNEL, draft(null)).hostFor(MEMBER));
+    }
+
+    @Test
+    void membersWithoutCreateEventAndOutsidersMayNotPost()
+    {
         assertEquals("EVENT_POST_FORBIDDEN", code(() -> service.preparePost(MEMBER, CHANNEL, draft(null))));
         assertEquals("GUILD_FORBIDDEN", code(() -> service.preparePost(OUTSIDER, CHANNEL, draft(null))));
+        when(access.effective(channel, ADMIN))
+                .thenReturn(ChannelPermissionCalculator.ADMIN_BASE & ~ChannelCapability.CREATE_EVENT.mask());
+        assertEquals("EVENT_POST_FORBIDDEN", code(() -> service.preparePost(ADMIN, CHANNEL, draft(null))),
+                "an overwrite that denies CREATE_EVENT takes it away from an admin");
+    }
+
+    @Test
+    void paidEventsStayOwnerOnlyEvenWithTheMoneyAreaOpen()
+    {
+        when(access.clubOwnerId(CLUB)).thenReturn(OWNER);
+        moneyAreas.put("tickets", true);
+        assertEquals("EVENT_POST_FORBIDDEN", code(() -> service.preparePost(ADMIN, CHANNEL, draft("39.90"))));
+        assertEquals(CLUB, service.preparePost(OWNER, CHANNEL, draft("39.90")).clubId());
+    }
+
+    @Test
+    void aClubWithoutAnOwnerTakesNoDelegatedEvents()
+    {
+        when(access.clubOwnerId(CLUB)).thenReturn(0L);
+        assertEquals("EVENT_HOST_MISSING", code(() -> service.preparePost(ADMIN, CHANNEL, draft(null))));
+    }
+
+    @Test
+    void attachAcceptsAnActivityHostedByTheOwnerAndKeepsTheRealPoster()
+    {
+        when(mapper.selectActivityState(ACTIVITY)).thenReturn(activity(1, 1));
+        doAnswer(inv -> {
+            ChannelEventRow r = inv.getArgument(0);
+            r.setId(EVENT);
+            when(mapper.selectEvent(EVENT)).thenReturn(r);
+            return 1;
+        }).when(mapper).insertEvent(any());
+        service.attach(ADMIN, new ChannelEventService.PostTarget(CHANNEL, CLUB, OWNER), draft(null), ACTIVITY);
+        ArgumentCaptor<ChannelEventRow> row = ArgumentCaptor.forClass(ChannelEventRow.class);
+        verify(mapper).insertEvent(row.capture());
+        assertEquals(ADMIN, row.getValue().getPosterMemberId(), "poster_member_id records who really posted");
+        assertEquals("EVENT_ACTIVITY_MISMATCH",
+                code(() -> service.attach(MEMBER, new ChannelEventService.PostTarget(CHANNEL, CLUB), draft(null), 901L)));
+    }
+
+    @Test
+    void listTellsTheAppWhoMayPostAndWhoMayCharge()
+    {
+        when(mapper.selectByChannel(eq(CHANNEL), any(), anyInt())).thenReturn(List.of());
+        assertEquals(Boolean.TRUE, service.list(ADMIN, CHANNEL).get("can_post"));
+        assertEquals(Boolean.FALSE, service.list(ADMIN, CHANNEL).get("can_post_paid"));
+        assertEquals(Boolean.TRUE, service.list(OWNER, CHANNEL).get("can_post_paid"));
+        assertEquals(Boolean.FALSE, service.list(MEMBER, CHANNEL).get("can_post"));
     }
 
     @Test
@@ -267,6 +343,49 @@ class ChannelEventServiceTest
         when(mapper.selectActivityState(ACTIVITY)).thenReturn(activity(2, 0));
         service.syncWaiting(CHANNEL);
         verify(mapper).markCancelled(EVENT);
+    }
+
+    /** W7 SOC-7: the review decision itself posts the held card (once) or closes it, without waiting for a list read. */
+    @Test
+    void approvalPostsTheHeldCardOnceAndRefusalClosesIt()
+    {
+        IImRealtimePublisher realtime = mock(IImRealtimePublisher.class);
+        service.setRealtime(realtime);
+        ChannelEventRow e = event(ChannelEventRow.STATUS_WAITING_REVIEW, 24 * HOUR, 26 * HOUR);
+        when(mapper.selectByActivity(ACTIVITY)).thenReturn(e);
+
+        when(mapper.selectActivityState(ACTIVITY)).thenReturn(activity(0, 0));
+        assertFalse(service.syncByActivity(ACTIVITY), "still in review: nothing posted");
+        verify(mapper, never()).insertCardMessage(anyMap());
+
+        when(mapper.selectActivityState(ACTIVITY)).thenReturn(activity(1, 1));
+        assertTrue(service.syncByActivity(ACTIVITY));
+        verify(mapper).insertCardMessage(anyMap());
+        verify(mapper).markPosted(EVENT, 5555L);
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Map<String, Object>> hint = ArgumentCaptor.forClass(Map.class);
+        verify(realtime).publish(eq(CHANNEL), eq(IImRealtimePublisher.MESSAGE_CREATED), hint.capture());
+        assertEquals("5555", hint.getValue().get("message_id"), "ids only, never the card text");
+        assertEquals(2, hint.getValue().size());
+
+        assertFalse(service.syncByActivity(ACTIVITY), "already posted: a second decision posts nothing");
+        verify(mapper).insertCardMessage(anyMap());
+
+        ChannelEventRow refused = event(ChannelEventRow.STATUS_WAITING_REVIEW, 24 * HOUR, 26 * HOUR);
+        when(mapper.selectByActivity(ACTIVITY)).thenReturn(refused);
+        when(mapper.selectActivityState(ACTIVITY)).thenReturn(activity(2, 0));
+        assertFalse(service.syncByActivity(ACTIVITY));
+        verify(mapper).markCancelled(EVENT);
+        assertFalse(service.syncByActivity(0L));
+    }
+
+    @Test
+    void aCardPostedWithoutARealtimePublisherStillPosts()
+    {
+        ChannelEventRow e = event(ChannelEventRow.STATUS_WAITING_REVIEW, 24 * HOUR, 26 * HOUR);
+        when(mapper.selectByActivity(ACTIVITY)).thenReturn(e);
+        when(mapper.selectActivityState(ACTIVITY)).thenReturn(activity(1, 1));
+        assertTrue(service.syncByActivity(ACTIVITY));
     }
 
     @Test

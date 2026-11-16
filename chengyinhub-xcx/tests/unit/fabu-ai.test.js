@@ -375,9 +375,9 @@ test('★ 预检频控超限 → 降级放行 + 友好文案(包含匹配,不硬
   p.submitForm();
   // 后端运行时把 dailyLimit 拼进文案,这里故意用 35 而不是默认的 20:
   // 页面若改成硬编码整串匹配,这条就会红。
-  sent[0].success({ code: 500, msg: '今日AI次数已用完(35/天),明天再来吧' });
+  sent[0].success({ code: 500, msg: '今日AI次数已用完(35/天)，明天再来吧' });
 
-  assert.ok(p._precheckSkipLabel('今日AI次数已用完(35/天),明天再来吧').indexOf('AI 次数已用完') >= 0, '频控要给专门的友好文案，不能落到通用保底');
+  assert.ok(p._precheckSkipLabel('今日AI次数已用完(35/天)，明天再来吧').indexOf('AI 次数已用完') >= 0, '频控要给专门的友好文案，不能落到通用保底');
   // 2026-10-30 V-24:没有阻断项直接发布,不再弹确认层
   assert.equal(p.data.publishCheck.show, false);
   assert.equal(createdCount(), 1, '频控用完必须还能发布');

@@ -10,7 +10,7 @@
         <view class="ma__card {{selected === item.id ? 'is-sel' : ''}} {{item.badge ? 'is-paired' : ''}} pe pe--left"
               style="--pe-d:.25s;--pe-s:.09s;--pe-i:{{index}}"
               wx:for="{{leftRows}}" wx:key="id" data-id="{{item.id}}" bindtap="onTapLeft"
-              aria-role="button" aria-label="左侧条目:{{item.label}}{{item.badge ? '，已连第 ' + item.badge + ' 条，点一下解开' : ''}}"
+              aria-role="button" aria-label="左侧条目：{{item.label}}{{item.badge ? '，已连第 ' + item.badge + ' 条，点一下解开' : ''}}"
               hover-class="ma__press" hover-stay-time="80">
           <view class="ma__t">{{item.label}}</view>
           <!-- 整体通过才变绿(那意味着每条都在答案里);判错不逐条标红 —— 服务端不给逐条对错 -->
@@ -27,7 +27,7 @@
         <view class="ma__card ma__card--r {{selected === item.id ? 'is-sel' : ''}} {{item.badge ? 'is-paired' : ''}} pe pe--right"
               style="--pe-d:.31s;--pe-s:.09s;--pe-i:{{index}}"
               wx:for="{{rightRows}}" wx:key="id" data-id="{{item.id}}" bindtap="onTapRight"
-              aria-role="button" aria-label="右侧条目:{{item.label}}{{item.badge ? '，已连第 ' + item.badge + ' 条，点一下解开' : ''}}"
+              aria-role="button" aria-label="右侧条目：{{item.label}}{{item.badge ? '，已连第 ' + item.badge + ' 条，点一下解开' : ''}}"
               hover-class="ma__press" hover-stay-time="80">
           <view class="ma__dot {{item.badge ? 'ma__c' + ((item.badge - 1) % 6) : ''}} {{verdict === 'ok' && item.badge ? 'is-right' : ''}}">{{item.badge || ''}}</view>
           <view class="ma__t">{{item.label}}</view>

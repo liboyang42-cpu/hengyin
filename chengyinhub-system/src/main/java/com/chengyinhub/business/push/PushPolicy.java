@@ -8,7 +8,8 @@ import com.chengyinhub.business.service.channel.platform.ChannelNotifyService;
  * 推送是否该发：完全沿用既有通知偏好（im_notify_pref / im_conversation_member.muted / im_club_notify_default）。
  * <ul>
  * <li>会话免打扰（旧 muted 或 永久/定时静音）或处于免打扰时段：不推，@ 也不推（与未读角标口径一致）。</li>
- * <li>有效等级：会话级（≠3 继承）→ 账号默认 →（俱乐部频道/群）俱乐部共享默认（未配置为 1 仅@）→ 0 全部。</li>
+ * <li>有效等级：会话级（≠3 继承）→ 账号默认 → 频道默认（im_channel.notify_default，公告/活动为 0 全部）
+ *     →（俱乐部频道/群）俱乐部共享默认（未配置为 1 仅@）→ 0 全部。</li>
  * <li>等级 0 全部推；1 只推 @我 或 @全体（本人开了“屏蔽 @全体”时 @全体 不算）；2 不推。</li>
  * </ul>
  */
@@ -18,18 +19,31 @@ public final class PushPolicy
 
     public static boolean chatAllowed(Map<String, Object> row, boolean mentionedMe, boolean mentionedEveryone, Integer clubDefaultLevel)
     {
+        return chatAllowed(row, mentionedMe, mentionedEveryone, null, clubDefaultLevel);
+    }
+
+    /** W7 x-channel-reach (SOC-2): the channel's own default sits between the account default and the club default. */
+    public static boolean chatAllowed(Map<String, Object> row, boolean mentionedMe, boolean mentionedEveryone,
+            Integer channelDefaultLevel, Integer clubDefaultLevel)
+    {
         if (row == null) return false;
         if (flag(row.get("memberMuted")) || flag(row.get("convPermanent")) || flag(row.get("convMutedActive"))) return false;
         if (quiet(row, "convQuiet") || quiet(row, "accountQuiet")) return false;
-        int level = effectiveLevel(integer(row.get("convLevel")), integer(row.get("accountLevel")), clubDefaultLevel);
+        int level = effectiveLevel(integer(row.get("convLevel")), integer(row.get("accountLevel")), channelDefaultLevel, clubDefaultLevel);
         boolean mention = mentionedMe || (mentionedEveryone && !flag(row.get("suppressBroadcast")));
         return level == 0 || (level == 1 && mention);
     }
 
     static int effectiveLevel(Integer conversationLevel, Integer accountLevel, Integer clubDefaultLevel)
     {
+        return effectiveLevel(conversationLevel, accountLevel, null, clubDefaultLevel);
+    }
+
+    static int effectiveLevel(Integer conversationLevel, Integer accountLevel, Integer channelDefaultLevel, Integer clubDefaultLevel)
+    {
         if (conversationLevel != null && conversationLevel != 3) return conversationLevel;
         if (accountLevel != null && accountLevel != 3) return accountLevel;
+        if (channelDefaultLevel != null && channelDefaultLevel >= 0 && channelDefaultLevel <= 2) return channelDefaultLevel;
         if (clubDefaultLevel != null) return clubDefaultLevel;
         return 0;
     }

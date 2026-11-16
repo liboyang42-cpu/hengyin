@@ -10,9 +10,12 @@ const SHEET = '../../pages/shezhi/components/privacy-sheet/index.js';
 const settle = () => new Promise(resolve => setImmediate(resolve));
 
 function harness(recordBehavior) {
-  const h = { locations: [], starts: [], listeners: new Set(), records: [], requests: [], modals: [], stops: 0 };
+  const h = { locations: [], starts: [], listeners: new Set(), records: [], requests: [], consentReads: [], modals: [], stops: 0 };
   const app = { globalData: { user_id: 9, features: {} }, getUserID: () => 9, isDevEnv: () => false,
-    sendRequest(options) { h.requests.push(options); },
+    sendRequest(options) {
+      if (options.url === '/api/compliance/consents/latest') { h.consentReads.push(options); options.success({ code: 200, data: null }); return; }
+      h.requests.push(options);
+    },
     recordConsent(payload) { h.records.push(payload); return recordBehavior ? recordBehavior(payload) : Promise.resolve(); } };
   global.getApp = () => app;
   global.wx = {

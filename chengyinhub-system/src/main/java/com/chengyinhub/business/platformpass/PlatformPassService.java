@@ -874,6 +874,33 @@ public class PlatformPassService {
         extendClaimTickets(memberId);
     }
 
+    /**
+     * T5:Apple 撤回退款(REFUND_REVERSED)、运营复核同意后,在调用方事务内重新开通。订单 已退款 → 已支付;
+     * 被撤销的那一段按下单时冻结的天数,从现在(或本人最后一段到期)起重开,不追溯、不叠送。只由复核服务调用。
+     */
+    void reinstateAfterAppleReversal(Map<String, Object> order, Date now) {
+        long orderId = num(order.get("id"));
+        long memberId = num(order.get("member_id"));
+        if (mapper.reinstateRefundedOrder(orderId) != 1) {
+            throw PlatformPassException.conflict("PASS_REVIEW_ORDER_NOT_REFUNDED", "订单不是已退款状态");
+        }
+        lockMember(memberId);
+        Date latest = mapper.selectLatestValidToForUpdate(memberId, now);
+        Date from = latest != null && latest.after(now) ? latest : now;
+        Date to = new Date(from.getTime() + num(order.get("valid_days")) * 86_400_000L);
+        if (row(mapper.selectMembershipByOrder(orderId)) == null) {
+            Map<String, Object> segment = new LinkedHashMap<>();
+            segment.put("member_id", memberId);
+            segment.put("order_id", orderId);
+            segment.put("valid_from", from);
+            segment.put("valid_to", to);
+            if (mapper.insertMembership(segment) != 1) throw new IllegalStateException("通行证有效期写入失败");
+        } else if (mapper.reopenMembership(orderId, from, to) != 1) {
+            throw new IllegalStateException("通行证有效期重开失败");
+        }
+        extendClaimTickets(memberId);
+    }
+
     /** R6a:在调用方事务内,按 Apple 已验证的退款/撤销事实收回这一段。只由 {@link PlatformPassAppleService} 调用。 */
     void finalizeAppleRefund(Map<String, Object> order, Date refundedAt) {
         finalizeRefund(order, null, null, refundedAt, num(order.get("price_fen")), "CHANNEL");

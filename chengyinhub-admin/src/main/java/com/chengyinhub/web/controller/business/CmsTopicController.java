@@ -283,7 +283,7 @@ public class CmsTopicController extends BaseController
             boolean ok = topicContentOwnershipService.reassignContentSlot(
                     id, request.getEntityType(), request.getEntityId());
             return ok ? AjaxResult.success()
-                    : AjaxResult.error("内容槽改判失败:entityType 须为 PLATFORM/MEMBER/CLUB,"
+                    : AjaxResult.error("内容槽改判失败：entityType 须为 PLATFORM/MEMBER/CLUB，"
                             + "且 PLATFORM 不得带 entityId、其余必须带 entityId");
         } catch (IllegalArgumentException | IllegalStateException e) {
             return error(e.getMessage());

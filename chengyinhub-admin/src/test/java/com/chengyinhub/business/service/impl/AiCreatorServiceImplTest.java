@@ -190,7 +190,7 @@ class AiCreatorServiceImplTest {
         com.chengyinhub.business.service.ai.AiServiceException ex = assertThrows(
                 com.chengyinhub.business.service.ai.AiServiceException.class,
                 () -> service.themeDraft(req, MEMBER_ID));
-        assertEquals("AI 服务暂未就绪,请稍后重试", ex.getMessage());
+        assertEquals("AI 服务暂未就绪，请稍后重试", ex.getMessage());
     }
 
     @Test
@@ -211,7 +211,7 @@ class AiCreatorServiceImplTest {
         com.chengyinhub.business.service.ai.AiServiceException ex = assertThrows(
                 com.chengyinhub.business.service.ai.AiServiceException.class,
                 () -> service.themeDraft(new AiThemeDraftReq(), MEMBER_ID));
-        assertEquals("AI 服务暂未就绪,请稍后重试", ex.getMessage());
+        assertEquals("AI 服务暂未就绪，请稍后重试", ex.getMessage());
 
         assertEquals(1, reserved.size());
         assertEquals(1, refunded.size());

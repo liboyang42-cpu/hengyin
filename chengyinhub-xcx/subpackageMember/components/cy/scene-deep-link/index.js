@@ -61,6 +61,13 @@ Component({
   },
 
   methods: {
+    onPoiTitle(event) {
+      const scene = this.data.sceneCurrent, detail = event.detail || {};
+      if (!scene || scene.id !== 'roam-poi-detail' || !detail.name || scene.title === detail.name
+          || String(scene.params.poiId || '') !== String(detail.poiId || '')
+          || String(scene.params.merchantId || '') !== String(detail.merchantId || '')) return;
+      this.setData({ 'sceneCurrent.title': detail.name, sceneStack: this.data.sceneStack.map((row, index) => index === this.data.sceneStack.length - 1 ? Object.assign({}, row, { title: detail.name }) : row) });
+    },
     openRoot(id) {
       if (this._rootOpened) return
       this._rootOpened = true

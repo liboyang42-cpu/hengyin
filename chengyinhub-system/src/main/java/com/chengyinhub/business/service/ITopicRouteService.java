@@ -20,4 +20,15 @@ public interface ITopicRouteService
      *         界面可另画明确标注的节点直线预览，不能用它作为道路距离、通关或奖励依据。
      */
     String buildGeometryJson(List<? extends CmsTopicNode> orderedNodes);
+
+    /**
+     * MPP-7：玩家当前位置到一站的步行路线（腾讯路线规划 walking，Key 只在后端）。
+     * 起点按 20 米取整后缓存 60 秒，同一站附近反复重算不会刷配额。
+     *
+     * @return 路线；腾讯地图客户端未配置、供应商拒绝或坐标非法时返回 null（调用方回 ROUTE_UNAVAILABLE）
+     */
+    default WalkRoute walkRoute(double fromLat, double fromLng, double toLat, double toLng)
+    {
+        return null;
+    }
 }

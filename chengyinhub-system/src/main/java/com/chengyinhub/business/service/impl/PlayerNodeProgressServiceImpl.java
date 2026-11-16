@@ -65,6 +65,20 @@ public class PlayerNodeProgressServiceImpl implements IPlayerNodeProgressService
     }
 
     @Override
+    public int markRemoteCompletion(Long id)
+    {
+        return id == null ? 0 : playerNodeProgressMapper.markRemoteCompletion(id);
+    }
+
+    @Override
+    public int countRemoteCompletions(Long memberId, Long activityId, Long topicId, String playInstanceId)
+    {
+        if (memberId == null || activityId == null || topicId == null) return 0;
+        return playerNodeProgressMapper.countRemoteCompletions(memberId, activityId, topicId,
+                playInstanceId == null ? "default" : playInstanceId);
+    }
+
+    @Override
     public Integer selectPuzzlePersonalBest(Long memberId, Long topicId)
     {
         return playerNodeProgressMapper.selectPuzzlePersonalBest(memberId, topicId);

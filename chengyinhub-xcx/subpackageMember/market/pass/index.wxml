@@ -37,6 +37,7 @@
         <cy-inline-error wx:if="{{buyError}}" kind="data" title="{{buyError}}" />
         <view class="mp-bar__reason" wx:if="{{buy.reason && buy.state !== 'buyable'}}">{{buy.reason}}</view>
         <view class="mp-bar__note" wx:elif="{{buy.reason && !checkout.length}}">{{buy.reason}}</view>
+        <cy-btn wx:if="{{buy.state === 'login'}}" variant="primary" bindtap="loginToBuy">购买</cy-btn>
         <cy-btn wx:if="{{buy.state === 'checkout'}}" variant="primary" bindtap="goCheckout">去报名</cy-btn>
         <block wx:if="{{buy.state === 'buyable'}}">
           <cy-btn wx:for="{{buy.payModes}}" wx:key="mode" variant="{{index === 0 ? 'primary' : 'secondary'}}"

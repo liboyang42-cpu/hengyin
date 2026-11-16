@@ -17,6 +17,9 @@
 
     <properties>
         <chengyin.e2e.providers.scope>test</chengyin.e2e.providers.scope>
+        <!-- SEC-03: the RuoYi code generator (raw ${sql} templates, table import) is not in the production jar.
+             Developers who need it build with `-Pcode-generator`. -->
+        <chengyin.generator.scope>test</chengyin.generator.scope>
     </properties>
 
     <dependencies>
@@ -87,6 +90,7 @@
         <dependency>
             <groupId>com.chengyinhub</groupId>
             <artifactId>chengyinhub-generator</artifactId>
+            <scope>${chengyin.generator.scope}</scope>
         </dependency>
 
         <!-- R9 BE-16: TEST-only E2E providers. Test scope by default, so `mvn package` never puts them in the
@@ -203,6 +207,13 @@
             <id>e2e-test-providers</id>
             <properties>
                 <chengyin.e2e.providers.scope>runtime</chengyin.e2e.providers.scope>
+            </properties>
+        </profile>
+        <!-- SEC-03: development only (`mvn -Pcode-generator ...`). Never for TEST or production builds. -->
+        <profile>
+            <id>code-generator</id>
+            <properties>
+                <chengyin.generator.scope>compile</chengyin.generator.scope>
             </properties>
         </profile>
         <!-- Fixed combined workload only. Default/full test compilation is unchanged. -->

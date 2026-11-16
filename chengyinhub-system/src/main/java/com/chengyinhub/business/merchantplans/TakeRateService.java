@@ -111,6 +111,18 @@ public class TakeRateService {
         return take == null ? configuredShareBps : BPS_MAX - take;
     }
 
+    /**
+     * K1 club dues take as a rate (scale 4): the configured {@code club_dues} take, else today's club ticket take (the
+     * stored {@code topic_club} rule, else {@code topic}). Null when neither can be read: the caller then sends the
+     * share order to manual review instead of guessing.
+     */
+    public BigDecimal clubDuesRate() {
+        Integer bps = configuredBps(TakeProduct.CLUB_DUES, TakeProduct.ANY_SOURCE);
+        if (bps != null) return toRate(bps);
+        SettlementRule rule = todayRule(TakeProduct.CLUB_DUES, TakeProduct.ANY_SOURCE);
+        return rule == null ? null : rule.getPlatformCommissionRate();
+    }
+
     // ---------------------------------------------------------------- admin console
 
     /** One row per product and source: today's value, the configured value (or null) and the value in force. */

@@ -323,8 +323,8 @@ test('正常退出清账号态仍保留原UNKNOWN，重新登录原owner不能�
   const storage = durableStorage(); storage.getStorageInfoSync = () => ({ keys: Object.keys(storage.values) });
   storage.values.authorization = 'synthetic';
   const h = harness(entries[0][0], entries[0][1], false, undefined, storage); h.invoke(); h.dispose();
-  const { clearStoragePreservingPlayerRoamMemory } = require('../../utils/roam-player-memory.js');
-  assert.equal(clearStoragePreservingPlayerRoamMemory(storage), true);
+  const { clearStorageForLogout } = require('../../utils/roam-player-memory.js');
+  assert.equal(clearStorageForLogout(storage), true);
   assert.equal(storage.values.authorization, undefined);
   const next = harness(entries[0][0], entries[0][1], false, undefined, storage); next.invoke();
   assert.equal(next.requests.length, 0);

@@ -363,7 +363,7 @@ public class UmsMemberCartServiceImpl implements IUmsMemberCartService
                     throw new ServiceException("订单明细保存失败");
                 }
                 if (pmsSkuService.deductStockForProduct(cart.getSkuId(), cart.getProductId(), cart.getQuantity()) == 0) {
-                    throw new ServiceException("[" + cart.getProductName() + "]商品库存不足,请重试");
+                    throw new ServiceException("[" + cart.getProductName() + "]商品库存不足，请重试");
                 }
                 if (umsMemberCartMapper.deleteUmsMemberCartByIdAndMemberId(memberId, cart.getId()) != 1) {
                     throw new ServiceException("购物车数据已变更，请重试");

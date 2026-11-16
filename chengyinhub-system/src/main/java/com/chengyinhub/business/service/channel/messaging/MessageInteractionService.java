@@ -95,6 +95,8 @@ public class MessageInteractionService
         boolean on = onRaw == null || Boolean.TRUE.equals(onRaw);
 
         im.requireReadable(viewer, conv);
+        // SOC-4：加表情与发消息走同一道安全闸（限制发言、拉黑、已无发送权）；撤回自己的表情不拦。
+        if (on) im.requireSendable(viewer, conv);
         if (channels != null && channels.isChannel(conv)) channels.requireReact(viewer, conv);
         Map<String, Object> head = mapper.selectMessageHead(messageId);
         if (head == null || number(head.get("conversationId")) != conv || number(head.get("status")) != ImMessage.STATUS_NORMAL
@@ -218,6 +220,7 @@ public class MessageInteractionService
     public Map<String, Object> typing(long viewer, long conv)
     {
         im.requireReadable(viewer, conv);
+        im.requireSendable(viewer, conv); // SOC-4：与发送同一道安全闸
         if (channels != null && channels.isChannel(conv)) channels.mentionScope(viewer, conv); // 发送权限（不受慢速模式限制）
         long now = System.currentTimeMillis();
         String key = viewer + ":" + conv;

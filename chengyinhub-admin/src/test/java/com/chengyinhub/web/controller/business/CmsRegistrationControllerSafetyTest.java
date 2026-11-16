@@ -101,7 +101,7 @@ class CmsRegistrationControllerSafetyTest {
         AjaxResult result = controller.remove(new Long[] { 1L });
 
         assertEquals(403, result.get(AjaxResult.CODE_TAG));
-        assertTrue(String.valueOf(result.get(AjaxResult.MSG_TAG)).contains("报名含支付事实,不支持删除"),
+        assertTrue(String.valueOf(result.get(AjaxResult.MSG_TAG)).contains("报名含支付事实，不支持删除"),
                 "应被报名禁删封口拦下,实际文案:" + result.get(AjaxResult.MSG_TAG));
         verifyNoInteractions(registrationService);
     }

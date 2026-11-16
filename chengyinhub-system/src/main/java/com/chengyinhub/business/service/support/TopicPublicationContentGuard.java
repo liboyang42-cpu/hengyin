@@ -565,7 +565,7 @@ public class TopicPublicationContentGuard {
         for (String key : refs) {
             if (!defined.contains(key)) {
                 throw contentFailure(PublicationProblem.CODE_THOUGHT_REF_UNRESOLVED, "journeyRulesJson.thoughts",
-                        new ServiceException("故事里用到的念头「" + key + "」还没在思维阁里定义,玩家永远得不到它"));
+                        new ServiceException("故事里用到的念头「" + key + "」还没在思维阁里定义，玩家永远得不到它"));
             }
         }
     }
@@ -711,7 +711,7 @@ public class TopicPublicationContentGuard {
             if (!registered.contains(entry.getKey())) {
                 missing.add(entry.getKey() + "(节点:" + String.join(",", entry.getValue()) + ")");
                 problems.add(stateKeyProblem(PublicationProblem.CODE_STATE_KEY_UNREGISTERED, entry.getKey(), refs,
-                        "状态键未注册:" + entry.getKey()));
+                        "状态键未注册：" + entry.getKey()));
             }
         }
         // R2-B10:主题数值规则的力竭标记与玩法块引用同一道闸 —— 它会被检定链路写进本局 state_json,
@@ -719,14 +719,14 @@ public class TopicPublicationContentGuard {
         if (exhaustTag != null && !registered.contains(exhaustTag)) {
             missing.add(exhaustTag + "(来源:主题数值规则)");
             problems.add(stateKeyProblem(PublicationProblem.CODE_STATE_KEY_UNREGISTERED, exhaustTag, refs,
-                    "状态键未注册:" + exhaustTag));
+                    "状态键未注册：" + exhaustTag));
         }
         // R8:主题剧情配置(journey_story_json)的 when 条件同样只能引用已注册的键。
         for (String storyKey : storyKeys) {
             if (!registered.contains(storyKey) && !thoughtDoneTags.contains(storyKey)) {
                 missing.add(storyKey + "(来源:主题剧情配置)");
                 problems.add(stateKeyProblem(PublicationProblem.CODE_STATE_KEY_UNREGISTERED, storyKey, refs,
-                        "状态键未注册:" + storyKey));
+                        "状态键未注册：" + storyKey));
             }
         }
         // R19:叙事搬进章节故事流后,beat 块上的 when(brief carry / outcome fact / revisit change)
@@ -735,7 +735,7 @@ public class TopicPublicationContentGuard {
             if (!registered.contains(chapterKey) && !thoughtDoneTags.contains(chapterKey)) {
                 missing.add(chapterKey + "(来源:章节故事流)");
                 problems.add(stateKeyProblem(PublicationProblem.CODE_STATE_KEY_UNREGISTERED, chapterKey, refs,
-                        "状态键未注册:" + chapterKey));
+                        "状态键未注册：" + chapterKey));
             }
         }
         // R8-STORY:剧情配置的 cond 与 optionalClues 引用同一注册表(收集服务已收过的键不重复报)
@@ -744,7 +744,7 @@ public class TopicPublicationContentGuard {
                     && !thoughtDoneTags.contains(entry.getKey())) {
                 missing.add(entry.getKey() + "(来源:" + entry.getValue() + ")");
                 problems.add(stateKeyProblem(PublicationProblem.CODE_STATE_KEY_UNREGISTERED, entry.getKey(), refs,
-                        "状态键未注册:" + entry.getKey()));
+                        "状态键未注册：" + entry.getKey()));
             }
         }
         // R11-C:尾声的 relationKey 已注册还不够,类型必须就是 relation(关系值来源口径)。
@@ -753,14 +753,14 @@ public class TopicPublicationContentGuard {
                 continue;       // 未注册已由上面的通用闸报出,不重复报
             }
             if (!ThemeStateKey.TYPE_RELATION.equals(registeredTypes.get(relationKey))) {
-                missing.add(relationKey + "(来源:主题剧情配置尾声,键类型必须是 relation)");
+                missing.add(relationKey + "(来源：主题剧情配置尾声，键类型必须是 relation)");
                 problems.add(PublicationProblem.at(PublicationProblem.CODE_STATE_KEY_TYPE_INVALID, null,
-                        "stateKeys", "状态键类型不对:" + relationKey + "(来源:主题剧情配置尾声,键类型必须是 relation)"));
+                        "stateKeys", "状态键类型不对：" + relationKey + "(来源：主题剧情配置尾声，键类型必须是 relation)"));
             }
         }
         if (!missing.isEmpty()) {
             throw TopicPublicationContentException.withIssues(
-                    new ServiceException("主题发布失败:以下状态键未注册 → " + missing), problems);
+                    new ServiceException("主题发布失败：以下状态键未注册 → " + missing), problems);
         }
     }
 
@@ -853,7 +853,7 @@ public class TopicPublicationContentGuard {
         try {
             rules = JourneyRules.parse(raw);
         } catch (RuntimeException e) {
-            throw new ServiceException("主题的旅程数值规则无法解析,主题发布失败:" + e.getMessage());
+            throw new ServiceException("主题的旅程数值规则无法解析，主题发布失败：" + e.getMessage());
         }
         // R22-SEC S15:checkEnabled 只关检定,不豁免力竭标记的注册闸(运行期仍会写入)。
         if (rules.getRecovery() == null) {
@@ -972,7 +972,7 @@ public class TopicPublicationContentGuard {
         if (!missing.isEmpty()) {
             throw contentFailure(PublicationProblem.CODE_NARRATIVE_NPC_INVALID,
                     "nodes[].template.advancedConfigJson.enter/outcome.npcId",
-                    new ServiceException("主题发布失败:节点叙事的 npcId 不属于本主题可用 NPC → " + missing));
+                    new ServiceException("主题发布失败：节点叙事的 npcId 不属于本主题可用 NPC → " + missing));
         }
     }
 
@@ -1262,7 +1262,7 @@ public class TopicPublicationContentGuard {
             journeyStoryValidator.validate(raw, com.chengyinhub.business.service.support.JourneyStoryValidator.Context.of(
                     chapterIds, journeyStoryAvailableNpcIds(topic.getId(), current), nodeIds, branchNodeRefs, outcomeNodeRefs));
         } catch (RuntimeException e) {
-            ServiceException invalid = new ServiceException("主题的剧情配置引用无效,主题发布失败:" + e.getMessage()
+            ServiceException invalid = new ServiceException("主题的剧情配置引用无效，主题发布失败：" + e.getMessage()
                     + publicationLocation(topic, fieldPath));
             invalid.initCause(e);
             throw contentFailure(fieldPath.startsWith("themeRuntimeConfigJson")
@@ -1310,7 +1310,7 @@ public class TopicPublicationContentGuard {
         try {
             keys = com.chengyinhub.business.util.StateKeyRefs.collectJourneyStory(raw);
         } catch (RuntimeException e) {
-            throw new ServiceException("主题的剧情配置无法解析,主题发布失败:" + e.getMessage());
+            throw new ServiceException("主题的剧情配置无法解析，主题发布失败：" + e.getMessage());
         }
         for (String key : keys) {
             refs.put(key, "剧情配置");
@@ -1326,7 +1326,7 @@ public class TopicPublicationContentGuard {
         try {
             return com.chengyinhub.business.util.StateKeyRefs.collectJourneyStoryRelationKeys(raw);
         } catch (RuntimeException e) {
-            throw new ServiceException("主题的剧情配置无法解析,主题发布失败:" + e.getMessage());
+            throw new ServiceException("主题的剧情配置无法解析，主题发布失败：" + e.getMessage());
         }
     }
 

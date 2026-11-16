@@ -55,6 +55,45 @@ class LocationTrustPolicyTest {
         assertEquals(LocationTrustDecision.ACCEPT, v.decision());
     }
 
+    /** GAME-4: 290 m hops 3 s apart between two good fixes are no longer "jitter". */
+    @Test
+    void steppedJumpsAreJudged() {
+        LocationTrustPolicy.Baseline before = new LocationTrustPolicy.Baseline(LAT - 290 / M_PER_DEG, LNG, NOW - 3_000L, null, 10d);
+        LocationTrustPolicy.Verdict v = eval(LocationTrustKind.CHECKIN, full(LAT, LNG, 10d, null, null, null), before);
+        assertTrue(v.reasons().contains(LocationTrustPolicy.SPEED_IMPOSSIBLE));
+        assertEquals(LocationTrustDecision.ACCEPT_NO_REWARD, v.decision());
+    }
+
+    @Test
+    void steppedJumpsKeepTheOldRuleInFlatMode() {
+        LocationTrustConfig flat = LocationTrustConfig.read(k -> "location.trust.jitterMode".equals(k) ? "FLAT" : null);
+        LocationTrustPolicy.Baseline before = new LocationTrustPolicy.Baseline(LAT - 290 / M_PER_DEG, LNG, NOW - 3_000L, null, 10d);
+        LocationTrustPolicy.Verdict v = LocationTrustPolicy.evaluate(LocationTrustKind.CHECKIN,
+                full(LAT, LNG, 10d, null, null, null), before, 0, NOW, flat);
+        assertEquals(LocationTrustDecision.ACCEPT, v.decision());
+    }
+
+    @Test
+    void jitterAllowanceNeverWidensForClientsWithoutAccuracy() {
+        // both accuracies missing: 150 + 150 + 50 = 350 m, capped at the old 300 m rule
+        LocationTrustPolicy.Verdict v = eval(LocationTrustKind.SHOP_VISIT, LocationFix.of(LAT, LNG), baseAgo(1, 320));
+        assertTrue(v.reasons().contains(LocationTrustPolicy.SPEED_IMPOSSIBLE));
+    }
+
+    /** GAME-4: many small hops each under the allowance are caught by the 10-minute window. */
+    @Test
+    void windowCatchesManySmallHops() {
+        LocationTrustPolicy.Baseline last = new LocationTrustPolicy.Baseline(LAT - 60 / M_PER_DEG, LNG, NOW - 3_000L, null, 10d);
+        LocationTrustPolicy.Baseline windowStart = new LocationTrustPolicy.Baseline(LAT - 9_000 / M_PER_DEG, LNG, NOW - 120_000L, null, 10d);
+        LocationTrustPolicy.Verdict v = LocationTrustPolicy.evaluate(LocationTrustKind.CHECKIN,
+                full(LAT, LNG, 10d, null, null, null), last, windowStart, 0, NOW, CFG);
+        assertTrue(v.reasons().contains(LocationTrustPolicy.SPEED_IMPOSSIBLE), "9 km in 2 minutes = 75 m/s");
+        LocationTrustPolicy.Verdict walking = LocationTrustPolicy.evaluate(LocationTrustKind.CHECKIN,
+                full(LAT, LNG, 10d, null, null, null), last,
+                new LocationTrustPolicy.Baseline(LAT - 600 / M_PER_DEG, LNG, NOW - 540_000L, null, 10d), 0, NOW, CFG);
+        assertEquals(LocationTrustDecision.ACCEPT, walking.decision());
+    }
+
     @Test
     void honest_metroBetweenTwoCheckins_overLongGapUsesVehicleLimit() {
         // 12 km in 12 minutes = 16.7 m/s: over the on-foot 15 m/s, but the gap is > 5 min so 35 m/s applies

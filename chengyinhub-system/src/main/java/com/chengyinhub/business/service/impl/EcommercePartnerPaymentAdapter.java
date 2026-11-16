@@ -253,6 +253,68 @@ public class EcommercePartnerPaymentAdapter {
         }
     }
 
+    /**
+     * K1 club dues: places a dues invoice ({@code CLM...}) on the club's own sub-merchant (service-provider JSAPI,
+     * {@code settle_info.profit_sharing=true}). Called only while the collection model is active and its decision is
+     * SPLIT. A seller row is written first (an order already started on a sub-merchant keeps it), then
+     * {@code beforeWechat} records the dues split ledger, then the payment intent is frozen and WeChat is called.
+     * Never falls back to the platform merchant account: a platform attempt already exists → definite refusal.
+     */
+    public Map<String, String> createDuesOrder(String outTradeNo, long totalFen, String description, String openid,
+                                               com.chengyinhub.business.collection.CollectionDecision split,
+                                               String platformMchid,
+                                               java.util.function.Consumer<EcomOrderSeller> beforeWechat) {
+        if (!enabled() || split == null || !split.split() || outTradeNo == null || !outTradeNo.startsWith("CLM")
+                || totalFen <= 0 || openid == null || openid.isBlank())
+            throw PaymentPreorderException.definiteFailure("卖家收款暂不可用，请稍后再试", null);
+        EcomOrderSeller seller = mapper.selectOrderSeller(outTradeNo);
+        if (seller == null) {
+            if (platformMchid != null && !platformMchid.isBlank() && intents.hasAnyAttempt(platformMchid, outTradeNo))
+                throw PaymentPreorderException.definiteFailure("这笔会费曾按旧方式发起支付，请关闭后重新续费", null);
+            EcomOrderSeller row = new EcomOrderSeller();
+            row.setOutTradeNo(outTradeNo);
+            row.setSubMchid(split.subMchid());
+            row.setSellerType(split.sellerType().name());
+            row.setSellerId(split.sellerId());
+            row.setTotalFen(totalFen);
+            try {
+                mapper.insertOrderSeller(row);
+            } catch (DuplicateKeyException concurrent) {
+                // 并发下单：以先写入的那条为准。
+            }
+            seller = mapper.selectOrderSeller(outTradeNo);
+            if (seller == null) throw PaymentPreorderException.definiteFailure("卖家收款单写入失败", null);
+        }
+        if (seller.getTotalFen() == null || seller.getTotalFen() != totalFen)
+            throw PaymentPreorderException.definiteFailure("支付金额与卖家收款单不符", null);
+        if (beforeWechat != null) beforeWechat.accept(seller);
+        String subMchid = seller.getSubMchid();
+        String body = description(description == null || description.isBlank() ? "俱乐部会费" : description);
+        String notifyUrl;
+        try {
+            notifyUrl = gateway.paymentNotifyUrl();
+        } catch (RuntimeException invalid) {
+            throw PaymentPreorderException.definiteFailure("创建微信支付订单参数异常：" + invalid.getMessage(), invalid);
+        }
+        String wxNo = intents.freezePaymentIntent(outTradeNo, subMchid, switches.spAppid(), "JSAPI", "CNY",
+                Math.toIntExact(totalFen), openid, body, notifyUrl, () -> {
+                    try {
+                        gateway.queryPartnerOrder(subMchid, outTradeNo);
+                        throw new IllegalStateException("历史卖家原单缺少冻结请求，须保留原单查证");
+                    } catch (EcommercePayGateway.PartnerOrderNotFound absent) {
+                        // 微信侧不存在同号原单，可以首次提交。
+                    }
+                });
+        try {
+            RestoreDispatchGuard.requireDispatchAllowed();
+            return gateway.prepayJsapi(subMchid, wxNo, totalFen, body, openid);
+        } catch (RestoreDispatchGuard.Blocked paused) {
+            throw paused;
+        } catch (RuntimeException e) {
+            throw PaymentPreorderException.resultUncertain("创建微信支付订单结果未知：" + e.getMessage(), e);
+        }
+    }
+
     // ------------------------------------------------------------------ 查单 / 关单
 
     Map<String, String> queryOrderStatus(String businessNo, EcomOrderSeller seller) {

@@ -35,6 +35,13 @@ public interface IImService
     /** W5 C2：读会话的同一道闸（与历史分页相同），不通过抛异常。实时流、表情回应、引用与话题读取共用。 */
     void requireReadable(Long memberId, Long conversationId);
 
+    /**
+     * SOC-4：写会话的共用安全闸（发送、表情回应、正在输入）。不通过抛异常：
+     * 账号被限制发言；系统会话；不再是成员；俱乐部参与限制或群/游戏频道已无发送权；单聊双方任一方拉黑。
+     * 频道自身的 SEND / ADD_REACTION 权限仍由各入口按动作另行检查。
+     */
+    void requireSendable(Long memberId, Long conversationId);
+
     /** 群功能共用的实时成员闸；会话索引行不能独立授权。 */
     void requireActiveGroupMembership(Long memberId, Long conversationId);
 

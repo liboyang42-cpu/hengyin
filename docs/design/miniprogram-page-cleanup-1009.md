@@ -125,6 +125,7 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `pages/club/topic-detail/index` | 否 | `chengyinhub-xcx/pages/club/detail/index.js:2535` | KEEP |
 | `pages/club/topic-story/index` | 否 | `chengyinhub-xcx/pages/club/topic-detail/index.js:654` | KEEP |
 | `pages/club/workbench/index` | 否 | 无直接源引用；兼容契约/外发历史待确认 | UNSURE |
+| `pages/club/channels/index` | 否 | `chengyinhub-xcx/pages/club/detail/index.js:2700` | KEEP |
 | `pages/topic/index/index` | 否 | `chengyinhub-admin/sql/migration_seed_prefab_life_20260918.sql:51` | KEEP |
 | `pages/topic/merchantinfo/merchantinfo` | 否 | `chengyinhub-xcx/docs/audit-e2e-202609/logs/walk-merchant.json:340` | KEEP |
 | `pages/topic/merchantapply/index` | 否 | `chengyinhub-xcx/docs/audit-e2e-202609/logs/walk-merchant.json:328` | KEEP |
@@ -157,6 +158,7 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `pages/merchant/game-node/index` | 否 | `chengyinhub-xcx/docs/audit-e2e-202609/logs/walk-merchant.json:291` | KEEP |
 | `pages/merchant/customer/detail/index` | 否 | `chengyinhub-xcx/docs/audit-e2e-202609/logs/walk-merchant.json:278` | KEEP |
 | `pages/merchant/verify-records/index` | 否 | `chengyinhub-xcx/pages/merchant/index/index.js:315` | KEEP |
+| `pages/merchant/bundle-reservations/index` | 否 | `chengyinhub-xcx/pages/merchant/index/index.js:360` | KEEP |
 | `pages/merchant/payout-account/index` | 否 | `chengyinhub-xcx/pages/merchant/index/index.js:364` | KEEP |
 | `pages/merchant/crm-campaigns/index` | 否 | `chengyinhub-xcx/pages/merchant/customer/index.js:915` | KEEP |
 | `pages/merchant/team/index` | 否 | `chengyinhub-xcx/docs/audit-e2e-202609/logs/walk-merchant.json:305` | KEEP |

@@ -161,18 +161,18 @@ test('主题货架玩法数使用去重 gameCount，不把节点引用数当成�
     { id: 990040, name: '一起动起来', templateCount: 0, gameCount: 0, chapterCount: 8, productType: 2 }
   ];
   await respond(requests.find((r) => r.url === '/api/template/topic-template/list'), ok(rows));
-  assert.equal(vm._topics.find((t) => t.id === 990047).meta, '实验模板 · 1 个玩法');
-  assert.equal(vm._topics.find((t) => t.id === 990012).meta, '实验模板 · 4 章 · 7 个玩法');
-  assert.equal(vm._topics.find((t) => t.id === 990040).meta, '实验模板 · 8 章');
+  assert.equal(vm._topics.find((t) => t.id === 990047).meta, '1 个玩法');
+  assert.equal(vm._topics.find((t) => t.id === 990012).meta, '4 章 · 7 个玩法');
+  assert.equal(vm._topics.find((t) => t.id === 990040).meta, '8 章');
   assert.deepEqual(rows.map((t) => [t.id, t.templateCount, t.gameCount]), [
     [990047, 4, 1], [990012, 11, 7], [990040, 0, 0]
   ]);
 });
 
-test('主题时长按秒换算(不再把 14400 秒写成「14400分钟」),未验证的主题标「实验模板」', async () => {
+test('主题时长按秒换算(不再把 14400 秒写成「14400分钟」),只有明确实验状态才标「实验模板」', async () => {
   const { vm, requests } = mountShelf();
   await respond(requests.find((r) => r.url === '/api/template/topic-template/list'), ok([
-    topic(1, '风味巡游', { totalTime: 14400 }),
+    topic(1, '风味巡游', { totalTime: 14400, templateStatus: 'EXPERIMENTAL' }),
     topic(2, '不惑之年', { totalTime: 7800, templateStatus: 'VERIFIED' })
   ]));
   const [a, b] = vm._topics;
@@ -273,11 +273,11 @@ test('主题点开进卡堆预览(带商家作用域与只读标记),玩法点�
   vm.openGame({ currentTarget: { dataset: { item: { id: 81 } } } });
   assert.deepEqual(navigations, [
     '/pages/templatedetail/topic-preview/index?id=7&scope=MERCHANT&readonly=1',
-    '/pages/templatedetail/templatedetail?id=81&operationScope=MERCHANT'
+    '/pages/templatedetail/templatedetail?id=81&operationScope=MERCHANT&readonly=1'
   ]);
   vm.openTopic({ currentTarget: { dataset: { item: { id: 8, previewOnly: true } } } });
   assert.equal(navigations.length, 2);
-  assert.deepEqual(vm.events.pop(), ['toast', { text: '这是预览模板，保存后才能查看' }]);
+  assert.deepEqual(vm.events.pop(), ['toast', { text: '暂未开放' }]);
 });
 
 test('模板页只留顶栏、发布入口与底栏；货架走分包异步组件，搜索进统一搜索页', () => {
@@ -412,7 +412,8 @@ test('用这个模板：先过写前登录闸，只读岗位拦下，在途不�
   m.page.useTemplate();
   const uses = m.requests.filter((r) => r.url === '/api/template/topic-template/use');
   assert.equal(uses.length, 1, '在途时连点不重复复制');
-  assert.deepEqual(uses[0].data, { id: '7', scope: 'MERCHANT' });
+  assert.match(uses[0].data.requestId, /^tu-/); // D-03:采用带幂等 requestId
+  assert.deepEqual({ id: uses[0].data.id, scope: uses[0].data.scope }, { id: '7', scope: 'MERCHANT' });
   uses[0].success(ok({ topicId: 901 }));
   assert.deepEqual(m.navigations, ['/pages/publish/fabu/index?id=901&scope=MERCHANT']);
 
@@ -446,7 +447,7 @@ test('标签按多个维度分组(没有「场景」维度);横滑行只放常�
   assert.ok(!art.TOPIC_TAGS.some((t) => /黄浦|徐汇|浦东|虹口/.test(t.name)), '业主去掉了区域维度');
   const { vm, requests } = mountShelf();
   await respond(requests.find((r) => r.url === '/api/template/topic-template/list'), ok([
-    topic(1, '风味巡游', { totalTime: 14400 }), topic(2, '高温末日逃生', { totalTime: 21600 }), topic(3, '异常事务局：不存在的坐标', { productType: 1 })
+    topic(1, '风味巡游', { totalTime: 14400, templateStatus: 'EXPERIMENTAL' }), topic(2, '高温末日逃生', { totalTime: 21600 }), topic(3, '异常事务局：不存在的坐标', { productType: 1 })
   ]));
   assert.ok(vm.data.topicTags.length <= art.TOPIC_ROW.length + 1);
   assert.ok(!vm.data.topicTagGroups.some((g) => g.tags.some((t) => t.key === 'versus')), '没有内容的「竞技对抗」不出现');

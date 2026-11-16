@@ -556,7 +556,7 @@ public class ApiActivityController extends BaseController {
         // 若该活动还有已付款报名,删完活动就查不到了,而用户的钱还在平台 —— 钱原地悬空。
         // 「删除」不该隐含大额资金操作,故此处拒绝并引导去走「取消活动」(那条会整单全额退)。
         if (cmsActivityService.countPaidRegistrations(cid) > 0) {
-            return error("该活动已有用户付费报名,不能直接删除。请先「取消活动」(将全额退款给所有未核销报名),再删除。");
+            return error("该活动已有用户付费报名，不能直接删除。请先「取消活动」(将全额退款给所有未核销报名)，再删除。");
         }
 
         // [资损闸 · W9] 上面那道只看 payment_status=2 = 钱已到账,漏了「钱随时可能进来」:玩家拉起支付、
@@ -565,7 +565,7 @@ public class ApiActivityController extends BaseController {
         // ⚠️ 无条件拦 0,不按 pay_expire_time 放过「过期弃单」—— 该字段后端无强制力(支付口不校验它),
         // 过期单照样付得了。弃单解堵靠 orderCloseTask 关单成 3(约 35 分钟内自愈),不靠这里放行。
         if (cmsActivityService.countPendingRegistrations(cid) > 0) {
-            return error("该活动有用户的报名待支付,此刻删除会导致「钱收了、活动没了」。未支付的单会在支付窗口过期后由系统自动关单(约 30 分钟),届时即可删除。");
+            return error("该活动有用户的报名待支付，此刻删除会导致「钱收了、活动没了」。未支付的单会在支付窗口过期后由系统自动关单(约 30 分钟)，届时即可删除。");
         }
 
         cmsActivity.setId(cid);
@@ -597,7 +597,7 @@ public class ApiActivityController extends BaseController {
             return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         if (reason == null || reason.trim().isEmpty()) {
-            return error("请填写取消原因,它会展示给已报名的用户");
+            return error("请填写取消原因，它会展示给已报名的用户");
         }
         Long memberId = 0L;
         try {
@@ -883,12 +883,26 @@ public class ApiActivityController extends BaseController {
     @Log(title = "发布活动", businessType = BusinessType.INSERT)
     @PostMapping("/publish")
     public AjaxResult publish(@Validated @RequestBody CmsActivityPublishRequest request) {
-        if (request == null || request.getRequestId() == null || request.getRequestId().isBlank()) return publishOnce(request);
+        if (request == null || request.getRequestId() == null || request.getRequestId().isBlank()) return publishOnce(request, null);
         return authorWriteReceipts.execute(getAppUserId(), "ACTIVITY_PUBLISH", request.getRequestId(), request,
-                () -> publishOnce(request));
+                () -> publishOnce(request, null));
     }
 
-    private AjaxResult publishOnce(CmsActivityPublishRequest request) {
+    /**
+     * W7 SOC-6(主理人拍板 方案 A):俱乐部管理员或持 CREATE_EVENT 的角色在频道发的免费活动,主办主体是俱乐部主理人
+     * (配额、结算、退款归主理人),实际操作人是当前登录者,真实发布人另记在 channel_event.poster_member_id。
+     * 不是 HTTP 路由:只有 ApiChannelEventController 在 ChannelEventService.preparePost 放行后调用。
+     * 其余闸(内容安全、配额、俱乐部归属)与 /publish 完全相同;publishActivity 仍校验 club.member_id == 主办主体。
+     */
+    public AjaxResult publishHostedByClubOwner(CmsActivityPublishRequest request, long clubOwnerMemberId) {
+        if (clubOwnerMemberId <= 0 || request == null) return refuse(ErrorCode.FORBIDDEN, "仅俱乐部主理人或商家可发布活动");
+        request.setScope(null);
+        if (request.getRequestId() == null || request.getRequestId().isBlank()) return publishOnce(request, clubOwnerMemberId);
+        return authorWriteReceipts.execute(getAppUserId(), "ACTIVITY_PUBLISH", request.getRequestId(), request,
+                () -> publishOnce(request, clubOwnerMemberId));
+    }
+
+    private AjaxResult publishOnce(CmsActivityPublishRequest request, Long clubOwnerHost) {
         try {
 
             // 添加调试日志
@@ -906,7 +920,9 @@ public class ApiActivityController extends BaseController {
 
             final ActivityPublisher publisher;
             try {
-                publisher = resolveActivityPublisher(member_id, request == null ? null : request.getScope());
+                publisher = clubOwnerHost != null
+                        ? clubOwnerHostedPublisher(clubOwnerHost, member_id)
+                        : resolveActivityPublisher(member_id, request == null ? null : request.getScope());
             } catch (ServiceException se) {
                 return error(se.getMessage());
             }
@@ -1313,6 +1329,14 @@ public class ApiActivityController extends BaseController {
             return null;
         }
         return new ActivityPublisher(principalMemberId, principalMemberId, false);
+    }
+
+    /** W7 SOC-6:主理人做主办主体、当前登录者做操作人;主理人已不是俱乐部发布角色时不放行。 */
+    private ActivityPublisher clubOwnerHostedPublisher(Long clubOwnerMemberId, Long actorMemberId) {
+        if (clubOwnerMemberId == null || clubOwnerMemberId <= 0 || !isClubActivityPublisher(clubOwnerMemberId)) {
+            return null;
+        }
+        return new ActivityPublisher(clubOwnerMemberId, actorMemberId, false);
     }
 
     /**

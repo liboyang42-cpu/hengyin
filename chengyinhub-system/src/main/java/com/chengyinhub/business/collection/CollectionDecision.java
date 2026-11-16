@@ -20,6 +20,8 @@ public record CollectionDecision(CollectionPolicy policy, SellerOfRecordPolicy.S
     public static final String SUB_MCHID_IS_PLATFORM = "SUB_MCHID_IS_PLATFORM";
     public static final String DUES_SPLIT_NOT_BUILT = "DUES_SPLIT_NOT_BUILT";
     public static final String APP_CHANNEL_SPLIT_NOT_BUILT = "APP_CHANNEL_SPLIT_NOT_BUILT";
+    /** W7 MERCHANT-1: the Q5 money area (or the collection model) is closed; the platform must open it first. */
+    public static final String MONEY_SWITCH_CLOSED = "MONEY_SWITCH_CLOSED";
 
     public boolean platform() { return policy == CollectionPolicy.PLATFORM; }
 

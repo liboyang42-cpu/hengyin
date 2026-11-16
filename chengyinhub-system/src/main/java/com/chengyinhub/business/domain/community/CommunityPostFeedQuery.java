@@ -13,6 +13,9 @@ public class CommunityPostFeedQuery {
     private String collectionCode;
     private String keyword;
     private Long authorId;
+    /** K2 discovery: internal PLACE mode only (POI or MERCHANT); never reachable through the public feed modes. */
+    private String placeType;
+    private Long placeId;
 
     public Long getViewerId() { return viewerId; }
     public void setViewerId(Long viewerId) { this.viewerId = viewerId; }
@@ -36,4 +39,8 @@ public class CommunityPostFeedQuery {
     public void setKeyword(String keyword) { this.keyword = keyword; }
     public Long getAuthorId() { return authorId; }
     public void setAuthorId(Long authorId) { this.authorId = authorId; }
+    public String getPlaceType() { return placeType; }
+    public void setPlaceType(String placeType) { this.placeType = placeType; }
+    public Long getPlaceId() { return placeId; }
+    public void setPlaceId(Long placeId) { this.placeId = placeId; }
 }

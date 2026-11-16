@@ -152,7 +152,15 @@ public class ChannelMessageService implements IChannelConversationGate
     public Map<String, Object> decorateHistory(long conversationId, Map<String, Object> page, List<Long> orderedIds)
     {
         Map<String, Object> data = new LinkedHashMap<>(page);
-        data.put("list", snapshots(conversationId, orderedIds));
+        List<Map<String, Object>> list = snapshots(conversationId, orderedIds);
+        // SOC-4：保留历史页对“已拉黑发送者”的标记（快照不删行）。
+        Set<String> blocked = new HashSet<>();
+        if (page.get("list") instanceof List<?> rows)
+            for (Object row : rows)
+                if (row instanceof com.chengyinhub.business.domain.ImMessage m && m.getId() != null
+                        && Boolean.TRUE.equals(m.getSenderBlocked())) blocked.add(String.valueOf(m.getId()));
+        if (!blocked.isEmpty()) for (Map<String, Object> v : list) if (blocked.contains(v.get("id"))) v.put("senderBlocked", true);
+        data.put("list", list);
         Long cursor = messages.maxMutation(conversationId);
         data.put("mutation_cursor", String.valueOf(cursor == null ? 0L : cursor));
         data.put("sync_contract", SYNC_CONTRACT);
@@ -185,13 +193,102 @@ public class ChannelMessageService implements IChannelConversationGate
             v.put("mention_type", m.get("mentionType"));
             mentions.computeIfAbsent(toLong(m.get("messageId")), k -> new ArrayList<>()).add(v);
         }
+        Map<Long, Map<String, Object>> quotes = replyQuotes(conversationId, byId, ids);
         for (Long id : ids)
         {
             Map<String, Object> r = byId.get(id);
             if (r == null || toLong(r.get("conversationId")) != conversationId) continue;
-            list.add(snapshotView(r, pinned.contains(id), mentions.get(id)));
+            Map<String, Object> v = snapshotView(r, pinned.contains(id), mentions.get(id));
+            long reply = toLong(r.get("status")) == 0 ? replyToId(r.get("extraJson")) : 0;
+            if (reply > 0) v.put("replyTo", quotes.getOrDefault(reply, quoteView(reply, null)));
+            list.add(v);
         }
         return list;
+    }
+
+    // SOC-3：快照带被回复消息的摘要（一页一次批量读取），客户端据此画引用行。
+    static final int QUOTE_SUMMARY_LIMIT = 80;
+
+    private Map<Long, Map<String, Object>> replyQuotes(long conversationId, Map<Long, Map<String, Object>> byId, List<Long> ids)
+    {
+        Set<Long> wanted = new LinkedHashSet<>();
+        for (Long id : ids)
+        {
+            Map<String, Object> r = byId.get(id);
+            if (r == null || toLong(r.get("status")) != 0) continue;
+            long reply = replyToId(r.get("extraJson"));
+            if (reply > 0) wanted.add(reply);
+        }
+        Map<Long, Map<String, Object>> out = new HashMap<>();
+        if (wanted.isEmpty()) return out;
+        List<Long> missing = new ArrayList<>();
+        for (Long id : wanted)
+        {
+            Map<String, Object> known = byId.get(id);
+            if (known != null) out.put(id, quoteView(id, known.get("conversationId") != null
+                    && toLong(known.get("conversationId")) == conversationId ? known : null));
+            else missing.add(id);
+        }
+        if (!missing.isEmpty())
+        {
+            Map<Long, Map<String, Object>> heads = new HashMap<>();
+            for (Map<String, Object> r : messages.selectMessages(missing)) heads.put(toLong(r.get("id")), r);
+            for (Long id : missing)
+            {
+                Map<String, Object> head = heads.get(id);
+                boolean same = head != null && toLong(head.get("conversationId")) == conversationId;
+                out.put(id, quoteView(id, same ? head : null));
+            }
+        }
+        return out;
+    }
+
+    /** extra_json 里服务端写回的 reply_to_id（十进制字符串）；没有或不合法时为 0。 */
+    static long replyToId(Object extraJson)
+    {
+        if (!(extraJson instanceof String text) || text.isBlank() || !text.contains("reply_to_id")) return 0;
+        try
+        {
+            com.alibaba.fastjson2.JSONObject o = com.alibaba.fastjson2.JSON.parseObject(text);
+            Object raw = o == null ? null : o.get("reply_to_id");
+            String value = raw == null ? "" : String.valueOf(raw);
+            return (raw instanceof String || raw instanceof Number) && value.matches("[1-9][0-9]{0,18}") ? Long.parseLong(value) : 0;
+        }
+        catch (RuntimeException notJson) { return 0; }
+    }
+
+    /** 引用行：VISIBLE 才带摘要和发送者；撤回、未过审、不在本频道都只给状态。 */
+    static Map<String, Object> quoteView(long id, Map<String, Object> head)
+    {
+        Map<String, Object> v = new LinkedHashMap<>();
+        v.put("id", String.valueOf(id));
+        if (head == null) { v.put("state", "UNAVAILABLE"); return v; }
+        long status = toLong(head.get("status"));
+        Object check = head.get("checkStatus");
+        boolean approved = check == null || toLong(check) == 1;
+        if (status == 0 && approved)
+        {
+            v.put("state", "VISIBLE");
+            v.put("summary", quoteSummary(head));
+            long sender = toLong(head.get("senderId"));
+            if (sender > 0) v.put("senderId", String.valueOf(sender));
+            if (head.get("senderName") != null) v.put("senderName", head.get("senderName"));
+        }
+        else if (status == 1) v.put("state", "RECALLED");
+        else if (status == 2) v.put("state", "BLOCKED");
+        else v.put("state", "UNAVAILABLE");
+        return v;
+    }
+
+    static String quoteSummary(Map<String, Object> head)
+    {
+        long type = toLong(head.get("msgType"));
+        if (type != 1 && type != 3 && type != 4) return null; // 图片、语音等只给状态，客户端显示固定文案
+        Object content = head.get("content");
+        if (content == null) return null;
+        String text = content.toString();
+        if (text.codePointCount(0, text.length()) <= QUOTE_SUMMARY_LIMIT) return text;
+        return text.substring(0, text.offsetByCodePoints(0, QUOTE_SUMMARY_LIMIT)) + "…";
     }
 
     static Map<String, Object> snapshotView(Map<String, Object> r, boolean pinned, List<Map<String, Object>> mentions)
@@ -218,6 +315,8 @@ public class ChannelMessageService implements IChannelConversationGate
             v.put("mentions", mentions == null ? List.of() : mentions);
             v.put("mention_everyone", everyone);
         }
+        // SOC-14：注销账号的消息已清空正文并撤回，客户端显示“该用户已注销”。
+        else if (r.get("senderDelFlag") != null && toLong(r.get("senderDelFlag")) == 2L) v.put("account_erased", true);
         return v;
     }
 

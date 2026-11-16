@@ -90,6 +90,37 @@ public class CityBoardAdminController extends BaseController {
         return success(boardAdmin.boardAudit(boardId, limit));
     }
 
+    /** CITY-19: tier and district layout with what is still outside the approved ranges. */
+    @PreAuthorize("@ss.hasPermi('business:citygame:list')")
+    @GetMapping("/boards/{boardId}/layout")
+    public AjaxResult boardLayout(@PathVariable String boardId) {
+        return success(boardAdmin.layout(boardId));
+    }
+
+    @PreAuthorize("@ss.hasPermi('business:citygame:edit')")
+    @Log(title = "CITY地点等级", businessType = BusinessType.UPDATE)
+    @PutMapping("/boards/{boardId}/points/{pointId}/tier")
+    public AjaxResult updatePointTier(@PathVariable String boardId, @PathVariable String pointId, @RequestBody Map<String, Object> body) {
+        return success(boardAdmin.updatePointTier(adminUid(), boardId, pointId, body == null ? null : body.get("tier")));
+    }
+
+    @PreAuthorize("@ss.hasPermi('business:citygame:edit')")
+    @Log(title = "CITY街区", businessType = BusinessType.UPDATE)
+    @PutMapping("/boards/{boardId}/districts/{districtId}")
+    public AjaxResult upsertDistrict(@PathVariable String boardId, @PathVariable String districtId, @RequestBody Map<String, Object> body) {
+        String name = body != null && body.get("name") instanceof String ? (String) body.get("name") : null;
+        String color = body != null && body.get("colorToken") instanceof String ? (String) body.get("colorToken") : null;
+        return success(boardAdmin.upsertDistrict(adminUid(), boardId, districtId, name, color));
+    }
+
+    @PreAuthorize("@ss.hasPermi('business:citygame:edit')")
+    @Log(title = "CITY地点街区", businessType = BusinessType.UPDATE)
+    @PutMapping("/boards/{boardId}/points/{pointId}/district")
+    public AjaxResult assignDistrict(@PathVariable String boardId, @PathVariable String pointId, @RequestBody Map<String, Object> body) {
+        String districtId = body != null && body.get("districtId") instanceof String ? (String) body.get("districtId") : null;
+        return success(boardAdmin.assignDistrict(adminUid(), boardId, pointId, districtId));
+    }
+
     @PreAuthorize("@ss.hasPermi('business:citygame:list')")
     @GetMapping("/merchant-ops/queue")
     public AjaxResult merchantOpsQueue(@RequestParam(required = false) String status) {

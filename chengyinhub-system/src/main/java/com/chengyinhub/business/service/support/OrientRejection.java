@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service.support;
 
+import com.chengyinhub.common.constant.HttpStatus;
+
 /**
  * 城市定向(Doc2 F1d)带机器可读 errorCode 的业务拒绝;Controller 把 errorCode 放进 AjaxResult,
  * 小程序按 errorCode 分支,不解析文案(同 IPlayTeamService.TeamRejection 的约定)。
@@ -36,4 +38,34 @@ public class OrientRejection extends IllegalStateException {
     }
 
     public String getErrorCode() { return errorCode; }
+
+    /** Maps OrientRejection / OrientScoringException errorCode constants to client or dependency status codes. */
+    public static int httpStatusForErrorCode(String errorCode) {
+        if (errorCode == null || errorCode.trim().isEmpty()) {
+            return HttpStatus.CONFLICT;
+        }
+        switch (errorCode) {
+            case DISABLED:
+            case OrientScoringException.DISABLED:
+                return HttpStatus.SERVICE_UNAVAILABLE;
+            case LOGIN_REQUIRED:
+                return HttpStatus.UNAUTHORIZED;
+            case NOT_OWNER:
+            case NOT_PARTICIPANT:
+            case TEAM_NOT_MEMBER:
+                return HttpStatus.FORBIDDEN;
+            case NOT_FOUND:
+            case OrientScoringException.SESSION_NOT_FOUND:
+                return HttpStatus.NOT_FOUND;
+            case BAD_REQUEST:
+            case COORD_SYS_INVALID:
+            case COORD_INVALID:
+            case ALT_TYPE_INVALID:
+            case PHOTO_INVALID:
+            case OrientScoringException.INVALID_ARGUMENT:
+                return HttpStatus.BAD_REQUEST;
+            default:
+                return HttpStatus.CONFLICT;
+        }
+    }
 }

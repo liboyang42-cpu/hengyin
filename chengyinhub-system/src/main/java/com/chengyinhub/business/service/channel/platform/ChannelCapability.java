@@ -7,6 +7,7 @@ import java.util.List;
 /**
  * App 能力表（NativeChannelManagementCapability）的服务端镜像；位号显式固定，不从枚举顺序推断。
  * 26 为 MANAGE_BOUNTY 保留位，19–22、24 为未开放能力，均不会出现在有效权限里。
+ * 28 CREATE_EVENT（W7 SOC-6）：在频道发免费活动；频道级，可放进角色位与频道覆盖。
  */
 public enum ChannelCapability
 {
@@ -15,10 +16,12 @@ public enum ChannelCapability
     PIN_MESSAGE(8, false), MANAGE_MESSAGE(9, false), MANAGE_CHANNEL(10, true), MANAGE_ROLE(11, true),
     KICK_MEMBER(12, true), BAN_MEMBER(13, true), TIMEOUT_MEMBER(14, false), MANAGE_BOT(15, true),
     MANAGE_RULE(16, false), VIEW_AUDIT(17, true), ADMINISTRATOR(18, true), BYPASS_SLOWMODE(23, false),
-    MANAGE_WEBHOOKS(25, true), MANAGE_PROGRESS(27, true);
+    MANAGE_WEBHOOKS(25, true), MANAGE_PROGRESS(27, true), CREATE_EVENT(28, false);
 
     /** App 侧解析上限 0x3ffffff；MANAGE_PROGRESS(27) 只出现在名字列表，不进覆盖位图。 */
     public static final long OVERWRITE_MAX = 0x3ffffffL;
+    /** 角色位与频道覆盖可写的位：0–25 之外只放开 CREATE_EVENT(28)；26、27 仍不能写入。 */
+    public static final long WRITABLE_BITS = OVERWRITE_MAX | (1L << 28);
 
     private final int bit;
     private final boolean guildScoped;
@@ -62,14 +65,14 @@ public enum ChannelCapability
 
     public static String hex(long bits) { return "0x" + Long.toHexString(bits); }
 
-    /** 只接受 App 写出的 "0x…" 形式，超出覆盖上限或格式不对返回 null。 */
+    /** 只接受 App 写出的 "0x…" 形式，含可写位以外的位或格式不对返回 null。 */
     public static Long parseHex(String text)
     {
         if (text == null || !text.matches("0x[0-9a-fA-F]{1,16}")) return null;
         try
         {
             long value = Long.parseUnsignedLong(text.substring(2), 16);
-            return value < 0 || value > OVERWRITE_MAX ? null : value;
+            return value < 0 || (value & ~WRITABLE_BITS) != 0 ? null : value;
         }
         catch (NumberFormatException e)
         {

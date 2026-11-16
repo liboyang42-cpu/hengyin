@@ -35,6 +35,21 @@ public interface PlayerNodeProgressMapper
     int markShopDayGameDone(@Param("memberId") Long memberId, @Param("activityId") Long activityId,
             @Param("topicId") Long topicId, @Param("nodeId") Long nodeId);
 
+    /** GAME-2: rows of this topic's current run whose start passed the 300 m start check. */
+    int countStartVerified(@Param("memberId") Long memberId, @Param("activityId") Long activityId,
+            @Param("topicId") Long topicId);
+
+    /** GAME-2: mark this stop's row(s) as the verified start of the run (start fence passed). */
+    int markStartVerified(@Param("memberId") Long memberId, @Param("activityId") Long activityId,
+            @Param("topicId") Long topicId, @Param("nodeId") Long nodeId);
+
+    /** GAME-2: this completion happened away from the stop; prizes were capped to XP and badges. */
+    int markRemoteCompletion(@Param("id") Long id);
+
+    /** GAME-2: completed stops of one run that were finished away from the stop. */
+    int countRemoteCompletions(@Param("memberId") Long memberId, @Param("activityId") Long activityId,
+            @Param("topicId") Long topicId, @Param("playInstanceId") String playInstanceId);
+
     /** 任务已结算后的进度投影，只更新本人的同一局到达行，不发奖。 */
     int markGameplayQuestDone(PlayerNodeProgress scope);
 

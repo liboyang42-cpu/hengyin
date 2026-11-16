@@ -17,6 +17,9 @@ public interface LocationTrustMapper {
     /** Latest fix scored ACCEPT and not simulated, received at or after {@code since}. Keys: lat,lng,receivedAt,clientTs. */
     Map<String, Object> selectLastCleanFix(@Param("memberId") Long memberId, @Param("since") Date since);
 
+    /** GAME-4: earliest clean fix received at or after {@code since} (window start). Same keys as selectLastCleanFix. */
+    Map<String, Object> selectFirstCleanFix(@Param("memberId") Long memberId, @Param("since") Date since);
+
     /** How many fixes since {@code since} carry exactly these coordinates and this accuracy. */
     int countIdenticalSince(@Param("memberId") Long memberId, @Param("lat") java.math.BigDecimal lat,
                             @Param("lng") java.math.BigDecimal lng, @Param("accuracy") java.math.BigDecimal accuracy,
@@ -55,6 +58,10 @@ public interface LocationTrustMapper {
                                            @Param("memberId") Long memberId, @Param("placeRef") String placeRef);
 
     int consumeEvidence(@Param("id") Long id, @Param("memberId") Long memberId, @Param("consumedRef") String consumedRef,
+                        @Param("now") Date now);
+
+    /** City Monopoly: ACCEPT or REVIEW evidence (a REVIEW claim goes to a person); one use only. */
+    int consumeEvidenceForReview(@Param("id") Long id, @Param("memberId") Long memberId, @Param("consumedRef") String consumedRef,
                         @Param("now") Date now);
 
     int clearEvidencePhotoCoordinatesBefore(@Param("cutoff") Date cutoff, @Param("limit") int limit);

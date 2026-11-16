@@ -17,7 +17,7 @@ public class ReadCacheConfiguration {
 
     @Bean
     public ReadCache readCache(ObjectProvider<StringRedisTemplate> redis,
-                               @Value("${chengyin.read-cache.enabled:true}") boolean enabled,
+                               @Value("${chengyin.read-cache.enabled:false}") boolean enabled,
                                @Value("${chengyin.read-cache.ttl.poi-seconds:60}") int poiTtl,
                                @Value("${chengyin.read-cache.ttl.features-seconds:30}") int featuresTtl,
                                @Value("${chengyin.read-cache.ttl.banner-seconds:300}") int bannerTtl,

@@ -12,7 +12,7 @@ test('站点卡:步行超过 60 分钟不报分钟,只留距离', () => {
   assert.equal(pops.sheetFacts({}, '4.9km').walkText, '')
   const far = pops.sheetFacts({}, '1066.6km')
   assert.equal(far.walkText, '')
-  assert.equal(far.distText, '1066.6km')
+  assert.equal(far.distText, '1066.6 公里')
 })
 
 test('开始弹窗:玩家只看站名与任务,不带制作用标签', () => {

@@ -107,6 +107,9 @@ class UpgradeAuthorizationBoundaryTest {
             "GET, /api/preset/route/list",
             "GET, /api/preset/route/info",
             "GET, /api/city/nodes/42",
+            // 2026-11-14 owner：公开附近目录也允许精确 GET，POST 负控仍保留。
+            "GET, /api/city/nodes",
+            "GET, /api/city/nodes/merchant/42",
             "POST, /api/merchant/list",
             "POST, /api/merchant/public-detail",
             "POST, /api/merchant/public-home",
@@ -116,8 +119,11 @@ class UpgradeAuthorizationBoundaryTest {
             "POST, /api/login/phone",
             "POST, /api/login/wechat/app",
             "POST, /api/login/apple",
-            "GET, /api/common/config",
-            "POST, /api/common/config",
+            "POST, /api/common/dict",
+            "POST, /api/common/banner",
+            "POST, /api/common/infomation_list",
+            "POST, /api/common/infomation_detail",
+            "POST, /api/common/channel/callback/meituan",
             "GET, /index.html",
             "GET, /assets/docs/index.html",
             "GET, /assets/nested/theme.css",
@@ -168,10 +174,10 @@ class UpgradeAuthorizationBoundaryTest {
             "POST, /api/preset/route/info",
             "GET, /api/preset/style/list",
             "GET, /api/preset/route/info/extra",
-            "GET, /api/city/nodes",
+            "POST, /api/city/nodes",
             "POST, /api/city/nodes/42",
             "GET, /api/city/nodes/favorites",
-            "GET, /api/city/nodes/merchant/42",
+            "POST, /api/city/nodes/merchant/42",
             "GET, /api/city/nodes/42/complete",
             "POST, /api/city/nodes/42/complete",
             "POST, /api/city/nodes/42/favorite",
@@ -187,7 +193,14 @@ class UpgradeAuthorizationBoundaryTest {
             "GET, /api/upgrade/anonymous/manage",
             "GET, /api/upgrade/class/items/42/private",
             "GET, /api/upgrade/class/manage",
-            "GET, /api/unlisted/protected"
+            "GET, /api/unlisted/protected",
+            // SEC-02:/api/common/ 不再整段匿名,未列出的(含未来新增的)一律要登录
+            "GET, /api/common/config",
+            "POST, /api/common/config",
+            "GET, /api/common/uploadOSS/receipt",
+            "GET, /api/common/channel/callback/meituan",
+            "POST, /api/common/channel/callback/meituan/extra",
+            "POST, /api/common/dict/extra"
     })
     void privateSiblingsNestedPathsAndWrongMethodsStillRequireAuthentication(String method, String path)
             throws Exception {

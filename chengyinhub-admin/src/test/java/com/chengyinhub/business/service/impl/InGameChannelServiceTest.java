@@ -166,7 +166,8 @@ class InGameChannelServiceTest
         assertTrue(msgCap.getValue().getContent().contains("[接管]"));
         assertTrue(msgCap.getValue().getContent().contains("外滩灯塔"));
 
-        verify(memberMapper, never()).addUnreadForActiveMember(610L, 11L, 1);
-        verify(memberMapper, times(1)).addUnreadForActiveMember(610L, 12L, 1);
+        // SOC-13: one set-based unread update that skips the actor, no per-member loop.
+        verify(memberMapper, times(1)).addUnreadForActiveMembersExcept(610L, 11L, 1);
+        verify(memberMapper, never()).addUnreadForActiveMember(anyLong(), anyLong(), anyInt());
     }
 }

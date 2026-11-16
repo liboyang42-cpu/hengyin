@@ -23,9 +23,10 @@ import java.util.Map;
  * <ol>
  *   <li>keeps the places inside the box with the same inclusive bounds (compared as decimals, like MySQL compares
  *       the {@code decimal(10,6)} columns with the bound literals the driver sends);</li>
- *   <li>orders them by the same squared equirectangular distance to the box centre, computed in the same steps and
- *       types as MySQL (exact decimal differences, then double), then by id;</li>
- *   <li>keeps the first {@code limit};</li>
+ *   <li>orders them like the SQL read: {@code coalesce(node_level, 0)} descending, then the same squared
+ *       equirectangular distance to the box centre, computed in the same steps and types as MySQL (exact decimal
+ *       differences, then double), then id;</li>
+ *   <li>keeps the first {@code limit} (the controller asks for one more than it shows, to set {@code truncated});</li>
  *   <li>adds {@code found} / {@code pendingRedeem} for the member with one query over those ids (same rules).</li>
  * </ol>
  * It falls back to the SQL read when caching is off, Redis fails, the box needs more than {@code maxTiles} tiles,
@@ -122,7 +123,10 @@ public class MapPoiTileCache {
         }
         List<Ranked> ranked = new ArrayList<>(inBox.size());
         for (RoamPoi p : inBox.values()) ranked.add(new Ranked(p, squaredDistance(p, centerLat, centerLng, k)));
-        ranked.sort(Comparator.comparingDouble(Ranked::distance).thenComparing(r -> r.poi().getId()));
+        // Same order as the SQL read (#830): coalesce(node_level, 0) desc, box-centre distance asc, id asc.
+        ranked.sort(Comparator.comparingInt((Ranked r) -> level(r.poi())).reversed()
+                .thenComparingDouble(Ranked::distance)
+                .thenComparing(r -> r.poi().getId()));
         List<RoamPoi> ordered = new ArrayList<>(Math.min(limit, ranked.size()));
         for (int i = 0; i < ranked.size() && i < limit; i++) ordered.add(ranked.get(i).poi());
         mark(ordered, memberId);
@@ -137,6 +141,10 @@ public class MapPoiTileCache {
         double dLat = p.getLat().subtract(centerLat).doubleValue();
         double dLng = p.getLng().subtract(centerLng).doubleValue() * k;
         return Math.pow(dLat, 2) + Math.pow(dLng, 2);
+    }
+
+    static int level(RoamPoi p) {
+        return p.getNodeLevel() == null ? 0 : p.getNodeLevel();
     }
 
     static long tile(BigDecimal degrees) {

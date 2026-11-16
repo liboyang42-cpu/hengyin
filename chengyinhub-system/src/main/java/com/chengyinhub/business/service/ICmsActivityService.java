@@ -31,6 +31,9 @@ public interface ICmsActivityService
     @Transactional(rollbackFor = Exception.class)
     int executeActivitySettlement();
 
+    /** D-19:只读列出「结算待处理」的自由探索场次(无结算路径、分钱规则待业主拍板)。ownerMemberId 空=全部。 */
+    java.util.List<java.util.Map<String, Object>> listStrandedFreeExploreSettlements(Long ownerMemberId);
+
     /**
      * 查询活动
      *

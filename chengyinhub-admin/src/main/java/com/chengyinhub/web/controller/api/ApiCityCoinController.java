@@ -37,7 +37,7 @@ public class ApiCityCoinController extends BaseController {
             return success(cityCoinService.summary(memberId));
         } catch (RuntimeException e) {
             logger.warn("city coin summary unavailable member={}: {}", memberId, e.toString());
-            return error("城市币暂时无法读取,请稍后再试");
+            return error("城市币暂时无法读取，请稍后再试");
         }
     }
 }

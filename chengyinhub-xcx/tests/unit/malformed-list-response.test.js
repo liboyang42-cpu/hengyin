@@ -22,6 +22,7 @@ function harness(relativePath, kind) {
     sendRequest(options) { requests.push(options); },
     getRequestErrorMessage(_res, fallback) { return fallback; },
     getUserID() { return 7; },
+    getAuthorization() { return 'fixture-member'; },
     getUserRole() { return 'player'; },
     getUserType() { return 1; },
     getPageSize() { return 10; },

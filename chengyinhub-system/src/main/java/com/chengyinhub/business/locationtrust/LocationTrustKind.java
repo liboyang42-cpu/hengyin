@@ -6,6 +6,8 @@ public enum LocationTrustKind {
     CHECKIN(true),
     /** /api/roam/poi/discover: POI found, credited at finish. */
     POI_DISCOVER(true),
+    /** GAME-4 /api/city/nodes/{id}/complete: the place check-in both clients use (reward log, coupon queue). */
+    CITY_NODE(true),
     /** /api/roam/shop/visit: shop counted for the session and the shop-streak medal. */
     SHOP_VISIT(true),
     /** /api/roam/reveal: fog tiles. */
@@ -19,7 +21,11 @@ public enum LocationTrustKind {
     /** CITY claim photo evidence. */
     CLAIM_EVIDENCE(true),
     /** R4 guest-walk: the track of one walk made before sign-in, uploaded once after sign-in (fog cells only). */
-    GUEST_WALK(false);
+    GUEST_WALK(false),
+    /** G2 treasure hunt: a hidden item found at one exact place. */
+    TREASURE_FIND(true),
+    /** G2 walk-test gate: the creator stands at a node of their own journey. Never rewarded. */
+    WALK_TEST_ONSITE(false);
 
     private final boolean pointReward;
 

@@ -14,7 +14,7 @@
 2. **Weather Event Rules (`weather_event_rule`) & APIs (Zero Ledger / Money Changes)**
    - **Additive & Reversible SQL**:
      - `chengyinhub-admin/sql/migration_20261114_weather_event_rule.sql`: `CREATE TABLE IF NOT EXISTS weather_event_rule (...)` (`id, topic_id, rule_name, condition_key, condition_values, unlock_node_id, task_label, window_start, window_end, enabled, del_flag, create_time, update_time`).
-     - `chengyinhub-admin/sql/rollback_20261114_weather_event_rule.sql`: `DROP TABLE IF EXISTS weather_event_rule;`.
+     - `chengyinhub-admin/sql/bak_weather_event_rule_20261114_rollback.sql`: `DROP TABLE IF EXISTS weather_event_rule;`.
    - **Domain / Mapper / Service**:
      - `chengyinhub-system/src/main/java/com/chengyinhub/business/domain/WeatherEventRule.java`
      - `chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/WeatherEventRuleMapper.java` + `chengyinhub-system/src/main/resources/mapper/business/WeatherEventRuleMapper.xml`

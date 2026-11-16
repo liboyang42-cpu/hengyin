@@ -316,12 +316,6 @@ class ApiPlaySensorResultTest {
         template.setValidationMethod(ValidationMethod.PHOTO);
         template.setSensorType(null);
         template.setSensorConfig(null);
-        Map<String, Object> couponDrop = new HashMap<>();
-        couponDrop.put("dropType", 3);
-        couponDrop.put("couponTemplateId", 909L);
-        when(drops.rollDrop(anyLong(), anyLong(), anyLong(), anyLong(), anyLong()))
-                .thenReturn(couponDrop);
-        when(coupons.grantCouponById(MEMBER, 909L)).thenReturn(true);
         allowVerifiedUpload();
 
         AjaxResult result = BasicPlayCommandFixtures.photo(controller,
@@ -329,12 +323,47 @@ class ApiPlaySensorResultTest {
 
         assertEquals(200, result.get("code"));
         verify(points).award(MEMBER, 12L, NODE, "节点打卡");
-        verify(drops).rollDrop(anyLong(), anyLong(), anyLong(), anyLong(), anyLong());
-        verify(coupons).grantCouponById(MEMBER, 909L);
+        // W7 GAME-3 (x-rewards-evidence): a photo completion grants no coupon, like C5, so no drop is rolled
+        // (a type-3 drop is a coupon). Points, progression and the completion grant stay on the full policy.
+        verify(drops, never()).rollDrop(anyLong(), anyLong(), anyLong(), anyLong(), anyLong());
+        verify(coupons, never()).grantCouponById(anyLong(), anyLong());
         verify(progression).onNodeDone(MEMBER);
         verify(completion).grantOnce(MEMBER, TOPIC, ACTIVITY, null);
         verify(completion, never()).grantOnce(
                 MEMBER, TOPIC, ACTIVITY, null, RewardPolicy.XP_BADGE_ONLY);
+    }
+
+    /** x-template-games R2:照片没人判,带坐标的站没带定位 ⇒ 照常完成,但只发探索值与徽章。 */
+    @Test
+    void locatedPhotoStopWithoutAFixCompletesWithoutPoints() {
+        template.setValidationMethod(ValidationMethod.PHOTO);
+        template.setSensorType(null);
+        template.setSensorConfig(null);
+        node.setLongitude("121.4737"); node.setLatitude("31.2304");
+        allowVerifiedUpload();
+
+        AjaxResult result = BasicPlayCommandFixtures.photo(controller,
+                String.valueOf(ACTIVITY), String.valueOf(NODE), "remote-photo.png", null);
+
+        assertEquals(200, result.get("code"));
+        verify(points, never()).award(MEMBER, 12L, NODE, "节点打卡");
+        verify(progression).onNodeDone(MEMBER);
+    }
+
+    /** 同一站,随照片带来的定位就在站点旁 ⇒ 奖品照发。 */
+    @Test
+    void locatedPhotoStopWithAFixAtTheStopPaysPoints() {
+        template.setValidationMethod(ValidationMethod.PHOTO);
+        template.setSensorType(null);
+        template.setSensorConfig(null);
+        node.setLongitude("121.4737"); node.setLatitude("31.2304");
+        allowVerifiedUpload();
+
+        AjaxResult result = BasicPlayCommandFixtures.photoAt(controller,
+                String.valueOf(ACTIVITY), String.valueOf(NODE), "here-photo.png", null, "121.4738", "31.2305", "20");
+
+        assertEquals(200, result.get("code"));
+        verify(points).award(MEMBER, 12L, NODE, "节点打卡");
     }
 
     @Test

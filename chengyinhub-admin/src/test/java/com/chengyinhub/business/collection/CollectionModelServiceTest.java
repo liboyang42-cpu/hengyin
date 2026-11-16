@@ -5,6 +5,8 @@ import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.vo.PlatformSettlementAccountVO;
 import com.chengyinhub.business.mapper.CmsActivityMapper;
+import com.chengyinhub.business.moneyswitch.MoneyArea;
+import com.chengyinhub.business.moneyswitch.MoneyGateTestSupport;
 import com.chengyinhub.business.moneyswitch.MoneySwitchService;
 import com.chengyinhub.business.moneyswitch.mapper.MoneySwitchMapper;
 import com.chengyinhub.business.payout.EcommerceSellerResolver;
@@ -55,9 +57,18 @@ class CollectionModelServiceTest {
         mapper = mock(CollectionModelMapper.class);
     }
 
-    CollectionModelService service(boolean ceiling, PayoutSwitches switches) {
-        return new CollectionModelService(new MoneySwitchService(mock(MoneySwitchMapper.class), ceiling), switches, sellers,
+    /** {@code on}: the S2 model flag on and the Q5 tickets area effectively open (ceiling on, row on). */
+    CollectionModelService service(boolean on, PayoutSwitches switches) {
+        return service(on, on, switches);
+    }
+
+    CollectionModelService service(boolean modelEnabled, boolean ticketsOpen, PayoutSwitches switches) {
+        MoneySwitchService money = ticketsOpen ? MoneyGateTestSupport.moneySwitch(true, MoneyArea.TICKETS)
+                : new MoneySwitchService(mock(MoneySwitchMapper.class), false);
+        CollectionModelService model = new CollectionModelService(money, switches, sellers,
                 activities, rules, mapper, "SPLIT", "SPLIT", "SPLIT");
+        model.setModelEnabled(modelEnabled);
+        return model;
     }
 
     static CmsRegistration registration(long ownerType, long ownerId) {
@@ -79,7 +90,7 @@ class CollectionModelServiceTest {
     // ---- switch closed: exactly today's behaviour ----
 
     @Test
-    void ceilingOffIsANoOpThatReadsNothing() {
+    void modelFlagOffIsANoOpThatReadsNothing() {
         CollectionModelService model = service(false, RAILS_ON);
         assertFalse(model.active());
         CollectionDecision d = model.decide(1L, 9L);
@@ -88,14 +99,76 @@ class CollectionModelServiceTest {
         assertDoesNotThrow(() -> model.requireCollectible(1L, 9L, new BigDecimal("69.00")));
         assertDoesNotThrow(() -> model.requirePlatformMayCollect(registration(1L, 9L), false));
         assertDoesNotThrow(() -> model.requirePlatformMayCollect(registration(2L, 9L), true));
-        assertDoesNotThrow(() -> model.requireClubDuesCollectible(3L));
         verifyNoInteractions(sellers, activities, rules, mapper);
+    }
+
+    @Test
+    void theModelFlagIsIndependentOfTheAppMoneyCeiling() {
+        // W7 MERCHANT-3: ceiling on (app money areas may open) does not turn S2 on, and S2 on needs no ceiling.
+        CollectionModelService ceilingOnly = service(false, true, RAILS_ON);
+        assertFalse(ceilingOnly.active());
+        assertEquals(CollectionDecision.MODEL_OFF, ceilingOnly.decide(1L, 9L).reason());
+        merchant("CHECKING", null);
+        CollectionModelService modelOnly = service(true, false, RAILS_ON);
+        assertTrue(modelOnly.active());
+        assertThrows(BusinessRefusal.class, () -> modelOnly.requireCollectible(1L, 9L, new BigDecimal("69.00")));
+    }
+
+    // ---- W7 MERCHANT-1: club dues are never collected by the platform ----
+
+    @Test
+    void duesAreRefusedWhileTheModelIsOffAndNoSellerIsRead() {
+        CollectionModelService model = service(false, true, RAILS_ON);
+        BusinessRefusal refusal = assertThrows(BusinessRefusal.class, () -> model.requireClubDuesCollectible(3L));
+        assertEquals(ErrorCode.CLUB_DUES_COLLECTION_UNAVAILABLE, refusal.getErrorCode());
+        assertEquals(422, refusal.getHttpStatus());
+        @SuppressWarnings("unchecked") Map<String, Object> data = (Map<String, Object>) refusal.getData();
+        assertEquals(CollectionDecision.MONEY_SWITCH_CLOSED, data.get("reason"));
+        assertEquals("WAIT_FOR_PLATFORM", data.get("nextStep"));
+        assertTrue(model.decideClubDues(3L).refused());
+        verifyNoInteractions(sellers, activities, rules);
+    }
+
+    @Test
+    void duesAreRefusedWhileTheTicketsAreaIsClosedEvenWithABoundClub() {
+        when(sellers.clubDuesFacts(3L)).thenReturn(new Facts(ProductKind.CLUB_DUES, false, SellerType.CLUB, 3L, "FINISH", SUB));
+        CollectionModelService model = service(true, false, RAILS_ON);
+        BusinessRefusal refusal = assertThrows(BusinessRefusal.class, () -> model.requireDuesMoneyOpen(3L));
+        @SuppressWarnings("unchecked") Map<String, Object> data = (Map<String, Object>) refusal.getData();
+        assertEquals(CollectionDecision.MONEY_SWITCH_CLOSED, data.get("reason"));
+        assertThrows(BusinessRefusal.class, () -> model.requireClubDuesCollectible(3L));
+        verify(sellers, never()).clubDuesFacts(anyLong());
+    }
+
+    @Test
+    void platformGatewayRefusesClmOrdersInEveryMode() {
+        for (boolean on : new boolean[] {false, true}) {
+            CollectionModelService model = service(on, RAILS_ON);
+            assertThrows(IllegalStateException.class, () -> model.requirePlatformMayCollectDues("CLM20261116001"));
+            assertDoesNotThrow(() -> model.requirePlatformMayCollectDues("R-TICKET-1"));
+            assertDoesNotThrow(() -> model.requirePlatformMayCollectDues(null));
+        }
+    }
+
+    @Test
+    void duesStatusNeverReportsThePlatformPathAsPayable() {
+        for (boolean[] mode : new boolean[][] {{false, false}, {false, true}, {true, false}}) {
+            Map<String, Object> status = service(mode[0], mode[1], RAILS_ON).clubDuesStatus(3L);
+            assertEquals("WAIT_FOR_PLATFORM", status.get("state"));
+            assertEquals(false, status.get("collectible"));
+            assertEquals("WAIT_FOR_PLATFORM", status.get("nextStep"));
+        }
+        when(sellers.clubDuesFacts(3L)).thenReturn(new Facts(ProductKind.CLUB_DUES, false, SellerType.CLUB, 3L, "FINISH", SUB));
+        Map<String, Object> open = service(true, RAILS_ON).clubDuesStatus(3L);
+        assertEquals("SPLIT", open.get("state"));
+        assertEquals(true, open.get("collectible"));
     }
 
     @Test
     void shippedConfigurationKeepsTheModelOff() throws Exception {
         String yml = new String(getClass().getResourceAsStream("/application.yml").readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
         assertTrue(yml.contains("server-ceiling: ${CHENGYIN_MONEY_SWITCH_SERVER_CEILING:false}"));
+        assertTrue(yml.contains("enabled: ${CHENGYIN_COLLECTION_MODEL_ENABLED:false}"));
         assertTrue(yml.contains("merchant: ${CHENGYIN_COLLECTION_POLICY_MERCHANT:SPLIT}"));
         assertFalse(yml.matches("(?s).*CHENGYIN_COLLECTION_POLICY_[A-Z]+:PLATFORM.*"));
     }
@@ -181,11 +254,15 @@ class CollectionModelServiceTest {
     }
 
     @Test
-    void clubDuesAreRefusedWhileTheModelIsActive() {
+    void clubDuesWithoutABoundClubSubMerchantAreRefusedWhileTheModelIsActive() {
+        // K1 (club-dues) built the split path: dues are refused only when the club cannot be paid by split settlement.
+        when(sellers.clubDuesFacts(3L)).thenReturn(new Facts(ProductKind.CLUB_DUES, false, SellerType.CLUB, 3L, null, null));
         CollectionModelService model = service(true, RAILS_ON);
         BusinessRefusal refusal = assertThrows(BusinessRefusal.class, () -> model.requireClubDuesCollectible(3L));
         assertEquals(ErrorCode.CLUB_DUES_COLLECTION_UNAVAILABLE, refusal.getErrorCode());
-        verify(mapper).recordRefusal("DUES", 3L, CollectionDecision.DUES_SPLIT_NOT_BUILT);
+        verify(mapper).recordRefusal("DUES", 3L, CollectionDecision.SELLER_NOT_BOUND);
+        when(sellers.clubDuesFacts(3L)).thenReturn(new Facts(ProductKind.CLUB_DUES, false, SellerType.CLUB, 3L, "FINISH", SUB));
+        assertTrue(model.requireClubDuesCollectible(3L).split());
     }
 
     @Test

@@ -1,39 +1,8 @@
 name: Isolated authenticated Redis recovery
 
 on:
-  pull_request:
-    paths:
-      - '.github/workflows/isolated-authenticated-redis-recovery.yml'
-      - 'ci/authenticated_redis_recovery_probe.py'
-      - 'ci/test_authenticated_redis_recovery_probe.py'
-      - 'ci/capacity_mixed_probe.py'
-      - 'ci/test_capacity_mixed_probe.py'
-      - 'ci/gameplay_process_recovery_probe.py'
-      - 'ci/test_gameplay_process_recovery_probe.py'
-      - 'ci/restore_application_http_probe.py'
-      - 'ci/restore_application_http_runtime.py'
-      - 'ci/test_restore_application_http_probe.py'
-      - 'ci/test_restore_application_http_entry.py'
-      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpApplicationChild.java'
-      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/GameplayProcessRecoveryChild.java'
-      - 'ci/authenticated-redis-recovery.sh'
-      - 'ci/upgrade-startup/application.properties'
-      - 'ci/upgrade-startup/logback.xml'
-      - 'ci/upgrade_startup_network.py'
-      - 'ci/migration_ledger.py'
-      - 'ci/migration-dependencies.json'
-      - 'ci/run_migration.py'
-      - 'ci/sql_splitter.py'
-      - 'scripts/bootstrap-test-admin.py'
-      - 'scripts/e2e/build_schema.py'
-      - 'scripts/e2e/base_schema_20260818_migrations.json'
-      - 'scripts/e2e/schema_replay_policy_20260921.json'
-      - 'scripts/e2e/policy_source_custody.py'
-      - 'scripts/e2e/source_provenance_20260818.json'
-      - 'sql/**'
-      - 'chengyinhub-*/sql/**'
-      - 'chengyinhub-*/src/main/**'
-      - '**/pom.xml'
+  push:
+    branches: [master]
   workflow_dispatch:
     inputs:
       probe_mode:

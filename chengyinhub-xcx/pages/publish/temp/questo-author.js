@@ -10,6 +10,8 @@
  * 界面不露这些键名。就地校验只挡服务端必拒的形状,其余仍以服务端保存/发布校验为准。
  */
 
+const answerText = require('../../../utils/answer-text.js');
+
 const HINT_TYPES = [
   { value: 'TEXT', label: '文字' },
   { value: 'IMAGE', label: '图片' },
@@ -285,7 +287,7 @@ const methods = {
   qzHangmanForm(e) {
     const on = !!e.detail.value;
     const before = this.data.advanced || {};
-    const answer = String((before.qa && before.qa.answerText) || '').split(/[、,，]/)[0].trim();
+    const answer = answerText.split((before.qa && before.qa.answerText) || '')[0] || '';
     this.pickGame({ currentTarget: { dataset: { key: on ? 'hangman' : 'qaText', r5: true } } });
     if (on && answer && !String((this.data.advanced.hangman || {}).answer || '').trim()) {
       this._qzAdvanced((a) => { a.hangman = Object.assign({}, a.hangman, { answer, format: reshapeFormat(answer, []) }); });

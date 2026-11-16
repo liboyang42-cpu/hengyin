@@ -194,27 +194,36 @@ public class PlayEntryApplication {
         int playMode = playNodeContext.resolveMode(progActId, tId); // 复用既有 helper,循环内 + 出参共用
         TopicRouteState routeState = null;
         com.chengyinhub.business.domain.CmsTopic routeTopic = cmsTopicService.selectCmsTopicById(tId);
-        com.fasterxml.jackson.databind.JsonNode contentSnapshot = contentSnapshotForRead(memberId,tId,progActId,registered,routeTopic);
+        com.fasterxml.jackson.databind.JsonNode contentSnapshot = safeContentSnapshotForRead(memberId,tId,progActId,registered,routeTopic);
         String contentRules = com.chengyinhub.business.service.support.NodeJourneySnapshot.hasContentSnapshots(contentSnapshot)
                 ? com.chengyinhub.business.service.support.NodeJourneySnapshot.journeyRules(contentSnapshot.toString())
                 : routeTopic == null ? null : routeTopic.getJourneyRulesJson();
-        if (com.chengyinhub.business.service.support.NodeJourneySnapshot.hasContentSnapshots(contentSnapshot) && contentRules == null)
-            throw new IllegalStateException("本局数值规则快照不可用");
+        if (com.chengyinhub.business.service.support.NodeJourneySnapshot.hasContentSnapshots(contentSnapshot) && contentRules == null) {
+            logger.warn("Play nodes journey rules snapshot missing, falling back to topic rules memberId={} topicId={} activityId={}",
+                    memberId, tId, progActId);
+            contentRules = routeTopic == null ? null : routeTopic.getJourneyRulesJson();
+        }
         boolean hasJourneyState = com.chengyinhub.business.domain.JourneyRules.parse(contentRules).hasRuntimeState();
         // RV4 S533-3:check.bargain 报价只在本局规则开了魔鬼交易时下发;老主题(无旅程状态)不多查库。
         boolean bargainOffered = hasJourneyState && topicRouteRuntimeService != null
                 && topicRouteRuntimeService.bargainOffered(memberId, tId, progActId);
         if (registered && topicRouteRuntimeService != null
-                && (playMode == PlayMode.LINEAR_ORIENTEERING || hasJourneyState)) {
+                && (selfPlay || playMode == PlayMode.LINEAR_ORIENTEERING || hasJourneyState)) {
             try {
-                routeState = capabilities == null ? topicRouteRuntimeService.state(memberId, tId, progActId)
-                        : topicRouteRuntimeService.state(memberId, tId, progActId,
-                                com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration
-                                        .parse(clientPlatform, clientVersion, capabilities));
+                com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration declaration =
+                        com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration
+                                .parse(clientPlatform, clientVersion, capabilities);
+                routeState = selfPlay
+                        ? topicRouteRuntimeService.personalRun(memberId, tId, declaration)
+                        : capabilities == null ? topicRouteRuntimeService.state(memberId, tId, progActId)
+                        : topicRouteRuntimeService.state(memberId, tId, progActId, declaration);
                 if (routeState != null && routeState.getSessionId() != null)
-                    contentSnapshot = contentSnapshotForRead(memberId,tId,progActId,true,routeTopic);
-            } catch (IllegalArgumentException | IllegalStateException | com.chengyinhub.common.exception.ServiceException e) {
-                return error(e.getMessage());
+                    contentSnapshot = safeContentSnapshotForRead(memberId,tId,progActId,true,routeTopic);
+            } catch (com.chengyinhub.common.exception.ServiceException e) {
+                return e.getCode() != null ? new AjaxResult(e.getCode(), e.getMessage()) : error(e.getMessage());
+            } catch (IllegalArgumentException | IllegalStateException e) {
+                logger.warn("Play nodes route state unavailable, continuing with live node projection memberId={} topicId={} activityId={}",
+                        memberId, tId, progActId, e);
             }
         }
         // 第十一轮 h5:通用个人局的站点完成记在本局状态(任务结算),不写打卡进度表;节点 done 跟本局走,
@@ -251,20 +260,34 @@ public class PlayEntryApplication {
             boolean legacyNodeGame = nodeSource != null && nodeSource.path("legacyNodeContent").asBoolean();
             boolean nodeVersioned = com.chengyinhub.business.service.support.NodeJourneySnapshot.hasContentSnapshots(nodeSource);
             if (nodeVersioned && !nodeSource.path("nodeAnswers").has(String.valueOf(n.getId()))) continue;
-            com.fasterxml.jackson.databind.JsonNode content = nodeVersioned
-                    ? com.chengyinhub.business.service.support.NodeJourneySnapshot.answerFromSnapshot(nodeSource,n.getId()) : null;
-            if (nodeVersioned && !com.chengyinhub.business.service.support.NodeJourneySnapshot.hasContent(content))
-                throw new IllegalStateException("本局内容快照不可用");
-            if (nodeVersioned && !sharedContent && content.path("nodePresentation").path("id").asLong() != n.getId())
-                throw new IllegalStateException("本局内容归属不可用");
+            com.fasterxml.jackson.databind.JsonNode content = null;
+            boolean snapshotContentFallback = false;
+            if (nodeVersioned) {
+                try {
+                    content = com.chengyinhub.business.service.support.NodeJourneySnapshot.answerFromSnapshot(nodeSource,n.getId());
+                    if (!com.chengyinhub.business.service.support.NodeJourneySnapshot.hasContent(content)
+                            || (!sharedContent && content.path("nodePresentation").path("id").asLong() != n.getId())) {
+                        logger.warn("Play node snapshot invalid, falling back to live node projection memberId={} topicId={} activityId={} nodeId={}",
+                                memberId, tId, progActId, n.getId());
+                        content = null;
+                        snapshotContentFallback = true;
+                    }
+                } catch (IllegalStateException | IllegalArgumentException e) {
+                    logger.warn("Play node snapshot unreadable, falling back to live node projection memberId={} topicId={} activityId={} nodeId={}",
+                            memberId, tId, progActId, n.getId(), e);
+                    content = null;
+                    snapshotContentFallback = true;
+                }
+            }
             PlayNodeQueryApplication.NodeTask task = playNodeQueryApplication.projectNodeBeforeRuntime(read, n, content);
             presentedNodes.add(task.node());
             if (task.template() != null) {
                 // New content uses this request's captured config. The old compatibility path
                 // keeps its original Entry-owned shared refresh outside pure Query.
-                com.fasterxml.jackson.databind.JsonNode themeNodeConfig = nodeVersioned || legacyNodeGame
+                com.fasterxml.jackson.databind.JsonNode themeNodeConfig = !snapshotContentFallback && (nodeVersioned || legacyNodeGame)
                         ? nodeSource.path("nodeConfigs").get(String.valueOf(n.getId()))
-                        : topicRouteRuntimeService == null ? null : topicRouteRuntimeService.nodeRuntimeConfig(memberId, n.getTopicId(), n.getId(), progActId);
+                        : snapshotContentFallback || topicRouteRuntimeService == null ? null
+                        : topicRouteRuntimeService.nodeRuntimeConfig(memberId, n.getTopicId(), n.getId(), progActId);
                 playNodeQueryApplication.projectFrozenTemplate(read, task, themeNodeConfig);
             }
             playNodeQueryApplication.finishNode(read, task, n);
@@ -293,6 +316,17 @@ public class PlayEntryApplication {
     }
 
     /** The caller has already performed the original public/spectator/player admission. */
+    private com.fasterxml.jackson.databind.JsonNode safeContentSnapshotForRead(Long member, Long topicId, Long activity,
+            boolean registered, com.chengyinhub.business.domain.CmsTopic topic) {
+        try {
+            return contentSnapshotForRead(member, topicId, activity, registered, topic);
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            logger.warn("Play nodes content snapshot unusable, falling back to live topic/node projection memberId={} topicId={} activityId={}",
+                    member, topicId, activity, e);
+            return null;
+        }
+    }
+
     private com.fasterxml.jackson.databind.JsonNode contentSnapshotForRead(Long member, Long topicId, Long activity,
             boolean registered, com.chengyinhub.business.domain.CmsTopic topic) {
         if (registered && topicRouteRuntimeService != null)
