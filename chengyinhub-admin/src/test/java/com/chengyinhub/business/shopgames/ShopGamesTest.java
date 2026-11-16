@@ -274,9 +274,34 @@ class ShopGamesTest {
 
     // ------------------------------------------------------------------ 3. a check-in launches the profile's game
 
+    /** Shop games open (switch on), presence rule at its safe default. */
     private static ShopGamePlayService plays(FakeJdbc jdbc, ShopGameProfileService profiles, IPointsAwardService points, Instant now) {
-        return new ShopGamePlayService(jdbc, profiles, null, points, Clock.fixed(now, ZoneId.of("Asia/Shanghai")));
+        return new ShopGamePlayService(jdbc, profiles, null, points, Clock.fixed(now, ZoneId.of("Asia/Shanghai")))
+                .withConfig(k -> ShopGamePlayService.KEY_PLAY_ENABLED.equals(k) ? "true" : null, null);
     }
+
+    /** The shop at POI 900 sits at (31.2, 121.4) with a 60 m radius. */
+    private static void shopPlace(FakeJdbc jdbc) {
+        Map<String, Object> place = new LinkedHashMap<>();
+        place.put("lat", 31.2);
+        place.put("lng", 121.4);
+        place.put("radius_m", 60);
+        jdbc.rows.put("SELECT lat, lng, radius_m FROM roam_poi", a -> List.of(place));
+    }
+
+    /** The player's own runtime session on template 12, started after the launch. */
+    private static void session(FakeJdbc jdbc, int status, Instant started) {
+        Map<String, Object> r = new LinkedHashMap<>();
+        r.put("id", 9L);
+        r.put("status", status);
+        r.put("activity_id", 0L);
+        r.put("topic_id", 3L);
+        r.put("node_id", 4L);
+        r.put("started_at", Timestamp.from(started));
+        jdbc.rows.put("FROM game_runtime_session", a -> List.of(r));
+    }
+
+    private static final Map<String, Object> AT_SHOP = Map.of("playId", 1, "sessionId", 9, "lat", 31.2001, "lng", 121.4001, "accuracy", 10);
 
     private static Map<String, Object> playRow(long id, String key, Long tpl, String status, Instant expires) {
         Map<String, Object> r = new LinkedHashMap<>();
@@ -309,7 +334,7 @@ class ShopGamesTest {
             Map<String, Object> issue(long memberId, long poiId, String source) {
                 return super.issue(memberId, poiId, source);
             }
-        };
+        }.withConfig(k -> ShopGamePlayService.KEY_PLAY_ENABLED.equals(k) ? "true" : null, null);
         // The insert makes the row readable.
         FakeJdbc spy = jdbc;
         jdbc.rows.put("FROM cy_shop_game_play WHERE member_id", a -> spy.updates.stream().anyMatch(s -> s.contains("INSERT INTO cy_shop_game_play"))
@@ -351,11 +376,15 @@ class ShopGamesTest {
 
     @Test
     void theGameIsPickedByRotationNotByThePlayer() {
-        int a = ShopGamePlayService.pick(MEMBER, "2026-11-15", 3);
-        assertEquals(a, ShopGamePlayService.pick(MEMBER, "2026-11-15", 3));
+        int a = ShopGamePlayService.pick(MEMBER, SHOP, "2026-11-15", 3);
+        assertEquals(a, ShopGamePlayService.pick(MEMBER, SHOP, "2026-11-15", 3));
         assertTrue(a >= 0 && a < 3);
-        assertEquals(-1, ShopGamePlayService.pick(MEMBER, "2026-11-15", 0));
-        assertEquals(0, ShopGamePlayService.pick(MEMBER, "2026-11-15", 1));
+        assertEquals(-1, ShopGamePlayService.pick(MEMBER, SHOP, "2026-11-15", 0));
+        assertEquals(0, ShopGamePlayService.pick(MEMBER, SHOP, "2026-11-15", 1));
+        // W7 GAME-8: the rotation includes the shop, so the same player gets different games at different shops.
+        java.util.Set<Integer> picks = new java.util.HashSet<>();
+        for (long shop = 1; shop <= 30; shop++) picks.add(ShopGamePlayService.pick(MEMBER, shop, "2026-11-15", 3));
+        assertTrue(picks.size() > 1, "rotation ignores the shop");
     }
 
     @Test
@@ -379,8 +408,10 @@ class ShopGamesTest {
         jdbc.rows.put("FROM cy_shop_game_play WHERE id", a -> List.of(row[0]));
         IPointsAwardService points = mock(IPointsAwardService.class);
         when(points.award(MEMBER, 31L, 1L, "店铺小游戏")).thenReturn(10);
+        shopPlace(jdbc);
+        session(jdbc, 1, now.minusSeconds(60));
         ShopGamePlayService svc = plays(jdbc, new ShopGameProfileService(jdbc, access(), null, plan(0)), points, now);
-        svc.finish(MEMBER, Map.of("playId", 1, "roundsWon", 2));
+        svc.finish(MEMBER, AT_SHOP);
         verify(points).award(MEMBER, 31L, 1L, "店铺小游戏");
         int upd = indexOf(jdbc.updates, "UPDATE cy_shop_game_play SET status = ?");
         assertEquals("WON", jdbc.updateArgs.get(upd)[0]);
@@ -400,19 +431,136 @@ class ShopGamesTest {
         Instant now = Instant.parse("2026-11-15T04:00:00Z");
         FakeJdbc jdbc = cafe(null, null);
         jdbc.rows.put("FROM cy_shop_game_play WHERE id", a -> List.of(playRow(1L, "qaPick", 12L, "ISSUED", now.plusSeconds(600))));
+        shopPlace(jdbc);
+        session(jdbc, 2, now.minusSeconds(60));
         IPointsAwardService points = mock(IPointsAwardService.class);
-        plays(jdbc, new ShopGameProfileService(jdbc, access(), null, plan(0)), points, now).finish(MEMBER, Map.of("playId", 1, "roundsWon", 1));
+        // The client claims three rounds; the judged session failed, so it is a loss.
+        Map<String, Object> lost = plays(jdbc, new ShopGameProfileService(jdbc, access(), null, plan(0)), points, now)
+                .finish(MEMBER, Map.of("playId", 1, "sessionId", 9, "roundsWon", 3, "lat", 31.2, "lng", 121.4));
+        assertEquals(false, lost.get("won"));
         verify(points, never()).award(anyLong(), anyLong(), anyLong(), anyString());
 
         FakeJdbc late = cafe(null, null);
         late.rows.put("FROM cy_shop_game_play WHERE id", a -> List.of(playRow(1L, "qaPick", 12L, "ISSUED", now.minusSeconds(1))));
-        assertEquals("PLAY_EXPIRED", assertThrows(MerchantGapException.class, () -> plays(late,
-                new ShopGameProfileService(late, access(), null, plan(0)), points, now)
-                .finish(MEMBER, Map.of("playId", 1, "roundsWon", 3))).getErrorCode());
+        // W7 GAME-8: expiry is answered (status EXPIRED), not thrown, so the EXPIRED mark is not rolled back.
+        Map<String, Object> expired = plays(late, new ShopGameProfileService(late, access(), null, plan(0)), points, now)
+                .finish(MEMBER, AT_SHOP);
+        assertEquals("EXPIRED", expired.get("status"));
+        assertTrue(late.updates.stream().anyMatch(u -> u.contains("SET status = 'EXPIRED'")));
         verify(points, never()).award(anyLong(), anyLong(), anyLong(), anyString());
-        assertEquals("INVALID_REQUEST", assertThrows(MerchantGapException.class, () -> plays(late,
-                new ShopGameProfileService(late, access(), null, plan(0)), points, now)
-                .finish(MEMBER, Map.of("playId", 1, "roundsWon", 4))).getErrorCode());
+    }
+
+    // ------------------------------------------------------------------ W7 GAME-8 / MERCHANT-5
+
+    @Test
+    void shopGameSwitchOffLaunchesNothingAndPaysNothing() {
+        Instant now = Instant.parse("2026-11-15T04:00:00Z");
+        FakeJdbc jdbc = cafe(null, null);
+        jdbc.rows.put("FROM cy_shop_game_play WHERE id", a -> List.of(playRow(1L, "qaPick", 12L, "ISSUED", now.plusSeconds(600))));
+        shopPlace(jdbc);
+        session(jdbc, 1, now.minusSeconds(60));
+        IPointsAwardService points = mock(IPointsAwardService.class);
+        for (java.util.function.Function<String, String> cfg : List.<java.util.function.Function<String, String>>of(
+                k -> null, k -> "false", k -> " yes ", k -> { throw new IllegalStateException("db"); })) {
+            ShopGamePlayService svc = new ShopGamePlayService(jdbc, new ShopGameProfileService(jdbc, access(), null, plan(0)),
+                    null, points, Clock.fixed(now, ZoneId.of("Asia/Shanghai"))).withConfig(cfg, null);
+            assertFalse(svc.playOpen());
+            Map<String, Object> launch = svc.launchAfterCheckin(MEMBER, POI);
+            assertEquals(false, launch.get("available"));
+            assertEquals("NOT_OPEN", launch.get("reason"));
+            assertEquals("NOT_OPEN", svc.launch(MEMBER, Map.of("poiId", POI, "source", "PLACE_PAGE", "lat", 31.2, "lng", 121.4))
+                    .get("reason"));
+            MerchantGapException e = assertThrows(MerchantGapException.class, () -> svc.finish(MEMBER, AT_SHOP));
+            assertEquals("SHOP_GAME_NOT_OPEN", e.getErrorCode());
+        }
+        assertFalse(jdbc.updates.stream().anyMatch(u -> u.contains("cy_shop_game_play")), "no play row while closed");
+        verify(points, never()).award(anyLong(), anyLong(), anyLong(), anyString());
+    }
+
+    @Test
+    void shopGameResultRequiresJudgedSession() {
+        Instant now = Instant.parse("2026-11-15T04:00:00Z");
+        IPointsAwardService points = mock(IPointsAwardService.class);
+        // No session id: the client's rounds are not enough.
+        FakeJdbc a = cafe(null, null);
+        a.rows.put("FROM cy_shop_game_play WHERE id", x -> List.of(playRow(1L, "qaPick", 12L, "ISSUED", now.plusSeconds(600))));
+        assertEquals("PLAY_NOT_JUDGED", assertThrows(MerchantGapException.class, () -> plays(a,
+                new ShopGameProfileService(a, access(), null, plan(0)), points, now)
+                .finish(MEMBER, Map.of("playId", 1, "roundsWon", 3))).getErrorCode());
+        // A session that is not the player's own on this template (query answers nothing).
+        assertEquals("PLAY_NOT_JUDGED", assertThrows(MerchantGapException.class, () -> plays(a,
+                new ShopGameProfileService(a, access(), null, plan(0)), points, now).finish(MEMBER, AT_SHOP)).getErrorCode());
+        // A session started before the launch (an old win reused).
+        FakeJdbc b = cafe(null, null);
+        b.rows.put("FROM cy_shop_game_play WHERE id", x -> List.of(playRow(1L, "qaPick", 12L, "ISSUED", now.plusSeconds(600))));
+        session(b, 1, now.minusSeconds(3600));
+        assertEquals("PLAY_NOT_JUDGED", assertThrows(MerchantGapException.class, () -> plays(b,
+                new ShopGameProfileService(b, access(), null, plan(0)), points, now).finish(MEMBER, AT_SHOP)).getErrorCode());
+        // Still running.
+        FakeJdbc c = cafe(null, null);
+        c.rows.put("FROM cy_shop_game_play WHERE id", x -> List.of(playRow(1L, "qaPick", 12L, "ISSUED", now.plusSeconds(600))));
+        session(c, 0, now.minusSeconds(60));
+        assertEquals("PLAY_NOT_FINISHED", assertThrows(MerchantGapException.class, () -> plays(c,
+                new ShopGameProfileService(c, access(), null, plan(0)), points, now).finish(MEMBER, AT_SHOP)).getErrorCode());
+        verify(points, never()).award(anyLong(), anyLong(), anyLong(), anyString());
+    }
+
+    @Test
+    void aJudgedWinAwayFromTheShopFinishesWithoutPoints() {
+        Instant now = Instant.parse("2026-11-15T04:00:00Z");
+        FakeJdbc jdbc = cafe(null, null);
+        jdbc.rows.put("FROM cy_shop_game_play WHERE id", a -> List.of(playRow(1L, "qaPick", 12L, "ISSUED", now.plusSeconds(600))));
+        shopPlace(jdbc);
+        session(jdbc, 1, now.minusSeconds(60));
+        IPointsAwardService points = mock(IPointsAwardService.class);
+        // About 1.1 km away.
+        Map<String, Object> out = plays(jdbc, new ShopGameProfileService(jdbc, access(), null, plan(0)), points, now)
+                .finish(MEMBER, Map.of("playId", 1, "sessionId", 9, "lat", 31.21, "lng", 121.4));
+        assertEquals("REMOTE", out.get("rewardCeilingReason"));
+        int upd = indexOf(jdbc.updates, "UPDATE cy_shop_game_play SET status = ?");
+        assertEquals("WON", jdbc.updateArgs.get(upd)[0]);
+        assertEquals(0, jdbc.updateArgs.get(upd)[2]);
+        verify(points, never()).award(anyLong(), anyLong(), anyLong(), anyString());
+    }
+
+    @Test
+    void deviceReportedOrRuntimeCappedGamesPayNoPoints() {
+        Instant now = Instant.parse("2026-11-15T04:00:00Z");
+        assertTrue(ShopGameCatalog.game("steps").deviceReported());
+        assertTrue(ShopGameCatalog.game("react").deviceReported());
+        assertFalse(ShopGameCatalog.game("qaPick").deviceReported());
+        IPointsAwardService points = mock(IPointsAwardService.class);
+        FakeJdbc jdbc = cafe(null, null);
+        jdbc.rows.put("FROM cy_shop_game_play WHERE id", a -> List.of(playRow(1L, "steps", 12L, "ISSUED", now.plusSeconds(600))));
+        shopPlace(jdbc);
+        session(jdbc, 1, now.minusSeconds(60));
+        assertEquals("DEVICE_REPORTED", plays(jdbc, new ShopGameProfileService(jdbc, access(), null, plan(0)), points, now)
+                .finish(MEMBER, AT_SHOP).get("rewardCeilingReason"));
+        FakeJdbc capped = cafe(null, null);
+        capped.rows.put("FROM cy_shop_game_play WHERE id", a -> List.of(playRow(1L, "qaPick", 12L, "ISSUED", now.plusSeconds(600))));
+        shopPlace(capped);
+        session(capped, 1, now.minusSeconds(60));
+        com.chengyinhub.business.service.IAdvancedGameRuntimeService runtime =
+                mock(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);
+        when(runtime.rewardCappedToXpBadge(MEMBER, 0L, 3L, 4L)).thenReturn(true);
+        ShopGamePlayService svc = new ShopGamePlayService(capped, new ShopGameProfileService(capped, access(), null, plan(0)),
+                null, points, Clock.fixed(now, ZoneId.of("Asia/Shanghai")))
+                .withConfig(k -> ShopGamePlayService.KEY_PLAY_ENABLED.equals(k) ? "true" : null, runtime);
+        assertEquals("UNJUDGED_EVIDENCE", svc.finish(MEMBER, AT_SHOP).get("rewardCeilingReason"));
+        verify(points, never()).award(anyLong(), anyLong(), anyLong(), anyString());
+    }
+
+    @Test
+    void placePageLaunchNeedsALocationAndTheShopRadius() {
+        Instant now = Instant.parse("2026-11-15T04:00:00Z");
+        FakeJdbc jdbc = cafe(null, null);
+        shopPlace(jdbc);
+        ShopGamePlayService svc = plays(jdbc, new ShopGameProfileService(jdbc, access(), null, plan(0)), null, now);
+        assertEquals("LOCATION_REQUIRED", assertThrows(MerchantGapException.class,
+                () -> svc.launch(MEMBER, Map.of("poiId", POI, "source", "PLACE_PAGE"))).getErrorCode());
+        assertEquals("TOO_FAR", svc.launch(MEMBER, Map.of("poiId", POI, "source", "PLACE_PAGE", "lat", 31.21, "lng", 121.4))
+                .get("reason"));
+        assertTrue(ShopGamePlayService.SOURCES.contains("PLACE_PAGE"));
     }
 
     @Test

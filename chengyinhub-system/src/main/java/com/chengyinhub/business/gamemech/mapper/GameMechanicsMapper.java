@@ -71,6 +71,14 @@ public interface GameMechanicsMapper {
             + " values(#{huntId}, #{sort}, #{name}, #{clue}, #{lat}, #{lng}, #{radiusM})")
     int insertItem(Map<String, Object> row);
 
+    /** W7 GAME-16: an edit updates an item in place, so finds of it keep counting. */
+    @Update("update treasure_hunt_item set sort = #{sort}, name = #{name}, clue = #{clue}, lat = #{lat}, lng = #{lng},"
+            + " radius_m = #{radiusM} where id = #{id} and hunt_id = #{huntId}")
+    int updateItem(Map<String, Object> row);
+
+    @Delete("delete from treasure_hunt_item where hunt_id = #{huntId} and id = #{id}")
+    int deleteItem(@Param("huntId") Long huntId, @Param("id") Long id);
+
     @Select("select f.item_id as itemId, f.found_at as foundAt from treasure_hunt_find f"
             + " where f.hunt_id = #{huntId} and f.member_id = #{memberId}")
     List<Map<String, Object>> selectFinds(@Param("huntId") Long huntId, @Param("memberId") Long memberId);

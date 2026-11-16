@@ -40,6 +40,12 @@ public final class ShopGameCatalog {
     public record Game(String key, String nameZh, String nameEn, int seconds, boolean needsMotion, boolean needsCamera) {
         public boolean accessible() { return !needsMotion && !needsCamera; }
 
+        /**
+         * W7 GAME-8: the device, not the server, decides the outcome (step count, reaction time). Such a game can
+         * still be played and finished, but its win pays no points (C1).
+         */
+        public boolean deviceReported() { return DEVICE_REPORTED.contains(key); }
+
         public Map<String, Object> toMap() {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("key", key);
@@ -50,6 +56,7 @@ public final class ShopGameCatalog {
             m.put("passRounds", PASS_ROUNDS);
             m.put("needsMotion", needsMotion);
             m.put("needsCamera", needsCamera);
+            m.put("deviceReported", deviceReported());
             return m;
         }
     }
@@ -59,6 +66,8 @@ public final class ShopGameCatalog {
         public String defaultGame() { return pool.get(0); }
     }
 
+    /** Games whose result the device reports: they pay no points (see {@link Game#deviceReported()}). */
+    public static final java.util.Set<String> DEVICE_REPORTED = java.util.Set.of("steps", "react");
     private static final Map<String, Game> GAMES = new LinkedHashMap<>();
     private static final Map<String, Kind> KINDS = new LinkedHashMap<>();
     public static final String OTHER = "OTHER";
