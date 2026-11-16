@@ -366,6 +366,68 @@ class ApiPlaySensorResultTest {
         verify(points).award(MEMBER, 12L, NODE, "节点打卡");
     }
 
+    /** x-life-games R11:偏好题和拍照同一规则 —— 带坐标的城市站没带定位,照常完成,不发积分。 */
+    @Test
+    void locatedPreferenceStopWithoutAFixCompletesWithoutPoints() {
+        preferenceRunsTheCompletion();
+        node.setLongitude("121.4737"); node.setLatitude("31.2304");
+
+        AjaxResult result = BasicPlayCommandFixtures.submitPreference(controller, NODE, preferenceRequest(null, null, null));
+
+        assertEquals(200, result.get("code"), String.valueOf(result.get("msg")));
+        verify(points, never()).award(MEMBER, 12L, NODE, "节点打卡");
+        verify(progression).onNodeDone(MEMBER);
+    }
+
+    /** 同一站,随提交带来的定位就在站点旁 ⇒ 奖品照发。 */
+    @Test
+    void locatedPreferenceStopWithAFixAtTheStopPaysPoints() {
+        preferenceRunsTheCompletion();
+        node.setLongitude("121.4737"); node.setLatitude("31.2304");
+
+        AjaxResult result = BasicPlayCommandFixtures.submitPreference(controller, NODE,
+                preferenceRequest("121.4738", "31.2305", "20"));
+
+        assertEquals(200, result.get("code"), String.valueOf(result.get("msg")));
+        verify(points).award(MEMBER, 12L, NODE, "节点打卡");
+    }
+
+    /** 线上站(没坐标)不要求定位。 */
+    @Test
+    void onlinePreferenceStopPaysPointsWithoutAFix() {
+        preferenceRunsTheCompletion();
+
+        AjaxResult result = BasicPlayCommandFixtures.submitPreference(controller, NODE, preferenceRequest(null, null, null));
+
+        assertEquals(200, result.get("code"), String.valueOf(result.get("msg")));
+        verify(points).award(MEMBER, 12L, NODE, "节点打卡");
+    }
+
+    @SuppressWarnings("unchecked")
+    private void preferenceRunsTheCompletion() {
+        template.setValidationMethod(ValidationMethod.PREFERENCE_GROUP);
+        template.setSensorType(null);
+        template.setSensorConfig(null);
+        com.chengyinhub.web.service.PreferencePlayService preferences =
+                mock(com.chengyinhub.web.service.PreferencePlayService.class);
+        when(preferences.submit(anyLong(), anyLong(), anyLong(), anyLong(), any(), any(), any(), any()))
+                .thenAnswer(call -> ((java.util.function.Function<String, java.util.Map<String, Object>>) call.getArgument(7))
+                        .apply(null));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "preferencePlayService", preferences);
+    }
+
+    private static com.chengyinhub.business.domain.dto.PreferenceSubmitRequest preferenceRequest(
+            String longitude, String latitude, String accuracy) {
+        com.chengyinhub.business.domain.dto.PreferenceSubmitRequest request =
+                new com.chengyinhub.business.domain.dto.PreferenceSubmitRequest();
+        request.setActivityId(String.valueOf(ACTIVITY));
+        request.setChoices(Collections.singletonMap("pick", "a"));
+        request.setLongitude(longitude);
+        request.setLatitude(latitude);
+        request.setAccuracy(accuracy);
+        return request;
+    }
+
     @Test
     void photoMustProveUploadedObjectFactBeforeCompleting() {
         template.setValidationMethod(ValidationMethod.PHOTO);

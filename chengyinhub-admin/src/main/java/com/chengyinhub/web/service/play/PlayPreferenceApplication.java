@@ -8,6 +8,7 @@ import com.chengyinhub.business.domain.CmsMemberTemplate;
 import com.chengyinhub.common.constant.PlayMode;
 import com.chengyinhub.common.constant.RewardPolicy;
 import com.chengyinhub.common.constant.ValidationMethod;
+import com.chengyinhub.business.service.support.RewardPresencePolicy;
 import com.chengyinhub.business.domain.CmsTopicNode;
 import com.chengyinhub.business.domain.dto.PreferenceSubmitRequest;
 import com.chengyinhub.business.domain.dto.PreferenceTagCorrectionRequest;
@@ -43,6 +44,9 @@ public class PlayPreferenceApplication {
     private PlayNodeContext playNodeContext;
     @Autowired
     private PlayBasicIntentApplication playBasicIntentApplication;
+    /** x-life-games R11:与 GAME-2 同一组开关;缺省 = 安全默认值。 */
+    @Autowired(required = false)
+    private com.chengyinhub.system.service.ISysConfigService sysConfigService;
 
     private static final class PreferencePlayCtx {
         private CmsTopicNode node;
@@ -90,17 +94,33 @@ public class PlayPreferenceApplication {
                 && !playNodeContext.hasCompletedNodeFact(memberId, request.getActivityId(), pctx.node)) {
             return error("该站已下架，暂时无法完成");
         }
+        // x-life-games R11:与拍照(R2)同一规则 —— 自由探索已凭扫码进店证明到场;其余模式下带坐标的站,
+        // 随提交带来的定位不在奖励半径内(或没带)⇒ 照常完成,只发探索值与徽章,并记 remote_completion。
+        RewardPolicy rewardPolicy = RewardPolicy.FULL;
+        if (playNodeContext.resolveMode(pctx.playCtx.actId, pctx.playCtx.topicId) != PlayMode.FREE_COLLECT) {
+            RewardPresencePolicy presence = rewardPresence();
+            rewardPolicy = presence.policyFor(PlayPhotoCommandApplication.presentAtStop(pctx.node,
+                    request.getLongitude(), request.getLatitude(), request.getAccuracy(), presence));
+        }
+        final RewardPolicy policy = rewardPolicy;
+        final boolean remote = policy == RewardPolicy.XP_BADGE_ONLY;
         try {
             Map<String, Object> data = preferencePlayService.submit(memberId, pctx.playCtx.topicId,
                     pctx.playCtx.actId, nodeId, pctx.template, request, originalRun.progressInstance(),
                     outcomeCode -> playNodeCompletionApplication.advanceProgress(memberId, pctx.node, pctx.playCtx.actId,
-                            null, null, null, RewardPolicy.FULL, request.getRouteActionId(),
-                            request.getExpectedRouteVersion(), outcomeCode, null, originalRun));
+                            null, null, null, policy, request.getRouteActionId(),
+                            request.getExpectedRouteVersion(), outcomeCode, null, originalRun, remote));
             return AjaxResult.success(Boolean.TRUE.equals(data.get("needsTiebreak"))
                     ? "请选择一道取舍题" : "偏好结果已生成", data);
         } catch (IllegalArgumentException e) {
             return error(e.getMessage());
         }
+    }
+
+    /** GAME-2 开关,每次读;读不到 = 安全默认值。 */
+    private RewardPresencePolicy rewardPresence() {
+        if (sysConfigService == null) return RewardPresencePolicy.defaults();
+        return RewardPresencePolicy.read(sysConfigService::selectConfigByKey);
     }
 
     public AjaxResult confirmPreferenceTag(Long actorMemberId, Long tagId)
