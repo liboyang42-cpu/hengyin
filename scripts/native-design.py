@@ -2,6 +2,7 @@
 """Export existing Mini tokens to Swift; check task-scoped native page pairs."""
 import argparse
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -14,8 +15,16 @@ def load(path):
     return json.loads(path.read_text())
 
 
+def git_environment(repo):
+    environment = os.environ.copy()
+    if repo.resolve() != Path.cwd().resolve():
+        for name in subprocess.check_output(["git", "rev-parse", "--local-env-vars"], text=True).splitlines():
+            environment.pop(name, None)
+    return environment
+
+
 def staged_text(repo, path):
-    result = subprocess.run(["git", "-C", str(repo), "show", ":" + path], capture_output=True)
+    result = subprocess.run(["git", "-C", str(repo), "show", ":" + path], capture_output=True, env=git_environment(repo))
     if result.returncode:
         raise ValueError(f"Missing staged/tracked design source: {repo.name}/{path}")
     return result.stdout.decode("utf-8")
@@ -25,7 +34,7 @@ def verify_baseline(repo, baseline):
     commit = baseline["commit"]
     if not re.fullmatch(r"[0-9a-f]{40}", commit):
         raise ValueError("Invalid approved App baseline commit")
-    result = subprocess.run(["git", "-C", str(repo), "merge-base", "--is-ancestor", commit, "HEAD"], capture_output=True)
+    result = subprocess.run(["git", "-C", str(repo), "merge-base", "--is-ancestor", commit, "HEAD"], capture_output=True, env=git_environment(repo))
     if result.returncode:
         raise ValueError(f"App checkout is not based on approved {baseline.get('ref', 'source')} {commit[:12]}; verify the latest native source before generating or checking")
 
@@ -127,7 +136,7 @@ def main():
         if args.action != "check" or args.mini_path or args.ios_path or args.reviewed_mini_path or args.reviewed_ios_path:
             raise ValueError("--staged-side is only for token checks")
         repo = ROOT if args.staged_side == "mini" else args.ios_root
-        changed = subprocess.run(["git", "-C", str(repo), "diff", "--cached", "--name-only", "-z"], capture_output=True, check=True).stdout.decode().split("\0")
+        changed = subprocess.run(["git", "-C", str(repo), "diff", "--cached", "--name-only", "-z"], capture_output=True, check=True, env=git_environment(repo)).stdout.decode().split("\0")
         mapped = load(ROOT / "design/native/page-pairs.json")
         prefix = "chengyinhub-xcx/" if args.staged_side == "mini" else ""
         watched = [prefix + path for group in mapped.values() for path in group[args.staged_side]]

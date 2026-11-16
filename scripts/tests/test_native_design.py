@@ -1,10 +1,12 @@
 import importlib.util
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 spec = importlib.util.spec_from_file_location("native_design", ROOT / "scripts/native-design.py")
@@ -79,6 +81,32 @@ class NativeDesignTests(unittest.TestCase):
         self.assertEqual(hooks.hook_text(result, "token_check"), result)
         with self.assertRaises(ValueError):
             hooks.hook_text("#!/usr/bin/env python3\nprint('keep')\n", "token_check")
+
+    def test_foreign_git_reads_keep_the_callers_alternate_index(self):
+        with tempfile.TemporaryDirectory() as directory:
+            caller, foreign = [Path(directory) / name for name in ("caller", "foreign")]
+            for repo in (caller, foreign):
+                subprocess.run(["git", "init", "-q", str(repo)], check=True)
+                (repo / "tokens").write_text(repo.name + " staged")
+                subprocess.run(["git", "-C", str(repo), "add", "tokens"], check=True)
+            subprocess.run(["git", "-C", str(foreign), "-c", "user.name=Native fixture", "-c", "user.email=native-fixture@example.invalid", "-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null", "commit", "-qm", "approved foreign source"], check=True)
+            approved = subprocess.check_output(["git", "-C", str(foreign), "rev-parse", "HEAD"], text=True).strip()
+            alternate = Path(directory) / "hook-index"
+            alternate.write_bytes((caller / ".git/index").read_bytes())
+            (caller / "tokens").write_text("caller alternate staged")
+            environment = dict(os.environ, GIT_INDEX_FILE=str(alternate))
+            subprocess.run(["git", "-C", str(caller), "add", "tokens"], env=environment, check=True)
+            (caller / "tokens").write_text("caller unstaged")
+            (foreign / "tokens").write_text("foreign unstaged")
+            previous = Path.cwd()
+            try:
+                os.chdir(caller)
+                with patch.dict(os.environ, {"GIT_DIR": str(caller / ".git"), "GIT_WORK_TREE": str(caller), "GIT_INDEX_FILE": str(alternate)}):
+                    self.assertEqual(design.staged_text(caller, "tokens"), "caller alternate staged")
+                    self.assertEqual(design.staged_text(foreign, "tokens"), "foreign staged")
+                    design.verify_baseline(foreign, {"ref": "fixture", "commit": approved})
+            finally:
+                os.chdir(previous)
 
     def test_staged_checks_reject_a_repaired_worktree_with_bad_index(self):
         with tempfile.TemporaryDirectory() as directory:
