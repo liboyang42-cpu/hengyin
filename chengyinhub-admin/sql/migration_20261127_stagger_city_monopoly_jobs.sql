@@ -6,8 +6,8 @@
 -- 计划表(SysJobStaggerPlanTest 解析这些行):
 -- plan: cityMonopolyTask.settle() = 44 3 3 * * ?
 -- plan: cityMonopolyTask.nightly() = 50 23 3 * * ?
--- plan: cityMonopolyTask.seasonSettle() = 56 7 9 ? * MON
+-- plan: cityMonopolyTask.seasonSettle() = 56 7 9 * * ?
 
 UPDATE sys_job SET cron_expression = '44 3 3 * * ?', update_time = NOW() WHERE invoke_target = 'cityMonopolyTask.settle()' AND cron_expression IN ('0 3 3 * * ?');
 UPDATE sys_job SET cron_expression = '50 23 3 * * ?', update_time = NOW() WHERE invoke_target = 'cityMonopolyTask.nightly()' AND cron_expression IN ('0 23 3 * * ?');
-UPDATE sys_job SET cron_expression = '56 7 9 ? * MON', update_time = NOW() WHERE invoke_target = 'cityMonopolyTask.seasonSettle()' AND cron_expression IN ('0 7 9 ? * MON');
+UPDATE sys_job SET cron_expression = '56 7 9 * * ?', update_time = NOW() WHERE invoke_target = 'cityMonopolyTask.seasonSettle()' AND cron_expression IN ('0 7 9 * * ?');

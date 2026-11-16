@@ -20,8 +20,8 @@ FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM sys_job WHERE invoke_target = 'cityMon
 
 INSERT INTO sys_job
     (job_name, job_group, invoke_target, cron_expression, misfire_policy, concurrent, status, create_by, create_time, remark)
-SELECT '城市大富翁:赛季结算', 'DEFAULT', 'cityMonopolyTask.seasonSettle()', '56 7 9 ? * MON', '3', '1', '0',
-       'system', NOW(), 'CITY-6;每周一 09:07 结算上一赛季一次,已结算则跳过'
+SELECT '城市大富翁:赛季结算', 'DEFAULT', 'cityMonopolyTask.seasonSettle()', '56 7 9 * * ?', '3', '1', '0',
+       'system', NOW(), 'CITY-6;每天 09:07 检查,上一赛季未结算则结算一次,已结算则跳过'
 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM sys_job WHERE invoke_target = 'cityMonopolyTask.seasonSettle()');
 
 -- 只读核验:

@@ -59,3 +59,28 @@ export function getTerritoryAudit(params) {
 export function getTerritoryLeaderboard(params) {
   return request({ url: '/business/city-game/territories/leaderboard', method: 'get', params })
 }
+
+// CITY-6: City Monopoly operations (config read, overnight batches, season settle, abuse queue).
+export function getMonopolyConfig() {
+  return request({ url: '/business/city-game/monopoly/config', method: 'get' })
+}
+
+export function runMonopolySettle() {
+  return request({ url: '/business/city-game/monopoly/settle', method: 'post' })
+}
+
+export function runMonopolyNightly() {
+  return request({ url: '/business/city-game/monopoly/nightly', method: 'post' })
+}
+
+export function settleMonopolySeason(seasonId, params) {
+  return request({ url: '/business/city-game/monopoly/season/' + encodeURIComponent(seasonId) + '/settle', method: 'post', params })
+}
+
+export function listMonopolyAbuse(params) {
+  return request({ url: '/business/city-game/monopoly/abuse', method: 'get', params })
+}
+
+export function reviewMonopolyAbuse(signalId, confirm) {
+  return request({ url: '/business/city-game/monopoly/abuse/' + encodeURIComponent(signalId) + '/review', method: 'post', data: { confirm: !!confirm } })
+}

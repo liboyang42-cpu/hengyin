@@ -363,7 +363,8 @@ public class CityMonopolyService {
                             + "FROM city_game_point p WHERE p.board_id = ? AND p.point_id = ? AND p.del_flag = 0", boardId, pointId);
             if (rows.isEmpty()) throw new CityGameException(404, "SPACE_NOT_FOUND", "地点不存在");
             Map<String, Object> r = rows.get(0);
-            Long place = r.get("place_id") instanceof Number ? ((Number) r.get("place_id")).longValue() : poiId;
+            // Long.valueOf: a long/Long ternary would unbox a null poiId (board point without a POI) into an NPE.
+            Long place = r.get("place_id") instanceof Number ? Long.valueOf(((Number) r.get("place_id")).longValue()) : poiId;
             return new Target("board:" + boardId + ":" + pointId, place, boardId, pointId, (String) r.get("property_id"),
                     (String) r.get("title"), dbl(r.get("latitude")), dbl(r.get("longitude")),
                     CityMonopolyRules.normalizeTier(r.get("tier") instanceof Number ? ((Number) r.get("tier")).intValue() : null),
@@ -1854,7 +1855,7 @@ public class CityMonopolyService {
     }
 
     /**
-     * CITY-6: weekly job. Settles the previous season once (its freeze has passed by definition); a settled season is
+     * CITY-6: daily job. Settles the previous season once (its freeze has passed by definition); a settled season is
      * skipped, so running twice is harmless.
      */
     @Transactional(rollbackFor = Exception.class)

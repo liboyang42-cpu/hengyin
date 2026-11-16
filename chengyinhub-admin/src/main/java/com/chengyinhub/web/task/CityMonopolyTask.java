@@ -14,7 +14,7 @@ import com.chengyinhub.business.citygame.CityMonopolyService;
  * <ul>
  *   <li>{@code cityMonopolyTask.settle()} 03:03: PENDING rent of earlier days becomes 积分, or VOID when flagged.</li>
  *   <li>{@code cityMonopolyTask.nightly()} 03:23: legacy conversion, upkeep, decay, release and abuse detection.</li>
- *   <li>{@code cityMonopolyTask.seasonSettle()} Monday 09:07: settles the previous season once.</li>
+ *   <li>{@code cityMonopolyTask.seasonSettle()} daily 09:07: settles the previous season once (skips a settled one).</li>
  * </ul>
  * Every step is idempotent per day / event / season (city_points_flow keys and the season status), so a re-run or
  * a second node firing the same row pays nothing twice.
