@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -13,6 +14,7 @@ import com.chengyinhub.business.merchantgap.MerchantGapException;
 import com.chengyinhub.business.shopgames.CityShopLandingHook;
 import com.chengyinhub.business.shopgames.ShopGamePlayService;
 import com.chengyinhub.business.shopgames.ShopGameProfileService;
+import com.chengyinhub.business.shopgames.ShopGameSessionService;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
 
@@ -27,6 +29,11 @@ import com.chengyinhub.common.core.domain.AjaxResult;
  *   <li>{@code POST /api/shop-games/result}: {@code {playId, sessionId, lat, lng, accuracy}}; the judged runtime session
  *       decides the outcome, and a win at the shop awards points under governance caps. 409 {@code SHOP_GAME_NOT_OPEN}
  *       while {@code shopgames.play.enabled} is off.</li>
+ *   <li>W7 x-shop-game-runner, the play's own runtime session outside any journey:
+ *       {@code POST /api/shop-games/plays/{playId}/session} starts or resumes it;
+ *       {@code GET /api/shop-games/sessions/state?sessionId=} reads it;
+ *       {@code POST /api/shop-games/sessions/action} takes {@code {sessionId, version, idempotencyKey, action, payload}}
+ *       like {@code /api/play/advanced/action}. Then {@code result} with {@code {playId, lat, lng, accuracy}}.</li>
  * </ul>
  */
 @RestController
@@ -35,11 +42,14 @@ public class ApiShopGameController extends BaseController {
     private final ShopGameProfileService profiles;
     private final ShopGamePlayService plays;
     private final CityShopLandingHook landing;
+    private final ShopGameSessionService sessions;
 
-    public ApiShopGameController(ShopGameProfileService profiles, ShopGamePlayService plays, CityShopLandingHook landing) {
+    public ApiShopGameController(ShopGameProfileService profiles, ShopGamePlayService plays, CityShopLandingHook landing,
+                                 ShopGameSessionService sessions) {
         this.profiles = profiles;
         this.plays = plays;
         this.landing = landing;
+        this.sessions = sessions;
     }
 
     @GetMapping("/api/shop-games/profile")
@@ -83,6 +93,21 @@ public class ApiShopGameController extends BaseController {
     @PostMapping("/api/shop-games/result")
     public ResponseEntity<AjaxResult> result(@RequestBody(required = false) Map<String, Object> body) {
         return ApiMerchantGapController.answer(() -> plays.finish(member(), body));
+    }
+
+    @PostMapping("/api/shop-games/plays/{playId}/session")
+    public ResponseEntity<AjaxResult> startSession(@PathVariable("playId") Long playId) {
+        return ApiMerchantGapController.answer(() -> sessions.start(member(), playId));
+    }
+
+    @GetMapping("/api/shop-games/sessions/state")
+    public ResponseEntity<AjaxResult> sessionState(@RequestParam(required = false) Long sessionId) {
+        return ApiMerchantGapController.answer(() -> sessions.state(member(), sessionId));
+    }
+
+    @PostMapping("/api/shop-games/sessions/action")
+    public ResponseEntity<AjaxResult> sessionAction(@RequestBody(required = false) Map<String, Object> body) {
+        return ApiMerchantGapController.answer(() -> sessions.act(member(), body));
     }
 
     private Long member() {

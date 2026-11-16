@@ -56,6 +56,12 @@
 
   <view wx:if="{{merchant && (merchant.storyTitle || merchant.description)}}" class="poi-section"><text class="poi-section__title">{{merchant.storyTitle || '品牌故事'}}</text><text class="poi-story">{{merchant.description}}</text></view>
   <view wx:if="{{merchant}}" class="poi-section"><text class="poi-section__title">基本信息</text><view class="poi-group"><view class="poi-row"><text>商家名称</text><text class="poi-row__value">{{merchant.displayName}}</text></view><view wx:if="{{merchant.catNames}}" class="poi-row"><text>品类</text><text class="poi-row__value">{{merchant.catNames}}</text></view><view class="poi-row"><text>收费方式</text><text class="poi-row__value">{{merchant.chargeText}}</text></view><view class="poi-row"><text>营业状态</text><text class="poi-row__value">{{merchant.businessStatusText}}</text></view><view wx:if="{{merchant.address && hasLocation}}" class="poi-row" bindtap="openLocation" aria-role="button" aria-label="导航到{{merchant.address}}" hover-class="cy-pressed" hover-stay-time="80"><text>门店地址</text><text class="poi-row__value poi-row__link">{{merchant.address}}</text></view><view wx:elif="{{merchant.address}}" class="poi-row"><text>门店地址</text><text class="poi-row__value">{{merchant.address}}</text></view></view></view>
+  <view wx:if="{{shopGame}}" class="poi-section">
+    <text class="poi-section__title">这家店的小游戏</text>
+    <text wx:if="{{shopGame.name}}" class="poi-story">{{shopGame.name}}</text>
+    <cy-btn wx:if="{{shopGame.open}}" variant="primary" bindtap="playShopGame">玩今天的小游戏</cy-btn>
+    <text class="poi-story">{{shopGame.open ? '每天每家店可以玩一局。在店里玩赢了才发积分，不在店里也能玩，只记成绩。' : '店铺小游戏还没开放，开放后就在这里玩。'}}</text>
+  </view>
   <view wx:if="{{node}}" class="poi-section">
     <text class="poi-section__title">地点详情</text><text class="poi-story">{{isCatalog ? catalogReason : node.description}}</text>
     <view wx:if="{{photoCredit}}" bindtap="onPhotoCredit" class="poi-credit" aria-role="button" aria-label="资料来源" hover-class="cy-pressed" hover-stay-time="80">资料来源 {{creditOpen ? '收起' : '展开'}}</view>

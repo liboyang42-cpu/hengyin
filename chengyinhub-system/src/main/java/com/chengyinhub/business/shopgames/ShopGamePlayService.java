@@ -270,12 +270,19 @@ public class ShopGamePlayService {
         return out;
     }
 
-    /** The server's verdict on a play: the runtime session that played its template. */
-    record Judged(boolean won, Long activityId, Long topicId, Long nodeId) { }
+    /**
+     * The server's verdict on a play: the runtime session that played its template. {@code untrusted} is set for a
+     * shop session (W7 x-shop-game-runner), whose evidence check needs no journey ids.
+     */
+    record Judged(boolean won, Long activityId, Long topicId, Long nodeId, List<String> untrusted) {
+        Judged(boolean won, Long activityId, Long topicId, Long nodeId) { this(won, activityId, topicId, nodeId, null); }
+    }
 
     static final String SESSION_COLUMNS = "SELECT id, status, activity_id, topic_id, node_id, started_at FROM game_runtime_session";
 
     private Judged judge(long memberId, Map<String, Object> play, Object sessionArg) {
+        Judged shop = judgeShopSession(memberId, play);
+        if (shop != null) return shop;
         if (!(sessionArg instanceof Number n) || n.doubleValue() != Math.rint(n.doubleValue()) || n.longValue() <= 0) {
             throw new MerchantGapException(409, "PLAY_NOT_JUDGED", "这局小游戏还没有结果");
         }
@@ -296,13 +303,43 @@ public class ShopGamePlayService {
     }
 
     /**
+     * W7 x-shop-game-runner: a play started from the place page or a City Monopoly landing is judged from its own
+     * shop session ({@code cy_shop_game_session}, bound to the play). Null when the play has none (journey shop node).
+     * A running session whose deadline passed counts as lost; a running one before its deadline is not finished.
+     */
+    private Judged judgeShopSession(long memberId, Map<String, Object> play) {
+        List<Map<String, Object>> rows;
+        try {
+            rows = jdbc.queryForList(ShopGameSessionService.SESSION_COLUMNS + " WHERE play_id = ? AND member_id = ?",
+                    ((Number) play.get("id")).longValue(), memberId);
+        } catch (org.springframework.dao.DataAccessException missingTable) {
+            return null;
+        }
+        if (rows == null || rows.isEmpty()) return null;
+        Map<String, Object> session = rows.get(0);
+        int st = session.get("status") instanceof Number s ? s.intValue() : -1;
+        if (st == 0) {
+            Object deadline = session.get("deadline_at");
+            if (deadline == null || !clock.instant().isAfter(instant(deadline))) {
+                throw new MerchantGapException(409, "PLAY_NOT_FINISHED", "这局小游戏还没玩完");
+            }
+            return new Judged(false, null, null, null, List.of());
+        }
+        List<String> untrusted = runtime == null ? List.of("RUNTIME_UNAVAILABLE")
+                : runtime.templateUntrustedEvidence(ShopGameSessionService.toSession(session));
+        return new Judged(st == 1, null, null, null, untrusted == null ? List.of() : untrusted);
+    }
+
+    /**
      * Why a judged win pays no points, or null when it pays. Owner decision 2: prizes need presence at the shop;
      * games the device reports, and runtime evidence the runtime itself caps, pay none.
      */
     private String rewardCeiling(Map<String, Object> play, Judged judged, Map<String, Object> body) {
         ShopGameCatalog.Game g = ShopGameCatalog.game(String.valueOf(play.get("game_key")));
         if (g == null || g.deviceReported()) return "DEVICE_REPORTED";
-        if (runtime != null && runtime.rewardCappedToXpBadge(play.get("member_id") instanceof Number m ? m.longValue() : null,
+        if (judged.untrusted() != null) {
+            if (!judged.untrusted().isEmpty()) return "UNJUDGED_EVIDENCE";
+        } else if (runtime != null && runtime.rewardCappedToXpBadge(play.get("member_id") instanceof Number m ? m.longValue() : null,
                 judged.activityId(), judged.topicId(), judged.nodeId())) {
             return "UNJUDGED_EVIDENCE";
         }

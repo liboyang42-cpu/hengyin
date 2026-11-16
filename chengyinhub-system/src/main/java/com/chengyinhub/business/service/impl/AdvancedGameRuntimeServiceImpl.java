@@ -4322,4 +4322,84 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         return result;
     }
 
+
+    // ===== W7 x-shop-game-runner: template-only sessions (no activity, topic or node; caller stores them) =====
+
+    @Override
+    public GameRuntimeSession templateStart(Long memberId, Long templateId, String rawConfig) {
+        if (memberId == null || memberId <= 0 || templateId == null || templateId <= 0) throw new IllegalArgumentException("参数有误");
+        String normalized = configValidator.validateAndNormalize(rawConfig);
+        if (normalized == null) throw new IllegalStateException("TEMPLATE_UNSUPPORTED");
+        JsonNode config = readJson(normalized, "高级玩法配置不可用");
+        if (!TemplatePlayRules.unsupported(config).isEmpty() || !(config instanceof ObjectNode)) throw new IllegalStateException("TEMPLATE_UNSUPPORTED");
+        config = TemplatePlayRules.capTries((ObjectNode) config);
+        normalized = writeJson(config);
+        Date now = clock.now();
+        GameRuntimeSession session = new GameRuntimeSession();
+        session.setTemplateId(templateId);
+        session.setOwnerType(GameRuntimeSession.OWNER_PLAYER);
+        session.setOwnerId(memberId);
+        session.setConfigSnapshotJson(normalized);
+        session.setStateJson(writeJson(initialState(config, null, Collections.emptyList())));
+        session.setStatus(GameRuntimeSession.STATUS_RUNNING);
+        session.setScore(0);
+        session.setCompletedUnits(0);
+        session.setVersion(0);
+        session.setStartedAt(now);
+        session.setDeadlineAt(deadline(config, now));
+        session.setCreateTime(now);
+        session.setUpdateTime(now);
+        return session;
+    }
+
+    @Override
+    public GameRuntimeSession templateAct(GameRuntimeSession session, Long memberId, String action, Map<String, Object> payload) {
+        if (session == null || memberId == null || !memberId.equals(session.getOwnerId())
+                || session.getTopicId() != null || session.getNodeId() != null) throw new IllegalArgumentException("参数有误");
+        String normalizedAction = StringUtils.defaultString(action).trim().toUpperCase(java.util.Locale.ROOT);
+        if (!TemplatePlayRules.ACTIONS.contains(normalizedAction)) throw new IllegalArgumentException("这个小游戏不支持这一步");
+        if (!Integer.valueOf(GameRuntimeSession.STATUS_RUNNING).equals(session.getStatus())) throw new IllegalStateException("这局小游戏已经结束了");
+        Date now = clock.now();
+        Map<String, Object> frozen = objectMapper.convertValue(objectMapper.valueToTree(
+                payload == null ? Collections.emptyMap() : payload), new TypeReference<Map<String, Object>>() {});
+        JsonNode config = readJson(session.getConfigSnapshotJson(), "高级玩法配置不可用");
+        ObjectNode state = objectState(session.getStateJson());
+        if (session.getDeadlineAt() != null && now.after(session.getDeadlineAt())) {
+            session.setStatus(GameRuntimeSession.STATUS_EXPIRED);
+        } else if (TemplatePlayRules.GIVE_UP.equals(normalizedAction)) {
+            session.setStatus(GameRuntimeSession.STATUS_FAILED);
+        } else {
+            String attemptGame = ATTEMPT_BOUND_SUBMITS.get(normalizedAction);
+            if (attemptGame != null) actionJudgement().requireCurrentAttempt(state.path(attemptGame), frozen, memberId);
+            AdvancedActionJudgement.Plan plan = actionJudgement().evaluate(AdvancedActionJudgement.Action.valueOf(normalizedAction),
+                    new AdvancedActionJudgement.Input(config, state, frozen, session.getScore(), memberId));
+            if (plan.photoEvidence() != null) photoEvidenceVerifier.accept(plan.photoEvidence().imageUrl(), plan.photoEvidence().memberId());
+            state = plan.state();
+            if (plan.scoreAssigned()) session.setScore(plan.score());
+            if (attemptGame != null) consumeAttempt(state.path(attemptGame));
+            if (TemplatePlayRules.over(config, state)) {
+                session.setStatus(TemplatePlayRules.won(config, state) ? GameRuntimeSession.STATUS_COMPLETED : GameRuntimeSession.STATUS_FAILED);
+            }
+        }
+        if (!Integer.valueOf(GameRuntimeSession.STATUS_RUNNING).equals(session.getStatus())) session.setCompletedAt(now);
+        session.setStateJson(writeJson(state));
+        session.setUpdateTime(now);
+        return session;
+    }
+
+    @Override
+    public Map<String, Object> templateView(GameRuntimeSession session, Long memberId) {
+        if (session == null || session.getTopicId() != null || session.getNodeId() != null) throw new IllegalArgumentException("参数有误");
+        Map<String, Object> view = toView(session, memberId);
+        view.put("canRetry", false);
+        view.put("scope", "TEMPLATE");
+        return view;
+    }
+
+    @Override
+    public List<String> templateUntrustedEvidence(GameRuntimeSession session) {
+        if (session == null) return Collections.emptyList();
+        return untrustedCompletionEvidence(readJson(session.getConfigSnapshotJson(), "高级玩法配置不可用"),
+                objectState(session.getStateJson()));
+    }
 }
