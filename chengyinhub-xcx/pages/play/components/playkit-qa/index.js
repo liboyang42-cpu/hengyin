@@ -64,6 +64,7 @@ Component({
     imageUrl: { type: String, value: '' },
     audioUrl: { type: String, value: '' },
     lead: { type: String, value: '' },
+    instructions: { type: String, value: '' },
     options: { type: Array, value: [] },
     shotLead: { type: String, value: '' },
     shotNote: { type: String, value: '' },

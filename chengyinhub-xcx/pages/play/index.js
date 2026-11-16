@@ -7772,6 +7772,8 @@ Page({
     const kit = dailySignRevealState(previous, picked);
     // 模板故事图也承载任务证据；题面没另配图时沿用当前节点的授权图片，不拿地点封面代替。
     if (kit && kit.type === 'qa' && !kit.imageUrl && placeNode && placeNode.storyImage) kit.imageUrl = placeNode.storyImage;
+    // 规则里也可能是推理所需的资料；只读当前节点已去运营备注的公开文本。
+    if (kit && kit.type === 'qa') kit.instructions = placeNode && placeNode.rule || '';
     if (kit && kit.type === 'qa' && kit.passed && submitted && submitted.accepted) kit.acceptedInput = submitted.input;
     if (kit && kit.type === 'album' && !kit.done && kit.sessionId === previous.sessionId && kit.version === previous.version) kit.uploaded = !!previous.uploaded;
     if (!kit) { this.setData({ playKit: { show: false, kit: null } }); return; }

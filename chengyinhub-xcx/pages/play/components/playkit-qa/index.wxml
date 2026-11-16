@@ -4,13 +4,14 @@
 <cy-play-stage id="cy-play-stage" skin="{{theme === 'light' ? 'qa' : 'qadark'}}" show="{{show}}" back-label="退出"
                limit-seconds="{{finished ? 0 : limitSeconds}}" tries="{{triesCap}}"
                bind:back="onClose" bind:run="onRun" bind:verdict="onVerdict" bind:burn="onBurn">
-  <view class="g-col qa {{intro ? 'qa--intro' : ''}} {{burning ? 'qa--burning' : ''}} {{reducedMotion ? 'qa--reduced' : ''}}">
+  <view class="g-col qa {{inline ? 'qa--inline' : ''}} {{intro ? 'qa--intro' : ''}} {{burning ? 'qa--burning' : ''}} {{reducedMotion ? 'qa--reduced' : ''}}">
     <!-- 拍照那一档的大字默认回落成题干(见 advanced-game-preview 的 shotLead)。
          两处印同一句话时,只留中间那一句 —— 上面再来一遍是重复,不是强调。 -->
     <view class="qa__q pe pe--blur" style="--pe-d:.05s;--pe-dur:.7s" wx:if="{{!(mode === 'shot' && shotLead === title)}}">{{title}}</view>
 
     <!-- 一进来题目在屏幕正中,一秒后选项才出现 —— 一屏一件事:
          先让人把题读完,再给他可以按的东西。同时出现的话,人只会扫按钮。 -->
+    <scroll-view class="qa__scroll {{!inline && !(mode === 'pick' && !multi && judge !== false && !passed && ctaLabel !== '重拍') ? 'qa__scroll--footer' : ''}}" scroll-y="{{!inline}}" aria-role="region" aria-label="题目与作答">
     <view class="qa__body">
       <!-- 题干附件:商家没配就整块不出。没内容就不要显示提示语 -->
       <view class="qa__media" wx:if="{{imageUrl}}">
@@ -19,6 +20,10 @@
       <view class="qa__audio" wx:if="{{audioUrl}}" bindtap="onToggleAudio"
             aria-role="button" aria-label="{{playing ? '暂停题目音频' : '播放题目音频'}}"
             hover-class="qa__press" hover-stay-time="80">{{playing ? '暂停' : '播放这段'}}</view>
+
+      <scroll-view class="qa__materials" wx:if="{{instructions}}" scroll-y aria-role="region" aria-label="任务资料">
+        <text user-select>{{instructions}}</text>
+      </scroll-view>
 
       <!-- 前置步骤:先做点什么再答(闭眼盲品那类)。商家没填就不出 -->
       <!-- 拍照那一档的大字用的就是 lead,这里再画一遍就是同一句话印两遍 -->
@@ -88,6 +93,7 @@
       </view>
       <view wx:if="{{finished && answerText}}" class="qa__fb" aria-live="polite">{{answerText}}</view>
     </view>
+    </scroll-view>
   </view>
 
   <!-- 故事流内嵌且已答对:下面就是「继续故事」,这里不再叠一枚同义的「继续」(实走复核:两枚白按钮上下摞着) -->

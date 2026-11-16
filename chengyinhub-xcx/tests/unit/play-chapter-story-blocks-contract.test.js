@@ -368,6 +368,193 @@ function evidenceQaView() {
     playKit: { qa: { mode: 'TYPE', title: '根据材料作答', attempts: 1, finished: false } } }
 }
 
+const archiveRules = '摘要甲：阿驰：黑白毛，左耳边有一个小缺口，我叫它店长。林眠：右前爪是白的，左耳有小缺口，我叫它模特。\n摘要乙：小苏：黑白毛，右前爪白，我叫它团长。周伯与陆眉确认：他们的“领导”“点点”与阿驰、林眠、小苏的记录都引用同一个档案编号；昵称和今天的心情不用于辨认。\n待核档案\nA 黑白毛 左耳完整 右前爪白\nB 纯黑毛 左耳缺口 右前爪白\nC 黑白毛 左耳缺口 右前爪白\nD 黑白毛 左耳缺口 左前爪白而右前爪黑\n以上均为游戏虚构档案，不是寻找真实猫的指令。'
+
+test('QA资料：真实Page归一化到PICK/TYPE题面，内嵌与整屏都保留完整档案', () => {
+  for (const mode of ['PICK', 'TYPE']) for (const inline of [false, true]) {
+    const raw = { ruleInstructions: archiveRules, storyImg: '', questionImg: '',
+      questionAnswer: 'PRIVATE_CANONICAL_NOT_PLAYER_MATERIAL', correctAnswer: 'PRIVATE_CORRECT_NOT_PLAYER_MATERIAL' }
+    const page = evidenceQaPage(raw)
+    page.data.chapterFull = inline
+    const view = evidenceQaView()
+    view.present = inline ? 'inline' : 'modal'
+    view.playKit.qa.mode = mode
+    view.playKit.qa.lead = '先忽略昵称，只看三个稳定特征'
+    page.onAdvancedSession({ detail: view })
+    const kit = page.data.playKit.kit
+    assert.equal(kit.instructions, archiveRules, '226字原始档案不能只剩短引导和档案代码')
+    assert.ok(!JSON.stringify(kit).includes('PRIVATE_'), '材料链不读正确项或canonical')
+    assert.equal(kit.lead, view.playKit.qa.lead, '资料不是提示，不覆盖作者原引导')
+    assert.equal(kit.imageUrl, '')
+    assert.equal(kit.answerText, '')
+    assert.equal(kit.attempts, 1)
+    assert.equal(view.playKit.qa.instructions, undefined, '不改服务端原回包')
+  }
+})
+
+test('QA资料：只用当前公开规则，去运营括注，不补故事封面或答案', () => {
+  const page = evidenceQaPage({ ruleInstructions: archiveRules + '（运营备注：仅内部排班）' })
+  page.onAdvancedSession({ detail: evidenceQaView() })
+  assert.equal(page.data.playKit.kit.instructions, archiveRules)
+  const bare = evidenceQaPage({ ruleInstructions: '' })
+  bare.onAdvancedSession({ detail: evidenceQaView() })
+  assert.equal(bare.data.playKit.kit.instructions, '')
+  const other = evidenceQaPage({ ruleInstructions: archiveRules })
+  other.onAdvancedSession({ detail: { ...evidenceQaView(), playKit: { random: { items: [], drawCount: 1 } } } })
+  assert.equal(other.data.playKit.kit.instructions, undefined)
+})
+
+test('QA资料：旧节点/局/版本/账号回包不替换新节点的资料', () => {
+  for (const stale of ['node', 'session', 'version', 'previousVersion', 'account']) {
+    const page = evidenceQaPage({ ruleInstructions: archiveRules })
+    const view = evidenceQaView()
+    page.data.playKit = { show: true, kit: { type: 'qa', sessionId: 71, version: 2, instructions: '当前节点资料' } }
+    const current = page.data.playKit
+    if (stale === 'node') view.nodeId = 52
+    if (stale === 'session') page._advancedGameComponent = () => ({ data: { state: { sessionId: 72, version: 2 } } })
+    if (stale === 'version') page._advancedGameComponent = () => ({ data: { state: { sessionId: 71, version: 3 } } })
+    if (stale === 'previousVersion') view.version = 1
+    if (stale === 'account') page._isPlayAccountCurrent = () => false
+    page.onAdvancedSession({ detail: view })
+    assert.equal(page.data.playKit, current, stale)
+  }
+})
+
+test('QA资料：规则真正桥接到作答前可滚动文本，不只存在Page内存', () => {
+  const qaPath = require.resolve('../../pages/play/components/playkit-qa/index.js')
+  const previousComponent = global.Component, previousBehavior = global.Behavior
+  let definition
+  try {
+    global.Component = value => { definition = value }
+    global.Behavior = value => value
+    delete require.cache[qaPath]
+    require(qaPath)
+    assert.equal(definition.properties.instructions.type, String)
+    assert.equal(definition.properties.instructions.value, '')
+    const bridge = read('pages/play/components/playkit/index.wxml')
+    const qa = read('pages/play/components/playkit-qa/index.wxml')
+    const style = read('pages/play/components/playkit-qa/index.wxss')
+    assert.match(bridge, /instructions="{{kit.instructions}}"/)
+    assert.match(qa, /<scroll-view[^>]*class="qa__materials"[^>]*wx:if="{{instructions}}"[^>]*scroll-y/)
+    assert.match(qa, /<text[^>]*user-select[^>]*>{{instructions}}<\/text>/)
+    assert.ok(qa.indexOf('class="qa__materials"') < qa.indexOf('class="qa__input'))
+    assert.ok(qa.indexOf('class="qa__materials"') < qa.indexOf('class="qa__opts'))
+    assert.match(style, /\.qa__materials\s*{[^}]*height:/)
+    assert.match(style, /\.qa__materials\s*{[^}]*white-space:\s*pre-wrap/)
+  } finally {
+    global.Component = previousComponent
+    global.Behavior = previousBehavior
+    delete require.cache[qaPath]
+  }
+})
+
+test('QA资料：冷读档案可唯一匹配三项证词，移除材料就无法从代码标签推理', () => {
+  const page = evidenceQaPage({ ruleInstructions: archiveRules, storyImg: '' })
+  page.onAdvancedSession({ detail: evidenceQaView() })
+  const material = page.data.playKit.kit.instructions || ''
+  // 从公开证词与四份档案推导，不读取canonical或alias，也不提交真实游戏答案。
+  function compatible(text) {
+    if (!/阿驰：黑白毛/.test(text) || !/林眠：右前爪是白的，左耳有小缺口/.test(text)) return []
+    return text.split('\n').filter(line => /^[A-D] /.test(line))
+      .filter(line => /黑白毛/.test(line) && /左耳缺口/.test(line) && /右前爪白/.test(line))
+  }
+  assert.equal(compatible(material).length, 1, '只有看全材料才有唯一可辨认的档案')
+  assert.equal(compatible('A号档案 B号档案 C号档案 D号档案').length, 0)
+})
+
+function qaMaterialScrollContract(markup, style) {
+  const block = selector => {
+    const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const found = style.match(new RegExp('(?:^|\\n)' + escaped + '\\s*\\{([^}]+)\\}'))
+    assert.ok(found, selector + ' must have its own bounded layout rule')
+    return found[1]
+  }
+  const scroll = markup.match(/<scroll-view\s+class="qa__scroll[^>]+>/)
+  assert.ok(scroll, 'whole answer body needs a native scroll-view, not only the material text')
+  assert.match(scroll[0], /scroll-y="{{!inline}}"/)
+  assert.match(markup, /inline \? 'qa--inline'/)
+  assert.match(block('.qa__scroll'), /height:\s*0\s*;/)
+  assert.match(block('.qa__scroll'), /flex:\s*1\s*;/)
+  assert.match(block('.qa__scroll'), /min-height:\s*0\s*;/)
+  const clearance = block('.qa__scroll--footer').match(/margin-bottom:\s*(\d+)rpx\s*;/)
+  assert.ok(clearance, 'scroll viewport must stop above the fixed footer')
+  assert.equal(Number(clearance[1]), 144, '56px CTA + 30px bottom - existing 26px padding + 12px gap at 375px')
+  assert.match(block('.qa--inline .qa__scroll'), /height:\s*auto\s*;/)
+  assert.match(block('.qa--inline .qa__scroll'), /flex:\s*none\s*;/)
+  assert.match(block('.qa--inline .qa__body'), /min-height:\s*0\s*;/)
+  assert.match(block('.qa__body'), /min-height:\s*100%\s*;/)
+  assert.doesNotMatch(block('.qa__body'), /flex:\s*1\s*;/, 'scroll content must grow instead of overflowing a forced-height flex body')
+  const expression = scroll[0].match(/{{([^}]+)}}/)[1]
+  const footer = Function('inline', 'mode', 'multi', 'judge', 'passed', 'ctaLabel', 'return ' + expression)
+  assert.equal(footer(false, 'pick', true, true, false, '提交'), 'qa__scroll--footer')
+  assert.equal(footer(false, 'type', false, true, false, '提交'), 'qa__scroll--footer')
+  assert.equal(footer(false, 'pick', false, false, false, '确认选择'), 'qa__scroll--footer')
+  assert.equal(footer(false, 'pick', false, true, false, '提交'), '')
+  assert.equal(footer(true, 'pick', true, true, false, '提交'), '')
+  return Number(clearance[1]) / 2
+}
+
+test('QA资料整屏：真实Page与组件多选四项，375×667末项可滚到固定提交按钮上方', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] })
+  const page = evidenceQaPage({ ruleInstructions: archiveRules, storyImg: '' })
+  const view = evidenceQaView()
+  Object.assign(view.playKit.qa, { mode: 'PICK', multi: true, maxTries: 3,
+    lead: '先忽略昵称，只看三个稳定特征', options: ['A', 'B', 'C', 'D'].map(id => ({ id, label: id + '号档案' })) })
+  page.onAdvancedSession({ detail: view })
+  const kit = page.data.playKit.kit
+  assert.equal(kit.multi, true)
+  assert.equal(kit.instructions, archiveRules)
+  const oldComponent = global.Component, oldBehavior = global.Behavior
+  let definition
+  const qaPath = require.resolve('../../pages/play/components/playkit-qa/index.js')
+  try {
+    global.Component = value => { definition = value }
+    global.Behavior = value => value
+    delete require.cache[qaPath]
+    require(qaPath)
+  } finally {
+    global.Component = oldComponent
+    global.Behavior = oldBehavior
+    delete require.cache[qaPath]
+  }
+  const defaults = Object.fromEntries(Object.entries(definition.properties).map(([key, value]) => [key, value.value]))
+  const component = Object.assign({ data: Object.assign({}, defaults, definition.data, kit, { show: true }),
+    setData(patch) { Object.assign(this.data, patch) }, selectComponent() { return null } }, definition.methods)
+  const observer = Object.keys(definition.observers).find(key => key.startsWith('show, options'))
+  definition.observers[observer].call(component, ...observer.split(',').map(key => component.data[key.trim()]))
+  t.mock.timers.tick(1000)
+  assert.equal(component.data.triesCap, 3)
+  assert.equal(component.data.ctaLabel, '提交')
+  assert.equal(component.data.intro, false)
+  assert.equal(component.data.optionList.length, 4)
+  const bodyTop = 44 + 62 + 38 + 22 * 1.38 + 12, bodyBottom = 667 - 26
+  const optionHeight = 38 + 16 * 1.4 + .5
+  const contentHeight = 120 + 14 * 1.75 + 4 * optionHeight + .5 + 2 * 13
+  const fixedCtaTop = 667 - 30 - 56
+  const oldLastBottom = (bodyTop + bodyBottom) / 2 + contentHeight / 2
+  assert.ok(oldLastBottom - fixedCtaTop > 39, 'old centered body puts the last option beneath the fixed CTA')
+  const margin = qaMaterialScrollContract(read('pages/play/components/playkit-qa/index.wxml'), read('pages/play/components/playkit-qa/index.wxss'))
+  const viewportBottom = bodyBottom - margin
+  const viewportHeight = viewportBottom - bodyTop
+  assert.ok(viewportHeight > 0 && contentHeight > viewportHeight, 'long content actually needs scrolling')
+  assert.equal(fixedCtaTop - viewportBottom, 12)
+  assert.ok(contentHeight - Math.max(0, contentHeight - viewportHeight) <= viewportHeight, 'last option reaches the viewport at maximum native scroll')
+  const keyboardViewportHeight = viewportHeight - 250
+  assert.ok(keyboardViewportHeight > 0, 'same bounded body still has a scroll viewport during keyboard resize')
+  assert.match(read('pages/play/components/playkit-qa/index.wxml'), /<input[^>]*bindinput="onInput"[^>]*confirm-type="done"[\s\S]*?bindconfirm="onSubmitText"/)
+})
+
+test('QA资料滚动负控：移除原生滚动、CTA留位或内嵌自然高度均必须失败', () => {
+  const markup = read('pages/play/components/playkit-qa/index.wxml')
+  const style = read('pages/play/components/playkit-qa/index.wxss')
+  qaMaterialScrollContract(markup, style)
+  assert.throws(() => qaMaterialScrollContract(markup.replace('scroll-y="{{!inline}}"', 'scroll-y="false"'), style))
+  assert.throws(() => qaMaterialScrollContract(markup, style.replace(/margin-bottom:\s*144rpx/, 'margin-bottom: 0rpx')))
+  assert.throws(() => qaMaterialScrollContract(markup, style.replace(/(\.qa--inline \.qa__scroll\s*{[^}]*height:)\s*auto/, '$1 0')))
+  assert.match(markup, /<scroll-view[^>]*class="qa__materials"[^>]*scroll-y/)
+  assert.match(markup, /<text[^>]*user-select[^>]*>{{instructions}}<\/text>/)
+})
+
 test('normNode保留独立任务故事图，不把地点封面当作材料', () => {
   const page = evidenceQaPage()
   assert.equal(page.data.nodes[0].storyImage, 'https://example.invalid/evidence.jpg')

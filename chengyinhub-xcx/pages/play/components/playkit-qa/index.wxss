@@ -14,16 +14,18 @@
   line-height: 1.38;
   letter-spacing: -.01em;
 }
-/* 题干之外的都在这一块里:一进来它是透明的,一秒后才淡进来。
-   ★ flex:1 + 居中 —— 照原型 .qabody(163..719,justify-content:center),
-   作答框落在这块空当的正中;不给 flex 的话它会贴着题干,底下空一大片。 */
+/* 原生滚动区由整屏剩余高度约束；长资料/选项不能压到固定提交按钮下面。 */
+.qa__scroll { flex: 1; height: 0; min-height: 0; width: 100%; }
+.qa__scroll--footer { margin-bottom: 144rpx; } /* ds-ok CTA 112 + 底距 60 - 既有底边距 52 + 间隔 24 */
+.qa--inline .qa__scroll { flex: none; height: auto; }
+.qa--inline .qa__body { min-height: 0; }
+/* 短内容仍居中，长内容长出自己的高度后由外层滚动，不从中间溢出。 */
 .qa__body {
   display: flex;
   flex-direction: column;
   align-items: stretch;
   justify-content: center;
-  flex: 1;
-  min-height: 0;
+  min-height: 100%;
   gap: 26rpx;                             /* ds-ok 原型 .qabody gap 13px */
   width: 100%;
   opacity: 1;
@@ -43,6 +45,16 @@
   font-size: var(--cy-type-body);
   line-height: 1.75;
   color: var(--sub);
+}
+.qa__materials {
+  height: 24vh;
+  max-height: 240rpx;
+  flex: none;
+  text-align: left;
+  white-space: pre-wrap;
+  font-size: var(--cy-type-body);
+  line-height: 1.75;
+  color: var(--ink);
 }
 .qa__press { opacity: .88; }
 
