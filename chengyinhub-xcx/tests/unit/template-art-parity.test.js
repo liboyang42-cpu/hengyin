@@ -30,7 +30,7 @@ test('模板结果按模板页行样式画:具象图标优先,meta 为人数 · 
   assert.equal(theme.tplRow, true);
   assert.equal(theme.art, '');
   assert.equal(discover.decorateItem('club', { id: 1, name: '城市乐居人' }).tplRow, false);
-  // owner 2026-10-22:搜索里的模板是大卡,和「我的订单」卡同一套
+  // 2026-11-16:个人订单卡单独调低并改用主题底色，搜索模板大卡保留原样。
   const wxml = read('pages/search2/result/index.wxml');
   assert.match(wxml, /wx:elif="\{\{item\.tplRow\}\}" class="tpl-big"/);
   assert.match(wxml, /<image wx:if="\{\{item\.cover\}\}" class="tpl-big__img"/, '有封面优先铺封面');
@@ -42,10 +42,30 @@ test('模板结果按模板页行样式画:具象图标优先,meta 为人数 · 
     const m = body.match(new RegExp('(?:^|[;{\\s])' + prop + ':\\s*([^;]+);'));
     return m && m[1].trim();
   };
-  [['.tpl-big', '.pc-ord-card', 'height'], ['.tpl-big', '.pc-ord-card', 'border-radius'], ['.tpl-big', '.pc-ord-card', 'background'],
-    ['.tpl-big__shade', '.pc-ord-shade', 'background'], ['.tpl-big__shade', '.pc-ord-shade', 'height'],
-    // 2026-10-27 owner 真机走查 P-48:「我的订单」卡去掉了「出示核销码/查看」按钮(.pc-ord-btn 已删),按钮一项不再比对
-    ['.tpl-big__title', '.pc-ord-title', 'font-size']].forEach(([mine, theirs, prop]) => {
-    assert.equal(decl(wxss, mine, prop), decl(order, theirs, prop), `${mine} ${prop} 与订单卡一致`);
+  const rules = [
+    ['search', '.tpl-big', 'height', '440rpx'],
+    ['search', '.tpl-big', 'border-radius', '40rpx'],
+    ['search', '.tpl-big', 'background', 'linear-gradient(160deg, #5B6670 0%, #2A2F35 100%)'],
+    ['search', '.tpl-big__shade', 'background', 'linear-gradient(180deg, rgba(48,48,48,0) 0%, rgba(48,48,48,.5) 45%, rgba(58,58,58,.85) 100%)'],
+    ['search', '.tpl-big__shade', 'height', '88%'],
+    ['search', '.tpl-big__title', 'font-size', '40rpx'],
+    ['order', '.pc-ord-card', 'height', '400rpx'],
+    ['order', '.pc-ord-card', 'border-radius', 'var(--cy-radius-2xl)'],
+    ['order', '.pc-ord-card', 'background', 'var(--cy-color-home-feed-surface)'],
+    ['order', '.pc-ord-shade', 'background', 'linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, .72))'],
+    ['order', '.pc-ord-shade', 'height', '70%'],
+    ['order', '.pc-ord-title', 'font-size', '40rpx'],
+  ];
+  const checkStyles = sources => rules.forEach(([page, selector, prop, expected]) => {
+    assert.equal(decl(sources[page], selector, prop), expected, `${page} ${selector} ${prop}`);
   });
+  const sources = { search: wxss, order };
+  checkStyles(sources);
+  for (const [page, selector, prop] of rules) {
+    const source = sources[page], start = source.indexOf(selector + ' {'), end = source.indexOf('}', start);
+    const body = source.slice(start, end).replace(new RegExp('\\b(' + prop + ':\\s*)[^;]+;'), '$1__negative__;');
+    const changed = source.slice(0, start) + body + source.slice(end);
+    assert.notEqual(changed, source, `${selector} ${prop} 负控必须实际改动当前声明`);
+    assert.throws(() => checkStyles({ ...sources, [page]: changed }), { name: 'AssertionError' });
+  }
 });
