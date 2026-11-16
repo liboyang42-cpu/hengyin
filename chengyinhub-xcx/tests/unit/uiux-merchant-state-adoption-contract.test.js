@@ -89,7 +89,7 @@ function assertPartialStateUi(wxml, json) {
     '身份/加载失败必须有页内重试出路')
   // 2026-10-22 owner 裁决推翻「首载骨架 + 正在更新提示」:金额永远在位(首帧 ¥0.00),真值到了滚过去,
   // 加载中不出任何 loading UI(不足 400ms 不画加载态)。
-  assert.match(wxml, /class="rv-revenue-amount"[^>]*>\{\{money\.amount2\(revenueShown\)\}\}</,
+  assert.match(wxml, /class="rv-revenue-amount"[^>]*>\{\{dashboardData\.revenue != null \? money\.amount2\(revenueShown\) : '—'\}\}</,
     '收入金额永远在位,加载中显示当前值')
   assert.doesNotMatch(wxml, /<cy-skeleton[^>]*type="amount"|正在更新经营数据/,
     '收入区不得再出骨架或正在更新提示')
@@ -231,7 +231,7 @@ test('登出或切换商家后，旧主体的子请求不能回填品牌、金�
   }
   assert.equal(page.data.displayName, '商家')
   assert.equal(page.data.dashboardData.revenue, null)
-  assert.equal(page.data.revenueShown, '0.00', '旧主体迟到的金额不得滚上屏')
+  assert.equal(page.data.revenueShown, '—', '旧主体迟到的金额不得滚上屏或冒充零收入')
   assert.equal(page.data.todo.pendingVerify, 0)
 
   userId = 10
@@ -245,6 +245,7 @@ test('登出或切换商家后，旧主体的子请求不能回填品牌、金�
 
 test('经营数据刷新失败保留最后一次已确认金额，未知值仍为 null', () => {
   const page = loadPage()
+  page.data.merchantAccess = { active: true, canReadFinance: true }
   page.data.dashboardData = { revenue: '128.50', pendingOrders: 2 }
 
   page.loadDashboard()
@@ -343,7 +344,7 @@ test('负控：把收入和项目恢复为互斥整块 loading 时必须判红',
   const wxml = fs.readFileSync(WXML_PATH, 'utf8')
   const json = fs.readFileSync(JSON_PATH, 'utf8')
   const mutated = wxml
-    .replace('{{money.amount2(revenueShown)}}', '<cy-skeleton wx:if="{{dashboardLoading}}" type="amount" />')
+    .replace("{{dashboardData.revenue != null ? money.amount2(revenueShown) : '—'}}", '<cy-skeleton wx:if="{{dashboardLoading}}" type="amount" />')
     .replace(/!projectCards\.length\s*&&\s*\(joinLoading\s*\|\|\s*hostLoading\s*\|\|\s*todoLoading\)/,
       'joinLoading || hostLoading || todoLoading')
   assert.notEqual(mutated, wxml, '负控锚点失效')

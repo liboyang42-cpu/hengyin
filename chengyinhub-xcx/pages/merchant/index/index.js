@@ -84,9 +84,9 @@ Page({
       pendingOrders: null,
     },
     dashboardError: '',
-    // 屏上正在显示的累计收入(两位小数字符串):首帧 0.00,真值到了从当前显示值滚过去;
+    // 屏上正在显示的累计收入(两位小数字符串):未读取时 —，真值到了从当前显示值滚过去;
     // 返回页面不归零,出错保留上次显示值。只在换商家主体时归零。
-    revenueShown: '0.00',
+    revenueShown: '—',
     // 默认 fail closed，避免首帧把上一商家或假零报表先露出来。
     merchantAccess: inactiveAccess(),
     // 身份/加载没能确认时的页内错误(cy-inline-error 承接),不再是整屏身份闸。
@@ -164,7 +164,7 @@ Page({
 
   // 切换营业状态是资料写操作；员工页即使误触方法也必须在请求前关闭。
   toggleBusiness() {
-    if (!this.data.merchantAccess.canWriteProfile) return;
+    if (!this.requireWorkbenchPermission('canWriteProfile')) return;
     const next = this.data.businessStatus === 1 ? 0 : 1;
     if (next === 0) {
       // M-13:一次误触就打烊,先确认;打烊不挡核销,话要说实。
@@ -255,6 +255,16 @@ Page({
   },
 
   // 以下页内面板一律走场景栈:payload 仍留在各自 data 里,只有「显不显示」交给 sceneStack。
+  requireWorkbenchPermission(key) {
+    const access = this.data.merchantAccess;
+    if (access && access[key] === true) return true;
+    cyToast(access && access.active
+      ? '当前岗位未获授权，请联系店主开通'
+      : (this.data.consoleError ? '经营身份未能确认，请重新加载' : '正在确认经营身份，请稍候'));
+    return false;
+  },
+  onPermissionTap(e) { this.requireWorkbenchPermission(e.currentTarget.dataset.permission); },
+
   openMoreMenu() {
     this.openScene('merchant-more-menu');
   },
@@ -353,27 +363,32 @@ Page({
   },
 
   goManageCoupon() {
+    if (!this.requireWorkbenchPermission('canManageCoupons')) return;
     if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/coupon/coupon?scope=MERCHANT', complete: () => { this._navigating = false; } }); // 跳转中不响应连点,免得叠两层券管理页
   },
 
   goAftercare() {
-    if (!this.data.merchantAccess.canReadAftercare || this._navigating) return; // 跳转中不响应连点
+    if (!this.requireWorkbenchPermission('canReadAftercare')) return;
+    if (this._navigating) return; // 跳转中不响应连点
     this._navigating = true; wx.navigateTo({ url: '/pages/merchant/aftercare/index', complete: () => { this._navigating = false; } });
   },
 
   goBundleReservations() {
-    if (!this.data.merchantAccess.canVerify || this._navigating) return;
+    if (!this.requireWorkbenchPermission('canVerify')) return;
+    if (this._navigating) return;
     this._navigating = true;
     wx.navigateTo({ url: '/pages/merchant/bundle-reservations/index', complete: () => { this._navigating = false; } });
   },
 
   goVerifyRecords() {
-    if (!this.data.merchantAccess.canReadVerifyRecords || this._navigating) return; // 跳转中不响应连点,免得叠两层核销记录页
+    if (!this.requireWorkbenchPermission('canReadVerifyRecords')) return;
+    if (this._navigating) return; // 跳转中不响应连点,免得叠两层核销记录页
     this._navigating = true;
     wx.navigateTo({ url: '/pages/merchant/verify-records/index', complete: () => { this._navigating = false; } });
   },
   goPayoutAccount() {
-    if (!this.data.merchantAccess.canReadFinance || this._navigating) return; // 跳转中不响应连点
+    if (!this.requireWorkbenchPermission('canReadFinance')) return;
+    if (this._navigating) return; // 跳转中不响应连点
     this._navigating = true;
     wx.navigateTo({ url: '/pages/merchant/payout-account/index', complete: () => { this._navigating = false; } });
   },
@@ -519,6 +534,12 @@ Page({
   // 「我的消息」三路来源(会话 / 收到的邀请 / 经营动态)全部落定后一次性合并渲染:
   // 逐路渲染会让列表在加载中来回重排。返回页面时旧列表留在屏上,直到新一轮合并完成。
   startInbox(dataEpoch, access) {
+    const scope = [access.canManageCoop, access.canReadFinance, access.canReadVerifyRecords].join(':');
+    if (this._inboxScope && this._inboxScope !== scope) {
+      this._inboxUnread = []; this._notifications = [];
+      this.setData({ inboxItems: [], inboxAllRead: false, inboxLoaded: false, inboxError: false });
+    }
+    this._inboxScope = scope;
     const sources = ['conversations'];
     if (access.canManageCoop) sources.push('invites');
     if (access.canReadFinance || access.canReadVerifyRecords) sources.push('events');
@@ -588,6 +609,11 @@ Page({
 
   loadMerchantConsole(access, dataEpoch = this._dataEpoch || 0) {
     const currentAccess = access || this.data.merchantAccess;
+    if (!currentAccess.canReadFinance) {
+      this.stopRevenueCount();
+      clearTimeout(this._revHoldTimer);
+      this.setData({ revenueShown: '—', dashboardData: { revenue: null, pendingOrders: null } });
+    }
     // access/me 已给出可安全展示的商家摘要；完整资料接口要求 PROFILE_WRITE，
     // 核销员/运营/财务不得为了加载工作台而先撞一次 403。
     if (currentAccess.canWriteProfile) this.loadMerchantInfo(dataEpoch);
@@ -690,7 +716,7 @@ Page({
       merchantInfo: {},
       dashboardData: { revenue: null, pendingOrders: null },
       dashboardError: '',
-      revenueShown: '0.00',
+      revenueShown: '—',
       projectList: [],
       joinTotal: 0,
       joinLoading: true,
@@ -931,7 +957,8 @@ Page({
 
   // 竞猜待答:待办汇总里的 pendingPredict 只报条数,明细与「还剩几天」在待答页。
   goPredictInbox() {
-    if (!this.data.merchantAccess.canManageProjects || this._navigating) return; // 跳转中不响应连点
+    if (!this.requireWorkbenchPermission('canManageProjects')) return;
+    if (this._navigating) return; // 跳转中不响应连点
     this._navigating = true; wx.navigateTo({ url: '/pages/merchant/predict/index', complete: () => { this._navigating = false; } });
   },
 
@@ -977,6 +1004,8 @@ Page({
 
   loadDashboard(dataEpoch = this._dataEpoch || 0) {
     const that = this;
+    const mayRead = () => that.data.merchantAccess.canReadFinance || that.data.merchantAccess.canReadOrders || that.data.merchantAccess.canReadMarketing;
+    if (!mayRead()) return;
     // 2026-10-22 owner 裁决:收入区没有任何加载态 UI(金额永远在位、到值就滚),不再维护 dashboardLoading。
     that.setData({ dashboardError: '' });
     app.sendRequest({
@@ -986,6 +1015,7 @@ Page({
       retry: 2, // 只读,断网/超时自动重发两跳
       success(res) {
         if (!that.isCurrentDataEpoch(dataEpoch)) return;
+        if (!mayRead()) return;
         const data = res && res.data;
         const expectsRevenue = that.data.merchantAccess.canReadFinance;
         const revenue = data && data.revenue !== null && data.revenue !== undefined && data.revenue !== ''
@@ -1007,14 +1037,18 @@ Page({
         }
       },
       fail(res) {
-        if (!that.isCurrentDataEpoch(dataEpoch)) return;
+        if (!that.isCurrentDataEpoch(dataEpoch) || !mayRead()) return;
         that.setData({ dashboardError: app.getRequestErrorMessage(res, '经营数据加载失败') });
       },
     });
   },
 
   // 组件事件会作为第一个参数传入；不能直接把 bind:action 绑到带 epoch 参数的方法。
-  reloadDashboard() { this.loadDashboard(); },
+  reloadDashboard() { if (this.requireWorkbenchPermission('canReadFinance')) this.loadDashboard(); },
+  reloadTodo() {
+    const access = this.data.merchantAccess;
+    if (access.canReadVerifyRecords || access.canReadOrders || access.canReadAftercare || access.canManageProjects) this.loadTodo();
+  },
 
   // 累计收入从「屏上当前显示值」滚到新值(慢-快-慢);减少动态效果时直接落定。
   countRevenueTo(target) {
@@ -1214,6 +1248,7 @@ Page({
   },
 
   reloadProjects() {
+    if (!this.requireWorkbenchPermission('canManageProjects')) return;
     this.loadJoinList();
     this.loadChapterProjectList();
     this.loadHostProjects();
@@ -1230,12 +1265,14 @@ Page({
 
   // 入口名「协作邀请」= 合作中心铃铛那一页(收到的/我发出的);聊天与系统通知在 ledger 的「站内消息」。旧的「消息与动态」是空兼容页(M-07)。
   goMessages() {
+    if (!this.requireWorkbenchPermission('canManageCoop')) return;
     if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageB/pages/im/list/index', complete: () => { this._navigating = false; } });
   },
 
   // 「我的消息」是收入到账/核销流水,按类型去各自明细;「全部」与未知类型落核销记录(同时有待结算/已入账)。
   goEvent(e) {
     const type = e && e.currentTarget && e.currentTarget.dataset.type;
+    if (!this.requireWorkbenchPermission(type === 'income' ? 'canReadFinance' : 'canReadVerifyRecords')) return;
     if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/ledger/index?view=' + (type === 'income' ? 'settlement' : 'redemptions'), complete: () => { this._navigating = false; } });
   },
 
@@ -1367,6 +1404,7 @@ Page({
   },
 
   goScanQR() {
+    if (!this.requireWorkbenchPermission('canVerify')) return;
     const that = this;
     const login = captureLogin(app, wx), scanEpoch = this._verificationEpoch || 0;
     const scanCurrent = () => loginCurrent(app, wx, login) && scanEpoch === (that._verificationEpoch || 0);
@@ -1539,10 +1577,12 @@ Page({
   },
 
   goFinance() {
+    if (!this.requireWorkbenchPermission('canReadFinance')) return;
     if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageA/pages/assetcenter/earnings/index?theme=merchant', complete: () => { this._navigating = false; } }); // 2026-10-28 M-32:先进账户收益(浅色),结算明细在「更多」里
   },
 
   goBrandManage() {
+    if (!this.requireWorkbenchPermission('canWriteProfile')) return;
     if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/decor/index', complete: () => { this._navigating = false; } });
   },
 
@@ -1551,6 +1591,7 @@ Page({
   // 原来 reLaunch 到 pages/merchant/relation —— 那页标题是「合作」、内容是「找新的合作对象」,
   // 名不副实;合作仍从底部 tab「合作」进,这里不再重复给一个入口。
   goCustomers() {
+    if (!this.requireWorkbenchPermission('canReadCrm')) return;
     if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/customer/index', complete: () => { this._navigating = false; } });
   },
 
@@ -1586,6 +1627,7 @@ Page({
   },
 
   goPublishedProjects() {
+    if (!this.requireWorkbenchPermission('canManageProjects')) return;
     if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageA/pages/myproject/index?scope=MERCHANT', complete: () => { this._navigating = false; } });
   },
 

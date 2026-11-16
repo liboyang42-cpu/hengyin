@@ -30,6 +30,7 @@ function loadPage() {
   })
   page.data.merchantAccess = Object.assign({}, page.data.merchantAccess, {
     canReadAftercare: true, canManageProjects: true, canReadVerifyRecords: true,
+    canReadFinance: true, canReadCrm: true, canWriteProfile: true,
   })
   return { page, navs }
 }

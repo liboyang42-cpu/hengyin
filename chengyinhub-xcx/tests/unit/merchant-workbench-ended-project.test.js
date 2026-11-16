@@ -84,7 +84,7 @@ test('工作台项目卡过滤已结束项目,未开始/进行中/档期未知�
   ], '档期未知不是结束，不能静默吞掉');
 });
 
-test('过滤后没有卡片时隐藏项目整块', () => {
+test('过滤后没有卡片时保留项目标题与真实空态', () => {
   const page = loadPage();
   page.data.projectList = [
     { id: 1, topicId: 1, topicName: '已结束的路线', startDate: '2000-01-01', endDate: '2000-01-02' },
@@ -95,10 +95,10 @@ test('过滤后没有卡片时隐藏项目整块', () => {
 
   assert.deepEqual(page.data.projectCards, []);
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/merchant/index/index.wxml'), 'utf8');
-  assert.match(wxml, /merchantAccess\.canManageProjects && \(projectCards\.length \|\| joinLoading \|\| hostLoading/,
-    '项目整块只在有卡片、加载中或失败时出现');
-  assert.doesNotMatch(wxml, /title="还没有项目"/,
-    '项目为零时不保留空态占位');
+  assert.doesNotMatch(wxml, /merchantAccess\.canManageProjects && \(projectCards\.length \|\| joinLoading \|\| hostLoading/,
+    '项目结构不能随卡片和权限消失');
+  assert.match(wxml, /title="暂无进行中的项目"/,
+    '合法空列表保留真实空态与全部项目入口');
 });
 
 test('「全部 N」只数未结束的项目:承接与主办两侧都按状态签真源计数', () => {

@@ -62,14 +62,14 @@ test('工作台事件接口为空时不得用报名列表编造待处理报名',
   assert.match(js, /_notifications = \[\];/);
 });
 
-test('工作台零项目时整块「项目」不显示，不出现去承接 CTA', () => {
-  // 2026-09-18 用户走查 UI-01:没有项目就不要「项目」标题 + 空态,整块退场。
+test('工作台零项目保留真实空态与项目入口，不出现去承接 CTA', () => {
+  // 当前产品要求结构常驻，合法空列表与待授权分别展示。
   const wxml = read('pages/merchant/index/index.wxml');
   const js = read('pages/merchant/index/index.js');
   assert.doesNotMatch(wxml, /去承接/);
   assert.doesNotMatch(wxml, /<cy-empty[^>]*还没有项目/);
-  assert.match(wxml, /wx:if="\{\{merchantAccess\.canManageProjects && \(projectCards\.length \|\| joinLoading \|\| hostLoading \|\| todoLoading \|\| gameEntryLoading \|\| joinError \|\| hostError\)\}\}"/,
-    '零项目且无加载/错误时整块不渲染');
+  assert.match(wxml, /title="暂无进行中的项目" cta="全部项目"/,
+    '零项目保留真实空态与项目入口');
   assert.doesNotMatch(js, /goCoopCenter\s*\(/);
   assert.doesNotMatch(wxml, /rv-project-empty[^>]*bindtap="goPublishTopic"/);
   assert.doesNotMatch(js, /goPublishTopic\s*\(/);

@@ -86,7 +86,7 @@ function req(url, data, header) {
   });
 }
 
-// The merchant preview reads chapter-application/mine, which requires COOP_MANAGE.
+// Merchant project previews require COOP_MANAGE.
 function merchantProjectsRestricted(data) {
   var access = data.merchantAccess || {};
   return data.isMerchantView && data.merchantAccessState === 'ready'
@@ -1609,6 +1609,10 @@ Component({
       that.setData({ projectPreviewList: [], projectErr: false, projectAuthError: false });
     }
     that._projectPreviewMemberId = memberId;
+    if (that.data.isMerchantView && that.data.merchantAccessState !== 'ready') {
+      that.setData({ projectPreviewList: [], projectPendingCount: 0, projectErr: that.data.merchantAccessState === 'error', projectAuthError: false });
+      return Promise.resolve();
+    }
     if (merchantProjectsRestricted(that.data)) {
       that._projectPendingRequestId = (that._projectPendingRequestId || 0) + 1;
       that.setData({ projectPreviewList: [], projectErr: false, projectAuthError: false, projectPendingCount: 0 });
@@ -2275,7 +2279,7 @@ Component({
     var profileEpoch = that._followEpoch || 0;
     if (that._projectPendingMemberId !== undefined && that._projectPendingMemberId !== memberId) that.setData({ projectPendingCount: 0 });
     that._projectPendingMemberId = memberId;
-    if (merchantProjectsRestricted(that.data)) {
+    if (merchantProjectsRestricted(that.data) || that.data.isMerchantView && that.data.merchantAccessState !== 'ready') {
       that.setData({ projectPendingCount: 0 });
       return Promise.resolve();
     }
@@ -2382,7 +2386,7 @@ Component({
   },
   // M-25:商家视角没有订单页可看,任何进订单的入口都改去「我的项目」
   goOrder: function () { if (this.data.isMerchantView) { this.goProject(); return; } if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/order/order', complete: () => { this._navigating = false; } }); },
-  goProject: function () { if (merchantProjectsRestricted(this.data)) return; if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageA/pages/myproject/index' + (this.data.isMerchantView ? '?scope=MERCHANT' : ''), complete: () => { this._navigating = false; } }); },
+  goProject: function () { if (this.data.isMerchantView && this.data.merchantAccessState !== 'ready') { cyToast('经营身份未能确认，请重新加载'); return; } if (merchantProjectsRestricted(this.data)) { cyToast('当前岗位未获项目权限，请联系店主开通'); return; } if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageA/pages/myproject/index' + (this.data.isMerchantView ? '?scope=MERCHANT' : ''), complete: () => { this._navigating = false; } }); },
   onOrderPreviewTap: function (e) {
     if (this.data.isMerchantView) { this.goProject(); return; }
     var id = e.currentTarget.dataset.id;

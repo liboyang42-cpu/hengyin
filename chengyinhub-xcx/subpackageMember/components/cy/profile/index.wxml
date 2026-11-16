@@ -180,16 +180,19 @@
           retry="重试" bind:retry="reloadOrders" />
         </block>
 
-        <block wx:if="{{!isMerchantView || merchantAccessState !== 'ready' || !merchantAccess.active || merchantAccess.canManageCoop}}">
+        <block>
         <!-- C7:唯一管理入口(原「我的模板」section 并入我的项目页的模板 tab);角标=未通过+审核中 -->
         <view class="pc-sec-head" aria-label="{{projectErr ? (projectAuthError ? '项目登录状态失效，请重新进入' : '项目加载失败，请下拉刷新重试') : ''}}">
           <view class="pc-sec-left">
             <text class="pc-sec-tit {{isMerchantView ? 'pc-sec-tit--flush' : ''}} pc-sec-tit--sm">我的项目</text>
             <view class="pc-sec-badge" wx:if="{{projectPendingCount > 0}}" aria-role="text" aria-label="待处理项目 {{projectPendingCount || 0}} 个">待处理 {{projectPendingCount || 0}}</view>
           </view>
-          <view class="pc-sec-link" bindtap="goProject" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="管理全部项目"><text>管理全部</text><cy-icon name="arrow-right" size="26" /></view>
+          <view class="pc-sec-link" bindtap="goProject" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="{{isMerchantView && merchantAccessState === 'ready' && !merchantAccess.canManageCoop ? '我的项目待授权，联系店主申请' : '管理全部项目'}}"><text>管理全部</text><cy-icon name="{{isMerchantView && merchantAccessState === 'ready' && !merchantAccess.canManageCoop ? 'lock' : 'arrow-right'}}" size="26" /></view>
         </view>
-        <block wx:if="{{projectPreviewList.length || projectErr}}">
+        <cy-skeleton wx:if="{{isMerchantView && merchantAccessState !== 'ready' && merchantAccessState !== 'error'}}" type="list" count="{{1}}" />
+        <cy-error wx:elif="{{isMerchantView && merchantAccessState === 'error'}}" load-failure title="项目权限未能确认" retry="重试" bind:retry="loadMerchantAccess" />
+        <cy-empty wx:elif="{{isMerchantView && merchantAccess.active && !merchantAccess.canManageCoop}}" kind="no-permission" title="项目待授权" cta="联系店主授权" bind:cta="goProject" />
+        <block wx:elif="{{projectPreviewList.length || projectErr}}">
         <cy-error load-failure wx:if="{{projectErr}}"
           title="{{projectAuthError ? '登录未成功' : '项目加载失败'}}"
           sub="{{projectAuthError ? '请重新进入小程序' : ''}}"

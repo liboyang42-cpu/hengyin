@@ -50,13 +50,12 @@ page {
 
 .rv-hero {
   /* 2026-09-18 用户定:收入数字居中在问候行与快捷钮正中间 ⇒ 底距交给 .rv-revenue-zone,
-   * hero 自身不再压 200rpx;员工端(无收入区)仍用 --no-revenue 保持原构图。 */
+   * hero 自身不再压 200rpx，各岗位保留同一收入区。 */
   padding: var(--cy-space-2) var(--cy-page-x) 0;
 }
 
-.rv-hero--no-revenue {
-  padding-bottom: 200rpx; /* ds-ok: 200rpx 首屏构图定位值,无对应 spacing token */
-}
+.rv-action--locked { opacity: .65; }
+.rv-locked { display: flex; align-items: center; justify-content: center; gap: var(--cy-space-2); }
 
 .rv-hero-top {
   display: flex;

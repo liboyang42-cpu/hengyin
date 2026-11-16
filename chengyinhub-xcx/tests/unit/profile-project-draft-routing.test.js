@@ -18,6 +18,7 @@ function mount(merchant = false) {
   const component = Object.assign({}, definition.methods, { data: structuredClone(definition.data), _profileAttached: true });
   for (const [key, spec] of Object.entries(definition.properties)) component.data[key] = spec.value;
   Object.assign(component.data, { isSelf: true, hostSelf: true, userId: '990052', isMerchantView: merchant });
+  if (merchant) Object.assign(component.data, { merchantAccessState: 'ready', merchantAccess: { active: true, canManageCoop: true } });
   component.setData = patch => Object.assign(component.data, patch);
   return { component, requests, navs };
 }

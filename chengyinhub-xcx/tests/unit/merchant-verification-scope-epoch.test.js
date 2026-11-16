@@ -60,6 +60,7 @@ function makePage() {
     Object.assign(this.data, patch);
     if (callback) callback();
   };
+  page.data.merchantAccess = { active: true, canVerify: true, canReadVerifyRecords: true };
   page._dataEpoch = 1;
   page._merchantScopeKey = '11:101';
   page.data.chapterSheet = { show: true, code: 'OLD-TICKET', items: [{ id: 7, name: '旧商家章节' }] };

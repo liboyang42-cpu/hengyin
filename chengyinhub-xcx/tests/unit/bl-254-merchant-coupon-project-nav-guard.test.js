@@ -29,7 +29,7 @@ function loadPage() {
     setData(patch) { Object.assign(this.data, patch) },
   })
   page.data.merchantAccess = Object.assign({}, page.data.merchantAccess, {
-    canReadAftercare: true, canManageProjects: true, canReadVerifyRecords: true,
+    canReadAftercare: true, canManageProjects: true, canReadVerifyRecords: true, canManageCoupons: true,
   })
   return { page, navs }
 }
@@ -114,6 +114,6 @@ for (const [label, row, source, parameter] of [
 
 test('BL-254:优惠券跳转带 complete 清锁,onShow 仍兜底清锁', () => {
   const source = fs.readFileSync(path.join(ROOT, PAGE), 'utf8')
-  assert.match(source, /goManageCoupon\(\) \{\n    if \(this\._navigating\) return; this\._navigating = true; wx\.navigateTo\(\{[^\n]*complete: \(\) => \{ this\._navigating = false; \}/)
+  assert.match(source, /goManageCoupon\(\) \{\n    if \(!this\.requireWorkbenchPermission\('canManageCoupons'\)\) return;\n    if \(this\._navigating\) return; this\._navigating = true; wx\.navigateTo\(\{[^\n]*complete: \(\) => \{ this\._navigating = false; \}/)
   assert.match(source, /onShow\(options\) \{[\s\S]{0,200}this\._navigating = false;/)
 })

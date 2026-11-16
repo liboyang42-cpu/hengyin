@@ -27,10 +27,10 @@ test('商家工作台从更多菜单提供权限收口的退款售后入口', ()
   const wxml = read('pages/merchant/index/index.wxml');
   const js = read('pages/merchant/index/index.js');
 
-  assert.match(wxml, /wx:if="\{\{merchantAccess\.canReadAftercare\}\}"[^>]*data-action="aftercare"/);
+  assert.match(wxml, /aria-disabled="\{\{merchantAccess\.active && !merchantAccess\.canReadAftercare\}\}"[^>]*data-action="aftercare"/);
   assert.match(wxml, /class="rv-aftercare-alert"[^>]*wx:if="\{\{merchantAccess\.canReadAftercare && todo\.refundCount > 0\}\}"[^>]*bindtap="goAftercare"/,
     '有真实待回应售后时，必须在四个快捷操作下方直接显示高频待办');
   assert.match(wxml, /有 \{\{todo\.refundCount \|\| 0\}\} 笔售后待回应/);
   assert.match(js, /action === 'aftercare'[^\n]*goAftercare/);
-  assert.match(js, /goAftercare\(\)[\s\S]*merchantAccess\.canReadAftercare[\s\S]*\/pages\/merchant\/aftercare\/index/);
+  assert.match(js, /goAftercare\(\) \{\s*if \(!this\.requireWorkbenchPermission\('canReadAftercare'\)\) return;\s*if \(this\._navigating\) return;[^\n]*\s*this\._navigating = true; wx\.navigateTo\(\{ url: '\/pages\/merchant\/aftercare\/index'/);
 });

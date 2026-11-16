@@ -264,9 +264,10 @@ test('我的项目预览:全部结束或成功空列表时隐藏整区,不展示
   assert.deepEqual((await previewWith([])).projectPreviewList, [])
   const wxml = read('subpackageMember/components/cy/profile/index.wxml')
   const projectSection = wxml.slice(wxml.indexOf('<!-- C7:唯一管理入口'), wxml.indexOf('<!-- 我的资产'))
-  assert.match(projectSection, /<block wx:if="\{\{projectPreviewList.length \|\| projectErr\}\}">/)
+  assert.match(projectSection, /<block wx:elif="\{\{projectPreviewList.length \|\| projectErr\}\}">/)
   assert.match(projectSection, /<cy-error load-failure wx:if="\{\{projectErr\}\}"[\s\S]*bind:retry="reloadProjects"/)
-  assert.doesNotMatch(projectSection, /<cy-empty/)
+  assert.match(projectSection, /<cy-empty[^>]*kind="no-permission"[^>]*title="项目待授权"/)
+  assert.doesNotMatch(projectSection, /<cy-empty[^>]*title="暂无项目"/)
 })
 
 // UI-7:第一页 8 条全结束时,必须继续翻页把后面进行中的项目取进预览(而不是整块空)。

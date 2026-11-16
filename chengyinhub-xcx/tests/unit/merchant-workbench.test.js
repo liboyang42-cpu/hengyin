@@ -136,8 +136,9 @@ function assertLegacyMerchantHero(wxml, wxss) {
   assert.match(wxml, /class="rv-revenue-amount"[^>]*dashboardData\.revenue/);  // 读屏文本绑真值;反馈副文案已按文案精简清空(上线合并 2026-10-24)
   // 2026-10-22 owner 裁决推翻「首载 amount 骨架」:金额永远在位(首帧 ¥0.00),真值到了滚过去。
   const revenueZone = wxml.slice(wxml.indexOf('class="rv-revenue-zone"'), wxml.indexOf('<!-- 快捷操作 -->'));
-  assert.match(revenueZone, /class="rv-revenue-amount"[^>]*>\{\{money\.amount2\(revenueShown\)\}\}</, '金额永远渲染屏上当前显示值');
-  assert.doesNotMatch(revenueZone, /<cy-skeleton|rv-revenue-unknown|rv-revenue-sync/, '收入区不再骨架/暂未取到/正在更新三态轮换');
+  assert.match(revenueZone, /class="rv-revenue-amount"[^>]*>\{\{dashboardData\.revenue != null \? money\.amount2\(revenueShown\) : '—'\}\}</, '金额永远渲染屏上当前显示值');
+  assert.doesNotMatch(revenueZone, /<cy-skeleton[^>]*type="amount"|rv-revenue-unknown|rv-revenue-sync/, '已授权收入保留金额，未知权限的骨架不得伪造金额');
+  assert.match(revenueZone, /<cy-skeleton wx:else type="list"/, '未确认经营身份保留原位骨架');
   assert.match(wxml, /class="rv-actions"/);
   [
     ['goScanQR', '扫码'],
@@ -145,8 +146,10 @@ function assertLegacyMerchantHero(wxml, wxss) {
     ['goFinance', '财务'],
     ['openMoreMenu', '更多'],
   ].forEach(([handler, label]) => {
-    // 权限闸必须保留；按压态等属性可插在 aria-label 后，不锁属性紧跟 >。
-    assert.match(wxml, new RegExp(`<view class="rv-action"[^>]*merchantAccess\\.[^>]*bindtap="${handler}"[^>]*aria-label="${label}"[^>]*>[\\s\\S]*?<text class="rv-action-label">${label}<`));
+    const tag = wxml.match(new RegExp(`<view[^>]*bindtap="${handler}"[^>]*>`))[0];
+    assert.match(tag, /class="rv-action/);
+    assert.doesNotMatch(tag, /wx:if=/, '各岗位保留四个入口');
+    assert.match(wxml, new RegExp(`<text class="rv-action-label">${label}<`));
   });
   assert.doesNotMatch(wxml, /经营概览|class="rv-overview|class="rv-primary-actions"/);
 
@@ -192,7 +195,7 @@ test('工作台首屏恢复收入大数字 + 四个圆形快捷入口，待办�
   const wxss = fs.readFileSync(path.join(__dirname, '../../pages/merchant/index/index.wxss'), 'utf8');
 
   assertLegacyMerchantHero(wxml, wxss);
-  assert.match(wxml, /<cy-skeleton[^>]*wx:if="\{\{!projectCards\.length && \(joinLoading \|\| hostLoading \|\| todoLoading \|\| gameEntryLoading\)\}\}"/,
+  assert.match(wxml, /<cy-skeleton[^>]*wx:elif="\{\{!projectCards\.length && \(joinLoading \|\| hostLoading \|\| todoLoading \|\| gameEntryLoading\)\}\}"/,
     '只有没有旧项目的首载才显示项目骨架');
   // 失败不冒充空态：已加载卡片保留，区块内出现唯一恢复动作。
   const js = fs.readFileSync(path.join(__dirname, '../../pages/merchant/index/index.js'), 'utf8');

@@ -635,9 +635,13 @@ test('工作台先解析商家域 access/me，再按权限控制数据请求和�
   assert.match(js, /normalizeMerchantAccess/);
   assert.doesNotMatch(js, /app\.setUserType\(2\)/,
     '员工进入工作台不得把全局身份改写成商家 Owner');
-  assert.match(wxml, /wx:if="\{\{merchantAccess\.canVerify\}\}"[^>]*bindtap="goScanQR"/);
-  assert.match(wxml, /wx:if="\{\{merchantAccess\.canReadCrm\}\}"[^>]*bindtap="goCustomers"/);
-  assert.match(wxml, /wx:if="\{\{merchantAccess\.canReadFinance\}\}"[^>]*bindtap="goFinance"/);
+  for (const action of ['goScanQR', 'goCustomers', 'goFinance']) {
+    const tag = wxml.match(new RegExp('<view[^>]*bindtap="' + action + '"[^>]*>'))[0];
+    assert.doesNotMatch(tag, /wx:if=/, '岗位无权限保留快捷入口');
+    assert.match(tag, /aria-disabled=/, '授权状态必须可访问');
+  }
+  assert.match(js, /requireWorkbenchPermission\('canReadFinance'\)/);
+  assert.match(js, /requireWorkbenchPermission\('canReadCrm'\)/);
   assert.doesNotMatch(wxml, /data-action="team"/,
     '经营团队是低频配置，只保留“我的”主入口，不在工作台更多菜单重复出现');
 });

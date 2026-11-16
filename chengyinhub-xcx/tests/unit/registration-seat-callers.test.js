@@ -21,6 +21,9 @@ for (const file of files) test(file + ' 相机开启后A→B→A不能用新登�
   const page = new Function('app', 'wx', 'captureLogin', 'loginCurrent',
     // 2026-11-01:俱乐部页扫码拆成 onClubScan(权限闸)+ startClubScan(扫码与提交),「去核销」带 scan=1 进页直接走后者
     'return ({' + (file.includes('/club/') ? ['onClubScan', 'startClubScan'] : ['goScanQR']).map(name => method(file, name)).join(',') + '});')(app, wx, seats.captureLogin, seats.loginCurrent);
+  if (file === 'pages/merchant/index/index.js') {
+    page.requireWorkbenchPermission = key => key === 'canVerify'; // Authorized merchant fixture; login epoch must still reject stale scan.
+  }
   page.data = { clubId: 7, club: { isOwner: true } }; page.canGovern = club => club && club.isOwner;
   page._submitVerification = page.submitClubScan = () => sends.push('sent');
   page[file.includes('/club/') ? 'onClubScan' : 'goScanQR'](); app._loginEpoch += 2;

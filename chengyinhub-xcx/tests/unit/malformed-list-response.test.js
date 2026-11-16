@@ -390,6 +390,7 @@ test('漫游商家和印章列表含空元素时都进入错误态', () => {
 
 test('商家经营看板和参与项目拒绝畸形列表', () => {
   const dashboard = harness('pages/merchant/index/index.js', 'page');
+  dashboard.vm.data.merchantAccess = { active: true, canReadFinance: true };
   dashboard.vm.loadDashboard();
   assert.doesNotThrow(() => dashboard.requests[0].success({
     code: '200', data: { revenue: 1, revenue7d: [null] },

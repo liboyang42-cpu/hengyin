@@ -20,7 +20,7 @@ test('BL-256: 8 处入口都先判跳转锁,complete 里解锁', () => {
     ['subpackageMember/components/cy/scene-route-content/index.js', new RegExp(LOCK + "'\\/pages\\/club\\/governance\\/index\\?clubId=' \\+ clubId, complete: ")],
     ['pages/club/edit/index.js', new RegExp(LOCK + "'\\/pages\\/club\\/governance\\/index\\?clubId=' \\+ this\\.data\\.clubId, complete: ")],
     // 2026-10-22 owner 裁决(L05 交接):更多→协作邀请改指站内收件箱 im/list(会话 + 收到的邀请)
-    ['pages/merchant/index/index.js', new RegExp("goMessages\\(\\) \\{\\s*" + LOCK + "'\\/subpackageB\\/pages\\/im\\/list\\/index', complete: ")],
+    ['pages/merchant/index/index.js', new RegExp("goMessages\\(\\) \\{\\s*if \\(!this\\.requireWorkbenchPermission\\(\x27canManageCoop\x27\\)\\) return;\\s*" + LOCK + "'\\/subpackageB\\/pages\\/im\\/list\\/index', complete: ")],
   ]
   for (const [file, re] of cases) assert.match(read(file), re, file)
 })

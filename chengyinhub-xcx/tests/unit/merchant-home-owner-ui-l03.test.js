@@ -100,14 +100,14 @@ test('easeInOutCubic:两头慢中间快,端点与对称性正确;默认缓动不
     motion.countUpFrames(0, 10, { duration: 100, fps: 10, ease: motion.easeOutCubic }).map((f) => f.value))
 })
 
-test('(b) 累计收入首帧 ¥0.00,真值到了缓入缓出滚到位;返回页面从上次显示值继续,不归零', () => {
+test('(b) 累计收入未读取时 —,真值到了缓入缓出滚到位;返回页面从上次显示值继续,不归零', () => {
   const page = loadPage()
-  assert.equal(page.data.revenueShown, '0.00', '首帧就是 0.00,不是骨架或「暂未取到」')
+  assert.equal(page.data.revenueShown, '—', '尚未读取时不得冒充零收入')
   page.onShow()
   last('/api/merchant/access/me').success(accessReply())
   last('/api/merchant/dashboard').success({ code: 200, data: { revenue: 1000 } })
   assert.equal(page.data.dashboardData.revenue, '1000.00')
-  assert.equal(page.data.revenueShown, '0.00', '还没起帧')
+  assert.equal(page.data.revenueShown, '—', '还没起帧')
 
   mock.timers.tick(130)
   const early = Number(page.data.revenueShown)
@@ -147,7 +147,7 @@ test('(b) 帧内金额不变就不 setData;同值重载不起任何帧', () => {
   const before = page.setCount
   mock.timers.tick(1400)
   assert.equal(page.data.revenueShown, '0.05')
-  assert.ok(page.setCount - before <= 5, '只有 0.01..0.05 五个不同显示值才写, got ' + (page.setCount - before))
+  assert.ok(page.setCount - before <= 6, '取得真实金额后从 0.00..0.05 六个不同显示值才写, got ' + (page.setCount - before))
 })
 
 test('(a) 同一账号 onShow:重新确认期间保留上次确认的权限,页面不变形', () => {
@@ -166,7 +166,7 @@ test('(a) 同一账号 onShow:重新确认期间保留上次确认的权限,页�
   assert.equal(page.data.merchantAccess.canReadFinance, true)
 })
 
-test('(a) 换账号:立即 fail closed,换主体清数据并把收入归零', () => {
+test('(a) 换账号:立即 fail closed,换主体清数据并把收入置为未知', () => {
   const page = loadPage()
   page.onShow()
   last('/api/merchant/access/me').success(accessReply(3))
@@ -178,7 +178,7 @@ test('(a) 换账号:立即 fail closed,换主体清数据并把收入归零', ()
   page.onShow()
   assert.equal(page.data.merchantAccess.active, false, '换账号不得沿用上一账号的岗位权限')
   last('/api/merchant/access/me').success(accessReply(4))
-  assert.equal(page.data.revenueShown, '0.00', '新主体不能看到上一主体的金额')
+  assert.equal(page.data.revenueShown, '—', '新主体不能看到上一主体金额或虚构零收入')
 })
 
 test('(a) 确认失去商家身份才清:access/me 说 inactive 时撤掉权限', () => {

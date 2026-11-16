@@ -46,6 +46,7 @@ beforeEach(() => {
 function makePage() {
   const page = Object.assign({}, pageConfig);
   page.data = JSON.parse(JSON.stringify(pageConfig.data));
+  page.data.merchantAccess = { active: true, canVerify: true, canReadVerifyRecords: true };
   page.setData = (patch) => Object.assign(page.data, patch);
   page.openScene = (id) => openedScenes.push(id);
   page.closeScene = () => { closedScenes += 1; };

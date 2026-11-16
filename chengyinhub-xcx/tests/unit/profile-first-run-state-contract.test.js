@@ -955,15 +955,18 @@ for (const method of ['loadProjectPreview', 'loadProjectPending']) test(`CHECKIN
   }
 })
 
-test('CHECKIN个人页：隐藏管理项目区且旧点击不能进入管理页', () => {
+test('CHECKIN个人页：项目原位待授权，点击说明且不进入管理页', () => {
   const component = merchantProjectProfile(['merchant:basic:read'])
   const previousWx = global.wx
   const navigation = []
-  global.wx = { navigateTo: options => navigation.push(options.url) }
+  const toasts = []
+  global.wx = { navigateTo: options => navigation.push(options.url), showToast: options => toasts.push(options.title) }
   try { component.goProject() } finally { global.wx = previousWx }
   assert.deepEqual(navigation, [])
   const wxml = read(PROFILE_WXML)
-  assert.match(wxml, /<block wx:if="\{\{[^\n]*merchantAccess\.canManageCoop[^\n]*\}\}">\s*<!-- C7:/)
+  assert.match(wxml, /<block>\s*<!-- C7:/)
+  assert.match(wxml, /title="项目待授权" cta="联系店主授权"/)
+  assert.ok(toasts.some(title => /店主/.test(title)))
 })
 
 for (const role of ['MERCHANT_OWNER', 'MERCHANT_MANAGER']) {
@@ -984,8 +987,7 @@ test('商家权限读取失败不是无项目，原网络错误仍然可见', as
   const component = merchantProjectProfile([])
   component.data.merchantAccessState = 'error'
   const pending = component.loadProjectPreview()
-  assert.equal(requests.length, 1)
-  requests[0].fail({ errMsg: 'network timeout' })
+  assert.equal(requests.length, 0, '身份失败不得试探受限项目接口')
   await pending
   assert.equal(component.data.projectErr, true)
 })

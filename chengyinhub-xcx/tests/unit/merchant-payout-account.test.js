@@ -44,7 +44,8 @@ test('每个服务端状态都有中文名', () => {
 test('入口只在财务查看权限下出现，并登记在商家分包', () => {
   const root = path.join(__dirname, '../..');
   const wxml = fs.readFileSync(path.join(root, 'pages/merchant/index/index.wxml'), 'utf8');
-  assert.match(wxml, /wx:if="\{\{merchantAccess\.canReadFinance\}\}" bindtap="onMoreItem" data-action="payoutAccount"/);
+  assert.match(wxml, /aria-disabled="\{\{merchantAccess\.active && !merchantAccess\.canReadFinance\}\}" bindtap="onMoreItem" data-action="payoutAccount"/);
+  assert.doesNotMatch(wxml, /wx:if="\{\{merchantAccess\.canReadFinance\}\}" bindtap="onMoreItem"/);
   const app = JSON.parse(fs.readFileSync(path.join(root, 'app.json'), 'utf8'));
   const merchant = app.subPackages.find((p) => p.root === 'pages/merchant');
   assert.ok(merchant.pages.includes('payout-account/index'));
