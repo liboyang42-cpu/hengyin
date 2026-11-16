@@ -59,12 +59,12 @@ written anywhere; every money action below still needs its Q5 area open, and the
 | `mvn … test -Dtest=MerchantPlansTest` | 24 run, 0 fail (5 new) |
 | `mvn … test -Dtest=DuesRefundDecisionServiceTest` | 5 run, 0 fail (new) |
 | `mvn … test -Dtest=MoneySwitchServiceTest,MoneyGateTest,SponsoredQuestServicesTest,PlayerMessagePunctuationTest,MemberPrivacyErasureServiceTest` | 17 / 4 / 13 / 2 / 4 run, 0 fail |
-| WIDE_RUN | WIDE_RESULT |
+| `mvn … test -Dtest='*MoneyPayout*Test,MerchantPlans*Test,*CommerceConsole*Test,DuesRefund*Test,T5MapperSqlTest,MoneySwitch*Test,MoneyGate*Test,SponsoredQuest*Test,*Collection*Test,ClubDues*Test,ClubMembership*Test,PlayerMessagePunctuationTest,MemberPrivacyErasureServiceTest,TwoNodeSchedulingTest,SysJobStaggerPlanTest,E2eTestProvidersProfileTest,*Payout*Test,*Refund*Test'` | 98 classes, 902 run, 0 failures, 0 errors, 78 skipped (MySQL ITs); exit 0 |
 | `bash ci/migration-safety-check.sh` | 迁移安全门禁:通过 |
 | `bash ci/migration-layout-check.sh` | 迁移布局门禁:通过; no `rollback_*.sql` |
 | `node --test "tests/unit/**/*.test.js"` (chengyinhub-ui) | base 31 fail (pre-existing) → branch 31 fail; 5 new contract tests pass |
-| `node ci/prepare-mini-artifacts.js` then `node --test "tests/unit/**/*.test.js"` (chengyinhub-xcx) | XCX_RESULT |
-| `node tests/lint/ui-integrity.js --warn-as-error` | LINT_RESULT |
+| `node ci/prepare-mini-artifacts.js` then `node --test "tests/unit/**/*.test.js"` (chengyinhub-xcx) | base `roadmap/be-integ`: 17923 pass / 32 fail; branch: 17925 pass / 32 fail — the same 32 tests (pre-existing); 2 new tests pass |
+| `node tests/lint/ui-integrity.js --warn-as-error` | exit 1 on base and on branch with the identical 127 findings (pre-existing, e.g. U5 silentError sites in `utils/money-payout.js`); no new finding |
 
 No new `@Scheduled` method or `sys_job`, so the stagger and two-node ratchets are untouched.
 
