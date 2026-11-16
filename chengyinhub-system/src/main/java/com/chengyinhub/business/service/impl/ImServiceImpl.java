@@ -1003,7 +1003,8 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         }
 
         Long receiverId = 0L;
-        List<ImConversationMember> parts = memberMapper.selectByConversation(convId);
+        // SOC-13：群/频道不再加载整张成员表（未读用一条集合 UPDATE 扇出），只有单聊需要找对方。
+        List<ImConversationMember> parts = isGroup ? null : memberMapper.selectByConversation(convId);
         if (!isGroup && parts != null)
         {
             for (ImConversationMember p : parts)
@@ -1144,17 +1145,8 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         if (type != ImMessage.MSG_IMAGE && isGroup)
         {
             // 图片在审核通过后才给收件人增加未读。
-            // 群:给除发送者外的所有成员各 +1 未读(替代单聊的单一 receiver 扇出)
-            if (parts != null)
-            {
-                for (ImConversationMember p : parts)
-                {
-                    if (!p.getMemberId().equals(memberId))
-                    {
-                        memberMapper.addUnreadForActiveMember(convId, p.getMemberId(), 1);
-                    }
-                }
-            }
+            // 群/频道:一条集合 UPDATE 给除发送者外的在籍成员各 +1 未读(SOC-13，不再逐人 UPDATE 持锁)
+            memberMapper.addUnreadForActiveMembersExcept(convId, memberId, 1);
         }
         else if (type != ImMessage.MSG_IMAGE && receiverId > 0)
         {

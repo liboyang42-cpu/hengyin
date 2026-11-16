@@ -41,6 +41,13 @@
         where m.conversation_id = #{conversationId} and m.member_id = #{memberId} and m.deleted = 0
     </update>
 
+    <update id="addUnreadForActiveMembersExcept">
+        update im_conversation_member m
+        join im_conversation c on c.id = m.conversation_id and c.status = 0
+        set m.unread_count = m.unread_count + #{delta}
+        where m.conversation_id = #{conversationId} and m.member_id &lt;&gt; #{exceptMemberId} and m.deleted = 0
+    </update>
+
     <select id="selectMyConversations" resultMap="ImConversationMemberResult">
         select m.id, m.conversation_id, m.member_id, m.role, m.unread_count, m.last_read_msg_id, m.muted, m.deleted, m.create_time
         from im_conversation_member m
