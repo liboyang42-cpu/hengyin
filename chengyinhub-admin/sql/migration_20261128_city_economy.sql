@@ -98,4 +98,5 @@ WHERE t.district_id IS NULL AND p.district_id IS NOT NULL AND t.status = 'ACTIVE
 
 UPDATE city_district d SET d.ownable_count = (
   SELECT COUNT(*) FROM city_game_point p JOIN city_game_property pr ON pr.board_id = p.board_id AND pr.point_id = p.point_id
-  WHERE p.board_id = d.board_id AND p.district_id = d.district_id AND p.del_flag = 0 AND pr.role = 'OPERABLE');
+  WHERE p.board_id = d.board_id AND p.district_id = d.district_id AND p.del_flag = 0 AND pr.role = 'OPERABLE')
+WHERE d.district_id = 'd1' AND d.ownable_count = 0;

@@ -227,7 +227,7 @@ public class CityMonopolyService {
     }
 
     /** Debits 积分 now (all-or-nothing), spending the season's opening credit first for {@link #STIPEND_SINKS}. */
-    private boolean debit(long memberId, String seasonId, long amount, String kind, String refType, String refId, String reason) {
+    boolean debit(long memberId, String seasonId, long amount, String kind, String refType, String refId, String reason) {
         if (amount <= 0) return true;
         String key = "CITYM:" + kind + ":" + refType + ":" + refId;
         if (!flow(memberId, seasonId, -amount, "AVAILABLE", kind, refType, refId, key)) return true; // replay
@@ -302,7 +302,7 @@ public class CityMonopolyService {
     }
 
     /** Takes what the balance allows; the rest becomes member debt repaid from later income (any season). */
-    private long debitOrDebt(long memberId, String seasonId, long amount, String kind, String refType, String refId, String reason) {
+    long debitOrDebt(long memberId, String seasonId, long amount, String kind, String refType, String refId, String reason) {
         if (amount <= 0) return 0;
         String key = "CITYM:" + kind + ":" + refType + ":" + refId;
         if (!flow(memberId, seasonId, -amount, "AVAILABLE", kind, refType, refId, key)) return 0;

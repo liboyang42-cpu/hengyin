@@ -326,8 +326,10 @@ public class CityBoardAdminService {
         return token.trim();
     }
 
+    Map<String, Object> boardRowForAuthoring(String boardId) { return selectBoardRow(boardId); }
+
     private void requireEditableBoard(String boardId) {
-        Map<String, Object> live = selectBoardRow(boardId);
+        Map<String, Object> live = boardRowForAuthoring(boardId);
         if (live == null) throw new CityGameException(404, "CITY_BOARD_NOT_FOUND", "城市棋盘不存在");
         if ("FROZEN".equals(live.get("lifecycle"))) throw new CityGameException(409, "BOARD_FROZEN", "已冻结的棋盘不可修改");
     }
