@@ -81,3 +81,32 @@ The 《生活不掉线》 and 《今天值得庆祝》 themes read their own off
 | 生活 G1/G2/G5 (from x-template-games) | 0→6 with the configs in `migration_20261116_template_games.sql` |
 
 Values are the ones in `migration_20261116_life_games.sql`. Consequences to weigh: theme stops change from "arrive and done" to a choice or a puzzle; already-published theme runs keep their frozen answers (`freezeNodeAnswers`) and change only after a republish; 庆祝 G1 stays single-player (each companion plays once; nothing merges answers). Merchant copies adopted before this migration are not changed either: they keep the rule card until the merchant re-adopts or edits.
+
+## Verification
+
+All Maven runs with `LANG=C.UTF-8 LC_ALL=C.UTF-8`.
+- `mvn -B -q -DskipTests compile`: OK.
+- `mvn -B -pl chengyinhub-admin -am test -Dtest='*Template*Test,*Preference*Test,*Play*Test,*Seed*Test,AdvancedGameConfigValidatorTest,PlayerMessagePunctuationTest,SysJobStaggerPlanTest,TwoNodeSchedulingTest,MemberPrivacyErasureServiceTest,E2eTestProvidersProfileTest,*Migration*Test'`: **2340 run, 0 failures, 0 errors, 73 skipped**, BUILD SUCCESS.
+- Negative control: flipping 生活 G3's `correct` from C to B makes `LifeGamesSeedContractTest.timePuzzlesHaveExactlyOneRightOption` fail ("expected [B] but was [C]"); restored.
+- `bash ci/migration-safety-check.sh`: 迁移安全门禁:通过. `bash ci/migration-layout-check.sh`: 迁移布局门禁:通过.
+- Mini-program (`node ../ci/prepare-mini-artifacts.js`, then `node --test "tests/unit/**/*.test.js"`):
+  - base `origin/roadmap/be-integ`: 17950 tests, 32 failing;
+  - first branch run: 17955 tests, 35 failing. The 3 new ones were all `press-feedback-coverage-contract` (my tally retry used a bare `bindtap`). Fixed by using `cy-inline-error`'s own action; that test file now passes (12/12 with the tally test). With the fix the failing set equals the base's.
+- `node tests/lint/ui-integrity.js --warn-as-error`: exit 1 on base and on branch (pre-existing items). After making the tally's `setData` keys explicit (a U4 item on the first run), the findings are identical to the base once content hashes and line numbers are ignored; only the scan count grows (2 JS files, 1 WXML).
+
+## Not verified here
+
+- No MySQL: the migration was not run. The `UPDATE … JOIN` guards and JSON columns were checked by reading; the contract test covers every config and answer.
+- No device: the mini-program tally card and the preference fix were unit- and source-checked only.
+
+## Owner and coordinator actions
+
+1. Run `migration_20261116_life_games.sql` through chengyin-db-migrate after `migration_20261116_template_games.sql` (read-only pre-check in the file header).
+2. Decide whether the two themes' own rows get the same change (table above), and whether already-adopted merchant copies should be offered the new version.
+3. Deploy order for R11: same as R2. Ship this backend with or after the app and mini-program builds that send the fix, or keep `play.arrive.remote_reward_policy=FULL` until then. Old clients send no fix, so their preference answers at located city stops would pay XP and badges only.
+4. The shelf puzzles (G3/G6 and celebrate G3–G6) use example hours, prices and routes. Their guides ask adopters to replace them with their own and change the right option. They are not added to the R9 placeholder guard (they are puzzles, not shop secrets); say if they should be.
+
+## Overlap with the UI agent
+
+- None of the UI agent's defects were fixed here.
+- Shared backend file: `PlayBasicCommandApplication.java` (answer receipt, one helper). Shared mini-program file: `pages/play/index.js` (`submitPreference` only) and `pages/publish/temp/index.{wxml,json,js}` (one line each).
