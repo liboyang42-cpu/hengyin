@@ -73,13 +73,13 @@ test('活动详情路由页只保留深链 chrome，正文委托给 play-activit
 
   assert.match(pageWxml, /<cy-scene-play-activity-detail\b/)
   assert.match(pageWxml, /<cy-nav-bar\b/)
-  assert.match(pageWxml, /<cy-page-title\b/)
+  assert.doesNotMatch(pageWxml, /<cy-page-title\b/, '活动介绍直接使用实际活动标题，不叠加大页标题')
   assert.doesNotMatch(pageWxml, /wx:for=/, '深链壳不得自己渲染活动列表正文')
   assert.doesNotMatch(pageJs, /url:\s*['"]\/api\//, '深链壳不得自己读取活动业务数据')
   assert.doesNotMatch(componentWxml, /<cy-(?:nav-bar|page-title)\b/, '场景正文不得重复宿主标题')
 })
 
-test('场景真源保留票务、地图、阵容、节点、评价、取消与分享能力', () => {
+test('活动介绍保留票务、单点地图、阵容、评价、取消与分享；不渲染路线玩法', () => {
   const js = read('subpackageMember/components/cy/scene-play-activity-detail/index.js')
   const wxml = read('subpackageMember/components/cy/scene-play-activity-detail/index.wxml')
 
@@ -91,12 +91,13 @@ test('场景真源保留票务、地图、阵容、节点、评价、取消与�
   assert.match(js, /app\.getUserType\(\)\s*==\s*2/)
   assert.match(js, /wx\.openLocation\(/)
 
-  for (const binding of ['info.memberTemplateList', 'info.registrationList', 'info.commentList', 'cancelReason', 'uploadImages']) {
+  for (const binding of ['info.registrationList', 'info.commentList', 'cancelReason', 'uploadImages']) {
     assert.match(wxml, new RegExp(binding.replace('.', '\\.')))
   }
+  assert.doesNotMatch(wxml, /info\.memberTemplateList|bindtap="goTopic"/, '活动介绍不复制主题的路线与玩法区块')
   assert.match(wxml, /open-type="share"/)
   assert.match(wxml, /disabled="\{\{!canCancel\}\}"[^>]*>确认取消并退款<\/cy-btn>/)
-  assert.match(wxml, /disabled="\{\{!canConfirmSignup\}\}"[^>]*>\{\{noTicketText \|\| '立即报名'\}\}<\/cy-btn>/)
+  assert.match(wxml, /disabled="\{\{!!noTicketText\}\}"[^>]*>\{\{noTicketText \|\| '立即报名'\}\}<\/cy-btn>/)
   assert.match(wxml, /disabled="\{\{!canSubmitComment\}\}"[^>]*>发布评价<\/cy-btn>/)
 })
 

@@ -79,12 +79,13 @@ test('F-W5-11 期次行无封面:改两列,标题不落进 112rpx 封面列', ()
   assert.match(wxml, /<view class="manage-project manage-project--edition" wx:for="\{\{shareEditions\}\}"/)
 })
 
-// ---------- F-W5-13 活动详情:分类行叫分类,主题另给入口 ----------
+// ---------- F-W5-13 活动介绍:分类不是主题，活动只有单一集合点 ----------
 
-test('F-W5-13 活动详情:分类行标「分类」,缺失写「分类待确认」;有 topicId 才出主题路线', () => {
+test('F-W5-13 活动介绍:分类行标「分类」，保留集合点，不再渲染主题路线', () => {
   const wxml = read('subpackageMember/components/cy/scene-play-activity-detail/index.wxml')
   assert.match(wxml, /<text class="activity-row__key">分类<\/text><text class="activity-row__value">\{\{categoryText \|\| '—'\}\}<\/text>/)
   assert.doesNotMatch(wxml, /主题待确认/)
   assert.doesNotMatch(wxml, /activity-row__key">主题<\/text>/, '不得把分类当主题名展示')
-  assert.match(wxml, /<view wx:if="\{\{info\.topicId\}\}" class="activity-row" bindtap="goTopic"/)
+  assert.doesNotMatch(wxml, /bindtap="goTopic"|主题路线/)
+  assert.match(wxml, /wx:if="\{\{hasLocation\}\}"[^>]*bindtap="openLocation"/)
 })

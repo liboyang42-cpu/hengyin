@@ -274,10 +274,10 @@ test('#4 JS 兜底不再回显原始代码:官方收件箱角色/状态、主题
 // ---------- #5 灰色「立即报名」 ----------
 
 function loadDetail(tickets) {
-  const scrolls = []
+  const scrolls = [], navigations = []
   const m = mount('subpackageMember/components/cy/scene-play-activity-detail/index.js', {
     app: { getUserID: () => '7', getUserType: () => 1 },
-    wx: { pageScrollTo: (opts) => scrolls.push(opts) },
+    wx: { pageScrollTo: (opts) => scrolls.push(opts), navigateTo: (options) => navigations.push(options) },
   })
   m.host.data.activityId = '5'
   m.host._activityReadIdentity = () => '7'
@@ -289,33 +289,42 @@ function loadDetail(tickets) {
   }
   m.host.load('5')
   const req = m.requests.find((r) => r.url === '/api/activity/info')
-  req.success({ code: 200, data: { id: 5, name: '城市夜跑', isSignUp: 0, memberId: 9, omsTicketList: tickets,
-    collaboratorsList: [], sysCategoryList: [], registrationList: [], memberTemplateList: [], commentList: [] } })
-  return Object.assign(m, { scrolls })
+  const activityData = { id: 5, name: '城市夜跑', isSignUp: 0, memberId: 9, omsTicketList: tickets,
+    collaboratorsList: [], sysCategoryList: [], registrationList: [], memberTemplateList: [], commentList: [] }
+  req.success({ code: 200, data: activityData })
+  return Object.assign(m, { scrolls, navigations, activityData })
 }
 
-test('#5 只有一张可报名的票:自动选中,「立即报名」可点', () => {
+test('#5 只有一张可报名的票:报名入口可开半屏，确认实际可售票才进结算', () => {
   const m = loadDetail([{ id: 11, name: '标准票', price: 0, remainingInventory: 3 }, { id: 12, name: '早鸟', price: 0, remainingInventory: 0 }])
   try {
     assert.equal(m.host.data.state, 'ready')
-    assert.equal(m.host.data.selectedTicketId, '11')
-    assert.equal(m.host.data.canConfirmSignup, true)
     assert.equal(m.host.data.noTicketText, '')
+    assert.deepEqual(Array.from(m.host.data.tickets, ticket => ticket._available), [true, false])
+    m.host.openSignupSheet()
+    assert.equal(m.host.data.signupSheetShow, true)
+    assert.equal(m.navigations.length, 0)
+    m.host.onSignupSheetConfirm({ detail: { activityId: 5, ticketId: 11 } })
+    assert.equal(m.navigations.length, 0)
+    m.requests.at(-1).success({ code: 200, data: m.activityData })
+    assert.equal(m.navigations[0].url, '/pages/activity/baoming/baoming?activityId=5&ticketId=11')
   } finally { m.restore() }
 })
 
-test('#5 多张票未选:点灰按钮滚到票种并标红线;选票后红线消失', () => {
+test('#5 多张票未选:打开选票半屏，不滚动、不提前结算；选择保留实际票身份', () => {
   const m = loadDetail([{ id: 11, name: 'A', price: 0, remainingInventory: 3 }, { id: 12, name: 'B', price: 0 }])
   try {
-    assert.equal(m.host.data.selectedTicketId, '')
-    assert.equal(m.host.data.canConfirmSignup, false)
+    assert.equal(m.host.data.signupSheetShow, false)
+    assert.equal(m.navigations.length, 0)
     m.host.onSignupDisabledTap()
-    assert.equal(m.host.data.ticketsAttention, true)
-    assert.equal(m.scrolls.length, 1)
-    assert.equal(m.scrolls[0].scrollTop, 580)
-    m.host.selectTicket({ currentTarget: { dataset: { id: '12' } } })
-    assert.equal(m.host.data.ticketsAttention, false)
-    assert.equal(m.host.data.canConfirmSignup, true)
+    assert.equal(m.host.data.signupSheetShow, true)
+    assert.equal(m.host.data.signupActivities[0].id, 5)
+    assert.equal(m.scrolls.length, 0)
+    m.host.onSignupSheetConfirm({ detail: { activityId: 5, ticketId: 12 } })
+    assert.equal(m.navigations.length, 0, '确认后先重读当前活动')
+    m.requests.at(-1).success({ code: 200, data: m.activityData })
+    assert.equal(m.navigations.length, 1)
+    assert.equal(m.navigations[0].url, '/pages/activity/baoming/baoming?activityId=5&ticketId=12')
   } finally { m.restore() }
 })
 
@@ -325,14 +334,15 @@ test('#5 没有可报名的票:按钮直接说明,不滚动不标红', () => {
     try {
       assert.equal(m.host.data.noTicketText, text)
       m.host.onSignupDisabledTap()
-      assert.equal(m.host.data.ticketsAttention, false)
+      assert.equal(m.host.data.signupSheetShow, false)
+      assert.equal(m.navigations.length, 0)
       assert.equal(m.scrolls.length, 0)
     } finally { m.restore() }
   }
   const wxml = read('subpackageMember/components/cy/scene-play-activity-detail/index.wxml')
-  assert.match(wxml, /disabled="\{\{!canConfirmSignup\}\}" bindtap="openSignup" bind:disabledtap="onSignupDisabledTap">\{\{noTicketText \|\| '立即报名'\}\}<\/cy-btn>/)
-  assert.match(wxml, /class="ticket-list \{\{ticketsAttention \? 'ticket-list--attention' : ''\}\}"/)
-  assert.match(read('subpackageMember/components/cy/scene-play-activity-detail/index.wxss'), /\.ticket-list--attention \.ticket:not\(\.ticket--disabled\) \{ border-color: var\(--cy-color-status-danger\); \}/)
+  assert.match(wxml, /disabled="\{\{!!noTicketText\}\}" bindtap="openSignupSheet" bind:disabledtap="onSignupDisabledTap">\{\{noTicketText \|\| '立即报名'\}\}<\/cy-btn>/)
+  assert.match(wxml, /class="ticket-list"/)
+  assert.doesNotMatch(wxml, /ticketsAttention|selectedTicketId|canConfirmSignup/)
 })
 
 // ---------- #6 活动详情游客可浏览,报名前登录 ----------
@@ -347,8 +357,8 @@ test('#6 游客点「立即报名」先走写前登录(signup),登录后续上;�
   })
   try {
     m.host.data.activityId = '5'
-    m.host.setData({ info: { memberId: 9, isSignUp: 0 }, tickets: [{ _id: '11', id: 11, _available: true }], selectedTicketId: '11', canConfirmSignup: true })
-    m.host.openSignup()
+    m.host.setData({ info: { memberId: 9, isSignUp: 0 }, tickets: [{ _id: '11', id: 11, _available: true }] })
+    m.host.openSignup('11')
     assert.deepEqual(resumes, ['signup'])
     assert.deepEqual(navigations, [])
   } finally { m.restore() }
@@ -358,8 +368,8 @@ test('#6 游客点「立即报名」先走写前登录(signup),登录后续上;�
   })
   try {
     member.host.data.activityId = '5'
-    member.host.setData({ info: { memberId: 9, isSignUp: 0 }, tickets: [{ _id: '11', id: 11, _available: true }], selectedTicketId: '11', canConfirmSignup: true })
-    member.host.openSignup()
+    member.host.setData({ info: { memberId: 9, isSignUp: 0 }, tickets: [{ _id: '11', id: 11, _available: true }] })
+    member.host.openSignup('11')
     assert.deepEqual(navigations, ['/pages/activity/baoming/baoming?activityId=5&ticketId=11'])
   } finally { member.restore() }
 })

@@ -1,5 +1,5 @@
 'use strict'
-// BL-238:会员分包活动详情组件(goTopic/goPlay/goUserInfo/goTemplateDetail/openSignup)、
+// BL-238:活动介绍实际半屏结算/goPlay/goUserInfo导航与已退出的主题/模板入口、
 // 券列表「新建」(GoAdd)、我的模板(goInfo)跳转入口加跳转中保护——连点只跳一次,
 // complete 后可再跳;onShow / pageLifetimes.show 兜底清锁。
 const { test } = require('node:test')
@@ -57,10 +57,11 @@ function mountDetail() {
   return { inst, navs, show }
 }
 
-test('活动详情组件 主题路线连点只跳一次', () => {
+test('活动介绍组件 半屏确认所用结算入口连点只跳一次', () => {
   const { inst, navs, show } = mountDetail()
-  inst.data.info = { topicId: 3 }
-  onceThenAgain(navs, () => inst.goTopic(), '/pages/topic/index/index?id=3', show)
+  inst.setData({ activityId: '42', info: { memberId: 8, isSignUp: 0 }, tickets: [{ _id: '9', id: 9 }] })
+  inst._activityReadOwner = inst._activityReadIdentity()
+  onceThenAgain(navs, () => inst.openSignup(9), '/pages/activity/baoming/baoming?activityId=42&ticketId=9', show)
 })
 
 test('活动详情组件 去玩连点只跳一次', () => {
@@ -68,19 +69,18 @@ test('活动详情组件 去玩连点只跳一次', () => {
   onceThenAgain(navs, () => inst.goPlay(), '/subpackageMember/signup/index', show)
 })
 
-test('活动详情组件 用户主页、模板详情连点只跳一次', () => {
+test('活动介绍组件 用户主页连点只跳一次；不再保留退出UI的主题/模板导航', () => {
   const a = mountDetail()
   const ev = { currentTarget: { dataset: { id: 9 } } }
   onceThenAgain(a.navs, () => a.inst.goUserInfo(ev), '/pages/userinfo/userinfo?userId=9', a.show)
-  const b = mountDetail()
-  onceThenAgain(b.navs, () => b.inst.goTemplateDetail(ev), '/pages/templatedetail/templatedetail?id=9&scope=my', b.show)
+  assert.equal(a.inst.goTopic, undefined)
+  assert.equal(a.inst.goTemplateDetail, undefined)
 })
 
 test('活动详情组件 跳转中「立即报名」不再进结算页', () => {
   const { inst, navs } = mountDetail()
-  inst.data.canConfirmSignup = true
   inst._navigating = true
-  inst.openSignup()
+  inst.openSignup(9)
   assert.equal(navs.length, 0)
 })
 

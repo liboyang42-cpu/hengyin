@@ -72,7 +72,7 @@ function mountComponent() {
   const sandbox = {
     Date, Math, Promise, String, Number, Array, Object, JSON, console,
     getApp: () => app,
-    wx: { vibrateShort() {}, showToast() {} },
+    wx: { vibrateShort() {}, showToast() {}, navigateTo(options) { global.wx.navigateTo(options) } },
     require(id) {
       if (!id.startsWith('.')) return require(id)
       return require(path.resolve(path.dirname(absolutePath), id))
@@ -128,7 +128,7 @@ function captureToasts(run) {
   return { shown, navigations }
 }
 
-test('详情票种:已开始/已结束的场次置灰并写明理由,卡点不再放行', () => {
+test('介绍票种:已开始/已结束写明理由，半屏确认使用的结算入口仍拒绝过窗', () => {
   const harness = loadDetailWithTickets([
     { id: 11, name: '9.22 场', price: 69, remainingInventory: 5, startTime: PAST, endTime: PAST_END },
     { id: 12, name: '只有场次日期', price: 69, remainingInventory: 5, startTime: PAST },
@@ -149,31 +149,25 @@ test('详情票种:已开始/已结束的场次置灰并写明理由,卡点不�
     '置灰还不够 —— 卡面要写明是场次问题，不然用户以为还能捡漏')
 
   const blocked = captureToasts(() => {
-    harness.instance.selectTicket({ currentTarget: { dataset: { id: '11' } } })
-    harness.instance.selectTicket({ currentTarget: { dataset: { id: '12' } } })
+    harness.instance.openSignup(11)
+    harness.instance.openSignup(12)
   })
   assert.deepEqual(blocked.shown, ['场次已结束', '场次已开始'], '理由要说准，不能一律报「已售罄」')
-  // Round5 #5:四张里只有 13 场可报名 → 进页即自动选中;点过期场次不得把选择换走
-  assert.equal(harness.instance.data.selectedTicketId, '13', '过期场次不得被选中')
+  assert.deepEqual(blocked.navigations, [], '过窗票不得进入结算页')
 
-  // ★开场即停售:进行中场次(id15,startTime 已过)现在同样不能被选中
-  const inProgress = captureToasts(() => {
-    harness.instance.selectTicket({ currentTarget: { dataset: { id: '15' } } })
-  })
-  assert.deepEqual(inProgress.shown, ['场次已开始'], '场次一到开始时间就不再放行，不再「进行中照样能买」')
-  assert.equal(harness.instance.data.selectedTicketId, '13', '已开始场次不得被选中')
+  const inProgress = captureToasts(() => harness.instance.openSignup(15))
+  assert.deepEqual(inProgress.shown, ['场次已开始'], '场次一到开始时间就不再放行')
+  assert.deepEqual(inProgress.navigations, [])
 
-  const ok2 = captureToasts(() => {
-    harness.instance.selectTicket({ currentTarget: { dataset: { id: '13' } } })
-  })
-  assert.deepEqual(ok2.shown, [], '还没到开始时间的场次照常能买')
-  assert.equal(harness.instance.data.selectedTicketId, '13')
+  const available = captureToasts(() => harness.instance.openSignup(13))
+  assert.deepEqual(available.shown, [], '还没到开始时间的场次照常能买')
+  assert.equal(available.navigations.length, 1)
+  assert.equal(available.navigations[0].url, '/pages/activity/baoming/baoming?activityId=activity-1&ticketId=13')
 
-  // 深链/刷新后 selectedTicketId 停在过期票上时,立即报名同样要拦
-  harness.instance.setData({ selectedTicketId: '11', canConfirmSignup: true })
-  const open = captureToasts(() => harness.instance.openSignup())
-  assert.deepEqual(open.shown, ['场次已结束'])
-  assert.deepEqual(open.navigations, [], '过窗票不得进入结算页')
+  available.navigations[0].complete()
+  const repeatedExpired = captureToasts(() => harness.instance.openSignup(11))
+  assert.deepEqual(repeatedExpired.shown, ['场次已结束'])
+  assert.deepEqual(repeatedExpired.navigations, [], '正常返回后也不能借用上一张可售票放行过期票')
 })
 
 /* ── 结算页 ──────────────────────────────────────────────────────────────── */

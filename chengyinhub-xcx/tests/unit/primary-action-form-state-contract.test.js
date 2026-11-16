@@ -288,10 +288,11 @@ test('活动详情：取消、选票报名、评价分别读取独立 JS 派生�
   const js = read('subpackageMember/components/cy/scene-play-activity-detail/index.js')
   const wxml = read('subpackageMember/components/cy/scene-play-activity-detail/index.wxml')
   assert.match(wxml, /disabled="\{\{!canCancel\}\}"[^>]*>确认取消并退款<\/cy-btn>/)
-  assert.match(wxml, /disabled="\{\{!canConfirmSignup\}\}"[^>]*>\{\{noTicketText \|\| '立即报名'\}\}<\/cy-btn>/)
+  assert.match(wxml, /disabled="\{\{!!noTicketText\}\}"[^>]*>\{\{noTicketText \|\| '立即报名'\}\}<\/cy-btn>/)
   assert.match(wxml, /disabled="\{\{!canSubmitComment\}\}"[^>]*>发布评价<\/cy-btn>/)
   assert.match(js, /canCancel:\s*false/)
-  assert.match(js, /canConfirmSignup:\s*false/)
+  assert.match(js, /signupSheetShow:\s*false/)
+  assert.doesNotMatch(js, /this\.data\.(?:selectedTicketId|canConfirmSignup)/)
   assert.match(js, /canSubmitComment:\s*false/)
 })
 
@@ -365,7 +366,7 @@ test('负控：外围表单任一主按钮摘掉 JS 派生态必须判红', () =
   const cases = [
     // 2026-09-03:官方发布面板已随入口一起删,这一行负控没有锚点了(留着会因锚点失效恒红)。
     ['pages/merchant/decor/perks/index.wxml', ' disabled="{{!canSave || saveReadbackPending}}"', /disabled="\{\{!canSave \|\| saveReadbackPending\}\}"/],
-    ['subpackageMember/components/cy/scene-play-activity-detail/index.wxml', ' disabled="{{!canConfirmSignup}}"', /disabled="\{\{!canConfirmSignup\}\}"/],
+    ['subpackageMember/components/cy/scene-play-activity-detail/index.wxml', ' disabled="{{!!noTicketText}}"', /disabled="\{\{!!noTicketText\}\}"/],
     ['pages/publish/fabu/step3.wxml', ' disabled="{{!canSaveTicket}}"', /disabled="\{\{!canSaveTicket\}\}"/],
   ]
   cases.forEach(([file, anchor, contract]) => {

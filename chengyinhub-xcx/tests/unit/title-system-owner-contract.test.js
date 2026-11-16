@@ -172,7 +172,7 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
      2026-09-11 那一页整块摘回 master 的 #1058 ⇒ 它的标题形态也回到 master 的居中 nav 标题,
      这里跟着摘除;上面 EXPECTED_NAV_ROUTES 里那一条仍然在,两份盘点不重复登记。 */
   'subpackageRoam/history/index',   // 同上:收口后大标题由 cy-page-title 出
-  'pages/activity/detail/index',    // 活动详情正文收进 scene，深链壳改用统一 L1 标题
+  // 活动介绍由真实 Scene hero 显示活动名，下面单独核标题 owner；壳不叠加大标题。
   // 2026-08-07 用户裁决:广场帖文流不设大标题,从 EXPECTED_PAGE_TITLE_ROUTES 摘除
   'pages/search2/index',
   // 2026-09-20 UI-17:票夹页去实底黑条，当前票名承担页面上下文，cy-page-title 摘除
@@ -375,6 +375,13 @@ function assertTitleInventory(readSource = read) {
   assert.equal(rows.length, 174, '注册页面盘点数量发生漂移,需重新核对标题规范')
   // 2026-11-13 pass-mini +1(custom 导航):通行证订单详情 market/pass-order ⇒ 173;custom 172。
   assert.equal(rows.filter((row) => row.custom).length, 173)
+  const activityShell = routeSources('pages/activity/detail/index', readSource)
+  assert.match(activityShell.wxml, /<cy-nav-bar\b/)
+  assert.match(activityShell.wxml, /<cy-scene-play-activity-detail\b[^>]*activity-id="\{\{id\}\}"/)
+  assert.doesNotMatch(activityShell.wxml, /<cy-page-title\b/)
+  assert.equal(activityShell.json.usingComponents['cy-scene-play-activity-detail'], '/subpackageMember/components/cy/scene-play-activity-detail/index')
+  assert.match(readSource('subpackageMember/components/cy/scene-play-activity-detail/index.wxml'),
+    /class="activity-hero__title">\{\{titleText\}\}<\/text>/, '活动介绍必须保留真实活动标题')
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
   //   均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 = 133；custom 导航 129 + 2 = 131。
   const knownRoutes = new Set(routes)
@@ -421,6 +428,11 @@ test('负控:myinvite 源码摘掉 page-title 时真实盘点必须判红', () =
     name: 'AssertionError',
     message: /page-title inventory 路由映射发生漂移/,
   })
+  const scene = 'subpackageMember/components/cy/scene-play-activity-detail/index.wxml'
+  const withoutActivityTitle = read(scene).replace('{{titleText}}', '')
+  assert.notEqual(withoutActivityTitle, read(scene), '活动标题变异锚点失效')
+  assert.throws(() => assertTitleInventory((file) => file === scene ? withoutActivityTitle : read(file)),
+    /活动介绍必须保留真实活动标题/)
 })
 
 test('owner 普通二级页统一使用 cy-nav-bar + cy-page-title', () => {

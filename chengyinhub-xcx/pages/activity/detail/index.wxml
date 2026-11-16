@@ -4,7 +4,6 @@
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
   <cy-nav-bar plain custom-back bind:back="goBack" />
-  <cy-page-title title="活动详情" safe-top="{{false}}" />
   <view class="activity-shell__body">
     <cy-scene-play-activity-detail id="activityDetail" activity-id="{{id}}" bind:loaded="onSceneLoaded" bind:close="goBack" />
   </view>

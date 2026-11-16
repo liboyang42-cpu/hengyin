@@ -108,7 +108,6 @@ Component({
     cancelledHasOwnOrder: false,
     gateClubId: 0,
     gateMessage: '',
-    selectedTicketId: '',
     expandedTicketId: '',
     statusText: '',
     statusVariant: 'done',
@@ -132,9 +131,9 @@ Component({
     cancelling: false,
     cancelError: '',
     cancelBlocked: false,
-    canConfirmSignup: false,
-    ticketsAttention: false,
     noTicketText: '',
+    signupSheetShow: false,
+    signupActivities: [],
     voteShow: false,
     starsBox: [1, 1, 1, 1, 1],
     answer: -1,
@@ -156,6 +155,8 @@ Component({
     },
     detached() {
       this._detached = true
+      this._signupSheetContext = null
+      this._resumeSignup = null
       this._loadToken = (this._loadToken || 0) + 1
       this._cancelToken = (this._cancelToken || 0) + 1
       this._commentToken = (this._commentToken || 0) + 1
@@ -168,7 +169,7 @@ Component({
       // 报名或加入俱乐部后返回须重读；首次 show 保留 attached/observer 的读取去重。
       else if (this.data.activityId && (wasHidden || this.data.state === 'gate')) { this._loadingId = ''; this._loadedId = ''; this.load(this.data.activityId) }
     },
-    hide() { this._hidden = true },
+    hide() { this._hidden = true; this.closeSignupSheet(); this._resumeSignup = null },
   },
   methods: {
     _activityReadIdentity() { return [typeof app.getUserID === 'function' ? app.getUserID() : '', (app.globalData || {}).authorization || ''].join('|') },
@@ -177,21 +178,19 @@ Component({
       if (this._activityReadOwner !== this._activityReadIdentity() || res && res.reason === 'sessionChanged') {
         this._loadToken += 1
         this._loadingId = ''; this._loadedId = ''
-        this.setData({ state: 'loading', info: {}, tickets: [], canConfirmSignup: false, cancelledHasOwnOrder: false })
+        this.setData({ state: 'loading', info: {}, tickets: [], cancelledHasOwnOrder: false })
         if (!this._hidden) this.load(this.data.activityId)
         return false
       }
       return true
-    },
-    goTopic() {
-      const id = Number(this.data.info.topicId)
-      if (Number.isSafeInteger(id) && id > 0 && !this._navigating) { this._navigating = true; wx.navigateTo({ url: '/pages/topic/index/index?id=' + id, complete: () => { this._navigating = false } }) }
     },
     load(id) {
       if (this._detached) return
       const requestedId = String(id || '')
       const owner = this._activityReadIdentity()
       if (!requestedId) {
+        this.closeSignupSheet()
+        this._resumeSignup = null
         this._loadToken = (this._loadToken || 0) + 1
         this._loadingId = ''
         this._loadedId = ''
@@ -199,6 +198,8 @@ Component({
         return
       }
       if (owner === this._activityReadOwner && (this._loadingId === requestedId || this._loadedId === requestedId)) return
+      this.closeSignupSheet()
+      if (this._resumeSignup && (this._resumeSignup.id !== requestedId || this._resumeSignup.owner !== owner)) this._resumeSignup = null
       this._activityReadOwner = owner
       const token = (this._loadToken || 0) + 1
       this._loadToken = token
@@ -206,16 +207,15 @@ Component({
       this._commentToken = (this._commentToken || 0) + 1
       this._loadingId = requestedId
       this._loadedId = ''
+      const signupSelection = this._signupSelection
+      this._signupSelection = null
       this.setData({
         state: 'loading',
         cancelledHasOwnOrder: false,
         errorMsg: '',
         info: {},
         tickets: [],
-        selectedTicketId: '',
         expandedTicketId: '',
-        canConfirmSignup: false,
-        ticketsAttention: false,
         noTicketText: '',
         cancelShow: false,
         voteShow: false,
@@ -283,7 +283,6 @@ Component({
           const host = info.collaboratorsList[0] || {}
           const action = actionFor(info)
           const selectable = selectableTickets(tickets)
-          const onlyTicket = selectable.length === 1 ? selectable[0]._id : ''
           const latitude = coordinate(info.latitude, 90)
           const longitude = coordinate(info.longitude, 180)
           const averageRating = nonNegativeNumber(info.averageRating)
@@ -314,14 +313,21 @@ Component({
             hasLocation: latitude !== null && longitude !== null,
             actionState: action.state,
             actionText: action.text,
-            selectedTicketId: onlyTicket,
-            expandedTicketId: onlyTicket,
-            canConfirmSignup: !!onlyTicket,
-            ticketsAttention: false,
+            expandedTicketId: '',
             noTicketText: selectable.length ? '' : tickets.length ? '暂无可报名票种' : '暂未开放票种',
             isOwner: info.memberId != null && info.memberId == app.getUserID(),
           })
           this.triggerEvent('loaded', { id: requestedId, name: info.name || '', imgUrl: info.imgUrl || '' })
+          if (signupSelection && signupSelection.id === requestedId && signupSelection.owner === owner && !this._hidden && action.state === 'signup') {
+            const selected = tickets.find((ticket) => ticket._id === signupSelection.ticketId)
+            if (selected) {
+              this.openSignup(selected._id)
+            }
+          }
+          if (this._resumeSignup && this._resumeSignup.id === requestedId && this._resumeSignup.owner === owner) {
+            this._resumeSignup = null
+            this.openSignupSheet()
+          }
         },
         successStatusAbnormal: (res, status) => this.failLoad(token, '服务暂时不可用，请稍后重试。', res, status),
         fail: (res, status) => this.failLoad(token, '网络异常，请重试。', res, status),
@@ -332,7 +338,7 @@ Component({
       if (!this._activityReadCurrent(token, res)) return
       if (res && res.errorCode === 'ACTIVITY_CANCELLED') {
         this._loadingId = ''
-        this.setData({ state: 'cancelled', info: {}, tickets: [], canConfirmSignup: false,
+        this.setData({ state: 'cancelled', info: {}, tickets: [],
           cancelledHasOwnOrder: res.canViewOwnOrders === true })
         return
       }
@@ -357,67 +363,82 @@ Component({
       this.setData({ expandedTicketId: this.data.expandedTicketId === id ? '' : id })
     },
 
-    selectTicket(event) {
-      const id = String(event.currentTarget.dataset.id || '')
-      const ticket = this.data.tickets.find((item) => item._id === id)
-      if (!ticket) return
-      // CU-C-32:场次已过/已开始的票先拦,而且理由必须说准 —— 拿「已售罄」去解释一个
-      // 过期场次是两套口径,用户会以为还有机会刷到票。
-      if (ticket._windowPassed) {
-        toast(ticket._windowText || '该场次已过')
-        return
-      }
-      if (ticket._available === false) {
-        toast('该票种已售罄')
-        return
-      }
-      this.setData({ selectedTicketId: id, expandedTicketId: id, canConfirmSignup: true, ticketsAttention: false })
-    },
 
-    // Round5 #5:多张票还没选时点灰按钮 —— 滚到票种并用红线标出,而不是没反应。
     onSignupDisabledTap() {
-      if (this.data.canConfirmSignup || this.data.noTicketText || !this.data.tickets.length) return
-      this.setData({ ticketsAttention: true })
-      const query = this.createSelectorQuery()
-      query.select('.ticket-list').boundingClientRect()
-      query.selectViewport().scrollOffset()
-      query.exec((res) => {
-        const rect = res && res[0]
-        const viewport = res && res[1]
-        if (!rect || !viewport || typeof wx.pageScrollTo !== 'function') return
-        wx.pageScrollTo({ scrollTop: Math.max(0, viewport.scrollTop + rect.top - 120), duration: 300 })
-      })
+      this.openSignupSheet()
     },
 
-    openSignup() {
-      if (!this.data.canConfirmSignup || this._navigating) return
-      // Round5 #6:活动详情对游客只读开放后,报名前先登录(写前登录,与主题详情同口径)
-      if (app.ensureLoginFor && !app.ensureLoginFor('signup', () => this.openSignup(), { owner: this, target: () => [this.data.activityId, this.data.selectedTicketId] })) return
+    openSignupSheet() {
+      if (this._detached || this._hidden || this._navigating || this.data.state !== 'ready' || this.data.actionState !== 'signup' || this.data.noTicketText) return
+      const id = String(this.data.activityId)
+      const resume = () => {
+        if (this._detached || this._hidden || String(this.data.activityId) !== id) return
+        this._resumeSignup = { id, owner: this._activityReadIdentity() }
+        this._loadingId = ''; this._loadedId = ''
+        this.load(id)
+      }
+      if (!this._signupAllowed(resume, () => [this.data.activityId])) return
+      if (this._activityReadOwner !== this._activityReadIdentity()) { resume(); return }
+      this._signupSheetContext = { id, owner: this._activityReadIdentity(), token: this._loadToken }
+      const info = this.data.info
+      this.setData({ signupSheetShow: true, signupActivities: [{ id: Number(id), name: info.name,
+        startDate: info.startDate, endDate: info.endDate }] })
+    },
+
+    closeSignupSheet() {
+      this._signupSheetContext = null
+      this.setData({ signupSheetShow: false })
+    },
+
+    onSignupSheetConfirm(event) {
+      const context = this._signupSheetContext
+      const detail = event.detail || {}
+      if (!context || !this.data.signupSheetShow || this._detached || this._hidden || this._navigating ||
+          this.data.state !== 'ready' || context.token !== this._loadToken ||
+          context.owner !== this._activityReadIdentity() || context.id !== String(this.data.activityId) ||
+          String(detail.activityId) !== context.id) return
+      const ticket = this.data.tickets.find((item) => item._id === String(detail.ticketId))
+      if (!ticket) return
+      this.closeSignupSheet()
+      // 半屏会重读票；确认后也重读宿主权限、报名状态和库存，再交给原结算闸。
+      this._signupSelection = { id: context.id, owner: context.owner, ticketId: ticket._id }
+      this.reload()
+    },
+
+    _signupAllowed(resume, target) {
+      if (app.ensureLoginFor && !app.ensureLoginFor('signup', resume, { owner: this, target })) return false
       if (app.getUserType() == 2) {
         toast('商家用户不可报名活动')
-        return
+        return false
       }
       const info = this.data.info || {}
       if (info.memberId == app.getUserID()) {
         toast('不可报名您发布的活动')
-        return
+        return false
       }
       if (info.isSignUp === 1) {
         toast('您已报名该活动')
-        return
+        return false
       }
-      const ticket = this.data.tickets.find((item) => item._id === this.data.selectedTicketId)
+      if (info.cancelTime) { toast('活动已取消'); return false }
+      return true
+    },
+
+    openSignup(ticketId) {
+      if (this._navigating) return
+      if (!this._signupAllowed(() => this.openSignup(ticketId), () => [this.data.activityId, ticketId])) return
+      const ticket = this.data.tickets.find((item) => item._id === String(ticketId))
       if (!ticket) {
         toast('请先选择票种')
         return
       }
-      // CU-C-32:与 selectTicket 同一把尺子。原来只比 endTime(报名截止),startTime
+      // CU-C-32:仍使用原统一时窗判据。原来只比 endTime(报名截止),startTime
       // 已过而 endTime 缺失/仍在未来的票会从这里直接走到结算页。
-      if (ticket._windowPassed) {
-        toast(ticket._windowText || '该场次已过')
+      if (ticketWindowPassed(ticket)) {
+        toast(ticketWindowText(ticket) || '该场次已过')
         return
       }
-      if (ticket._available === false) {
+      if (nonNegativeInteger(ticket.remainingInventory) === 0) {
         toast('该票种已售罄')
         return
       }
@@ -445,10 +466,6 @@ Component({
       if (id && !this._navigating) { this._navigating = true; wx.navigateTo({ url: `/pages/userinfo/userinfo?userId=${id}`, complete: () => { this._navigating = false } }) }
     },
 
-    goTemplateDetail(event) {
-      const id = event.currentTarget.dataset.id
-      if (id && !this._navigating) { this._navigating = true; wx.navigateTo({ url: `/pages/templatedetail/templatedetail?id=${id}&scope=my`, complete: () => { this._navigating = false } }) }
-    },
 
     openLocation() {
       const info = this.data.info || {}
