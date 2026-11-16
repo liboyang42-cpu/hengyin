@@ -44,7 +44,7 @@ test('★徽章掉落必须留住 badgeCode，并给出查看收藏 + 继续两�
     '奖励落位不能只是一句 toast —— 一闪而过就没有刷新入口了');
 
   assert.match(wxml, /bindtap="openRewardCollection"/);
-  assert.match(wxml, /bindtap="closeRewardDrop"/);
+  assert.match(wxml, /bindtap="closeRewardDrop" aria-role="button" aria-label="收起奖励"[^>]*>收起奖励</);
   assert.match(js, /openRewardCollection\(\)/);
 });
 

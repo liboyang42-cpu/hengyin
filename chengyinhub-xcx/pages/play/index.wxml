@@ -1001,7 +1001,7 @@
 
 <!-- 通关 banner -->
 <!-- 奖励掉落卡:常驻直到玩家自己处理掉。带 badgeCode 的「查看收藏」是这枚徽章的回读入口,
-     「继续」是文档要求的下一步——两条明路,不靠一闪而过的 toast。 -->
+     「收起奖励」只关闭卡片——两条明路,不靠一闪而过的 toast。 -->
 <view class="rdrop" wx:if="{{rewardDrop.show}}">
   <view class="rdrop__head">
     <view class="rdrop__dot"></view>
@@ -1012,7 +1012,7 @@
   </view>
   <view class="rdrop__row">
     <view class="rdrop__go" bindtap="openRewardCollection" aria-role="button" aria-label="查看收藏" hover-class="cy-pressed" hover-stay-time="80">查看收藏</view>
-    <view class="rdrop__next" bindtap="closeRewardDrop" aria-role="button" aria-label="继续下一步" hover-class="cy-pressed" hover-stay-time="80">继续</view>
+    <view class="rdrop__next" bindtap="closeRewardDrop" aria-role="button" aria-label="收起奖励" hover-class="cy-pressed" hover-stay-time="80">收起奖励</view>
   </view>
 </view>
 <view class="banner" wx:if="{{hud.bottomCard(screen, allDone && !canContinueGames, nav, nextNode, null) === 'banner'}}" bindtap="openFinish" hover-class="cy-pressed" hover-stay-time="80">
@@ -1260,7 +1260,7 @@
       </block>
 
       <view class="gp2__feedback" id="gp2Feedback" wx:if="{{gWrong}}">{{game.feedback}}</view>
-      <!-- P-11 答对那一拍:作者配的完成反馈(没配才写「对了」+ 揭示)与本站碎片;读完点「继续」回故事流 -->
+      <!-- P-11 答对那一拍:作者配的完成反馈(没配才写「对了」+ 揭示)与本站碎片;读完点「完成本步」回故事流 -->
       <view class="gp2__right" id="gp2Right" wx:if="{{gRight}}" aria-role="status">
         <view class="gp2__right-h"><cy-icon name="check" size="32" /><text>{{gRight.text || '对了'}}</text></view>
         <text class="gp2__right-reveal" wx:if="{{gRight.reveal}}">{{gRight.reveal}}</text>
@@ -1288,7 +1288,7 @@
     <view class="gp2__cta" wx:elif="{{game.vm==2}}" bindtap="photoGame" hover-class="cy-pressed" hover-stay-time="80">{{gWriteUnknown?'结果待确认':(photoTaken?'重新拍摄':'拍照上传')}}</view>
     <view class="gp2__cta" wx:elif="{{game.vm==6 && preference.result}}" bindtap="finishPreferenceResult" hover-class="cy-pressed" hover-stay-time="80">收下本站建议</view>
     <view class="gp2__cta" wx:elif="{{game.vm==6 && (!preference.inheritedTags.length || preference.answerHere)}}" bindtap="nextPreferenceStep" hover-class="cy-pressed" hover-stay-time="80">{{preference.submitting?'正在生成…':(preference.stepIndex < preference.steps.length - 1 ? '下一题':'生成我的结果')}}</view>
-    <view class="gp2__cta" wx:if="{{gRight && (game.vm==1 || game.vm==3)}}" bindtap="continueAfterRight" hover-class="cy-pressed" hover-stay-time="80">继续</view>
+    <view class="gp2__cta" wx:if="{{gRight && (game.vm==1 || game.vm==3)}}" bindtap="continueAfterRight" aria-role="button" aria-label="完成本步" hover-class="cy-pressed" hover-stay-time="80">完成本步</view>
     <view class="gp2__cta" wx:elif="{{game.vm==1 || game.vm==3}}" bindtap="submitGame" hover-class="cy-pressed" hover-stay-time="80">{{gWriteUnknown?'结果待确认':'提交'}}</view>
   </view>
 </view>

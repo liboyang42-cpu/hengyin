@@ -224,3 +224,29 @@ for (const image of ['', 'https://assets.example.test/missing-original.jpg', '/i
     f.assertSourcesUnchanged();
   });
 }
+
+test('synthetic existing Page: 完成本步消费pending一次，收起奖励仅关闭卡片', () => {
+  const f = fixture(), p = f.page(), completed = [];
+  const source = require('node:fs').readFileSync(require.resolve('../../pages/play/index.wxml'), 'utf8');
+  const answer = (source.match(/<view\b[^>]*>[^<]*<\/view>/g) || []).find(tag => tag.includes('bindtap="continueAfterRight"'));
+  const reward = (source.match(/<view\b[^>]*>[^<]*<\/view>/g) || []).find(tag => tag.includes('bindtap="closeRewardDrop"'));
+  assert.match(answer, /aria-label="完成本步"[^>]*>完成本步</);
+  assert.match(reward, /aria-label="收起奖励"[^>]*>收起奖励</);
+  const tap = tag => p[tag.match(/bindtap="([^"]+)"/)[1]]();
+  const receipt = { firstTime: true, answerReveal: '合成的已判对揭示', xp: 12 };
+  p.data.nodes = [{ nodeId: 11, fragmentText: '合成碎片' }];
+  p.onComplete = (node, data) => completed.push({ node, data });
+  p._answerRight(11, receipt, '');
+  assert.equal(p.data.gRight.hold, true);
+  assert.equal(completed.length, 0, '真实完成回调仍等待玩家确认');
+  tap(answer); tap(answer);
+  assert.deepEqual(completed, [{ node: 11, data: receipt }]);
+  assert.equal(p._answerRightPending, null);
+  assert.equal(p.data.gRight, null);
+  p.data.rewardDrop = { show: true, text: '已获得合成徽章', badges: [{ code: 'FIRST_STEP' }] };
+  const expected = structuredClone(p.data); expected.rewardDrop.show = false;
+  tap(reward); tap(reward);
+  assert.deepEqual(p.data, expected, '收起奖励不得改掉徽章code、节点或其他状态');
+  assert.equal(completed.length, 1);
+  assert.equal(f.requests.length, 0, '两种确认动作都不重发答题、发奖或重开请求');
+});
