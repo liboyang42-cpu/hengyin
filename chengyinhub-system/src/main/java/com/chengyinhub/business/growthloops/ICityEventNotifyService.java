@@ -30,4 +30,24 @@ public interface ICityEventNotifyService
      * 为 null 时只说据点数。
      */
     void weeklyYield(long holderMemberId, String weekKey, int placesHeld, Long coins);
+
+    // ------------------------------------------------------------ W7 CITY-11: City Monopoly events (default: no-op)
+
+    /**
+     * City Monopoly takeover: the former holder lost the place. revengeHours/revengeRate describe the cheaper strike
+     * back (challenge.revenge_discount.*); revengeRate is the share taken off the fee (0.5 = half).
+     */
+    default void monopolyLost(long formerHolderMemberId, String placeRef, String placeName, long revengeHours, double revengeRate) {}
+
+    /** The holder defended: the challenger rolled {@code total}, short of {@code dc}. */
+    default void defended(long holderMemberId, String placeRef, String placeName, int total, int dc) {}
+
+    /** Nobody has visited the place for {@code days} days; it starts losing levels soon. */
+    default void decaying(long holderMemberId, String placeRef, String placeName, long days) {}
+
+    /** The place was released because it was left alone too long. */
+    default void released(long formerHolderMemberId, String placeRef, String placeName) {}
+
+    /** Season result: rank among {@code participants}; {@code xp} may be 0. */
+    default void seasonResult(long memberId, String seasonId, int rank, int participants, int xp) {}
 }

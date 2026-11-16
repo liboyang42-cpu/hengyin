@@ -54,4 +54,25 @@ class CityEventNotifierTest
         assertDoesNotThrow(() -> new CityEventNotifier(push).lost(1L, "x", "y"));
         assertDoesNotThrow(() -> new CityEventNotifier(null).lost(1L, "x", "y"));
     }
+
+    @Test
+    void cityMonopolyCopyMatchesTheReviewTable() {
+        IPushFanoutService push = mock(IPushFanoutService.class);
+        CityEventNotifier notifier = new CityEventNotifier(push);
+        notifier.monopolyLost(4L, "terr:T-1", "老街", 24, 0.5);
+        notifier.defended(4L, "terr:T-1", "老街", 13, 15);
+        notifier.decaying(4L, "terr:T-1", "老街", 5);
+        notifier.released(4L, "terr:T-1", "老街");
+        ArgumentCaptor<MemberNotice> c = ArgumentCaptor.forClass(MemberNotice.class);
+        verify(push, times(4)).notifyMemberAfterCommit(eq(4L), c.capture());
+        java.util.List<MemberNotice> all = c.getAllValues();
+        assertEquals("「老街」被夺走了。24 小时内反击，挑战费减半。", all.get(0).message(false).body());
+        assertEquals("老街 was taken. Strike back within 24 hours for half the fee.", all.get(0).message(true).body());
+        assertEquals("「老街」守住了！对手掷出 13，没有达到 15。", all.get(1).message(false).body());
+        assertEquals("老街 held! The challenger rolled 13, short of 15.", all.get(1).message(true).body());
+        assertEquals("Nobody has looked after 老街 for 5 days. Visit soon or it loses a level.", all.get(2).message(true).body());
+        assertEquals("老街 was left alone too long and is open again.", all.get(3).message(true).body());
+        assertEquals("city-terr:T-1", all.get(0).threadId());
+    }
+
 }

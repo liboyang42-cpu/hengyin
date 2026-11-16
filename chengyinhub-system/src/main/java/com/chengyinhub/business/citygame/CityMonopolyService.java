@@ -61,6 +61,8 @@ public class CityMonopolyService {
     private RoamTerritoryService territories;
     private com.chengyinhub.business.locationtrust.ClaimEvidenceService claimEvidence;
     private com.chengyinhub.business.pointsgov.PointsGovernanceService governance;
+    private final CityMonopolyNotices notices = new CityMonopolyNotices();
+    private com.chengyinhub.business.service.impl.RoamFogCellService fogCells;
 
     @Autowired
     public CityMonopolyService(JdbcTemplate jdbc, CityGameMapper mapper, CityMonopolyConfigService configs,
@@ -91,6 +93,14 @@ public class CityMonopolyService {
     /** CITY-7: City Monopoly income goes through the same caps and budget as every other 积分 award. */
     @Autowired(required = false) public void setGovernance(com.chengyinhub.business.pointsgov.PointsGovernanceService governance) {
         this.governance = governance;
+    }
+    /** W7 CITY-16: lit-cell checks read the kept cells (roam_member_fog_cell) while keeping is on. */
+    @Autowired(required = false) public void setFogCells(com.chengyinhub.business.service.impl.RoamFogCellService fogCells) {
+        this.fogCells = fogCells;
+    }
+    /** W7 CITY-11: holders hear about takeovers, defences, decay, release and season results. */
+    @Autowired(required = false) public void setCityNotify(com.chengyinhub.business.growthloops.ICityEventNotifyService notify) {
+        notices.setNotify(notify);
     }
     @Autowired(required = false) public void setClaimEvidence(com.chengyinhub.business.locationtrust.ClaimEvidenceService claimEvidence) {
         this.claimEvidence = claimEvidence;
@@ -836,9 +846,7 @@ public class CityMonopolyService {
                 Integer.class, memberId, new Timestamp(now - cooldown), t.poiId(), t.pointId());
         Integer holdings = jdbc.queryForObject("SELECT COUNT(*) FROM roam_territory WHERE owner_member_id = ? AND rules_kind = 'MONOPOLY' AND status = 'ACTIVE'",
                 Integer.class, memberId);
-        Integer lit = jdbc.queryForObject("SELECT COUNT(*) FROM roam_fog_tile WHERE member_id = ? AND geohash7 = ?",
-                Integer.class, memberId, RoamTerritoryService.encodeGeohash7(t.lat(), t.lng()));
-        boolean litOrNow = (lit != null && lit > 0)
+        boolean litOrNow = !litCells(memberId, List.of(RoamTerritoryService.encodeGeohash7(t.lat(), t.lng()))).isEmpty()
                 || GeoDistanceUtils.haversineMeters(ev.lat(), ev.lng(), t.lat(), t.lng()) <= c.num("city.monopoly.claim.radius_m");
         List<Long> own = hashes("SELECT phash FROM city_claim_evidence WHERE member_id = ? AND target_key = ? AND phash IS NOT NULL", memberId, t.key());
         List<Long> others = hashes("SELECT phash FROM city_claim_evidence WHERE member_id <> ? AND target_key = ? AND phash IS NOT NULL", memberId, t.key());
@@ -908,6 +916,12 @@ public class CityMonopolyService {
                 t.lat(), t.lng(), Math.round(configs.global().num("city.monopoly.yield.visit_radius_m")), memberId, photo, requestId,
                 new Timestamp(now), new Timestamp(now + protH * 3_600_000L), t.tier(), level, invested, t.districtId(), new Timestamp(now), evidenceId);
         return territoryId;
+    }
+
+    /** Same key as {@link #targetOf}, without the merchant lookup (used for the push throttle). */
+    static String placeKeyOf(Map<String, Object> terr) {
+        return terr.get("board_id") != null && terr.get("point_id") != null
+                ? "board:" + terr.get("board_id") + ":" + terr.get("point_id") : "poi:" + terr.get("poi_id");
     }
 
     private Target targetOf(Map<String, Object> terr) {
@@ -1286,11 +1300,17 @@ public class CityMonopolyService {
             long last = CityGameSupport.millis(t.get("last_owner_visit_at") != null ? t.get("last_owner_visit_at") : t.get("claimed_at"));
             long days = Math.max(0, (now - last) / 86_400_000L);
             CityMonopolyRules.Decay d = CityMonopolyRules.decay(c, days, lore);
-            if (d.reminderDay()) reminders.add(Map.of("memberId", owner, "territoryId", id, "daysSinceVisit", days));
+            if (d.reminderDay()) {
+                reminders.add(Map.of("memberId", owner, "territoryId", id, "daysSinceVisit", days));
+                if (d.state() != CityMonopolyRules.DecayState.RELEASED) {
+                    notices.decaying(owner, placeKeyOf(t), id, (String) t.get("title"), now, days); // CITY-11
+                }
+            }
             if (d.state() == CityMonopolyRules.DecayState.RELEASED) {
-                jdbc.update("UPDATE roam_territory SET status = 'RELEASED', released_at = ?, release_reason = 'DECAY', version = version + 1 WHERE territory_id = ? AND status = 'ACTIVE'",
+                int changed = jdbc.update("UPDATE roam_territory SET status = 'RELEASED', released_at = ?, release_reason = 'DECAY', version = version + 1 WHERE territory_id = ? AND status = 'ACTIVE'",
                         new Timestamp(now), id);
                 released++;
+                if (changed > 0) notices.released(owner, placeKeyOf(t), id, (String) t.get("title"), now); // CITY-11
                 continue;
             }
             int applied = ((Number) t.get("decay_levels_applied")).intValue();
@@ -1603,6 +1623,10 @@ public class CityMonopolyService {
             }
             xp(memberId, c.integer("city.monopoly.xp.takeover_win"), "城市大富翁抢夺成功");
             seasonStat(memberId, seasonId, "takeovers", 1);
+            // CITY-11: the former holder hears about it and about the cheaper strike back.
+            notices.lost(defender, memberId, t.key(), territoryId, t.title(), now,
+                    Math.round(c.num("city.monopoly.challenge.revenge_discount.window_h")),
+                    c.num("city.monopoly.challenge.revenge_discount.rate"));
             property = wire(c, jdbc.queryForMap("SELECT * FROM roam_territory WHERE territory_id = ?", newId), memberId, true);
         } else {
             long until = Math.max(terr.get("protected_until") == null ? 0 : CityGameSupport.millis(terr.get("protected_until")),
@@ -1613,6 +1637,7 @@ public class CityMonopolyService {
                     Integer.class, defender, Timestamp.valueOf(day(c, now).atStartOfDay())));
             if (defensesToday < c.num("city.monopoly.xp.defense_daily_max")) xp(defender, c.integer("city.monopoly.xp.defense_win"), "城市大富翁防守成功");
             seasonStat(defender, seasonId, "defenses", 1);
+            notices.defended(defender, memberId, t.key(), territoryId, t.title(), now, roll + mods.total(), dc); // CITY-11
             property = wire(c, jdbc.queryForMap("SELECT * FROM roam_territory WHERE territory_id = ?", territoryId), memberId, false);
         }
         insertChallenge(requestId, terr, seasonId, memberId, defender, fee, dc, roll, roll == 20 || roll == 1, rerolled, mods.parts(),
@@ -1841,11 +1866,17 @@ public class CityMonopolyService {
             throw new CityGameException(400, "BBOX_INVALID", "地图范围无效");
         }
         CityMonopolyConfig c = configs.global();
-        Set<String> lit = new HashSet<>(jdbc.queryForList("SELECT geohash7 FROM roam_fog_tile WHERE member_id = ?", String.class, memberId));
+        // CITY-16: territories first (≤ 500), then only their cells, from the kept cells while keeping is on.
+        List<Map<String, Object>> inView = jdbc.queryForList("SELECT * FROM roam_territory WHERE status = 'ACTIVE' AND rules_kind = 'MONOPOLY' "
+                + "AND latitude BETWEEN ? AND ? AND longitude BETWEEN ? AND ? LIMIT 500", minLat, maxLat, minLng, maxLng);
+        List<String> wanted = new ArrayList<>();
+        for (Map<String, Object> t : inView) {
+            if (t.get("geohash7") != null && ((Number) t.get("owner_member_id")).longValue() != memberId) wanted.add(String.valueOf(t.get("geohash7")));
+        }
+        Set<String> lit = litCells(memberId, wanted);
         List<Map<String, Object>> items = new ArrayList<>();
-        for (Map<String, Object> t : jdbc.queryForList("SELECT * FROM roam_territory WHERE status = 'ACTIVE' AND rules_kind = 'MONOPOLY' "
-                + "AND latitude BETWEEN ? AND ? AND longitude BETWEEN ? AND ? LIMIT 500", minLat, maxLat, minLng, maxLng)) {
-            boolean visible = lit.contains(String.valueOf(t.get("geohash7"))) || ((Number) t.get("owner_member_id")).longValue() == memberId;
+        for (Map<String, Object> t : inView) {
+            boolean visible = (t.get("geohash7") != null && lit.contains(String.valueOf(t.get("geohash7")).toLowerCase(java.util.Locale.ROOT))) || ((Number) t.get("owner_member_id")).longValue() == memberId;
             if (!visible) {
                 Map<String, Object> fogged = new LinkedHashMap<>();
                 fogged.put("districtId", t.get("district_id"));
@@ -1857,6 +1888,36 @@ public class CityMonopolyService {
             }
         }
         return Map.of("items", items, "currency", "POINTS");
+    }
+
+    static final int LIT_CHUNK = 200;
+
+    /**
+     * W7 CITY-16: which of {@code cells} the member has lit. Reads the kept cells (owner decision: revealed cells are
+     * kept for good) and falls back to the 30-day {@code roam_fog_tile} window only while keeping is switched off.
+     * Bounded by the cells asked for, in chunks of {@value #LIT_CHUNK}.
+     */
+    Set<String> litCells(long memberId, java.util.Collection<String> cells) {
+        Set<String> wanted = new java.util.LinkedHashSet<>();
+        for (String cell : cells) {
+            if (cell != null && !cell.isBlank()) wanted.add(cell.trim().toLowerCase(java.util.Locale.ROOT));
+        }
+        Set<String> out = new HashSet<>();
+        if (wanted.isEmpty()) return out;
+        boolean kept = fogCells != null && fogCells.retainEnabled();
+        String sql = kept ? "SELECT cell_key FROM roam_member_fog_cell WHERE member_id = ? AND cell_key IN ("
+                : "SELECT LOWER(geohash7) FROM roam_fog_tile WHERE member_id = ? AND geohash7 IN (";
+        List<String> all = new ArrayList<>(wanted);
+        for (int from = 0; from < all.size(); from += LIT_CHUNK) {
+            List<String> chunk = all.subList(from, Math.min(all.size(), from + LIT_CHUNK));
+            Object[] args = new Object[chunk.size() + 1];
+            args[0] = memberId;
+            for (int i = 0; i < chunk.size(); i++) args[i + 1] = chunk.get(i);
+            String marks = String.join(",", java.util.Collections.nCopies(chunk.size(), "?"));
+            List<String> rows = jdbc.queryForList(sql + marks + ")", String.class, args);
+            if (rows != null) for (String r : rows) if (r != null) out.add(r.toLowerCase(java.util.Locale.ROOT));
+        }
+        return out;
     }
 
     public Map<String, Object> property(Long memberId, String id) {
@@ -2154,8 +2215,9 @@ public class CityMonopolyService {
                     seasonId, String.valueOf(member));
             if (!st.isEmpty() && st.get(0).get("rewarded_at") == null) {
                 Map<String, Object> reward = CityMonopolyRules.soloReward(c, i + 1, solo.size(), ((Number) s.get("claims")).intValue());
+                int rewardXp = reward == null ? 0 : ((Number) reward.getOrDefault("xp", 0)).intValue();
                 if (reward != null) {
-                    xp(member, ((Number) reward.getOrDefault("xp", 0)).intValue(), "城市大富翁赛季奖励");
+                    xp(member, rewardXp, "城市大富翁赛季奖励");
                     if (reward.get("title") != null) {
                         String title = String.valueOf(reward.get("title")).replace("{city}", city == null ? "城市" : city)
                                 .replace("{n}", seasonId.replaceAll("\\D", ""));
@@ -2165,6 +2227,7 @@ public class CityMonopolyService {
                 }
                 jdbc.update("UPDATE city_season_score SET rewarded_at = ? WHERE season_id = ? AND scope = 'SOLO' AND subject_id = ?", new Timestamp(now), seasonId, String.valueOf(member));
                 rewarded++;
+                notices.seasonResult(member, seasonId, i + 1, solo.size(), rewardXp); // CITY-11: once, with the reward mark
             }
         }
         for (String scope : List.of("team", "club")) {

@@ -34,6 +34,15 @@ public class ApiRoamTerritoryController extends BaseController {
         return memberId;
     }
 
+    /** CITY-12: the leaderboard stays readable as before; a signed-in viewer is told which rows are theirs. */
+    private Long viewerOrNull() {
+        try {
+            return getAppUserId();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     private Long member() {
         try {
             return getAppUserId();
@@ -73,7 +82,7 @@ public class ApiRoamTerritoryController extends BaseController {
                                   @RequestParam(required = false) String regionId,
                                   @RequestParam(required = false) String seasonId,
                                   @RequestParam(required = false) Integer limit) {
-        return success(service.leaderboard(boardId, regionId, seasonId, limit));
+        return success(service.leaderboard(viewerOrNull(), boardId, regionId, seasonId, limit));
     }
 
     @GetMapping("/my")
