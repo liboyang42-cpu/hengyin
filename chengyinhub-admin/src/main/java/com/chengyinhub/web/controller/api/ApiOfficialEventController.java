@@ -162,6 +162,7 @@ public class ApiOfficialEventController extends BaseController {
         Map<String, Object> data = new java.util.HashMap<>();
         try {
             data.put("qrcodeUrl", playerWxacodeService.getOrCreateScene("ac." + id));
+            data.put("linkQr", com.chengyinhub.business.service.IPlayerWxacodeService.linkFor("ac." + id));
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }

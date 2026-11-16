@@ -444,6 +444,7 @@ public class ApiMerchantController extends BaseController {
         Map<String, Object> data = new HashMap<>();
         try {
             data.put("qrcodeUrl", playerWxacodeService.getOrCreateScene("sh." + subject));
+            data.put("linkQr", com.chengyinhub.business.service.IPlayerWxacodeService.linkFor("sh." + subject));
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }
