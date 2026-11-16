@@ -1555,7 +1555,7 @@
         <!-- 2. 剧情时间流(沉浸式,多节点) -->
         <view class="cg-pv-panel" wx:if="{{ pvStepKey === 'story' }}">
           <view class="cg-pv-beat" wx:for="{{ pvBeats }}" wx:key="id" wx:for-item="pb">
-            <view class="cg-pv-beat-tag"><view class="cg-pv-beat-line"></view>{{ pb.label }}</view>
+            <view class="cg-pv-beat-tag" wx:if="{{pb.label}}"><view class="cg-pv-beat-line"></view>{{ pb.label }}</view>
             <view class="cg-pv-beat-img" wx:for="{{ pb.imgs }}" wx:key="index" wx:for-item="pimg"><image src="{{ pimg }}" mode="aspectFill" class="cg-pv-beat-img-pic" /></view>
             <view class="cg-pv-beat-text cy-story-hand">{{ pb.text }}</view>
           </view>

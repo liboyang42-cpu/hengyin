@@ -1683,7 +1683,7 @@ test('异常块是标记:之后的段落带档位;内心声音占一段带颜色
       { type: 'odd', key: 'o1', level: 3 },
       { type: 'text', content: '之后' },
       { type: 'voice', key: 'v1', who: '规矩', content: '回到推荐路线上。' },
-      { type: 'voice', key: 'v2', who: '旁白', content: '不认识的声音不出' },
+      { type: 'voice', key: 'v2', who: '未配置角色', content: '不认识的声音不出' },
     ],
   }, [])
 
@@ -2187,3 +2187,43 @@ test('章节翻转:进第二章时带上第一章完成页与三面;通关只在
   assert.equal(page.data.finale.show, false)
   assert.equal(saved, 1)
 })
+
+test('玩家故事保留叙事与对白，精确旁白元数据不成为正文前缀', () => {
+  const prose = '她说，旁白这个词让她想起镜头外的雨。';
+  const page = makePage({ directorNotes: 'AUTHOR_ONLY', blocks: [
+    { type: 'authorNote', content: 'AUTHOR_ONLY' },
+    { type: 'text', who: '旁白', content: prose, directorNotes: 'AUTHOR_ONLY', answer: 'SECRET_ANSWER' },
+    { type: 'text', who: '阿澜', content: '镜头里的这句话是我说的。' },
+    { type: 'text', who: '主持人', content: '请先读你手里的信。' },
+    { type: 'voice', who: '旁白', content: '雨停了，信封仍在掌心。' },
+  ] }, []);
+  page.openChapterFull();
+  assert.deepEqual(page.data.chapterParas.map(p=>p.kind), ['text','voice','voice','text']);
+  assert.equal(page.data.chapterParas[0].text, prose);
+  assert.doesNotMatch(JSON.stringify(page.data.chapterParas), /AUTHOR_ONLY|SECRET_ANSWER/);
+  assert.equal(page.data.chapterParas[1].who,'阿澜');assert.equal(page.data.chapterParas[1].text,'镜头里的这句话是我说的。');
+  assert.equal(page.data.chapterParas[2].who,'主持人');assert.equal(page.data.chapterParas[3].text,'雨停了，信封仍在掌心。');
+});
+test('玩家叙事不显示制作条件和旁白角色标题，普通继续不回流',()=>{
+  const wxml=read('pages/play/index.wxml');
+  assert.doesNotMatch(wxml,/class="chfull__cond"/);
+  assert.match(wxml,/class="chfull__voice-t"/);
+  assert.doesNotMatch(wxml,/class="chfull__voice-t cy-story-hand"/);
+  assert.doesNotMatch(wxml,/aria-label="[^"\n]*旁白/);
+  assert.doesNotMatch(wxml,/bindtap="continueStoryGame"[^>]*>继续<\/view>/);
+});
+
+test('节点回放声音与揭示使用同一标签规则，正文仍原样保留', () => {
+  const page = makePage({ blocks: [
+    { type: 'node', nodeId: 1 },
+    { type: 'reveal', who: '旁白', content: '信纸上的旁白二字没有褪色。' }
+  ] }, [{ nodeId: 1, done: true, chapterId: 1 }]);
+  page._storyVoices = { '1': [{ who: '旁白', text: '镜头外传来雨声。' }, { who: '阿澜', text: '我听见了。' }] };
+  page.openChapterFull();
+  const narrative = page.data.chapterParas.find(p => p.text === '镜头外传来雨声。');
+  assert.equal(narrative.kind, 'text');
+  assert.equal(page.data.chapterParas.find(p => p.text === '我听见了。').who, '阿澜');
+  const reveal = page.data.chapterParas.find(p => p.kind === 'reveal');
+  assert.equal(reveal.who, '');
+  assert.deepEqual(reveal.lines, ['信纸上的旁白二字没有褪色。']);
+});

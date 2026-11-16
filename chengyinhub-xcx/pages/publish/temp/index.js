@@ -1,3 +1,4 @@
+const { playerStoryLabel } = require('../../../utils/story-player-label.js');
 const templateAdoption = require('../utils/publish/template-adoption.js');
 // R11 g1 F2:服务端只在带 outcomeRules 时才把这两段当作一站玩法(AdvancedGameConfigValidator.hasEnabledMechanic)
 const OUTCOME_REQUIRED_SECTIONS = ['check', 'album'];
@@ -2970,7 +2971,7 @@ Page({
       const beats = this.data.storyBeats.filter(b => (b.text && b.text.trim()) || (b.imgs && b.imgs.length));
       patch.pvBeats = beats.map((b, n) => ({
         id: n,
-        label: (b.tag && b.tag.trim()) ? b.tag : ('时刻 ' + (n + 1)),
+        label: playerStoryLabel(b.tag),
         text: b.text || '',
         imgs: Array.isArray(b.imgs) ? b.imgs : []
       }));

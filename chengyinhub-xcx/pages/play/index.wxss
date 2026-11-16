@@ -555,8 +555,6 @@ page { background: var(--cy-color-bg-page); }
 .chfull__para.odd2.is-flick .chfull__voice-t{ opacity:1; transform:translateX(4rpx); }
 .chfull__para.odd3 .chfull__img, .chfull__para.odd3 .chfull__album-img{ filter:grayscale(1) contrast(1.2); }
 .chfull__para.odd3:not(.chfull__para--wide){ font-family:ui-monospace, Menlo, monospace; letter-spacing:.02em; }
-/* 试玩里条件正文头上的小字「选过 X 才看到」(真玩家看不到这一行) */
-.chfull__cond{ display:block; margin-bottom:8rpx; font-size:var(--cy-font-caption); color:var(--cy-color-text-tertiary); letter-spacing:2rpx; }
 .chfull__voice{ margin:0 24rpx; text-align:left; }   /* 宽段 40rpx + 24rpx = 原型 .voice 左右 32px */
 .chfull__voice-n{ display:flex; align-items:center; gap:16rpx; font-size:var(--cy-font-caption); letter-spacing:4rpx; font-weight:800; color:var(--vc); }
 .chfull__voice-dot{ width:12rpx; height:12rpx; border-radius:50%; background:var(--vc); box-shadow:0 0 20rpx var(--vc); } /* ds-ok 原型 .vn b::before 发光点 */

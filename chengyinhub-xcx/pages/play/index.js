@@ -168,6 +168,7 @@ const packSkip = require('./utils/pack-skip.js');
 const { ticketWalletUrl } = require('../../utils/ticket-wallet-url.js');
 /* 内心声音(原型 VOICES 表原值);第 3 档异常时两个声音改名(越往后越像机器)。 */
 const STORY_VOICE_COLORS = { 规矩: '#B9A7FF', 窗外: '#5CD6C8', 心: '#FF9F80', 精密: '#7EB6FF', 咔哒: '#FF6B6B' };   /* ds-ok 原型 VOICES */
+const { playerStoryLabel } = require('../../utils/story-player-label.js');
 const STORY_VOICE_ALT = { 规矩: '进程', 窗外: '传感器' };
 /** 咔哒改写记录 → 故事流里那几句内心声音(会话视图与 /nodes 回包共用一份写法) */
 /** 初始状态页的几行:作者开了的精力 / 幸运 + 可见属性,取回执里的当前值 */
@@ -3860,7 +3861,11 @@ Page({
     let autoNodeId = null;   // 读到的第一个内嵌玩法:不出「进入」,直接铺开(2026-09-24 对照原型)
     // 这一站玩法里发生过的内心声音(咔哒等)接在玩法后面;重铺整章也不能丢
     const pushVoices = (nodeId) => ((this._storyVoices || {})[String(nodeId)] || [])
-      .forEach((v) => items.push({ kind: 'voice', who: v.who, color: v.color, text: v.text, mood: curMood, odd: curOdd }));
+      .forEach((v) => {
+        const who = playerStoryLabel(v.who);
+        if (who) items.push({ kind: 'voice', who, color: v.color, text: v.text, mood: curMood, odd: curOdd });
+        else push(v.text);
+      });
     if (blocks && blocks.length) {
       for (let i = 0; i < blocks.length; i += 1) {
         const b = blocks[i];
@@ -3908,7 +3913,10 @@ Page({
         if (b.type === 'text') {
           const previousOdd = curOdd;
           if (b.level != null) curOdd = Math.max(0, Math.min(3, Number(b.level) || 0));
-          push(b.who ? String(b.who) + '：' + String(b.content || '') : b.content, condOf(b));
+          const who = playerStoryLabel(b.who);
+          if (who) items.push({ kind: 'voice', who, color: STORY_VOICE_COLORS[who] || 'var(--cy-color-text-secondary)',
+            text: keepNumerals(applyStoryVars(String(b.content || ''), vars)), mood: curMood, odd: curOdd });
+          else push(b.content, condOf(b));
           curOdd = previousOdd;
         }
         else if ((b.type === 'image' || b.type === 'audio') && b.url) {
@@ -3929,7 +3937,7 @@ Page({
           if (CHAPTER_ATMOSPHERE_VALUES.indexOf(b.mood) >= 0) curMood = b.mood;
         } else if (b.type === 'reveal' && b.content) {
           const lines = String(b.content).split(/\n+/).map((x) => applyStoryVars(x.trim(), vars)).filter(Boolean);
-          if (lines.length) items.push({ kind: 'reveal', who: String(b.who || ''), lines, mood: curMood, odd: curOdd });
+          if (lines.length) items.push({ kind: 'reveal', who: playerStoryLabel(b.who), lines, mood: curMood, odd: curOdd });
         } else if (b.type === 'gallery') {
           // 图片组(2026-11-10 l-editor,编辑器原型 v2):作者按 1–4 格版式配的一组图。这里先按每张一段图落地
           // (与 image 块同一个渲染分支,layout / altText 原样带着);主题内的整组网格由 l-play 接手。
@@ -3945,6 +3953,8 @@ Page({
           items.push({ kind: 'divider', text: '', mood: curMood, odd: curOdd });   // 作者分割线:一条细线,仍占一个 .chfull__para
         } else if (b.type === 'odd') {
           curOdd = Math.max(0, Math.min(3, Number(b.level) || 0));   // 标记块,同 mood 不产出 item
+        } else if (b.type === 'voice' && typeof b.who === 'string' && b.who.trim() && !playerStoryLabel(b.who) && b.content) {
+          push(b.content, condOf(b));
         } else if (b.type === 'voice' && STORY_VOICE_COLORS[b.who] && b.content) {
           items.push({ kind: 'voice', who: (curOdd >= 3 && STORY_VOICE_ALT[b.who]) || b.who, color: STORY_VOICE_COLORS[b.who],
             text: applyStoryVars(String(b.content), vars), mood: curMood, odd: curOdd, cond: condOf(b) });

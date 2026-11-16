@@ -1,4 +1,4 @@
-// P-60(2026-10-27):故事流手写体加载器 —— 未配置 / 失败回落系统字体,只给故事流正文和对白挂样式类。
+// 故事流叙事使用手写体；角色对白使用系统字体。未配置 / 加载失败均回落系统字体。
 const { test } = require('node:test')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
@@ -55,11 +55,12 @@ test('配置了 https 地址:全局加载一次,成功 / 失败都通知所有�
   assert.deepEqual(results, [false, false, false], '失败后不再重试,直接回落')
 })
 
-test('样式类只挂在故事流正文 / 对白上,字族带系统字体回落;仓里不放字体文件', () => {
+test('叙事与对白字体区分，字族带系统字体回落;仓里不放字体文件', () => {
   const wxml = read('pages/play/index.wxml')
   assert.match(wxml, /chfull__para--wide' : 'cy-story-hand'/)
-  assert.match(wxml, /class="chfull__reveal-b cy-story-hand"/)
-  assert.match(wxml, /class="chfull__voice-t cy-story-hand"/)
+  assert.ok(wxml.includes('class="chfull__reveal-b {{item.who ? \'\' : \'cy-story-hand\'}}"'))
+  assert.match(wxml, /class="chfull__voice-t"/)
+  assert.doesNotMatch(wxml, /class="chfull__voice-t cy-story-hand"/)
   assert.doesNotMatch(wxml, /st-line--ttl[^"]*cy-story-hand/, '标题不换字体')
   assert.match(read('pages/publish/temp/index.wxml'), /class="cg-pv-beat-text cy-story-hand"/)
   for (const file of ['pages/play/index.wxss', 'pages/publish/temp/index.wxss']) {

@@ -134,7 +134,7 @@
       <view class="fx-story__act" wx:if="{{themeBag.sessionId}}" bindtap="openThemeBackpack" aria-role="button" aria-label="背包" hover-class="cy-pressed" hover-stay-time="80"><view class="ptb-bag" aria-hidden="true"></view></view>
       <view class="fx-story__act" wx:if="{{helpPanel.enabled && advancedPlay.show && playKit.kit && !playKit.kit.done && helpPanel.nodeId == advancedPlay.node.nodeId}}" bindtap="openHelpPanel" aria-role="button" aria-label="提示" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="info" size="30" /></view>
       <view class="fx-story__act" wx:if="{{hasCasebook}}" bindtap="openCasebook" aria-role="button" aria-label="案件册" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="draft" size="30" /></view>
-      <view class="fx-story__act {{audioNodeId === 'chapter' && audioError ? 'is-error' : ''}}" wx:if="{{chapter.audioUrl}}" bindtap="toggleStoryAudio" aria-role="button" aria-label="{{audioNodeId === 'chapter' && audioLoading ? '旁白加载中' : (audioNodeId === 'chapter' && audioError ? '旁白播放失败，点此重试' : (audioNodeId === 'chapter' && audioPlaying ? '关掉旁白' : '播放旁白'))}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="{{audioNodeId === 'chapter' && audioLoading ? 'clock' : (audioNodeId === 'chapter' && audioError ? 'warning' : 'play')}}" size="30" /></view>
+      <view class="fx-story__act {{audioNodeId === 'chapter' && audioError ? 'is-error' : ''}}" wx:if="{{chapter.audioUrl}}" bindtap="toggleStoryAudio" aria-role="button" aria-label="{{audioNodeId === 'chapter' && audioLoading ? '故事音频加载中' : (audioNodeId === 'chapter' && audioError ? '故事音频播放失败，点此重试' : (audioNodeId === 'chapter' && audioPlaying ? '关闭故事音频' : '播放故事音频'))}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="{{audioNodeId === 'chapter' && audioLoading ? 'clock' : (audioNodeId === 'chapter' && audioError ? 'warning' : 'play')}}" size="30" /></view>
       <view class="fx-story__act" bindtap="toggleSessionTools" aria-role="button" aria-label="{{sessionToolsOpen ? '收起游玩工具' : '游玩工具'}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="more" size="30" /></view>
     </view>
   </view>
@@ -207,15 +207,14 @@
              不必重铺整章。show 传 true —— 它在流里露着,不由弹层那套控制。 -->
         <!-- 终章反转:对面回的话,左侧气泡;读到这一块整章翻成对话框(.chfull.is-chat) -->
         <view wx:elif="{{item.kind === 'divider'}}" class="chfull__divider" aria-hidden="true"></view>
-        <view wx:elif="{{item.kind === 'reveal'}}" class="chfull__reveal" aria-role="text" aria-label="{{item.who || '对面'}}回复">
+        <view wx:elif="{{item.kind === 'reveal'}}" class="chfull__reveal" aria-role="text" aria-label="{{item.who ? item.who + '回复' : '故事片段'}}">
           <view wx:if="{{item.who}}" class="chfull__reveal-who">{{item.who}}</view>
-          <view class="chfull__reveal-b cy-story-hand" wx:for="{{lk.rows(item.lines)}}" wx:for-item="line" wx:key="key">{{line.text}}</view>
+          <view class="chfull__reveal-b {{item.who ? '' : 'cy-story-hand'}}" wx:for="{{lk.rows(item.lines)}}" wx:for-item="line" wx:key="key">{{line.text}}</view>
         </view>
         <!-- 内心声音(咔哒等):原型 .voice —— 左对齐,名字前一颗发光的点,颜色随说话的那个声音 -->
         <view wx:elif="{{item.kind === 'voice'}}" class="chfull__voice" style="--vc:{{item.color}}" aria-role="text" aria-label="{{item.who}}:{{item.text}}">
-          <text class="chfull__cond" wx:if="{{item.cond}}">{{item.cond}}</text>
           <view class="chfull__voice-n"><text class="chfull__voice-dot"></text>{{item.who}}</view>
-          <view class="chfull__voice-t cy-story-hand">{{item.text}}</view>
+          <view class="chfull__voice-t">{{item.text}}</view>
         </view>
         <view wx:elif="{{item.kind === 'thought'}}" class="chfull__thought" aria-role="text" aria-label="得到一个念头：{{item.name}}">
           <view class="chfull__thought-orb"></view>
@@ -253,7 +252,7 @@
         </view>
         <!-- V3-15:延伸任务不写进正文,流末尾一行入口,点开半屏(utils/story-kit-card.js) -->
         <view wx:elif="{{item.kind === 'tasks'}}" class="chfull__tasks" bindtap="openStoryTasks" aria-role="button" aria-label="延伸任务，{{item.count}} 个" hover-class="chfull__tasks--press" hover-stay-time="80"><view class="chfull__tasks-ico" aria-hidden="true"><cy-icon name="flag" size="32" /></view><text class="chfull__tasks-t">延伸任务</text><text class="chfull__tasks-n">{{item.count}}</text><cy-icon name="chevron-right" size="28" /></view>
-        <block wx:else><text class="chfull__cond" wx:if="{{item.cond}}">{{item.cond}}</text><text wx:if="{{item.chars}}" wx:for="{{item.chars}}" wx:for-item="c" wx:key="i" class="tfx__c {{c.raw ? 'is-raw' : ''}}" style="--i:{{c.i}};--r:{{c.r}};--dx:{{c.dx}}px;--dy:{{c.dy}}px" aria-hidden="true">{{c.ch}}</text><block wx:if="{{!item.chars}}">{{item.text}}</block><text wx:if="{{item.chars}}" class="tfx__sr">{{item.text}}</text></block>
+        <block wx:else><text wx:if="{{item.chars}}" wx:for="{{item.chars}}" wx:for-item="c" wx:key="i" class="tfx__c {{c.raw ? 'is-raw' : ''}}" style="--i:{{c.i}};--r:{{c.r}};--dx:{{c.dx}}px;--dy:{{c.dy}}px" aria-hidden="true">{{c.ch}}</text><block wx:if="{{!item.chars}}">{{item.text}}</block><text wx:if="{{item.chars}}" class="tfx__sr">{{item.text}}</text></block>
       </view>
       <view class="chfull__end" wx:if="{{chapterFlowAction && ((chapterParas[chapterParas.length - 1].kind !== 'game' && chapterParas[chapterParas.length - 1].kind !== 'kit' && chapterParas[chapterParas.length - 1].kind !== 'journeyCheck') || chapterParas[chapterParas.length - 1].done)}}">
         <view class="chfull__continue" bindtap="continueChapterStory" aria-role="button" aria-label="{{chapterFlowAction}}" hover-class="cy-pressed" hover-stay-time="80">{{chapterFlowAction}}</view>
