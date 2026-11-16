@@ -96,7 +96,17 @@ Existing tests that still pass: `MemberIdentityServiceTest` (10), `PublisherIden
 
 ### Suite totals
 
-RESULTS_PLACEHOLDER
+These ran in the cloud session container, not on the Mac. Command: `LANG=C.UTF-8 LC_ALL=C.UTF-8 mvn -B ... test -Dmaven.test.failure.ignore=true`, plus `-DargLine=-Xmx6g`. Without the larger heap, the first run's surefire fork ran out of memory after 1,347 classes and the rest of the suite never ran.
+
+| Run | Tests | Failures | Errors | Skipped | Build |
+|---|---|---|---|---|---|
+| Module: `-pl chengyinhub-admin -am` | 19,947 | 0 | 34 | 713 | SUCCESS |
+| Full suite (all modules) | 19,947 | 0 | 34 | 713 | SUCCESS |
+
+`MerchantIdentityR3Test` passed in both runs (13 tests, 0 failures). All tests live in `chengyinhub-admin`, which is why the two totals match.
+
+All 34 errors come from 14 `com.chengyinhub.business.it.*MyBatisTest` classes. Each one fails with `Communications link failure` while creating its MySQL test database (`MybatisItDatabase.recreate`). The container has no MySQL, and AGENTS.md keeps MySQL on the test VPS and says not to start a local one. None of these classes touch this change. They need to be rerun on the VPS:
+AuditReportLane, ClubCrmCheckinDetail, ClubDissolutionGate, ClubTopicManageStats, ComplianceF7, MerchantDashboardAggregation, MerchantNumbersAgree, O08MemberOnlyTopicLocation, PublicActivityScopeGate, PublicTopicFeedGate, PublicVisibility, RedemptionRewardClawback, TopicDraftVisibility, TopicSyncPostRestore (each name ends in `MyBatisTest`).
 
 ## Not changed / follow-ups
 
