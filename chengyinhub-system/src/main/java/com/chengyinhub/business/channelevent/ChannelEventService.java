@@ -27,6 +27,7 @@ import com.chengyinhub.business.domain.dto.CmsActivityPublishRequest;
 import com.chengyinhub.business.mapper.channel.platform.ChannelPlatformMapper;
 import com.chengyinhub.business.moneyswitch.MoneyArea;
 import com.chengyinhub.business.moneyswitch.MoneySwitchService;
+import com.chengyinhub.business.service.IImRealtimePublisher;
 import com.chengyinhub.business.service.IPushFanoutService;
 import com.chengyinhub.business.service.channel.platform.ChannelCapability;
 import com.chengyinhub.business.service.channel.platform.ChannelGuildAccess;
@@ -84,8 +85,15 @@ public class ChannelEventService
     private AppMediaAssetService media;
     @Autowired(required = false)
     private com.chengyinhub.business.mapper.AppMediaAssetMapper mediaAssets;
+    /** W7 SOC-7: open chats learn about a new card at once, like any other new message. */
+    @Autowired(required = false)
+    @Lazy
+    private IImRealtimePublisher realtime;
 
     public ChannelEventService() { }
+
+    /** Tests: the real-time publisher is optional and injected lazily in the app. */
+    void setRealtime(IImRealtimePublisher realtime) { this.realtime = realtime; }
 
     ChannelEventService(ChannelEventMapper mapper, ChannelPlatformMapper channels, ChannelGuildAccess access,
             MoneySwitchService moneySwitch, InGameChannelService inGameChannels, AppMediaAssetService media)
@@ -221,6 +229,29 @@ public class ChannelEventService
         }
     }
 
+    /**
+     * W7 SOC-7: the review decision on an activity posts its held channel card (approved) or closes it (refused,
+     * removed). Called after the decision commits, so it runs in its own transaction. Idempotent: only a row still
+     * waiting is touched, and {@code markPosted ... AND status = 0} refuses a second post.
+     *
+     * @return true when a card was posted
+     */
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+    public boolean syncByActivity(long activityId)
+    {
+        if (activityId <= 0) return false;
+        ChannelEventRow row = mapper.selectByActivity(activityId);
+        if (row == null || !Integer.valueOf(ChannelEventRow.STATUS_WAITING_REVIEW).equals(row.getStatus())) return false;
+        Map<String, Object> state = mapper.selectActivityState(activityId);
+        if (activityVisible(state))
+        {
+            postCard(row);
+            return Integer.valueOf(ChannelEventRow.STATUS_POSTED).equals(row.getStatus());
+        }
+        if (activityGone(state)) mapper.markCancelled(row.getId());
+        return false;
+    }
+
     static boolean activityVisible(Map<String, Object> state)
     {
         return state != null && toLong(state.get("status")) == 1 && toLong(state.get("publishStatus")) == 1
@@ -252,20 +283,38 @@ public class ChannelEventService
         row.setStatus(ChannelEventRow.STATUS_POSTED);
         mapper.touchConversation(conversationId, text.length() > 200 ? text.substring(0, 200) : text);
         mapper.fanOutUnread(conversationId, row.getPosterMemberId());
-        pushAfterCommit(messageId);
+        pushAfterCommit(conversationId, messageId, row.getPosterMemberId());
     }
 
-    private void pushAfterCommit(long messageId)
+    private void pushAfterCommit(long conversationId, long messageId, long posterMemberId)
     {
-        if (pushFanout == null) return;
+        if (pushFanout == null && realtime == null) return;
         Runnable push = () -> {
-            try
+            if (pushFanout != null)
             {
-                pushFanout.chatMessageSent(messageId);
+                try
+                {
+                    pushFanout.chatMessageSent(messageId);
+                }
+                catch (RuntimeException e)
+                {
+                    log.warn("频道活动卡片推送登记失败 messageId={}", messageId);
+                }
             }
-            catch (RuntimeException e)
+            if (realtime != null)
             {
-                log.warn("频道活动卡片推送登记失败 messageId={}", messageId);
+                // W7 SOC-7: only the "new message" hint, as for any message; clients read the card through their own reads.
+                Map<String, Object> hint = new LinkedHashMap<>();
+                hint.put("message_id", String.valueOf(messageId));
+                hint.put("sender_id", String.valueOf(posterMemberId));
+                try
+                {
+                    realtime.publish(conversationId, IImRealtimePublisher.MESSAGE_CREATED, hint);
+                }
+                catch (RuntimeException e)
+                {
+                    log.warn("频道活动卡片实时提示失败 messageId={}", messageId);
+                }
             }
         };
         if (TransactionSynchronizationManager.isSynchronizationActive())

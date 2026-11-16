@@ -31,6 +31,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.chengyinhub.business.channelevent.mapper.ChannelEventMapper;
 import com.chengyinhub.business.mapper.channel.platform.ChannelPlatformMapper;
 import com.chengyinhub.business.moneyswitch.MoneySwitchService;
+import com.chengyinhub.business.service.IImRealtimePublisher;
 import com.chengyinhub.business.service.channel.platform.ChannelCapability;
 import com.chengyinhub.business.service.channel.platform.ChannelGuildAccess;
 import com.chengyinhub.business.service.channel.platform.ChannelPermissionCalculator;
@@ -267,6 +268,49 @@ class ChannelEventServiceTest
         when(mapper.selectActivityState(ACTIVITY)).thenReturn(activity(2, 0));
         service.syncWaiting(CHANNEL);
         verify(mapper).markCancelled(EVENT);
+    }
+
+    /** W7 SOC-7: the review decision itself posts the held card (once) or closes it, without waiting for a list read. */
+    @Test
+    void approvalPostsTheHeldCardOnceAndRefusalClosesIt()
+    {
+        IImRealtimePublisher realtime = mock(IImRealtimePublisher.class);
+        service.setRealtime(realtime);
+        ChannelEventRow e = event(ChannelEventRow.STATUS_WAITING_REVIEW, 24 * HOUR, 26 * HOUR);
+        when(mapper.selectByActivity(ACTIVITY)).thenReturn(e);
+
+        when(mapper.selectActivityState(ACTIVITY)).thenReturn(activity(0, 0));
+        assertFalse(service.syncByActivity(ACTIVITY), "still in review: nothing posted");
+        verify(mapper, never()).insertCardMessage(anyMap());
+
+        when(mapper.selectActivityState(ACTIVITY)).thenReturn(activity(1, 1));
+        assertTrue(service.syncByActivity(ACTIVITY));
+        verify(mapper).insertCardMessage(anyMap());
+        verify(mapper).markPosted(EVENT, 5555L);
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Map<String, Object>> hint = ArgumentCaptor.forClass(Map.class);
+        verify(realtime).publish(eq(CHANNEL), eq(IImRealtimePublisher.MESSAGE_CREATED), hint.capture());
+        assertEquals("5555", hint.getValue().get("message_id"), "ids only, never the card text");
+        assertEquals(2, hint.getValue().size());
+
+        assertFalse(service.syncByActivity(ACTIVITY), "already posted: a second decision posts nothing");
+        verify(mapper).insertCardMessage(anyMap());
+
+        ChannelEventRow refused = event(ChannelEventRow.STATUS_WAITING_REVIEW, 24 * HOUR, 26 * HOUR);
+        when(mapper.selectByActivity(ACTIVITY)).thenReturn(refused);
+        when(mapper.selectActivityState(ACTIVITY)).thenReturn(activity(2, 0));
+        assertFalse(service.syncByActivity(ACTIVITY));
+        verify(mapper).markCancelled(EVENT);
+        assertFalse(service.syncByActivity(0L));
+    }
+
+    @Test
+    void aCardPostedWithoutARealtimePublisherStillPosts()
+    {
+        ChannelEventRow e = event(ChannelEventRow.STATUS_WAITING_REVIEW, 24 * HOUR, 26 * HOUR);
+        when(mapper.selectByActivity(ACTIVITY)).thenReturn(e);
+        when(mapper.selectActivityState(ACTIVITY)).thenReturn(activity(1, 1));
+        assertTrue(service.syncByActivity(ACTIVITY));
     }
 
     @Test
