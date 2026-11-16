@@ -68,7 +68,7 @@ public class ShopGameSessionService {
     public Map<String, Object> start(Long memberId, Long playId) {
         requireMember(memberId);
         if (playId == null || playId <= 0) throw new MerchantGapException(400, "INVALID_REQUEST", "请求无效");
-        if (!plays.playOpen()) throw new MerchantGapException(409, "SHOP_GAME_NOT_OPEN", "店铺小游戏还没开放");
+        if (!plays.playOpen()) throw new MerchantGapException(409, "SHOP_GAME_NOT_OPEN", "店铺小游戏还没开放，开放后再来");
         requireRuntime();
         List<Map<String, Object>> rows = jdbc.queryForList(ShopGamePlayService.PLAY_COLUMNS
                 + " WHERE id = ? AND member_id = ? FOR UPDATE", playId, memberId);
@@ -129,7 +129,7 @@ public class ShopGameSessionService {
         requireMember(memberId);
         if (body == null) throw new MerchantGapException(400, "INVALID_REQUEST", "请求无效");
         requireRuntime();
-        if (!plays.playOpen()) throw new MerchantGapException(409, "SHOP_GAME_NOT_OPEN", "店铺小游戏还没开放");
+        if (!plays.playOpen()) throw new MerchantGapException(409, "SHOP_GAME_NOT_OPEN", "店铺小游戏还没开放，开放后再来");
         Long sessionId = body.get("sessionId") instanceof Number n ? n.longValue() : null;
         Integer version = body.get("version") instanceof Number v && v.doubleValue() == Math.rint(v.doubleValue()) ? v.intValue() : null;
         String key = body.get("idempotencyKey") == null ? "" : body.get("idempotencyKey").toString().trim();

@@ -233,7 +233,7 @@ public class ShopGamePlayService {
     public Map<String, Object> finish(Long memberId, Map<String, Object> body) {
         if (memberId == null || memberId <= 0) throw new MerchantGapException(401, "UNAUTHORIZED", "请先登录");
         if (body == null) throw new MerchantGapException(400, "INVALID_REQUEST", "请求无效");
-        if (!playOpen()) throw new MerchantGapException(409, "SHOP_GAME_NOT_OPEN", "店铺小游戏还没开放");
+        if (!playOpen()) throw new MerchantGapException(409, "SHOP_GAME_NOT_OPEN", "店铺小游戏还没开放，开放后再来");
         long playId = positive(body.get("playId"));
         List<Map<String, Object>> rows = jdbc.queryForList(PLAY_COLUMNS + " WHERE id = ? AND member_id = ? FOR UPDATE",
                 playId, memberId);

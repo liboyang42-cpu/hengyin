@@ -2773,10 +2773,10 @@ Page({
         that._joinFxTimer = setTimeout(afterFx, that.data.reducedMotion ? 0 : 900);
       } else {
         that.setData({ joinFx: '' });
-        cyToast((res && res.msg) || '加入失败');
+        cyToast((res && res.msg) || '加入失败，请稍后再试');
       }
     };
-    const onFailed = function () { that.setData({ joinFx: '' }); cyToast('加入失败'); };
+    const onFailed = function () { that.setData({ joinFx: '' }); cyToast('加入失败，请稍后再试'); };
     if (viaInvite) {
       app.sendRequest({
         url: '/api/club/invites/' + this._inviteCode + '/accept', method: 'POST',

@@ -39,7 +39,7 @@ public class ApiShareLinkController extends BaseController
         try {
             return success(shareLinks.link(path, id));
         } catch (IllegalArgumentException invalid) {
-            return AjaxResult.error(400, "链接不对");
+            return AjaxResult.error(400, "这个链接打不开，请对方重新分享");
         }
     }
 }
