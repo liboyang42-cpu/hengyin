@@ -456,7 +456,8 @@ Page({
       const cardTarget = systemRecord || !!currentOriginalUrl || !!genericAction;
       // 对方气泡上方「名字·时间」一行用的名字:单聊/客服/系统统一用会话对方名(name)。
       // 小程序不露出群聊(见 list/index.js:tabOf),故无需逐条 senderName。
-      return Object.assign({}, m, { timeDivider: divider, noticeTime: t ? fmtAbs(t) : '', activityNotice: !!activityNotice, card: card, cardTarget, systemRecord, currentOriginalUrl, genericAction, genericButtons, displayContent: displayContent,
+      const channelEvent = !!systemCard.channelEventUrl(m);
+      return Object.assign({}, m, { timeDivider: divider, noticeTime: t ? fmtAbs(t) : '', activityNotice: !!activityNotice, channelEvent, card: card, cardTarget, systemRecord, currentOriginalUrl, genericAction, genericButtons, displayContent: displayContent,
         displayName: that.data.name || '' });
     });
     if (that._reviewMessageId && !that._reviewMatches(decorated.find(row => String(row.id) === String(that._reviewMessageId)))) that.closeReviewResult();
@@ -1108,6 +1109,15 @@ Page({
     this.setData({ reviewResult: { taskId: systemCard.positiveId(result.taskId), bizId: systemCard.positiveId(result.bizId),
       outcome: result.outcome, reason: result.reason, followUp: result.followUp }, reviewDetail: null });
     if (shouldLoadAuditDetail(message.card)) this.loadReviewDetail(result.taskId);
+  },
+  // W7 SOC-7: tapping a channel event card opens its activity. The url is rebuilt from the stored message, never the dataset.
+  onChannelEventTap(e) {
+    if (this._disposed || this._hidden || this._navigating) return;
+    const id = e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.msg;
+    const message = systemCard.positiveId(id) && (this.data.msgs || []).find(row => String(row.id) === String(id));
+    if (!message || message.conversationId != null && String(message.conversationId) !== String(this.data.conversationId)) return;
+    const url = systemCard.channelEventUrl(message);
+    if (url) this._openCardTarget(url, null);
   },
   onCurrentCard(e) { this._openCardOriginal(this._cardMessage(e.currentTarget.dataset.msg)); },
   _openGenericCard(message, index) {
