@@ -1140,6 +1140,8 @@ public class ApiRoamController extends BaseController {
         if (!validLat(poiLat) || !validLng(poiLng) || !validLat(curLat) || !validLng(curLng)) return refuse(ErrorCode.LOCATION_INVALID, "定位无效");
 
         locationConsent.requireCurrentAgreement(memberId);
+        // CITY-5: the app sends its accuracy as locAccuracy (fix signals); rent needs it as hAcc.
+        hAcc = com.chengyinhub.business.locationtrust.LocationSignals.accuracy(hAcc);
         Map<String, Object> data = new LinkedHashMap<>();
         // SEC-06: the player's fix is scored before anything is credited. Poor accuracy / future time = retry;
         // simulated or impossible speed = nothing credited (visit not recorded, so an honest retry later still counts).

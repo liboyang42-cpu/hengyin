@@ -1191,14 +1191,18 @@ Page({
       const reveals = (this._historyReveals || []).concat(this._reveals || []);
       if (!isPointRevealed({ lat: d.latitude, lng: d.longitude }, reveals, REVEAL_M)) return;
     }
-    const c = this.data.center || {};
-    req('/api/roam/checkin', 'POST', {
+    // CITY-5:只用真实定位(不用地图中心,也不拿地点坐标冒充),并带上精度 hAcc,地主才能收到租金。
+    const c = this._realAnchor;
+    if (!c || c.lat == null || c.lng == null) { cyToast('先开启定位再点亮'); return; }
+    const body = {
       name: d.name || '',
       poiLat: String(d.latitude),
       poiLng: String(d.longitude),
-      curLat: String(c.lat != null ? c.lat : d.latitude),
-      curLng: String(c.lng != null ? c.lng : d.longitude),
-    }).then((res) => {
+      curLat: String(c.lat),
+      curLng: String(c.lng),
+    };
+    if (this._realAccuracy != null) body.hAcc = String(this._realAccuracy);
+    req('/api/roam/checkin', 'POST', body).then((res) => {
       const r = (res && res.data) || {};
       if (r.tooFar) { cyToast('离得有点远，走近点'); return; }
       if (r.participating && r.poiId) {
@@ -4267,6 +4271,7 @@ Page({
     const prev = this._realAnchor;
     const p = accepted.point;
     this._realAnchor = p; this._player = p;
+    this._realAccuracy = loc && Number.isFinite(loc.accuracy) ? loc.accuracy : null; // CITY-5:点到店带上定位精度
     this._dist = (this._dist || 0) + accepted.distance;
     // D-70:跳点不再丢段。里程只加封顶后的 distance,轨迹按补出来的 points 连续上图
     // (直线段 points 就是终点,与旧行为一致;补出来的中间点只为画线/点亮连续,不重复计里程)。

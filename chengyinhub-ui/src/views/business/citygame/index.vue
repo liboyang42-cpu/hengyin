@@ -385,6 +385,11 @@
           </el-col>
         </el-row>
       </el-tab-pane>
+
+      <!-- CITY-6: 城市大富翁运营（夜间任务补跑、规则差异、风控队列） -->
+      <el-tab-pane label="城市大富翁运营" name="monopoly" lazy>
+        <city-monopoly-ops />
+      </el-tab-pane>
     </el-tabs>
   </div>
 </template>
@@ -408,6 +413,7 @@ import {
   getTerritoryLeaderboard
 } from '@/api/business/citygame'
 import { listRoamPoi } from '@/api/business/roamPoi'
+import CityMonopolyOps from './monopoly'
 
 const emptyForm = () => ({
   boardId: '',
@@ -429,6 +435,7 @@ const emptyForm = () => ({
 
 export default {
   name: 'CityGameAdmin',
+  components: { CityMonopolyOps },
   data() {
     return {
       activeTab: 'boards',

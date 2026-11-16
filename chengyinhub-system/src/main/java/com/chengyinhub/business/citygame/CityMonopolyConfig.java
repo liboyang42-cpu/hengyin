@@ -74,6 +74,7 @@ public final class CityMonopolyConfig {
         String def = DEFAULTS.get(key);
         try {
             if (key.endsWith("currency")) return "POINTS".equals(value);
+            if (key.equals("city.monopoly.claim.attest_mode")) return "REQUIRED".equals(value) || "SIGNAL".equals(value);
             if (isBoolean(def)) return "true".equals(value) || "false".equals(value);
             if (isNumber(def)) {
                 double v = Double.parseDouble(value);
