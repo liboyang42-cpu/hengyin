@@ -429,5 +429,10 @@ class PlayHelpCostApplicationTest {
         public List<PlayAttemptLog> selectPreferenceResults(Long memberId, Long topicId) {
             return List.of();
         }
+
+        @Override
+        public List<java.util.Map<String, Object>> selectPreferenceTallyByTemplate(Long templateId) {
+            return List.of();
+        }
     }
 }
