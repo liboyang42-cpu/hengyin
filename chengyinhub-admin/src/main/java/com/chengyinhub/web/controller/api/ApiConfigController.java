@@ -94,6 +94,8 @@ public class ApiConfigController extends BaseController {
         data.put("appFilingNo", configText(APP_FILING_NO_KEY, 64));
         data.put("supportContact", configText(SUPPORT_CONTACT_KEY, 128));
         data.put("agePolicy", agePolicy());
+        // MERCHANT-14:商家入驻审核时长的公示文案(如「1-3 个工作日」);未配置为空串,App 据此不写具体时长。
+        data.put("merchantReviewSla", configText(MERCHANT_REVIEW_SLA_KEY, 32));
         return success(data);
     }
 
@@ -121,6 +123,8 @@ public class ApiConfigController extends BaseController {
     static final String AIGC_FILING_NO_KEY = "aigc.algorithm.filing-no";
     /** App 备案号(工信部 ICP/App 备案,形如「陕ICP备xxxxxxxx号-xA」);在 beian.miit.gov.cn 可查。 */
     static final String APP_FILING_NO_KEY = "app.filing.icp-no";
+    /** MERCHANT-14:商家入驻审核时长(运营承诺的原文,如「1-3 个工作日」)。 */
+    static final String MERCHANT_REVIEW_SLA_KEY = "merchant.onboarding.review-sla";
     /** 玩家可见的客服联系方式(电话或邮箱原文)。 */
     static final String SUPPORT_CONTACT_KEY = "app.support.contact";
 
