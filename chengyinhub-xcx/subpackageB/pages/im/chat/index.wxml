@@ -144,7 +144,7 @@
       <view wx:elif="{{item.msgType != 3 && item.senderId == myId}}" class="row right">
         <view class="bubble-wrap bubble-wrap--self">
           <text wx:if="{{item.timeDivider}}" class="msg-time">{{item.timeDivider}}</text>
-          <view class="bubble me {{item.failed?'failed':''}}">
+          <view class="bubble me {{item.failed?'failed':''}}" bindtap="{{item.channelEvent ? 'onChannelEventTap' : ''}}" hover-class="{{item.channelEvent ? 'cy-pressed' : 'none'}}" hover-stay-time="80" data-msg="{{item.id}}" aria-role="{{item.channelEvent ? 'button' : ''}}" aria-label="{{item.channelEvent ? '查看活动' : ''}}">
             <image wx:if="{{item.msgType==2}}" class="b-img" src="{{item.content}}" mode="widthFix" lazy-load="true" />
             <text wx:else>{{item.displayContent}}</text>
           </view>
@@ -160,7 +160,7 @@
         <cy-avatar class="row-avatar" size="{{64}}" src="{{item.senderAvatar || avatar || '/images/d_profile.png'}}" />
         <view class="bubble-wrap">
           <text wx:if="{{item.displayName || item.timeDivider}}" class="sender-name">{{item.displayName}}{{item.displayName && item.timeDivider ? ' · ' : ''}}{{item.timeDivider}}</text>
-          <view class="bubble other">
+          <view class="bubble other" bindtap="{{item.channelEvent ? 'onChannelEventTap' : ''}}" hover-class="{{item.channelEvent ? 'cy-pressed' : 'none'}}" hover-stay-time="80" data-msg="{{item.id}}" aria-role="{{item.channelEvent ? 'button' : ''}}" aria-label="{{item.channelEvent ? '查看活动' : ''}}">
             <image wx:if="{{item.msgType==2}}" class="b-img" src="{{item.content}}" mode="widthFix" lazy-load="true" />
             <text wx:else>{{item.displayContent}}</text>
           </view>

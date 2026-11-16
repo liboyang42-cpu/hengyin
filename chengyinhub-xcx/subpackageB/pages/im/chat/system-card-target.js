@@ -41,6 +41,17 @@ function activityNoticeUrl(message) {
   if (!id || extra.type === 'CLUB_CAMPAIGN' && (!positiveId(extra.campaignId) || !positiveId(extra.clubId))) return '';
   return '/pages/activity/detail/index?id=' + id;
 }
+// W7 SOC-7: a member-posted channel event card (text message whose extra_json is a channel_event) opens the
+// existing activity page. Only the activity id is read from the payload; any url/path field disqualifies it.
+function channelEventUrl(message) {
+  if (!message || ![1, '1'].includes(message.msgType) || typeof message.extraJson !== 'string') return '';
+  let extra;
+  try { extra = JSON.parse(message.extraJson); } catch (_) { return ''; }
+  if (!extra || typeof extra !== 'object' || Array.isArray(extra) || extra.cardType !== 'channel_event'
+      || ['action', 'url', 'path'].some(key => Object.prototype.hasOwnProperty.call(extra, key))) return '';
+  const id = positiveId(extra.activityId);
+  return id ? '/pages/activity/detail/index?id=' + id : '';
+}
 // Legacy system cards may link to these current business pages; dataset URLs are never authority.
 function genericActionInfo(message, index) {
   const noticeUrl = index === undefined && activityNoticeUrl(message);
@@ -66,4 +77,4 @@ function genericActionInfo(message, index) {
   const bcId = positiveId(card.bcId);
   return url || index === undefined && bcId ? { url, bcId } : null;
 }
-module.exports = { positiveId, recordOf, originalUrl, buttonUrl, activityNoticeUrl, genericActionInfo };
+module.exports = { positiveId, recordOf, originalUrl, buttonUrl, activityNoticeUrl, channelEventUrl, genericActionInfo };
