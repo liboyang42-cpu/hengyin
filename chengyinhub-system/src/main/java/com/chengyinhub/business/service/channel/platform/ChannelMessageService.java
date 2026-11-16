@@ -226,6 +226,8 @@ public class ChannelMessageService implements IChannelConversationGate
             v.put("mentions", mentions == null ? List.of() : mentions);
             v.put("mention_everyone", everyone);
         }
+        // SOC-14：注销账号的消息已清空正文并撤回，客户端显示“该用户已注销”。
+        else if (r.get("senderDelFlag") != null && toLong(r.get("senderDelFlag")) == 2L) v.put("account_erased", true);
         return v;
     }
 

@@ -15,7 +15,8 @@
     <select id="selectMessages" resultType="java.util.HashMap" useCache="false">
         select m.id, m.conversation_id as conversationId, m.sender_id as senderId, m.msg_type as msgType, m.content,
                m.extra_json as extraJson, m.status, m.check_status as checkStatus, m.version, m.edited_at as editedAt,
-               m.create_time as createTime, coalesce(u.nickname, u.name) as senderName, u.avatar as senderAvatar
+               m.create_time as createTime, coalesce(u.nickname, u.name) as senderName, u.avatar as senderAvatar,
+               u.del_flag as senderDelFlag
           from im_message m left join ums_member u on u.id = m.sender_id and m.sender_id &gt; 0
          where m.id in <foreach collection="ids" item="i" open="(" separator="," close=")">#{i}</foreach>
     </select>
