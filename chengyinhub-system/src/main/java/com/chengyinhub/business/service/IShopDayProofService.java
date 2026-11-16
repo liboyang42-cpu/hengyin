@@ -23,6 +23,13 @@ public interface IShopDayProofService {
         return false;
     }
 
+    /**
+     * GAME-2:本局这一站过了开局校验(300 米)。{@link #runStarted} 只认这样的行,
+     * 没坐标的答题站留下的进度行不再算「已开局」。
+     */
+    default void markStartVerified(Long memberId, Long activityId, Long topicId, Long nodeId) {
+    }
+
     /** 游戏完成:进店行 status 0→1 条件更新;返回 true = 本次为首次完成(该发奖)。 */
     boolean markGameDone(Long memberId, Long activityId, Long topicId, Long nodeId);
 }
