@@ -134,6 +134,9 @@ public interface RoamMapper {
     int countPoisBySession(@Param("sessionId") Long sessionId);
     /** 该 member 今日新点亮格子数(日限 200 用) */
     int countTilesTodayByMember(@Param("memberId") Long memberId);
+
+    /** GAME-4: first-visit XP ("点亮地点") credited to this member since midnight, net of revocations. */
+    int sumVisitXpToday(@Param("memberId") Long memberId);
     /** 该 member 累计点亮格子数(里程碑勋章用) */
     int countTilesEverByMember(@Param("memberId") Long memberId);
     /** 该 member 历史点亮格子(供小程序换设备/清缓存后恢复迷雾状态) */

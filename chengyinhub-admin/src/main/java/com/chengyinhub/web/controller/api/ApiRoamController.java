@@ -64,6 +64,8 @@ import java.util.Map;
 public class ApiRoamController extends BaseController {
 
     static final int DAILY_TILE_XP_LIMIT = 200;   // 1格=1XP,日限
+    /** GAME-4:首访点亮探索值日限(20/个 ⇒ 每天 10 个新地点);超出照常点亮,只是不再加探索值。 */
+    static final int ROAM_VISIT_XP_DAILY_LIMIT = 200;
     static final int[] TILE_MILESTONES = { 50, 200, 1000 };  // 版图里程碑勋章阈值
 
     /** 三店连亮的勋章 code。★ 阈值不进 code:改阈值=改 code 会让已发的章变孤儿
@@ -1141,6 +1143,17 @@ public class ApiRoamController extends BaseController {
 
         locationConsent.requireCurrentAgreement(memberId);
         Map<String, Object> data = new LinkedHashMap<>();
+        // GAME-4: with location.trust.checkinRequiresFix on, a check-in without the device's own fix signals
+        // (accuracy + fix time) is recorded as "not credited", never an error, so old clients keep working.
+        if (checkinFixMissing(curLat, curLng)) {
+            data.put("participating", false);
+            data.put("firstVisit", false);
+            data.put("xp", 0);
+            data.put("uncredited", true);
+            data.put("trustCode", "FIX_MISSING");
+            data.put("trustMessage", "需要打开定位才能点亮这里");
+            return AjaxResult.success("需要打开定位才能点亮这里", data);
+        }
         // SEC-06: the player's fix is scored before anything is credited. Poor accuracy / future time = retry;
         // simulated or impossible speed = nothing credited (visit not recorded, so an honest retry later still counts).
         com.chengyinhub.business.locationtrust.LocationTrustService.Assessment trusted =
@@ -1205,7 +1218,13 @@ public class ApiRoamController extends BaseController {
             firstVisit = inserted > 0;
         }
         int xp = 0;
-        if (firstVisit) { xp = VISIT_XP; growthService.addExp(memberId, xp, "点亮地点"); }
+        boolean xpCapped = false;
+        if (firstVisit) {
+            // GAME-4:首访探索值每日封顶(roam_visit 日限),防止脚本连点刷探索值榜
+            xp = visitXpWithDailyCap(roamMapper.sumVisitXpToday(memberId), VISIT_XP, ROAM_VISIT_XP_DAILY_LIMIT);
+            xpCapped = xp < VISIT_XP;
+            if (xp > 0) growthService.addExp(memberId, xp, "点亮地点");
+        }
         if (firstVisit && memberAttributeService != null) {
             // Attributes v2 探索: first lit POI +10 AXP (idempotent per member + point key).
             memberAttributeService.grant(memberId, com.chengyinhub.business.citygame.AttributeRules.Source.NEW_POI, "poi:" + geoKey(poiLat, poiLng));
@@ -1222,6 +1241,7 @@ public class ApiRoamController extends BaseController {
         data.put("participating", false);
         data.put("firstVisit", firstVisit);
         data.put("xp", xp);
+        if (xpCapped) data.put("capped", true);
         data.put("name", poiName);
         if (firstVisit && inGameChannelService != null) {
             inGameChannelService.postRoamEvent(
@@ -1272,6 +1292,19 @@ public class ApiRoamController extends BaseController {
      * 格子探索值(套今日 200 上限):tilesToday=今日累计新格(含本次),sessionTiles=本会话新格。
      * 本会话应得 = min(tilesToday,limit) 减去 本会话之前今日已达上限部分,保证跨会话每日不超 limit。
      */
+    /** GAME-4:本次首访可得探索值 = min(本次额度, 日限 - 今日已得),不为负。 */
+    static int visitXpWithDailyCap(int earnedToday, int visitXp, int dailyLimit) {
+        return Math.max(0, Math.min(visitXp, dailyLimit - Math.max(0, earnedToday)));
+    }
+
+    /** GAME-4:开关打开且请求缺设备定位精度或定位时间 ⇒ 不计。开关读不到 = 关(旧行为)。 */
+    boolean checkinFixMissing(double curLat, double curLng) {
+        if (locationTrust == null || !locationTrust.config().checkinRequiresFix()) return false;
+        com.chengyinhub.business.locationtrust.LocationFix fix =
+                com.chengyinhub.business.locationtrust.LocationSignals.current(curLat, curLng);
+        return fix == null || fix.accuracyMeters() == null || fix.clientTimestampMs() == null;
+    }
+
     static int tileXpWithDailyCap(int tilesToday, int sessionTiles, int dailyLimit) {
         int session = Math.max(0, sessionTiles);
         int today = Math.max(session, tilesToday);      // 防脏数据:今日至少含本会话

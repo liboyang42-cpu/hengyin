@@ -189,8 +189,13 @@ public class ApiCityNodeController extends BaseController {
         }
     }
 
+    /** GAME-4: scores the client fix like /api/roam/checkin. Optional so hand-built unit tests keep the legacy path. */
+    @Autowired(required = false)
+    private com.chengyinhub.business.locationtrust.LocationTrustService locationTrust;
+
     @Operation(summary = "完成节点互动并领券(半径二次校验 + 按验证方式判定 + 每人每节点仅一次)")
     @PostMapping("/nodes/{id}/complete")
+    @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 30, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
     @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public AjaxResult complete(@PathVariable("id") Long id, Double lat, Double lng,
                                String answer, String photoUrl, String code) {
@@ -205,6 +210,25 @@ public class ApiCityNodeController extends BaseController {
 
         // ① 服务端二次半径校验(GPS 只作触发,不作发放唯一依据)
         if (lat == null || lng == null) return refuse(ErrorCode.LOCATION_REQUIRED, "缺少定位");
+        // GAME-4: the fix is scored before the radius check (accuracy, fix time, simulated, impossible speed).
+        // Rejected = retryable refusal; withheld = recorded answer "not credited" and no reward log row.
+        if (locationTrust != null) {
+            com.chengyinhub.business.locationtrust.LocationTrustService.Assessment trusted = locationTrust.assess(
+                    memberId, null, com.chengyinhub.business.locationtrust.LocationTrustKind.CITY_NODE, String.valueOf(id),
+                    com.chengyinhub.business.locationtrust.LocationSignals.current(lat, lng));
+            if (trusted.rejected()) {
+                return AjaxResult.error(com.chengyinhub.business.locationtrust.LocationTrustMessages.rejected(trusted.reasons()))
+                        .put("trustCode", com.chengyinhub.business.locationtrust.LocationTrustMessages.code(trusted.reasons()))
+                        .put("retryable", true);
+            }
+            if (trusted.withheld()) {
+                Map<String, Object> held = new LinkedHashMap<>();
+                held.put("uncredited", true);
+                held.put("trustCode", com.chengyinhub.business.locationtrust.LocationTrustMessages.code(trusted.reasons()));
+                held.put("trustMessage", com.chengyinhub.business.locationtrust.LocationTrustMessages.withheld(trusted.reasons()));
+                return AjaxResult.success(com.chengyinhub.business.locationtrust.LocationTrustMessages.withheld(trusted.reasons()), held);
+            }
+        }
         int radius = (node.getRadiusM() != null && node.getRadiusM() > 0) ? node.getRadiusM() : 80;
         double dist = distMeters(lat, lng, node.getLat().doubleValue(), node.getLng().doubleValue());
         if (!withinReach(dist, radius)) return error("离据点太远，请到店后再完成");

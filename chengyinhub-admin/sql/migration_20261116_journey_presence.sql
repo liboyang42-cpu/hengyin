@@ -8,12 +8,14 @@ SELECT 'migration_20261116_journey_presence.sql' AS running;
 -- player_node_progress.remote_completion: 1 = the stop was completed away from it; points, coupons, drops and the
 --   podium medal were capped to XP and badges, and the journey completion award is capped the same way.
 -- sys_config play.arrive.remote_reward_policy (XP_BADGE_ONLY = safe default, FULL = previous behaviour) and
---   play.arrive.reward_radius_m (80). Seeded only when missing; never overwrites an ops value.
+--   play.arrive.reward_radius_m (80). GAME-4 location.trust.jitterMode (ACCURACY), windowMinutes (10) and
+--   checkinRequiresFix (false until the fixed mini-program is live). Seeded only when missing; never overwrites.
 --
 -- ROLLBACK (manual, only after the backend build that reads these columns has been rolled back):
 --   ALTER TABLE player_node_progress DROP COLUMN remote_completion;
 --   ALTER TABLE player_node_progress DROP COLUMN start_verified;
---   DELETE FROM sys_config WHERE config_key IN ('play.arrive.remote_reward_policy', 'play.arrive.reward_radius_m');
+--   DELETE FROM sys_config WHERE config_key IN ('play.arrive.remote_reward_policy', 'play.arrive.reward_radius_m',
+--     'location.trust.jitterMode', 'location.trust.windowMinutes', 'location.trust.checkinRequiresFix');
 -- Idempotent: every ALTER is guarded by information_schema; re-running changes nothing.
 
 SET @jp_start_ddl = IF(
@@ -47,6 +49,12 @@ SELECT * FROM (
          'XP_BADGE_ONLY=开局后不在站点附近完成只发探索值与徽章(安全默认);FULL=照旧全额发奖' AS r
   UNION ALL SELECT '旅程-领奖半径(米)', 'play.arrive.reward_radius_m', '80', 'Y', 'admin', NOW(),
          '积分、券、掉落、名次奖牌要求人在站点此半径内(站点自身半径更大时取更大者),30-1000'
+  UNION ALL SELECT '定位可信-抖动判定', 'location.trust.jitterMode', 'ACCURACY', 'Y', 'admin', NOW(),
+         'GAME-4 ACCURACY=两次精度之和+50米内才算抖动(不超过 minMoveMeters);FLAT=旧规则固定 minMoveMeters'
+  UNION ALL SELECT '定位可信-窗口(分钟)', 'location.trust.windowMinutes', '10', 'Y', 'admin', NOW(),
+         'GAME-4 这段时间内总位移/用时不得超过交通速度上限'
+  UNION ALL SELECT '定位可信-点亮要求真实定位', 'location.trust.checkinRequiresFix', 'false', 'Y', 'admin', NOW(),
+         'GAME-4 true=点亮请求缺定位精度或定位时间则只记录不计;新版小程序上线后再打开'
 ) seed
 WHERE NOT EXISTS (SELECT 1 FROM sys_config s WHERE s.config_key = seed.k);
 

@@ -23,7 +23,8 @@ import java.util.List;
  *       {@code identicalFixRepeat} times. {@code identicalAction}, FLAG.</li>
  *   <li>{@code SPEED_IMPOSSIBLE}: implied speed from the last clean fix. Within {@code footWindowSeconds} the
  *       on-foot limit applies; over a longer gap transit is plausible and the vehicle limit applies; moves
- *       shorter than {@code minMoveMeters} are GPS jitter and never judged. Journeys and presence always use the
+ *       within the jitter allowance (GAME-4: both accuracies + 50 m, at most {@code minMoveMeters}) are never
+ *       judged. A rolling {@code windowMinutes} window also caps total displacement at the vehicle speed. Journeys and presence always use the
  *       vehicle limit (riding between stations is allowed). NO_REWARD.</li>
  * </ol>
  * Missing signals (old clients, the mini-program) add no reason at all.
@@ -44,8 +45,18 @@ public final class LocationTrustPolicy {
     }
 
     /** The last clean fix this member reported (any kind); the server receive time is authoritative. */
-    public record Baseline(double lat, double lng, long receivedAtMs, Long clientTimestampMs) {
+    public record Baseline(double lat, double lng, long receivedAtMs, Long clientTimestampMs, Double accuracyMeters) {
+        public Baseline(double lat, double lng, long receivedAtMs, Long clientTimestampMs) {
+            this(lat, lng, receivedAtMs, clientTimestampMs, null);
+        }
     }
+
+    /** GAME-4: accuracies are clamped to this range for the jitter allowance; a missing one counts as the top. */
+    static final double JITTER_ACCURACY_MIN = 20d;
+    static final double JITTER_ACCURACY_MAX = 150d;
+    static final double JITTER_MARGIN_METERS = 50d;
+    /** GAME-4: the rolling window check ignores windows shorter than this (one fix right after another). */
+    static final long WINDOW_MIN_SECONDS = 30L;
 
     /** Result of scoring. {@code speedMps} is null when there was no usable baseline. */
     public record Verdict(LocationTrustDecision decision, List<String> reasons, Double speedMps) {
@@ -76,6 +87,15 @@ public final class LocationTrustPolicy {
 
     public static Verdict evaluate(LocationTrustKind kind, LocationFix fix, Baseline baseline, int identicalBefore,
                                    long nowMs, LocationTrustConfig cfg) {
+        return evaluate(kind, fix, baseline, null, identicalBefore, nowMs, cfg);
+    }
+
+    /**
+     * @param windowStart GAME-4: the earliest clean fix within {@code windowMinutes}; total displacement since it
+     *                    must stay within the vehicle speed. Null skips the window check.
+     */
+    public static Verdict evaluate(LocationTrustKind kind, LocationFix fix, Baseline baseline, Baseline windowStart,
+                                   int identicalBefore, long nowMs, LocationTrustConfig cfg) {
         List<String> reasons = new ArrayList<>();
         LocationTrustDecision decision = LocationTrustDecision.ACCEPT;
         if (fix == null || !fix.validCoordinates()) {
@@ -122,14 +142,43 @@ public final class LocationTrustPolicy {
                 double dist = GeoDistanceUtils.haversineMeters(baseline.lat(), baseline.lng(), fix.lat(), fix.lng());
                 if (Double.isFinite(dist)) {
                     speed = dist / dtSec;
-                    if (dist > cfg.minMoveMeters() && speed > speedLimit(kind, dtSec, cfg)) {
+                    if (dist > jitterMeters(fix, baseline, cfg) && speed > speedLimit(kind, dtSec, cfg)) {
                         reasons.add(SPEED_IMPOSSIBLE);
                         decision = decision.max(LocationTrustDecision.ACCEPT_NO_REWARD);
                     }
                 }
             }
         }
+        // GAME-4: many short hops can each stay under the jitter allowance; the window sees their sum.
+        if (windowStart != null && !reasons.contains(SPEED_IMPOSSIBLE)) {
+            long windowMs = nowMs - windowStart.receivedAtMs();
+            if (windowMs >= WINDOW_MIN_SECONDS * 1000L && windowMs <= cfg.windowMinutes() * 60_000L) {
+                double dist = GeoDistanceUtils.haversineMeters(windowStart.lat(), windowStart.lng(), fix.lat(), fix.lng());
+                if (Double.isFinite(dist) && dist > jitterMeters(fix, windowStart, cfg)
+                        && dist / (windowMs / 1000d) > cfg.vehicleSpeedMps()) {
+                    reasons.add(SPEED_IMPOSSIBLE);
+                    decision = decision.max(LocationTrustDecision.ACCEPT_NO_REWARD);
+                }
+            }
+        }
         return new Verdict(decision, reasons, speed);
+    }
+
+    /**
+     * GAME-4: how far two fixes may differ and still be GPS jitter. FLAT (old rule) = {@code minMoveMeters}.
+     * ACCURACY (default) = both accuracies (clamped 20–150 m, missing = 150 m) + 50 m, never more than FLAT,
+     * so a 290 m hop between two good fixes is judged while old clients without accuracy keep today's rule.
+     */
+    static double jitterMeters(LocationFix fix, Baseline before, LocationTrustConfig cfg) {
+        if (cfg.jitterMode() == LocationTrustConfig.JitterMode.FLAT) return cfg.minMoveMeters();
+        double allowance = clampAccuracy(fix.accuracyMeters()) + clampAccuracy(before == null ? null : before.accuracyMeters())
+                + JITTER_MARGIN_METERS;
+        return Math.min(cfg.minMoveMeters(), allowance);
+    }
+
+    private static double clampAccuracy(Double accuracy) {
+        if (accuracy == null || !Double.isFinite(accuracy) || accuracy < 0d) return JITTER_ACCURACY_MAX;
+        return Math.max(JITTER_ACCURACY_MIN, Math.min(JITTER_ACCURACY_MAX, accuracy));
     }
 
     /** On foot for short gaps; vehicles over long gaps and for journeys/presence. */
