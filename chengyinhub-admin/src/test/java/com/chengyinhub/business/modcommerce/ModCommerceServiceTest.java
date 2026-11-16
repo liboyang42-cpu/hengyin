@@ -500,6 +500,24 @@ class ModCommerceServiceTest {
     }
 
     @Test
+    void storeKitSetupComesFromServerConfigurationAndKeepsWithdrawnProductsRestorable() {
+        Map<String, Object> open = service.storeKit();
+        assertEquals(true, open.get("available"));
+        assertEquals(true, open.get("selling"));
+        assertEquals(BUNDLE, open.get("bundleId"));
+        assertEquals("SANDBOX", open.get("environment"));
+        assertEquals("CN", open.get("market"));
+        assertEquals(List.of(PRODUCT), open.get("productIds"));
+
+        service.setOfferEnabled(offerId, false, "operator");
+        when(moneySwitch.snapshot()).thenReturn(Map.of("pass", false));
+        Map<String, Object> closed = service.storeKit();
+        assertEquals(true, closed.get("available"), "delivery and restore still work");
+        assertEquals(false, closed.get("selling"), "no new purchase");
+        assertEquals(List.of(PRODUCT), closed.get("productIds"), "a withdrawn template stays restorable");
+    }
+
+    @Test
     void cancellationBeforeDispatchCancelsAndAnUnseenRequestIsTombstoned() throws Exception {
         String key = (String) service.create(BUYER, intent("req-1")).get("orderKey");
         assertEquals("CANCELLED", service.cancel(BUYER, key).get("state"));

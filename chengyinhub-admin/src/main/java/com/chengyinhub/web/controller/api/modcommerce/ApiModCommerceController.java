@@ -30,7 +30,7 @@ import java.util.function.LongFunction;
  *       {@code native-context}, {@code native-dispatch}): while {@link ModCommerceService#open()} is false (the default:
  *       {@code chengyin.mod-commerce.enabled=false}, or the money switch's {@code pass} area closed) they answer exactly
  *       what {@link ApiAppGapsWorkshopController#commerceOff} answers today.</li>
- *   <li><b>Deliver</b> (order status, {@code native-transaction}, {@code restore}, {@code reconcile}, {@code cancel},
+ *   <li><b>Deliver</b> ({@code storekit}, order status, {@code native-transaction}, {@code restore}, {@code reconcile}, {@code cancel},
  *       {@code reversal-status}, {@code licenses*}): need only {@link ModCommerceService#deliverable()}, so a purchase
  *       Apple has charged is granted and restorable after the area closes.</li>
  * </ul>
@@ -45,6 +45,12 @@ public class ApiModCommerceController extends BaseController {
     public ApiModCommerceController(ModCommerceService service) { this.service = service; }
 
     public record Signed(String signedTransaction) { }
+
+    /** MERCHANT-9: App Store setup for templates. A deliver route: restore needs it after the area closes. */
+    @GetMapping("/storekit")
+    public ResponseEntity<AjaxResult> storeKit(HttpServletResponse response) {
+        return deliver(response, actor -> service.storeKit());
+    }
 
     @GetMapping("/offers")
     public ResponseEntity<AjaxResult> offers(@RequestParam(value = "before", required = false) String before, HttpServletResponse response) {

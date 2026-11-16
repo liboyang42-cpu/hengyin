@@ -115,6 +115,27 @@ public class ModCommerceService {
         return config.isEnabled();
     }
 
+    /**
+     * {@code GET /api/mod-commerce/storekit} (MERCHANT-9): the App Store facts the app needs to build its StoreKit
+     * setup for templates, all from server configuration: bundle id, environment ({@code SANDBOX} / {@code PRODUCTION})
+     * and every product id of this market (on sale or withdrawn, so a bought template stays restorable).
+     * {@code selling} is {@link #open()}; when false the app may deliver and restore, never start a purchase.
+     */
+    public Map<String, Object> storeKit() {
+        String reason = verifier.unavailableReason();
+        String environment = reason == null ? verifier.configuredEnvironment() : null;
+        if (reason == null && environment == null) reason = "APPLE_ENVIRONMENT_NOT_CONFIGURED";
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("available", reason == null);
+        out.put("unavailableReason", reason);
+        out.put("selling", reason == null && open());
+        out.put("market", market());
+        out.put("bundleId", reason == null ? appleProperties.getBundleId() : null);
+        out.put("environment", reason == null ? environment.toUpperCase(Locale.ROOT) : null);
+        out.put("productIds", reason == null ? mapper.productIds(market()) : List.of());
+        return out;
+    }
+
     private String market() {
         String m = config.getMarket() == null ? "" : config.getMarket().trim().toUpperCase(Locale.ROOT);
         if (!m.equals("CN") && !m.equals("US")) throw failure("MOD_COMMERCE_MARKET_INVALID", 503);

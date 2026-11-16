@@ -54,6 +54,7 @@ class ApiModCommerceControllerTest {
     /** Routes that deliver what Apple already charged (MERCHANT-2): only the feature flag gates them. */
     private static List<ResponseEntity<AjaxResult>> deliverRoutes(ApiModCommerceController c, MockHttpServletResponse r) {
         List<ResponseEntity<AjaxResult>> out = new ArrayList<>();
+        out.add(c.storeKit(r));
         out.add(c.cancelRequest(new ModCommerceService.Intent("req", "MCO_x", "0".repeat(64)), r));
         out.add(c.order("WKO_x", r));
         out.add(c.orderOffer("WKO_x", r));
@@ -162,7 +163,7 @@ class ApiModCommerceControllerTest {
                 "GET /orders/{orderKey}/native-context", "POST /orders/{orderKey}/native-dispatch",
                 "POST /orders/{orderKey}/native-transaction", "POST /native-transactions/restore",
                 "POST /orders/{orderKey}/reconcile", "POST /orders/{orderKey}/cancel", "GET /orders/{orderKey}/reversal-status",
-                "GET /licenses", "GET /licenses/{licenseId}")) {
+                "GET /licenses", "GET /licenses/{licenseId}", "GET /storekit")) {
             assertTrue(routes.contains(expected), expected);
         }
     }
