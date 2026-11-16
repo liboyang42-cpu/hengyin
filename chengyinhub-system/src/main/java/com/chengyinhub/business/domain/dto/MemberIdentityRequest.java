@@ -1,5 +1,6 @@
 package com.chengyinhub.business.domain.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.io.Serializable;
@@ -15,6 +16,8 @@ public class MemberIdentityRequest implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private String realName;
+    /** 小程序传 idCard;iOS 与商家入驻同名传 idCardNumber,两者等价。 */
+    @JsonAlias("idCardNumber")
     private String idCard;
     private Boolean consent;
     /** 采集入口:club_apply / merchant_apply / topic_publish,服务端白名单校验。 */

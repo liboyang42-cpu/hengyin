@@ -2122,7 +2122,10 @@ public class ApiMerchantController extends BaseController {
             // RUN-52 发布者实名:商家是要收钱的发布者,新入驻必须先把姓名与身份证号交给平台。
             // 只闸 id == null 这一支:改一份已经填到一半的申请时,那个表单里没有这两个字段,
             // 拦在那里等于把人锁在自己填过的东西外面;他真要把店开出来收钱,还是会撞上下面那道发布闸。
-            String identityErr = memberIdentityService.checkRegistered(member_id);
+            // R3(iOS):入驻表单直接带 realName + idCardNumber。带了就先只校验(不落库、不碰事务),
+            // 真正登记放到下面「重复申请」判定之后、建商家之前,跟商家行同一个事务;
+            // 没带则沿用小程序口径 —— 之前在 /api/publisher/identity 登记过的放行,没登记过的拒。
+            String identityErr = prepareRegistrationIdentity(member_id, request);
             if (identityErr != null) return error(identityErr);
         }
 
@@ -2184,6 +2187,13 @@ public class ApiMerchantController extends BaseController {
             if (existing != null) {
                 return AjaxResult.error(HttpStatus.CONFLICT, "已提交过商家入驻申请，请勿重复提交");
             }
+            if (hasInlineIdentity(request)) {
+                // 校验已在上面过完;这里只剩两种结果:首次登记落库(AES-GCM 密文 + 盲索引),
+                // 或已登记且证件一致的幂等放行。换证会抛 ServiceException,连同本事务一起回滚。
+                memberIdentityService.register(member_id, request.getRealName(), request.getIdCardNumber(),
+                        true, com.chengyinhub.business.service.impl.MemberIdentityService.SOURCE_MERCHANT_APPLY,
+                        currentIpOrNull());
+            }
             //账号状态：1启用  2禁用
             mmsMerchant.setAccountStatus(0L);
             //删除标记 0 代表存在  2删除
@@ -2195,6 +2205,38 @@ public class ApiMerchantController extends BaseController {
             } else {
                 return error("更新失败");
             }
+        }
+    }
+
+    /** realName / idCardNumber 任一非空即视为「表单带了实名」,另一个缺了交给校验报错,不静默忽略。 */
+    private static boolean hasInlineIdentity(MerchantRegistrationDTO request) {
+        return StringUtils.isNotEmpty(request.getRealName()) || StringUtils.isNotEmpty(request.getIdCardNumber());
+    }
+
+    /**
+     * 新入驻的实名前置:带了 → 只校验;没带 → 必须此前已登记。返回错误文案或 null。
+     * 文案一律不含入参,身份证号不进任何日志与响应。
+     */
+    private String prepareRegistrationIdentity(Long memberId, MerchantRegistrationDTO request) {
+        if (!hasInlineIdentity(request)) {
+            return memberIdentityService.checkRegistered(memberId) == null
+                    ? null : com.chengyinhub.business.service.impl.MemberIdentityService.MSG_IDENTITY_REQUIRED;
+        }
+        try {
+            memberIdentityService.validateSubmission(request.getRealName(), request.getIdCardNumber(),
+                    Boolean.TRUE.equals(request.getIdentityConsent()));
+            return null;
+        } catch (com.chengyinhub.common.exception.ServiceException invalid) {
+            return invalid.getMessage();
+        }
+    }
+
+    /** 同意留痕要 IP;没有请求上下文(单测 / 异步)时留空,不为一个 IP 把入驻打成 500。 */
+    private static String currentIpOrNull() {
+        try {
+            return com.chengyinhub.common.utils.ip.IpUtils.getIpAddr();
+        } catch (RuntimeException noRequest) {
+            return null;
         }
     }
 

@@ -26,8 +26,8 @@ import java.util.Map;
  * <p>刻意<b>不加</b> {@code @Log}:RuoYi 的操作日志会把入参整份 JSON 落进 sys_oper_log,
  * 挂上它就等于把明文身份证号抄进一张没有任何加密与脱敏的表里。
  *
- * <p>也没有「查详情」接口 —— 前端只允许知道登记过没有(见 {@link #status()}),
- * 姓名与身份证号从这条调用栈出去不了。
+ * <p>也没有「查详情」接口 —— 前端只允许知道登记过没有与脱敏值(见 {@link #status()}),
+ * 明文姓名与身份证号从这条调用栈出去不了。
  */
 @RestController
 @Tag(name = "发布者实名登记")
@@ -59,7 +59,7 @@ public class ApiMemberIdentityController extends BaseController {
         return AjaxResult.success("实名信息已登记", data);
     }
 
-    @Operation(summary = "查询是否已登记实名(只回状态,不回显任何填写值)")
+    @Operation(summary = "查询是否已登记实名(只回状态与脱敏值,明文永不下发)")
     @PostMapping("/status")
     public AjaxResult status() {
         Long memberId;
@@ -68,8 +68,14 @@ public class ApiMemberIdentityController extends BaseController {
         } catch (Exception e) {
             return error("请先登录");
         }
+        // 已登记:回 realNameMasked(张*)与 idCardNumberMasked(110***********1234);未登记只回 false。
+        Map<String, Object> masked = memberIdentityService.maskedView(memberId);
         Map<String, Object> data = new HashMap<>();
-        data.put("registered", memberIdentityService.isRegistered(memberId));
+        data.put("registered", masked != null);
+        if (masked != null) {
+            data.put("realNameMasked", masked.get("realNameMasked"));
+            data.put("idCardNumberMasked", masked.get("idCardNumberMasked"));
+        }
         return AjaxResult.success(data);
     }
 }
