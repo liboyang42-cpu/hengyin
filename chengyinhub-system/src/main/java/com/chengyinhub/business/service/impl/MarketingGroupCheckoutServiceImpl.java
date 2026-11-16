@@ -158,7 +158,6 @@ public class MarketingGroupCheckoutServiceImpl implements IMarketingGroupCheckou
             throw MarketingProductException.badRequest("PRODUCT_REQUIRED", "请选择商品");
         }
         MarketingProduct product = rules.requireProduct(productId);
-        rules.requireSellable(product, new Date());
         Integer kind = product.getProductKind();
         if (kind == null || (kind != MarketingProduct.KIND_GROUP_TEAM
                 && kind != MarketingProduct.KIND_SCHOOL_GROUP)) {
@@ -174,6 +173,7 @@ public class MarketingGroupCheckoutServiceImpl implements IMarketingGroupCheckou
             throw MarketingProductException.conflict("GROUP_PURCHASE_KIND_INVALID",
                     "团体/学校商品必须映射自玩通行证");
         }
+        rules.requireSellable(product, new Date());
         int quantity = requestedQuantity == null ? 1 : requestedQuantity;
         rules.requireQuantity(quantity);
 

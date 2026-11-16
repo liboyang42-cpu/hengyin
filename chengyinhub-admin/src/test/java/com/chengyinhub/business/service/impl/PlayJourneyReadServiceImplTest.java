@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.BadSqlGrammarException;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -494,8 +495,8 @@ class PlayJourneyReadServiceImplTest {
         assertEquals("claimed", items.get(0).get("status"), "券已发放=claimed");
         assertEquals("pending", items.get(1).get("status"), "配了奖励但没完成=pending");
         assertFalse(items.get(1).containsKey("claimableAt"), "没完成不知道何时可领");
-        assertEquals("none", items.get(2).get("status"), "没配奖励=none");
-        assertNull(items.get(2).get("reward"));
+        assertEquals("pending", items.get(2).get("status"), "未单配奖励仍有既有默认探索值，但未完成不能算已领");
+        assertEquals("探索值 12", items.get(2).get("reward"));
         assertEquals("claimed", items.get(3).get("status"), "完成且券到手=claimed");
         assertEquals("pending", items.get(4).get("status"), "完成但券没到手=pending");
         assertEquals(Long.valueOf(1_700L), items.get(4).get("claimableAt"), "可领时刻=完成时刻");
@@ -558,6 +559,164 @@ class PlayJourneyReadServiceImplTest {
         assertFalse(String.valueOf(items.get(0).get("reward")).contains("模板的旧交付"),
                 "冻结故事流没有 deliver 就不回退模板");
         assertTrue(String.valueOf(items.get(0).get("reward")).contains("勋章:金印"));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void backpackProjectsExistingDefaultXpForMissingZeroAndNegativeConfiguration() {
+        XpBudgetServiceImpl resolver = new XpBudgetServiceImpl();
+        when(xpBudgetService.resolveNodeXp(any(CmsTopicNode.class)))
+                .thenAnswer(inv -> resolver.resolveNodeXp(inv.getArgument(0)));
+        CmsTopicNode missing = node(N1, 1L, null, null);
+        CmsTopicNode zero = node(N2, 2L, null, null);
+        zero.setXpValue(0);
+        CmsTopicNode negative = node(N3, 3L, null, null);
+        negative.setXpValue(-9);
+        when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
+                .thenReturn(Arrays.asList(missing, zero, negative));
+        when(progressMapper.selectPlayerNodeProgressList(any(PlayerNodeProgress.class)))
+                .thenReturn(Arrays.asList(progress(N1, new Date(1_000L)),
+                        progress(N2, new Date(2_000L)), progress(N3, new Date(3_000L))));
+
+        List<Map<String, Object>> items = (List<Map<String, Object>>) service.backpack(MEMBER, TOPIC).get("nodes");
+
+        assertEquals(3, items.size());
+        for (Map<String, Object> item : items) {
+            assertEquals("探索值 12", item.get("reward"), "与首次默认实例完成的既有12XP合同一致");
+            assertEquals("claimed", item.get("status"));
+            assertFalse(item.containsKey("claimableAt"), "已到账探索值不是待领取券");
+        }
+        assertNull(missing.getXpValue());
+        assertEquals(Integer.valueOf(0), zero.getXpValue());
+        assertEquals(Integer.valueOf(-9), negative.getXpValue(), "只读投影不得改作者配置");
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void backpackKeepsPositiveNodeAndTemplateXpIncludingValuesBelowDefault() {
+        CmsMemberTemplate template = new CmsMemberTemplate();
+        template.setXpValue(37);
+        when(templateMapper.selectCmsMemberTemplateById(8L)).thenReturn(template);
+        XpBudgetServiceImpl resolver = new XpBudgetServiceImpl();
+        ReflectionTestUtils.setField(resolver, "cmsMemberTemplateMapper", templateMapper);
+        when(xpBudgetService.resolveNodeXp(any(CmsTopicNode.class)))
+                .thenAnswer(inv -> resolver.resolveNodeXp(inv.getArgument(0)));
+        CmsTopicNode explicit = node(N1, 1L, 8L, null);
+        explicit.setXpValue(48);
+        CmsTopicNode fromTemplate = node(N2, 2L, 8L, null);
+        fromTemplate.setXpValue(-1);
+        CmsTopicNode small = node(N3, 3L, null, null);
+        small.setXpValue(1);
+        when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
+                .thenReturn(Arrays.asList(explicit, fromTemplate, small));
+        when(progressMapper.selectPlayerNodeProgressList(any(PlayerNodeProgress.class)))
+                .thenReturn(Arrays.asList(progress(N1, new Date(1_000L)),
+                        progress(N2, new Date(2_000L)), progress(N3, new Date(3_000L))));
+
+        List<Map<String, Object>> items = (List<Map<String, Object>>) service.backpack(MEMBER, TOPIC).get("nodes");
+
+        assertEquals(Arrays.asList("探索值 48", "探索值 37", "探索值 1"),
+                items.stream().map(item -> item.get("reward")).toList());
+        assertTrue(items.stream().allMatch(item -> "claimed".equals(item.get("status"))));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void backpackXpRemainsPendingForUncompletedAndUnreachedNodes() {
+        when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
+                .thenReturn(Arrays.asList(node(N1, 1L, null, null), node(N2, 2L, null, null),
+                        node(N3, 3L, null, null), node(N4, 4L, null, null)));
+        PlayerNodeProgress pending = progress(N1, new Date(1_000L));
+        pending.setStatus(0);
+        PlayerNodeProgress rejected = progress(N2, new Date(2_000L));
+        rejected.setStatus(2);
+        when(progressMapper.selectPlayerNodeProgressList(any(PlayerNodeProgress.class))).thenAnswer(inv -> {
+            PlayerNodeProgress probe = inv.getArgument(0);
+            assertEquals(Long.valueOf(MEMBER), probe.getMemberId());
+            assertEquals(Long.valueOf(TOPIC), probe.getTopicId());
+            assertEquals(Long.valueOf(0L), probe.getActivityId());
+            return Arrays.asList(pending, rejected, progress(N4, new Date(4_000L)));
+        });
+
+        List<Map<String, Object>> items = (List<Map<String, Object>>) service.backpack(MEMBER, TOPIC).get("nodes");
+
+        for (int i = 0; i < 3; i++) {
+            assertEquals("探索值 12", items.get(i).get("reward"));
+            assertEquals("pending", items.get(i).get("status"), "未完成/未到达的锁定后续节点不能显示已赚取");
+            assertFalse(items.get(i).containsKey("claimableAt"));
+        }
+        assertEquals("claimed", items.get(3).get("status"));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void backpackKeepsTopicActivityEntitlementProjectionForReplayInstances() {
+        session.setPlayInstanceId("replay-2");
+        CmsTopicNode configured = node(N2, 2L, null, null);
+        configured.setXpValue(48);
+        when(xpBudgetService.resolveNodeXp(configured)).thenReturn(48);
+        when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
+                .thenReturn(Arrays.asList(node(N1, 1L, null, null), configured));
+        when(progressMapper.selectPlayerNodeProgressList(any(PlayerNodeProgress.class)))
+                .thenReturn(Arrays.asList(progress(N1, new Date(1_000L)), progress(N2, new Date(2_000L))));
+
+        List<Map<String, Object>> items = (List<Map<String, Object>>) service.backpack(MEMBER, TOPIC).get("nodes");
+
+        assertEquals("探索值 12", items.get(0).get("reward"));
+        assertEquals("探索值 48", items.get(1).get("reward"));
+        assertTrue(items.stream().allMatch(item -> "claimed".equals(item.get("status"))),
+                "背包沿用TOPIC_ACTIVITY既有权益投影，不把重玩不再派发误作隐藏既有权益");
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void backpackXpWithoutAnyRunIsProspectiveNotClaimed() {
+        topic.setStatus(1);
+        topic.setUserStatus(1);
+        when(routeMapper.selectMemberTopicSessions(MEMBER, TOPIC)).thenReturn(Collections.singletonList(null));
+        when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
+                .thenReturn(Collections.singletonList(node(N1, 1L, null, null)));
+
+        List<Map<String, Object>> items = (List<Map<String, Object>>) service.backpack(MEMBER, TOPIC).get("nodes");
+
+        assertEquals("探索值 12", items.get(0).get("reward"));
+        assertEquals("pending", items.get(0).get("status"));
+        assertFalse(items.get(0).containsKey("claimableAt"));
+    }
+
+    @Test
+    void backpackXpDoesNotBypassScopeOrForeignRunChecks() {
+        assertThrows(ServiceException.class, () -> service.backpack(null, TOPIC));
+        assertThrows(ServiceException.class, () -> service.backpack(MEMBER, 0L));
+        session.setMemberId(OTHER);
+        assertThrows(ServiceException.class, () -> service.backpack(MEMBER, TOPIC));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void backpackDoesNotReuseSoloCompletionForAnotherActivity() {
+        topic.setStatus(1);
+        topic.setUserStatus(1);
+        when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
+                .thenReturn(Collections.singletonList(node(N1, 1L, null, null)));
+        when(progressMapper.selectPlayerNodeProgressList(any(PlayerNodeProgress.class))).thenAnswer(inv -> {
+            PlayerNodeProgress probe = inv.getArgument(0);
+            assertEquals(Long.valueOf(MEMBER), probe.getMemberId());
+            assertEquals(Long.valueOf(TOPIC), probe.getTopicId());
+            if (Long.valueOf(0L).equals(probe.getActivityId())) {
+                return Collections.singletonList(progress(N1, new Date(1_000L)));
+            }
+            assertEquals(Long.valueOf(900L), probe.getActivityId());
+            return Collections.emptyList();
+        });
+
+        List<Map<String, Object>> solo = (List<Map<String, Object>>) service.backpack(MEMBER, TOPIC).get("nodes");
+        List<Map<String, Object>> activity = (List<Map<String, Object>>) service.backpack(MEMBER, TOPIC, 900L).get("nodes");
+
+        assertEquals("claimed", solo.get(0).get("status"));
+        assertEquals("探索值 12", activity.get(0).get("reward"));
+        assertEquals("pending", activity.get(0).get("status"));
+        assertFalse(activity.get(0).containsKey("claimableAt"));
     }
 
     // ==================== 构造 ====================

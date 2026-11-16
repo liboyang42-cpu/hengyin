@@ -440,6 +440,8 @@ public class PlayJourneyReadServiceImpl implements IPlayJourneyReadService {
             String medalName = template == null ? null : trimToNull(template.getMedalName());
             String medalImg = template == null ? null : trimToNull(template.getMedalImg());
             int xp = xpBudgetService.resolveNodeXp(node);
+            // Match the existing base award in PlayNodeCompletionApplication.advanceProgress, not the raw XP budget.
+            if (xp <= 0) xp = 12;
 
             boolean couponConfigured = couponId != null && couponId.longValue() > 0L;
             String reward = rewardText(deliver, couponConfigured ? couponId : null, medalName, medalImg, xp);

@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.MarketingProduct;
 import com.chengyinhub.business.domain.MarketingProductItem;
 import com.chengyinhub.business.domain.MarketingProductOrder;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,9 +60,10 @@ public class MarketingProductCatalogServiceImpl implements IMarketingProductCata
                 productMapper.selectItemsByProductIds(ids));
         Date now = new Date();
         List<PassBundleView> out = new ArrayList<>();
+        Map<Long, CmsTopic> topicCache = new HashMap<>();
         for (MarketingProduct product : products) {
             List<MarketingProductItem> items = itemsByProduct.getOrDefault(product.getId(), new ArrayList<>());
-            if (!items.isEmpty() && rules.isSellable(product, now)) out.add(view(product, items));
+            if (!items.isEmpty() && rules.isSellable(product, now, items, topicCache)) out.add(view(product, items));
         }
         return out;
     }
@@ -81,8 +84,8 @@ public class MarketingProductCatalogServiceImpl implements IMarketingProductCata
         }
         MarketingProduct product = rules.requireProduct(request.getProductId());
         Date now = new Date();
-        rules.requireSellable(product, now);
         List<MarketingProductItem> items = rules.items(product.getId());
+        rules.requireSellable(product, now, items, new HashMap<>());
 
         int fulfillment = request.getFulfillmentKind() == null
                 ? MarketingProductOrder.FULFILLMENT_SELF : request.getFulfillmentKind();

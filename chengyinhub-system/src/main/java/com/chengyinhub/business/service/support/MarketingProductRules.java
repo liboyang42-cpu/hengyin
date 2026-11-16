@@ -15,7 +15,9 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /** 商品可售与加座前置校验；报价与下单共用，避免两套规则漂移。 */
 @Component
@@ -70,6 +72,12 @@ public class MarketingProductRules {
     }
 
     public void requireSellable(MarketingProduct product, Date now) {
+        requireSellable(product, now, null, new HashMap<>());
+    }
+
+    /** 已载绑定与本次调用/目录页的主题缓存；不得跨请求复用。 */
+    public void requireSellable(MarketingProduct product, Date now,
+                                List<MarketingProductItem> boundItems, Map<Long, CmsTopic> topicCache) {
         if (!Integer.valueOf(MarketingProduct.STATUS_ON_SALE).equals(product.getStatus())) {
             throw MarketingProductException.conflict("PRODUCT_NOT_ON_SALE", "商品未在售");
         }
@@ -97,7 +105,8 @@ public class MarketingProductRules {
             throw MarketingProductException.conflict("EXPLORE_CAPACITY_INVALID",
                     "只有探索票才能占章节容量");
         }
-        if (items(product.getId()).isEmpty()) {
+        List<MarketingProductItem> content = boundItems == null ? items(product.getId()) : boundItems;
+        if (content.isEmpty()) {
             throw MarketingProductException.conflict("PRODUCT_HAS_NO_CONTENT", "商品未绑定任何作品");
         }
         Integer route = product.getFulfillmentRoute();
@@ -127,11 +136,32 @@ public class MarketingProductRules {
             throw MarketingProductException.conflict("GIFT_REQUIRES_EXISTING_ROW",
                     "礼品商品不能使用“首次使用起算”有效期");
         }
+        // ②无票自玩与最终履约共用退款钟；团体票仍交原票种结算。
+        if (Integer.valueOf(2).equals(product.getPurchaseKind()) && !product.usesTicketRegistration()) {
+            for (MarketingProductItem item : content) {
+                Long topicId = item == null ? null : item.getTopicId();
+                // 页内复用（含不存在的主题），不跨请求缓存退款准备状态。
+                if (!topicCache.containsKey(topicId)) {
+                    topicCache.put(topicId, topicId == null ? null : topicMapper.selectCmsTopicById(topicId));
+                }
+                try {
+                    FulfillmentWindowResolver.resolve(topicCache.get(topicId), null);
+                } catch (IllegalStateException missingWindow) {
+                    throw MarketingProductException.conflict("REFUND_DECISION_POINT_MISSING",
+                            "该商品暂不可购买，请联系发布者完善开放时间");
+                }
+            }
+        }
     }
 
     public boolean isSellable(MarketingProduct product, Date now) {
+        return isSellable(product, now, null, new HashMap<>());
+    }
+
+    public boolean isSellable(MarketingProduct product, Date now,
+                              List<MarketingProductItem> boundItems, Map<Long, CmsTopic> topicCache) {
         try {
-            requireSellable(product, now);
+            requireSellable(product, now, boundItems, topicCache);
             return true;
         } catch (MarketingProductException rejected) {
             return false;

@@ -417,8 +417,9 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         }
         Set<LocalDate> desired = new HashSet<>(desiredDates);
         for (Map.Entry<LocalDate, ClubEventOccurrence> entry : existingByDate.entrySet()) {
-            if (desired.contains(entry.getKey())) continue;
             ClubEventOccurrence occurrence = entry.getValue();
+            if (desired.contains(entry.getKey())
+                    && occurrence.getOccurrenceAt().equals(assemblyMoment(entry.getKey(), startTime))) continue;
             if (clubEventOpsMapper.countProtectedActivityHistory(occurrence.getActivityId()) != 0) {
                 throw conflict("已有报名或结算事实的未来场次不能移除");
             }
@@ -431,7 +432,9 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
             }
         }
         for (LocalDate date : desiredDates) {
-            if (existingByDate.containsKey(date)) continue;
+            ClubEventOccurrence existingOccurrence = existingByDate.get(date);
+            if (existingOccurrence != null
+                    && existingOccurrence.getOccurrenceAt().equals(assemblyMoment(date, startTime))) continue;
             createOccurrence(series.getId(), request.getClubId(), request.getTopicId(), date, startTime,
                     series.getDefaultLeadMemberId(), series.getDefaultCapacity(), access.getOwnerMemberId(),
                     actorMemberId, safeUsername(username, actorMemberId), now);

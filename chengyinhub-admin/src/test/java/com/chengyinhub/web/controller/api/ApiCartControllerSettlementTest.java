@@ -21,6 +21,15 @@ import com.chengyinhub.business.mapper.UmsMemberCartMapper;
 import com.chengyinhub.business.mapper.UmsMemberAddressMapper;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.core.domain.model.LoginUser;
+import com.chengyinhub.common.core.domain.model.LoginAppUser;
+import com.chengyinhub.common.core.domain.entity.AppUser;
+import com.chengyinhub.common.utils.PageUtils;
+import org.junit.jupiter.api.AfterEach;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import com.chengyinhub.common.exception.ServiceException;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -38,7 +47,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -72,12 +81,77 @@ class ApiCartControllerSettlementTest {
 
     @org.junit.jupiter.api.BeforeEach
     void successfulPersistenceReturnsItsActualWriteReceipt() {
+        AppUser appUser = new AppUser();
+        appUser.setUserId(MEMBER);
+        appUser.setUserName("u");
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
+                new LoginAppUser(MEMBER, appUser), null, Collections.emptyList()));
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setParameter("pageNum", "1");
+        request.setParameter("pageSize", "20");
+        request.setParameter("member_id", String.valueOf(MEMBER + 1));
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
         when(orderSvc.insertOmsOrder(any())).thenAnswer(call -> {
             com.chengyinhub.business.domain.OmsOrder order = call.getArgument(0);
             order.setId(700L);
             return 1;
         });
         when(itemSvc.insertOmsOrderItem(any())).thenReturn(1);
+    }
+
+    @AfterEach
+    void clearRequestAndPrincipal() {
+        SecurityContextHolder.clearContext();
+        RequestContextHolder.resetRequestAttributes();
+        PageUtils.clearPage();
+    }
+
+    @Test
+    void realAppPrincipalListsOnlyItsOwnCartDespiteRequestMemberId() {
+        when(cartView.selectViewMemberCartList(any())).thenReturn(Collections.emptyList());
+
+        assertTrue(controller().getCartList().isSuccess());
+
+        ArgumentCaptor<ViewMemberCart> query = ArgumentCaptor.forClass(ViewMemberCart.class);
+        verify(cartView).selectViewMemberCartList(query.capture());
+        assertEquals(MEMBER, query.getValue().getMemberId());
+        assertEquals(Long.valueOf(0), query.getValue().getIsBuy());
+    }
+
+    @Test
+    void anonymousPrincipalCannotReachAnyCartService() {
+        SecurityContextHolder.clearContext();
+        assertNonAppPrincipalCannotReachCartServices();
+    }
+
+    @Test
+    void backendPrincipalCannotBeUsedAsAnAppMember() {
+        LoginUser backendUser = mock(LoginUser.class);
+        when(backendUser.getUserId()).thenReturn(MEMBER);
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
+                backendUser, null, Collections.emptyList()));
+        assertNonAppPrincipalCannotReachCartServices();
+    }
+
+    private void assertNonAppPrincipalCannotReachCartServices() {
+        IUmsMemberCartService service = mock(IUmsMemberCartService.class);
+        ApiCartController controller = new ApiCartController();
+        ReflectionTestUtils.setField(controller, "viewMemberCartService", cartView);
+        ReflectionTestUtils.setField(controller, "umsMemberCartService", service);
+        assertAll(
+                () -> assertEquals(Integer.valueOf(401), assertThrows(ServiceException.class,
+                        controller::getCartList).getCode()),
+                () -> assertEquals(Integer.valueOf(401), assertThrows(ServiceException.class,
+                        () -> controller.cartDelete("5")).getCode()),
+                () -> assertEquals(Integer.valueOf(401), assertThrows(ServiceException.class,
+                        () -> controller.cartAdd("1", "2", "1", "0")).getCode()),
+                () -> assertEquals(Integer.valueOf(401), assertThrows(ServiceException.class,
+                        () -> controller.cartUpdate("5", "1", "2")).getCode()),
+                () -> assertEquals(Integer.valueOf(401), assertThrows(ServiceException.class,
+                        () -> controller.cartSettlement("5")).getCode()),
+                () -> assertEquals(Integer.valueOf(401), assertThrows(ServiceException.class,
+                        () -> controller.orderSettlement("5", "", "1")).getCode()));
+        verifyNoInteractions(service, cartView);
     }
 
     @Test
@@ -112,11 +186,7 @@ class ApiCartControllerSettlementTest {
     }
 
     private ApiCartController controller() {
-        ApiCartController c = spy(new ApiCartController());
-        LoginUser lu = mock(LoginUser.class);
-        when(lu.getUserId()).thenReturn(MEMBER);
-        when(lu.getUsername()).thenReturn("u");
-        doReturn(lu).when(c).getLoginUser();
+        ApiCartController c = new ApiCartController();
         ReflectionTestUtils.setField(c, "viewMemberCartService", cartView);
         ReflectionTestUtils.setField(c, "umsMemberCartService", cartSvc);
         ReflectionTestUtils.setField(cartSvc, "umsMemberCartMapper", cartMapper);
@@ -135,10 +205,7 @@ class ApiCartControllerSettlementTest {
     @Test
     void cartDeleteForwardsRawIdsAndAuthenticatedMemberToService() {
         IUmsMemberCartService service = mock(IUmsMemberCartService.class);
-        ApiCartController controller = spy(new ApiCartController());
-        LoginUser loginUser = mock(LoginUser.class);
-        when(loginUser.getUserId()).thenReturn(MEMBER);
-        doReturn(loginUser).when(controller).getLoginUser();
+        ApiCartController controller = new ApiCartController();
         ReflectionTestUtils.setField(controller, "umsMemberCartService", service);
 
         assertTrue(controller.cartDelete("5,6").isSuccess());
@@ -150,11 +217,7 @@ class ApiCartControllerSettlementTest {
     @Test
     void controllerForwardsRawCartParametersToService() {
         IUmsMemberCartService service = mock(IUmsMemberCartService.class);
-        ApiCartController controller = spy(new ApiCartController());
-        LoginUser loginUser = mock(LoginUser.class);
-        when(loginUser.getUserId()).thenReturn(MEMBER);
-        when(loginUser.getUsername()).thenReturn("u");
-        doReturn(loginUser).when(controller).getLoginUser();
+        ApiCartController controller = new ApiCartController();
         ReflectionTestUtils.setField(controller, "umsMemberCartService", service);
 
         controller.cartAdd("1", "2", "3", "0");

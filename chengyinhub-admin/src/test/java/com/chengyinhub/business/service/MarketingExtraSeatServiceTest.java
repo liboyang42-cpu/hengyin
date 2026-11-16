@@ -1,6 +1,7 @@
 package com.chengyinhub.business.service;
 
 import com.chengyinhub.business.domain.CmsRegistration;
+import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.MarketingProduct;
 import com.chengyinhub.business.domain.MarketingProductItem;
 import com.chengyinhub.business.domain.MarketingProductOrder;
@@ -80,8 +81,16 @@ class MarketingExtraSeatServiceTest {
         orders = mock(MarketingProductOrderMapper.class);
         extraSeats = mock(MarketingExtraSeatMapper.class);
         registrations = mock(CmsRegistrationMapper.class);
+        CmsTopicMapper topics = mock(CmsTopicMapper.class);
+        for (long topicId : new long[]{TOPIC, TOPIC_B}) {
+            CmsTopic topic = new CmsTopic();
+            topic.setId(topicId);
+            topic.setStartDate(Date.from(java.time.Instant.parse("2030-01-01T00:00:00Z")));
+            topic.setEndDate(Date.from(java.time.Instant.parse("2030-01-02T00:00:00Z")));
+            when(topics.selectCmsTopicById(topicId)).thenReturn(topic);
+        }
         MarketingProductRules rules = new MarketingProductRules(products, orders,
-                mock(CmsTopicMapper.class), mock(IOmsTicketService.class));
+                topics, mock(IOmsTicketService.class));
         service = new MarketingExtraSeatServiceImpl(rules, orders, extraSeats, registrations,
                 new MarketingQuoteSigner(SECRET), new MarketingCashChannel(false));
 

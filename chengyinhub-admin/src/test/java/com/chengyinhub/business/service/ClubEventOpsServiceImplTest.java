@@ -320,6 +320,85 @@ class ClubEventOpsServiceImplTest {
     }
 
     @Test
+    void futureOnlyEditReplacesSameDateWhenAssemblyTimeChanges() {
+        LocalDate date = LocalDate.now(ZoneId.of("Asia/Shanghai")).plusDays(1);
+        ClubEventOccurrence original = activeOccurrence(81L, 71L, date);
+        original.setOccurrenceAt(Date.from(date.atTime(9, 0).atZone(ZoneId.of("Asia/Shanghai")).toInstant()));
+        when(mapper.selectSeriesByIdForUpdate(61L)).thenReturn(storedSeries());
+        when(mapper.selectFutureOccurrencesForUpdate(org.mockito.ArgumentMatchers.eq(61L), any()))
+                .thenReturn(Collections.singletonList(original));
+        when(mapper.cancelFutureActivityCas(org.mockito.ArgumentMatchers.eq(71L), any(),
+                org.mockito.ArgumentMatchers.eq("operator"))).thenReturn(1);
+        when(mapper.cancelOccurrenceCas(81L, 0)).thenReturn(1);
+        when(mapper.updateSeriesScheduleCas(org.mockito.ArgumentMatchers.eq(61L),
+                org.mockito.ArgumentMatchers.eq(0), org.mockito.ArgumentMatchers.eq("CUSTOM_DATES"),
+                org.mockito.ArgumentMatchers.eq("operator"), any())).thenReturn(1);
+        when(sessionService.open(any(), any(), any())).thenReturn(72L);
+        ClubEventSeriesRequest request = futureRequest(date);
+        request.setStartTime("09:30");
+
+        ClubEventSeries updated = service.updateFuture(ACTOR, "operator", request);
+
+        assertEquals(Integer.valueOf(1), updated.getVersion());
+        verify(roleAssignmentService).revokeEventLeadForCancelledOccurrence(
+                ACTOR, CLUB, 71L, "series-cancel-61-71");
+        verify(mapper).cancelFutureActivityCas(org.mockito.ArgumentMatchers.eq(71L), any(),
+                org.mockito.ArgumentMatchers.eq("operator"));
+        verify(mapper).cancelOccurrenceCas(81L, 0);
+        Date expected = Date.from(date.atTime(9, 30).atZone(ZoneId.of("Asia/Shanghai")).toInstant());
+        ArgumentCaptor<ClubSessionOpenRequest> open = ArgumentCaptor.forClass(ClubSessionOpenRequest.class);
+        verify(sessionService).open(open.capture(), org.mockito.ArgumentMatchers.eq(OWNER),
+                org.mockito.ArgumentMatchers.eq("operator"));
+        assertEquals(expected, open.getValue().getSessionDate());
+        assertEquals("09:30", open.getValue().getSessionTime());
+        ArgumentCaptor<ClubEventOccurrence> occurrence = ArgumentCaptor.forClass(ClubEventOccurrence.class);
+        verify(mapper).insertOccurrence(occurrence.capture());
+        assertEquals(Long.valueOf(72L), occurrence.getValue().getActivityId());
+        assertEquals(expected, occurrence.getValue().getOccurrenceAt());
+    }
+
+    @Test
+    void futureOnlyEditPreservesSameDateAndTimeEvenWithRegistrationHistory() {
+        LocalDate date = LocalDate.now(ZoneId.of("Asia/Shanghai")).plusDays(1);
+        ClubEventOccurrence original = activeOccurrence(81L, 71L, date);
+        original.setOccurrenceAt(Date.from(date.atTime(14, 30).atZone(ZoneId.of("Asia/Shanghai")).toInstant()));
+        when(mapper.selectSeriesByIdForUpdate(61L)).thenReturn(storedSeries());
+        when(mapper.selectFutureOccurrencesForUpdate(org.mockito.ArgumentMatchers.eq(61L), any()))
+                .thenReturn(Collections.singletonList(original));
+        when(mapper.countProtectedActivityHistory(71L)).thenReturn(1);
+        when(mapper.updateSeriesScheduleCas(org.mockito.ArgumentMatchers.eq(61L),
+                org.mockito.ArgumentMatchers.eq(0), org.mockito.ArgumentMatchers.eq("CUSTOM_DATES"),
+                org.mockito.ArgumentMatchers.eq("operator"), any())).thenReturn(1);
+
+        service.updateFuture(ACTOR, "operator", futureRequest(date));
+
+        verify(mapper, never()).countProtectedActivityHistory(any());
+        verify(mapper, never()).cancelFutureActivityCas(any(), any(), any());
+        verify(mapper, never()).cancelOccurrenceCas(any(), any());
+        verify(sessionService, never()).open(any(), any(), any());
+        verify(mapper, never()).insertOccurrence(any());
+    }
+
+    @Test
+    void futureOnlyEditRejectsSameDateTimeChangeWithRegistrationHistory() {
+        LocalDate date = LocalDate.now(ZoneId.of("Asia/Shanghai")).plusDays(1);
+        ClubEventOccurrence original = activeOccurrence(81L, 71L, date);
+        original.setOccurrenceAt(Date.from(date.atTime(9, 0).atZone(ZoneId.of("Asia/Shanghai")).toInstant()));
+        when(mapper.selectSeriesByIdForUpdate(61L)).thenReturn(storedSeries());
+        when(mapper.selectFutureOccurrencesForUpdate(org.mockito.ArgumentMatchers.eq(61L), any()))
+                .thenReturn(Collections.singletonList(original));
+        when(mapper.countProtectedActivityHistory(71L)).thenReturn(1);
+
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> service.updateFuture(ACTOR, "operator", futureRequest(date)));
+
+        verify(mapper, never()).cancelFutureActivityCas(any(), any(), any());
+        verify(mapper, never()).cancelOccurrenceCas(any(), any());
+        verify(mapper, never()).updateSeriesScheduleCas(any(), any(), any(), any(), any());
+        verify(sessionService, never()).open(any(), any(), any());
+    }
+
+    @Test
     void activityManagerReadsOnlyActiveSeriesAndFutureDatesInSameClub() {
         ClubEventSeries stored = storedSeries();
         when(mapper.selectActiveSeriesByClub(CLUB)).thenReturn(Collections.singletonList(stored));

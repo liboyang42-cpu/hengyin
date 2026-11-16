@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service;
 
+import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.MarketingProduct;
 import com.chengyinhub.business.domain.MarketingProductItem;
 import com.chengyinhub.business.domain.MarketingProductOrder;
@@ -63,6 +64,7 @@ class MarketingProductPurchaseServiceTest {
     private static final long ORDER_ID = 7001L;
 
     private MarketingProductMapper products;
+    private CmsTopicMapper topics;
     private MarketingProductOrderMapper orders;
     private GiftEntitlementMapper gifts;
     private UmsMemberMapper members;
@@ -91,7 +93,14 @@ class MarketingProductPurchaseServiceTest {
         FulfillmentOutcome pending = new FulfillmentOutcome();
         pending.pendingActivation = true;
         when(fulfillment.grant(any())).thenReturn(pending);
-        CmsTopicMapper topics = mock(CmsTopicMapper.class);
+        topics = mock(CmsTopicMapper.class);
+        for (long topicId : new long[]{100L, 101L}) {
+            CmsTopic topic = new CmsTopic();
+            topic.setId(topicId);
+            topic.setStartDate(java.util.Date.from(java.time.Instant.parse("2030-01-01T00:00:00Z")));
+            topic.setEndDate(java.util.Date.from(java.time.Instant.parse("2030-01-02T00:00:00Z")));
+            when(topics.selectCmsTopicById(topicId)).thenReturn(topic);
+        }
         signer = new MarketingQuoteSigner(SECRET);
         IOmsTicketService ticketService = mock(IOmsTicketService.class);
         com.chengyinhub.business.domain.OmsTicket ticket = new com.chengyinhub.business.domain.OmsTicket();
@@ -129,6 +138,21 @@ class MarketingProductPurchaseServiceTest {
             detail.setId(55L);
             return 1;
         });
+    }
+
+    @Test
+    void invalidBundleWindowIsRejectedBeforeOrderOrPointsWrites() {
+        when(topics.selectCmsTopicById(101L)).thenReturn(new CmsTopic());
+
+        MarketingProductException rejection = assertThrows(MarketingProductException.class,
+                () -> service.purchase(MEMBER, signed(request(), 120)));
+
+        assertEquals("REFUND_DECISION_POINT_MISSING", rejection.getReasonCode());
+        assertEquals(409, rejection.getHttpStatus());
+        verify(orders, never()).insert(any());
+        verify(members, never()).deductPoints(anyLong(), anyInt());
+        verify(points, never()).insertUmsMemberPointsDetail(any());
+        verify(fulfillment, never()).grant(any());
     }
 
     @Test
