@@ -2117,13 +2117,10 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         // 时段门按业务时区(Asia/Shanghai)取分钟,不依赖 JVM 默认时区(-Duser.timezone)。
         java.time.ZonedDateTime businessNow = clock.now().toInstant().atZone(BUSINESS_ZONE);
         int nowMinute = businessNow.getHour() * 60 + businessNow.getMinute();
-        boolean open = from < to
-                ? (nowMinute >= from && nowMinute < to)
-                : (nowMinute >= from || nowMinute < to);   // 跨夜
-        if (!open) {
-            throw new IllegalStateException("这一站还没到开放时间(" 
-                    + timeWindow.path("openFrom").asText("") + "–" + timeWindow.path("openTo").asText("") + ")");
-        }
+        // GAME-19:窗外时分清「还没开」与「今天已关」(跨夜时段由 judge 分支处理),回包带码与时刻。
+        TimeWindowRefusal refusal = TimeWindowRefusal.judge(from, to, nowMinute,
+                timeWindow.path("openFrom").asText(""), timeWindow.path("openTo").asText(""));
+        if (refusal != null) throw refusal;
     }
 
     /** "HH:mm" → 当天第几分钟;格式不对返回 -1(由配置校验负责拦,这里只是不炸) */
