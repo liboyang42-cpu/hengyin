@@ -824,7 +824,7 @@ public class RoamTerritoryService {
     }
 
     /**
-     * CITY-12: the player leaderboard. Every holder except the viewer is masked (no id, no nickname); the viewer's own
+     * CITY-12: the player leaderboard. Every holder except the viewer is masked (no real id or nickname); the viewer's own
      * rows say {@code isMine}. The admin console keeps {@link #leaderboard(String, String, String, Integer)}.
      */
     public Map<String, Object> leaderboard(Long viewer, String boardId, String regionId, String seasonId, Integer limit) {
@@ -839,7 +839,8 @@ public class RoamTerritoryService {
                     if (!(o instanceof Map<?, ?> m)) continue;
                     Map<String, Object> row = new LinkedHashMap<>();
                     for (Map.Entry<?, ?> e : m.entrySet()) row.put(String.valueOf(e.getKey()), e.getValue());
-                    maskHolder(row, me);
+                    // Leaders keep a distinct number (their rank) so older clients that require the key still decode.
+                    maskHolder(row, me, "leaders".equals(key) ? masked.size() + 1L : 0L);
                     masked.add(row);
                 }
             }
@@ -848,14 +849,19 @@ public class RoamTerritoryService {
         return out;
     }
 
-    static void maskHolder(Map<String, Object> row, long viewer) {
+    /**
+     * Masks another holder on a leaderboard row. {@code ownerMemberId} and {@code ownerNickname} stay present (older
+     * clients decode them as required): the id becomes {@code substituteId} (rank, or 0), the nickname the masked name.
+     */
+    static void maskHolder(Map<String, Object> row, long viewer, long substituteId) {
         Long owner = row.get("ownerMemberId") instanceof Number ? ((Number) row.get("ownerMemberId")).longValue() : null;
         boolean mine = owner != null && viewer > 0 && owner == viewer;
-        row.put("holderMasked", owner == null ? null : CityMonopolyService.mask(owner));
+        String masked = owner == null ? null : CityMonopolyService.mask(owner);
+        row.put("holderMasked", masked);
         row.put("isMine", mine);
         if (!mine) {
-            row.put("ownerMemberId", null);
-            row.put("ownerNickname", null);
+            row.put("ownerMemberId", substituteId);
+            row.put("ownerNickname", masked);
         }
     }
 

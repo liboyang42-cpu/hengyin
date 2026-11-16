@@ -106,19 +106,43 @@ class CityMonopolyNotifyWiringTest {
     @Test
     void leaderboardMasksEveryoneButTheViewer() {
         Map<String, Object> other = new HashMap<>(row("ownerMemberId", 12345L, "ownerNickname", "小明"));
-        RoamTerritoryService.maskHolder(other, 7L);
-        assertNull(other.get("ownerMemberId"));
-        assertNull(other.get("ownerNickname"));
+        RoamTerritoryService.maskHolder(other, 7L, 2L);
+        assertEquals(2L, other.get("ownerMemberId"), "a rank number, never the member id");
+        assertEquals("玩家1***5", other.get("ownerNickname"));
         assertEquals("玩家1***5", other.get("holderMasked"));
         assertEquals(false, other.get("isMine"));
         Map<String, Object> mine = new HashMap<>(row("ownerMemberId", 7L, "ownerNickname", "我"));
-        RoamTerritoryService.maskHolder(mine, 7L);
+        RoamTerritoryService.maskHolder(mine, 7L, 1L);
         assertEquals(7L, mine.get("ownerMemberId"));
         assertEquals("我", mine.get("ownerNickname"));
         assertEquals(true, mine.get("isMine"));
         Map<String, Object> anonymous = new HashMap<>(row("ownerMemberId", 7L, "ownerNickname", "我"));
-        RoamTerritoryService.maskHolder(anonymous, 0L);
-        assertNull(anonymous.get("ownerNickname"), "a signed-out read sees nobody");
+        RoamTerritoryService.maskHolder(anonymous, 0L, 0L);
+        assertEquals(0L, anonymous.get("ownerMemberId"), "a signed-out read sees nobody");
+        assertEquals("玩家*", anonymous.get("ownerNickname"));
+    }
+
+    @Test
+    void leaderboardReadMasksLeadersAndTopPlaces() {
+        JdbcTemplate jdbc = mock(JdbcTemplate.class);
+        when(jdbc.queryForList(contains("GROUP BY t.owner_member_id"), any(Object[].class)))
+                .thenReturn(List.of(row("ownerMemberId", 12345L, "ownerNickname", "小明", "territoryCount", 3L),
+                        row("ownerMemberId", 7L, "ownerNickname", "我", "territoryCount", 1L)));
+        when(jdbc.queryForList(contains("ORDER BY t.revenue_total_points DESC, t.checkin_count DESC"), any(Object[].class)))
+                .thenReturn(List.of(row("territoryId", "T-1", "ownerMemberId", 12345L, "ownerNickname", "小明")));
+        RoamTerritoryService t = new RoamTerritoryService(jdbc, mock(CityGameMapper.class), null, () -> NOW);
+
+        Map<String, Object> out = t.leaderboard(7L, null, null, null, 10);
+
+        @SuppressWarnings("unchecked") List<Map<String, Object>> leaders = (List<Map<String, Object>>) out.get("leaders");
+        @SuppressWarnings("unchecked") List<Map<String, Object>> top = (List<Map<String, Object>>) out.get("topTerritories");
+        assertEquals(1L, leaders.get(0).get("ownerMemberId"));
+        assertEquals("玩家1***5", leaders.get(0).get("ownerNickname"));
+        assertEquals(7L, leaders.get(1).get("ownerMemberId"));
+        assertEquals(true, leaders.get(1).get("isMine"));
+        assertEquals(0L, top.get(0).get("ownerMemberId"));
+        assertFalse(out.toString().contains("小明"));
+        assertFalse(out.toString().contains("12345"));
     }
 
     @Test
