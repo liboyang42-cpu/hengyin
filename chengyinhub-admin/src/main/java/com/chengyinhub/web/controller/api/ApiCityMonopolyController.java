@@ -46,7 +46,8 @@ public class ApiCityMonopolyController extends BaseController {
     @GetMapping("/territory/map")
     public AjaxResult map(@RequestParam(required = false) Double minLat, @RequestParam(required = false) Double minLng,
                           @RequestParam(required = false) Double maxLat, @RequestParam(required = false) Double maxLng,
-                          @RequestParam(required = false) String bbox) {
+                          @RequestParam(required = false) String bbox,
+                          @RequestParam(required = false) Boolean includeFree) {
         // CITY-3: the four bounds, or bbox=minLat,minLng,maxLat,maxLng.
         if ((minLat == null || minLng == null || maxLat == null || maxLng == null) && bbox != null) {
             String[] p = bbox.split(",");
@@ -64,7 +65,8 @@ public class ApiCityMonopolyController extends BaseController {
         if (minLat == null || minLng == null || maxLat == null || maxLng == null) {
             throw new CityGameException(400, "BBOX_REQUIRED", "缺少地图范围");
         }
-        return success(service.map(member(), minLat, minLng, maxLat, maxLng));
+        // W7 x-fog-monopoly: includeFree=true also lists the unheld places in view (fog rule applies).
+        return success(service.map(member(), minLat, minLng, maxLat, maxLng, Boolean.TRUE.equals(includeFree)));
     }
 
     /** CITY-2: whether claims, upgrades, challenges and chance tasks can pass right now, with reason codes. */
