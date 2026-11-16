@@ -142,7 +142,7 @@
        下一站给「导航过去」(微信地图),站内不接管导航。 -->
   <view class="story-map" wx:if="{{storyMap && fmStyleReady}}">
     <free-map class="story-map__map" wx:if="{{storyMap}}" nodes="{{fmNodes}}" player="{{fmPlayer}}" target="{{nextNode}}"
-              center="{{storyMapCenter}}" scale="16" map-polyline="{{fmPolyline}}" trail-polyline="{{fmTrail}}" team-pins="{{fmTeamPins}}" fit="{{!teamFollowKey}}" fit-padding="{{[140, 48, 240, 48]}}"
+              center="{{storyMapCenter}}" scale="16" map-polyline="{{walkGuide.on ? walkGuide.lines : fmPolyline}}" trail-polyline="{{fmTrail}}" team-pins="{{fmTeamPins}}" fit="{{!teamFollowKey}}" fit-padding="{{[140, 48, 240, 48]}}"
               subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}" tone="{{fmTone}}" show-controls="{{false}}" show-photo-callouts="{{false}}"
               reduced-motion="{{reducedMotion}}" />
     <view class="team-rail" wx:if="{{teamRail.length}}" style="top:{{chrome.contentTop + 56}}px">
@@ -157,10 +157,16 @@
     </view>
     <view class="story-map__card" wx:if="{{nextNode && !(chapterGate.show && chapterGate.held)}}">
       <view class="story-map__copy">
-        <text class="story-map__k">下一站{{storyDistText ? ' · ' + storyDistText : ''}}</text>
+        <text class="story-map__k">下一站{{walkGuide.on ? ' · ' + walkGuide.text : (storyDistText ? ' · ' + storyDistText : '')}}</text>
         <text class="story-map__t">{{nextNode.name}}</text>
+        <text class="story-map__k" wx:if="{{walkGuide.error}}">{{walkGuide.error}}</text>
       </view>
-      <view class="story-map__go" wx:if="{{nextNode.lat && nextNode.lng}}" bindtap="openNextStopNav" aria-role="button" aria-label="用微信地图导航到{{nextNode.name}}" hover-class="cy-pressed" hover-stay-time="80">导航过去</view>
+      <!-- MPP-7:在小程序里走过去(步行路线画在这张地图上,到站 ≤50 米由自动到达接手);导航过去仍是逃生门 -->
+      <view class="story-map__acts" wx:if="{{nextNode.lat && nextNode.lng}}">
+        <view class="story-map__go" wx:if="{{!walkGuide.on}}" bindtap="startWalkGuide" aria-role="button" aria-label="在小程序里步行到{{nextNode.name}}" hover-class="cy-pressed" hover-stay-time="80">{{walkGuide.loading ? '正在找路' : '在小程序里走过去'}}</view>
+        <view class="story-map__go" wx:else bindtap="stopWalkGuide" aria-role="button" aria-label="收起步行路线" hover-class="cy-pressed" hover-stay-time="80">收起路线</view>
+        <view class="story-map__go" bindtap="openNextStopNav" aria-role="button" aria-label="用微信地图导航到{{nextNode.name}}" hover-class="cy-pressed" hover-stay-time="80">导航过去</view>
+      </view>
     </view>
   </view>
   <canvas type="2d" id="stBack" class="fx-story__dust"></canvas><view class="look-tex"></view>
@@ -2020,6 +2026,15 @@
     <cy-btn variant="primary" style="width:100%" bindtap="onTeamConsentStart" accessibility-label="开始">开始</cy-btn>
   </view>
 </cy-sheet>
+
+<!-- MPP-7:锁着的站留一张卡(服务端原因 / 原提示文案),不再是一闪而过的 toast -->
+<view class="lock-card" wx:if="{{lockCard.show}}" aria-role="alert">
+  <view class="story-map__copy">
+    <text class="story-map__k">{{lockCard.name ? lockCard.name + ' · ' : ''}}还没解锁</text>
+    <text class="story-map__t">{{lockCard.text}}</text>
+  </view>
+  <view class="story-map__go" bindtap="closeLockCard" aria-role="button" aria-label="知道了，收起提示" hover-class="cy-pressed" hover-stay-time="80">知道了</view>
+</view>
 
 <view wx:if="{{chapterVideo.show}}" class="chapter-video" data-token="{{chapterVideo.token}}" catchtap="finishChapterVideo" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="跳过视频">
   <video id="chapter-video" class="chapter-video__film" src="{{chapterVideo.url}}" poster="{{chapterVideo.poster}}" autoplay="{{true}}" controls="{{false}}" show-center-play-btn="{{false}}" show-play-btn="{{false}}" show-fullscreen-btn="{{false}}" enable-progress-gesture="{{false}}" object-fit="contain" data-token="{{chapterVideo.token}}" bindtap="finishChapterVideo" aria-role="button" aria-label="跳过视频" hover-class="cy-pressed" hover-stay-time="80" bindplay="onChapterVideoPlay" bindtimeupdate="onChapterVideoTime" bindwaiting="onChapterVideoWaiting" bindended="finishChapterVideo" binderror="finishChapterVideo" />

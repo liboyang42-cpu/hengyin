@@ -1852,6 +1852,9 @@ page { background: var(--cy-color-bg-page); }
 .story-map__copy{ flex:1; min-width:0; display:flex; flex-direction:column; }
 .story-map__k{ font-size:21rpx; letter-spacing:3rpx; color:rgba(255,255,255,.6); } /* ds-ok 同入口卡小标签 */
 .story-map__t{ margin-top:8rpx; font-size:33rpx; font-weight:800; color:#FFFFFF; } /* ds-ok */
+.story-map__acts{ flex:none; display:flex; flex-direction:column; gap:var(--cy-space-2); } /* MPP-7 两颗同款按钮竖排 */
+.lock-card{ position:fixed; left:var(--cy-page-x); right:var(--cy-page-x); bottom:calc(var(--cy-space-6) + env(safe-area-inset-bottom)); z-index:60;
+  display:flex; align-items:center; gap:var(--cy-space-3); padding:var(--cy-space-4); border-radius:38rpx; background:#111111; } /* ds-ok MPP-7 与 story-map__card 同一张卡 */
 .story-map__go{ flex:none; height:var(--cy-btn-h); padding:0 var(--cy-space-4); display:flex; align-items:center;
   border-radius:var(--cy-radius-pill); background:#FFFFFF; color:#000000; font-size:27rpx; font-weight:700; } /* ds-ok 反色中性主按钮 */
 
