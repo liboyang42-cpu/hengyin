@@ -12,6 +12,8 @@ const merchantTheme = require('../../../../utils/merchant-theme.js');
 const app = getApp();
 // 距底部不超过这个距离(px)视为「在看最新消息」,轮询到新消息时跟随滚动(U-142)
 const NEAR_BOTTOM_PX = 120;
+// SOC-10:群/频道的「更多」:先选具体消息再举报或拉黑它的作者,没有「对方」。
+const GROUP_SHEET_ITEMS = ['举报这条消息', '拉黑该用户', '隐藏会话'];
 
 // 服务端可见顺序含微秒：不要转 JS Date 丢精度，也不要以客户端时钟推测审批时间。
 function messageOrder(message) {
@@ -154,6 +156,8 @@ Page({
     // 原来它和私信共用同一套输入栏/举报/拉黑:能打字、能点发送,发出去才红一个气泡,
     // 拉黑/举报的目标又不是任何人。可供性必须在进入前就收窄,不是等后端拒绝。
     const readOnly = type === 2;
+    // SOC-10:群(4)与频道(5)没有「对方」:不按 blocked 锁输入栏,举报/拉黑先选具体消息。
+    const groupLike = type === 4 || type === 5;
     const isMerchantView = roleGuard.isMerchantView();
     const sysNotice = readOnly && isMerchantView;
     if (isMerchantView) merchantTheme.merchantPageShow();
@@ -173,6 +177,7 @@ Page({
       type: type,
       readOnly: readOnly,
       moreSheetItems: readOnly ? ['隐藏会话'] : ['举报这条消息', '举报对方', '拉黑', '隐藏会话'],
+      groupLike: groupLike,
       myId: app.getUserID(),
       myAvatar: app.getAvatar(),
     }); this._needPeerName = !name && Number(type) === 1; // 第十二轮 k9(p1 N-10):链接没带对方名字时,首屏读完再去会话列表取
@@ -185,8 +190,10 @@ Page({
        服务端要不要一并挡写入是后端的事,这里修的是用户看得见的那一半。
        type=3 官方客服按现状仍可写,不在这个闸里。 */
     if (type == 2) this.setData({ disabled: true, disabledText: '系统通知，不能回复' });
+    if (groupLike) this.setData({ moreSheetItems: GROUP_SHEET_ITEMS });
     this.loadMessages(true);
     if (type == 2) this.loadReportEntry();
+    if (type == 5) this.loadChannelGate(conversationId);
   },
 
   // 系统消息只放在城瘾小助手:举报进度(社区治理通知)从这里进「我的举报」,不再在消息列表单列。
@@ -341,10 +348,14 @@ Page({
           that.setData({ msgs, sending: msgs.some(m => m.sending), hasMore: !!res.data.hasMore, cursor: res.data.nextCursor || 0, loadState: 'ready', loadErrorText: '', loadMoreError: '' });
           if (that._needPeerName && !that.data.name) that._fillPeerName();
           // 拉黑只存服务端:重进会话按回包禁用输入框,不然能打字、一发就失败(3-22)
-          const blockedByMe = res.data.blockedByMe === true;
+          // SOC-10:群/频道没有「对方」,blocked 不锁输入栏;频道的只读原因来自频道权限(loadChannelGate)。
+          const groupLike = that.data.groupLike === true;
+          const blockedByMe = !groupLike && res.data.blockedByMe === true;
+          const pairBlocked = !groupLike && res.data.blocked === true;
+          const channelLock = groupLike ? (that._channelLock || '') : '';
           that._blockedByMe = blockedByMe;
-          that.setData({ disabled: that.data.readOnly || res.data.blocked === true, disabledText: that.data.readOnly ? '系统通知不支持回复' : res.data.blocked === true ? (blockedByMe ? '你已拉黑对方，无法发送消息' : '对方暂不可联系，无法发送消息') : '',
-            moreSheetItems: that.data.readOnly ? ['隐藏会话'] : ['举报这条消息', '举报对方', blockedByMe ? '解除拉黑' : '拉黑', '隐藏会话'] });
+          that.setData({ disabled: that.data.readOnly || pairBlocked || !!channelLock, disabledText: that.data.readOnly ? '系统通知不支持回复' : pairBlocked ? (blockedByMe ? '你已拉黑对方，无法发送消息' : '对方暂不可联系，无法发送消息') : channelLock,
+            moreSheetItems: that.data.readOnly ? ['隐藏会话'] : groupLike ? GROUP_SHEET_ITEMS : ['举报这条消息', '举报对方', blockedByMe ? '解除拉黑' : '拉黑', '隐藏会话'] });
           if (toBottom) that.scrollBottom();
           that._markReadWhenVisible(conversationId, memberId);
           that.recoverPending();
@@ -456,7 +467,9 @@ Page({
       const cardTarget = systemRecord || !!currentOriginalUrl || !!genericAction;
       // 对方气泡上方「名字·时间」一行用的名字:单聊/客服/系统统一用会话对方名(name)。
       // 小程序不露出群聊(见 list/index.js:tabOf),故无需逐条 senderName。
-      return Object.assign({}, m, { timeDivider: divider, noticeTime: t ? fmtAbs(t) : '', activityNotice: !!activityNotice, card: card, cardTarget, systemRecord, currentOriginalUrl, genericAction, genericButtons, displayContent: displayContent,
+      // SOC-4:群/频道里服务端标了 senderBlocked 的消息折叠,点开才显示。
+      const blockedHidden = m.senderBlocked === true && !(that._revealedBlocked && that._revealedBlocked[String(m.id)]);
+      return Object.assign({}, m, { blockedHidden, timeDivider: divider, noticeTime: t ? fmtAbs(t) : '', activityNotice: !!activityNotice, card: card, cardTarget, systemRecord, currentOriginalUrl, genericAction, genericButtons, displayContent: displayContent,
         displayName: that.data.name || '' });
     });
     if (that._reviewMessageId && !that._reviewMatches(decorated.find(row => String(row.id) === String(that._reviewMessageId)))) that.closeReviewResult();
@@ -871,7 +884,9 @@ Page({
     if (!this._isReadContextCurrent(this.data.conversationId, this.data.myId)) return;
     const label = e.detail.label;
     this.setData({ moreSheetShow: false });
-    if (label === '举报这条消息') this.doReport();
+    if (label === '举报这条消息' && this.data.groupLike) this._pickOtherMessage(false, (m) => this.doReport(m));
+    else if (label === '拉黑该用户' && this.data.groupLike) this._pickOtherMessage(true, (m) => this.doBlockSender(m));
+    else if (label === '举报这条消息') this.doReport();
     else if (label === '举报对方') this.doReportPeer();
     else if (label === '拉黑') this.doBlock();
     else if (label === '解除拉黑') this.doBlock(true);
@@ -897,15 +912,15 @@ Page({
   },
 
   onMoreCancel() { this.setData({ moreSheetShow: false }); },
-  doReport() {
+  doReport(picked) {
     const conversationId = this.data.conversationId;
     const memberId = this.data.myId;
     if (!this._isReadContextCurrent(conversationId, memberId)) return;
     if (this._reportInFlight
         && this._isReadContextCurrent(this._reportInFlight.conversationId, this._reportInFlight.memberId)) return;
     // 没有「选中某条」的交互 ⇒ 只举报对方发的最近一条,绝不报自己的消息(3-22)
-    let last = null;
-    for (let i = this.data.msgs.length - 1; i >= 0; i--) {
+    let last = picked && picked.id ? picked : null;
+    for (let i = this.data.msgs.length - 1; !last && i >= 0; i--) {
       const m = this.data.msgs[i];
       if (m.id && String(m.id).indexOf('tmp_') !== 0 && m.senderId && m.senderId != this.data.myId) { last = m; break; }
     }
@@ -964,6 +979,82 @@ Page({
     this.setData({ reportShow: true, reportPeerId: String(otherId) });
   },
   onReportClose() { this.setData({ reportShow: false }); },
+
+  // SOC-10:群/频道里先选一条别人的消息(最近 6 条),举报这条消息或拉黑它的作者,绝不猜「对方」。
+  _pickOtherMessage(distinctSenders, then) {
+    if (!this._isReadContextCurrent(this.data.conversationId, this.data.myId)) return;
+    const picks = [];
+    const seen = {};
+    for (let i = this.data.msgs.length - 1; i >= 0 && picks.length < 6; i--) {
+      const m = this.data.msgs[i];
+      if (!m.id || String(m.id).indexOf('tmp_') === 0 || !(Number(m.senderId) > 0) || m.senderId == this.data.myId) continue;
+      if (distinctSenders) { if (seen[m.senderId]) continue; seen[m.senderId] = true; }
+      picks.push(m);
+    }
+    if (!picks.length) { app.tips && app.tips('暂无可选的消息'); return; }
+    const label = (m) => {
+      const who = String(m.senderName || '成员').slice(0, 8);
+      if (distinctSenders) return who;
+      const text = m.msgType == 2 ? '[图片]' : m.msgType == 3 ? '[卡片]' : String(m.displayContent || m.content || '').replace(/\s+/g, ' ');
+      return who + '：' + (text.length > 12 ? text.slice(0, 12) + '…' : text);
+    };
+    this._pick = { conversationId: this.data.conversationId, memberId: this.data.myId, picks, then };
+    this.setData({ pickSheetShow: true, pickSheetTitle: distinctSenders ? '拉黑哪位成员' : '举报哪条消息', pickSheetItems: picks.map(label) });
+  },
+
+  onPickSelect(e) {
+    const pick = this._pick;
+    this._pick = null;
+    this.setData({ pickSheetShow: false });
+    const index = e && e.detail ? Number(e.detail.index) : -1;
+    if (!pick || !this._isReadContextCurrent(pick.conversationId, pick.memberId)) return;
+    const m = pick.picks[index];
+    if (m) pick.then(m);
+  },
+
+  onPickCancel() { this._pick = null; this.setData({ pickSheetShow: false }); },
+
+  doBlockSender(m) {
+    const conversationId = this.data.conversationId;
+    const memberId = this.data.myId;
+    const targetId = Number(m && m.senderId);
+    if (!conversationId || !this._isReadContextCurrent(conversationId, memberId)) return;
+    if (!Number.isSafeInteger(targetId) || targetId <= 0 || targetId === Number(memberId)) return;
+    if (this._pendingBlock
+        && this._isReadContextCurrent(this._pendingBlock.conversationId, this._pendingBlock.memberId)) return;
+    this._pendingClear = null;
+    const pending = { conversationId, memberId, submitting: false, unblock: false, group: true, targetId };
+    this._pendingBlock = pending;
+    this._showBlockConfirmation(pending);
+  },
+
+  // 已拉黑成员的消息折叠成一行,点「显示」只在本页展开这一条。
+  onRevealBlocked(e) {
+    const id = e.currentTarget.dataset.id;
+    if (id == null) return;
+    this._revealedBlocked = Object.assign({}, this._revealedBlocked || {}, { [String(id)]: true });
+    this.setData({ msgs: this.decorate(this.data.msgs) });
+  },
+
+  // SOC-10:频道输入栏按频道权限给出真实状态(公告频道只有主理人和管理员可以发言;归档频道只读)。
+  loadChannelGate(conversationId) {
+    const memberId = this.data.myId;
+    app.sendRequest({
+      url: '/api/channels/' + conversationId, method: 'GET', hideLoading: true,
+      success: (res) => {
+        if (!this._isReadContextCurrent(conversationId, memberId)) return;
+        if (!isBizOk(res) || !res.data || typeof res.data !== 'object') return;
+        const perms = Array.isArray(res.data.my_permissions_list) ? res.data.my_permissions_list : null;
+        const status = Number(res.data.status);
+        const lock = status === 1 ? '频道已归档，只能查看'
+          : (perms && perms.indexOf('SEND_MESSAGE') < 0 ? '这个频道只有主理人和管理员可以发言' : '');
+        const previous = this._channelLock || '';
+        this._channelLock = lock;
+        if (lock) this.setData({ disabled: true, disabledText: lock });
+        else if (previous && this.data.disabledText === previous) this.setData({ disabled: false, disabledText: '' });
+      },
+    });
+  },
 
   _showBlockConfirmation(pending) {
     if (!pending || this._pendingBlock !== pending || pending.submitting || pending.opened || this._hidden
@@ -1044,6 +1135,13 @@ Page({
       success: (res) => {
         if (!current()) return;
         if (!isBizOk(res)) { failed((res && res.msg) || '拉黑失败，请重试'); return; }
+        if (pending.group) {
+          // SOC-4/10:频道里拉黑某位成员只折叠 TA 的消息,不锁住整个频道。
+          this._pendingBlock = null;
+          if (dc) dc.done();
+          this.loadMessages(false);
+          return;
+        }
         this._blockedByMe = true;
         this.setData({ disabled: true, disabledText: '你已拉黑对方，无法发送消息', moreSheetItems: ['举报这条消息', '举报对方', '解除拉黑', '隐藏会话'] });
         this._pendingBlock = null;
