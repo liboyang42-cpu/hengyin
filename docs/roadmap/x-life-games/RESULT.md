@@ -34,3 +34,50 @@ Per game (shelf rows in `cms_template_library` only):
 Rules for the seed change: one migration, every UPDATE guarded on the seed text (`create_by`, `validation_method=0`, no `preference_json`/`correct_answer`, rule text still the seed's or `x-template-games`' rule-card wording). Merchant-edited rows are left alone.
 
 R10, R11 and the tally screen use what exists: the answer receipt gains `feedbackText` next to `answerReveal`; the preference submit takes the same `longitude/latitude/accuracy` as `/photo` and the same switch and radius; the tally screens read `GET /api/template/preference-tally`.
+
+## Fix status
+
+| ID | Status | What |
+|---|---|---|
+| R12 生活 G0/G3/G4/G6 and 庆祝 G0–G7 describe mechanics they do not offer | Fixed (shelf rows) | `migration_20261116_life_games.sql`: six preference groups, six server-judged option puzzles, two new 30 s timers (table above). The two themes' own rows wait for the owner (below) |
+| R10 the app never shows `answerReveal`/`feedbackText` | Fixed | Backend: a right answer's receipt now carries `feedbackText` next to `answerReveal`. App: decoded and shown under the passed verdict (chengyin-app receipt). Mini-program already showed both (`passText` from `/nodes`, `answerReveal` from the receipt; `pages/play/utils/answer-right-moment.js`): no change |
+| R11 preference submits pay full prizes without presence | Fixed | Same rule as R2 photos: outside free-collect (which already needs the store scan), a located stop without a fix inside the GAME-2 radius completes with XP and badges only and records `remote_completion`. Same switch `play.arrive.remote_reward_policy` (FULL = old rule) and radius. Both clients send the fix |
+| Merchant tally screen | Fixed | Mini-program: read-only `cy-preference-tally` on the owner's template detail (`pages/publish/temp`, 我的模板 scope, vm=6 only). App: the chengyin-app receipt. Under 3 answers only the total, as the server does |
+
+## Changes, file by file
+
+- `chengyinhub-admin/sql/migration_20261116_life_games.sql` (new). Not transactional (multi-table `UPDATE … JOIN`, as `20261116_template_games`). Rollback note at the top. A temporary table holds the 12 rows; ① writes the two G6 timers only where `advanced_config_json IS NULL` and the row is still vm=0; ② swaps in the mechanic only where the row is still vm=0, has no `preference_json`/`correct_answer`, and its rules are still the seed text (`玩家动作…`) or the x-template-games rule-card text (`这是一张规则卡…`). Player rules and descriptions are plain; merchant notes move to `merchant_guide`. A `runner: assert=scalar-true` post-check.
+- `ci/migration-dependencies.json`: `20261116_life_games` after both seeds, the celebrate copy fix, the 0825 timers, `20261116_template_games`, the preference library, the advanced runtime and the merchant guide column.
+- `chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayBasicCommandApplication.java`: `answerFeedbackText` (frozen content first, else the live template, same source as `/nodes`); put in the right-answer receipt only.
+- `chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayPreferenceApplication.java`: presence check before `advanceProgress`; reuses `PlayPhotoCommandApplication.presentAtStop` and the `remoteCompletion` overload. Optional `ISysConfigService` for the switch.
+- `chengyinhub-system/.../domain/dto/PreferenceSubmitRequest.java`: optional `longitude/latitude/accuracy` (strings, like `/photo`). Not part of the intent fingerprint (choices and tag only), so a resend with another reading is still the same intent.
+- Mini-program:
+  - `pages/play/index.js` `submitPreference`: merges `photoFixOf(this._loc, node, mode)` (the R2 helper: city mode, located stop, reading under 2 minutes) into the payload. Never blocks.
+  - `pages/publish/components/preference-tally/` (new component) and `pages/publish/utils/preference-tally-view.js` (pure view mapping); `pages/publish/temp/index.{json,wxml,js}`: register the component, one `wx:if` line (`isMyScope && tallyTemplateId && validationMethod === 6`), and `tallyTemplateId` in page data.
+- Tests:
+  - `LifeGamesSeedContractTest` (new, 7 tests): the 12 rows parsed from the SQL; every preference config through `PreferenceResultEvaluator`, every combination of picks finishes with a result that quotes every pick, every result reachable, result titles distinct (the tally lists them by title); the pick-three is a `discard` of one from four and each result lists the three kept; every option puzzle complete, with the right answer **recomputed from the numbers in the question** (opening-window overlap, three-hour schedule, walk-leg limit, budget sum, the three fallback conditions); timers through `AdvancedGameConfigValidator`; no merchant words or banned player words in player text.
+  - `ApiPlayProgressCompletionTruthTest.correctReceiptCarriesTheAuthorsFeedbackTextAndAWrongOneDoesNot`.
+  - `ApiPlaySensorResultTest`: `locatedPreferenceStopWithoutAFixCompletesWithoutPoints`, `locatedPreferenceStopWithAFixAtTheStopPaysPoints`, `onlinePreferenceStopPaysPointsWithoutAFix`.
+  - Mini: `tests/unit/play-preference-fix.test.js`, `tests/unit/preference-tally-view.test.js`.
+
+## Theme rows waiting for the owner (not changed)
+
+The 《生活不掉线》 and 《今天值得庆祝》 themes read their own official rows in `cms_member_template` (`member_id=100000`, same titles, `create_by` = the two seeds), wired to theme nodes by the topic seeds. If the owner approves, the change is exactly the shelf change, applied to those rows:
+
+| Theme row (`cms_member_template`, member 100000) | Would change |
+|---|---|
+| 生活 G0｜30秒生活掉线测试 | `validation_method` 0→6, `preference_json`, `description`, `rule_instructions`, `merchant_guide` (keeps its 30 s timer) |
+| 生活 G3｜营业时间拼图 | 0→3, `question_name`, `question_a..d`, `correct_answer`='C', `hint1`, `answer_reveal`, `feedback_text`, `description`, `rule_instructions`, `merchant_guide` |
+| 生活 G4｜去之前准备什么 | 0→6 (`discard` step), `preference_json`, `description`, `rule_instructions`, `merchant_guide` |
+| 生活 G6｜首选失效怎么办 | 0→3 (`correct_answer`='B'), the option fields as G3, plus `advanced_config_json` = 30 s timer |
+| 庆祝 G0｜30秒今天值得什么 | 0→6 (keeps its 30 s timer) |
+| 庆祝 G1｜每人一个不能 | 0→6 |
+| 庆祝 G2｜气氛卡碰撞 | 0→6 |
+| 庆祝 G3｜三小时时间方块 | 0→3, 'C' (keeps its 3 h timer) |
+| 庆祝 G4｜每人预算筹码 | 0→3, 'B' |
+| 庆祝 G5｜十分钟步行上限 | 0→3, 'B' (keeps its 10 min timer) |
+| 庆祝 G6｜主选突然掉线 | 0→3, 'C', plus the 30 s timer |
+| 庆祝 G7｜60秒共同落款 | 0→6 (keeps its 60 s timer) |
+| 生活 G1/G2/G5 (from x-template-games) | 0→6 with the configs in `migration_20261116_template_games.sql` |
+
+Values are the ones in `migration_20261116_life_games.sql`. Consequences to weigh: theme stops change from "arrive and done" to a choice or a puzzle; already-published theme runs keep their frozen answers (`freezeNodeAnswers`) and change only after a republish; 庆祝 G1 stays single-player (each companion plays once; nothing merges answers). Merchant copies adopted before this migration are not changed either: they keep the rule card until the merchant re-adopts or edits.
