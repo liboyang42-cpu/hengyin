@@ -18,7 +18,7 @@ This package covers the 19 the owner named. The other 50 are listed so nobody re
 
 ### What changed since August
 
-- `migration_20260825_named_mechanic_advanced_config.sql` gave **C02** a 90-minute timer and an elapsed-time leaderboard (`scope: TOPIC`), and gave **G0** a 30-second timer.
+- `migration_20260825_named_mechanic_advanced_config.sql` gave **C02** a 90-minute timer and an elapsed-time leaderboard (`scope: TOPIC`), and gave **G0** a 30-second timer. `migration_20260826_team_race_multiplayer.sql` then made C02 a real team race (multiplayer, activity + team required).
 - `migration_template_merchant_guide_20260906.sql` split merchant-only text into `merchant_guide` for the 18 play packs, but **not** for these 12. Their `rule_instructions` still end in "(运营提示:…)", which players see.
 - Manual photo review was removed on 2026-09-17 (`PlayPhotoCommandApplication`: "拍照任务不再有人工审核,一律机审"). Every photo is accepted on submit. **C04** still says `photo_review=1` and "等待被收入今日城市影集".
 - x-rewards-evidence (merged) applied "progress is free, prizes need presence" to `arrive` and `answer`, and capped unjudged advanced sections. Plain **photo** completions (`/api/play/photo`, vm=2) and **preference** submits (vm=6) still pay `RewardPolicy.FULL` with no presence check.
@@ -92,14 +92,13 @@ App gaps that matter for these games (from `chengyin-app`):
 - **Playable:** both.
 - **Problems:** fine as a check-in. The "今日身份" it promises is not given by anything; C06 is where roles live. The operator note is shown.
 
-### C02 小队竞速点亮 (GPS, vm=5 + timer + leaderboard)
-- **Player:** walks to a point, while a 90-minute timer runs.
-- **Judging:** server geofence. The board ranks elapsed time per player (TOPIC scope).
-- **Playable:** both. The app shows a dash instead of the remaining time.
+### C02 小队竞速点亮 (GPS, vm=5 + timer + leaderboard + multiplayer)
+- **Player:** joins a team in an activity session, then walks to a point within 90 minutes.
+- **Judging:** server geofence. The board (`GameRuntimeSessionMapper.selectLeaderboard`) ranks team sessions (`play_team`) by elapsed time.
+- **Playable:** inside an activity with teams only. `migration_20260826_team_race_multiplayer.sql` enabled `multiplayer` (ROLE_BASED, 2–4 players), and the server refuses self-play ("队伍玩法仅支持活动场次") and players without a team ("请先加入本场队伍"). The app shows a dash instead of the remaining time.
 - **Problems:**
-  - It says **小队** (squad) but ranks individuals. "小队排名正在更新" is false.
-  - "最终按完成时间和任务数排名" is not what the board does.
-  - No multiplayer team mode on a shelf template: it needs an activity session and `play_team`, per the 08-25 migration note.
+  - The shelf card does not say it needs an activity and a team. A merchant who adopts it for self-play gets a stop nobody can start.
+  - "最终按完成时间和任务数排名" is not what the board does: it ranks only by time.
 
 ### C03 街角谜题 (text, vm=1)
 - **Player:** finds a year on a door plate.
@@ -169,7 +168,7 @@ Lessons for these games:
 | R4 | C04 promises manual review and selection that no longer exist; photo requirement texts imply checks | Dishonest | Seed: `photo_review=0`; honest feedback and requirement text ("照片不做自动识别,提交即完成") |
 | R5 | C06's role draw is offline only | The headline mechanic is missing in both clients | Seed: add an advanced `random` role deck (4 roles, draw 1). Both clients already play `random` before the photo |
 | R6 | G1/G2/G5 say "三选一" but offer no choice; G0/G3/G4/G6 describe mechanics that don't exist | Dull and dishonest on the shelf | Seed: G1/G2/G5 become vm=6 preference groups on the shelf. G0/G3/G4/G6 get an honest "rule card" label in their rules |
-| R7 | C02 says squad race; board ranks individual elapsed time | Misleading | Seed copy: "按个人用时排名" everywhere. App: show the timer's remaining time instead of a dash |
+| R7 | C02 needs an activity and a team (since 08-26) but the card does not say so; it claims a "time and task count" ranking | Adopters build stops nobody can start in self-play | Seed copy: says it needs an activity session and a team, and that the board ranks team time. App: show the timer's remaining time instead of a dash |
 | R8 | C05 relay hand-over is offline; copy implies the app does it | Misleading | Seed copy: leader sets the order; the app records each team's phrase |
 | R9 | Placeholder answers (M01 城市醒了, M02 A, C03 1932, C05 星火继续) stay on adopted copies | Shared answers are farmable across shops and untrue | Authoring default: publishing an adopted copy of an official shelf game with the seed's unchanged question and answer is refused ("请换成你店里的题和答案"). Switch `template.official_placeholder_guard`, default on |
 | R10 | App never shows `answerReveal`/`feedbackText` | Players miss the payoff text authors write | Left open (app answer receipt change; touches the stop-answer path the UI agent owns) |
