@@ -87,6 +87,10 @@ public class AccountDeregistrationServiceImpl implements IAccountDeregistrationS
     @Autowired(required = false)
     private MemberPrivacyErasureService memberPrivacyErasureService;
 
+    /** SOC-14: chat text and channel operator ids (switches chengyin.erasure.*). */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.channel.platform.ChatErasureService chatErasureService;
+
     @Override
     public DeregistrationStatusVO precheck(Long memberId) {
         UmsMember member = memberMapper.selectUmsMemberById(memberId);
@@ -378,6 +382,8 @@ public class AccountDeregistrationServiceImpl implements IAccountDeregistrationS
             deregistrationMapper.deleteMemberAddresses(memberId);
             // R13:路线图新增的位置/设备个人信息(保留迷雾格、漫游轨迹、定位可信留痕、安装号关联、推送设备)
             if (memberPrivacyErasureService != null) memberPrivacyErasureService.erase(memberId, now);
+            // SOC-14:聊天正文(私信/群/频道)与频道操作人;KEEP 开关下不动
+            if (chatErasureService != null) eraseOptional("im_message", () -> chatErasureService.eraseMember(memberId));
             roamHangoutService.closeAllByMember(memberId);   // 附近的局:局主没了,局转关、群转关
             eraseR3PersonalData(memberId);                   // ★HIGH-S6:领地/城市大富翁/属性/频道/外部游戏/随机
             appSessionRegistryService.revokeAll(memberId);

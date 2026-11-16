@@ -38,7 +38,9 @@ POST_DEPLOY_MIGRATIONS = {"20261012_merchant_commerce_reconcile_job", "20261012_
                           "20261127_city_monopoly_jobs", "20261127_stagger_city_monopoly_jobs",
                           # W7 x-channel-reach: paused sys_job naming channelMembershipBackfillTask (new jar only),
                           # and its stagger file that only updates that row.
-                          "20261116_channel_membership_backfill", "20261116_stagger_channel_membership_job"}
+                          "20261116_channel_membership_backfill", "20261116_stagger_channel_membership_job",
+                          # W7 x-channel-safety SOC-14: paused sys_job naming channelPurgeTask (new jar only), and its stagger.
+                          "20261128_channel_purge_job", "20261128_stagger_channel_purge_job"}
 BOOTSTRAP_SQL = {
     "sql/quartz.sql",
     "sql/ry_20250522.sql",

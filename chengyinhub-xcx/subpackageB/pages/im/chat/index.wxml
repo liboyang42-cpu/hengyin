@@ -56,6 +56,8 @@
           <text wx:else class="notice__text">{{item.displayContent}}</text>
         </view>
       </view>
+      <!-- SOC-4:群/频道里已拉黑成员的消息折叠成一行,点开才显示(复用时间分隔样式,不新增视觉) -->
+      <view wx:elif="{{item.blockedHidden}}" class="time-div" hover-class="cy-pressed" hover-stay-time="80" bindtap="onRevealBlocked" data-id="{{item.id}}" aria-role="button" aria-label="1 条来自已拉黑用户的消息，点按显示">1 条来自已拉黑用户的消息 · 显示</view>
       <block wx:else>
       <!-- 卡片/系统消息仍走居中时间分隔(与改动前一致);普通文字/图片气泡改用贴气泡的行内时间(见下方),
            两处若都渲染会对同一时刻重复显示,故这里限定 msgType==3 -->
@@ -249,6 +251,9 @@
                    bind:select="onPlusSelect" bind:cancel="onPlusCancel" />
   <cy-option-sheet show="{{moreSheetShow}}" title="更多" items="{{moreSheetItems}}" immediate="{{true}}"
                    bind:select="onMoreSelect" bind:cancel="onMoreCancel" />
+  <!-- SOC-10:群/频道里先选具体消息(或作者)再举报/拉黑 -->
+  <cy-option-sheet show="{{pickSheetShow}}" title="{{pickSheetTitle}}" items="{{pickSheetItems}}" immediate="{{true}}"
+                   bind:select="onPickSelect" bind:cancel="onPickCancel" />
   <cy-report-sheet wx:if="{{!readOnly}}" show="{{reportShow}}" target-type="MEMBER" target-id="{{reportPeerId}}" title="举报对方" bind:close="onReportClose" />
 </view>
 <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />

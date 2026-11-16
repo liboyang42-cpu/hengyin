@@ -129,7 +129,8 @@ Page({
     if (this._navigating) return;
     this._navigating = true;
     wx.navigateTo({
-      url: '/subpackageB/pages/im/chat/index?conversationId=' + id + '&name=' + encodeURIComponent(name || ''),
+      // SOC-10:频道按群打开(type=5),不是 1:1 私信:举报/拉黑针对具体消息的作者,输入栏按频道权限。
+      url: '/subpackageB/pages/im/chat/index?conversationId=' + id + '&type=5&name=' + encodeURIComponent(name || ''),
       complete: () => { this._navigating = false; }
     });
   },

@@ -155,4 +155,41 @@ class MessageInteractionServiceTest
         assertEquals("62", data.get("next_after"));
         assertEquals(2, ((List<?>) data.get("list")).size());
     }
+
+    // ===== SOC-4: react and typing pass the same safety gate as send =====
+
+    @Test
+    void restrictedOrBlockedAccountsCannotReactButCanRemoveTheirOwnReaction()
+    {
+        when(mapper.selectMessageHead(50L)).thenReturn(Map.of("conversationId", 9L, "status", 0, "checkStatus", 1));
+        doThrow(new ServiceException("账号已被限制发言", 403)).when(im).requireSendable(1L, 9L);
+
+        assertEquals(403, assertThrows(ServiceException.class,
+                () -> service.react(1, body("conversation_id", "9", "message_id", "50", "emoji", "heart"))).getCode());
+        verify(mapper, never()).insertReaction(anyLong(), anyLong(), anyString(), anyLong());
+
+        when(mapper.deleteReaction(50L, 1L, "heart")).thenReturn(1);
+        assertEquals(true, service.react(1, body("conversation_id", "9", "message_id", "50", "emoji", "heart", "on", false)).get("changed"));
+    }
+
+    @Test
+    void blockedPairAndReadOnlyMembersSendNoTypingHint()
+    {
+        doThrow(new ServiceException("对方暂不可联系", 403)).when(im).requireSendable(1L, 9L);
+        assertEquals(403, assertThrows(ServiceException.class, () -> service.typing(1, 9)).getCode());
+        doThrow(new ServiceException("无权在该游戏频道发送消息", 403)).when(im).requireSendable(2L, 9L);
+        assertEquals(403, assertThrows(ServiceException.class, () -> service.react(2,
+                body("conversation_id", "9", "message_id", "50", "emoji", "heart"))).getCode());
+        verify(realtime, never()).publish(anyLong(), anyString(), any());
+    }
+
+    @Test
+    void reactionAndTypingCallTheSendGate()
+    {
+        when(mapper.selectMessageHead(50L)).thenReturn(Map.of("conversationId", 9L, "status", 0, "checkStatus", 1));
+        when(mapper.insertReaction(50L, 1L, "heart", 9L)).thenReturn(1);
+        service.react(1, body("conversation_id", "9", "message_id", "50", "emoji", "heart"));
+        service.typing(1, 9);
+        verify(im, times(2)).requireSendable(1L, 9L);
+    }
 }

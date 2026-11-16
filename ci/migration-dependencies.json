@@ -1069,6 +1069,8 @@
     "20261128_city_economy": ["20261124_city_numbers_attr", "20261127_city_monopoly_claim_flow", "20261115_points_governance", "20261113_gaps_a_city_game"],
     "20261127_city_monopoly_jobs": ["20261124_city_numbers_attr"],
     "20261127_stagger_city_monopoly_jobs": ["20261127_city_monopoly_jobs", "20261115_stagger_all_sys_jobs", "20261115_stagger_club_growth_jobs"],
+    "20261128_channel_purge_job": ["20261105_l8_channel_lifecycle"],
+    "20261128_stagger_channel_purge_job": ["20261115_stagger_all_sys_jobs", "20261128_channel_purge_job"],
     "20261126_reward_drop_perm_union": ["20261115_admin_consoles", "20261123_sys_random", "20261125_admin_r3_perms"],
     "20261115_club_dues": ["20261115_collection_model", "club_role_membership_20260823"],
     "20261115_hardening": ["web_admin_nine_domains_20260719", "20261115_money_pass", "20261115_merchant_plans", "20261115_admin_consoles"],

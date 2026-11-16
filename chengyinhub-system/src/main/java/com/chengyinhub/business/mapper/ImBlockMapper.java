@@ -16,4 +16,7 @@ public interface ImBlockMapper
 
     /** 双向是否存在拉黑(任一方向) */
     public int existsBetween(@Param("a") Long a, @Param("b") Long b);
+
+    /** SOC-4：senderIds 中被 viewer 拉黑的人（只看 viewer → sender 方向） */
+    public java.util.List<Long> selectBlockedAmong(@Param("viewer") Long viewer, @Param("senderIds") java.util.List<Long> senderIds);
 }
