@@ -95,6 +95,14 @@ public class RoamTerritoryService {
         return monopoly != null && monopoly.enabled(boardId);
     }
 
+    /**
+     * CITY-7 (owner decision 2026-11-16): City Monopoly pays 积分 only, so its boards say POINTS; classic territory keeps
+     * the non-cashable city coin ({@link #REVENUE_MODE}).
+     */
+    String revenueModeFor(String boardId) {
+        return monopolyActive(boardId) ? "POINTS" : REVENUE_MODE;
+    }
+
     /** Plausibility evaluation outcome for GPS coordinates and speed jumps. */
     public static final class PlausibilityVerdict {
         public final String status;
@@ -294,7 +302,7 @@ public class RoamTerritoryService {
         out.put("boardId", resolvedBoardId);
         out.put("regionId", board == null ? regionId : board.get("regionId"));
         out.put("seasonId", resolvedSeasonId);
-        out.put("revenueMode", REVENUE_MODE);
+        out.put("revenueMode", revenueModeFor(resolvedBoardId));
         out.put("items", items);
         out.put("territories", items);
         return out;
@@ -841,7 +849,7 @@ public class RoamTerritoryService {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("boardId", useBoardId);
         out.put("seasonId", useSeasonId);
-        out.put("revenueMode", REVENUE_MODE);
+        out.put("revenueMode", revenueModeFor(useBoardId));
         out.put("leaders", leaders);
         out.put("topTerritories", topTerritories);
         return out;

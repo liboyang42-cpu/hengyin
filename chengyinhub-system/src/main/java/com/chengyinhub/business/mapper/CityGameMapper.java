@@ -103,6 +103,10 @@ public interface CityGameMapper {
     int creditMemberPoints(@Param("memberId") long memberId, @Param("points") long points);
     int insertPointsEarnDetail(@Param("memberId") long memberId, @Param("before") long before, @Param("points") long points,
                                @Param("reason") String reason, @Param("businessKey") String businessKey);
+    /** CITY-7: same as {@link #insertPointsEarnDetail} with the governed award source (71-76) as event_type. */
+    int insertPointsEarnDetailTyped(@Param("memberId") long memberId, @Param("before") long before, @Param("points") long points,
+                                    @Param("reason") String reason, @Param("businessKey") String businessKey,
+                                    @Param("eventType") long eventType);
     List<Map<String, Object>> selectRoundRolls(@Param("boardId") String boardId, @Param("teamId") String teamId, @Param("roundSeq") long roundSeq);
     Map<String, Object> selectRoundForUpdate(@Param("boardId") String boardId, @Param("teamId") String teamId, @Param("roundSeq") long roundSeq);
 }
