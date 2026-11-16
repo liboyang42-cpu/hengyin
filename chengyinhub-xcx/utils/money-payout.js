@@ -47,8 +47,17 @@ function overview(done) { call('/api/payout/request/overview', 'GET', null, done
 function submit(amount, done) { call('/api/payout/request/submit', 'POST', { amount: String(amount) }, done) }
 function cancel(id, done) { call('/api/payout/request/cancel', 'POST', { id: id }, done) }
 // 小程序绑定页:绑定码 + 新鲜的 wx.login code。认领后什么都还没绑定,要回到 App 里确认。
+// MERCHANT-8:服务端回一个两位数字,只在这里显示;App 主人要在 App 里选同一个数字才会绑定。
 function claimBinding(bindCode, jsCode, done) {
-  call('/api/payout/binding/claim', 'POST', { bindCode: bindCode, jsCode: jsCode }, done)
+  call('/api/payout/binding/claim', 'POST', { bindCode: bindCode, jsCode: jsCode }, function (err, data) {
+    done(err, err ? null : matchNumberOf(data))
+  })
+}
+
+// 两位数字(10-99);读不到时回 null,页面就不显示数字。
+function matchNumberOf(data) {
+  var n = data && data.matchNumber
+  return typeof n === 'number' && n >= 10 && n <= 99 && Math.floor(n) === n ? n : null
 }
 
 // 扫普通链接二维码打开时 options.q 是整条链接(已 encodeURIComponent);也接受 ?bc= 直接传入。
@@ -93,6 +102,7 @@ module.exports = {
   submit: submit,
   cancel: cancel,
   claimBinding: claimBinding,
+  matchNumberOf: matchNumberOf,
   bindCodeFromOptions: bindCodeFromOptions,
   normalizeCode: normalizeCode,
   normalizeAmount: normalizeAmount,

@@ -8,7 +8,10 @@
   <view class="pb-content">
     <view class="pb-card" wx:if="{{done}}" aria-role="alert">
       <view class="pb-title">已确认是你的微信</view>
-      <view class="pb-text">请回到城瘾 App，点「确认绑定」完成。App 里确认之前，什么都不会绑定。</view>
+      <view class="pb-match" wx:if="{{matchNumber}}" aria-label="核对数字 {{matchNumber}}">{{matchNumber}}</view>
+      <view class="pb-text" wx:if="{{matchNumber}}">请在城瘾 App 里选择 {{matchNumber}}，再点「确认绑定」。App 里确认之前，什么都不会绑定。</view>
+      <view class="pb-text" wx:else>请回到城瘾 App，点「确认绑定」完成。App 里确认之前，什么都不会绑定。</view>
+      <view class="pb-text">如果不是你自己在 App 里生成的二维码，请不要告诉别人这个数字。</view>
     </view>
     <block wx:else>
       <view class="pb-card">

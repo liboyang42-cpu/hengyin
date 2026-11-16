@@ -20,11 +20,15 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.regex.Pattern;
 
 /**
@@ -37,6 +41,10 @@ import java.util.regex.Pattern;
  * </ol>
  * A code is single use, stored only as its sha256, and expires after a few minutes. Every step is refused unless
  * the money switch area for its purpose is open (wallet: {@code withdrawal}; club receiver: {@code payout}).
+ * <p>
+ * MERCHANT-8 number matching: a claim stores a random two-digit number and shows it only in the mini-program. The app
+ * gets three choices (that number and two others) and must send the one the scanner saw. A wrong number cancels the
+ * code, so a WeChat that scanned a leaked or over-the-shoulder code cannot be confirmed by guessing.
  */
 @Service
 public class PayoutBindingService {
@@ -44,6 +52,12 @@ public class PayoutBindingService {
     public static final String CLUB_RECEIVER = "CLUB_RECEIVER";
     static final Pattern CODE = Pattern.compile("[A-Za-z0-9_-]{24}");
     static final int CODE_BYTES = 18;
+    static final int MATCH_MIN = 10;
+    static final int MATCH_MAX = 99;
+    static final int MATCH_CHOICES = 3;
+    /** Machine codes the app maps to its own copy (never shown as is). */
+    static final String MATCH_REQUIRED = "PAYOUT_BIND_NUMBER_REQUIRED";
+    static final String MATCH_WRONG = "PAYOUT_BIND_NUMBER_MISMATCH";
     private static final SecureRandom RANDOM = new SecureRandom();
 
     private final PayoutBindingMapper bindings;
@@ -107,6 +121,11 @@ public class PayoutBindingService {
         out.put("open", gate.isOpen(areaFor(purpose)));
         out.put("status", latest == null ? "NONE" : effectiveStatus(latest));
         out.put("expiresAt", latest == null ? null : latest.get("expiresAt"));
+        Integer match = latest == null ? null : matchNumber(latest.get("matchNumber"));
+        if (match != null && "CLAIMED".equals(out.get("status"))) {
+            out.put("choices", choices(toLong(latest.get("id")), match));
+            out.put("claimedAt", latest.get("claimedAt"));
+        }
         if (WALLET.equals(purpose)) out.put("walletBound", walletBound(memberId));
         return out;
     }
@@ -131,19 +150,21 @@ public class PayoutBindingService {
         if (session == null || session.getOpenId() == null || session.getOpenId().isBlank())
             throw new BusinessRefusal(ErrorCode.REFUSED, "微信登录失败，请重试");
         String openid = session.getOpenId();
+        int match = newMatchNumber();
         tx.executeWithoutResult(status -> {
             Map<String, Object> row = bindings.selectByHashForUpdate(hash);
-            if (row == null || bindings.claim(toLong(row.get("id")), openid) != 1)
+            if (row == null || bindings.claim(toLong(row.get("id")), openid, match) != 1)
                 throw new BusinessRefusal(ErrorCode.GONE, "绑定码已失效，请在 App 里重新生成");
         });
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("purpose", purpose);
         out.put("status", "CLAIMED");
+        out.put("matchNumber", match);
         return out;
     }
 
-    /** App side: tie the claimed openid to this app account. */
-    public Map<String, Object> confirm(Long memberId, String rawPurpose, Long rawClubId) {
+    /** App side: tie the claimed openid to this app account, once the owner picked the number the scanner saw. */
+    public Map<String, Object> confirm(Long memberId, String rawPurpose, Long rawClubId, Integer pickedNumber) {
         requireMember(memberId);
         String purpose = purpose(rawPurpose);
         requireOpen(purpose);
@@ -152,6 +173,7 @@ public class PayoutBindingService {
         if (latest == null || !"CLAIMED".equals(effectiveStatus(latest)))
             throw new BusinessRefusal(ErrorCode.CONFLICT, "还没有在微信里扫码，或绑定码已失效");
         Long codeId = toLong(latest.get("id"));
+        requireMatch(memberId, codeId, matchNumber(latest.get("matchNumber")), pickedNumber);
         String openid = String.valueOf(latest.get("claimedOpenid"));
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("purpose", purpose);
@@ -178,6 +200,49 @@ public class PayoutBindingService {
         }
         out.put("status", "CONFIRMED");
         return out;
+    }
+
+    /**
+     * A claim made before number matching existed has no number: it cannot be confirmed, a new code is needed.
+     * No pick (an older app) is refused without cancelling. A wrong pick cancels the code (outside any transaction, so
+     * the cancel stays) and is refused.
+     */
+    private void requireMatch(Long memberId, Long codeId, Integer expected, Integer picked) {
+        if (expected == null) {
+            bindings.cancelClaimed(codeId, memberId);
+            throw new BusinessRefusal(ErrorCode.CONFLICT, MATCH_WRONG);
+        }
+        if (picked == null) throw new BusinessRefusal(ErrorCode.BAD_REQUEST, MATCH_REQUIRED);
+        if (!expected.equals(picked)) {
+            bindings.cancelClaimed(codeId, memberId);
+            throw new BusinessRefusal(ErrorCode.CONFLICT, MATCH_WRONG);
+        }
+    }
+
+    static int newMatchNumber() {
+        return MATCH_MIN + RANDOM.nextInt(MATCH_MAX - MATCH_MIN + 1);
+    }
+
+    /**
+     * The right number plus two others, in an order fixed per code (polling never reshuffles them). The order only
+     * depends on the code id and the number, which the app owner cannot see in the mini-program anyway.
+     */
+    static List<Integer> choices(long codeId, int match) {
+        Random seeded = new Random(codeId * 1_000_003L + match);
+        List<Integer> out = new ArrayList<>(MATCH_CHOICES);
+        out.add(match);
+        while (out.size() < MATCH_CHOICES) {
+            int other = MATCH_MIN + seeded.nextInt(MATCH_MAX - MATCH_MIN + 1);
+            if (!out.contains(other)) out.add(other);
+        }
+        Collections.shuffle(out, seeded);
+        return out;
+    }
+
+    static Integer matchNumber(Object value) {
+        if (value == null) return null;
+        int n = value instanceof Number num ? num.intValue() : Integer.parseInt(String.valueOf(value));
+        return n >= MATCH_MIN && n <= MATCH_MAX ? n : null;
     }
 
     boolean walletBound(Long memberId) {

@@ -86,13 +86,15 @@ public class ApiMoneyPayoutController extends BaseController {
         return success(bindings.status(memberId, purpose, clubId));
     }
 
-    /** Body: {"purpose": "...", "clubId": 1}. */
+    /** Body: {"purpose": "...", "clubId": 1, "matchNumber": 42} (the number the mini-program showed the scanner). */
     @Operation(summary = "在 App 里确认扫码的微信")
     @PostMapping("/binding/confirm")
     public AjaxResult confirm(@RequestBody(required = false) Map<String, Object> body) {
         Long memberId = memberOrNull();
         if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
-        return success(bindings.confirm(memberId, text(body, "purpose"), longOrNull(body == null ? null : body.get("clubId"))));
+        Long match = longOrNull(body == null ? null : body.get("matchNumber"));
+        Integer picked = match == null || match < 0 || match > 999 ? null : match.intValue();
+        return success(bindings.confirm(memberId, text(body, "purpose"), longOrNull(body == null ? null : body.get("clubId")), picked));
     }
 
     /**

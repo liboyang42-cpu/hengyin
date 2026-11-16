@@ -10,6 +10,7 @@ Page({
     codeInput: '',
     busy: false,
     done: false,
+    matchNumber: null,
     notice: '',
   },
 
@@ -31,9 +32,9 @@ Page({
       success(res) {
         if (that._unloaded) return
         if (!res || !res.code) { that.setData({ busy: false, notice: '微信登录失败，请重试' }); return }
-        moneyPayout.claimBinding(code, res.code, function (err) {
+        moneyPayout.claimBinding(code, res.code, function (err, matchNumber) {
           if (that._unloaded) return
-          that.setData({ busy: false, done: !err, notice: err || '' })
+          that.setData({ busy: false, done: !err, matchNumber: err ? null : matchNumber, notice: err || '' })
         })
       },
       fail() {
