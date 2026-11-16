@@ -22,6 +22,8 @@ const { resolveLeadMemberTicket } = require('./utils/lead-ticket-scan.js');
 const { seatTarget, seatKey, seatRecovery, seatChoice, captureLogin, loginCurrent } = require('../../utils/registration-seat.js');
 const { classifyVerificationOutcome, createVerificationWorkflow } = require('../../utils/merchant-verification.js');
 const { routeColorForKey, ROUTE_BORDER_COLOR } = require('../../utils/play-visual-tokens.js');
+const walkGuide = require('./utils/walk-guide.js');
+const { lockCard } = require('./utils/lock-card.js');
 const { getPlayMapState, getPlayRouteNodeState } = require('../../utils/play-state-contract.js');
 const gameSessionClient = require('../../utils/game-session-client.js');
 const orientLifecycle = require('./utils/orient-lifecycle.js');
@@ -579,6 +581,7 @@ Page({
     tileH: 0,                     // 瓦片行高:按剩余高度等分,4 家竖版大卡 / 6 家近方卡
     nodes: [], total: 0, merchantCount: 0, merchantDoneCount: 0, doneCount: 0, allDone: false, topicCompleted: false,
     remainingGameCount: 0, canContinueGames: false,
+    walkGuide: { on: false, loading: false, text: '', error: '', lines: [] }, lockCard: { show: false, nodeId: '', name: '', text: '' },
     fmNodes: [], fmPolyline: [], fmTrail: [], fmTeamPins: [], teamRail: [], teamFollowKey: '', teamConsent: { show: false, share: true }, routeCard: { on: false, ready: false }, routeMap: { points: [], lines: [], subkey: '', layerStyle: 1, tone: '' }, fmPlayer: null, fmCenter: { lat: 31.2304, lng: 121.4737 },
     fmSubkey: MAP_DARK.subkey, fmLayerStyle: MAP_DARK.layerStyle, /* 2026-11-14 owner:左上雷达与另两张图一样跟主题外观 */ fmTone: '', fmStyleReady: !mapStyleConfigured(), // S9 暗色底图预留,见上方 MAP_DARK 注释
 
@@ -2666,20 +2669,75 @@ Page({
       return true;
     }
     if (!node || !node.locked) return false;
-    if (this._routeState.routeMode === 'BRANCH_GRAPH') {
-      cyToast(node.lockReason || '前路未知 · 完成当前路线后解锁');
-      return true;
-    }
-    const prev = (this.data.nodes || []).find((n) => String(n.nodeId) === String(node.unlockAfterNodeId));
-    // locked 是进页那一刻的快照:前置站刚在本页完成时它还没刷新,不能再拿「先完成刚完成的那站」挡人。
-    // 服务端完成入口另有硬闸,这里放行只影响提示层。
-    if (prev && prev.done) {
+    // MPP-7:锁着的站不再只弹会消失的 toast,在故事流里留一张卡,写服务端原因(文案同原提示)。
+    const card = lockCard(node, this.data.nodes, this._routeState.routeMode);
+    if (!card) {
+      // locked 是进页那一刻的快照:前置站刚在本页完成时它还没刷新,不能再拿「先完成刚完成的那站」挡人。
+      // 服务端完成入口另有硬闸,这里放行只影响提示层。
       const idx = (this.data.nodes || []).indexOf(node);
       if (idx >= 0) this.setData({ ['nodes[' + idx + '].locked']: false });
       return false;
     }
-    cyToast(prev ? ('先完成「' + prev.name + '」才会解锁') : '前路未知 · 先完成前置关卡');
+    this.setData({ lockCard: card });
     return true;
+  },
+  closeLockCard() {
+    this.setData({ 'lockCard.show': false });
+  },
+
+  // ---------- MPP-7 在小程序里走过去(步行路线留在故事里;导航过去仍是逃生门) ----------
+  startWalkGuide() {
+    const n = this.data.nextNode;
+    if (!n || !n.lat || !n.lng || this.data.walkGuide.loading) return;
+    this._walkTarget = { nodeId: n.nodeId, at: [Number(n.lat), Number(n.lng)] };
+    this._walkState = walkGuide.createState();
+    this._requestWalkRoute();
+  },
+  _requestWalkRoute() {
+    const target = this._walkTarget;
+    if (!target) return;
+    const fail = (code) => {
+      if (this._walkTarget !== target) return;
+      this._walkTarget = null; this._walkLine = null;
+      this.setData({ walkGuide: { on: false, loading: false, text: '', error: walkGuide.errorText(code), lines: [] } });
+    };
+    const go = (loc) => {
+      if (this._walkTarget !== target) return;
+      if (!loc || !Number.isFinite(Number(loc.latitude)) || !Number.isFinite(Number(loc.longitude))) { fail('NO_LOCATION'); return; }
+      if (Number(loc.accuracy) > 80) { fail('WEAK_GPS'); return; }
+      this.setData({ 'walkGuide.loading': true, 'walkGuide.error': '' });
+      const data = { topicId: this.data.topicId, nodeId: target.nodeId, lat: Number(loc.latitude), lng: Number(loc.longitude) };
+      if (this.data.activityId) data.activityId = this.data.activityId;
+      req('/api/play/walk-route', 'GET', data, undefined, true).then((res) => {
+        if (this._walkTarget !== target) return;
+        const route = res && Number(res.code) === 200 ? walkGuide.readRoute(res.data) : null;
+        if (!route) { fail(walkGuide.failureCode(res)); return; }
+        this._walkLine = route.line;
+        const base = (this.data.fmPolyline || []).filter((line) => !line.walkGuide);
+        this.setData({ walkGuide: { on: true, loading: false, error: '', text: walkGuide.remainingText(route.distanceM),
+          lines: base.concat(walkGuide.mapLine(route.line, routeColorForKey('confirmed-progress'), ROUTE_BORDER_COLOR)) } });
+      });
+    };
+    if (this._loc && Number.isFinite(Number(this._loc.latitude))) go(this._loc);
+    else wx.getLocation({ type: 'gcj02', success: go, fail: () => go(null) });
+  },
+  stopWalkGuide() {
+    this._walkTarget = null; this._walkLine = null; this._walkState = null;
+    this.setData({ walkGuide: { on: false, loading: false, text: '', error: '', lines: [] } });
+  },
+  /** 每次定位:剩余距离跟着走;偏离 3 次重算(最多 2 次);到站 ≤50 米交回原有的自动到达。 */
+  _walkGuideOnFix(loc) {
+    const target = this._walkTarget;
+    if (!target || !this._walkLine || !loc) return;
+    const next = this.data.nextNode;
+    if (!next || String(next.nodeId) !== String(target.nodeId)) { this.stopWalkGuide(); return; }
+    const fix = [Number(loc.latitude), Number(loc.longitude)];
+    const step = walkGuide.onFix(this._walkState, fix, this._walkLine, target.at);
+    this._walkState = step.state;
+    if (step.action === 'arrive') { this.stopWalkGuide(); return; }
+    if (step.action === 'replan') { this._requestWalkRoute(); return; }
+    const text = walkGuide.remainingText(walkGuide.remainingAlong(fix, this._walkLine));
+    if (text && text !== this.data.walkGuide.text) this.setData({ 'walkGuide.text': text });
   },
 
   _playerProjectionContext() {
@@ -5378,6 +5436,7 @@ Page({
           that._loc = arrivalReading.stamp({ longitude: loc.longitude, latitude: loc.latitude, accuracy: loc.accuracy });
           that._noteLocAccuracy(loc.accuracy);
           if (typeof that._noteMyTrail === 'function') that._noteMyTrail(loc);
+          if (that._walkTarget) that._walkGuideOnFix(that._loc);   // MPP-7 步行路线跟着走
           /* R11 g1(j4 F7):「下一站 · Xm」与罗盘距离跟着走 —— 以前只在 rebuild 时算一次,走到站上还写着出发时的距离。
              文字没变就不 setData(取整到米 / 0.1km,每 tick 比一次很便宜)。 */
           if (that.data.nextNode) {

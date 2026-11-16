@@ -19,6 +19,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.chengyinhub.business.domain.CmsTopicNode;
 import com.chengyinhub.business.service.ITopicRouteService;
 import com.chengyinhub.business.service.TencentMapClient;
+import com.chengyinhub.business.service.WalkRoute;
 import com.chengyinhub.business.service.support.TopicSizeLimits;
 import com.chengyinhub.common.utils.StringUtils;
 import com.chengyinhub.common.utils.http.HttpRequestException;
@@ -64,6 +65,11 @@ public class TopicRouteServiceImpl implements ITopicRouteService
     private final MapResponseCache cache;
     /** No waiting callers or unbounded key-lock map. A cold duplicate declines until the winner completes. */
     private final Set<String> inFlight = new HashSet<>();
+    /** MPP-7：步行导航缓存，60 秒；起点按 20 米格取整，同一站同一格只算一次。 */
+    static final long WALK_TTL_SECONDS = 60;
+    static final double WALK_GRID_M = 20D;
+    private final MapResponseCache walkCache = new MapResponseCache(2L * 1024 * 1024, MapResponseCache.MAX_ENTRY_BYTES,
+            TimeUnit.SECONDS.toNanos(WALK_TTL_SECONDS), this::nanoTime);
 
     public TopicRouteServiceImpl()
     {
@@ -198,6 +204,22 @@ public class TopicRouteServiceImpl implements ITopicRouteService
     /** 调一段腾讯路线规划，返回解压后的坐标 [lat,lng] 列表 */
     private List<double[]> requestSegment(double[] from, double[] to, String routeMode)
     {
+        JSONObject route = requestRoute(from, to, routeMode);
+        if (route == null)
+        {
+            return null;
+        }
+        JSONArray poly = route.getJSONArray("polyline");
+        if (poly == null || poly.size() < 4)
+        {
+            return null;
+        }
+        return decompress(poly);
+    }
+
+    /** 调一段腾讯路线规划，返回第一条路线（含 distance 米、duration 分钟、压缩 polyline）；失败返回 null。 */
+    private JSONObject requestRoute(double[] from, double[] to, String routeMode)
+    {
         String url = DIRECTION_BASE + routeMode + "/?from="
                 + fmt(from[0]) + "," + fmt(from[1])
                 + "&to=" + fmt(to[0]) + "," + fmt(to[1]);
@@ -226,12 +248,99 @@ public class TopicRouteServiceImpl implements ITopicRouteService
         {
             return null;
         }
-        JSONArray poly = routes.getJSONObject(0).getJSONArray("polyline");
-        if (poly == null || poly.size() < 4)
+        return routes.getJSONObject(0);
+    }
+
+    @Override
+    public WalkRoute walkRoute(double fromLat, double fromLng, double toLat, double toLng)
+    {
+        if (!tencentMapClient.isReady() || !valid(fromLat, fromLng) || !valid(toLat, toLng))
         {
             return null;
         }
-        return decompress(poly);
+        double[] origin = snapToGrid(fromLat, fromLng);
+        double[] target = { toLat, toLng };
+        String key = "walk|" + fmt(target[0]) + "," + fmt(target[1]) + "|" + fmt(origin[0]) + "," + fmt(origin[1]);
+        String cached = walkCache.get(key);
+        if (cached != null)
+        {
+            return fromCache(cached);
+        }
+        synchronized (inFlight)
+        {
+            if (inFlight.size() >= TencentMapClient.MAX_IN_FLIGHT || !inFlight.add(key)) return null;
+        }
+        try
+        {
+            JSONObject route = requestRoute(origin, target, "walking");
+            if (route == null)
+            {
+                return null;
+            }
+            JSONArray poly = route.getJSONArray("polyline");
+            if (poly == null || poly.size() < 4)
+            {
+                return null;
+            }
+            List<double[]> line = decompress(poly);
+            // 腾讯 direction：distance 单位米，duration 单位分钟。
+            int distance = Math.max(0, route.getIntValue("distance", 0));
+            int durationS = Math.max(0, route.getIntValue("duration", 0)) * 60;
+            WalkRoute walk = new WalkRoute(distance, durationS, line);
+            walkCache.put(key, toCache(walk));
+            return walk;
+        }
+        catch (HttpRequestException error)
+        {
+            log.warn("[WalkRoute] provider network failure reason={}", error.getClass().getSimpleName());
+            return null;
+        }
+        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
+        catch (RuntimeException error)
+        {
+            log.warn("[WalkRoute] provider response rejected reason={}", error.getClass().getSimpleName());
+            return null;
+        }
+        finally
+        {
+            synchronized (inFlight) { inFlight.remove(key); }
+        }
+    }
+
+    /** 起点按 20 米格取整：同一格内的位置共用一条缓存路线，也不把玩家精确坐标写进缓存键。 */
+    static double[] snapToGrid(double lat, double lng)
+    {
+        double latStep = WALK_GRID_M / 111320D;
+        double snappedLat = Math.round(lat / latStep) * latStep;
+        // The longitude step follows the snapped latitude, so every point of one latitude row shares the same grid.
+        double lngStep = WALK_GRID_M / (111320D * Math.max(0.01D, Math.cos(Math.toRadians(snappedLat))));
+        return new double[] { snappedLat, Math.round(lng / lngStep) * lngStep };
+    }
+
+    private static boolean valid(double lat, double lng)
+    {
+        return Double.isFinite(lat) && Double.isFinite(lng) && lat >= -90D && lat <= 90D && lng >= -180D && lng <= 180D;
+    }
+
+    private static String toCache(WalkRoute walk)
+    {
+        return JSONObject.toJSONString(walk.toView());
+    }
+
+    private static WalkRoute fromCache(String json)
+    {
+        JSONObject o = JSONObject.parseObject(json);
+        JSONArray points = o.getJSONArray("polyline");
+        List<double[]> line = new ArrayList<>(points == null ? 0 : points.size());
+        if (points != null)
+        {
+            for (int i = 0; i < points.size(); i++)
+            {
+                JSONArray p = points.getJSONArray(i);
+                line.add(new double[] { p.getDoubleValue(0), p.getDoubleValue(1) });
+            }
+        }
+        return new WalkRoute(o.getIntValue("distanceM"), o.getIntValue("durationS"), line);
     }
 
     /**
