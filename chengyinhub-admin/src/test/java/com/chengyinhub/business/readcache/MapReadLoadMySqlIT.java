@@ -97,22 +97,14 @@ class MapReadLoadMySqlIT {
         System.out.println("MAPBENCH store=" + (redis != null ? "redis" : "memory") + " threads=" + threads + " seconds=" + seconds
                 + " places=" + count(factory));
 
-        run("pois legacy SQL (3 km)", threads, seconds, r -> {
+        // The controller asks for 501 rows (A5.2 "truncated"); the SQL read is #830's inner box query.
+        run("pois SQL #830, uncached (3 km)", threads, seconds, r -> {
             double[] b = box(r);
-            try (SqlSession s = factory.openSession(true)) {
-                Map<String, Object> p = new HashMap<>();
-                p.put("minLat", b[0]); p.put("maxLat", b[1]); p.put("minLng", b[2]); p.put("maxLng", b[3]);
-                p.put("memberId", member(r)); p.put("limit", 500);
-                s.selectList("legacy.MapReads.selectPoisNearFiltered", p);
-            }
-        });
-        run("pois two-phase SQL (3 km)", threads, seconds, r -> {
-            double[] b = box(r);
-            roam.selectPoisNear(b[0], b[1], b[2], b[3], member(r), 500);
+            roam.selectPoisNear(b[0], b[1], b[2], b[3], member(r), 501);
         });
         run("pois tile cache (3 km)", threads, seconds, r -> {
             double[] b = box(r);
-            tiles.near(b[0], b[1], b[2], b[3], member(r), 500);
+            tiles.near(b[0], b[1], b[2], b[3], member(r), 501);
         });
         run("fog kept cells (member, ~3 km)", threads, seconds, r -> {
             double lat = CENTER_LAT + (r.nextDouble() - 0.5) * 0.04, lng = CENTER_LNG + (r.nextDouble() - 0.5) * 0.05;
@@ -127,7 +119,7 @@ class MapReadLoadMySqlIT {
             double[] b = box(r);
             deals.selectDealsInBox(b[0], b[1], b[2], b[3], member(r), 100);
         });
-        System.out.println("MAPBENCH cache hits=" + cache.hits() + " misses=" + cache.misses() + " errors=" + cache.errors());
+        System.out.println("MAPBENCH cache hits=" + cache.hits() + " misses=" + cache.misses() + " errors=" + cache.errors() + " nearTies=" + cache.nearTies());
         if (redis != null) redis.destroy();
         pool.forceCloseAll();
     }
