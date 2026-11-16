@@ -237,7 +237,8 @@ public class RoamTerritoryService {
                                       String boardId, String regionId, String seasonId) {
         CityGameSupport.requireMember(memberId);
         if (!validCoord(lat, lng)) throw new CityGameException(400, "INVALID_COORDINATES", "无效的坐标");
-        int radius = radiusM == null || radiusM <= 0 ? 3000 : Math.min(radiusM, 50_000);
+        // CITY-12: a player read covers the walk around them, not a whole city.
+        int radius = radiusM == null || radiusM <= 0 ? 3000 : Math.min(radiusM, MAX_NEARBY_RADIUS_M);
         Map<String, Object> board = resolveBoard(boardId, regionId);
         String resolvedBoardId = board == null ? null : (String) board.get("boardId");
         String resolvedSeasonId = seasonId != null && !seasonId.isEmpty() ? seasonId
@@ -272,7 +273,7 @@ public class RoamTerritoryService {
                     resolvedBoardId, lat - dLat, lat + dLat, lng - dLng, lng + dLng);
             for (Map<String, Object> row : boardSpaces) {
                 if (row.get("poiId") instanceof Number) seenPoiIds.add(((Number) row.get("poiId")).longValue());
-                items.add(wireSpaceItem(row, lat, lng, now));
+                items.add(wireSpaceItem(row, lat, lng, now, memberId));
             }
         }
 
@@ -295,7 +296,7 @@ public class RoamTerritoryService {
         for (Map<String, Object> row : roamPois) {
             Long pid = row.get("poiId") instanceof Number ? ((Number) row.get("poiId")).longValue() : null;
             if (pid != null && seenPoiIds.contains(pid)) continue;
-            items.add(wireSpaceItem(row, lat, lng, now));
+            items.add(wireSpaceItem(row, lat, lng, now, memberId));
         }
 
         Map<String, Object> out = new LinkedHashMap<>();
@@ -308,7 +309,10 @@ public class RoamTerritoryService {
         return out;
     }
 
-    private Map<String, Object> wireSpaceItem(Map<String, Object> r, double curLat, double curLng, long now) {
+    /** CITY-12: largest radius a player's nearby read may cover. */
+    static final int MAX_NEARBY_RADIUS_M = 5000;
+
+    private Map<String, Object> wireSpaceItem(Map<String, Object> r, double curLat, double curLng, long now, long viewer) {
         double pLat = dbl(r.get("latitude"));
         double pLng = dbl(r.get("longitude"));
         double distM = GeoDistanceUtils.haversineMeters(curLat, curLng, pLat, pLng);
@@ -326,14 +330,20 @@ public class RoamTerritoryService {
         item.put("latitude", pLat);
         item.put("longitude", pLng);
         item.put("radiusM", r.get("poiRadiusM") instanceof Number ? ((Number) r.get("poiRadiusM")).intValue() : DEFAULT_RADIUS_M);
-        item.put("ownerMemberId", r.get("ownerMemberId"));
-        item.put("ownerNickname", r.get("ownerNickname"));
+        // CITY-12: other players are visible only by opt-in. Another holder is shown masked, like the City Monopoly
+        // reads; the keys stay (null) for older clients. The viewer sees their own place in full.
+        Long owner = r.get("ownerMemberId") instanceof Number ? ((Number) r.get("ownerMemberId")).longValue() : null;
+        boolean mine = owner != null && owner == viewer;
+        item.put("ownerMemberId", mine ? owner : null);
+        item.put("ownerNickname", mine ? r.get("ownerNickname") : null);
+        item.put("holderMasked", owner == null ? null : CityMonopolyService.mask(owner));
+        item.put("isMine", mine);
         item.put("holderTeamId", r.get("holderTeamId"));
         item.put("claimed", r.get("territoryId") != null || r.get("ownerMemberId") != null);
         item.put("status", r.get("territoryId") != null ? (isProtected ? "PROTECTED" : "CLAIMED") : (r.get("propStatus") != null ? r.get("propStatus") : "UNCLAIMED"));
         item.put("protectedUntilMillis", protMillis);
         item.put("isProtected", isProtected);
-        item.put("claimPhotoUrl", r.get("claimPhotoUrl"));
+        item.put("claimPhotoUrl", mine ? r.get("claimPhotoUrl") : null);
         item.put("checkinTollPoints", r.get("checkinTollPoints") instanceof Number ? ((Number) r.get("checkinTollPoints")).longValue() : DEFAULT_TOLL_POINTS);
         item.put("ownerRevenuePoints", r.get("ownerRevenuePoints") instanceof Number ? ((Number) r.get("ownerRevenuePoints")).longValue() : DEFAULT_REVENUE_POINTS);
         item.put("checkinCount", r.get("checkinCount") instanceof Number ? ((Number) r.get("checkinCount")).longValue() : 0L);
@@ -813,7 +823,43 @@ public class RoamTerritoryService {
                 (String) row.get("board_id"), (String) row.get("point_id"), curLat, curLng, accuracyM, deviceKey, sourceKey, "ROAM_CHECKIN");
     }
 
-    /** Season/board leaderboard ranking territory owners by total points revenue and holdings. */
+    /**
+     * CITY-12: the player leaderboard. Every holder except the viewer is masked (no id, no nickname); the viewer's own
+     * rows say {@code isMine}. The admin console keeps {@link #leaderboard(String, String, String, Integer)}.
+     */
+    public Map<String, Object> leaderboard(Long viewer, String boardId, String regionId, String seasonId, Integer limit) {
+        Map<String, Object> raw = leaderboard(boardId, regionId, seasonId, limit);
+        long me = viewer == null ? 0L : viewer;
+        Map<String, Object> out = new LinkedHashMap<>(raw);
+        for (String key : List.of("leaders", "topTerritories")) {
+            List<Map<String, Object>> masked = new ArrayList<>();
+            Object rows = raw.get(key);
+            if (rows instanceof List<?> list) {
+                for (Object o : list) {
+                    if (!(o instanceof Map<?, ?> m)) continue;
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    for (Map.Entry<?, ?> e : m.entrySet()) row.put(String.valueOf(e.getKey()), e.getValue());
+                    maskHolder(row, me);
+                    masked.add(row);
+                }
+            }
+            out.put(key, masked);
+        }
+        return out;
+    }
+
+    static void maskHolder(Map<String, Object> row, long viewer) {
+        Long owner = row.get("ownerMemberId") instanceof Number ? ((Number) row.get("ownerMemberId")).longValue() : null;
+        boolean mine = owner != null && viewer > 0 && owner == viewer;
+        row.put("holderMasked", owner == null ? null : CityMonopolyService.mask(owner));
+        row.put("isMine", mine);
+        if (!mine) {
+            row.put("ownerMemberId", null);
+            row.put("ownerNickname", null);
+        }
+    }
+
+    /** Season/board leaderboard ranking territory owners by total points revenue and holdings (admin console). */
     public Map<String, Object> leaderboard(String boardId, String regionId, String seasonId, Integer limit) {
         int capped = limit == null ? 20 : Math.max(1, Math.min(limit, 100));
         Map<String, Object> board = resolveBoard(boardId, regionId);
