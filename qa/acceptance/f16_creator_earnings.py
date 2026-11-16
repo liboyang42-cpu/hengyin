@@ -11,8 +11,6 @@ def flow(f):
     f.step("balance/list", "POST", "/api/balance/list", c,
            check=lambda j: None if isinstance(data_of(j), list) else "data not a list")
     f.step("wallet/stages (JSON)", "POST", "/api/wallet/stages", c, js={}, check=ok_data)
-    f.step("wallet/stages form-encoded (app encoding?)", "POST", "/api/wallet/stages", c, form={"x": "1"},
-           owner="app")
     f.step("merchant/finance/overview", "POST", "/api/merchant/finance/overview", MERCHANT, js={}, check=ok_data)
     f.step("merchant/finance/settlement-entries", "POST", "/api/merchant/finance/settlement-entries", MERCHANT,
            js={"source": "all", "pageNum": 1, "pageSize": 20}, check=ok_data)

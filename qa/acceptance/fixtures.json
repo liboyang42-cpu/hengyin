@@ -1,0 +1,39 @@
+{
+ "at": "2026-11-16T04:09:22Z",
+ "db": "cy_e2e_r2",
+ "seconds": 5.0,
+ "env": {
+  "E2E_COUPON_HISTORY_ID": "970114",
+  "E2E_PENDING_REFUND_ID": "992668",
+  "E2E_COVER_ASSET_ID": "990103",
+  "E2E_NODE_CHECKIN_CODE": "QA992021",
+  "E2E_LIVE_ACTIVITY": "9940014",
+  "E2E_LIVE_FREE_TICKET": "9940014",
+  "E2E_LIVE_PAID_TICKET": "9945014",
+  "E2E_REG_9001_FREE": "992226",
+  "E2E_REG_9004_LIVE": "992227",
+  "E2E_MONOPOLY_POI": "994501",
+  "E2E_MONOPOLY_BBOX": "23.120,113.255,23.140,113.275",
+  "E2E_MONOPOLY_DEFENDED": "00000000-0000-4000-8000-00000qa99452",
+  "E2E_MONOPOLY_BOARD": "qa-monopoly-1",
+  "E2E_PAY_SKIP": "TEST has no pay sandbox: payment-readiness says '支付服务暂不可用' (no WeChat Pay merchant config on be-int; the only stub, scripts/e2e/E2eWechatPayStub.java.stub, is compiled into an exploded jar by hand and is not in the TEST jar)",
+  "E2E_PLAY_MEMBER": "9001"
+ },
+ "log": [
+  "topic 992001 user_status 1 -> 1; im_block rows between fixture players removed: 0",
+  "club 9003 activity quota 0/3",
+  "merchant 9005 coupon quota 0/3",
+  "granted coupon history 970114 (9004, QA store coupon 9940601 of 9002)",
+  "pending refund_application 992668 (copy of seed 992657, status 0)",
+  "APPROVED cover asset 990103 (9003)",
+  "topic 992001 published answer for node 992021: present",
+  "9006 quit club 7001: code=200 msg=已退出",
+  "cancelled earlier QA registrations: 9004 992224 by 9003 -> 200 报名已取消，无现金退款，本单未使用积分",
+  "live activity 9940014 (now-15min .. now+4h), tickets free 9940014 / paid 9945014",
+  "registration 992226 for 9001 on 9940014 (free)",
+  "paid registration for 9001 not possible on TEST: create answers code 503 '支付服务暂不可用，请稍后再试'",
+  "registration 992227 for 9004 on 9940014 (free)",
+  "monopoly board qa-monopoly-1 (POINTS) with 3 POIs; defended territory 00000000-0000-4000-8000-00000qa99452 (9001, season s2026w46)",
+  "paid path TEST-SKIP: TEST has no pay sandbox: payment-readiness says '支付服务暂不可用' (no WeChat Pay merchant config on be-int; the only stub, scripts/e2e/E2eWechatPayStub.java.stub, is compiled into an exploded jar by hand and is not in the TEST jar)"
+ ]
+}

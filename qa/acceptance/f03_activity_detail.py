@@ -13,9 +13,21 @@ def check_info(j):
         return "ticket 992041 price != 0"
 
 
+def check_gate(j):
+    d = data_of(j) or {}
+    if d.get("gate") is not True:
+        return "anonymous detail is not the club gate (gate=%s)" % d.get("gate")
+    if d.get("clubId") not in (CLUB, str(CLUB)):
+        return "gate clubId=%s != %s" % (d.get("clubId"), CLUB)
+    if not d.get("message"):
+        return "gate has no message"
+
+
 def flow(f):
     m = PLAYER
-    f.step("activity/info 992031 (anonymous)", "POST", "/api/activity/info", None, form={"id": ACTIVITY}, check=check_info)
+    # Product decision (not changed here): a club-run activity shows anonymous visitors only the club gate.
+    f.step("activity/info 992031 (anonymous) -> club gate", "POST", "/api/activity/info", None, form={"id": ACTIVITY},
+           check=check_gate, owner="product")
     f.step("activity/info 992031 (signed in)", "POST", "/api/activity/info", m, form={"id": ACTIVITY}, check=check_info)
     f.step("topic/info-to-user 992001", "POST", "/api/topic/info-to-user", m, form={"id": TOPIC},
            check=lambda j: None if (data_of(j) or {}).get("lifecycle") == 3

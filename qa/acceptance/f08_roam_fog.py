@@ -8,11 +8,14 @@ TILES = ["ws0e9cb", "ws0e9cc"]  # geohash7 around Guangzhou old town (TEST coord
 def flow(f):
     m = PLAYER
     rid = ("qa%s%s" % (RUN_ID, uuid.uuid4().hex))[:64]
-    # The app never records the AGREE consent (account_api.dart:200 only revokes) -> roam/reveal would 4xx in-app.
-    f.step("compliance consent AGREE roam_location", "POST", "/api/compliance/consents", m,
-           js={"docType": "privacy_policy", "scene": "roam_location", "eventType": "AGREE", "requestId": rid,
-               "expectedRequestId": os.environ.get("E2E_ROAM_CONSENT_PREV", "")},
-           expect_code=(200, 409))
+    # Native AccountComplianceService: read the latest roam_location row, AGREE only when it is not already AGREE,
+    # with that row's requestId as expectedRequestId (Flutter never recorded AGREE: S4).
+    subj = {"docType": "privacy_policy", "scene": "roam_location"}
+    lt = f.step("consents/latest roam_location", "POST", "/api/compliance/consents/latest", m, js=subj)
+    latest = data_of(lt) if isinstance(data_of(lt), dict) else {}
+    if latest.get("eventType") != "AGREE":
+        f.step("compliance consent AGREE roam_location", "POST", "/api/compliance/consents", m,
+               js=dict(subj, eventType="AGREE", requestId=rid, expectedRequestId=latest.get("requestId") or ""))
     t0 = int(time.time() * 1000)
     r = f.step("roam/reveal (new session)", "POST", "/api/roam/reveal", m,
                form={"sessionId": 0, "tiles": ",".join(TILES)}, check=lambda j: need(j, "sessionId"))

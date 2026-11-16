@@ -10,9 +10,19 @@ Safety:
       E2E_TOKEN_<phone>   a token already minted for that fixture phone, or
       E2E_CODE_CMD        a shell command that prints the code, with {phone} substituted
                           (e.g. "ssh work docker exec be-int-redis redis-cli -n 9 GET sms_{phone}_code"),
-      E2E_SMS_CODE        a fixed code pre-planted in TEST Redis (RESULT.md: SET sms_<phone>_code '"123456"').
+      E2E_SMS_CODE        a fixed code pre-planted in TEST Redis (RESULT.md: SET sms_<phone>_code '"123456"'),
+      E2E_PLANT_CMD       a shell command that stores {code} for {phone} in TEST Redis (the TEST login hook), so a
+                          flow can sign a member in without /api/sms/send and its per-IP window. F01 and F18 still
+                          call the real /api/sms/send.
+
+Request shapes follow the native iOS client (chengyin-app origin/ui/main, Core/*):
+  * the Authorization header carries the bare token (AuthRequestBuilder), not "Bearer <token>";
+  * form fields go as multipart/form-data (AuthRequestBuilder.makeFormRequest); JSON bodies only where the
+    native service sends JSON (club, wallet/stages, registration quote/create, consents, merchant finance, ...).
+  * A step the TEST environment cannot run (no pay sandbox) is recorded as TEST-SKIP with its reason; a flow whose
+    other steps all pass is PASS.
 """
-import json, os, re, shlex, subprocess, sys, time, uuid
+import json, os, random, re, shlex, subprocess, sys, time, uuid
 
 import requests
 
@@ -52,7 +62,7 @@ class Flow:
         self.blocked = None
 
     def step(self, label, method, path, member=None, form=None, js=None, q=None,
-             expect_http=200, expect_code=200, check=None, owner="backend", files=None):
+             expect_http=200, expect_code=200, check=None, owner="backend", files=None, enc="multipart"):
         """Call one endpoint and record request/status/business code/latency/verdict.
 
         check(js) -> None or a string describing why the response is wrong.
@@ -61,14 +71,20 @@ class Flow:
             rec = dict(label=label, method=method, path=path, result="SKIP", note="blocked: " + self.blocked)
             self.steps.append(rec)
             return None
-        headers = {"User-Agent": "chengyin-qa-acceptance/r3", "X-Request-Id": "qa-%s-%s" % (RUN_ID, uuid.uuid4().hex[:8])}
+        headers = {"User-Agent": "chengyin-qa-acceptance/r3", "X-Request-Id": "qa-%s-%s" % (RUN_ID, uuid.uuid4().hex[:8]),
+                   "Accept": "application/json"}
         if member is not None:
-            headers["Authorization"] = "Bearer " + token(member)
+            headers["Authorization"] = token(member)
+        data = None
+        if form is not None and enc == "multipart" and files is None:
+            files = {k: (None, str(v)) for k, v in form.items() if v is not None}
+        elif form is not None:
+            data = form
         rec = dict(label=label, method=method, path=path, member=member,
                    request=_redact(dict(q=q, form=form, json=js)))
         t0 = time.monotonic()
         try:
-            r = requests.request(method, BASE + path, params=q, data=form, json=js, files=files,
+            r = requests.request(method, BASE + path, params=q, data=data, json=js, files=files,
                                  headers=headers, timeout=TIMEOUT)
         except requests.RequestException as e:
             rec.update(result="ERROR", status=None, code=None, ms=int((time.monotonic() - t0) * 1000),
@@ -105,10 +121,17 @@ class Flow:
     def block(self, why):
         self.blocked = self.blocked or why
 
+    def test_skip(self, label, method, path, why):
+        """A step TEST cannot run (environment gap, not a product result); it does not fail the flow."""
+        self.steps.append(dict(label=label, method=method, path=path, result="TEST-SKIP", note=why, owner="env"))
+
     def summary(self):
         res = [s["result"] for s in self.steps]
-        verdict = "PASS" if res and all(x == "PASS" for x in res) else ("BLOCKED" if not any(x in ("PASS", "FAIL") for x in res) else "FAIL")
-        return dict(id=self.fid, name=self.name, verdict=verdict, steps=self.steps)
+        ok = ("PASS", "TEST-SKIP")
+        verdict = "PASS" if res and "PASS" in res and all(x in ok for x in res) else (
+            "BLOCKED" if not any(x in ("PASS", "FAIL") for x in res) else "FAIL")
+        return dict(id=self.fid, name=self.name, verdict=verdict, steps=self.steps,
+                    test_skips=sum(1 for x in res if x == "TEST-SKIP"))
 
 
 _SECRET_KEYS = r'(?:token|accessToken|refreshToken|qrToken|ticketToken|secret|challengeToken|resultToken|smscode)'
@@ -147,14 +170,19 @@ def token(member):
     if pre:
         _TOKENS[member] = pre
         return pre
-    try:
-        requests.post(BASE + "/api/sms/send", data={"phone": phone}, timeout=TIMEOUT)
-    except requests.RequestException as e:
-        raise Blocked("cannot reach TEST server: %s" % e)
-    code = _sms_code(phone)
+    plant = os.environ.get("E2E_PLANT_CMD")
+    if plant:
+        code = "%06d" % random.randint(0, 999999)
+        subprocess.run(shlex.split(plant.format(phone=phone, code=code)), capture_output=True, text=True, timeout=30)
+    else:
+        try:
+            requests.post(BASE + "/api/sms/send", files={"phone": (None, phone)}, timeout=TIMEOUT)
+        except requests.RequestException as e:
+            raise Blocked("cannot reach TEST server: %s" % e)
+        code = _sms_code(phone)
     if not code:
         raise Blocked("no SMS code source for %s (set E2E_CODE_CMD or E2E_SMS_CODE)" % phone)
-    r = requests.post(BASE + "/api/login/phone", data={"phone": phone, "code": code}, timeout=TIMEOUT).json()
+    r = requests.post(BASE + "/api/login/phone", files={"phone": (None, phone), "code": (None, code)}, timeout=TIMEOUT).json()
     if r.get("code") != 200 or not r.get("token"):
         raise Blocked("login %s failed: %s" % (phone, r.get("msg")))
     _TOKENS[member] = r["token"]
@@ -199,6 +227,19 @@ def need(js, *keys):
                 return "missing data.%s" % k
             cur = cur.get(part)
     return None
+
+
+def advanced_qa(f, member, scope, node, answer, tag):
+    """Play a node's advanced qa mechanic the way the native client does (JSON /api/play/advanced/start, then
+    /api/play/advanced/action SUBMIT_QA {input}); the basic answer/check-in of such a node is refused until it passes."""
+    st = f.step("%s: play/advanced/start node %s" % (tag, node), "POST", "/api/play/advanced/start", member,
+                js=dict({k: int(v) for k, v in scope.items()}, nodeId=node), check=lambda j: need(j, "sessionId"))
+    d = data_of(st) or {}
+    return f.step("%s: play/advanced/action SUBMIT_QA" % tag, "POST", "/api/play/advanced/action", member,
+                  js={"sessionId": d.get("sessionId"), "version": d.get("version"), "action": "SUBMIT_QA",
+                      "idempotencyKey": "qa-%s-%s" % (RUN_ID, uuid.uuid4().hex[:10]), "payload": {"input": answer}},
+                  check=lambda j: None if "1921" in answer and "passed" not in json.dumps(data_of(j) or {}) or
+                  (json.dumps(data_of(j) or {}).find('"passed": true') >= 0) else "qa not passed: %s" % json.dumps(data_of(j))[:160])
 
 
 def main(flow_fn):

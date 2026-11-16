@@ -1,5 +1,102 @@
 # Chengyin backend acceptance — round r3
 
+## Wave 6 (2026-11-15 22:20 – 2026-11-16 04:12 UTC): native-client harness + idempotent fixtures
+
+- **Target:** TEST 8120 (be-int, DB `cy_e2e_r2`) over loopback on the `work` VPS. Same jar as wave 5 (`integration/backend-app-r3` @ `82f0bab79`). Production was not touched.
+- **Runs:** after iterative partial runs, `full` (ended 04:09 UTC) and `full2` (ended 04:11 UTC, `results.json` / `results.md`), each preceded by `fixtures.setup()`; both gave the same verdicts. After `full2`, F08's consent step was switched to the native read-latest-then-AGREE sequence and F08 was re-run alone (`results-rerun-w6.json`, PASS). `fixtures.json` holds the ids the fixture wrote for `full2`.
+- **Result: 16 of 18 flows pass, twice in a row** (wave 5: 3 of 18). The two failures are confirmed product defects, one per owner:
+  - **F06** fails only on the native app's self-check-in request shape (**A5, app**). The same check-in with the backend contract passes.
+  - **F09** fails only on `challenge/command`, which throws a NullPointerException for every d20 roll from 2 to 19 (**B10, backend**). Claim, rent, protection and the challenge quote pass.
+- **TEST-SKIP:** F04's paid path after the paid quote. TEST has no pay sandbox: `payment-readiness` reports "支付服务暂不可用", and the only pay stub (`scripts/e2e/E2eWechatPayStub.java.stub`) has to be compiled into an exploded jar by hand, so it is not in the TEST jar. Because of that, `registration/create` for a paid ticket fails closed with code 503 before it writes an order. The harness checks that 503 refusal and records "create → pending order → pay/app" as TEST-SKIP. For the same reason, no paid registration for 9001 can be seeded.
+
+### Per flow (`full2`; pass / fail / TEST-SKIP)
+
+| Flow | Result | Verdict | Notes |
+|---|---|---|---|
+| F01 Sign-in | 8 / 0 / 0 | **Pass** | Real `sms/send` + `login/phone`; `login/code` e2e stub (B4). The bad-code refusal is still code 500 (not part of SMOKE-500-R4). |
+| F02 Browse home | 11 / 0 / 0 | **Pass** | The harness now pages through the whole upcoming list (`is_my=2`). Club-run 992031 is on **no** page: the public shelf (`PublicActivityScope.PUBLIC_SHELF`) never lists community sessions. The flow now asserts that rule (product decision, see below). Members reach 992031 through `registration/my-joined` (passes). |
+| F03 Activity detail | 6 / 0 / 0 | **Pass** | The anonymous detail is the club gate (`gate:true, clubId 7001, message`), which the native client renders (`ActivityDetail.swift`). Product decision, not changed. |
+| F04 Register and pay | 10 / 0 / 1 | **Pass** (paid TEST-SKIP) | Native shapes: quote `{ownerType, ownerId, ticketId, isUsePoint}`; create adds `realName, phone, quoteSign, payChannel APP, requestId`. Free path, idempotent replay and paid quote (`payAmount > 0`) pass. The paid create is refused with 503 (pay not configured), as described above. |
+| F05 Ticket QR | 5 / 0 / 0 | **Pass** | Uses 9001's fresh free registration on the run's live activity. The wallet is decoded as `{total, rows}` (`TicketWalletService.RouteEnvelope`). |
+| F06 Check-in | 10 / 1 / 0 | **Fail (app A5)** | Entry QR → non-owner merchant refused → owner scan "核销成功" → rescan `alreadyVerified` all pass. Self check-in as 9004: action-context, then the node's advanced qa (`/api/play/advanced/start` + `SUBMIT_QA`), then `play/checkin` with the action fields **and `nodeId`** → "打卡成功"; the replay is idempotent. The request the native client sends (no `nodeId`) → `INTENT_INPUT_INVALID` "参数有误" (A5). |
+| F07 Play game | 16 / 0 / 0 | **Pass** | 9001 on a fresh run: nodes, route-state ACTIVE, action-context, hint ladder, help/use and its replay (no charge), advanced qa, answer "答对了！" and its replay, action-receipt, help receipt, 992021 COMPLETED, `GET ending`. Unregistered 9009 is not playable. B1 and B5 are confirmed on live data. |
+| F08 Roam and fog | 10 / 0 / 0 | **Pass** | Unchanged except encoding. Re-run with the native consent sequence: pass. |
+| F09 City Monopoly | 10 / 1 / 0 | **Fail (backend B10)** | The QA LIVE board pays in 积分 (`currency POINTS`). Season, map (unlit tiles show only `districtId/tier`), points, claim quote → claim `CLAIMED`, visitor `consents/latest` + rent check-in (`revenueMode POINTS`, owner revenue event), protection refusal (HTTP 409 `TERRITORY_PROTECTED`), challenge quote on the defended property and owner revenue all pass. `challenge/command` → HTTP 200, code 500, "系统繁忙" (B10). |
+| F10 Club join and chat | 9 / 0 / 0 | **Pass** | JSON only, as the native client sends it (the multipart probe was Flutter's A3). `join-request/approve` after a direct join → 400 "入会申请不存在或已处理" (SMOKE-500-R4 code, asserted). |
+| F11 Messages | 12 / 0 / 0 | **Pass** | The DM chain passes. `im/read` carries `read_to` + `request_id` (UUID), as `IMExpandedService` sends it. The group part uses the club 7001 chat from `club/chat`: 9004 sends, 9001 reads. |
+| F12 Publish topic | 5 / 0 / 0 | **Pass** | Uses a fixture APPROVED cover. `play/nodes` on the new self-play topic → 402 "请先购买自玩通行证" (route published; self-play pass gate), accepted. |
+| F13 Publish activity | 6 / 0 / 0 | **Pass** | Quota room from the fixture; the flow deletes its own activity. |
+| F14 Merchant verify | 9 / 0 / 0 | **Pass** | 9005 publishes and then stops its coupon (native `CouponManagementContract`: JSON publish with `scope MERCHANT`, multipart stop). 9002 verifies the fixture-granted coupon on a store coupon (`scope_type 1`): "核销成功", replay `alreadyUsed`, foreign merchant refused, `useStatus 1`. |
+| F15 Merchant refund | 7 / 0 / 0 | **Pass** | Player cancel-refund of F04's free order; aftercare detail + respond AGREE on the fixture's pending refund_application. |
+| F16 Creator earnings | 8 / 0 / 0 | **Pass** | `wallet/stages` as JSON only (`WalletCommerceService.swift:28`); the form probe is gone. |
+| F17 Withdraw | 11 / 0 / 0 | **Pass** | Over-balance → 409 `WITHDRAWAL_INSUFFICIENT_BALANCE` (B2). |
+| F18 Account deletion | 10 / 0 / 0 | **Pass** | `fixtures.release_for_f18()` releases 9001's fixture registrations first; apply → revoke → result → cancel → `NORMAL`. |
+
+### New defects (live, with repro)
+
+| # | Owner | Severity | Defect | Repro on TEST | Evidence |
+|---|---|---|---|---|---|
+| B10 | backend | **High** | `CityMonopolyService.challengeCommand` builds its reply with `out.put("nat", roll == 20 ? 20 : roll == 1 ? 1 : null)`. Java unboxes the inner `Integer` null into the outer `int` ternary, so every roll from 2 to 19 throws a NullPointerException after the roll and the transaction rolls back. About 90% of challenges answer HTTP 200 / code 500 "系统繁忙，请稍后重试", and no challenge can resolve except on a natural 1 or 20. Fix: `Integer nat = roll == 20 ? Integer.valueOf(20) : roll == 1 ? Integer.valueOf(1) : null;` plus a test with a mid roll (CityMonopolyServiceUnitTest only covers fixed rolls). | As 9009 on board `qa-monopoly-1`: `POST /api/city-game/territory/challenge/quote {territoryId}` → `challenge/command {requestId, quoteId, quoteHash, evidence}`. | app.log: `NullPointerException: Cannot invoke "java.lang.Integer.intValue()" at CityMonopolyService.challengeCommand(CityMonopolyService.java:1292)`; both full runs. |
+| A5 | app (native iOS) | **High** | `PlayExperienceService.completionRequest(.scan)` removes `nodeId` ("source checkin resolves node from code") but still merges the action-context fields. The backend refuses every context-bound basic command without `nodeId` (`PlayBasicIntentApplication.basicIntentScope` → `INTENT_INPUT_INVALID` "参数有误"), so no in-app door check-in succeeds once action-context binding is on. Fix in the app: send the `nodeId` the action context was read for. Alternatively, the backend resolves the node from `code` when `nodeId` is absent. | As 9004 on a live run after the node's advanced qa: `POST /api/play/checkin` (multipart) `activityId, topicId, code, routeActionId, expectedRouteVersion, routeSessionId` → "参数有误". The same request plus `nodeId=992021` → "打卡成功". | F06, both full runs. |
+| B5b | backend / data | Medium | The B5 fallback (`qa.answerText`) is applied only when a topic is compiled at publish. Topics published before the fix keep `nodeAnswers.<node>.questionAnswer = null` in `published_route_graph_json`, so every new run answers `CONFIG_INVALID` "该节点答案未配置" until the topic is recompiled. On TEST, 992001 cannot be recompiled through `publish-draft`: a SELLING commercial topic is refused with "商业主题只有 DRAFT/PENDING_REVIEW 可提交立项审核", and its seed media are bare URLs, which P-17 refuses. Production topics published before B5 will behave the same. Needs a one-off recompile/backfill of `nodeAnswers` (or the runtime fallback from the template). | Fresh run on 992001 before the fixture repair: `play/answer` → `CONFIG_INVALID`. | Wave 6 run 1; fixed on TEST by `fixtures.frozen_answer()`. |
+| B9 | backend | Low | Authorization and "already done" refusals that SMOKE-500-R4 did not convert still answer code 500: `dyncode/issue` on another member's order ("无权操作该报名单"), non-owner `scan_dynamic_code`, rescan "该订单已核销", foreign `coupon/verification`, `activity/info` unknown id, player `activity/publish`, `login/phone` bad code, `roam/finish` twice. The messages are clear. The harness asserts "refused with a message" for these, and SMOKE-500-R4 codes (400/404/409) where they exist. | See the steps in `results.md`. | `full2`. |
+| A6 | app (native iOS) | Coverage | The native client has no client for the City Monopoly territory endpoints (`/api/city-game/territory/*`, `/api/roam/territory/checkin`). F09 is a backend-contract flow written from spec §6.2. The store-day path (`Core/PlayStoreDayService.swift:99-124`) still sends no action context (A1 residual, not on the main play path). | — | source read of `origin/ui/main` a31949367 |
+
+### Product decisions to confirm (not changed)
+
+- **F03:** the anonymous detail of a club-run activity shows the club gate, not the detail.
+- **F02 (same rule):** club-run sessions never appear on the public home lists (`PUBLIC_SHELF` excludes community activities), so a club-run session is only reachable through the club page or "my joined".
+- Carried over: several active free registrations per member and session; the SMS per-IP window keyed on the proxy address.
+
+### Harness changes (requests now match the native iOS client, `chengyin-app` `origin/ui/main` Core/*)
+
+- The `Authorization` header carries the bare token, and form fields go as multipart/form-data (`AuthRequestBuilder`). JSON is used only where the native service sends JSON (club, wallet/stages, registration quote/create, consents, help/use, advanced play, merchant finance, aftercare respond, coupon publish).
+- The Flutter probes are removed (multipart `club/list`, form `wallet/stages`, `POST ending`, answer without `routeSessionId`). They are replaced by the native shapes, and by replay/idempotency checks where the probe was the only use.
+- Self check-in and answers bind to `GET /api/play/action-context` and send `routeActionId, expectedRouteVersion, routeSessionId[, runtimeInstance, authorityEpoch]` (A1). Nodes with an advanced mechanic are played through `/api/play/advanced/start` + `SUBMIT_QA` first.
+- The ticket wallet decodes `{total, rows}`. F02 pages through the whole upcoming list. Assertions use the SMOKE-500-R4 codes (`approve` 400, protection 409, over-balance 409).
+- Logins plant a TEST code in Redis (`E2E_PLANT_CMD`) instead of calling `sms/send` for every member, so the per-IP SMS window no longer breaks runs. F01 and F18 still call the real `sms/send`.
+- New result kind **TEST-SKIP** (an environment gap with its reason; does not fail the flow). `results.md` shows pass / fail / TEST-SKIP per flow.
+
+### Fixtures (`fixtures.py`, run first by `run_all.py`; idempotent; TEST DB through the VPS)
+
+Each run first undoes what the last run or an api-smoke pass left behind, then writes fresh rows. SQL runs through `docker exec be-int-mysql` (on the VPS) or `instabox exec work --stdin` (from the Mac). Every batch aborts unless the schema is `cy_e2e_*`.
+- **Live play window:** a new QA activity on topic 992001 / club 7001 per run (ids 9940001+, starts now − 15 min, free ticket + 0.01 paid ticket). Earlier QA activities are retired and their open registrations released by the topic owner (`cancel-by-owner`), so every run has a fresh session. 992031's schedule is no longer moved.
+- **Registrations:** a fresh free registration for 9001 (F05, F06, F07) and for 9004 (F06 self check-in). A paid registration for 9001 is impossible on TEST (503, see above).
+- **Topic 992001:** back on the shelf (`user_status 1`). The published snapshot gets node 992021's frozen answer, the value the post-B5 compiler produces (B5b). Node 992021 gets check-in code `QA992021`.
+- **im_block** rows between 9001 and 9009 are deleted.
+- **Quotas:** club 9003 activity quota gets room by retiring test-runner rows only (`QA 验收活动%`, `E2E API smoke check`). The coupon publisher is 9005 (0/3), and earlier `QA 验收券 %` coupons are stopped.
+- **Granted coupon:** a fresh unused coupon for 9004 on QA store coupon 9940601 of 9002 (`scope_type 1`, store 8001).
+- **Pending refund_application** (status 0) copied from seed 992657 on 9002's activity 992035.
+- **APPROVED cover asset** of 9003 (990103). Earlier QA topics of 9003 are taken off the shelf. 9006 leaves club 7001 so F10 can join again.
+- **City Monopoly:** LIVE board `qa-monopoly-1` (currency POINTS = 积分, per the owner ruling of 2026-11-15) with district `qa-d1` and POIs 994501–994503 in the TEST play area. It also holds a territory of 9001 past its protection, for the challenge. Earlier QA territories, evidence, challenges and yield events are cleared. The board's frozen `config_json` overrides only two settings: `claim.require_app_attest=false` (a harness cannot produce an Apple App Attest assertion) and claim hours 00:00–23:59 (deterministic at any hour). The account gates are met with TEST data: `create_time` of 9001/9004/9009 set to 2026-11-01, level ≥ 3 for 9004/9009, at least 600 积分, and three recent visited POIs for 9009.
+- **Payment:** TEST-SKIP with the reason exported as `E2E_PAY_SKIP`.
+
+### api-smoke now restores the state it changes
+
+`qa/acceptance/smoke_state_guard.py` is installed next to the shared runner (`/data/workspace/api-smoke/`, and the paged copy `/tmp/r3-w4/api-smoke-paged/`). Both `smoke_runner.py` files now end with `smoke_state_guard.guarded(main)`; the originals are kept as `smoke_runner.py.prev-acc-w6`. It snapshots topic 992001's shelf status and the `im_block` ids between fixture players before a pass, and restores them afterwards, also on an error. Verified on TEST with a simulated pass: shelf 1 → 0 → 1, and the new `im_block` row 95 was removed.
+
+### How to run (on the `work` VPS)
+
+```bash
+cd /data/workspace/qa-acc-r3
+E2E_BASE_URL=http://127.0.0.1:8120 \
+E2E_CODE_CMD='docker exec be-int-redis redis-cli -n 9 GET sms_{phone}_code' \
+E2E_PLANT_CMD="docker exec be-int-redis redis-cli -n 9 SET sms_{phone}_code '\"{code}\"' EX 300" \
+/tmp/qa-venv/bin/python3 qa/acceptance/run_all.py          # fixtures + all 18 flows (wrapper: /tmp/acc-w6.sh TAG)
+```
+
+From the Mac, set `E2E_FIXTURE_REMOTE=1` (SQL/Redis through `instabox exec work`). `E2E_SKIP_FIXTURES=1` runs the flows on the current data.
+
+### TEST state changed by this wave
+
+- New rows: QA live activities in 9940001–9940016 and their tickets, all retired (`fixtures.teardown()` now runs at the end of `run_all.py`; the ids 9940005/7/13/15 are F13's own published-and-deleted activities, which follow the raised auto-increment); QA coupon 9940601 and granted histories 970103–970115; refund_application copies 992658–992669; board `qa-monopoly-1`, district `qa-d1`, POIs 994501–994503, their board points and QA territories; three `member_visited_poi` rows for 9009.
+- Changed: topic 992001 `published_route_graph_json` (node 992021 `questionAnswer`), and `cms_topic_node` 992021 `checkin_code`. 992001's `img_url`/`img_arr`/`finish_medal_img` were briefly set to `media-asset:990103` during a failed republish attempt and then restored to the seed URLs; `is_draft` is back to 0.
+- Changed: `create_time` of 9001/9004/9009 → 2026-11-01; `member_growth` level ≥ 3 for 9004/9009; `city_abuse_signal` rows of 9001/9004/9009 cleared.
+- Retired: smoke activities 993067–993069 (`cancel_time`), and coupon 970003 (status 0; `seed_4xx_fixtures.py` upserts it back).
+- api-smoke runners patched as described above.
+
+---
+
 ## Wave 5 re-test (2026-11-15 21:49–22:02 UTC, backend `integration/backend-app-r3` @ `785d70908`)
 
 - **Target:** TEST 8120 (be-int, DB `cy_e2e_r2`), called over loopback `http://127.0.0.1:8120` on the `work` VPS. Production was not touched.

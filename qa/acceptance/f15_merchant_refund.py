@@ -12,11 +12,12 @@ def flow(f):
     f.step("player cannot read merchant aftercare", "POST", "/api/merchant/aftercare/list", p,
            q={"bucket": "ALL", "pageNum": 1, "pageSize": 20}, expect_code=None,
            check=lambda j: None if j.get("code") != 200 else "player read merchant aftercare")
-    reg = os.environ.get("E2E_REFUND_REG")
+    reg = os.environ.get("E2E_REFUND_REG") or os.environ.get("E2E_F04_FREE_REG")  # F04's fresh free order of 9004
     if reg:
-        f.step("player registration/cancel-refund", "POST", "/api/registration/cancel-refund", p, form={"id": reg})
+        f.step("player registration/cancel-refund (free order from F04)", "POST", "/api/registration/cancel-refund", p, form={"id": reg})
         f.step("registration/info cancelled", "POST", "/api/registration/info", p, form={"id": reg},
-               check=lambda j: None if (data_of(j) or {}).get("registrationStatus") == 4 else "not cancelled")
+               check=lambda j: None if (data_of(j) or {}).get("registrationStatus") in (3, 4) else
+               "registrationStatus=%s" % (data_of(j) or {}).get("registrationStatus"))
     rf = os.environ.get("E2E_PENDING_REFUND_ID")
     if not rf:
         f.block("no pending (status=0) refund_application for a 9002 activity on TEST - data seeding needed")

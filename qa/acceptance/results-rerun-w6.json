@@ -1,0 +1,276 @@
+{
+ "base": "http://127.0.0.1:8120",
+ "run_id": "20261116041139",
+ "at": "2026-11-16T04:11:43Z",
+ "fixtures": {
+  "at": "2026-11-16T04:11:43Z",
+  "db": "cy_e2e_r2",
+  "seconds": 4.5,
+  "env": {
+   "E2E_COUPON_HISTORY_ID": "970115",
+   "E2E_PENDING_REFUND_ID": "992669",
+   "E2E_COVER_ASSET_ID": "990103",
+   "E2E_NODE_CHECKIN_CODE": "QA992021",
+   "E2E_LIVE_ACTIVITY": "9940016",
+   "E2E_LIVE_FREE_TICKET": "9940016",
+   "E2E_LIVE_PAID_TICKET": "9945016",
+   "E2E_REG_9001_FREE": "992229",
+   "E2E_REG_9004_LIVE": "992230",
+   "E2E_MONOPOLY_POI": "994501",
+   "E2E_MONOPOLY_BBOX": "23.120,113.255,23.140,113.275",
+   "E2E_MONOPOLY_DEFENDED": "00000000-0000-4000-8000-00000qa99452",
+   "E2E_MONOPOLY_BOARD": "qa-monopoly-1",
+   "E2E_PAY_SKIP": "TEST has no pay sandbox: payment-readiness says '支付服务暂不可用' (no WeChat Pay merchant config on be-int; the only stub, scripts/e2e/E2eWechatPayStub.java.stub, is compiled into an exploded jar by hand and is not in the TEST jar)",
+   "E2E_PLAY_MEMBER": "9001"
+  },
+  "log": [
+   "topic 992001 user_status 1 -> 1; im_block rows between fixture players removed: 0",
+   "club 9003 activity quota 0/3",
+   "merchant 9005 coupon quota 0/3",
+   "granted coupon history 970115 (9004, QA store coupon 9940601 of 9002)",
+   "pending refund_application 992669 (copy of seed 992657, status 0)",
+   "APPROVED cover asset 990103 (9003)",
+   "topic 992001 published answer for node 992021: present",
+   "9006 quit club 7001: code=200 msg=已退出",
+   "cancelled earlier QA registrations: 9004 992227 by 9003 -> 200 报名已取消，无现金退款，本单未使用积分",
+   "live activity 9940016 (now-15min .. now+4h), tickets free 9940016 / paid 9945016",
+   "registration 992229 for 9001 on 9940016 (free)",
+   "paid registration for 9001 not possible on TEST: create answers code 503 '支付服务暂不可用，请稍后再试'",
+   "registration 992230 for 9004 on 9940016 (free)",
+   "monopoly board qa-monopoly-1 (POINTS) with 3 POIs; defended territory 00000000-0000-4000-8000-00000qa99452 (9001, season s2026w46)",
+   "paid path TEST-SKIP: TEST has no pay sandbox: payment-readiness says '支付服务暂不可用' (no WeChat Pay merchant config on be-int; the only stub, scripts/e2e/E2eWechatPayStub.java.stub, is compiled into an exploded jar by hand and is not in the TEST jar)"
+  ]
+ },
+ "flows": [
+  {
+   "id": "F08",
+   "name": "Roam walk and fog reveal",
+   "verdict": "PASS",
+   "steps": [
+    {
+     "label": "consents/latest roam_location",
+     "method": "POST",
+     "path": "/api/compliance/consents/latest",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {
+       "docType": "privacy_policy",
+       "scene": "roam_location"
+      }
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 6,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"occurredAt\": \"2026-11-13T23:38:53.000+08:00\", \"requestId\": \"e61dad22-b4c3-44d2-9960-d6f8aa73e3a3\", \"docType\": \"privacy_policy\", \"eventType\": \"AGREE\", \"docVersion\": \"v2.1\", \"scene\": \"roam_location\"}}"
+    },
+    {
+     "label": "roam/reveal (new session)",
+     "method": "POST",
+     "path": "/api/roam/reveal",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": {
+       "sessionId": 0,
+       "tiles": "ws0e9cb,ws0e9cc"
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 13,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"sessionId\": 145, \"newlyRevealed\": 0}}"
+    },
+    {
+     "label": "roam/reveal replay reveals nothing new",
+     "method": "POST",
+     "path": "/api/roam/reveal",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": {
+       "sessionId": 145,
+       "tiles": "ws0e9cb,ws0e9cc"
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 10,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"sessionId\": 145, \"newlyRevealed\": 0}}"
+    },
+    {
+     "label": "roam/presence heartbeat",
+     "method": "POST",
+     "path": "/api/roam/presence",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": {
+       "sessionId": 145,
+       "lat": "23.129112",
+       "lng": "113.264385",
+       "explorePct": "1"
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 9,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200}"
+    },
+    {
+     "label": "roam/session",
+     "method": "GET",
+     "path": "/api/roam/session",
+     "member": 9004,
+     "request": {
+      "q": {
+       "sessionId": 145
+      },
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 4,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"sessionId\": \"145\", \"clientSessionKey\": null, \"state\": \"ACTIVE\"}}"
+    },
+    {
+     "label": "roam/finish",
+     "method": "POST",
+     "path": "/api/roam/finish",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": {
+       "sessionId": 145,
+       "poiIds": "",
+       "distanceM": "350"
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 17,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"finishedAt\": 1794802303676, \"tileXp\": 0, \"poiXp\": 0, \"totalXp\": 0, \"newTiles\": 0, \"newPois\": 0, \"tilesEver\": 6, \"medal\": null, \"sessionShops\": 0, \"badgeDelivery\": [], \"shopMedal\": null}}"
+    },
+    {
+     "label": "roam/finish twice is refused/settled",
+     "method": "POST",
+     "path": "/api/roam/finish",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": {
+       "sessionId": 145,
+       "poiIds": "",
+       "distanceM": "350"
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 500,
+     "ms": 5,
+     "msg": "本次漫游已结算",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"本次漫游已结算\", \"code\": 500}"
+    },
+    {
+     "label": "roam/session/records",
+     "method": "POST",
+     "path": "/api/roam/session/records",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": {
+       "sessionId": 145,
+       "records": "[{\"tile\": \"ws0e9cb\", \"collectedAt\": 1794802302676}]"
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 9,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"sessionId\": \"145\", \"acceptedRecords\": 1, \"evidenceType\": \"CLIENT_REPORTED\"}}"
+    },
+    {
+     "label": "roam/session/records with client-clock timestamp (clock skew)",
+     "method": "POST",
+     "path": "/api/roam/session/records",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": {
+       "sessionId": 145,
+       "records": "[{\"tile\": \"ws0e9cc\", \"collectedAt\": 1794802304131}]"
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 9,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"sessionId\": \"145\", \"acceptedRecords\": 1, \"evidenceType\": \"CLIENT_REPORTED\"}}"
+    },
+    {
+     "label": "roam/tiles contains revealed tiles",
+     "method": "GET",
+     "path": "/api/roam/tiles",
+     "member": 9004,
+     "request": {
+      "q": {
+       "limit": 500
+      },
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 4,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": [\"ws0e9cc\", \"ws0e9cb\", \"wtw3sjt\", \"wtw3sjr\", \"wtw3sjq\", \"wtw3skc\"]}"
+    }
+   ],
+   "test_skips": 0
+  }
+ ]
+}

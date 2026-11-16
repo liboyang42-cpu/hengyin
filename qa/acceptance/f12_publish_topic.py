@@ -25,7 +25,8 @@ def flow(f):
            check=lambda j: None if j.get("msg") in ("已发布", "已提交审核") else "msg=%s" % j.get("msg"))
     f.step("topic/publish-draft replay is idempotent", "POST", "/api/topic/publish-draft", m,
            form={"id": tid, "publishRequestId": pr})
-    f.step("play/nodes on new topic (no '路线尚未发布')", "GET", "/api/play/nodes", m, q={"topicId": tid},
+    f.step("play/nodes on new topic (no '路线尚未发布'; 402 = self-play pass gate)", "GET", "/api/play/nodes", m,
+           q={"topicId": tid}, expect_code=(200, 402),
            check=lambda j: None if "尚未发布" not in (j.get("msg") or "") else "route not published")
 
 
