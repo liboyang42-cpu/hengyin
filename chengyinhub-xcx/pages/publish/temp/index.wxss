@@ -1618,8 +1618,8 @@ page {
 }
 .cg-bottombar > cy-btn { border-radius: var(--cy-comp-btn-radius); box-shadow: 0 12rpx 32rpx rgba(17, 18, 20, .12); } /* ds-ok 浮起来的投影 */
 
-/* P-60:编辑器玩家视角预览里的故事正文同玩家端,用手写体(加载失败回落系统字体) */
-.cy-story-hand { font-family: 'CyStoryHand', -apple-system, "PingFang SC", "Noto Sans SC", sans-serif; } /* ds-ok 字族名同 story-font.js STORY_FONT_FAMILY */
+/* P-60:编辑器故事正文与玩家端同用系统衬线字体回落。 */
+.cy-story-hand { font-family: 'CyStoryHand', "Songti SC", "STSong", "Noto Serif SC", serif; } /* ds-ok 字族名同 story-font.js STORY_FONT_FAMILY */
 /* ===== 10-28 原型 A e-temp / e-after:分组列表 + 就地展开(检定段、添加加值半屏、消耗与效果半屏) =====
    L1 的半屏基础样式(feature/cy27-l1-editor-d20)落地后并过去,这里不再单留一份。 */
 /* 检定段沿用 cg-gcfg > cg-adv-body 外壳(段形状契约),里面这一层盖住白卡,分组列表直接落在页面底色上 */

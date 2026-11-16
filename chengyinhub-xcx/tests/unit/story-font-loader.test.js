@@ -64,7 +64,7 @@ test('叙事与对白字体区分，字族带系统字体回落;仓里不放字�
   assert.doesNotMatch(wxml, /st-line--ttl[^"]*cy-story-hand/, '标题不换字体')
   assert.match(read('pages/publish/temp/index.wxml'), /class="cg-pv-beat-text cy-story-hand"/)
   for (const file of ['pages/play/index.wxss', 'pages/publish/temp/index.wxss']) {
-    assert.match(read(file), /\.cy-story-hand \{ font-family: 'CyStoryHand', -apple-system, "PingFang SC"/)
+    assert.match(read(file), /\.cy-story-hand \{ font-family: 'CyStoryHand', "Songti SC", "STSong", "Noto Serif SC", serif;/)
   }
   const fonts = []
   const walk = dir => fs.readdirSync(dir, { withFileTypes: true }).forEach(e => {
