@@ -145,7 +145,7 @@ public class ChannelEventService
             throw new ChannelRejection(409, "PAID_EVENTS_OFF", "收费活动暂未开放，可以先发免费活动");
         if (standing == GuildStanding.OWNER) return new PostTarget(row.getId(), row.getGuildId(), me);
         long owner = access.clubOwnerId(row.getGuildId());
-        if (owner <= 0) throw new ChannelRejection(409, "EVENT_HOST_MISSING", "俱乐部暂时没有主理人，暂不能发活动");
+        if (owner <= 0) throw new ChannelRejection(409, "EVENT_HOST_MISSING", "俱乐部暂时没有主理人，还不能发活动");
         return new PostTarget(row.getId(), row.getGuildId(), owner);
     }
 

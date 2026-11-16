@@ -59,7 +59,7 @@ public class ApiPlayWalkRouteController extends BaseController {
             return coded(HttpStatus.BAD_REQUEST, "请求参数不完整", "ROUTE_BAD_REQUEST");
         }
         if (nodeService == null || routeRuntimeService == null || topicRouteService == null) {
-            return coded(HttpStatus.ERROR, "步行路线暂时无法读取", "ROUTE_UNAVAILABLE");
+            return coded(HttpStatus.ERROR, "步行路线暂时加载不了，请稍后再试", "ROUTE_UNAVAILABLE");
         }
         CmsTopicNode node = nodeService.selectCmsTopicNodeById(nid);
         if (node == null || !tid.equals(node.getTopicId())) {
@@ -78,7 +78,7 @@ public class ApiPlayWalkRouteController extends BaseController {
         }
         WalkRoute route = topicRouteService.walkRoute(fromLat, fromLng, toLat, toLng);
         if (route == null || route.getPolyline().size() < 2) {
-            return coded(HttpStatus.ERROR, "步行路线暂时无法读取", "ROUTE_UNAVAILABLE");
+            return coded(HttpStatus.ERROR, "步行路线暂时加载不了，请稍后再试", "ROUTE_UNAVAILABLE");
         }
         return success(route.toView());
     }
