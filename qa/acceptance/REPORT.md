@@ -1,5 +1,47 @@
 # Chengyin backend acceptance — round r3
 
+## Wave 8 (2026-11-16 20:25 – 20:30 UTC): merchant identity merged, re-test on TEST
+
+- **Target:** TEST 8120 (be-int, DB `cy_e2e_r2`) over loopback on the `work` VPS. New jar from `integration/backend-app-r3` @ `5acc166a0`, which merges `fix/merchant-identity-r3` (`c18158761`, receipt `qa/MERCHANT-IDENTITY-R3.md`). Merchant onboarding now takes `realName` + `idCardNumber` + `identityConsent` and stores them through the publisher-identity PII store (AES-256-GCM). Reads return masked values only. Deployed at 20:25 UTC under `flock /data/workspace/.deploy.lock` and started in 20 s. Rollback jar: `app/app.jar.prev-3f0cdb762`. No migration (the `ums_member_identity` table already exists). Production was not touched.
+- **PII key:** `CHENGYIN_WITHDRAWAL_PII_KEY` is set in the 8120 process from the TEST-only `app/.test-pii-key`. Only its presence was checked; the value was never printed.
+- **Run:** one full `run_all.py` (fixtures first, teardown at the end) at 20:29 UTC, using the wave 7 harness `152b8829f` with no code change. `results.json`, `results.md` and `fixtures.json` are in this commit.
+- **Result: 17 of 18 flows pass**, the same as wave 7, so nothing regressed. F04's paid path is still TEST-SKIP because TEST has no pay sandbox. F06 still fails only on A5: the native self check-in sends no `nodeId`. That is an app defect, and the backend is unchanged.
+
+| Flow | Result (pass / fail / TEST-SKIP) | Verdict |
+|---|---|---|
+| F01–F03, F05, F07–F18 | all steps pass | **Pass** |
+| F04 Register and pay | 10 / 0 / 1 | **Pass** (paid TEST-SKIP) |
+| F06 Check-in | 10 / 1 / 0 | **Fail (app A5)** |
+
+### Merchant identity live check (`/tmp/r3w8-verify.py` on the VPS, 17/17)
+
+A fresh TEST phone `13900000971` was logged in with a TEST code planted in Redis. This created member 990014, which had no merchant and no identity row. The ID number is synthetic: `999999199001010016` has a valid checksum, but area `999999` does not exist, so it cannot belong to a real person.
+
+| Check | Result |
+|---|---|
+| `POST /api/merchant/merchant_registration` with a bad check digit (`…0017`) | code 500, `身份证号格式不正确,请核对后重填`; the response does not echo the input |
+| Same request with `identityConsent: false` | refused with `请先勾选同意提供真实姓名与身份证号`; no identity row was written |
+| Valid submit | code 200 `{"msg":"更新成功"}`; the response holds no number, middle digits or name |
+| `POST /api/publisher/identity/status` | `registered: true`, `idCardNumberMasked: 999***********0016`, `realNameMasked: 测*`; no plaintext |
+| `ums_member_identity` (prefix and length only) | `id_card` = `v1:`, 67 chars; `real_name` = `v1:`, 63 chars; blind index set; `source merchant_apply` |
+| `mms_merchant` | pending row 8007 (`status 0`) |
+| Second application with another card | refused (`已提交过商家入驻申请，请勿重复提交`); the identity row is unchanged |
+| `app.log`, `sys_oper_log` | 0 lines or rows contain the number, its middle digits or the name; 1 `consent_record` row |
+
+The admin detail `GET /business/merchant/{id}` (`ownerIdentity`, masked) was not called live, because back-office logins are disabled on TEST. `MerchantIdentityR3Test` covers it.
+
+### New defects
+
+None. Carried over: A5 (app), B5b, B9, A6 (see wave 6).
+
+### TEST state changed by this wave
+
+- `8120` jar `3f0cdb762` → `5acc166a0` (rollback `app/app.jar.prev-3f0cdb762`).
+- New TEST member 990014 (`13900000971`) with an encrypted identity row (`merchant_apply`), a `consent_record` row and a pending merchant application 8007.
+- The usual fixture refresh and teardown of this run (QA live activity 9940019 retired, free registrations for 9001 and 9004, a QA territory on `qa-monopoly-1`).
+
+---
+
 ## Wave 7 (2026-11-16 14:21 – 14:35 UTC): F-19 and B10 merged, re-test on TEST
 
 - **Target:** TEST 8120 (be-int, DB `cy_e2e_r2`) over loopback on the `work` VPS. New jar from `integration/backend-app-r3` @ `3f0cdb762`: `dfabdb76c` merges `fix/registration-list-r3` (F-19, test + receipt only, no production code) and `3f0cdb762` merges `fix/challenge-npe-r3` (B10). Deployed at 14:21 UTC under `flock /data/workspace/.deploy.lock`; started in 20 s. Rollback jar `app/app.jar.prev-82f0bab79`. No migration. Production was not touched.
