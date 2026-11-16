@@ -52,6 +52,12 @@ public class MerchantPlanService {
     private final IMerchantAccessService access;
     private final OpsConsoleAudit audit;
     private final boolean selfCheckoutEnabled;
+    /** W7 MERCHANT-6: readiness switches (sys_config). Missing or unreadable means not ready (safe). */
+    public static final String KEY_READY_SHOP_GAMES = "merchant.plans.ready.shopGames";
+    public static final String KEY_READY_DEALS = "merchant.plans.ready.dealsSubmission";
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.system.service.ISysConfigService sysConfig;
+    private java.util.function.Function<String, String> configLookup;
 
     public MerchantPlanService(JdbcTemplate jdbc, MerchantPlansMoneyGate gate, IMerchantAccessService access,
                                OpsConsoleAudit audit,
@@ -61,6 +67,56 @@ public class MerchantPlanService {
         this.access = access;
         this.audit = audit;
         this.selfCheckoutEnabled = selfCheckoutEnabled;
+    }
+
+    /** For tests: sys_config values. */
+    MerchantPlanService withConfig(java.util.function.Function<String, String> lookup) {
+        this.configLookup = lookup;
+        return this;
+    }
+
+    private boolean ready(String key) {
+        try {
+            String v = configLookup != null ? configLookup.apply(key) : sysConfig == null ? null : sysConfig.selectConfigByKey(key);
+            return v != null && "true".equalsIgnoreCase(v.trim());
+        } catch (RuntimeException e) {
+            return false;
+        }
+    }
+
+    /**
+     * W7 MERCHANT-6: what a plan really delivers today. Shop games are capped by the pool, and each counted
+     * benefit carries whether its player-facing path works yet.
+     */
+    public Map<String, Object> effective(MerchantPlan plan) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        int extra = ((Number) plan.feature(MerchantPlan.F_EXTRA_NODE_GAMES)).intValue();
+        m.put("shopGames", com.chengyinhub.business.shopgames.ShopGameCatalog.allowance(extra));
+        m.put("dealsOffersPerMonth", ((Number) plan.feature(MerchantPlan.F_DEALS_OFFERS_PER_MONTH)).intValue());
+        Map<String, Object> ready = new LinkedHashMap<>();
+        ready.put("shopGamesPlayable", ready(KEY_READY_SHOP_GAMES));
+        ready.put("dealsSubmission", ready(KEY_READY_DEALS));
+        m.put("ready", ready);
+        return m;
+    }
+
+    /** Listed benefits whose path is not working yet; empty when the plan can be sold. */
+    public List<String> notReady(MerchantPlan plan) {
+        List<String> out = new ArrayList<>();
+        if (((Number) plan.feature(MerchantPlan.F_EXTRA_NODE_GAMES)).intValue() > 0 && !ready(KEY_READY_SHOP_GAMES)) {
+            out.add(MerchantPlan.F_EXTRA_NODE_GAMES);
+        }
+        if (((Number) plan.feature(MerchantPlan.F_DEALS_OFFERS_PER_MONTH)).intValue() > 0 && !ready(KEY_READY_DEALS)) {
+            out.add(MerchantPlan.F_DEALS_OFFERS_PER_MONTH);
+        }
+        return out;
+    }
+
+    private Map<String, Object> planMap(MerchantPlan p) {
+        Map<String, Object> m = p.toMap();
+        m.put("effective", effective(p));
+        m.put("notReady", notReady(p));
+        return m;
     }
 
     // ---------------------------------------------------------------- catalogue
@@ -120,14 +176,14 @@ public class MerchantPlanService {
         long merchant = ctx.getMerchantId();
         Map<String, Object> out = new LinkedHashMap<>();
         List<Map<String, Object>> offered = new ArrayList<>();
-        for (MerchantPlan p : plans()) if (p.offered()) offered.add(p.toMap());
+        for (MerchantPlan p : plans()) if (p.offered()) offered.add(planMap(p));
         out.put("plans", offered);
         Map<String, Object> sub = activeSubscription(merchant, Instant.now());
         MerchantPlan current = currentPlan(merchant);
         Map<String, Object> cur = new LinkedHashMap<>();
         cur.put("code", current.code());
         cur.put("periodEnd", sub == null ? null : isoDay(sub.get("period_end")));
-        cur.put("plan", current.toMap());
+        cur.put("plan", planMap(current));
         out.put("current", cur);
         boolean open = gate.open();
         out.put("salesOpen", open);
@@ -153,6 +209,9 @@ public class MerchantPlanService {
         MerchantPlan plan = plan(rawCode == null ? null : rawCode.toString());
         if (plan == null || !plan.offered() || !plan.paid()) {
             throw new MerchantGapException(400, "PLAN_INVALID", "套餐无效");
+        }
+        if (!notReady(plan).isEmpty()) {
+            throw new MerchantGapException(409, "PLAN_FEATURE_NOT_READY", "这个套餐里有功能还没上线，暂不能购买");
         }
         int months = months(body == null ? null : body.get("months"));
         Object rawRequest = body.get("requestId");
@@ -180,7 +239,7 @@ public class MerchantPlanService {
     public Map<String, Object> adminView() {
         Map<String, Object> out = new LinkedHashMap<>();
         List<Map<String, Object>> list = new ArrayList<>();
-        for (MerchantPlan p : plans()) list.add(p.toMap());
+        for (MerchantPlan p : plans()) list.add(planMap(p));
         out.put("plans", list);
         out.put("salesOpen", gate.open());
         out.put("selfCheckoutEnabled", selfCheckoutEnabled);
@@ -216,6 +275,10 @@ public class MerchantPlanService {
             }
         }
         if (price > 0 && visitFee != null) throw new IllegalArgumentException("a plan is monthly or per visit, not both");
+        if (((Number) features.get(MerchantPlan.F_EXTRA_NODE_GAMES)).intValue()
+                > com.chengyinhub.business.shopgames.ShopGameCatalog.POOL_SIZE - 1) {
+            throw new IllegalArgumentException("超过可提供的小游戏数量");
+        }
         MerchantPlan after = new MerchantPlan(before.code(), nameZh, nameEn, price, visitFee, features, offered, before.sortOrder());
         if (after.toMap().equals(before.toMap())) return false;
         jdbc.update("UPDATE cy_merchant_plan SET name_zh = ?, name_en = ?, monthly_price_fen = ?, visit_fee_fen = ?,"
@@ -289,6 +352,9 @@ public class MerchantPlanService {
             after = Map.of("merchantId", merchantId, "planCode", MerchantPlan.FREE);
         } else {
             gate.requireOpen();
+            if (plan.paid() && !notReady(plan).isEmpty()) {
+                throw new IllegalStateException("PLAN_FEATURE_NOT_READY: " + String.join(",", notReady(plan)));
+            }
             after = startOrRenew(merchantId, plan, months(monthsRaw), "ADMIN", null, operator);
         }
         audit.record(sysUserId, "MERCHANT_PLAN_GRANT", "MERCHANT_PLAN_SUBSCRIPTION", merchantId, before, after, why);
