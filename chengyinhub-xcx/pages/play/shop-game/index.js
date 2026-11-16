@@ -16,16 +16,24 @@ function locate() {
   });
 }
 
-function send(url, data) {
+function launch(body) {
   return new Promise((resolve) => app.sendRequest({
-    url, method: 'POST', write: true, hideLoading: true, silentError: true,
-    data: JSON.stringify(data || {}), header: { 'Content-Type': 'application/json' },
+    url: '/api/shop-games/launch', method: 'POST', write: true, hideLoading: true,
+    data: JSON.stringify(body || {}), header: { 'Content-Type': 'application/json' },
+    success: resolve, successStatusAbnormal: resolve, fail: () => resolve(null),
+  }));
+}
+
+function result(body) {
+  return new Promise((resolve) => app.sendRequest({
+    url: '/api/shop-games/result', method: 'POST', write: true, hideLoading: true,
+    data: JSON.stringify(body || {}), header: { 'Content-Type': 'application/json' },
     success: resolve, successStatusAbnormal: resolve, fail: () => resolve(null),
   }));
 }
 
 Page({
-  data: { step: 'loading', reasonText: '', playId: 0, node: null, over: false, finishing: false, finishNote: '', verdict: null },
+  data: { privacyGateShow: false, step: 'loading', reasonText: '', playId: 0, node: null, over: false, finishing: false, finishNote: '', verdict: null },
 
   onLoad(options) {
     this._poiId = Number((options || {}).poiId) || 0;
@@ -34,6 +42,8 @@ Page({
   },
   onUnload() { this._gone = true; },
 
+  showPrivacyGate() { this.setData({ privacyGateShow: true }); },
+  onPrivacyGateSettled() { this.setData({ privacyGateShow: false }); },
   retry() { this.begin(); },
   exit() { wx.navigateBack({ fail: () => wx.reLaunch({ url: '/pages/roam/index' }) }); },
 
@@ -43,7 +53,7 @@ Page({
     this.setData({ step: 'loading', finishNote: '', over: false });
     locate().then((fix) => {
       if (!fix) return { code: 409, errorCode: 'LOCATION_REQUIRED' };
-      return send(runner.LAUNCH_PATH, runner.launchBody(this._poiId, this._source, fix));
+      return launch(runner.launchBody(this._poiId, this._source, fix));
     }).then((res) => {
       if (this._gone) return;
       if (!res) { this.setData({ step: 'unavailable', reasonText: runner.reasonText('UNAVAILABLE') }); return; }
@@ -68,7 +78,7 @@ Page({
   },
 
   record(fix) {
-    send(runner.RESULT_PATH, runner.finishBody(this.data.playId, fix)).then((res) => {
+    result(runner.finishBody(this.data.playId, fix)).then((res) => {
       if (this._gone) return;
       this.setData({ finishing: false });
       if (res && Number(res.code) === 200) { this.setData({ step: 'verdict', verdict: runner.verdictView(res.data) }); return; }

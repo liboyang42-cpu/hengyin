@@ -6078,6 +6078,8 @@ Page({
      ⚠️ roam-discover 那件半屏没删 —— 游玩页仍在用它(那边原型没有对应屏)。 */
   openRoamDiscover() { this.openShopStrip(); },
   openRoamTasks() { this.openScene('roam-task-list'); },
+  // W7 x-shop-game-runner:据点半屏「玩今天的小游戏」→ 店铺小游戏一局。
+  openShopGame(e) { const poiId = e && e.detail && e.detail.poiId; if (!poiId || this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/play/shop-game/index?poiId=' + encodeURIComponent(poiId) + '&source=PLACE_PAGE', complete: () => { this._navigating = false; } }); },
   openOfficialEvent(e) { const id = e && e.detail && e.detail.id; if (!id || this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/activity/official-detail/index?id=' + id, complete: () => { this._navigating = false; } }); },
   openRoamCoupons() { this.openScene('game-coupon-wallet'); },
   openStampAlbum() { this.openScene('roam-stamp-album'); },

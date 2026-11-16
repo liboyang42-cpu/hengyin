@@ -10,12 +10,12 @@ const read = (p) => fs.readFileSync(path.join(root, p), 'utf8');
 
 test('只把组件的 start/state/action 换成这局自己的会话路由,开局不带旅程 id', () => {
   assert.deepEqual(runner.mapRequest('/api/play/advanced/start', 'POST', { activityId: 0, topicId: 9, nodeId: 9 }, 9),
-    { url: '/api/shop-games/plays/9/session', method: 'POST', data: {} });
+    { route: 'start', playId: 9, method: 'POST', data: {} });
   assert.deepEqual(runner.mapRequest('/api/play/advanced/state', 'GET', { sessionId: 31 }, 9),
-    { url: '/api/shop-games/sessions/state', method: 'GET', data: { sessionId: 31 } });
+    { route: 'state', url: '/api/shop-games/sessions/state', method: 'GET', data: { sessionId: 31 } });
   const action = { sessionId: 31, version: 2, idempotencyKey: 'k', action: 'SUBMIT_TRUE_FALSE', payload: { answer: false } };
   assert.deepEqual(runner.mapRequest('/api/play/advanced/action', 'POST', action, 9),
-    { url: '/api/shop-games/sessions/action', method: 'POST', data: action });
+    { route: 'action', url: '/api/shop-games/sessions/action', method: 'POST', data: action });
   for (const url of ['/api/play/advanced/receipt', '/api/play/advanced/leaderboard', '/api/play/nodes']) {
     assert.equal(runner.mapRequest(url, 'GET', {}, 9), null, url);
   }
@@ -77,12 +77,17 @@ test('结果页:积分、不在店里只记成绩、手机自报、封顶', () =
 test('页面接线:组件走 shop-play-id,据点页开放时才给入口,页面已注册', () => {
   const component = read('pages/play/components/advanced-game/index.js');
   assert.match(component, /shopPlayId: \{ type: null, value: '' \}/);
+  assert.match(component, /if \(this\.data\.shopPlayId\) return this\.shopRequest\(url, method, data, this\.data\.shopPlayId\)/);
   assert.match(component, /shopGameRunner\.mapRequest\(url, method, data, shopPlayId\)/);
+  assert.match(component, /url: '\/api\/shop-games\/plays\/' \+ Number\(shopPlayId\) \+ '\/session', method: 'POST', data: '\{\}'/);
   assert.match(component, /return Promise\.resolve\(shopGameRunner\.refusal\(\)\)/);
   const page = read('pages/play/shop-game/index.wxml');
   assert.match(page, /shop-play-id="\{\{playId\}\}"/);
   const js = read('pages/play/shop-game/index.js');
-  assert.ok(js.indexOf('runner.LAUNCH_PATH') < js.indexOf('runner.RESULT_PATH'));
+  assert.ok(js.indexOf("'/api/shop-games/launch'") < js.indexOf("'/api/shop-games/result'"));
+  assert.match(read('pages/play/shop-game/index.json'), /cy-privacy-gate/);
+  assert.match(read('subpackageMember/components/cy/scene-roam-poi-detail/index.js'), /triggerEvent\('shopgame', \{ poiId \}\)/);
+  assert.match(read('pages/roam/index.wxml'), /bind:shopgame="openShopGame"/);
   const app = JSON.parse(read('app.json'));
   const play = app.subPackages.find(s => s.root === 'pages/play');
   assert.ok(play.pages.includes('shop-game/index'));

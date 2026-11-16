@@ -1,6 +1,7 @@
 <!-- W7 x-shop-game-runner:店铺小游戏一局。发局 → 开这局自己的会话 → 用 cy-advanced-game 玩 → 看结果。 -->
 <view class="sg-page">
   <cy-toast id="cy-toast" />
+  <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
   <view wx:if="{{step === 'loading'}}" class="sg-page__state"><cy-skeleton /></view>
   <view wx:elif="{{step === 'unavailable'}}" class="sg-page__state">
     <cy-error title="这局小游戏现在玩不了" sub="{{reasonText}}" retry="再试一次" bind:retry="retry" />
