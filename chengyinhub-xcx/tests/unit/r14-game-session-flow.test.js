@@ -290,3 +290,40 @@ test('当前局开始任务成功后自动打开本站,业务拒绝不打开', a
     if (accepted) assert.equal(p.data.advancedPlay.node.nodeId, 86);
   }
 });
+
+function playerVerdictControl(page) {
+  const source = fs.readFileSync(path.join(ROOT, 'pages/play/index.wxml'), 'utf8')
+  const host = (source.match(/<cy-play-verdict\b[^>]*>/g) || []).find(tag => tag.includes('r5Verdict.show'))
+  assert.ok(host)
+  const binding = host.match(/cta-text="\{\{(.*?)\}\}"/)
+  let component
+  const previous = global.Component, previousBehavior = global.Behavior
+  global.Behavior = value => value
+  global.Component = value => { component = value }
+  const file = require.resolve('../../pages/play/components/play-verdict/index.js')
+  delete require.cache[file]; require(file); global.Component = previous; global.Behavior = previousBehavior
+  const label = binding ? Function('r5Verdict', 'return (' + binding[1] + ')')(page.data.r5Verdict) : component.properties.ctaText.value
+  const close = host.match(/bind:close="([^"]+)"/)[1]
+  const button = fs.readFileSync(path.join(ROOT, 'pages/play/components/play-verdict/index.wxml'), 'utf8').match(/<view class="pv__cta"[^>]*>/)[0]
+  const tap = button.match(/bindtap="([^"]+)"/)[1]
+  return { label, tap: () => component.methods[tap].call({ triggerEvent: name => { assert.equal(name, 'close'); page[close]() } }) }
+}
+
+for (const [outcome, expected] of [['PASS', '完成本步'], ['FAIL', '返回任务']]) {
+  test('真实结算反馈CTA ' + outcome + '只关闭原反馈，不伪造重试/奖励/新局', () => {
+    const { page: p, requests } = setup()
+    const originalNodes = JSON.stringify(p.data.nodes), originalVersion = p._routeState.version
+    const view = settled => ({ sessionId: 71, lastOutcome: { attemptId: 'cta-71', settled, status: settled ? 'SETTLED' : 'PENDING', outcome, reply: '作者反馈', images: [] } })
+    p._applyR5OutcomeView(view(false)); p._applyR5OutcomeView(view(true))
+    assert.equal(p.data.r5Verdict.show, true)
+    const control = playerVerdictControl(p)
+    assert.equal(control.label, expected)
+    control.tap()
+    assert.equal(p.data.r5Verdict.show, false)
+    assert.equal(p._routeState.version, originalVersion)
+    assert.equal(JSON.stringify(p.data.nodes), originalNodes)
+    assert.equal(requests.length, 0)
+    p._applyR5OutcomeView(view(true))
+    assert.equal(p.data.r5Verdict.show, false, '相同已结算回执不重弹')
+  })
+}
