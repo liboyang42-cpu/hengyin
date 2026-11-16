@@ -50,7 +50,9 @@ public class PlayNodeContext {
             ctx.registration=new CmsRegistration(); ctx.registration.setId(view.registrationId());
             ctx.registration.setPurchaseKind(view.purchaseKind());
         }
-        if(view.failure()!=null) ctx.error=new AjaxResult(view.failure().originalAjaxCode(),view.failure().message());
+        // GAME-10:访问拒绝(未报名/活动未开始/通行证…)是业务拒绝,带有类型的 REFUSED,v2 不再按文案推断成系统故障。body 逐字不变。
+        if(view.failure()!=null) ctx.error=AjaxResult.refuse(view.failure().originalAjaxCode(),
+                com.chengyinhub.common.exception.ErrorCode.REFUSED,view.failure().message());
         return ctx;
     }
 
