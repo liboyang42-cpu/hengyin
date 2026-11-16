@@ -888,6 +888,7 @@ public class ApiTopicController extends BaseController {
         Map<String, Object> data = new HashMap<>();
         try {
             data.put("qrcodeUrl", playerWxacodeService.getOrCreateScene("tp." + topicId));
+            data.put("linkQr", com.chengyinhub.business.service.IPlayerWxacodeService.linkFor("tp." + topicId));
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }
@@ -969,6 +970,7 @@ public class ApiTopicController extends BaseController {
         Map<String, Object> data = new HashMap<>();
         try {
             data.put("qrcodeUrl", playerWxacodeService.getOrCreateScene(scene));
+            data.put("linkQr", com.chengyinhub.business.service.IPlayerWxacodeService.linkFor(scene));
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }

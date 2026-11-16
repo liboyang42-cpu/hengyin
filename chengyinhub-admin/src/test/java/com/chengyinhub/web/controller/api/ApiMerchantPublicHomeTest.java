@@ -363,6 +363,9 @@ class ApiMerchantPublicHomeTest {
         AjaxResult ok = controller.shareCode(String.valueOf(MEMBER_ID));
         assertEquals(200, ok.get(AjaxResult.CODE_TAG));
         assertEquals("https://example.invalid/sh.png", ((Map<?, ?>) ok.get(AjaxResult.DATA_TAG)).get("qrcodeUrl"));
+        // ONB-5:同一 scene 的标准链接码,App、iOS 相机和微信都能扫。
+        assertEquals("https://www.chengyinhub.com/door?scene=sh." + MEMBER_ID,
+                ((Map<?, ?>) ok.get(AjaxResult.DATA_TAG)).get("linkQr"));
 
         assertEquals(500, controller.shareCode("0").get(AjaxResult.CODE_TAG));
         assertEquals(500, controller.shareCode("999").get(AjaxResult.CODE_TAG), "查不到的商家不出码");

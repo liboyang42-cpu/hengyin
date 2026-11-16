@@ -198,6 +198,7 @@ public class ApiChapterMerchantNodeController extends BaseController {
         data.put("code", node.getCheckinCode());
         try {
             data.put("qrcodeUrl", playerWxacodeService.getOrCreateScene(node.getCheckinCode()));
+            data.put("linkQr", IPlayerWxacodeService.linkFor(node.getCheckinCode()));
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }
