@@ -66,8 +66,14 @@ class ClubMembershipMigrationContractTest {
         assertTrue(mapper.contains("id=\"selectplanbyidforupdate\"")
                         && mapper.contains("from club_membership_plan where id = #{id} and del_flag = 0 for update"),
                 "冻结会费套餐价格前必须锁住 plan，防止并发改价或下架后仍生成旧条款账单");
-        assertTrue(service.indexOf("transaction().execute(status -> preparerenewalintent")
-                        < service.indexOf("wechatpayservice.creategenericorder"),
+        // W7 MERCHANT-1: dues are created only on the club's own sub-merchant (duesSplit), never through the
+        // platform's createGenericOrder; the intent must still commit before that network call.
+        assertTrue(service.contains("duessplit.createorder(invoice")
+                        && !service.contains("wechatpayservice.creategenericorder"),
+                "会费只经俱乐部分账子商户下单，平台商户号不直接收会费");
+        int intentCommit = service.indexOf("transaction().execute(status -> preparerenewalintent");
+        assertTrue(intentCommit >= 0
+                        && service.indexOf("payparams = prepay(invoice", intentCommit) > intentCommit,
                 "PAYING intent 必须先用独立短事务提交，再调用微信，不能制造不可见孤儿订单");
     }
 

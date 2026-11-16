@@ -316,12 +316,6 @@ class ApiPlaySensorResultTest {
         template.setValidationMethod(ValidationMethod.PHOTO);
         template.setSensorType(null);
         template.setSensorConfig(null);
-        Map<String, Object> couponDrop = new HashMap<>();
-        couponDrop.put("dropType", 3);
-        couponDrop.put("couponTemplateId", 909L);
-        when(drops.rollDrop(anyLong(), anyLong(), anyLong(), anyLong(), anyLong()))
-                .thenReturn(couponDrop);
-        when(coupons.grantCouponById(MEMBER, 909L)).thenReturn(true);
         allowVerifiedUpload();
 
         AjaxResult result = BasicPlayCommandFixtures.photo(controller,
@@ -329,8 +323,10 @@ class ApiPlaySensorResultTest {
 
         assertEquals(200, result.get("code"));
         verify(points).award(MEMBER, 12L, NODE, "节点打卡");
-        verify(drops).rollDrop(anyLong(), anyLong(), anyLong(), anyLong(), anyLong());
-        verify(coupons).grantCouponById(MEMBER, 909L);
+        // W7 GAME-3 (x-rewards-evidence): a photo completion grants no coupon, like C5, so no drop is rolled
+        // (a type-3 drop is a coupon). Points, progression and the completion grant stay on the full policy.
+        verify(drops, never()).rollDrop(anyLong(), anyLong(), anyLong(), anyLong(), anyLong());
+        verify(coupons, never()).grantCouponById(anyLong(), anyLong());
         verify(progression).onNodeDone(MEMBER);
         verify(completion).grantOnce(MEMBER, TOPIC, ACTIVITY, null);
         verify(completion, never()).grantOnce(
