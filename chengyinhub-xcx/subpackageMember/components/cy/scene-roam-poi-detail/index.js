@@ -698,7 +698,9 @@ Component({
               const validCoupon = isRecord(receipt) && (receipt.needRedeem !== true || positiveId(receipt.couponId) !== null)
               const ok = res && (res.code === 200 || res.code === '200') && matchingPoi && validCoupon && typeof res.data.needRedeem === 'boolean' && (res.data.completed == null || (typeof res.data.completed === 'boolean' && res.data.completed !== res.data.needRedeem)) && (res.data.alreadyClaimed == null || typeof res.data.alreadyClaimed === 'boolean')
               // Only these controller messages prove rejection before insertRewardLogIgnore.
-              const rejected = res && (res.code === 500 || res.code === '500') && PREWRITE_REJECTIONS.has(res.msg)
+              // GAME-4:定位可信判定在写入前,拒绝(带 trustCode)与「记录了但不计」(uncredited)都没写打卡记录。
+              const uncredited = !!(res && (res.code === 200 || res.code === '200') && isRecord(res.data) && res.data.uncredited === true)
+              const rejected = uncredited || (res && (res.code === 500 || res.code === '500') && (PREWRITE_REJECTIONS.has(res.msg) || !!res.trustCode))
               if (!ok && !rejected) { unknown(); return }
               // 新调用被拒只说明本次没写入，不能否定上次未知请求。
               let unknownBefore = !!reverify
@@ -722,7 +724,7 @@ Component({
               this._reverification = null
               this._interactionToken = (this._interactionToken || 0) + 1
               this.setData({ completing: false, checkinPending: false })
-              if (rejected) { this._setInteractionRecovery('retry', '打卡没有完成', res.msg, 'start', '重新作答'); return }
+              if (rejected) { this._setInteractionRecovery('retry', uncredited ? '这次没有记上' : '打卡没有完成', uncredited ? (res.data.trustMessage || '定位看起来不在这里，到店后再试一次') : res.msg, 'start', '重新作答'); return }
               const result = res.data
               this.setData({ challengePhoto: '', choiceSheetShow: false, reverifyReady: false, reverifyStarted: false, pendingStatusText: '' })
               this._clearInteractionRecovery()
