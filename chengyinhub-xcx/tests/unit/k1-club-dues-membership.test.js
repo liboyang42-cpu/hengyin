@@ -26,9 +26,18 @@ test('资金开关关着:不能缴费,如实说即将开放', () => {
   assert.deepEqual(v.plans[0].benefits, ['活动优先报名'])
 })
 
-test('开关开着且俱乐部收款就绪(SPLIT 或今天的 AVAILABLE)才能缴费', () => {
+test('开关开着且俱乐部自己的收款账户就绪(只认 SPLIT)才能缴费', () => {
   assert.equal(vm.shapeOverview(overview(), true, false).canPay, true)
-  assert.equal(vm.shapeOverview(overview({ duesCollection: { state: 'AVAILABLE' } }), true, false).canPay, true)
+  assert.equal(vm.shapeOverview(overview({ duesCollection: {} }), true, false).canPay, false)
+})
+
+test('W7 MERCHANT-1:AVAILABLE(平台代收)不能缴费,如实说即将开放', () => {
+  const v = vm.shapeOverview(overview({ duesCollection: { state: 'AVAILABLE' } }), true, false)
+  assert.equal(v.canPay, false)
+  assert.equal(v.blockedText, '在线缴费即将开放')
+  const owner = vm.shapeCollection({ state: 'AVAILABLE' }, true)
+  assert.equal(owner.ready, false)
+  assert.equal(owner.stateText, '在线缴费即将开放')
   assert.equal(vm.shapeOverview(overview({ clubMembershipEnabled: false }), true, false).canPay, false)
 })
 

@@ -21,7 +21,7 @@ const INVOICE_TEXT = {
 // 不能缴费时说给成员听的话。owner=true 时给主理人看「去开通收款」的说法。
 function blockedText(state, owner) {
   if (state === 'NOT_BOUND') return owner ? '俱乐部还没开通收款账户，开通后成员才能在线缴费' : '俱乐部还没开通在线收款，请联系主理人';
-  if (state === 'WAIT_FOR_PLATFORM') return '在线缴费即将开放';
+  if (state === 'WAIT_FOR_PLATFORM' || state === 'AVAILABLE') return '在线缴费即将开放';
   if (state === 'UNAVAILABLE') return owner ? '会费暂时不能在线收取，请联系平台' : '会费暂时不能在线支付，请联系主理人';
   return '';
 }
@@ -67,12 +67,13 @@ function shapePlan(plan) {
   };
 }
 
-// canPay:资金开关 tickets 打开、俱乐部开了会费、服务端说可以收(AVAILABLE 或 SPLIT)。
+// canPay:资金开关 tickets 打开、俱乐部开了会费、服务端说可以收(只认 SPLIT:俱乐部自己的收款账户)。
+// W7 MERCHANT-1:会费是第三方的钱,平台账户从不代收;旧的 AVAILABLE(平台代收)一律当「即将开放」。
 function shapeOverview(data, moneyOpen, owner) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
   const dues = data.duesCollection && typeof data.duesCollection === 'object' ? data.duesCollection : {};
-  const duesState = typeof dues.state === 'string' ? dues.state : 'AVAILABLE';
-  const collectible = duesState === 'AVAILABLE' || duesState === 'SPLIT';
+  const duesState = typeof dues.state === 'string' ? dues.state : 'WAIT_FOR_PLATFORM';
+  const collectible = duesState === 'SPLIT';
   const enabled = data.clubMembershipEnabled === true;
   const status = typeof data.effectiveStatus === 'string' ? data.effectiveStatus : 'FREE';
   const term = data.term && typeof data.term === 'object' ? data.term : null;
@@ -107,7 +108,7 @@ function shapeOverview(data, moneyOpen, owner) {
 function shapeCollection(data, moneyOpen) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
   const state = typeof data.state === 'string' ? data.state : 'UNAVAILABLE';
-  const ready = moneyOpen && (state === 'AVAILABLE' || state === 'SPLIT');
+  const ready = moneyOpen && state === 'SPLIT';
   return {
     state,
     ready,

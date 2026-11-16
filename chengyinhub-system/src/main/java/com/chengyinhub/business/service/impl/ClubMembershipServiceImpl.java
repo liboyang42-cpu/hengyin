@@ -76,8 +76,8 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
     @Autowired private PlatformTransactionManager transactionManager;
     @Autowired private WechatVerifiedPaymentFactService verifiedPaymentFacts;
     /**
-     * S2 collection model + K1 club dues: while the model is active (money ceiling on), dues are paid to the club's own
-     * sub-merchant ({@link com.chengyinhub.business.collection.ClubDuesSplitService}) or refused; never the platform.
+     * S2 collection model + K1 club dues: dues are paid to the club's own sub-merchant
+     * ({@link com.chengyinhub.business.collection.ClubDuesSplitService}) or refused; never the platform (W7 MERCHANT-1).
      */
     @Autowired(required = false) private com.chengyinhub.business.collection.CollectionModelService collectionModel;
     @Autowired(required = false) private com.chengyinhub.business.collection.ClubDuesSplitService duesSplit;
