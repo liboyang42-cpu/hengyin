@@ -14,6 +14,8 @@ import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact;
 import com.chengyinhub.business.mapper.CmsActivityMapper;
 import com.chengyinhub.business.mapper.UmsMemberMapper;
 import com.chengyinhub.business.merchantplans.TakeRateService;
+import com.chengyinhub.business.moneyswitch.MoneyArea;
+import com.chengyinhub.business.moneyswitch.MoneyGateTestSupport;
 import com.chengyinhub.business.moneyswitch.MoneySwitchService;
 import com.chengyinhub.business.moneyswitch.mapper.MoneySwitchMapper;
 import com.chengyinhub.business.payout.EcommerceProfitShareService;
@@ -60,7 +62,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
- * K1 club dues through split settlement: ceiling off changes nothing; a club without a finished sub-merchant is refused
+ * K1 club dues through split settlement: model off refuses dues (W7 MERCHANT-1); a club without a finished sub-merchant is refused
  * before any order row; dues go to the club's own sub-merchant with the take frozen before WeChat, never to a platform-held
  * balance; profit sharing waits for refunds; a refund returns the shared take first.
  */
@@ -98,9 +100,14 @@ class ClubDuesSplitTest {
         when(takeRates.clubDuesRate()).thenReturn(new BigDecimal("0.0300"));
     }
 
-    CollectionModelService model(boolean ceiling, PayoutSwitches switches) {
-        return new CollectionModelService(new MoneySwitchService(mock(MoneySwitchMapper.class), ceiling), switches, sellers,
+    /** {@code on}: the S2 model flag on and the Q5 tickets area effectively open. */
+    CollectionModelService model(boolean on, PayoutSwitches switches) {
+        MoneySwitchService money = on ? MoneyGateTestSupport.moneySwitch(true, MoneyArea.TICKETS)
+                : new MoneySwitchService(mock(MoneySwitchMapper.class), false);
+        CollectionModelService model = new CollectionModelService(money, switches, sellers,
                 mock(CmsActivityMapper.class), mock(ISettlementRuleService.class), collectionMapper, "SPLIT", "SPLIT", "SPLIT");
+        model.setModelEnabled(on);
+        return model;
     }
 
     void club(String state, String sub) {
@@ -144,18 +151,18 @@ class ClubDuesSplitTest {
         return row;
     }
 
-    // ---- ceiling off: exactly today's behaviour ----
+    // ---- model off: dues are refused, never sent to the platform account (W7 MERCHANT-1) ----
 
     @Test
-    void ceilingOffChangesNothingAndReadsNothing() {
+    void ceilingOffRefusesDuesAndReadsNoSeller() {
         CollectionModelService model = model(false, ON);
-        CollectionDecision d = model.requireClubDuesCollectible(3L);
-        assertTrue(d.platform(), "the caller keeps today's platform order");
-        assertEquals(CollectionDecision.MODEL_OFF, d.reason());
-        assertEquals("AVAILABLE", model.clubDuesStatus(3L).get("state"));
-        assertDoesNotThrow(() -> model.requirePlatformMayCollectDues(CLM));
+        BusinessRefusal refusal = assertThrows(BusinessRefusal.class, () -> model.requireClubDuesCollectible(3L));
+        assertEquals(ErrorCode.CLUB_DUES_COLLECTION_UNAVAILABLE, refusal.getErrorCode());
+        assertEquals("WAIT_FOR_PLATFORM", model.clubDuesStatus(3L).get("state"));
+        assertEquals(false, model.clubDuesStatus(3L).get("collectible"));
+        assertThrows(IllegalStateException.class, () -> model.requirePlatformMayCollectDues(CLM));
         assertEquals("CLUB_DUES", model.policies().keySet().stream().filter("CLUB_DUES"::equals).findFirst().orElse(null));
-        verifyNoInteractions(sellers, collectionMapper);
+        verifyNoInteractions(sellers);
 
         ClubDuesSplitService service = dues(model, RAILS_OFF, adapter(model));
         assertEquals(0, service.planDue(50));

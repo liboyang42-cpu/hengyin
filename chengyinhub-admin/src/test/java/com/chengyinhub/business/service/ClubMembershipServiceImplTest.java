@@ -149,6 +149,7 @@ class ClubMembershipServiceImplTest {
         when(mapper.selectInvoiceByIdForUpdate(any())).thenAnswer(call ->
                 mapper.selectInvoiceById(call.getArgument(0, Long.class)));
         when(audits.insertBusinessAuditEvent(any(BusinessAuditEvent.class))).thenReturn(1);
+        installSplitDuesCollection();
         when(mapper.bindInvoicePaymentProof(any(),anyString(),any(),anyString(),any(),anyString())).thenAnswer(call -> {
             ClubMembershipInvoice invoice=mapper.selectInvoiceByOutTradeNoForUpdate("CLM01234567890123456789012345678");
             if(invoice==null)throw new AssertionError("missing original invoice fixture");
@@ -2381,6 +2382,31 @@ class ClubMembershipServiceImplTest {
         return payParams;
     }
 
+    /**
+     * W7 MERCHANT-1: the platform account never collects dues, so every dues prepay goes through the club's own
+     * sub-merchant. The invoice-lifecycle tests in this class stub the one WeChat prepay on {@code pay}; this default
+     * routes the split order to that same stub so they keep testing the intent, attach and recovery logic.
+     */
+    private void installSplitDuesCollection() {
+        com.chengyinhub.business.collection.CollectionDecision split = new com.chengyinhub.business.collection.CollectionDecision(
+                com.chengyinhub.business.collection.CollectionPolicy.SPLIT,
+                com.chengyinhub.business.payout.SellerOfRecordPolicy.SellerType.CLUB, CLUB, "1900000999",
+                com.chengyinhub.business.collection.CollectionDecision.SUB_MERCHANT);
+        com.chengyinhub.business.collection.CollectionModelService model =
+                mock(com.chengyinhub.business.collection.CollectionModelService.class);
+        when(model.requireClubDuesCollectible(any())).thenReturn(split);
+        WechatVerifiedFactTestSupport.setField(service, "collectionModel", model);
+        com.chengyinhub.business.collection.ClubDuesSplitService duesSplit =
+                mock(com.chengyinhub.business.collection.ClubDuesSplitService.class);
+        when(duesSplit.createOrder(any(ClubMembershipInvoice.class), any(), any())).thenAnswer(call -> {
+            ClubMembershipInvoice invoice = call.getArgument(0);
+            return pay.createGenericOrder(invoice.getOutTradeNo(),
+                    java.math.BigDecimal.valueOf(invoice.getAmountFen(), 2),
+                    "俱乐部会费-" + invoice.getPlanNameSnapshot(), call.getArgument(2));
+        });
+        WechatVerifiedFactTestSupport.setField(service, "duesSplit", duesSplit);
+    }
+
     private com.chengyinhub.business.collection.CollectionModelService duesModel(
             com.chengyinhub.business.collection.CollectionDecision decision) {
         com.chengyinhub.business.collection.CollectionModelService model =
@@ -2438,30 +2464,68 @@ class ClubMembershipServiceImplTest {
     }
 
     @Test
-    void modelOffKeepsTodaysPlatformOrderExactly() {
+    void modelOffRefusesNewDuesPrepay() {
+        // W7 MERCHANT-1: closed money switch or model off → typed refusal before any invoice row or WeChat call.
+        com.chengyinhub.business.collection.CollectionModelService model =
+                mock(com.chengyinhub.business.collection.CollectionModelService.class);
+        com.chengyinhub.common.exception.ErrorCode code =
+                com.chengyinhub.common.exception.ErrorCode.CLUB_DUES_COLLECTION_UNAVAILABLE;
+        org.mockito.Mockito.doThrow(new com.chengyinhub.common.exception.BusinessRefusal(
+                code, code.defaultMessage(), com.chengyinhub.common.exception.ErrorContract.LEGACY_ERROR_CODE,
+                code.httpStatus(), Map.of("reason", "MONEY_SWITCH_CLOSED", "nextStep", "WAIT_FOR_PLATFORM")))
+                .when(model).requireDuesMoneyOpen(CLUB);
+        WechatVerifiedFactTestSupport.setField(service, "collectionModel", model);
+        com.chengyinhub.business.collection.ClubDuesSplitService duesSplit =
+                mock(com.chengyinhub.business.collection.ClubDuesSplitService.class);
+        WechatVerifiedFactTestSupport.setField(service, "duesSplit", duesSplit);
+        stageRenewal("idem-off");
+
+        com.chengyinhub.common.exception.BusinessRefusal refusal = assertThrows(
+                com.chengyinhub.common.exception.BusinessRefusal.class, () -> service.renew(MEMBER, renew(9L, "idem-off")));
+
+        assertEquals(code, refusal.getErrorCode());
+        verify(mapper, never()).insertInvoice(any());
+        verify(mapper, never()).markInvoicePayingCas(any(), anyInt(), any());
+        verify(pay, never()).createGenericOrder(any(), any(), any(), any());
+        org.mockito.Mockito.verifyNoInteractions(duesSplit);
+        verify(model, never()).requireClubDuesCollectible(any());
+    }
+
+    @Test
+    void withoutTheCollectionModelDuesAreRefusedAndNeverOnThePlatformAccount() {
+        WechatVerifiedFactTestSupport.setField(service, "collectionModel", null);
+        stageRenewal("idem-none");
+
+        assertThrows(com.chengyinhub.common.exception.BusinessRefusal.class,
+                () -> service.renew(MEMBER, renew(9L, "idem-none")));
+
+        verify(mapper, never()).insertInvoice(any());
+        verify(pay, never()).createGenericOrder(any(), any(), any(), any());
+    }
+
+    @Test
+    void aPlatformDecisionNeverReachesThePlatformAccount() {
         duesModel(new com.chengyinhub.business.collection.CollectionDecision(
                 com.chengyinhub.business.collection.CollectionPolicy.PLATFORM,
                 com.chengyinhub.business.payout.SellerOfRecordPolicy.SellerType.PLATFORM, null, null,
                 com.chengyinhub.business.collection.CollectionDecision.MODEL_OFF));
-        com.chengyinhub.business.collection.ClubDuesSplitService duesSplit =
-                mock(com.chengyinhub.business.collection.ClubDuesSplitService.class);
-        WechatVerifiedFactTestSupport.setField(service, "duesSplit", duesSplit);
-        Map<String, String> payParams = stageRenewal("idem-off");
-        when(pay.createGenericOrder(any(), eq(new java.math.BigDecimal("99.00")), any(), eq("openid-71")))
-                .thenReturn(payParams);
+        Map<String, String> payParams = stageRenewal("idem-platform");
+        when(pay.createGenericOrder(any(), any(), any(), any())).thenReturn(payParams);
 
-        ClubMembershipRenewalVO result = service.renew(MEMBER, renew(9L, "idem-off"));
+        ClubMembershipRenewalVO result = service.renew(MEMBER, renew(9L, "idem-platform"));
 
-        assertEquals(payParams, result.getPayParams());
-        verify(pay).createGenericOrder(any(), any(), any(), any());
-        org.mockito.Mockito.verifyNoInteractions(duesSplit);
+        assertEquals("PREPAY_UNKNOWN", result.getPaymentState());
+        assertTrue(result.getPayParams().isEmpty());
+        verify(pay, never()).createGenericOrder(any(), any(), any(), any());
     }
 
     @Test
     void overviewTellsTheMemberWhetherDuesCanBePaid() {
         when(mapper.selectSetting(CLUB)).thenReturn(enabledSetting());
-        assertEquals("AVAILABLE", service.overview(MEMBER, CLUB).getDuesCollection().get("state"),
-                "no collection model bean: today's path");
+        WechatVerifiedFactTestSupport.setField(service, "collectionModel", null);
+        assertEquals("WAIT_FOR_PLATFORM", service.overview(MEMBER, CLUB).getDuesCollection().get("state"),
+                "no collection model bean: dues wait for the platform, never the old platform path");
+        assertEquals(false, service.overview(MEMBER, CLUB).getDuesCollection().get("collectible"));
         com.chengyinhub.business.collection.CollectionModelService model =
                 mock(com.chengyinhub.business.collection.CollectionModelService.class);
         when(model.clubDuesStatus(CLUB)).thenReturn(Map.of("state", "NOT_BOUND", "nextStep", "BIND_COLLECTION_ACCOUNT"));

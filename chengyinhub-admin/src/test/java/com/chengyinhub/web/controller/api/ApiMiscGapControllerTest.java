@@ -56,7 +56,7 @@ class ApiMiscGapControllerTest {
 
     ApiMiscGapController controller(boolean payments, boolean payout) {
         return new ApiMiscGapController(login, npc, im, registration, withdrawal, new RegistrationOriginalEventService(jdbc),
-                new MiscMoneySwitch(payments, payout), validator) {
+                new MiscMoneySwitch(payments, payout, com.chengyinhub.business.moneyswitch.MoneyGateTestSupport.openGate()), validator) {
             @Override public Long getAppUserId() { return 9009L; }
         };
     }

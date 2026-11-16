@@ -93,7 +93,7 @@ class ExternalGameSecurityR3Test {
                 balances.put(memberId, cur - fen);
             }
         };
-        return new ExternalGameMonetizationService(jdbc, tx, signer, new MiscMoneySwitch(payments, payments),
+        return new ExternalGameMonetizationService(jdbc, tx, signer, new MiscMoneySwitch(payments, payments, com.chengyinhub.business.moneyswitch.MoneyGateTestSupport.openGate()),
                 wallet, bridge, clock::get, SECRET, testWallet);
     }
 
