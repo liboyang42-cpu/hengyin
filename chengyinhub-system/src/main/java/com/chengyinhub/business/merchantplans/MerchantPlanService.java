@@ -38,6 +38,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  *
  * <p>Every console change (plan settings, confirming an order, granting or ending a plan) writes one platform audit
  * row in the same transaction.
+ *
+ * <p>W7 MERCHANT-12: an order tells the merchant how to pay (amount, payee, account, reference = order number,
+ * deadline) from server configuration {@code chengyin.merchant-plans.payment.*}; without that configuration no order
+ * is taken. Confirming payment needs the payment reference and the amount received (equal to the order amount). A
+ * paid plan granted without an order needs the separate permission {@code business:merchantplans:grantPaid}.
  */
 @Service
 public class MerchantPlanService {
@@ -45,6 +50,7 @@ public class MerchantPlanService {
     public static final ZoneId ZONE = ZoneId.of("Asia/Shanghai");
     public static final int MONTHS_MAX = 12;
     public static final int REASON_MAX = 255;
+    public static final String GRANT_PAID_REQUIRED = "不经订单开通付费套餐需要「无订单开通付费套餐」权限";
     static final ObjectMapper JSON = new ObjectMapper();
 
     private final JdbcTemplate jdbc;
@@ -58,6 +64,16 @@ public class MerchantPlanService {
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     private com.chengyinhub.system.service.ISysConfigService sysConfig;
     private java.util.function.Function<String, String> configLookup;
+    /** W7 MERCHANT-12: where the merchant pays. Blank payee or account = no instructions = no self-checkout. */
+    @Value("${chengyin.merchant-plans.payment.payee:}")
+    private String paymentPayee = "";
+    @Value("${chengyin.merchant-plans.payment.bank:}")
+    private String paymentBank = "";
+    @Value("${chengyin.merchant-plans.payment.account:}")
+    private String paymentAccount = "";
+    @Value("${chengyin.merchant-plans.payment.deadline-days:3}")
+    private int paymentDeadlineDays = 3;
+    static final java.util.regex.Pattern PAYMENT_REFERENCE = java.util.regex.Pattern.compile("[A-Za-z0-9_-]{4,64}");
 
     public MerchantPlanService(JdbcTemplate jdbc, MerchantPlansMoneyGate gate, IMerchantAccessService access,
                                OpsConsoleAudit audit,
@@ -67,6 +83,20 @@ public class MerchantPlanService {
         this.access = access;
         this.audit = audit;
         this.selfCheckoutEnabled = selfCheckoutEnabled;
+    }
+
+    /** For tests: where the merchant pays. */
+    MerchantPlanService withPayment(String payee, String bank, String account, int deadlineDays) {
+        this.paymentPayee = payee;
+        this.paymentBank = bank;
+        this.paymentAccount = account;
+        this.paymentDeadlineDays = deadlineDays;
+        return this;
+    }
+
+    /** True when a merchant can be told whom to pay. */
+    public boolean paymentInstructionsReady() {
+        return !blank(paymentPayee) && !blank(paymentAccount);
     }
 
     /** For tests: sys_config values. */
@@ -189,6 +219,11 @@ public class MerchantPlanService {
         out.put("salesOpen", open);
         out.put("salesState", open ? "OPEN" : "AVAILABLE_SOON");
         out.put("merchantId", merchant);
+        // MERCHANT-12: an order waiting for payment stays on the page with how to pay it.
+        List<Map<String, Object>> pending = jdbc.queryForList("SELECT order_no, plan_code, months, amount_fen, status,"
+                + " create_time FROM cy_merchant_plan_order WHERE merchant_id = ? AND status = 'PENDING'"
+                + " ORDER BY create_time DESC, order_no DESC LIMIT 1", merchant);
+        out.put("pendingOrder", pending == null || pending.isEmpty() ? null : orderView(pending.get(0)));
         return out;
     }
 
@@ -212,6 +247,9 @@ public class MerchantPlanService {
         }
         if (!notReady(plan).isEmpty()) {
             throw new MerchantGapException(409, "PLAN_FEATURE_NOT_READY", "这个套餐里有功能还没上线，暂不能购买");
+        }
+        if (!paymentInstructionsReady()) {
+            throw new MerchantGapException(409, "PLAN_PAYMENT_NOT_READY", "平台收款信息还没准备好，暂不能购买");
         }
         int months = months(body == null ? null : body.get("months"));
         Object rawRequest = body.get("requestId");
@@ -309,11 +347,24 @@ public class MerchantPlanService {
                 merchantId);
     }
 
-    /** Operations confirm that a pending order was paid: the plan starts or renews. Money switch must be open. */
+    /**
+     * Operations confirm that a pending order was paid: the plan starts or renews. Money switch must be open. MERCHANT-12:
+     * the payment reference (unique across orders) and the amount received (equal to the order amount) are required and
+     * stored on the order.
+     */
     @Transactional(rollbackFor = Exception.class)
-    public Map<String, Object> confirmPaid(String orderNo, Long sysUserId, String operator, String reason) {
+    public Map<String, Object> confirmPaid(String orderNo, String paymentReference, Object amountReceivedRaw,
+                                           Long sysUserId, String operator, String reason) {
         String why = reason(reason, operator);
         gate.requireOpen();
+        String reference = paymentReference == null ? "" : paymentReference.trim();
+        if (!PAYMENT_REFERENCE.matcher(reference).matches())
+            throw new IllegalArgumentException("请填写收款流水号(4-64 位字母、数字、- 或 _)");
+        if (!(amountReceivedRaw instanceof Number received) || received.doubleValue() != Math.rint(received.doubleValue())
+                || received.longValue() <= 0) {
+            throw new IllegalArgumentException("请填写实收金额(分)");
+        }
+        long receivedFen = received.longValue();
         List<Map<String, Object>> rows = jdbc.queryForList("SELECT order_no, merchant_id, plan_code, months, amount_fen, status"
                 + " FROM cy_merchant_plan_order WHERE order_no = ? FOR UPDATE", orderNo);
         if (rows.isEmpty()) throw new IllegalArgumentException("order not found");
@@ -321,24 +372,34 @@ public class MerchantPlanService {
         if (!"PENDING".equals(order.get("status"))) throw new IllegalStateException("order is not pending");
         MerchantPlan plan = plan(String.valueOf(order.get("plan_code")));
         if (plan == null || !plan.paid()) throw new IllegalStateException("plan is no longer sold");
+        long amount = ((Number) order.get("amount_fen")).longValue();
+        if (receivedFen != amount) throw new IllegalStateException("实收金额与订单金额不一致，不能确认");
+        Integer used = jdbc.queryForObject("SELECT COUNT(*) FROM cy_merchant_plan_order WHERE payment_reference = ?",
+                Integer.class, reference);
+        if (used != null && used > 0) throw new IllegalStateException("这个收款流水号已经用于另一笔订单");
         long merchant = ((Number) order.get("merchant_id")).longValue();
         int months = ((Number) order.get("months")).intValue();
-        if (jdbc.update("UPDATE cy_merchant_plan_order SET status = 'PAID', paid_time = CURRENT_TIMESTAMP, confirmed_by = ?"
-                + " WHERE order_no = ? AND status = 'PENDING'", operator, orderNo) != 1) {
+        if (jdbc.update("UPDATE cy_merchant_plan_order SET status = 'PAID', paid_time = CURRENT_TIMESTAMP, confirmed_by = ?,"
+                + " payment_reference = ?, amount_received_fen = ? WHERE order_no = ? AND status = 'PENDING'",
+                operator, reference, receivedFen, orderNo) != 1) {
             throw new IllegalStateException("order changed meanwhile");
         }
         Map<String, Object> sub = startOrRenew(merchant, plan, months, "PURCHASE", orderNo, operator);
-        audit.record(sysUserId, "MERCHANT_PLAN_ORDER_PAID", "MERCHANT_PLAN_ORDER", merchant, order, sub, why);
+        Map<String, Object> evidence = new LinkedHashMap<>(sub);
+        evidence.put("paymentReference", reference);
+        evidence.put("amountReceivedFen", receivedFen);
+        audit.record(sysUserId, "MERCHANT_PLAN_ORDER_PAID", "MERCHANT_PLAN_ORDER", merchant, order, evidence, why);
         return sub;
     }
 
     /**
      * Grants (or renews) a plan for a merchant from the console. A paid or per-visit plan needs the money switch
-     * open. Free ends the current plan now and is always allowed.
+     * open and, without an order (MERCHANT-12), the separate permission {@code business:merchantplans:grantPaid}
+     * ({@code paidGrantAllowed}). Free ends the current plan now and is always allowed.
      */
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> grant(Long merchantId, String planCode, Object monthsRaw, Long sysUserId, String operator,
-                                     String reason) {
+                                     String reason, boolean paidGrantAllowed) {
         String why = reason(reason, operator);
         if (merchantId == null || merchantId <= 0) throw new IllegalArgumentException("merchant is required");
         Integer exists = jdbc.queryForObject("SELECT COUNT(*) FROM mms_merchant WHERE id = ?", Integer.class, merchantId);
@@ -355,6 +416,7 @@ public class MerchantPlanService {
             if (plan.paid() && !notReady(plan).isEmpty()) {
                 throw new IllegalStateException("PLAN_FEATURE_NOT_READY: " + String.join(",", notReady(plan)));
             }
+            if (!paidGrantAllowed) throw new IllegalStateException(GRANT_PAID_REQUIRED);
             after = startOrRenew(merchantId, plan, months(monthsRaw), "ADMIN", null, operator);
         }
         audit.record(sysUserId, "MERCHANT_PLAN_GRANT", "MERCHANT_PLAN_SUBSCRIPTION", merchantId, before, after, why);
@@ -396,12 +458,12 @@ public class MerchantPlanService {
     }
 
     private Map<String, Object> orderByRequest(long merchant, String requestId) {
-        List<Map<String, Object>> rows = jdbc.queryForList("SELECT order_no, plan_code, months, amount_fen, status"
+        List<Map<String, Object>> rows = jdbc.queryForList("SELECT order_no, plan_code, months, amount_fen, status, create_time"
                 + " FROM cy_merchant_plan_order WHERE merchant_id = ? AND request_id = ?", merchant, requestId);
         return rows.isEmpty() ? null : rows.get(0);
     }
 
-    private static Map<String, Object> orderView(Map<String, Object> row) {
+    private Map<String, Object> orderView(Map<String, Object> row) {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("orderNo", row.get("order_no"));
         out.put("planCode", row.get("plan_code"));
@@ -409,7 +471,28 @@ public class MerchantPlanService {
         out.put("amountFen", row.get("amount_fen"));
         out.put("status", row.get("status"));
         out.put("payment", "OPERATIONS_CONFIRM");
+        out.put("paymentInstructions", "PENDING".equals(row.get("status")) ? paymentInstructions(row) : null);
         return out;
+    }
+
+    /** MERCHANT-12: amount, payee, account, the order number as the transfer reference, and the deadline. */
+    Map<String, Object> paymentInstructions(Map<String, Object> row) {
+        if (!paymentInstructionsReady()) return null;
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("amountFen", row.get("amount_fen"));
+        out.put("payee", paymentPayee.trim());
+        out.put("bank", blank(paymentBank) ? null : paymentBank.trim());
+        out.put("account", paymentAccount.trim());
+        out.put("reference", row.get("order_no"));
+        Object created = row.get("create_time");
+        Instant base = created == null ? Instant.now() : instant(created);
+        int days = Math.max(1, Math.min(30, paymentDeadlineDays));
+        out.put("deadline", base.atZone(ZONE).toLocalDate().plusDays(days).toString());
+        return out;
+    }
+
+    private static boolean blank(String value) {
+        return value == null || value.isBlank();
     }
 
     private MerchantPlan toPlan(Map<String, Object> r) {

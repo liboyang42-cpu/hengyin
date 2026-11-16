@@ -253,8 +253,8 @@ class MerchantPlansTest {
         MerchantGapException closed = assertThrows(MerchantGapException.class, () -> plans.checkout(7L,
                 Map.of("planCode", "BASIC", "months", 1, "requestId", "abcdefghijklmnop")));
         assertEquals(409, closed.getStatus());
-        assertThrows(IllegalStateException.class, () -> plans.grant(70L, "PRO", 1, 1L, "ops", "pilot"));
-        assertThrows(IllegalStateException.class, () -> plans.confirmPaid("MPLAN_1", 1L, "ops", "paid"));
+        assertThrows(IllegalStateException.class, () -> plans.grant(70L, "PRO", 1, 1L, "ops", "pilot", true));
+        assertThrows(IllegalStateException.class, () -> plans.confirmPaid("MPLAN_1", "WX4200001", 19900, 1L, "ops", "paid"));
         verify(jdbc, never()).update(org.mockito.ArgumentMatchers.startsWith("INSERT INTO cy_merchant_plan_order"),
                 any(Object[].class));
         verify(jdbc, never()).update(org.mockito.ArgumentMatchers.startsWith("INSERT INTO cy_merchant_plan_subscription"),
@@ -317,7 +317,7 @@ class MerchantPlansTest {
         MerchantGapException e = assertThrows(MerchantGapException.class, () -> plans.checkout(7L,
                 Map.of("planCode", "BASIC", "months", 1, "requestId", "abcdefghijklmnop")));
         assertEquals("PLAN_FEATURE_NOT_READY", e.getErrorCode());
-        IllegalStateException g = assertThrows(IllegalStateException.class, () -> plans.grant(70L, "PRO", 1, 1L, "ops", "pilot"));
+        IllegalStateException g = assertThrows(IllegalStateException.class, () -> plans.grant(70L, "PRO", 1, 1L, "ops", "pilot", true));
         assertTrue(g.getMessage().startsWith("PLAN_FEATURE_NOT_READY"));
         verify(jdbc, never()).update(org.mockito.ArgumentMatchers.startsWith("INSERT INTO cy_merchant_plan_order"),
                 any(Object[].class));
@@ -375,5 +375,115 @@ class MerchantPlansTest {
         assertThrows(IllegalStateException.class, gate::requireOpen);
         assertTrue(gate(true).open());
         assertFalse(gate(false).open());
+    }
+
+    // ------------------------------------------------------------------ W7 MERCHANT-12: operator dead ends
+
+    private static Map<String, Object> pendingOrder(long amountFen) {
+        Map<String, Object> o = new LinkedHashMap<>();
+        o.put("order_no", "MPLAN_1");
+        o.put("merchant_id", 70L);
+        o.put("plan_code", "BASIC");
+        o.put("months", 1);
+        o.put("amount_fen", amountFen);
+        o.put("status", "PENDING");
+        o.put("create_time", java.sql.Timestamp.from(Instant.parse("2026-11-20T02:00:00Z")));
+        return o;
+    }
+
+    private static MerchantPlanService readyPlans(JdbcTemplate jdbc, OpsConsoleAudit audit) {
+        return new MerchantPlanService(jdbc, gate(true), owner(), audit, true)
+                .withConfig(k -> "true")
+                .withPayment("城瘾平台", "招商银行", "6214000000000000", 3);
+    }
+
+    @Test
+    void confirmWithoutReferenceRefused() {
+        JdbcTemplate jdbc = planJdbc();
+        OpsConsoleAudit audit = mock(OpsConsoleAudit.class);
+        MerchantPlanService plans = readyPlans(jdbc, audit);
+        assertThrows(IllegalArgumentException.class, () -> plans.confirmPaid("MPLAN_1", null, 19900, 1L, "ops", "paid"));
+        assertThrows(IllegalArgumentException.class, () -> plans.confirmPaid("MPLAN_1", "x", 19900, 1L, "ops", "paid"));
+        assertThrows(IllegalArgumentException.class, () -> plans.confirmPaid("MPLAN_1", "WX4200001", null, 1L, "ops", "paid"));
+        assertThrows(IllegalArgumentException.class, () -> plans.confirmPaid("MPLAN_1", "WX4200001", 199.5, 1L, "ops", "paid"));
+        verify(jdbc, never()).update(org.mockito.ArgumentMatchers.startsWith("UPDATE cy_merchant_plan_order"), any(Object[].class));
+        verifyNoInteractions(audit);
+    }
+
+    @Test
+    void confirmNeedsTheOrderAmountAndAnUnusedReference() {
+        JdbcTemplate jdbc = planJdbc();
+        when(jdbc.queryForList(org.mockito.ArgumentMatchers.startsWith("SELECT order_no, merchant_id"), eq("MPLAN_1")))
+                .thenReturn(List.of(pendingOrder(19900)));
+        OpsConsoleAudit audit = mock(OpsConsoleAudit.class);
+        MerchantPlanService plans = readyPlans(jdbc, audit);
+        assertThrows(IllegalStateException.class, () -> plans.confirmPaid("MPLAN_1", "WX4200001", 100, 1L, "ops", "paid"));
+        when(jdbc.queryForObject(org.mockito.ArgumentMatchers.startsWith("SELECT COUNT(*) FROM cy_merchant_plan_order"),
+                eq(Integer.class), eq("WX4200001"))).thenReturn(1);
+        assertThrows(IllegalStateException.class, () -> plans.confirmPaid("MPLAN_1", "WX4200001", 19900, 1L, "ops", "paid"));
+        verifyNoInteractions(audit);
+
+        when(jdbc.queryForObject(org.mockito.ArgumentMatchers.startsWith("SELECT COUNT(*) FROM cy_merchant_plan_order"),
+                eq(Integer.class), eq("WX4200002"))).thenReturn(0);
+        when(jdbc.update(org.mockito.ArgumentMatchers.startsWith("UPDATE cy_merchant_plan_order"), any(Object[].class))).thenReturn(1);
+        Map<String, Object> sub = plans.confirmPaid("MPLAN_1", " WX4200002 ", 19900, 1L, "ops", "paid");
+        assertEquals("BASIC", sub.get("planCode"));
+        verify(jdbc).update(org.mockito.ArgumentMatchers.startsWith("UPDATE cy_merchant_plan_order SET status = 'PAID'"),
+                eq("ops"), eq("WX4200002"), eq(19900L), eq("MPLAN_1"));
+        verify(audit).record(eq(1L), eq("MERCHANT_PLAN_ORDER_PAID"), eq("MERCHANT_PLAN_ORDER"), eq(70L), any(),
+                org.mockito.ArgumentMatchers.argThat(m -> m instanceof Map<?, ?> map && "WX4200002".equals(map.get("paymentReference"))
+                        && Long.valueOf(19900L).equals(map.get("amountReceivedFen"))), eq("paid"));
+    }
+
+    @Test
+    void paidGrantWithoutAnOrderNeedsItsOwnPermission() {
+        JdbcTemplate jdbc = planJdbc();
+        when(jdbc.queryForObject(anyString(), eq(Integer.class), any())).thenReturn(1);
+        OpsConsoleAudit audit = mock(OpsConsoleAudit.class);
+        MerchantPlanService plans = readyPlans(jdbc, audit);
+        IllegalStateException e = assertThrows(IllegalStateException.class,
+                () -> plans.grant(70L, "BASIC", 1, 1L, "ops", "pilot", false));
+        assertEquals(MerchantPlanService.GRANT_PAID_REQUIRED, e.getMessage());
+        verify(jdbc, never()).update(org.mockito.ArgumentMatchers.startsWith("INSERT INTO cy_merchant_plan_subscription"),
+                any(Object[].class));
+        verifyNoInteractions(audit);
+        // Free never needs it.
+        plans.grant(70L, "FREE", null, 1L, "ops", "downgrade", false);
+        verify(audit).record(eq(1L), eq("MERCHANT_PLAN_GRANT"), anyString(), eq(70L), any(), any(), eq("downgrade"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void checkoutTellsTheMerchantHowToPayAndRefusesWithoutPaymentConfiguration() {
+        JdbcTemplate jdbc = planJdbc();
+        when(jdbc.queryForList(org.mockito.ArgumentMatchers.startsWith("SELECT order_no, plan_code"), eq(70L), anyString()))
+                .thenReturn(List.of(), List.of(pendingOrder(19900)));
+        MerchantPlanService unconfigured = new MerchantPlanService(jdbc, gate(true), owner(), mock(OpsConsoleAudit.class), true)
+                .withConfig(k -> "true");
+        MerchantGapException e = assertThrows(MerchantGapException.class, () -> unconfigured.checkout(7L,
+                Map.of("planCode", "BASIC", "months", 1, "requestId", "abcdefghijklmnop")));
+        assertEquals("PLAN_PAYMENT_NOT_READY", e.getErrorCode());
+
+        Map<String, Object> order = readyPlans(jdbc, mock(OpsConsoleAudit.class)).checkout(7L,
+                Map.of("planCode", "BASIC", "months", 1, "requestId", "abcdefghijklmnop"));
+        Map<String, Object> pay = (Map<String, Object>) order.get("paymentInstructions");
+        assertEquals(19900L, pay.get("amountFen"));
+        assertEquals("城瘾平台", pay.get("payee"));
+        assertEquals("6214000000000000", pay.get("account"));
+        assertEquals("MPLAN_1", pay.get("reference"));
+        assertEquals("2026-11-23", pay.get("deadline"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void thePlanPageKeepsTheOrderWaitingForPayment() {
+        JdbcTemplate jdbc = planJdbc();
+        when(jdbc.queryForList(org.mockito.ArgumentMatchers.startsWith("SELECT order_no, plan_code, months, amount_fen, status,"
+                + " create_time FROM cy_merchant_plan_order WHERE merchant_id = ? AND status = 'PENDING'"), eq(70L)))
+                .thenReturn(List.of(pendingOrder(19900)));
+        Map<String, Object> view = readyPlans(jdbc, mock(OpsConsoleAudit.class)).merchantView(7L);
+        Map<String, Object> pending = (Map<String, Object>) view.get("pendingOrder");
+        assertEquals("MPLAN_1", pending.get("orderNo"));
+        assertEquals("MPLAN_1", ((Map<String, Object>) pending.get("paymentInstructions")).get("reference"));
     }
 }
