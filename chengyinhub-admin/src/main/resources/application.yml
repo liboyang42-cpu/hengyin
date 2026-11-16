@@ -394,6 +394,10 @@ compliance:
     merchant_onsite_data_sharing: v1.0 # 探店日按单店授权姓名/手机号
     bank_account_collection: v1.0      # 提现向城瘾提供持卡人姓名/银行账号/预留手机号
     walk_safety_notice: v1.0           # P1b SEC-15:首次漫游前的出行安全提示(按账号记一次)
+  # ONB-10(PIPL 第45条):个人信息副本申请的答复期限 = 申请日 + N 个工作日(只算周一至周五,不扣法定节假日)。
+  # 期限由 owner/法务确定,改这里即可。
+  data-copy:
+    response-working-days: ${COMPLIANCE_DATA_COPY_RESPONSE_WORKING_DAYS:15}
 
 # E4 商业化先做能力，不开放自助收银台。价格/分成/次数/有效期均由 settlement_rule 配置。
 merchant:

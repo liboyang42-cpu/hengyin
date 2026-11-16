@@ -49,6 +49,7 @@ class SponsoredQuestServicesTest {
         c.setStartTime(new Date(System.currentTimeMillis() - 3_600_000L));
         c.setEndTime(new Date(System.currentTimeMillis() + 7 * 86_400_000L));
         c.setPlaceIds(new ArrayList<>(List.of(3L, 5L, 3L)));
+        c.setReason("新品推广");
         return c;
     }
 
@@ -113,7 +114,7 @@ class SponsoredQuestServicesTest {
         assertEquals(List.of(3L, 5L), c.getPlaceIds());
         verify(mapper).insertPlace(42L, 3L, 0);
         verify(mapper).insertPlace(42L, 5L, 1);
-        verify(audit).record(eq(1L), eq("SPONSORED_QUEST_CREATE"), eq("SPONSORED_QUEST"), eq(42L), any(), any(), any());
+        verify(audit).record(eq(1L), eq("SPONSORED_QUEST_CREATE"), eq("SPONSORED_QUEST"), eq(42L), any(), any(), eq("新品推广"));
     }
 
     @Test
@@ -150,7 +151,7 @@ class SponsoredQuestServicesTest {
         when(mapper.selectById(5L)).thenReturn(new HashMap<>(Map.of("id", 5L, "status", 0,
                 "endTime", new Date(System.currentTimeMillis() - 1000))));
         SponsoredQuestAdminService admin = new SponsoredQuestAdminService(mapper, mock(OpsConsoleAudit.class));
-        assertThrows(IllegalArgumentException.class, () -> admin.changeStatus(5L, 1, "ops", 1L, null), "window already over");
+        assertThrows(IllegalArgumentException.class, () -> admin.changeStatus(5L, 1, "ops", 1L, "上线"), "window already over");
         verify(mapper, never()).updateStatus(anyLong(), anyInt(), anyInt(), anyString());
     }
 
@@ -228,5 +229,23 @@ class SponsoredQuestServicesTest {
                 mock(OpsConsoleAudit.class)).state();
         assertEquals(false, state.get("chargingOpen"));
         assertEquals("广告", state.get("label"));
+    }
+
+    // W7 MERCHANT-15: create, edit and status changes need a reason, stored in the audit row.
+    @Test
+    void everyAdminWriteNeedsAReason() {
+        SponsoredQuestMapper mapper = mock(SponsoredQuestMapper.class);
+        OpsConsoleAudit audit = mock(OpsConsoleAudit.class);
+        SponsoredQuestAdminService admin = new SponsoredQuestAdminService(mapper, audit);
+        SponsoredQuestCampaign noReason = campaign(); noReason.setReason("  ");
+        assertThrows(IllegalArgumentException.class, () -> admin.create(noReason, "ops", 1L));
+        SponsoredQuestCampaign edit = campaign(); edit.setId(5L); edit.setReason(null);
+        assertThrows(IllegalArgumentException.class, () -> admin.update(edit, "ops", 1L));
+        assertThrows(IllegalArgumentException.class, () -> admin.changeStatus(5L, 2, "ops", 1L, null));
+        assertThrows(IllegalArgumentException.class, () -> admin.changeStatus(5L, 2, "ops", 1L, " "));
+        verify(mapper, never()).insertCampaign(any(), anyString());
+        verify(mapper, never()).updateCampaign(any(), anyString());
+        verify(mapper, never()).updateStatus(anyLong(), anyInt(), anyInt(), anyString());
+        verifyNoInteractions(audit);
     }
 }

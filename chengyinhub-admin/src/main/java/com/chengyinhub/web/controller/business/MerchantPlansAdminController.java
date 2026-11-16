@@ -24,6 +24,7 @@ import com.chengyinhub.common.annotation.Log;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.enums.BusinessType;
+import com.chengyinhub.framework.web.service.PermissionService;
 
 /**
  * S3a admin console: take rates per product type, merchant plans, plan orders and grants, verified-visit billing.
@@ -38,12 +39,14 @@ public class MerchantPlansAdminController extends BaseController {
     private final TakeRateService takeRates;
     private final MerchantPlanService plans;
     private final MerchantVisitBillingService billing;
+    private final PermissionService permissions;
 
     public MerchantPlansAdminController(TakeRateService takeRates, MerchantPlanService plans,
-                                        MerchantVisitBillingService billing) {
+                                        MerchantVisitBillingService billing, PermissionService permissions) {
         this.takeRates = takeRates;
         this.plans = plans;
         this.billing = billing;
+        this.permissions = permissions;
     }
 
     // ---------------------------------------------------------------- take rates
@@ -105,15 +108,22 @@ public class MerchantPlansAdminController extends BaseController {
         return success(plans.subscriptions(merchantId));
     }
 
-    /** Body: {"reason": "..."}. Money switch must be open. */
+    /**
+     * Body: {"paymentReference": "...", "amountReceivedFen": 19900, "reason": "..."}. Money switch must be open; the
+     * amount received must equal the order amount (MERCHANT-12).
+     */
     @PreAuthorize("@ss.hasPermi('business:merchantplans:sell')")
     @Log(title = "商家套餐收款确认", businessType = BusinessType.UPDATE)
     @PostMapping("/orders/{orderNo}/confirm-paid")
     public AjaxResult confirmPaid(@PathVariable("orderNo") String orderNo, @RequestBody Map<String, Object> body) {
-        return guarded(() -> plans.confirmPaid(orderNo, getUserId(), getUsername(), str(body.get("reason"))));
+        return guarded(() -> plans.confirmPaid(orderNo, str(body.get("paymentReference")), body.get("amountReceivedFen"),
+                getUserId(), getUsername(), str(body.get("reason"))));
     }
 
-    /** Body: {"merchantId": 1, "planCode": "BASIC", "months": 1, "reason": "..."}. Paid plans need the money switch open. */
+    /**
+     * Body: {"merchantId": 1, "planCode": "BASIC", "months": 1, "reason": "..."}. Paid plans need the money switch open
+     * and, because no order backs them, also {@code business:merchantplans:grantPaid} (MERCHANT-12).
+     */
     @PreAuthorize("@ss.hasPermi('business:merchantplans:sell')")
     @Log(title = "商家套餐开通", businessType = BusinessType.UPDATE)
     @PostMapping("/grant")
@@ -122,7 +132,7 @@ public class MerchantPlansAdminController extends BaseController {
             Object merchant = body.get("merchantId");
             Long merchantId = merchant instanceof Number n ? n.longValue() : null;
             return plans.grant(merchantId, str(body.get("planCode")), body.get("months"), getUserId(), getUsername(),
-                    str(body.get("reason")));
+                    str(body.get("reason")), permissions.hasPermi("business:merchantplans:grantPaid"));
         });
     }
 

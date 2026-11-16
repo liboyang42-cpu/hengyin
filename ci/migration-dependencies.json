@@ -1072,6 +1072,9 @@
     "20261128_channel_purge_job": ["20261105_l8_channel_lifecycle"],
     "20261129_channel_create_event_bit": ["20261112_im_channels_platform"],
     "20261129_club_invite": ["20261112_im_channels_platform"],
+    "20261130_payout_bind_match": ["20261115_money_payout"],
+    "20261130_money_on_operator": ["20261115_merchant_plans", "20261115_hardening", "club_role_membership_20260823"],
+    "20261130_money_switch_two_person": ["20261115_money_switch"],
     "20261128_stagger_channel_purge_job": ["20261115_stagger_all_sys_jobs", "20261128_channel_purge_job"],
     "20261126_reward_drop_perm_union": ["20261115_admin_consoles", "20261123_sys_random", "20261125_admin_r3_perms"],
     "20261115_club_dues": ["20261115_collection_model", "club_role_membership_20260823"],
@@ -1079,8 +1082,11 @@
     "20261116_journey_presence": ["play_progress_points", "20260820_questo_puzzle_atmosphere"],
     "20261116_shop_games_judged": ["20261115_shop_games", "20261115_game_mechanics", "20261115_merchant_plans"],
     "20261116_external_game_result_key": ["20261115_external_game_monetization_menus", "20261116_external_game_review"],
+    "20261116_life_games": ["seed_life_backup_games_20260820", "seed_celebrate_games_20260821", "fix_celebrate_copy_20260821", "20260825_named_mechanic_advanced_config", "20261116_template_games", "20260821_new_city_preference_library", "20260822_advanced_game_runtime", "template_merchant_guide_20260906"],
     "20261116_template_games": ["seed_template_library_12packs_20260820", "seed_life_backup_games_20260820", "template_merchant_guide_20260906", "20260821_new_city_preference_library", "20260822_advanced_game_runtime", "20260826_team_race_multiplayer"],
     "20261117_shop_game_runner": ["20261116_shop_games_judged", "20260822_advanced_game_runtime"],
+    "20261116_x_come_back_place_stamp": ["p6_roam_stamp"],
+    "20261116_x_disclosures_data_copy": ["20261012_missing_business_menu"],
     "20261115_maps_backend": ["roam", "roam_merchant_application_20260806", "m1_3_activity_club"]
   }
 }

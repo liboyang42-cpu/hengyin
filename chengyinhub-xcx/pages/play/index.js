@@ -6789,7 +6789,10 @@ Page({
     const intent = { context };
     this._preferenceWriteIntent = intent;
     const current = () => this._preferenceWriteIntent === intent && this._isPreferenceContextCurrent(context);
-    const original = Object.assign({}, payload, { choices: Object.assign({}, payload.choices || {}) });
+    // x-life-games R11:偏好题和拍照同一规则,带坐标的城市站随提交带最近一次定位(奖品要到场,不拦完成)
+    const prefNode = (this.data.nodes || []).find((n) => String(n.nodeId) === String(nodeId));
+    const original = Object.assign({}, payload, photoFixOf(this._loc, prefNode, this.data.mode),
+      { choices: Object.assign({}, payload.choices || {}) });
     this.setData({ 'preference.submitting': true, 'preference.error': '' });
     this._withThoughtSync(() => req('/api/play/preference/' + nodeId + '/submit', 'POST',
       this._routeWritePayload('preference', nodeId, original), { 'content-type': 'application/json' }), current)

@@ -7,3 +7,4 @@ page { background: var(--cy-bg-page); color: var(--cy-text-title); }
 .pb-input { margin-top: var(--cy-space-3); height: var(--cy-btn-h); padding: 0 var(--cy-space-3); border-radius: var(--cy-radius-md); background: var(--cy-color-input-bg-filled); color: var(--cy-color-input-text); font-size: var(--cy-font-body); }
 .pb-notice { margin: 0 var(--cy-page-x); font-size: var(--cy-font-label); color: var(--cy-color-text-secondary); }
 .pb-bottom { margin-top: auto; padding: var(--cy-space-5) var(--cy-page-x) calc(var(--cy-space-4) + env(safe-area-inset-bottom)); }
+.pb-match { margin: var(--cy-space-3) 0; text-align: center; font-size: var(--cy-font-display-xl); font-weight: 700; letter-spacing: 8rpx; color: var(--cy-text-title); }

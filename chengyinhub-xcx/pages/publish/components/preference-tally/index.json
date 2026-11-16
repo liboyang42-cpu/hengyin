@@ -1,0 +1,7 @@
+{
+  "component": true,
+  "usingComponents": {
+    "cy-card": "/components/cy/card/index",
+    "cy-inline-error": "/components/cy/inline-error/index"
+  }
+}

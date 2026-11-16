@@ -733,6 +733,9 @@ public class PlayTeamServiceImpl implements IPlayTeamService {
         boolean ready = url != null && !url.trim().isEmpty();
         result.put("qrState", ready ? QR_READY : QR_UNAVAILABLE);
         if (ready) result.put("qrcodeUrl", url);
+        // ONB-5:标准链接码不依赖微信接口,小程序码降级时也能给。
+        String link = com.chengyinhub.business.service.IPlayerWxacodeService.linkFor(scene);
+        if (link != null) result.put("linkQr", link);
         return result;
     }
 

@@ -69,7 +69,41 @@ public class ApiGrowthController extends BaseController {
         } catch (Exception e) {
             return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
-        return success(java.util.Map.of("visible", scopedLeaderboard.isVisible(memberId)));
+        // GAME-13: homeAreaSet tells the app whether the area board can work, without sending the area itself.
+        return success(java.util.Map.of("visible", scopedLeaderboard.isVisible(memberId),
+                "homeAreaSet", scopedLeaderboard.hasHomeArea(memberId)));
+    }
+
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IMapGeocodeService mapGeocodeService;
+
+    /**
+     * GAME-13: the player sets their home area for the area board ("use my current district"), or clears it.
+     * The coordinates are used once to look up the district and are not stored; only the 6-digit district code is.
+     */
+    @Operation(summary = "设置或清除我的所在地区(同区榜)")
+    @PostMapping("/leaderboard/home-area")
+    @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 10, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
+    public AjaxResult setHomeArea(Double lat, Double lng, Boolean clear) {
+        Long memberId;
+        try {
+            memberId = getAppUserId();
+        } catch (Exception e) {
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        }
+        if (Boolean.TRUE.equals(clear)) {
+            return success(java.util.Map.of("homeAreaSet", scopedLeaderboard.setHomeArea(memberId, null)));
+        }
+        if (lat == null || lng == null || !Double.isFinite(lat) || !Double.isFinite(lng)
+                || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+            return refuse(ErrorCode.LOCATION_REQUIRED, "需要定位才能找到你所在的区");
+        }
+        java.util.Map<String, String> district = mapGeocodeService == null ? null : mapGeocodeService.resolveDistrict(lng, lat);
+        if (district == null) {
+            return AjaxResult.error("暂时找不到你所在的区，请稍后再试").put("retryable", true);
+        }
+        boolean set = scopedLeaderboard.setHomeArea(memberId, Long.valueOf(district.get("areaCode")));
+        return success(java.util.Map.of("homeAreaSet", set, "areaName", district.get("areaName")));
     }
 
     @Operation(summary = "开启或关闭:在好友榜与同区榜上显示我")

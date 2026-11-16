@@ -15,6 +15,10 @@ public class ClubMembershipRefundReview extends BaseEntity {
     private String reason;
     private String requestId;
     private Integer version;
+    /** W7 MERCHANT-12: APPROVED / REJECTED once operations decided; null while the review is open. */
+    private String decision;
+    /** W7 MERCHANT-12: NOT_SENT / SUBMITTING / ACCEPTED / FAILED / UNKNOWN for an approval. */
+    private String refundState;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -32,4 +36,8 @@ public class ClubMembershipRefundReview extends BaseEntity {
     public void setRequestId(String requestId) { this.requestId = requestId; }
     public Integer getVersion() { return version; }
     public void setVersion(Integer version) { this.version = version; }
+    public String getDecision() { return decision; }
+    public void setDecision(String decision) { this.decision = decision; }
+    public String getRefundState() { return refundState; }
+    public void setRefundState(String refundState) { this.refundState = refundState; }
 }

@@ -86,6 +86,8 @@
         <result property="version" column="version"/>
         <result property="createTime" column="create_time"/>
         <result property="updateTime" column="update_time"/>
+        <result property="decision" column="decision"/>
+        <result property="refundState" column="refund_state"/>
     </resultMap>
 
     <select id="selectSetting" resultMap="SettingMap">
@@ -277,9 +279,11 @@
     <select id="selectRefundReviewByInvoice" resultMap="RefundMap">
         select * from club_membership_refund_review where invoice_id = #{invoiceId}
     </select>
+    <!-- W7 MERCHANT-12: the member also sees the operator's decision (no note) and whether the refund was sent. -->
     <select id="selectRefundReviewsByMember" resultMap="RefundMap">
-        select * from club_membership_refund_review
-        where club_id = #{clubId} and member_id = #{memberId} order by id desc
+        select v.*, d.decision as decision, d.refund_state as refund_state
+        from club_membership_refund_review v left join cy_dues_refund_decision d on d.review_id = v.id
+        where v.club_id = #{clubId} and v.member_id = #{memberId} order by v.id desc
     </select>
     <insert id="insertRefundReview" useGeneratedKeys="true" keyProperty="id"
             parameterType="com.chengyinhub.business.domain.ClubMembershipRefundReview">

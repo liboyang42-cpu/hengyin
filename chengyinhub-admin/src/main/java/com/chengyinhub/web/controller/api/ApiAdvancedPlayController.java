@@ -61,7 +61,7 @@ public class ApiAdvancedPlayController extends BaseController {
             sloResult = GameSloResult.SUCCESS;
         } catch (RuntimeException e) {
             // 原行为不变：异常仍收敛成同一条 error(msg)，只是分类后记一次指标。
-            response = error(e.getMessage());
+            response = withTimeWindowReason(error(e.getMessage()), e);
             sloResult = GameSloMetrics.classify(e);
         }
         // 每条请求只记一次：成功/异常互斥，不存在重复计数。
@@ -99,7 +99,7 @@ public class ApiAdvancedPlayController extends BaseController {
                玩家改了输入也交不了(实走复核:作品命名被拒后整屏卡在「原请求仍待确认」)。
                拍照动作先调外部模型再落库,仍走原来的未知态处理。 */
             if ("SUBMIT_PHOTO_CHECK".equalsIgnoreCase(action.trim())) return error(e.getMessage());
-            return AjaxResult.error(400, e.getMessage());
+            return withTimeWindowReason(AjaxResult.error(400, e.getMessage()), e);
         } catch (RuntimeException e) {
             return error(e.getMessage());
         }
@@ -109,6 +109,14 @@ public class ApiAdvancedPlayController extends BaseController {
         } catch (RuntimeException e) {
             return error(e.getMessage());
         }
+    }
+
+    /** GAME-19: a time-window refusal also carries its reason code and clock times, so the app words it in both languages. */
+    static AjaxResult withTimeWindowReason(AjaxResult result, RuntimeException e) {
+        if (e instanceof com.chengyinhub.business.service.impl.TimeWindowRefusal refusal) {
+            result.put("reasonCode", refusal.reasonCode()).put("opensAt", refusal.opensAt()).put("closedAt", refusal.closedAt());
+        }
+        return result;
     }
 
     /** Server opening calendar for a time-window node; the app schedules only a local reminder. */

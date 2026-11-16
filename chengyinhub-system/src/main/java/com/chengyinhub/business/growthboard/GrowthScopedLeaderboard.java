@@ -103,6 +103,24 @@ public class GrowthScopedLeaderboard {
         return isVisible(memberId);
     }
 
+    /** GAME-13:本人是否已选所在地。 */
+    public boolean hasHomeArea(long memberId) {
+        Long area = mapper.selectAreaId(memberId);
+        return area != null && area > 0;
+    }
+
+    /** GAME-13:保存本人所在地(合法 6 位行政区划代码)或清除(null);返回是否已设置。 */
+    public boolean setHomeArea(long memberId, Long areaCode) {
+        if (areaCode != null && !validAreaCode(String.valueOf(areaCode))) throw new IllegalArgumentException("所在地区无效");
+        mapper.updateAreaId(memberId, areaCode);
+        return hasHomeArea(memberId);
+    }
+
+    /** 6 位行政区划代码(adcode),首位 1-9。 */
+    public static boolean validAreaCode(String raw) {
+        return raw != null && raw.matches("[1-9][0-9]{5}");
+    }
+
     static final class Ranked {
         final List<LeaderboardItemVO> list;
         final LeaderboardItemVO me;

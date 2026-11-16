@@ -32,4 +32,14 @@ public class PreferenceSubmitRequest {
     public void setRuntimeInstance(String value) { runtimeInstance = value; }
     public Integer getAuthorityEpoch() { return authorityEpoch; }
     public void setAuthorityEpoch(Integer value) { authorityEpoch = value; }
+    /** x-life-games R11:提交时的定位(可空)。带坐标的城市站不在奖励半径内 ⇒ 照常完成,只发探索值与徽章。 */
+    private String longitude;
+    private String latitude;
+    private String accuracy;
+    public String getLongitude() { return longitude; }
+    public void setLongitude(String value) { longitude = value; }
+    public String getLatitude() { return latitude; }
+    public void setLatitude(String value) { latitude = value; }
+    public String getAccuracy() { return accuracy; }
+    public void setAccuracy(String value) { accuracy = value; }
 }

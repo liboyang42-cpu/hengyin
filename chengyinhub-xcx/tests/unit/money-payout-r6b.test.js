@@ -101,3 +101,17 @@ test('the binding page is registered and claims with a fresh wx.login code', () 
   assert.match(js, /wx\.login\(/)
   assert.match(js, /moneyPayout\.claimBinding\(code, res\.code/)
 })
+
+test('MERCHANT-8: the claim hands back the two-digit number the app owner must pick', () => {
+  let got = 'unset'
+  load(p => p.success({ code: 200, data: { status: 'CLAIMED', matchNumber: 42 } })).mod.claimBinding('A'.repeat(24), 'js', (err, n) => { got = [err, n] })
+  assert.deepEqual(got, [null, 42])
+  load(p => p.success({ code: 200, data: { status: 'CLAIMED' } })).mod.claimBinding('A'.repeat(24), 'js', (err, n) => { got = [err, n] })
+  assert.deepEqual(got, [null, null])
+  load(p => p.success({ code: 500, msg: '绑定码已失效，请在 App 里重新生成' })).mod.claimBinding('A'.repeat(24), 'js', (err, n) => { got = [err, n] })
+  assert.deepEqual(got, ['绑定码已失效，请在 App 里重新生成', null])
+  const { mod } = load(() => {})
+  for (const bad of [9, 100, 42.5, '42', true]) assert.equal(mod.matchNumberOf({ matchNumber: bad }), null)
+  const wxml = fs.readFileSync(path.join(root, 'subpackageMember/payout-bind/index.wxml'), 'utf8')
+  assert.match(wxml, /请在城瘾 App 里选择 \{\{matchNumber\}\}/)
+})

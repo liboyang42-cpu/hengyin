@@ -218,6 +218,39 @@ public class MapGeocodeServiceImpl implements IMapGeocodeService {
         return StringUtils.isEmpty(city) ? component.getString("province") : city;
     }
 
+    @Override
+    public Map<String, String> resolveDistrict(double longitude, double latitude) {
+        if (!tencentMapClient.isReady()) return null;
+        String requestKey = "D|" + coordinateGrid(longitude, latitude);
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+        if (!claim(requestKey)) return null;
+        try {
+            return parseDistrict(parseProviderResponse(requestGeocode(GEOCODE_URL + latitude + "," + longitude)));
+        } catch (Exception e) {
+            log.warn("[MapGeocode] district reverse geocode failed: {}", e.getClass().getSimpleName());
+            return null;
+        } finally {
+            synchronized (inFlight) { inFlight.remove(requestKey); }
+        }
+    }
+
+    /** GAME-13:reverse geocode → {areaCode, areaName};区县代码不是 6 位就当拿不到。 */
+    static Map<String, String> parseDistrict(JSONObject root) {
+        if (root == null || root.getIntValue("status", -1) != 0) return null;
+        JSONObject result = root.getJSONObject("result");
+        JSONObject adInfo = result == null ? null : result.getJSONObject("ad_info");
+        JSONObject component = result == null ? null : result.getJSONObject("address_component");
+        String code = adInfo == null ? null : adInfo.getString("adcode");
+        if (code == null || !code.matches("[1-9][0-9]{5}")) return null;
+        String name = component == null ? null : component.getString("district");
+        if (StringUtils.isEmpty(name) && adInfo != null) name = adInfo.getString("district");
+        if (StringUtils.isEmpty(name)) return null;
+        Map<String, String> out = new java.util.LinkedHashMap<>();
+        out.put("areaCode", code);
+        out.put("areaName", name);
+        return out;
+    }
+
     private boolean claim(String key) {
         synchronized (inFlight) {
             return inFlight.size() < TencentMapClient.MAX_IN_FLIGHT && inFlight.add(key);

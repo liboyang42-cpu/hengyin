@@ -15,7 +15,7 @@ import java.util.Map;
 public interface PayoutBindingMapper {
 
     String CODE_COLUMNS = "id, purpose, member_id as memberId, club_id as clubId, status, claimed_openid as claimedOpenid, "
-            + "expires_at as expiresAt, claimed_at as claimedAt, confirmed_at as confirmedAt, create_time as createTime";
+            + "match_number as matchNumber, expires_at as expiresAt, claimed_at as claimedAt, confirmed_at as confirmedAt, create_time as createTime";
 
     @Update("update cy_payout_bind_code set status = 'CANCELLED' "
             + "where member_id = #{memberId} and purpose = #{purpose} and status in ('ISSUED', 'CLAIMED')")
@@ -37,9 +37,14 @@ public interface PayoutBindingMapper {
     Map<String, Object> selectLatest(@Param("memberId") Long memberId, @Param("purpose") String purpose,
                                      @Param("clubId") Long clubId);
 
-    @Update("update cy_payout_bind_code set status = 'CLAIMED', claimed_openid = #{openid}, claimed_at = now() "
-            + "where id = #{id} and status = 'ISSUED' and expires_at > now()")
-    int claim(@Param("id") Long id, @Param("openid") String openid);
+    @Update("update cy_payout_bind_code set status = 'CLAIMED', claimed_openid = #{openid}, match_number = #{matchNumber}, "
+            + "claimed_at = now() where id = #{id} and status = 'ISSUED' and expires_at > now()")
+    int claim(@Param("id") Long id, @Param("openid") String openid, @Param("matchNumber") int matchNumber);
+
+    /** MERCHANT-8: the app owner picked a number other than the one the scanner saw; the code stops working. */
+    @Update("update cy_payout_bind_code set status = 'CANCELLED' "
+            + "where id = #{id} and member_id = #{memberId} and status = 'CLAIMED'")
+    int cancelClaimed(@Param("id") Long id, @Param("memberId") Long memberId);
 
     @Update("update cy_payout_bind_code set status = 'CONFIRMED', confirmed_at = now() "
             + "where id = #{id} and member_id = #{memberId} and status = 'CLAIMED' and expires_at > now()")

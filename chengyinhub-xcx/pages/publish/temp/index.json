@@ -19,7 +19,8 @@
     "cy-loading-mask": "/components/cy/loading-mask/index",
     "cy-modal-host": "/components/cy/modal-host/index",
     "cy-empty": "/components/cy/empty/index",
-    "cy-result-sheet": "/components/cy/result-sheet/index"
+    "cy-result-sheet": "/components/cy/result-sheet/index",
+    "cy-preference-tally": "/pages/publish/components/preference-tally/index"
   },
   "componentPlaceholder": {
     "cy-playkit": "view",

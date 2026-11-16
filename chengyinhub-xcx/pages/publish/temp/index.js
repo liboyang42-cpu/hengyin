@@ -1408,6 +1408,7 @@ Page({
       // R9-04:scope=my 说明 id 来自「我的模板」,回填要走 /api/template/myinfo 才能读草稿。
       // 它不参与写链路身份 —— 写身份仍只由 operationScope(MERCHANT)决定。
       isMyScope: options.scope === 'my' || options.templateScope === 'my',
+      tallyTemplateId: editingId || 0,   // x-life-games:偏好题汇总只读,按「我的模板」里这条的 id 查
       from: options.from || '',
       editorLoading: !!editingId,
       loadError: editingId || options.id == null ? '' : '模板编号无效，请返回后重试',
