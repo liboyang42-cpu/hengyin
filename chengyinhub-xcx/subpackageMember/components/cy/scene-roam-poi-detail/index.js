@@ -128,7 +128,7 @@ Component({
     playShopGame() {
       const poiId = this.data.poiId
       if (!poiId || !this.data.shopGame || !this.data.shopGame.open) return
-      wx.navigateTo({ url: '/pages/play/shop-game/index?poiId=' + encodeURIComponent(poiId) + '&source=PLACE_PAGE' })
+      this.triggerEvent('shopgame', { poiId })
     },
     _abortPoiPhoto() {
       const photo = this._poiPhoto

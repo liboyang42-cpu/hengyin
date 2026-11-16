@@ -84,15 +84,8 @@ Component({
       return (same || retry) && (state.nodeId == null || !context.nodeId || String(state.nodeId) === context.nodeId);
     },
     request(url, method, data) {
-      const shopPlayId = this.data.shopPlayId;
-      if (shopPlayId) {
-        const mapped = shopGameRunner.mapRequest(url, method, data, shopPlayId);
-        if (!mapped) return Promise.resolve(shopGameRunner.refusal());
-        return this.sendRaw(mapped.url, mapped.method, mapped.data).then(res => shopGameRunner.identify(res, shopPlayId));
-      }
-      return this.sendRaw(url, method, data);
-    },
-    sendRaw(url, method, data) {
+      // W7 x-shop-game-runner:店铺小游戏一局只走这局自己的会话路由,见 shopRequest。
+      if (this.data.shopPlayId) return this.shopRequest(url, method, data, this.data.shopPlayId);
       return new Promise((resolve, reject) => app.sendRequest({
         hideLoading: true,
         url,
@@ -103,6 +96,26 @@ Component({
         successStatusAbnormal: resolve,
         fail: reject
       }));
+    },
+    /** 店铺小游戏:组件的 start/state/action 换成这局自己的会话路由(开局不带旅程 id),其他路由不发;
+     *  成功回包在本机补上这局的本地身份(见 utils/shop-game-runner.js)。 */
+    shopRequest(url, method, data, shopPlayId) {
+      const mapped = shopGameRunner.mapRequest(url, method, data, shopPlayId);
+      if (!mapped) return Promise.resolve(shopGameRunner.refusal());
+      const done = (res) => shopGameRunner.identify(res, shopPlayId);
+      if (mapped.route === 'start') {
+        return new Promise((resolve, reject) => app.sendRequest({ hideLoading: true,
+          url: '/api/shop-games/plays/' + Number(shopPlayId) + '/session', method: 'POST', data: '{}',
+          header: { 'Content-Type': 'application/json' }, success: resolve, successStatusAbnormal: resolve, fail: reject })).then(done);
+      }
+      if (mapped.route === 'state') {
+        return new Promise((resolve, reject) => app.sendRequest({ hideLoading: true,
+          url: '/api/shop-games/sessions/state', method: 'GET', data: mapped.data,
+          success: resolve, successStatusAbnormal: resolve, fail: reject })).then(done);
+      }
+      return new Promise((resolve, reject) => app.sendRequest({ hideLoading: true,
+        url: '/api/shop-games/sessions/action', method: 'POST', data: JSON.stringify(mapped.data || {}),
+        header: { 'Content-Type': 'application/json' }, success: resolve, successStatusAbnormal: resolve, fail: reject })).then(done);
     },
     pendingKey() {
       const scope = this.sessionRequestContext();

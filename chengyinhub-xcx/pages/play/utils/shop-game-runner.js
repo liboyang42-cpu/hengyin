@@ -10,10 +10,6 @@ const RESULT_PATH = '/api/shop-games/result';
 const SESSION_STATE_PATH = '/api/shop-games/sessions/state';
 const SESSION_ACTION_PATH = '/api/shop-games/sessions/action';
 
-function sessionStartPath(playId) {
-  return '/api/shop-games/plays/' + playId + '/session';
-}
-
 function positiveInt(value) {
   const n = Number(value);
   return Number.isInteger(n) && n > 0 ? n : 0;
@@ -21,17 +17,17 @@ function positiveInt(value) {
 
 /**
  * 把组件发出的旅程路由换成这局店铺小游戏的会话路由。返回 null = 这条路由店铺小游戏没有,不发。
- * 开局不带任何旅程 id:只在路径里带 playId,body 为空。
+ * 开局不带任何旅程 id:组件只在路径 /api/shop-games/plays/{playId}/session 里带 playId,body 为空。
  */
 function mapRequest(url, method, data, playId) {
   const id = positiveInt(playId);
   if (!id) return null;
   const m = String(method || 'GET').toUpperCase();
-  if (url === '/api/play/advanced/start' && m === 'POST') return { url: sessionStartPath(id), method: 'POST', data: {} };
+  if (url === '/api/play/advanced/start' && m === 'POST') return { route: 'start', playId: id, method: 'POST', data: {} };
   if (url === '/api/play/advanced/state' && m === 'GET') {
-    return { url: SESSION_STATE_PATH, method: 'GET', data: { sessionId: (data || {}).sessionId } };
+    return { route: 'state', url: SESSION_STATE_PATH, method: 'GET', data: { sessionId: (data || {}).sessionId } };
   }
-  if (url === '/api/play/advanced/action' && m === 'POST') return { url: SESSION_ACTION_PATH, method: 'POST', data: data || {} };
+  if (url === '/api/play/advanced/action' && m === 'POST') return { route: 'action', url: SESSION_ACTION_PATH, method: 'POST', data: data || {} };
   return null;
 }
 
@@ -145,6 +141,6 @@ function sessionOver(status) {
 
 module.exports = {
   LAUNCH_PATH, RESULT_PATH, SESSION_STATE_PATH, SESSION_ACTION_PATH,
-  sessionStartPath, mapRequest, identify, refusal, reasonText, reasonOf, launchBody, finishBody,
+  mapRequest, identify, refusal, reasonText, reasonOf, launchBody, finishBody,
   launchView, verdictView, sessionOver, REASON_TEXT,
 };

@@ -988,7 +988,7 @@
   <view class="psheet__grab"></view>
   <view class="psheet__x" catchtap="onProtoSheetClose" aria-role="button" aria-label="关闭{{sceneCurrent.title}}" hover-class="cy-pressed" hover-stay-time="80"><view class="psheet__x-i"></view></view>
   <text class="ph1">{{sceneCurrent.title}}</text>
-  <cy-scene-roam-poi-detail poi-id="{{sceneCurrent.params.poiId}}" bind:open="openChildScene" bind:close="closeScene" bind:completed="onScenePoiCompleted" bind:citystamp="openCityStamp" bind:titlechange="onPoiTitle" />
+  <cy-scene-roam-poi-detail poi-id="{{sceneCurrent.params.poiId}}" bind:open="openChildScene" bind:close="closeScene" bind:completed="onScenePoiCompleted" bind:citystamp="openCityStamp" bind:titlechange="onPoiTitle" bind:shopgame="openShopGame" />
 </view>
 </view>
 
