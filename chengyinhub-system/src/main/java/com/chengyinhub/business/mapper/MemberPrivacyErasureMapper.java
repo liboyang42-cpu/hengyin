@@ -81,4 +81,7 @@ public interface MemberPrivacyErasureMapper {
 
     /** W7 SOC-15: the member's invite links stop working and lose the creator link. */
     int revokeClubInvitesByCreator(@Param("memberId") Long memberId);
+
+    // ---- data-copy requests (W7 ONB-10) ----
+    int deleteDataCopyRequests(@Param("memberId") Long memberId);
 }

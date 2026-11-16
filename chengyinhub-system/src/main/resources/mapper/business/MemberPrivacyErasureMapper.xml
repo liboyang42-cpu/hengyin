@@ -123,4 +123,8 @@
     <update id="revokeClubInvitesByCreator">
         update club_invite set revoked_at = coalesce(revoked_at, now()), creator_member_id = 0 where creator_member_id = #{memberId}
     </update>
+
+    <delete id="deleteDataCopyRequests">
+        delete from member_data_copy_request where member_id = #{memberId}
+    </delete>
 </mapper>

@@ -186,6 +186,9 @@ class UpgradeAuthorizationBoundaryTest {
             "POST, /api/user/info",
             "POST, /api/user/update",
             "POST, /api/user/public-info/extra",
+            // W7 ONB-10:个人信息副本申请只作用于当前登录会员,不得匿名放行
+            "POST, /api/user/data-copy/request",
+            "GET, /api/user/data-copy/latest",
             "POST, /api/login/withopenid",
             "POST, /api/login/future-entry",
             "POST, /api/login/code/extra",
