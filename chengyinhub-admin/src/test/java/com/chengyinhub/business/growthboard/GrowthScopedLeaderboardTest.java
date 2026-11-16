@@ -197,4 +197,33 @@ class GrowthScopedLeaderboardTest {
             assertTrue(text.contains("where m.id in ( ? , ? ) and m.del_flag = 0 and m.role = 'player'"), text);
         }
     }
+
+    // GAME-13: the district board works as soon as the player saves a home area.
+    @Test
+    void districtAfterAreaSet() {
+        when(mapper.selectAreaId(ME)).thenReturn(null);
+        assertEquals("noArea", board.read(ME, query("point", "total", "district"), "district").get("state"));
+        assertFalse(board.hasHomeArea(ME));
+
+        when(mapper.selectAreaId(ME)).thenReturn(110105L);
+        assertTrue(board.setHomeArea(ME, 110105L));
+        verify(mapper).updateAreaId(ME, 110105L);
+        when(mapper.selectDistrictCandidates(eq(ME), eq(110105L), anyInt())).thenReturn(new ArrayList<>(List.of(3L)));
+        when(mapper.selectScores(any(), any(), any(), any(), any())).thenReturn(List.of(row(3, 40, 1), row(ME, 20, 2)));
+        assertEquals("ready", board.read(ME, query("point", "total", "district"), "district").get("state"));
+    }
+
+    @Test
+    void homeAreaIsASixDigitCodeAndCanBeCleared() {
+        assertTrue(GrowthScopedLeaderboard.validAreaCode("110105"));
+        assertFalse(GrowthScopedLeaderboard.validAreaCode("010105"));
+        assertFalse(GrowthScopedLeaderboard.validAreaCode("11010"));
+        assertFalse(GrowthScopedLeaderboard.validAreaCode("1101050"));
+        assertFalse(GrowthScopedLeaderboard.validAreaCode(null));
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> board.setHomeArea(ME, 12L));
+        verify(mapper, never()).updateAreaId(ME, 12L);
+        when(mapper.selectAreaId(ME)).thenReturn(null);
+        assertFalse(board.setHomeArea(ME, null));
+        verify(mapper).updateAreaId(ME, null);
+    }
 }
