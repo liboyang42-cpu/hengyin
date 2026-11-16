@@ -40,7 +40,7 @@ Currency: 积分 only (owner decision 2026-11-16). No money route, no production
 - `mvn -B -q -pl chengyinhub-admin -am test -Dtest='CityMonopolyEndToEndFixTest,CityMonopolyServiceUnitTest,CityMonopolyConfigDefaultsTest,CityMonopolyRulesTest,SysJobStaggerPlanTest,TwoNodeSchedulingTest,CityMonopolySeasonSimulationTest'` → 85 run, 0 failures.
 - Sweep `-Dtest='*City*,*Roam*,*Territory*,*LocationTrust*,*ClaimEvidence*,*AppAttest*,*NativeStep*,PlayerMessagePunctuationTest,MemberPrivacyErasureServiceTest,SysJob*,TwoNode*,E2eTestProvidersProfileTest'` → 723 run, 0 failures, 11 errors, 74 skipped; all 11 errors are MySQL integration tests (`*MySqlIT`, `*MyBatisIT`) failing with `CommunicationsException` (no database in this container).
 - `bash ci/migration-safety-check.sh` → 迁移安全门禁:通过; `bash ci/migration-layout-check.sh` → 迁移布局门禁:通过.
-- Mini-program: `node ../ci/prepare-mini-artifacts.js`; `node --test "tests/unit/**/*.test.js"` base 30 failures; branch: see the final line below. `node tests/lint/ui-integrity.js --warn-as-error` exits 1 on base and branch with identical findings (only the backend mapping count differs, +1 for `/territory/capabilities`).
+- Mini-program: `node ../ci/prepare-mini-artifacts.js`; `node --test "tests/unit/**/*.test.js"` base 30 failures; branch 30 failures, the same set (17882 pass; the roam point-tap test fixture now gives a real fix, plus two CITY-5 cases). `node tests/lint/ui-integrity.js --warn-as-error` exits 1 on base and branch with identical findings (only the backend mapping count differs, +1 for `/territory/capabilities`).
 
 ## Not verified / needs the owner or a device
 
