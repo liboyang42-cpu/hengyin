@@ -25,6 +25,8 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -99,6 +101,7 @@ class PlatformPassAppleTest {
                 "price_fen", 1800L, "valid_days", 30L));
         inbox = new HashMap<>();
         when(mapper.selectByTokenForUpdate(anyString())).thenAnswer(i -> TOKEN.equals(i.getArgument(0)) ? appleRow : null);
+        when(mapper.selectByToken(anyString())).thenAnswer(i -> TOKEN.equals(i.getArgument(0)) ? appleRow : null);
         when(mapper.selectByTransactionForUpdate(anyString()))
                 .thenAnswer(i -> i.getArgument(0).equals(appleRow.get("transaction_id")) ? appleRow : null);
         when(mapper.selectByOrderNo(anyString())).thenAnswer(i -> appleRow);
@@ -249,7 +252,7 @@ class PlatformPassAppleTest {
     // ------------------------------------------------------------------ money switch
 
     @Test
-    void moneySwitchClosedRefusesOfferOrderAndConfirmWithoutWriting() {
+    void closedSwitchStillRefusesOfferAndNewOrders() {
         moneyOpen = false;
         assertEquals("MONEY_SWITCH_CLOSED", service.unavailableReason());
         Map<String, Object> offer = service.offer();
@@ -260,12 +263,35 @@ class PlatformPassAppleTest {
                 () -> service.createOrder(MEMBER, "MONTH", "req-12345678"));
         assertEquals("MONEY_SWITCH_CLOSED", order.getReasonCode());
         assertEquals(503, order.getHttpStatus());
-        assertEquals("MONEY_SWITCH_CLOSED", assertThrows(PlatformPassException.class,
-                () -> service.confirm(MEMBER, transaction("2000000001"))).getReasonCode());
-        assertEquals("MONEY_SWITCH_CLOSED", assertThrows(PlatformPassException.class,
-                () -> service.lookup(MEMBER, "2000000001")).getReasonCode());
         verify(passMapper, never()).insertOrder(anyMap());
         verify(mapper, never()).insertAppleOrder(anyMap());
+        verify(pass, never()).activate(anyMap(), any(), any());
+    }
+
+    @Test
+    void closedSwitchStillDeliversAVerifiedTransactionForAnExistingOrder() {
+        // MERCHANT-2: the order was created while selling was open; the area closed before the app confirmed.
+        moneyOpen = false;
+        assertNull(service.undeliverableReason());
+        service.confirm(MEMBER, transaction("2000000001"));
+        verify(pass, times(1)).activate(anyMap(), any(), any());
+        assertEquals("GRANTED", appleRow.get("state"));
+        assertEquals(1, orderRow.get("status"));
+        // Still only for the member who owns the order.
+        assertEquals("ORDER_NOT_FOUND", assertThrows(PlatformPassException.class,
+                () -> service.confirm(7L, transaction("2000000001"))).getReasonCode());
+        // Lookup is not refused by the switch either; here it fails only because the server API is not configured.
+        PlatformPassException lookup = assertThrows(PlatformPassException.class,
+                () -> service.lookup(MEMBER, "2000000001"));
+        assertNotEquals("MONEY_SWITCH_CLOSED", lookup.getReasonCode());
+        verify(passMapper, never()).insertOrder(anyMap());
+    }
+
+    @Test
+    void deliveryStillNeedsTheAppleChannelConfiguration() {
+        config.setEnabled(false);
+        assertNotNull(service.undeliverableReason());
+        assertThrows(PlatformPassException.class, () -> service.confirm(MEMBER, transaction("2000000001")));
         verify(pass, never()).activate(anyMap(), any(), any());
     }
 
@@ -398,14 +424,34 @@ class PlatformPassAppleTest {
     }
 
     @Test
-    void oneTimeChargeNotificationGrantsOnlyWhileTheSwitchIsOpen() {
+    void oneTimeChargeAfterSwitchOffGrantsTheExistingOrder() {
         moneyOpen = false;
         String closed = notification("ONE_TIME_CHARGE", UUID.randomUUID().toString(), transaction("2000000001"));
-        assertEquals("IGNORED", service.notificationIfPass(closed).orElseThrow().get("state"));
+        assertEquals("APPLIED", service.notificationIfPass(closed).orElseThrow().get("state"));
+        verify(pass, times(1)).activate(anyMap(), any(), any());
+        // Redelivery and a later confirm from the app add nothing.
+        assertEquals("APPLIED", service.notificationIfPass(closed).orElseThrow().get("state"));
+        service.confirm(MEMBER, transaction("2000000001"));
+        verify(pass, times(1)).activate(anyMap(), any(), any());
+    }
+
+    @Test
+    void oneTimeChargeWithoutOrderIsIgnored() {
+        String stranger = chain.sign(transactionJson("2000000005", PRODUCT, UUID.randomUUID().toString(), BUNDLE, "Sandbox",
+                "Non-Renewing Subscription", null));
+        String uuid = UUID.randomUUID().toString();
+        assertEquals("IGNORED", service.notificationIfPass(notification("ONE_TIME_CHARGE", uuid, stranger))
+                .orElseThrow().get("state"));
         verify(pass, never()).activate(anyMap(), any(), any());
-        moneyOpen = true;
-        String open = notification("ONE_TIME_CHARGE", UUID.randomUUID().toString(), transaction("2000000001"));
-        assertEquals("APPLIED", service.notificationIfPass(open).orElseThrow().get("state"));
+    }
+
+    @Test
+    void aChargeIgnoredByTheOldSwitchRuleIsProcessedWhenAppleRedelivers() {
+        String uuid = UUID.randomUUID().toString();
+        String payload = notification("ONE_TIME_CHARGE", uuid, transaction("2000000001"));
+        // Simulate a row stored IGNORED by the previous version while the area was closed.
+        inbox.put(uuid, new HashMap<>(Map.of("payload_hash", PlatformPassService.sha256(payload), "state", "IGNORED")));
+        assertEquals("APPLIED", service.notificationIfPass(payload).orElseThrow().get("state"));
         verify(pass, times(1)).activate(anyMap(), any(), any());
     }
 

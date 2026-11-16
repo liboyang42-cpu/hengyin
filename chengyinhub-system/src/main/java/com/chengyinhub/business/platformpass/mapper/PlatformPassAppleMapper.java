@@ -24,6 +24,10 @@ public interface PlatformPassAppleMapper {
     @Select("select * from platform_pass_apple_order where order_no = #{orderNo}")
     Map<String, Object> selectByOrderNo(@Param("orderNo") String orderNo);
 
+    /** 只读:ONE_TIME_CHARGE 通知判断「这笔扣款有没有本服务签出的订单」。 */
+    @Select("select * from platform_pass_apple_order where app_account_token = #{token}")
+    Map<String, Object> selectByToken(@Param("token") String token);
+
     @Select("select * from platform_pass_apple_order where app_account_token = #{token} for update")
     Map<String, Object> selectByTokenForUpdate(@Param("token") String token);
 

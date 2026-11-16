@@ -34,6 +34,10 @@ public interface ModCommerceMapper {
             + " where o.offer_id = #{offerId}")
     Map<String, Object> offer(@Param("offerId") String offerId);
 
+    /** MERCHANT-9: every App Store product id of this market, on sale or not, so earlier purchases stay restorable. */
+    @Select("select distinct o.product_id from mod_commerce_offer o where o.market = #{market} order by o.product_id")
+    List<String> productIds(@Param("market") String market);
+
     @Options(useCache = false, flushCache = Options.FlushCachePolicy.TRUE)
     @Select("select " + OFFER_COLUMNS + " from mod_commerce_offer o join workshop_version v on v.version_id = o.version_id"
             + " where o.product_id = #{productId}")

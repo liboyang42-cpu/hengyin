@@ -468,7 +468,7 @@ class ModCommerceServiceTest {
     }
 
     @Test
-    void notificationsForOtherProductsFallThroughAndChargesWaitForTheSwitch() throws Exception {
+    void notificationsForOtherProductsFallThroughAndChargesAreDeliveredWithTheSwitchClosed() throws Exception {
         String pass = notification("REFUND", transaction("1", "1", BUNDLE, "Sandbox", "org.chengyin.app.pass.month",
                 UUID.randomUUID().toString(), 6000, System.currentTimeMillis()));
         assertTrue(service.notificationIfTemplate(pass).isEmpty(), "not a workshop product: next handler");
@@ -476,20 +476,45 @@ class ModCommerceServiceTest {
 
         Map<String, Object> ready = readyOrder(BUYER, "req-1");
         Map<String, String> p = params(ready);
+        // MERCHANT-2: the area closed after the order was created; Apple's charge is still delivered.
         when(moneySwitch.snapshot()).thenReturn(Map.of("pass", false));
         String charge = notification("ONE_TIME_CHARGE", transaction("6000000001", "6000000001", BUNDLE, "Sandbox", PRODUCT,
                 p.get("appAccountToken"), 6000, null));
-        assertEquals("IGNORED", service.notificationIfTemplate(charge).orElseThrow().get("state"));
-        when(moneySwitch.snapshot()).thenReturn(Map.of("pass", true));
+        assertEquals("APPLIED", service.notificationIfTemplate(charge).orElseThrow().get("state"));
+        assertEquals("PAID", service.order(BUYER, (String) ready.get("orderKey")).get("state"));
+        assertEquals(1, ledger("SALE"));
         String chargeAgain = notification("ONE_TIME_CHARGE", transaction("6000000001", "6000000001", BUNDLE, "Sandbox", PRODUCT,
                 p.get("appAccountToken"), 6000, null));
         assertEquals("APPLIED", service.notificationIfTemplate(chargeAgain).orElseThrow().get("state"));
-        assertEquals("PAID", service.order(BUYER, (String) ready.get("orderKey")).get("state"));
+        assertEquals(1, ledger("SALE"), "granted once");
+
+        String stranger = notification("ONE_TIME_CHARGE", transaction("6000000009", "6000000009", BUNDLE, "Sandbox", PRODUCT,
+                UUID.randomUUID().toString(), 6000, null));
+        assertEquals("IGNORED", service.notificationIfTemplate(stranger).orElseThrow().get("state"),
+                "a charge with no server order is not ours");
 
         String unmatched = notification("REFUND", transaction("7", "7", BUNDLE, "Sandbox", PRODUCT,
                 UUID.randomUUID().toString(), 6000, System.currentTimeMillis()));
         assertEquals("APPLE_ORDER_NOT_MATCHED", code(() -> service.notificationIfTemplate(unmatched)),
                 "an unmatched refund is never acknowledged; Apple retries");
+    }
+
+    @Test
+    void storeKitSetupComesFromServerConfigurationAndKeepsWithdrawnProductsRestorable() {
+        Map<String, Object> open = service.storeKit();
+        assertEquals(true, open.get("available"));
+        assertEquals(true, open.get("selling"));
+        assertEquals(BUNDLE, open.get("bundleId"));
+        assertEquals("SANDBOX", open.get("environment"));
+        assertEquals("CN", open.get("market"));
+        assertEquals(List.of(PRODUCT), open.get("productIds"));
+
+        service.setOfferEnabled(offerId, false, "operator");
+        when(moneySwitch.snapshot()).thenReturn(Map.of("pass", false));
+        Map<String, Object> closed = service.storeKit();
+        assertEquals(true, closed.get("available"), "delivery and restore still work");
+        assertEquals(false, closed.get("selling"), "no new purchase");
+        assertEquals(List.of(PRODUCT), closed.get("productIds"), "a withdrawn template stays restorable");
     }
 
     @Test
