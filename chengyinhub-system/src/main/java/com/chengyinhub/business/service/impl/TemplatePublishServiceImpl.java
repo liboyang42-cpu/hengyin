@@ -98,6 +98,10 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
     @Autowired
     private com.chengyinhub.business.service.support.AppMediaPublicationGuard mediaPublicationGuard;
 
+    /** x-template-games R9:官方示例题守卫开关;缺省 = 开。 */
+    @Autowired(required = false)
+    private com.chengyinhub.system.service.ISysConfigService sysConfigService;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long publishTemplateWithTransaction(CmsTemplatePublishRequest request, Long memberId, String username) {
@@ -136,6 +140,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         assertTemplateRewardOwnership(memberId, memberTemplate, existing);
         mediaPublicationGuard.requireTemplate(memberId, memberTemplate, true);
         validatePreferenceForReview(memberTemplate);
+        assertOfficialPlaceholderReplaced(request.getOriginalTemplateId(), memberTemplate);
 
         // 设置基本信息
         memberTemplate.setMemberId(memberId);
@@ -513,6 +518,17 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         template.setDelFlag(creating ? 0 : null);
         template.setUpdateBy(username);
         template.setUpdateTime(now);
+    }
+
+    /** x-template-games R9:采用来的官方示例题,题目和答案原样不动不能发布(开关默认开)。 */
+    private void assertOfficialPlaceholderReplaced(Long originalTemplateId, CmsMemberTemplate template) {
+        if (originalTemplateId == null || originalTemplateId <= 0) return;
+        String raw = sysConfigService == null ? null
+                : sysConfigService.selectConfigByKey(com.chengyinhub.business.service.support.OfficialPlaceholderGuard.KEY);
+        if (!com.chengyinhub.business.service.support.OfficialPlaceholderGuard.enabled(raw)) return;
+        String refusal = com.chengyinhub.business.service.support.OfficialPlaceholderGuard.check(
+                templateLibraryService.selectCmsTemplateLibraryById(originalTemplateId), template);
+        if (refusal != null) throw new ServiceException(refusal, HttpStatus.BAD_REQUEST);
     }
 
     private void validatePreferenceForReview(CmsMemberTemplate template) {
