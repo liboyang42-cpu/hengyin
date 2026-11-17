@@ -59,6 +59,27 @@ test('活动介绍只展示一个集合点，不复制主题路线或玩法；�
   assert.match(read(SCENE + '.wxss'), /\.activity-action\s*\{[^}]*position:\s*fixed/)
 })
 
+test('主题式介绍首屏保留真实主办方与完整正文，次要事实和票种不再套旧卡片或手风琴', () => {
+  const wxml = read(SCENE + '.wxml')
+  const hero = wxml.slice(wxml.indexOf('<view class="activity-hero">'), wxml.indexOf('    <view wx:if="{{info.cancelTime}}"'))
+  for (const field of ['info.imgUrl', 'hostName', 'titleText', 'info.description', 'dateText', 'categoryText']) assert.ok(hero.includes(field), field)
+  assert.match(hero, /bindtap="goUserInfo"/)
+  const css = read(SCENE + '.wxss')
+  assert.match(css, /\.activity-host__name\s*\{[^}]*color:\s*var\(--cy-comp-sheet-player-text\)/)
+  assert.match(css, /\.activity-host__role\s*\{[^}]*color:\s*var\(--cy-comp-sheet-player-text-secondary\)/)
+  assert.doesNotMatch(wxml, /activity-meta|ticket__more|expandedTicketId|catchtap="toggleTicket"|aria-role="tab"/)
+  for (const field of ['registrationCountText', 'info.addressName', 'item._priceText', 'item._inventoryText', 'item._dateText', 'item._deadlineText', 'item.cmsRegistrationList']) assert.ok(wxml.includes(field), field)
+  const m = mount()
+  m.host.reload()
+  const description = '真实活动介绍\n'.repeat(80)
+  m.respond(detail({ description, addressName: 'TEST 集合点' }))
+  assert.equal(m.host.data.info.description, description)
+  assert.equal(m.host.data.info.addressName, 'TEST 集合点')
+  assert.equal(m.host.toggleTicket, undefined)
+  assert.equal(m.host.data.tickets[0]._priceText, '¥0')
+  assert.equal(m.host.data.tickets[0]._inventoryText, '剩余 2 张')
+})
+
 test('多票主按钮先开底部选票；真实 picker 的确认只进入原活动结算一次', () => {
   const m = mount()
   m.host.openSignupSheet()

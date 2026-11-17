@@ -108,7 +108,6 @@ Component({
     cancelledHasOwnOrder: false,
     gateClubId: 0,
     gateMessage: '',
-    expandedTicketId: '',
     statusText: '',
     statusVariant: 'done',
     dateText: '',
@@ -215,7 +214,6 @@ Component({
         errorMsg: '',
         info: {},
         tickets: [],
-        expandedTicketId: '',
         noTicketText: '',
         cancelShow: false,
         voteShow: false,
@@ -313,7 +311,6 @@ Component({
             hasLocation: latitude !== null && longitude !== null,
             actionState: action.state,
             actionText: action.text,
-            expandedTicketId: '',
             noTicketText: selectable.length ? '' : tickets.length ? '暂无可报名票种' : '暂未开放票种',
             isOwner: info.memberId != null && info.memberId == app.getUserID(),
           })
@@ -356,11 +353,6 @@ Component({
     reload() {
       this._loadedId = ''
       this.load(this.data.activityId)
-    },
-
-    toggleTicket(event) {
-      const id = String(event.currentTarget.dataset.id || '')
-      this.setData({ expandedTicketId: this.data.expandedTicketId === id ? '' : id })
     },
 
 
