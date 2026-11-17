@@ -45,7 +45,8 @@
     ],
     "ios": [
       "App/ActivityDetailView.swift",
-      "App/ActivityPresentationComponents.swift"
+      "App/ActivityPresentationComponents.swift",
+      "App/ActivityPeopleSection.swift"
     ]
   },
   "team-invitation": {
@@ -197,6 +198,14 @@
     ],
     "ios": [
       "App/ProfileSelfOrdersSection.swift"
+    ]
+  },
+  "club-members-avatar": {
+    "mini": [
+      "pages/club/detail/index.wxml"
+    ],
+    "ios": [
+      "App/ClubMembersView.swift"
     ]
   },
   "merchant-redemption-records": {

@@ -6,7 +6,7 @@
 
 `design-map.json` 映射既有 tokens 的17个尺寸，以及原生语义颜色、Dynamic Type 与强调色。375pt 是参考画布，rpx 到 pt 不按实际设备宽度换算。App 的 `App/QuestifyPalette.swift` 由既有生成器生成；只读接入不重新生成或改变数值。
 
-`page-pairs.json` 当前登记17组真实源码对应；登记和源码存在不代表交互、视觉、设备或业务已经验收。新增页面需核实真实对应，不伪造另一端改动。工作树检查需列出本任务全部 UI 文件；确实无须修改的对侧用 `--reviewed-mini-path` / `--reviewed-ios-path` 及 `--review-note` 说明。
+`page-pairs.json` 当前登记18组真实源码对应；登记和源码存在不代表交互、视觉、设备或业务已经验收。新增页面需核实真实对应，不伪造另一端改动。工作树检查需列出本任务全部 UI 文件；确实无须修改的对侧用 `--reviewed-mini-path` / `--reviewed-ios-path` 及 `--review-note` 说明。
 
 在公共仓库根目录运行，`APP_ROOT` 由使用者设置为核实过的 App checkout：
 
