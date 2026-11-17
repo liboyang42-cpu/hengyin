@@ -37,9 +37,9 @@
     </view>
 
     <view class="activity-section activity-facts">
-      <view wx:if="{{hasLocation}}" class="activity-fact" bindtap="openLocation" hover-class="activity-row--press" hover-stay-time="80" aria-role="button" aria-label="导航到集合点"><cy-icon name="pin" size="28" /><text class="activity-row__link">{{info.addressName || info.address || '查看地图'}}</text></view>
-      <view wx:elif="{{info.addressName || info.address}}" class="activity-fact"><cy-icon name="pin" size="28" /><text>{{info.addressName || info.address}}</text></view>
-      <view class="activity-fact"><text>{{registrationCountText || 0}} 人已报名</text></view>
+      <view wx:if="{{hasLocation}}" class="activity-fact" bindtap="openLocation" hover-class="activity-row--press" hover-stay-time="80" aria-role="button" aria-label="导航到集合点"><cy-icon name="pin" size="28" /><text class="activity-fact__text activity-row__link">{{info.addressName || info.address || '查看地图'}}</text></view>
+      <view wx:elif="{{info.addressName || info.address}}" class="activity-fact"><cy-icon name="pin" size="28" /><text class="activity-fact__text">{{info.addressName || info.address}}</text></view>
+      <view class="activity-fact"><text class="activity-fact__text">{{registrationCountText || 0}} 人已报名</text></view>
     </view>
 
     <view wx:if="{{info.registrationList.length}}" class="activity-section">

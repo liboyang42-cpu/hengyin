@@ -18,7 +18,7 @@
 .activity-section__title { display: block; margin-bottom: var(--cy-space-2); color: var(--cy-color-text-primary); font-size: var(--cy-type-section-title); font-weight: 700; }
 .activity-facts { display: flex; flex-direction: column; gap: var(--cy-space-3); padding-bottom: var(--cy-space-4); border-bottom: 1rpx solid var(--cy-color-border-subtle); }
 .activity-fact { display: flex; align-items: center; gap: var(--cy-space-2); min-height: var(--cy-btn-h); color: var(--cy-color-text-secondary); font-size: var(--cy-type-body); overflow-wrap: anywhere; }
-.activity-fact text { min-width: 0; }
+.activity-fact__text { min-width: 0; }
 .activity-row__link { text-decoration: underline; }
 .activity-host__row { display: flex; align-items: center; gap: var(--cy-space-2); min-height: 88rpx; }
 .activity-host__copy { min-width: 0; display: flex; flex: 1; flex-direction: column; gap: var(--cy-space-1); }
