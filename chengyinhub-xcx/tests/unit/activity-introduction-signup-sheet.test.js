@@ -80,6 +80,27 @@ test('主题式介绍首屏保留真实主办方与完整正文，次要事实�
   assert.equal(m.host.data.tickets[0]._inventoryText, '剩余 2 张')
 })
 
+test('报名预览空头像与玩家个人头一致，真实头像及成员点击身份不变', () => {
+  const people = read(SCENE + '.wxml').split('<view class="activity-people">')[1].split('</view>')[0]
+  const expression = people.match(/<cy-avatar\b[^>]*src="\{\{([^}]+)\}\}"/)[1]
+  const { resolveSelfIdentity } = require('../../utils/identity-sync.js')
+  for (const avatar of [undefined, null, '', 'https://media.example.test/upload/member.png?viewer=52']) {
+    const m = mount()
+    const item = { id: 73, memberId: 51, nickname: '同一玩家', avatar }
+    m.host.reload()
+    m.respond(detail({ registrationList: [item] }))
+    const src = vm.runInNewContext(expression, { item: m.host.data.info.registrationList[0] })
+    assert.equal(src, resolveSelfIdentity(false, null, item).avatar)
+    const face = m.component('components/cy/avatar/index')
+    face.definition.observers['src, name'].call(face.host, src, item.nickname)
+    assert.equal(face.host.data._mode, 'image', '有昵称的空头像也应显示与个人头相同的默认图')
+    assert.match(people, /bindtap="goUserInfo"[^>]*data-id="\{\{item\.memberId\}\}"/)
+    m.host.goUserInfo({ currentTarget: { dataset: { id: item.memberId } } })
+    assert.equal(m.navigations[0].url, '/pages/userinfo/userinfo?userId=51')
+    assert.equal(m.requests.every(r => r.url === '/api/activity/info'), true)
+  }
+})
+
 test('多票主按钮先开底部选票；真实 picker 的确认只进入原活动结算一次', () => {
   const m = mount()
   m.host.openSignupSheet()

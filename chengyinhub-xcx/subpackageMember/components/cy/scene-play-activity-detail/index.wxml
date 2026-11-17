@@ -46,7 +46,7 @@
       <text class="activity-section__title">{{registrationCountText || 0}} 人已报名</text>
       <view class="activity-people">
         <view class="activity-person" wx:for="{{info.registrationList}}" wx:key="id" bindtap="goUserInfo" hover-class="activity-row--press" hover-stay-time="80" data-id="{{item.memberId}}" aria-role="button" aria-label="查看{{item.nickname || '报名用户'}}主页" style="--pmi:{{index}};">
-          <cy-avatar size="64" src="{{item.avatar || ''}}" name="{{item.nickname}}" />
+          <cy-avatar size="64" src="{{item.avatar || '/images/d_profile.png'}}" name="{{item.nickname}}" />
         </view>
       </view>
     </view>
