@@ -3,6 +3,7 @@ package com.chengyinhub.business.mapper;
 import com.chengyinhub.business.domain.PmsProduct;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.io.Resources;
+import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.session.Configuration;
 import org.junit.jupiter.api.Test;
 
@@ -13,6 +14,8 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /** G5-10f 商品目录的 mapper 约束：真 XML 生成 BoundSql，不连库、不 mock。 */
 class PmsProductMapperSqlTest {
@@ -36,6 +39,33 @@ class PmsProductMapperSqlTest {
                 .getSql()
                 .replaceAll("\\s+", " ")
                 .toLowerCase();
+    }
+
+    @Test
+    void merchantScopedInsertKeepsColumnsAndParametersAligned() throws Exception {
+        PmsProduct product = new PmsProduct();
+        product.setMerchantId(9917201L);
+        product.setProductName("TEST-PMS-CART53-1116-ONE");
+        product.setPublishStatus(0);
+        product.setPrice(1);
+        product.setStock(2L);
+        product.setDelFlag(0);
+
+        BoundSql bound = parse().getMappedStatement(NAMESPACE + "insertPmsProduct").getBoundSql(product);
+        String sql = bound.getSql().replaceAll("\\s+", " ").trim();
+        int columnsEnd = sql.indexOf(')');
+        String[] columns = sql.substring(sql.indexOf('(') + 1, columnsEnd).trim().split("\\s*,\\s*");
+        String[] values = sql.substring(sql.indexOf('(', columnsEnd) + 1, sql.lastIndexOf(')'))
+                .trim().split("\\s*,\\s*");
+
+        assertArrayEquals(new String[] { "merchant_id", "product_name", "publish_status", "price", "stock", "del_flag" }, columns);
+        assertEquals(columns.length, values.length);
+        assertEquals(columns.length, bound.getParameterMappings().size());
+        for (String value : values) {
+            assertEquals("?", value);
+        }
+        assertArrayEquals(new String[] { "merchantId", "productName", "publishStatus", "price", "stock", "delFlag" },
+                bound.getParameterMappings().stream().map(mapping -> mapping.getProperty()).toArray(String[]::new));
     }
 
     @Test

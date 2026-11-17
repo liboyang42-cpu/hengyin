@@ -70,7 +70,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <insert id="insertPmsProduct" parameterType="PmsProduct" useGeneratedKeys="true" keyProperty="id">
         insert into pms_product
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="merchantId != null  and merchantId != ''">merchant_id</if>
+            <if test="merchantId != null  and merchantId != ''">merchant_id,</if>
             <if test="productName != null and productName != ''">product_name,</if>
             <if test="pic != null">pic,</if>
             <if test="albumPics != null">album_pics,</if>
