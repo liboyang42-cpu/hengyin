@@ -65,6 +65,74 @@ jobs:
           cache: maven
       - name: Compile and run unit tests
         run: mvn -B test
+      # x-loose-ends (2026-11-17): MySQL-only integration classes that surefire's
+      # default includes skip (*IT names) or that sit behind an env gate, and that
+      # no other workflow ran. Same pattern as ci/backend-test.sh: name each class,
+      # open its gate, then read the surefire reports back with ci/assert_it_ran.py
+      # (missing report, skipped, failure or error = red). Runs even when the unit
+      # step is red, so a known unit failure does not hide these results.
+      # The three W7 classes (MerchantReferralBountyDeadlockRetryMySqlIT,
+      # AdvancedGameRuntimeMySqlIT; ComplianceF7MyBatisTest already runs in the
+      # unit step) are also in ci/backend-test.sh, which only ci.yml runs on
+      # master pull requests; naming them here covers feature/** pushes too.
+      # Classes that need more than MySQL, or are red on a fresh MySQL 8.0.45,
+      # are listed in docs/roadmap/x-loose-ends/RESULT.md.
+      - name: Run named MySQL integration tests
+        if: ${{ !cancelled() }}
+        env:
+          CHENGYIN_TEST_MYSQL_HOST: 127.0.0.1
+          CHENGYIN_TEST_MYSQL_PORT: '3306'
+          CHENGYIN_TEST_MYSQL_USER: root
+          CHENGYIN_TEST_MYSQL_PASSWORD: root
+          CHENGYIN_TEST_MYSQL_DATABASE_BASE: chengyin_bt
+          CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX: _${{ github.run_id }}_${{ github.run_attempt }}
+          CHENGYIN_MYBATIS_IT: '1'
+          CHENGYIN_FUNDS_MYSQL_IT: '1'
+          CHENGYIN_R2_MYSQL_IT: '1'
+          CHENGYIN_MERCHANT_GAP_MYSQL_IT: '1'
+          CHENGYIN_SYS_AINPC_MYSQL_IT: '1'
+          CHENGYIN_WEATHER_MYSQL_IT: '1'
+        run: |
+          set -euo pipefail
+          NAMED_ITS=(
+            MerchantReferralBountyDeadlockRetryMySqlIT
+            AdvancedGameRuntimeMySqlIT
+            AuditAppealRequestMySqlIT
+            AuditItemProblemMySqlIT
+            AuthorAttributeBindingMyBatisIT
+            BeGapMiscMysqlIntegrationTest
+            CartSettlementWriteReceiptMySqlIT
+            ChainPersistenceMySqlIT
+            ChannelsFourthPassMySqlIT
+            ChannelsGapImMySqlIT
+            ChannelsPlatformMySqlIT
+            ChannelsSecondPassMySqlIT
+            ChannelsThirdPassMySqlIT
+            ChannelsWebhookDispatchMySqlIT
+            ClubProxyEnrollMysqlIntegrationTest
+            CompletedRouteFactMapperMySqlIT
+            CoopServiceRealDbIT
+            CreatorMaintenanceMysqlIntegrationTest
+            ExternalGameMonetizationMysqlIntegrationTest
+            FriendFoundationSchemaMySqlIT
+            GuardWorkbenchScopeMySqlIT
+            ImAdminSendIdempotencyMySqlIT
+            ImClubConversationBatchMySqlIT
+            ImModerationUnreadMySqlIT
+            InGameChannelMySqlIT
+            MerchantGapMySqlIT
+            OfficialEventAttendanceMySqlIT
+            OrientRouteSettlementMySqlIT
+            RewardsWorkshopMysqlIntegrationTest
+            SysAinpcMySqlIT
+            SysRandomMySqlIT
+            UserInvoiceLifecycleMySqlIT
+            WeatherEventRuleMySqlIT
+          )
+          IFS=, ; IT_LIST="${NAMED_ITS[*]}" ; unset IFS
+          mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false \
+            -Dsurefire.failIfNoSpecifiedTests=false -Dtest="$IT_LIST"
+          python3 ci/assert_it_ran.py chengyinhub-admin/target/surefire-reports "${NAMED_ITS[@]}"
       - name: Test summary
         if: always()
         run: |
