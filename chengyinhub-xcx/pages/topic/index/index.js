@@ -422,11 +422,12 @@ Page({
     this.setData({ isScrolling: true, coverLeaving: true });
     this._later(280, () => {
       const go = () => wx.pageScrollTo({ scrollTop: this.data.screen2Top, duration: 0,
-        complete: () => {
-          this.setData({ currentScreen: 1, isScrolling: false, detailEnter: true, coverLeaving: false });
+        success: () => {
+          this.setData({ currentScreen: 1, detailEnter: true });
           this._later(1100, () => this.setData({ detailEnter: false }));
           this._measureHero();
-        } });
+        },
+        complete: () => this.setData({ isScrolling: false, coverLeaving: false }) });
       if (this.data.screen2Top <= 0) { this.calculateScreenHeights(); this._later(200, go); } else go();
     });
   },
