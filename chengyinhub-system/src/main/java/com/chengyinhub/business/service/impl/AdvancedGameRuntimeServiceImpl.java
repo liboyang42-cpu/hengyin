@@ -1194,6 +1194,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             throw new ServiceException("高级玩法尚未完成");
         }
 
+        // 先算终点码:所有拒绝都在写库之前抛出,本方法不回滚调用方事务也不会留下半截完成状态。
+        String outcome = terminalOutcome(snapshot, state);
         int oldVersion = session.getVersion();
         Date now = clock.now();
         session.setStatus(GameRuntimeSession.STATUS_COMPLETED);
@@ -1203,7 +1205,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             throw new ServiceException("高级玩法状态已更新，请重试");
         }
         session.setVersion(oldVersion + 1);
-        return terminalOutcome(snapshot, state);
+        return outcome;
     }
     /**
      * 跳过本题:本题记 0 分 + 辅助完成,不产生答对、到达、扫码、照片、核销或支付证明。
