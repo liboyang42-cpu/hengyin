@@ -251,13 +251,13 @@ class PlayArriveRecoveryContractTest
         verifyNoCompletion();
     }
 
-    /** 81m 精度:80m 闸原值不动,只说明「到开阔处再来」可重试。 */
+    /** F08 v2:开局精度上限 200m;超过时提示再试一次,可重试。 */
     @Test
     void accuracyAboveLimitIsRetryable()
     {
-        AjaxResult result = arrive(NODE_LNG, NODE_LAT, "81");
+        AjaxResult result = arrive(NODE_LNG, NODE_LAT, "201");
 
-        assertEquals("定位精度不足，请到开阔处或扫码完成", result.get("msg"), "既有文案不得变");
+        assertEquals("定位不准，再试一次", result.get("msg"));
         assertRejection(result, PlayCommandErrorContract.ARRIVE_ACCURACY_LOW, true);
         verifyNoCompletion();
     }

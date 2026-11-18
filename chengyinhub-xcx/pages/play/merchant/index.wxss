@@ -195,3 +195,10 @@
 .mp-cta__main { transition: var(--cy-tr-press); }
 .mp-stat__n,
 .mp-stat__k { font-variant-numeric: tabular-nums; }
+/* F08 本店权益卡:与商家信息同一套面 */
+.mp-perk{ margin-top:var(--cy-space-3); display:flex; align-items:center; gap:var(--cy-space-3); padding:var(--cy-space-4);
+  border-radius:var(--cy-radius-lg); background:var(--cy-color-play-surface-solid); border:1rpx solid var(--cy-color-play-line);
+  color:var(--cy-color-text-tertiary); }
+.mp-perk__c{ flex:1; min-width:0; display:flex; flex-direction:column; gap:var(--cy-space-1); }
+.mp-perk__t{ font-size:var(--cy-font-body); font-weight:600; color:var(--cy-color-text-primary); }
+.mp-perk__s{ font-size:var(--cy-font-caption); color:var(--cy-color-text-tertiary); }

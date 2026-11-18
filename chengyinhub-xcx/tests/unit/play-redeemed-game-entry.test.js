@@ -122,13 +122,13 @@ test('authoritative rebuild refreshes an open hero without losing its animation 
   instance.rebuild();
   assert.equal(instance.data.hero.open, true);
   assert.equal(instance.data.hero.style, 'left:20px');
-  assert.equal(instance.data.hero.node.stepArrive, true);
-  assert.equal(instance.data.hero.node.stepRedeem, true);
-  assert.equal(instance.data.hero.node.stepProof, false);
+  // F08:到店三步说明块已删,hero 不再带 step* 字段;权威重建仍刷新核销态与 CTA
+  assert.equal(instance.data.hero.node.stepArrive, undefined);
+  assert.equal(instance.data.hero.node.done, true);
   assert.equal(ctaDisabled(instance.data.hero.node), false);
   instance.data.nodes = [nodeFor(instance, { gameDone: true })];
   instance.rebuild();
-  assert.equal(instance.data.hero.node.stepProof, true);
+  assert.equal(instance.data.hero.node.done, true);
   assert.equal(ctaDisabled(instance.data.hero.node), true);
 });
 

@@ -52,4 +52,17 @@ public interface PlayerNodeProgressMapper
     /** 分支主题榜外的「我」:本人最新一局;没开过局返回 null。 */
     com.chengyinhub.business.domain.vo.LeaderboardItemVO selectRouteLeaderboardRow(
             @Param("activityId") Long activityId, @Param("topicId") Long topicId, @Param("memberId") Long memberId);
+
+    /** F08:记录到达来源;只写第一次(已有来源不覆盖)。 */
+    int updateArrivalSource(@Param("id") Long id, @Param("arrivalSource") String arrivalSource);
+
+    /**
+     * 自由探索到访(FE-STORY 5.2):本人本局同章节已有到店行的节点写 visit_time / visit_method,只写第一次。
+     * 坐标只在原行没有时补写。
+     */
+    int markVisited(@Param("memberId") Long memberId, @Param("activityId") Long activityId,
+                    @Param("topicId") Long topicId, @Param("playInstanceId") String playInstanceId,
+                    @Param("nodeIds") java.util.List<Long> nodeIds, @Param("visitMethod") Integer visitMethod,
+                    @Param("visitTime") java.util.Date visitTime,
+                    @Param("longitude") String longitude, @Param("latitude") String latitude);
 }

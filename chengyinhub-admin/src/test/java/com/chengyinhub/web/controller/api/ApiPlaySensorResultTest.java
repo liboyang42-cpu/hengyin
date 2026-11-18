@@ -268,7 +268,7 @@ class ApiPlaySensorResultTest {
                 String.valueOf(ACTIVITY), String.valueOf(NODE), "filter-shot.png", null);
 
         assertEquals(500, result.get("code"));
-        assertEquals("先扫店内静态码进店，再开始任务", result.get("msg"));
+        assertEquals("先点「我已到店」，再开始任务", result.get("msg"));
         verify(proof, never()).submitPhoto(anyLong(), anyLong(), anyLong(), anyString());
         verify(progressService, never()).insertPlayerNodeProgress(any());
         verify(growth, never()).addExp(anyLong(), anyInt(), anyString());
@@ -516,7 +516,7 @@ class ApiPlaySensorResultTest {
         when(proof.hasArrived(MEMBER, ACTIVITY, NODE)).thenReturn(false);
         AjaxResult result = BasicPlayCommandFixtures.sensorResult(controller, request("still", payload("heldSec", 12)));
         assertEquals(500, result.get("code"));
-        assertEquals("先扫店内静态码进店，再开始任务", result.get("msg"));
+        assertEquals("先点「我已到店」，再开始任务", result.get("msg"));
         verify(progressService, never()).insertPlayerNodeProgress(any());
     }
 

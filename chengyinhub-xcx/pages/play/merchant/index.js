@@ -38,6 +38,26 @@ function requestPhoto(data) {
   return request('/api/play/photo', data)
 }
 
+/** F08「我已到店」:带一次前台定位走 /api/play/arrive,到没到由服务端按 300 米判 */
+function requestArrive(data) {
+  return request('/api/play/arrive', data)
+}
+
+const { roundedMeters } = require('../utils/arrival-radius.js')
+/** /arrive 被拒的原因 → 本页提示与主按钮(「重新定位」/「扫码解锁」) */
+function arriveRefusal(response) {
+  const code = String((response && response.errorCode) || '')
+  const data = (response && response.data) || {}
+  if (code === 'ARRIVE_TOO_FAR') {
+    const meters = roundedMeters(data.distanceMeters != null ? data.distanceMeters : response.distanceMeters)
+    return { feedback: meters ? '离这里还有约 ' + meters + ' 米' : '还没到店', retry: 'locate' }
+  }
+  if (code === 'ARRIVE_ACCURACY_LOW') return { feedback: '定位不准，再试一次', retry: 'locate' }
+  if (code === 'ARRIVE_LOCATION_MISSING') return { feedback: '没有取到定位', retry: 'locate' }
+  if (code === 'VISIT_SCAN_REQUIRED') return { feedback: '这里需要扫码', retry: 'scan' }
+  return null
+}
+
 Page({
   data: {
     node: null, notFound: false, statusBarHeight: 20, regId: 0,
@@ -48,6 +68,8 @@ Page({
     // 写回执态，词典见 utils/play-state-contract.js
     receipt: 'ready',
     merchantConsent: 'UNKNOWN', consentBusy: false,
+    // F08:到店第一步「我已到店」;被拒后主按钮变「重新定位」或「扫码解锁」。扫码与拍照收进「更多」
+    arriveRetry: '', more: { show: false },
     // B5 收窄(2026-08-15):扫码进店后的体验层 —— 有游戏弹游戏,无游戏弹任务卡
     game: { show: false, answer: '', choice: '', submitting: false, done: false, resultText: '', errText: '', receipt: 'ready' },
     task: { show: false },
@@ -94,6 +116,8 @@ Page({
     }, () => {
       // 从选店页扫码进来(intro 快捷扫码路径):落地即弹体验层,和页内扫码同一仪式
       if (String(query && query.justScanned) === '1') this._maybeAutoPopup()
+      // 没有玩法的店从卡片「到店打卡」进来:已到店就直接出示核销码(F08 / FE-GAPS G1)
+      else if (String(query && query.verify) === '1' && node.arrived && !node.done) this.openVerifyCode()
     })
     if (node.merchantId) this._loadMerchantConsent()
   },
@@ -115,7 +139,7 @@ Page({
 
   openGame() {
     const node = this.data.node
-    if (!node || !node.arrived) { this.setData({ feedback: '先扫店内码进店，再开始任务' }); return }
+    if (!node || !node.arrived) { this.setData({ feedback: '先点「我已到店」，再开始任务' }); return }
     if (Number(node.validationMethod || node.vm) === 6) { this.openPreferenceGame(); return }
     if (!node.question) { this.openTaskCard(); return }
     // ★unknown 期间只把弹层重新打开,绝不重置状态:原来这里无条件重建整个 game 对象,
@@ -138,7 +162,7 @@ Page({
    *  把归一化后的节点（带 hasAdvanced / vm，来自游玩页 normNode）交给它的 startGame。
    *  交接失败不是一句「稍后再试」就完事，unreachable 必须给出还留在本页的退路。 */
   _handoffToPlayHost(node, unreachable) {
-    if (!node || !node.arrived) { this.setData({ feedback: '先扫店内码进店，再开始任务' }); return }
+    if (!node || !node.arrived) { this.setData({ feedback: '先点「我已到店」，再开始任务' }); return }
     const prev = this._prev
     if (!prev || typeof prev.startGame !== 'function') { unreachable(); return }
     /* 交给游玩页排队、由它在 onShow 重读落定后再开:返回时游玩页会整页重读节点,
@@ -238,7 +262,35 @@ Page({
   },
   openTaskCard() { this.setData({ 'task.show': true }) },
   closeTaskCard() { this.setData({ 'task.show': false }) },
-  closeSheets() { this.setData({ 'game.show': false, 'task.show': false }) },
+  closeSheets() { this.setData({ 'game.show': false, 'task.show': false, 'more.show': false }) },
+  openMore() { this.setData({ 'more.show': true }) },
+  moreScan() { this.setData({ 'more.show': false }); this.scanArrival() },
+  morePhoto() { this.setData({ 'more.show': false }); this.uploadProof() },
+
+  /** 「我已到店」:先说明用途,再前台取一次定位交给服务端判 */
+  arriveHere() {
+    if (this.data.busy) return
+    if (this.data.arriveRetry === 'scan') { this.scanArrival(); return }
+    if (this._arrivePurposeShown) { this._locateAndArrive(); return }
+    cyModal.show({ title: '用一次位置确认你到店了', content: '', confirmText: '确认位置', cancelText: '取消',
+      success: (r) => { if (r && r.confirm) { this._arrivePurposeShown = true; this._locateAndArrive() } } })
+  },
+  _locateAndArrive() {
+    if (this.data.busy) return
+    this.setData({ busy: true, feedback: '' })
+    wx.getLocation({ type: 'gcj02', isHighAccuracy: true,
+      success: (loc) => {
+        this.setData({ busy: false })
+        const node = this.data.node || {}
+        this._submitProof(requestArrive, Object.assign({}, this._session, { nodeId: node.nodeId, longitude: loc.longitude,
+          latitude: loc.latitude, accuracy: typeof loc.accuracy === 'number' ? loc.accuracy : undefined }), '已到店',
+        { autoPopup: !!(node.hasGame || node.hasAdvanced) })
+      },
+      fail: (err) => {
+        const denied = /auth|deny|denied|authorize|permission/i.test((err && err.errMsg) || '')
+        this.setData({ busy: false, feedback: denied ? '定位没有开启，可在「更多」里扫码到店' : '没有取到定位，请重试' })
+      } })
+  },
   taskGoPhoto() {
     if (this.data.busy) return
     this.closeTaskCard()
@@ -294,26 +346,36 @@ Page({
   },
 
   async _submitProof(sendProof, payload, successMessage, opts) {
-    if (sendProof === requestCheckin && !this._isIntentOwnerCurrent()) return
+    // checkin / arrive 是基础路线写:走游玩页的意图身份(可回读原命令回执,不重发);photo 照旧
+    const kind = sendProof === requestCheckin ? 'checkin' : (sendProof === requestArrive ? 'arrive' : '')
+    const basic = !!kind
+    if (basic && !this._isIntentOwnerCurrent()) return
     this.setData({ busy: true, feedback: '', degradedMessage: '', receipt: 'submitting' })
-    const basic = sendProof === requestCheckin
-    if (basic) this._proofBasicIntent = true
-    const response = basic ? await this._sendBasicIntent('checkin', '/api/play/checkin', Object.assign({}, payload, { nodeId: this.data.node.nodeId })) : await sendProof(payload)
+    if (basic) { this._proofBasicIntent = true; this._proofBasicKind = kind }
+    const response = basic ? await this._sendBasicIntent(kind, kind === 'arrive' ? '/api/play/arrive' : '/api/play/checkin', Object.assign({}, payload, { nodeId: this.data.node.nodeId })) : await sendProof(payload)
     if (basic && (!this._isIntentOwnerCurrent() || response.obsolete)) return
-    if (basic && response.intentTerminal) this._prev._resolveRouteAction('checkin', this.data.node.nodeId)
-    else if (basic) this._prev._handleRouteConflict(response, 'checkin', this.data.node.nodeId)
+    if (basic && response.intentTerminal) this._prev._resolveRouteAction(kind, this.data.node.nodeId)
+    else if (basic) this._prev._handleRouteConflict(response, kind, this.data.node.nodeId)
     if (!(response.code === 200 || response.code === '200')) {
       // netFail = 请求没拿到响应,服务端可能已经写进去了。原来这里 busy:false 就放行了,
       // 一句「请勿重复核销」拦不住手 —— 改成锁着不放,只能由 /api/play/nodes 权威回读解锁。
+      // 证明没送达(intentNotExecuted)才可再点;其余网络/网关失败一律只回读
+      if (basic && response.intentNotExecuted && !response.intentTerminal) {
+        this._prev._resolveRouteAction(kind, this.data.node.nodeId)
+        this.setData({ busy: false, receipt: 'failed', feedback: '网络异常，请重试' })
+        return
+      }
       if (response.netFail || response.httpFail || Number(response.code) === 520) return this._resolveProofUnknown(opts)
+      const refusal = kind === 'arrive' ? arriveRefusal(response) : null
       this.setData({
         busy: false, receipt: 'failed', degradedMessage: '',
-        feedback: response.msg || '现场记录失败，请稍后重试',
+        arriveRetry: refusal ? refusal.retry : this.data.arriveRetry,
+        feedback: (refusal && refusal.feedback) || response.msg || '现场记录失败，请稍后重试',
       })
       return
     }
     const node = Object.assign({}, this.data.node, response.data || {})
-    this.setData({ node, busy: false, receipt: 'confirmed', feedback: successMessage }, () => {
+    this.setData({ node, busy: false, receipt: 'confirmed', feedback: successMessage, arriveRetry: '' }, () => {
       // 扫码进店成功 → 弹体验层(游戏/任务卡),checkin 回包已带题面
       if (opts && opts.autoPopup) this._maybeAutoPopup()
     })
@@ -329,10 +391,11 @@ Page({
     this.setData({ busy: true, receipt: 'unknown', feedback: '', degradedMessage: unknown.label })
     if (this._proofBasicIntent) {
       if (!this._isIntentOwnerCurrent()) return
-      const receipt = await this._prev._readBasicRouteIntent('checkin', this.data.node.nodeId)
+      const kind = this._proofBasicKind || 'checkin'
+      const receipt = await this._prev._readBasicRouteIntent(kind, this.data.node.nodeId)
       if (!this._isIntentOwnerCurrent()) return
       if (!receipt.intentTerminal) { this.setData({ degradedMessage: '原到店命令结果待确认，请稍后查询' }); return }
-      this._prev._resolveRouteAction('checkin', this.data.node.nodeId)
+      this._prev._resolveRouteAction(kind, this.data.node.nodeId)
       this._proofBasicIntent = false
       const landed = Number(receipt.code) === 200
       const node = landed ? Object.assign({}, this.data.node, receipt.data || {}) : this.data.node

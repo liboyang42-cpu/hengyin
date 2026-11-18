@@ -349,6 +349,26 @@ const ACTION_VARIANTS = new Map([
       'getLocation-denied': ['not-called'], 'modal-cancelled': ['not-called'],
     },
   }]],
+  // FE-STORY 锁卡「我已到达 / 扫码解锁」:一次点击只发一条到访写 —— GPS 地点走 /arrive,扫码地点(或服务端回 VISIT_SCAN_REQUIRED
+  // 后玩家确认改扫码)走 /checkin。结果未知只回读 /nodes 与原命令回执,不重发;成功后回读 /nodes 拿本章正文。
+  ['pages/play/index.js:onVisitTap', [{
+    id: null, handler: 'onVisitTap',
+    apis: ['/api/play/arrive', '/api/play/checkin', '/api/play/action-context', '/api/play/action-receipt', '/api/play/nodes'],
+    writeApis: ['/api/play/arrive', '/api/play/checkin'], effectClasses: ['write', 'read', 'state'],
+    externalCapabilities: ['getLocation', 'scanCode'],
+    requiredRequests: [{ urlTemplate: '/api/play/arrive', method: 'POST', kind: 'write' }],
+    requiredBranches: ['success', 'error', 'timeout', 'scan-place', 'scan-required', 'duplicate-trigger', 'getLocation-denied', 'modal-cancelled'],
+    requiredRequestsByBranch: {
+      'scan-place': [{ urlTemplate: '/api/play/checkin', method: 'POST', kind: 'write' }],
+      'scan-required': [{ urlTemplate: '/api/play/arrive', method: 'POST', kind: 'write' }, { urlTemplate: '/api/play/checkin', method: 'POST', kind: 'write' }],
+      ...Object.fromEntries(['duplicate-trigger', 'getLocation-denied', 'modal-cancelled']
+        .map(branch => [branch, [{ urlTemplate: '/api/play/arrive', method: 'POST', kind: 'write' }]])),
+    },
+    requiredRequestOutcomes: {
+      success: ['success'], error: ['error'], timeout: ['timeout'], 'scan-place': ['success'], 'scan-required': ['error', 'success'],
+      'duplicate-trigger': ['duplicate-trigger'], 'getLocation-denied': ['not-called'], 'modal-cancelled': ['not-called'],
+    },
+  }]],
   // 身份失效会清除金额，但这三个场景入口仍须验成功与拒绝分支。
   ['subpackageA/components/scene-asset-earnings/index.js:openWithdraw', [
     { id: null, handler: 'openWithdraw', requiredBranches: ['success', 'error'] },

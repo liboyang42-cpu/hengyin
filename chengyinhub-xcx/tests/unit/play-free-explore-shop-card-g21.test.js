@@ -9,12 +9,13 @@ const ROOT = path.resolve(__dirname, '../..')
 const wxml = fs.readFileSync(path.join(ROOT, 'pages/play/index.wxml'), 'utf8')
 const wxss = fs.readFileSync(path.join(ROOT, 'pages/play/index.wxss'), 'utf8')
 
-test('本店权益紧跟店铺,排在玩法与到店三步之前', () => {
+test('本店权益紧跟店铺,排在玩法之前;到店三步说明已删(F08)', () => {
   const shop = wxml.indexOf('<!-- ② 店铺')
   const perk = wxml.indexOf('<!-- ⑤ 本店权益')
   const game = wxml.indexOf('<!-- ③ 游戏')
   const steps = wxml.indexOf('<!-- ④ 到店三步')
-  assert.ok(shop > 0 && perk > shop && perk < game && perk < steps, '权益块应在店铺之后、玩法与三步之前')
+  assert.ok(shop > 0 && perk > shop && perk < game, '权益块应在店铺之后、玩法之前')
+  assert.equal(steps, -1, 'F08:到店三步说明块删掉')
   assert.match(wxml, /fx-perk__n">\{\{hero\.node\.perkName\}\}/)
 })
 

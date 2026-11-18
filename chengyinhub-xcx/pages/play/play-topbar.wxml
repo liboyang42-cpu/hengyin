@@ -41,7 +41,7 @@
     <view class="ks__b">
       <view class="xd" aria-live="polite">
         <view class="xd__c lk-card stq__card {{index === extDeck.idx ? (extDeck.flipping ? 'is-on is-out' : 'is-on') : (extDeck.flipping && index === extDeck.next ? 'is-in' : '')}}" wx:for="{{storyTasks.rows}}" wx:key="nodeId" bindtap="flipExtTask" aria-role="button" aria-label="{{item.name}}，第 {{index + 1}} 张，共 {{storyTasks.rows.length}} 张，轻点翻到下一张" hover-class="xd__c--press" hover-stay-time="80">
-          <view class="xd__cov"><image wx:if="{{item.img}}" class="xd__img" src="{{img.first(item.img)}}" mode="aspectFill" lazy-load="true" /><text wx:else class="xd__no stq__no">{{item.no}}</text></view>
+          <view class="xd__cov"><image wx:if="{{item.img}}" class="xd__img" src="{{img.first(item.img)}}" mode="aspectFill" lazy-load="true" /><cy-station-silhouette wx:elif="{{item.imgHidden}}" class="xd__img" num="{{item.no}}" /><text wx:else class="xd__no stq__no">{{item.no}}</text></view>
           <view class="xd__b"><text class="xd__k">{{index + 1}} / {{storyTasks.rows.length}}</text><text class="xd__t">{{item.name}}</text><text class="xd__p" wx:if="{{item.desc}}">{{item.desc}}</text><view class="xd__i"><view wx:if="{{item.address}}">地点<text>{{item.address}}</text></view></view></view>
           <view class="lk-btn lk-btn--primary xd__go" catchtap="goExtTask" aria-role="button" aria-label="去做 {{item.name}}" hover-class="cy-pressed" hover-stay-time="80">去做</view>
         </view>
