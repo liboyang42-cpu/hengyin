@@ -392,6 +392,8 @@ public class AdvancedGameConfigValidator {
         validateAlbum(root.get("album"),root.path("outcomeRules").path("version").asInt()==1);
         validateNote(root.get("note"));
         validateTypeIn(root.get("typeIn"));
+        // F02 按错答回复:qa(打字)/typeIn/hangman 三段同一形状;写法不能和正确答案或别名重叠。
+        validateWrongReplies(root);
         // 旅程体验模组化:三个阶段共用的三个**可选**顶层字段。缺省 = 老配置,照旧通过,
         // 所以 schemaVersion 保持 1 不升版。这里只查配置形状,**不查键注册表** ——
         // 键有没有被主题注册由发布期对账,运行期只保证每处引用都是合法键名 + 合法 op。
@@ -1496,6 +1498,15 @@ public class AdvancedGameConfigValidator {
     private void validateHintCost(JsonNode cost) {
         if (cost == null || cost.isNull()) return;
         requireObject(cost, "提示代价格式不正确");
+        // F01:运行期 PlayHelpUsagePolicy 只认 points/gems/coins,其余键(如 xp)会让这一层用不了;
+        // 保存时就拒,不能存进去之后运行期才失效。
+        var fields = cost.fieldNames();
+        while (fields.hasNext()) {
+            String field = fields.next();
+            if (!"points".equals(field) && !"gems".equals(field) && !"coins".equals(field)) {
+                throw new IllegalArgumentException("提示代价只支持积分 points，不支持 " + field);
+            }
+        }
         // 与运行期 PlayHelpUsagePolicy 同一口径:只有非零的宝石/金币才是"要扣",零值等价于没配。
         if (nonZeroCost(cost.get("gems")) || nonZeroCost(cost.get("coins"))) {
             throw new IllegalArgumentException("宝石与金币代价没有真实账本,不可配置");
@@ -2107,6 +2118,40 @@ public class AdvancedGameConfigValidator {
             throw new IllegalArgumentException("打字次数须为 0 至 10,0 表示不限");
         }
         validateXp(typeIn, "限时打字");
+    }
+
+    /**
+     * F02 {@code wrongReplies} 保存闸:各段用自己判对时的归一口径检查重叠,不引入模糊匹配。
+     * qa 只在打字模式下有意义(选项题已有逐项 after/fb)。
+     */
+    private void validateWrongReplies(JsonNode root) {
+        JsonNode qa = root.get("qa");
+        if (qa != null && qa.isObject() && qa.has(WrongReplies.FIELD)) {
+            if (!"TYPE".equals(qa.path("mode").asText(""))) {
+                throw new IllegalArgumentException("错答回复只用于打字问答，选项题请在选项上写反馈");
+            }
+            AnswerPolicy policy = AnswerPolicy.of(root.path(AnswerPolicy.FIELD));
+            String answerText = qa.path("answerText").asText("");
+            WrongReplies.validate(qa, "问答",
+                    text -> policy.isEmpty() ? AnswerPolicy.matchesAdvancedType(answerText, text)
+                            : policy.matchesAny(AnswerPolicy.answerTextCandidates(answerText), text),
+                    (a, b) -> AnswerPolicy.legacy().matches(a, b));
+        }
+        JsonNode typeIn = root.get("typeIn");
+        if (typeIn != null && typeIn.isObject() && typeIn.has(WrongReplies.FIELD)) {
+            boolean sensitive = typeIn.path("caseSensitive").asBoolean(false);
+            String target = typeIn.path("target").asText("");
+            WrongReplies.Matcher matcher = sensitive ? AnswerNormalizer::equivalentKeepCase : AnswerNormalizer::equivalent;
+            WrongReplies.validate(typeIn, "限时打字",
+                    text -> (sensitive ? text.equals(target) : text.equalsIgnoreCase(target)) || matcher.same(target, text),
+                    matcher);
+        }
+        JsonNode hangman = root.get("hangman");
+        if (hangman != null && hangman.isObject() && hangman.has(WrongReplies.FIELD)) {
+            boolean sensitive = hangman.path("caseSensitive").asBoolean(false);
+            WrongReplies.validate(hangman, "逐字猜词", text -> HangmanGameplay.acceptsWord(hangman, text),
+                    sensitive ? AnswerNormalizer::equivalentKeepCase : AnswerNormalizer::equivalent);
+        }
     }
 
     // ==================== 旅程体验模组化:requires / effects / check ====================

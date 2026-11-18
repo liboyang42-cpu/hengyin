@@ -140,7 +140,7 @@
   bind:verdict="onVerdict" bind:close="onClose" />
 
 <cy-playkit-hangman wx:elif="{{kit.type === 'hangman'}}" inline="{{inline}}"
-  show="{{show}}" title="{{kit.title}}" slots="{{kit.slots}}" solved="{{kit.solved}}" display="{{kit.display}}" feedback="{{kit.feedback}}"
+  show="{{show}}" title="{{kit.title}}" slots="{{kit.slots}}" solved="{{kit.solved}}" display="{{kit.display}}" feedback="{{kit.feedback}}" wrong-feedback="{{kit.wrongFeedback}}"
   input-mode="{{kit.inputMode}}" pool="{{kit.pool}}"
   bind:submit="onSubmit" bind:close="onClose" bind:continue="onContinue" />
 
@@ -246,7 +246,7 @@
 <cy-playkit-typein wx:elif="{{kit.type === 'typein'}}"
   show="{{show}}" title="{{kit.title}}" target="{{kit.target}}" seconds="{{kit.seconds}}"
   r5="{{kit.r5}}" deadline-at="{{kit.deadlineAt}}"
-  case-sensitive="{{kit.caseSensitive}}" tries="{{kit.tries}}" attempts="{{kit.attempts}}"
+  case-sensitive="{{kit.caseSensitive}}" tries="{{kit.tries}}" attempts="{{kit.attempts}}" wrong-feedback="{{kit.wrongFeedback}}"
   passed="{{kit.passed}}" terminal-skin="{{kit.terminalSkin}}" start-confirmed="{{kit.startConfirmed}}" start-failure-seq="{{kit.startFailureSeq}}"
   bind:start="onStart" bind:submit="onSubmit" bind:refresh="onRefresh" bind:close="onClose" />
 

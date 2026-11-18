@@ -107,6 +107,24 @@ public final class HangmanGameplay {
         LetterPoolSupport.validateHangman(section, blanks.toString(), aliasesForPool, sensitive);
     }
 
+    /** F02 错答回复的保存闸用:这个整词会不会被判成答对(答案或别名,与 {@link #judge} 同一比较)。 */
+    public static boolean acceptsWord(JsonNode section, String word) {
+        if (!enabled(section) || word == null || word.trim().isEmpty()) return false;
+        Layout layout = layout(section);
+        return keyMatches(word.trim().codePoints().toArray(), layout.cps, caseSensitive(section), section);
+    }
+
+    /** F02:本局状态里玩家最近一次补齐后的整词(预填 + 补入);没补齐返回空串。 */
+    public static String filledWord(JsonNode section, JsonNode kitState) {
+        if (!enabled(section)) return "";
+        Layout layout = layout(section);
+        Map<Integer, String> filled = filledFrom(kitState);
+        for (int i = 0; i < layout.cps.length; i++) {
+            if (!layout.isFixed(i) && !filled.containsKey(i)) return "";
+        }
+        return reconstruct(layout, filled);
+    }
+
     /**
      * 模板详情等「整实体下发」出口的白名单摘要：只给开局就该公开的形状，不含答案、别名与预填字符
      * （预填字符本身就是答案的一部分）。

@@ -379,7 +379,7 @@
     },
     "cost": {
      "type": "object",
-     "additionalProperties": true,
+     "additionalProperties": false,
      "description": "只认已有真实账本的类型：本树只有积分 ums_member_points_detail。",
      "properties": {
       "points": {
@@ -395,7 +395,7 @@
        "description": "无真实账本；非零保存期拒绝、运行期该层不可用。"
       }
      },
-     "x-cy-gap": "保存闸只检查 points/gems/coins；未知代价键（如 xp）保存期通过，但运行期 PlayHelpUsagePolicy.parseCost 会判为该层配置无效。"
+     "x-cy-historical": "F01（2026-11-18）起未知代价键（如 xp）保存期直接拒绝；提示统一 points:0，惩罚只体现在本题得分。"
     },
     "freeQuota": {
      "const": 0,
@@ -477,6 +477,9 @@
      "type": "boolean",
      "default": true,
      "description": "F03 每局按本局种子固定打乱下发顺序；false = 作者顺序。"
+    },
+    "wrongReplies": {
+     "$ref": "#/$defs/wrongReplies"
     }
    }
   },
@@ -2585,6 +2588,10 @@
        "default": true
       }
      }
+    },
+    "wrongReplies": {
+     "$ref": "#/$defs/wrongReplies",
+     "description": "只用于 mode=TYPE；选项题用 options[].fb/after。"
     }
    }
   },
@@ -3305,6 +3312,9 @@
      "minimum": 0,
      "maximum": 1000,
      "description": "段内奖励分上限 1000（validateXp）。"
+    },
+    "wrongReplies": {
+     "$ref": "#/$defs/wrongReplies"
     }
    }
   },
@@ -3665,6 +3675,45 @@
      "minimum": 0,
      "maximum": 1000,
      "description": "段内奖励分上限 1000（validateXp）。"
+    }
+   }
+  },
+  "wrongReplies": {
+   "type": "array",
+   "maxItems": 20,
+   "description": "F02 按错答回复（解谜赛中间答案表）。只留服务端；判错命中某条写法时回那一条 reply，没命中回 outcomeRules.fail.reply。次数、得分、奖励不变。投影不下发错答表，只下发判错后的 lastFeedback。",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "match",
+     "reply"
+    ],
+    "properties": {
+     "match": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 10,
+      "items": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 200
+      },
+      "description": "按该玩法判对的同一归一口径比较（qa TYPE：LEGACY_V1；typeIn/hangman：AnswerNormalizer），不做模糊匹配。不能与正确答案或别名重叠，同一写法不能出现在两条里。"
+     },
+     "reply": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+     },
+     "images": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+       "type": "string",
+       "maxLength": 512
+      }
+     }
     }
    }
   }

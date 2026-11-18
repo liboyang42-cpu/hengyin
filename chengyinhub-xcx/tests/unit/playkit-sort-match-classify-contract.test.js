@@ -239,13 +239,15 @@ test('★qa 多选:勾多个再提交,发的是 optionIds 全集', () => {
   if (inst._introTimer) clearTimeout(inst._introTimer)
 })
 
-test('★qa 单选一字不变:点选项即提交,仍然是单个 optionId', () => {
+test('★qa 单选:先选、确认才提交(F04),仍然是单个 optionId', () => {
   const { def, inst, events } = mount('pages/play/components/playkit-qa/index.js')
   Object.assign(inst.data, { show: true, mode: 'pick', multi: false, sessionId: 'qa-single', nodeId: '22' })
   def.observers['show, options, mode, multi, passed, finished, judge, lastOptionId, lastOptionIds, feedbackText, feedbackImages, sessionId, nodeId'].call(inst, true,
     [{ id: 'a', t: '冷萃' }, { id: 'b', t: '拿铁' }], 'pick', false, false, false)
   inst.data.multi = false
   inst.onPick({ currentTarget: { dataset: { i: 1 } } })
+  assert.equal(events.length, 0)
+  inst.onCta()
   assert.deepEqual(plain(events[0]), { name: 'submit', detail: { mode: 'pick', index: 1, optionId: 'b' } })
   if (inst._introTimer) clearTimeout(inst._introTimer)
 })

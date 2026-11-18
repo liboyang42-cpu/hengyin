@@ -1613,4 +1613,53 @@ class AdvancedGameConfigValidatorTest {
         assertNull(v.outcomeRulesMissingReason("{\"schemaVersion\":1,\"coinFlip\":{\"enabled\":true,\"heads\":{\"label\":\"正面\",\"action\":\"a\"},\"tails\":{\"label\":\"反面\",\"action\":\"b\"}}}", false));
         assertNull(v.outcomeRulesMissingReason("", false));
     }
+    // ==================== F02 wrongReplies 保存闸 ====================
+
+    private static String qaWithWrong(String rows) {
+        return "{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"title\":\"示例站点\","
+                + "\"answerText\":\"ABC、甲乙丙\",\"wrongReplies\":" + rows + "}}";
+    }
+
+    @Test
+    void wrongRepliesAreSavedWhenTheyDoNotOverlapTheAnswer() throws Exception {
+        String saved = validator.validateAndNormalize(qaWithWrong("[{\"match\":[\"ABD\",\"甲乙\"],\"reply\":\"接近了\"}]"));
+        assertEquals("接近了", objectMapper.readTree(saved).path("qa").path("wrongReplies").get(0).path("reply").asText());
+    }
+
+    @Test
+    void wrongReplyMatchingTheAnswerOrAnAliasIsRejected() {
+        IllegalArgumentException answer = assertThrows(IllegalArgumentException.class,
+                () -> validator.validateAndNormalize(qaWithWrong("[{\"match\":[\"abc\"],\"reply\":\"x\"}]")));
+        assertTrue(answer.getMessage().contains("重叠"));
+        assertThrows(IllegalArgumentException.class,
+                () -> validator.validateAndNormalize(qaWithWrong("[{\"match\":[\"甲乙丙\"],\"reply\":\"x\"}]")));
+        String aliased = "{\"schemaVersion\":1,\"answerPolicy\":{\"version\":1,\"acceptedAliases\":[\"XYZ\"]},"
+                + "\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"title\":\"示例站点\",\"answerText\":\"ABC\","
+                + "\"wrongReplies\":[{\"match\":[\"xyz\"],\"reply\":\"x\"}]}}";
+        assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize(aliased));
+    }
+
+    @Test
+    void wrongReplyShapeLimitsAreEnforced() {
+        assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize(
+                qaWithWrong("[{\"match\":[\"ABD\"],\"reply\":\"a\"},{\"match\":[\"abd\"],\"reply\":\"b\"}]")),
+                "同一写法不能出现在两条里");
+        assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize(
+                qaWithWrong("[{\"match\":[],\"reply\":\"a\"}]")));
+        assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize(
+                qaWithWrong("[{\"match\":[\"ABD\"],\"reply\":\"" + "长".repeat(501) + "\"}]")));
+        StringBuilder many = new StringBuilder("[");
+        for (int i = 0; i < 21; i++) many.append(i == 0 ? "" : ",").append("{\"match\":[\"W").append(i).append("\"],\"reply\":\"r\"}");
+        assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize(qaWithWrong(many.append("]").toString())));
+    }
+
+    @Test
+    void hangmanAndTypeInWrongRepliesCannotSwallowTheAnswer() {
+        String hangman = "{\"schemaVersion\":1,\"hangman\":{\"enabled\":true,\"answer\":\"ABC\",\"aliases\":[\"ABCD\"],"
+                + "\"wrongReplies\":[{\"match\":[\"abcd\"],\"reply\":\"x\"}]}}";
+        assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize(hangman));
+        String typeIn = "{\"schemaVersion\":1,\"typeIn\":{\"enabled\":true,\"title\":\"t\",\"target\":\"ABC\",\"seconds\":30,"
+                + "\"wrongReplies\":[{\"match\":[\"ａｂｃ\"],\"reply\":\"x\"}]}}";
+        assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize(typeIn));
+    }
 }

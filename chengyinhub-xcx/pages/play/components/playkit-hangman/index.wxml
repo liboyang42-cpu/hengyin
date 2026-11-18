@@ -33,7 +33,7 @@
                   hover-class="{{item.used ? '' : 'lp__press'}}" hover-stay-time="80">{{item.ch}}</view>
           </view>
         </view>
-        <view class="hm__err {{verdict === 'no' ? 'is-show' : ''}}" aria-live="polite">{{verdict === 'no' ? '不对，再想想' : ''}}</view>
+        <view class="hm__err {{verdict === 'no' ? 'is-show' : ''}}" aria-live="polite">{{verdict === 'no' ? (wrongFeedback || '还不对，再看看题面') : ''}}</view>
         <view class="lp__clear {{canClear ? '' : 'is-off'}}" bindtap="onClearPool"
               aria-role="button" aria-label="清空" aria-disabled="{{!canClear}}" hover-class="{{canClear ? 'lp__press' : ''}}" hover-stay-time="80">清空</view>
       </block>
@@ -42,7 +42,7 @@
         <input class="hm__in {{verdict === 'no' ? 'is-wrong' : ''}}" value="{{typedText}}" focus="{{focused}}" cursor="{{cursor}}" maxlength="{{blankCount}}"
                bindinput="onInput" bindfocus="onFocus" bindblur="onBlur" confirm-type="done" bindconfirm="onSubmit"
                placeholder="点格子，用系统键盘输入" placeholder-class="hm__ph" aria-label="逐字猜词输入框" />
-        <view class="hm__err {{verdict === 'no' ? 'is-show' : ''}}" aria-live="polite">{{verdict === 'no' ? '不对，再想想' : ''}}</view>
+        <view class="hm__err {{verdict === 'no' ? 'is-show' : ''}}" aria-live="polite">{{verdict === 'no' ? (wrongFeedback || '还不对，再看看题面') : ''}}</view>
       </block>
 
       <view class="hm__fb" wx:if="{{solved}}" aria-live="polite">{{display}}</view>

@@ -48,7 +48,8 @@
       </block>
       <block wx:elif="{{mode === 'type'}}">
         <input class="qa__input {{typeWrong ? 'qa__input--wrong' : ''}}" value="{{typed}}" bindinput="onInput" confirm-type="done"
-               disabled="{{passed || finished}}"
+               disabled="{{passed || finished}}" focus="{{typeWrong && selectAll > 0}}"
+               selection-start="{{typeWrong && selectAll > 0 ? 0 : -1}}" selection-end="{{typeWrong && selectAll > 0 ? selectAll : -1}}"
                placeholder="在这里作答" placeholder-class="qa__ph" bindconfirm="onSubmitText" />
       </block>
 
@@ -59,7 +60,7 @@
         <view class="qa__pic {{item.state}}"
               wx:for="{{optionList}}" wx:key="k"
               data-i="{{index}}" bindtap="onPick"
-              aria-disabled="{{finished || passed || submitted}}" aria-role="button" aria-label="选项 {{item.key}}:{{item.t}}{{item.alt && item.alt !== item.t ? '，' + item.alt : ''}}"
+              aria-disabled="{{finished || passed || submitted}}" aria-selected="{{item.state === 'is-on'}}" aria-role="button" aria-label="选项 {{item.key}}:{{item.t}}{{item.alt && item.alt !== item.t ? '，' + item.alt : ''}}"
               hover-class="qa__press" hover-stay-time="80">
           <image wx:if="{{item.img}}" class="qa__pic-img" src="{{item.img}}" mode="aspectFill" aria-hidden="true" binderror="onOptionImgError" data-i="{{index}}" />
           <view wx:else class="qa__pic-img qa__pic-img--none" aria-hidden="true">{{item.key}}</view>
@@ -74,7 +75,7 @@
         <view class="qa__opt {{item.state}} {{index === 0 ? 'qa__opt--first' : ''}}"
               wx:for="{{optionList}}" wx:key="k"
               data-i="{{index}}" bindtap="onPick"
-              aria-disabled="{{finished || passed || submitted}}" aria-role="button" aria-label="选项 {{item.key}}:{{item.t}}{{item.alt && item.alt !== item.t ? '，' + item.alt : ''}}"
+              aria-disabled="{{finished || passed || submitted}}" aria-selected="{{item.state === 'is-on'}}" aria-role="button" aria-label="选项 {{item.key}}:{{item.t}}{{item.alt && item.alt !== item.t ? '，' + item.alt : ''}}"
               hover-class="qa__press" hover-stay-time="80">
           <view class="qa__opt-main pe pe--left" style="--pe-d:1.05s;--pe-i:{{index}}">
             <view class="qa__opt-k">{{item.key}}</view>
@@ -112,7 +113,7 @@
   </view>
 
   <!-- 故事流内嵌且已答对:下面就是「继续故事」,这里不再叠一枚同义的「继续」(实走复核:两枚白按钮上下摞着) -->
-  <view wx:if="{{!(inline && (passed || finished || ctaLabel === '继续')) && !(mode === 'pick' && !multi && judge !== false && !passed && ctaLabel !== '重拍')}}" class="g-btn {{ctaDisabled ? 'g-btn--disabled' : ''}} {{intro ? 'qa__cta--hold' : ''}} {{burning ? 'qa__cta--burn' : ''}}"
+  <view wx:if="{{!(inline && (passed || finished || ctaLabel === '继续'))}}" class="g-btn {{ctaDisabled ? 'g-btn--disabled' : ''}} {{intro ? 'qa__cta--hold' : ''}} {{burning ? 'qa__cta--burn' : ''}}"
         bindtap="onCta"
         aria-role="button" aria-label="{{ctaLabel}}" hover-class="g-btn--press" hover-stay-time="80">
     {{ctaLabel}}

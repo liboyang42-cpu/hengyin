@@ -15,9 +15,9 @@
     </view>
 
     <view class="br__opts" wx:if="{{!isEnd}}">
-      <view class="br__opt {{index === 0 ? 'br__opt--first' : ''}} {{picked === index ? 'is-on' : (picked >= 0 || !writable ? 'is-off' : '')}} pe pe--right" style="--pe-d:.75s;--pe-s:.12s;--pe-i:{{index}}"
+      <view class="br__opt {{index === 0 ? 'br__opt--first' : ''}} {{picked === index || (picked < 0 && chosen === index) ? 'is-on' : (picked >= 0 || !writable ? 'is-off' : '')}} pe pe--right" style="--pe-d:.75s;--pe-s:.12s;--pe-i:{{index}}"
             wx:for="{{options}}" wx:key="k" data-i="{{index}}" bindtap="onPick"
-            aria-role="button" aria-label="{{item.t}}" aria-disabled="{{!writable || picked >= 0}}"
+            aria-role="button" aria-label="{{item.t}}" aria-selected="{{chosen === index}}" aria-disabled="{{!writable || picked >= 0}}"
             hover-class="br__press" hover-stay-time="80">
         <view class="br__k">{{index + 1}}</view>
         <view class="br__t">{{item.t}}</view>
@@ -28,4 +28,8 @@
     <!-- 走到终点:这一段就是结局本身,正文已经在上面。判定屏由台面出 -->
     <view class="br__end" wx:if="{{isEnd}}">结局</view>
   </view>
+
+  <!-- F04:先选、可以换,按这里才算 -->
+  <view class="g-btn {{chosen < 0 || picked >= 0 || !writable ? 'g-btn--disabled' : ''}}" wx:if="{{!isEnd && options.length > 1}}" bindtap="onConfirm"
+        aria-role="button" aria-label="确认选择" aria-disabled="{{chosen < 0 || picked >= 0 || !writable}}" hover-class="g-btn--press" hover-stay-time="80">确认选择</view>
 </cy-play-stage>

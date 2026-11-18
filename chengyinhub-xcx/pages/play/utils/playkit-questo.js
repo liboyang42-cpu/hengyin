@@ -57,6 +57,8 @@ function hangmanKit(seg) {
     // F03 字母池:只有服务端说 pool 才走候选字;pool 是本局已打乱、已去掉提示移除的干扰字的候选字(可重复)
     inputMode: s.inputMode === 'pool' ? 'pool' : 'keyboard',
     pool: s.inputMode === 'pool' && Array.isArray(s.pool) ? s.pool.filter((c) => typeof c === 'string' && c !== '') : [],
+    // F02:没解开时服务端回的那句话(错答表命中那条或通用错答);没有就由组件兜底
+    wrongFeedback: s.solved !== true && typeof s.lastFeedback === 'string' ? s.lastFeedback : '',
   };
 }
 

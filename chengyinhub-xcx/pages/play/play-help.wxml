@@ -24,12 +24,6 @@
         </view>
       </view>
     </view>
-    <view class="tb-group" wx:if="{{helpPanel.skip || helpPanel.skipPending}}">
-      <view class="tb-row phl__row" bindtap="tapHelpSkip" aria-role="button" aria-label="跳过本题" hover-class="cy-pressed" hover-stay-time="80">
-        <view class="tb-copy"><text class="tb-name phl__danger">跳过本题</text></view>
-        <text class="ptb__r">{{helpPanel.skipPending ? '继续核对' : ''}}</text>
-      </view>
-    </view>
     <text class="phl__err" wx:if="{{helpPanel.notice}}">{{helpPanel.notice}}</text>
     <view class="tb-group">
       <view class="tb-row phl__row" bindtap="toggleHelpReceipt" aria-role="button" aria-label="分数明细" hover-class="cy-pressed" hover-stay-time="80">
@@ -40,6 +34,13 @@
         <view class="tb-row" wx:for="{{helpPanel.receipt.lines}}" wx:key="k"><view class="tb-copy"><text class="tb-purpose">{{item.k}}</text></view><text class="ptb__r">{{item.v}}</text></view>
         <view class="tb-row" wx:if="{{helpPanel.receiptError}}"><text class="tb-purpose">{{helpPanel.receiptError}}</text></view>
       </block>
+    </view>
+    <!-- F01:提示按第 1 级、第 2 级、答案排在上面;跳过单独放在最底下一行 -->
+    <view class="tb-group" wx:if="{{helpPanel.skip || helpPanel.skipPending}}">
+      <view class="tb-row phl__row" bindtap="tapHelpSkip" aria-role="button" aria-label="跳过，继续剧情" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="tb-copy"><text class="tb-name phl__danger">跳过，继续剧情</text></view>
+        <text class="ptb__r">{{helpPanel.skipPending ? '继续核对' : ''}}</text>
+      </view>
     </view>
   </view>
   </scroll-view>

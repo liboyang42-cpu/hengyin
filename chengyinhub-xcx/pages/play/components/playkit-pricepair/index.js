@@ -50,12 +50,15 @@ Component({
     // 同 playkit-qa:派生数据换键名,别写回被监听的 items —— 那会自触发死循环
     posters: [],
     revealed: false,
+    // F04:确认前选中的那一张(可以换);submitted = 已确认、等服务端判
+    chosen: -1,
+    submitted: false,
   },
   observers: {
     'show, items, attempts, finished, passed, lastPickId, answerId': function (show, items) {
       if (!show) return;
       const d = this.data;
-      this.setData({ posters: paint(items).map(it => {
+      this.setData({ chosen: -1, submitted: false, posters: paint(items).map(it => {
         if (it.id === d.lastPickId) return Object.assign(it, d.passed ? { state: 'is-right', mark: '就是它' } : { state: 'is-wrong', mark: '不是' });
         if (d.finished && it.id === d.answerId) return Object.assign(it, { state: 'is-right', mark: '正确答案' });
         return it;
@@ -69,13 +72,23 @@ Component({
     _tints: () => TINTS.slice(),
     _inkOn: inkOn,
 
+    /* F04:点海报只是选中,确认前可以换;按「确认选择」才交。 */
     onPick(e) {
-      if (this.data.revealed) return;
+      if (this.data.revealed || this.data.submitted) return;
       const i = Number(e.currentTarget.dataset.i);
+      if (!this.data.posters[i]) return;
+      motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' });
+      this.setData({ chosen: i });
+    },
+    onConfirm() {
+      if (this.data.revealed || this.data.submitted) return;
+      const i = this.data.chosen;
+      const poster = this.data.posters[i];
+      if (!poster) return;
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
+      this.setData({ submitted: true });
       /* 带上这张海报自己的 id:服务端按 id 判「是不是当前这一对里的」,
          下标在服务端那边没有意义(它手里的顺序不一定是屏上这个)。 */
-      const poster = this.data.posters[i] || {};
       this.triggerEvent('submit', { index: i, pickId: poster.id });
     },
 
@@ -96,6 +109,7 @@ Component({
       if (stage && stage.nudge) stage.nudge();   // 答错整块台面抖一下(原型 .phone.shake)
       this.setData({
         revealed: exhausted,
+        chosen: -1, submitted: false,
         posters: this.data.posters.map((it, i) => Object.assign({}, it,
           i === d.index ? { state: 'is-wrong', mark: '不是' } : it)),
       });

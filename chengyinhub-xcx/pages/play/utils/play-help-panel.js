@@ -6,7 +6,8 @@
 // ★ 每层三态:免费 / 消耗 N 积分 / 不可用;已解锁的层是「重看」,不弹扣费确认。
 // ★ 本局剩余免费次数只显示服务端 remainingFreeUses;没下发就不显示计数器(未知不是 0)。
 // ★ 使用与跳过都带 requestId,发出前先落盘;结果未知时「继续核对」用同一个号(服务端只回放原结果),永不换号。
-// ★ 跳过只在服务端给出可用的 SKIP 层时出现;确认写明「本题记 0 分并标辅助完成」,成功不放庆祝动画。
+// ★ 跳过只在服务端给出可用的 SKIP 层时出现,单独放在面板最底下一行;确认写明「这一关记 0 分」,成功不放庆祝动画。
+// ★ F01 逐级:服务端也拒越级(LEVEL_OUT_OF_ORDER),这里置灰只是提前告诉玩家;跳过不受顺序限制。
 // ★ 分数明细只搬服务端 helpReceipt;NOT_SCORED 显示「本题不计分」,绝不写 0 分;积分与解谜分分开列。
 const { id } = require('../../../utils/orient-score-view.js');
 const modal = require('../../../utils/modal.js');
@@ -15,7 +16,7 @@ const morph = require('../../../utils/morph-success.js');
 const BASE = '/api/play/help';
 const PENDING_KEY = 'play-help-pending:v1';
 // POOL_TRIM(F03 字母池):去掉 N 个干扰字;回包 content 是一句文字(如「已去掉 3 个干扰字」),候选字要重读会话视图才少。
-const TYPE_LABEL = { TEXT: '文字提示', IMAGE: '图片提示', LETTER: '首字', DIGIT: '一个数字', ANSWER: '答案', SKIP: '跳过本题', POOL_TRIM: '去掉干扰字' };
+const TYPE_LABEL = { TEXT: '文字提示', IMAGE: '图片提示', LETTER: '首字', DIGIT: '一个数字', ANSWER: '答案', SKIP: '跳过，继续剧情', POOL_TRIM: '去掉干扰字' };
 const RENDERABLE = ['TEXT', 'IMAGE', 'LETTER', 'DIGIT', 'ANSWER', 'POOL_TRIM'];
 
 const data = { helpPanel: { show: false, loading: false, enabled: false, error: '', nodeId: '', runId: '',
@@ -238,7 +239,7 @@ function methods(send) {
       if (!panelState.skip || panelState.busy) return;
       if (panelState.skipPending) return this._helpSkip();
       const c = this._helpCapture();
-      modal.show({ title: '跳过本题', content: '本题记 0 分并标辅助完成', confirmText: '跳过', confirmColor: '#E5484D', /* ds-ok: 上线波次原型逐值(装饰 / 品牌色块) */
+      modal.show({ title: '跳过这一关', content: '这一关记 0 分', confirmText: '跳过', confirmColor: '#E5484D', /* ds-ok: 上线波次原型逐值(装饰 / 品牌色块) */
         success: res => { if (res.confirm && this._helpCurrent(c)) this._helpSkip(); } });
     },
     _helpSkip() {

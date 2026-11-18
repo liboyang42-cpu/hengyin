@@ -19,6 +19,8 @@ Component({
   data: {
     stepIcons: stepIcons('blindtaste'),
     stage: 0,           // 0 领小样 · 1 闭眼尝 · 2 作答
+    chosenKey: '',      // F04 确认前选中的那一条(可以换)
+    answering: false,   // F04 已确认、等服务端回执
     eyes: 'open',       // open | closed | peek
     count: TASTE_SECONDS,
     breathIn: false,
@@ -45,7 +47,7 @@ Component({
       const stage = startStage(selectedKey, locked);
       if (stage === 2 || this._shownOnce !== true) {
         this._shownOnce = true;
-        this.setData({ stage, eyes: 'open', opened: stage === 2 });
+        this.setData({ stage, eyes: 'open', opened: stage === 2, chosenKey: '', answering: false });
         if (stage === 0) this._liftCups();
       }
     },
@@ -104,12 +106,20 @@ Component({
       if (this._released && Date.now() - this._released < 500) return;
       if (this.data.eyes === 'closed') this.onEyesOpen(); else this.onEyesClose();
     },
+    /* F04:点一条只是选中,确认前可以换;按「确认选择」才作答(作答不可撤销)。 */
     onPick(e) {
-      if (this.data.locked || this.data.selectedKey || this.data.stage !== 2) return;
+      if (this.data.locked || this.data.selectedKey || this.data.stage !== 2 || this.data.answering) return;
       const key = e.currentTarget.dataset.key;
       if (!key) return;
-      // 作答不可撤销(选中即提交,没有提交按钮)→ medium。
+      motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' });
+      this.setData({ chosenKey: key });
+    },
+    onConfirm() {
+      if (this.data.locked || this.data.selectedKey || this.data.stage !== 2 || this.data.answering) return;
+      const key = this.data.chosenKey;
+      if (!key) return;
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
+      this.setData({ answering: true });
       this.triggerEvent('answer', { key });
     },
     onClose() { this.triggerEvent('close'); },

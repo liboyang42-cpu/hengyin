@@ -4,7 +4,9 @@
 // 反馈、限时、次数、判定屏全是一样的 —— 铺成三个组件的话,同一处改动要改三遍。
 //
 // 三条规则不是随手定的:
-//   · **答错清空输入框**。留着错答案,人得先自己删一遍才能再试;
+//   · **答错保留输入并全选**(F02)。玩家多半只差一两个字,直接改比重打省事;服务端按错答表回一句话,
+//     显示在输入框下方,没有回复才用兜底句;
+//   · **单选先选、可以换、按「确认」才提交**(F04,照 Duolingo)。确认后才锁定;
 //   · **次数按「选项数 - 1」封顶**。三个选项给三次错等于白给 —— 错满两次之后
 //     剩下的那个必然是答案,第三次不是机会是走过场;
 //   · **答错不算通关**。次数用完就是失败,不给「差不多也算」。
@@ -29,8 +31,8 @@ const KEYS = ['A', 'B', 'C', 'D'];
 const HEAD_OK = '答对了';
 const HEAD_NO = '再想想';
 const HEAD_SHOT = '拍好了';   // 第十二轮 k7 F16:拍照打卡没有对错,交了照片不说「答对了」
-/* 打字题答错的固定说法(原型写死这一句)。服务端给了话就用服务端的 */
-const RETRY_TEXT = '不对。把它清掉，再试一次。';
+/* 打字题答错的兜底说法(与服务端通用错答同一句,句末不带句号)。服务端给了话就用服务端的 */
+const RETRY_TEXT = '还不对，再看看题面';
 /* 一进来题目占满一屏,一秒后选项才淡进来 */
 const INTRO_MS = 1000;
 
@@ -110,6 +112,8 @@ Component({
     optionList: [],
     picGrid: false,
     typed: '',
+    /* F02 答错后全选高亮保留的输入(input selection-end);-1 = 不选 */
+    selectAll: -1,
     typeWrong: false,
     playing: false,
     feedback: '',
@@ -132,14 +136,15 @@ Component({
       if (value && this.data.poolOn && this.data.passed) this._syncQaPool();
     },
     /* P-10:故事流里的打字题,页面不调 settle(),判过只回流 attempts / feedbackText。
-       次数涨了且仍没过 = 刚答错:清掉输入框、描红、写一句;首次挂载(_seenTypeAttempts 未定)不算。 */
+       次数涨了且仍没过 = 刚答错:保留输入并全选、描红、写一句(F02);首次挂载(_seenTypeAttempts 未定)不算。 */
     attempts: function (value) {
       const now = Number(value) || 0;
       const seen = this._seenTypeAttempts;
       this._seenTypeAttempts = now;
       if (seen == null || now <= seen) return;
       if (this.data.mode !== 'type' || this.data.passed || this.data.finished) return;
-      this.setData({ typed: '', typeWrong: true, ctaDisabled: true, fbHead: HEAD_NO, feedback: this.data.feedbackText || (this.data.authoredOutcome === 'FAIL' ? '' : RETRY_TEXT) });
+      const kept = String(this.data.typed || this._submittedText || '');
+      this.setData({ typed: kept, typeWrong: true, selectAll: kept.length, ctaDisabled: !kept.trim(), fbHead: HEAD_NO, feedback: this.data.feedbackText || (this.data.authoredOutcome === 'FAIL' ? '' : RETRY_TEXT) });
       if (this.data.poolOn) this._paintQaPool();   // 字符池:已放的字不清,按钮按「填满没有」重新亮
     },
     /* F03:服务端重读后候选字变了(提示去掉了干扰字)→ 对一遍已放的字 */
@@ -151,8 +156,11 @@ Component({
       this.setData({ feedback: '' });
     },
     failureSeq: function (value) {
-      if (!value || this.data.finished || this.data.passed || this.data.judge !== false) return;
-      this.setData({ submitted: false, ctaDisabled: !this.data.optionList.some(o => o.state === 'is-on') });
+      const singlePick = this.data.mode === 'pick' && !this.data.multi;
+      if (!value || this.data.finished || this.data.passed || (this.data.judge !== false && !singlePick)) return;
+      // F04 网络失败:选中状态保留,主按钮变成「重试」
+      const any = this.data.optionList.some(o => o.state === 'is-on');
+      this.setData({ submitted: false, ctaDisabled: !any, ctaLabel: any ? '重试' : this.data.ctaLabel });
     },
     'show, options, mode, multi, passed, finished, judge, lastOptionId, lastOptionIds, feedbackText, feedbackImages, sessionId, nodeId': function (show, options, mode, multi, passed, finished) {
       if (this._qaDisposed) return;
@@ -180,15 +188,17 @@ Component({
           state: isAnswer ? 'is-right' : (isChosen ? (answers.length ? 'is-wrong' : 'is-on') : ''),
         });
       });
-      const confirmPick = mode === 'pick' && this.data.judge === false;
-      const isMultiPick = mode === 'pick' && !!multi && !confirmPick;
+      /* F04:单选(判不判对错都一样)先选、可以换,按「确认选择」才提交;多选仍是勾选 + 提交 */
+      const confirmPick = mode === 'pick' && (this.data.judge === false || !multi);
+      const isMultiPick = mode === 'pick' && !!multi && this.data.judge !== false;
       this.setData({
         optionList: opts,
         /* r2 b2-ug-02:有选项配图时改成图卡网格(图在上、字在下),纯文字题仍是细线行 */
         picGrid: mode === 'pick' && opts.some(o => !!o.img),
         /* P-10:打字题答错时服务端常不带反馈文案,原来整块反馈不渲染 = 玩家看不出判过了。
            没有文案就写一句固定的「不对」,输入框描红,下一次输入即清。 */
-        typed: passed ? (this.data.acceptedInput || (!fresh && (this._submittedText || this.data.typed)) || '') : '', feedback: (passed || finished || this.data.attempts > 0)
+        typed: passed ? (this.data.acceptedInput || (!fresh && (this._submittedText || this.data.typed)) || '')
+          : ((!fresh && (this.data.typed || this._submittedText)) || ''), feedback: (passed || finished || this.data.attempts > 0)
           ? (this.data.feedbackText || (mode === 'type' && !passed && !finished && this.data.attempts > 0 && this.data.authoredOutcome !== 'FAIL' ? RETRY_TEXT : '')) : '',
         typeWrong: mode === 'type' && !passed && !finished && this.data.attempts > 0,
         shownFeedbackImages: (passed || finished || this.data.attempts > 0)
@@ -199,7 +209,8 @@ Component({
         triesCap: this.data.judge === false || finished ? 0 : cappedTries(this.data.maxTries, opts.length),
         ctaLabel: passed ? '继续' : (confirmPick ? '确认选择' : (mode === 'shot' ? '拍一张' : '提交')),
         // 多选一进来一个都没勾,按钮就得是灰的 —— 亮着一颗按不动的按钮比灰着更糟
-        ctaDisabled: !passed && (finished || mode === 'type' || isMultiPick || confirmPick),
+        ctaDisabled: !passed && (finished || (mode === 'type' && !String(this.data.typed || '').trim() && !(!fresh && this._submittedText))
+          || isMultiPick || confirmPick),
       });
       this._syncQaPool(fresh);
       const stage = this.selectComponent('#cy-play-stage');
@@ -318,7 +329,7 @@ Component({
     onInput(e) {
       if (this.data.passed || this.data.finished || this.data.submitted) return;
       const typed = String(e.detail.value || '');
-      this.setData({ typed, typeWrong: false, ctaDisabled: !typed.trim() });
+      this.setData({ typed, typeWrong: false, selectAll: -1, ctaDisabled: !typed.trim() });
     },   // P-10:下一次输入即清掉描红
     onToggleAudio() {
       this.setData({ playing: !this.data.playing });
@@ -337,6 +348,17 @@ Component({
         });
         return;
       }
+      /* F04 单选(判对错):点选项只是选中,可以随便换;按「确认选择」才提交。上一次答错标的红保留,
+         让玩家看得见哪条已经试过。 */
+      if (this.data.mode === 'pick' && !this.data.multi) {
+        motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' });
+        this.setData({
+          optionList: this.data.optionList.map((o, at) => Object.assign({}, o, {
+            state: at === i ? 'is-on' : (o.state === 'is-on' || o.state === 'is-dim' ? '' : o.state) })),
+          ctaDisabled: false,
+        });
+        return;
+      }
       /* 多选:点一下只是勾上/取消,提交走底部那颗按钮 —— 只报一个 id 会被服务端
          当成单选读,而多选要的是 optionIds 全集。
          ⚠️ 这一段必须在 ctaDisabled 早退之前:多选里那个标记只表示「一个都没勾」,
@@ -349,14 +371,21 @@ Component({
         this.setData({ optionList: optionList, ctaDisabled: !any });
         return;
       }
-      if (this.data.ctaDisabled) return;
-      // 单选:选了哪条就报哪条,对错由服务端回 —— 正确答案不在客户端
+    },
+    /** F04 单选确认:报最后选中的那一条,对错由服务端回 —— 正确答案不在客户端。 */
+    _confirmSingle() {
+      const i = this.data.optionList.findIndex(o => o.state === 'is-on');
+      if (i < 0) return;
+      const picked = this.data.optionList[i];
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
-      /* l-kits 2026-11-10 图片选项(原型 gp-kit-embed):点下去这张先上浮、其余变淡,等服务端判;
+      /* l-kits 2026-11-10 图片选项(原型 gp-kit-embed):确认时这张上浮、其余变淡,等服务端判;
          这只是「我选了它」的即时反馈,不是对错 —— 对错由 settle() 按服务端回执重写。 */
-      if (this.data.picGrid) {
-        this.setData({ optionList: this.data.optionList.map((o, at) => Object.assign({}, o, { state: at === i ? 'is-on' : 'is-dim' })) });
-      }
+      this.setData({
+        submitted: true, ctaDisabled: true,
+        optionList: this.data.picGrid
+          ? this.data.optionList.map((o, at) => Object.assign({}, o, { state: at === i ? 'is-on' : 'is-dim' }))
+          : this.data.optionList,
+      });
       this.triggerEvent('submit', { mode: 'pick', index: i, optionId: picked.id || '' });
     },
     /** 多选的提交:报勾中的全部 id。一个都没勾时按钮是灰的,这里再兜一道。 */
@@ -392,7 +421,7 @@ Component({
         });
         return;
       }
-      // 单选:点选项本身就是提交。多选:按钮才是提交,这里接住它
+      // 单选与多选都由按钮提交(F04:单选先选可换,确认才算)
       if (this.data.mode === 'pick') {
         if (this.data.judge === false) {
           const index = this.data.optionList.findIndex(o => o.state === 'is-on');
@@ -400,6 +429,7 @@ Component({
           this.setData({ submitted: true, ctaDisabled: true });
           this.triggerEvent('submit', { mode: 'pick', index, optionId: this.data.optionList[index].id });
         } else if (this.data.multi) this._submitPick();
+        else this._confirmSingle();
         return;
       }
       if (this.data.poolOn) {
@@ -455,10 +485,13 @@ Component({
          那行字会盖过刚才的反馈,人先看到的是判决,不是解释。 */
       const answerIndex = this._answerIndex();
       const reveal = this.data.judge !== false && pick && this.data.reveal && (multi ? Array.isArray(d.answerIds) : answerIndex >= 0);
+      const kept = this.data.mode === 'type' ? String(this.data.typed || '') : '';
       // 字段写死成字面量,不拼 patch:动态 setData 门禁核不出写了哪些顶层字段
       this.setData({
-        // 答错清空输入框:留着错答案,人得先自己删一遍才能再试
-        typed: '',
+        // F02 答错保留输入并全选:玩家直接改,不用重打
+        typed: kept,
+        selectAll: kept.length,
+        submitted: false,
         typeWrong: this.data.mode === 'type',
         feedback: d.feedback || (this.data.mode === 'type' ? RETRY_TEXT : ''),
         fbHead: HEAD_NO,
@@ -473,8 +506,9 @@ Component({
           // 图片选项点选时变淡的其余几张在判错后回到原样,还能再选(原型答错 2.4s 后复位,这里随回执即复位)
           return o.state === 'is-dim' ? Object.assign({}, o, { state: '' }) : o;
         }) : this.data.optionList,
-        ctaLabel: pick ? '知道了' : (exhausted ? this.data.ctaLabel : '再试一次'),
-        ctaDisabled: exhausted || this.data.mode === 'type',
+        ctaLabel: pick ? (multi ? '知道了' : '确认选择') : (exhausted ? this.data.ctaLabel : '再试一次'),
+        // 单选答错后要先另选一条才能再确认;打字题保留了输入,可以直接改了再交
+        ctaDisabled: exhausted || (pick && !multi) || (this.data.mode === 'type' && !kept.trim()),
       });
       if (this.data.poolOn && !exhausted) this._paintQaPool();   // 字符池:已放的字保留,填满就能直接再交
       if (exhausted && stage) stage.fail(false);

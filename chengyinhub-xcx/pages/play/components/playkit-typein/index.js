@@ -39,6 +39,7 @@ Component({
     startConfirmed: { type: Boolean, value: false },
     startFailureSeq: { type: Number, value: 0 },
     terminalSkin: { type: Boolean, value: false },   // 终端样式(原型 hello world 开机)
+    wrongFeedback: { type: String, value: '' },      // F02 判错后服务端回的那句话
   },
   data: {
     phase: 'intro',                            // intro | run
