@@ -436,4 +436,104 @@ class ShopDayExperienceLayerContractTest
         assertFalse(data.containsKey("results"));
         assertFalse(data.containsKey("tagOutput"));
     }
+
+    // ---- FE-STORY-1117 第五节:自由探索只下发已到访地点的剧情 ----
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> data(AjaxResult result) {
+        return (Map<String, Object>) result.get("data");
+    }
+
+    private void storyFixture() {
+        node.setDescription("示例站点的章节正文");
+        node.setCardHookLong("示例长钩子");
+        node.setFragmentText("示例碎片");
+        node.setHookText("一句钩子");
+        com.chengyinhub.business.domain.CmsTopicChapter chapter = new com.chengyinhub.business.domain.CmsTopicChapter();
+        chapter.setId(CHAPTER);
+        chapter.setTopicId(TOPIC);
+        chapter.setName("示例章");
+        chapter.setDescription("示例章正文");
+        chapter.setSortId(1L);
+        ICmsTopicChapterService chapters = mock(ICmsTopicChapterService.class);
+        when(chapters.selectCmsTopicChapterList(any())).thenReturn(Collections.singletonList(chapter));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicChapterService", chapters);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void unvisitedPlaceShipsOnlyTheLockedCard() {
+        storyFixture();
+        when(progressService.selectPlayerNodeProgressList(any())).thenReturn(Collections.emptyList());
+
+        AjaxResult result = controller.nodes(ACTIVITY, null);
+        Map<String, Object> m = firstNode(result);
+
+        assertEquals(Boolean.FALSE, m.get("visited"));
+        assertEquals(Boolean.TRUE, m.get("storyLocked"));
+        assertEquals("GPS", m.get("visitCheck"));
+        assertEquals(300, m.get("visitRadius"));
+        assertEquals(null, m.get("description"));
+        assertEquals(null, m.get("cardHookLong"));
+        assertEquals(null, m.get("fragmentText"));
+        assertEquals("一句钩子", m.get("hookText"), "锁卡只留不剧透的钩子");
+        Map<String, Object> d = data(result);
+        assertEquals(0, d.get("storyUnlocked"));
+        assertEquals(1, d.get("storyTotal"));
+        Map<String, Object> chapter = ((List<Map<String, Object>>) d.get("chapters")).get(0);
+        assertEquals(Boolean.TRUE, chapter.get("chapterLocked"));
+        assertEquals(null, chapter.get("description"));
+        assertEquals(Collections.emptyList(), chapter.get("blocks"));
+        assertEquals("示例章", chapter.get("name"));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void visitedPlaceShipsTheChapterStory() {
+        storyFixture();
+
+        AjaxResult result = controller.nodes(ACTIVITY, null);
+        Map<String, Object> m = firstNode(result);
+
+        assertEquals(Boolean.TRUE, m.get("visited"));
+        assertEquals(Boolean.FALSE, m.get("storyLocked"));
+        assertEquals("示例站点的章节正文", m.get("description"));
+        assertEquals("示例长钩子", m.get("cardHookLong"));
+        assertEquals("示例碎片", m.get("fragmentText"));
+        Map<String, Object> d = data(result);
+        assertEquals(1, d.get("storyUnlocked"));
+        Map<String, Object> chapter = ((List<Map<String, Object>>) d.get("chapters")).get(0);
+        assertEquals(Boolean.FALSE, chapter.get("chapterLocked"));
+        assertEquals("示例章正文", chapter.get("description"));
+    }
+
+    @Test
+    void scanConfiguredPlaceAdvertisesScanAndOnlinePlaceIsAlwaysVisited() {
+        storyFixture();
+        when(progressService.selectPlayerNodeProgressList(any())).thenReturn(Collections.emptyList());
+        com.chengyinhub.business.mapper.CmsTopicNodeMapper nodeMapper = mock(com.chengyinhub.business.mapper.CmsTopicNodeMapper.class);
+        when(nodeMapper.selectVisitConfigByTopicId(TOPIC)).thenReturn(Collections.singletonList(
+                new com.chengyinhub.business.domain.FreeExploreVisitConfig(NODE, 1, null)));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeMapper", nodeMapper);
+
+        Map<String, Object> scan = firstNode(controller.nodes(ACTIVITY, null));
+        assertEquals("SCAN", scan.get("visitCheck"));
+        assertEquals(Boolean.TRUE, scan.get("storyLocked"));
+
+        when(nodeMapper.selectVisitConfigByTopicId(TOPIC)).thenReturn(Collections.singletonList(
+                new com.chengyinhub.business.domain.FreeExploreVisitConfig(NODE, 2, null)));
+        Map<String, Object> online = firstNode(controller.nodes(ACTIVITY, null));
+        assertEquals("ONLINE", online.get("visitCheck"));
+        assertEquals(Boolean.TRUE, online.get("visited"));
+        assertEquals("示例站点的章节正文", online.get("description"));
+    }
+
+    @Test
+    void freeExploreStorePhotosAreNeverHidden() {
+        node.setImgUrl("/store-front.jpg");
+        when(progressService.selectPlayerNodeProgressList(any())).thenReturn(Collections.emptyList());
+        Map<String, Object> m = firstNode(controller.nodes(ACTIVITY, null));
+        assertEquals("/store-front.jpg", m.get("imgUrl"), "F07:自由探索店铺照片用来找店,不遮");
+        assertFalse(m.containsKey("imgHidden"));
+    }
 }
