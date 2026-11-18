@@ -808,6 +808,8 @@ public class PlayBasicCommandApplication {
             try {
                 advancedGameRuntimeService.completeGate(memberId, actId, ctx.topicId, node.getId());
             } catch (ServiceException notPassed) {
+                // 不吞掉原因:记下真实拒绝原因,回 4xx 业务回执(completeGate 的拒绝不会把本事务标成 rollback-only)
+                logger.info("arrive 高级玩法未完成 memberId={} nodeId={} reason={}", memberId, nId, notPassed.getMessage());
                 return PlayCommandErrorContract.unresolvedEffect(notPassed.getMessage(), PlayCommandErrorContract.ADVANCED_FIRST);
             }
         }

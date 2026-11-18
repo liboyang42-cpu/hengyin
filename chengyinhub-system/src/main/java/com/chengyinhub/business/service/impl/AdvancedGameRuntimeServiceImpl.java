@@ -345,6 +345,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         requireWithinTimeWindow(config.get("timeWindow"));
         Date now = clock.now();
         ObjectNode state = initialState(config, team, teamMembers);
+        adoptExistingNote(config, state, nodeId, memberId);
         // Server-created state only: author config cannot supply an original content identity.
         if (input.content != null) state.set("originalNodeContent", input.content.deepCopy());
         if (config.has("outcomeRules")) state.put("attemptOrdinal", 1);
@@ -403,6 +404,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             else if(topicRouteRuntimeService.genericPlayer(memberId,session.getTopicId(),session.getActivityId()) || TopicRoutePublicationCompiler.outcomeNeedsGenericRun(config))topicRouteRuntimeService.assertGameplayOutcomeStart(memberId,session.getTopicId(),session.getActivityId(),session.getNodeId(),session.getPlayInstanceId());
         }
         ObjectNode restarted = initialState(config, team, teamMembers);
+        adoptExistingNote(config, restarted, session.getNodeId(), memberId);
         if (config.has("outcomeRules")) restarted.put("attemptOrdinal", readJson(session.getStateJson(), "Invalid attempt state").path("attemptOrdinal").asLong(1) + 1);
         for(String origin:Arrays.asList("originalRouteSessionId","originalGameSessionId","originalNodeContent"))if(objectState(session.getStateJson()).has(origin))restarted.set(origin,objectState(session.getStateJson()).get(origin).deepCopy());
         for (String sensor : AdvancedActionJudgement.SKIPPABLE_SENSOR_SECTIONS) if (objectState(session.getStateJson()).path(sensor).path("soloNoLead").asBoolean(false)) restarted.with(sensor).put("soloNoLead", true);
@@ -1134,7 +1136,9 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    // 拒绝(ServiceException)都发生在任何写入之前;调用方(到站)会接住拒绝并回 4xx,
+    // 这里不能把共享事务标成 rollback-only,否则到站提交时变成 UnexpectedRollbackException 500。
+    @Transactional(rollbackFor = Exception.class, noRollbackFor = ServiceException.class)
     public String completeGate(Long memberId, Long activityId, Long topicId, Long nodeId) {
         CmsTopicNode node = nodeMapper.selectCmsTopicNodeById(nodeId);
         if (node == null || !topicId.equals(node.getTopicId())) return null;
@@ -1183,6 +1187,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         }
         JsonNode snapshot = readJson(session.getConfigSnapshotJson(), "高级玩法配置不可用");
         ObjectNode state = objectState(session.getStateJson());
+        // 留言站:本人上一局已留过时,本局按已留下收尾(否则这一站永远过不去)
+        if (adoptExistingNote(snapshot, state, nodeId, memberId)) session.setStateJson(state.toString());
         // 已按「跳过·辅助完成」收尾的局:允许走完,但终点码与奖励口径都由 skip 事实降级(见 terminalOutcome)。
         if (!mechanicsReady(snapshot, state) && !isSkipped(state)) {
             throw new ServiceException("高级玩法尚未完成");
@@ -2615,6 +2621,30 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
      * 留言:一句留给下一个人。存 play_note(跨玩家、按节点),不在会话 state 里 ——
      * state 只记「我留过了」,读的人在投影里拿 previous。
      */
+    /** 本人在这一站已留下的那句(play_note 一人一站唯一);没有返回 null。 */
+    private PlayNote ownNote(Long nodeId, Long memberId) {
+        if (playNoteMapper == null || nodeId == null || memberId == null) return null;
+        List<PlayNote> recent = playNoteMapper.selectRecentByNode(nodeId, 500);
+        if (recent != null) for (PlayNote row : recent) if (memberId.equals(row.getMemberId())) return row;
+        return null;
+    }
+
+    /**
+     * 本局留言段还没完成、但本人在这一站已有留言(上一局留下的)→ 记为已留下。
+     * 开局、重开与到站收尾都调;返回是否改了 state。
+     */
+    private boolean adoptExistingNote(JsonNode config, ObjectNode state, Long nodeId, Long memberId) {
+        if (!enabled(config.get("note")) || state.path("note").path("done").asBoolean(false)) return false;
+        PlayNote existing = ownNote(nodeId, memberId);
+        if (existing == null) return false;
+        ObjectNode node = state.with("note");
+        node.put("text", existing.getContent());
+        node.put("at", existing.getCreateTime() == null ? clock.now().getTime() : existing.getCreateTime().getTime());
+        node.put("done", true);
+        node.put("adopted", true);
+        return true;
+    }
+
     private void submitNote(JsonNode config, ObjectNode state, Map<String, Object> payload,
             GameRuntimeSession session, Long memberId) {
         JsonNode cfg = config.get("note");
@@ -2640,8 +2670,14 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         try {
             if (playNoteMapper.insert(note) != 1) throw new IllegalStateException("留言保存失败");
         } catch (DuplicateKeyException alreadyLeft) {
-            // uk_member_node 撞了 = 这一站这个人已经留过(可能是上一局留下的)
-            throw new IllegalStateException("这一句已经留下了");
+            // uk_member_node 撞了 = 这一站这个人已经留过(上一局留下的)。play_note 一人一站只留一句,
+            // 投影也已把那句当作「我的」显示为已留 —— 本局按「已留下」完成,不能把玩家卡在这一站。
+            PlayNote existing = ownNote(session.getNodeId(), memberId);
+            node.put("text", existing == null ? content : existing.getContent());
+            node.put("at", clock.now().getTime());
+            node.put("done", true);
+            node.put("adopted", true);
+            return;
         }
         node.put("text", content);
         node.put("at", clock.now().getTime());
@@ -3629,7 +3665,14 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         return state.has("zeroChallengeInstance") ? state.path("challenge").path("success").asBoolean()
                 : Integer.valueOf(GameRuntimeSession.STATUS_COMPLETED).equals(session.getStatus())
                 || (Integer.valueOf(GameRuntimeSession.STATUS_RUNNING).equals(session.getStatus())
-                && (config.has("outcomeRules")?"PASS".equals(state.path("gameplayDecision").path("outcome").asText()):mechanicsReady(config, state)));
+                && (config.has("outcomeRules") && !completionTypeMain(config)
+                    ? "PASS".equals(state.path("gameplayDecision").path("outcome").asText()) : mechanicsReady(config, state)));
+    }
+
+    /** 完成型主玩法(建档/相册/留言/每日签):交了就完,没有「没通过」,是否走完只看玩法本身。 */
+    private static boolean completionTypeMain(JsonNode config) {
+        String main = com.chengyinhub.business.service.support.GameplayOutcomeRules.mainKit(config);
+        return main != null && java.util.Arrays.asList("profile", "album", "note", "dailySign").contains(main);
     }
 
     /**
