@@ -244,6 +244,8 @@ test('审核通过后的实际供给阶段不再要求点位字段', () => {
       termsMode: 'PERK',
       perkTemplateId: 7,
       quotaTotal: 12,
+      familyAccepted: 0, // F12:没打开「接受亲子票」就明确发 0
+      familyPerkText: '',
     },
   });
 });

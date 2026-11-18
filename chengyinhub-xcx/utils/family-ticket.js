@@ -52,4 +52,10 @@ function childAgeOptions(ticket) {
   return out
 }
 
-module.exports = { FAMILY_NAME, isFamily, familyTicketDraft, familyBlockReason, familyFields, familyLabel, childAgeOptions }
+/* 购票页年龄选择的初始状态:换票种时重置,非亲子票为空(不出选择行) */
+function familyAgeState(ticket) {
+  const ages = childAgeOptions(ticket)
+  return { childAgeOptions: ages, childAgeLabels: ages.map(a => a + ' 岁'), childAge: null }
+}
+
+module.exports = { familyAgeState, FAMILY_NAME, isFamily, familyTicketDraft, familyBlockReason, familyFields, familyLabel, childAgeOptions }

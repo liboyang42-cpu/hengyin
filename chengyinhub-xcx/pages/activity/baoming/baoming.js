@@ -24,6 +24,7 @@ function selectedAddressStorageKey(userId) {
 const { isValidMobile } = require('../../../utils/form-state.js');
 const indexFormat = require('../../../utils/index/index-format.js');
 const ticketSource = require('../../../utils/ticket-source.js');
+const familyTicket = require('../../../utils/family-ticket.js'); // F12 亲子票:只选儿童年龄
 const marketingConsent = require('../../../utils/marketing-consent-entry.js');
 const quoteView = require('../utils/quote-view.js');
 const { hostReservationView } = require('../utils/host-reservation.js');
@@ -225,6 +226,7 @@ Page({
     skeletonItems: [1, 2], // 加载中两张卡:第三张会被底栏占位切掉一半(p08-baoming-loading)
     ticketList: [],
     selectedTicket: null,
+    childAgeOptions: [], childAgeLabels: [], childAge: null, // F12 亲子票儿童年龄(只要年龄,不要姓名)
     signupState: 'loading',
     ticketSoldOut: false,
     waitlistState: 'NONE',
@@ -780,7 +782,7 @@ Page({
           // 确保总金额保留两位小数
           const totalAmount = selectedTicket ? parseFloat(selectedTicket.price.toFixed(2)) : 0;
 
-          that.setData({
+          that.setData(Object.assign(familyTicket.familyAgeState(selectedTicket), {
             activityInfo: activityInfo,
             merchantClosed: activityInfo.merchantClosed === true,
             ticketList: ticketList,
@@ -801,7 +803,7 @@ Page({
             pageState: 'ready',
             everLoaded: true,
             loadErrorMsg: ''
-          }, () => {
+          }), () => {
             // 数据设置完成后重新计算折扣
             that.recalculateDiscount();
             that.loadWaitlistStatus();
@@ -853,6 +855,14 @@ Page({
     this.setData({ ticketSheetShow: false });
   },
 
+  // F12 亲子票:选儿童年龄(年龄段内每一岁)
+  onChildAgeChange(e) {
+    const index = Number(e && e.detail && e.detail.value);
+    const age = (this.data.childAgeOptions || [])[index];
+    if (age == null) return;
+    this.setData({ childAge: age });
+  },
+
   onTicketSheetSelect(e) {
     const index = Number(e && e.detail && e.detail.index);
     // CU-C-32:读的是 openTicketSheet 过滤后的那份列表,与选项顺序一一对应。
@@ -863,7 +873,7 @@ Page({
     if (selected && ticket.id == selected.id) return;
     // 与首次加载同一套状态重置:金额/售罄/候补都跟着新票种走,报价由 recalculateDiscount
     // 末尾的 refreshQuote 重新向服务端要(quoteSign 是绑定 ticketId 的,不能复用旧的)。
-    this.setData({
+    this.setData(Object.assign(familyTicket.familyAgeState(ticket), {
       selectedTicket: ticket,
       totalAmount: parseFloat(Number(ticket.price).toFixed(2)),
       ticketSoldOut: ticketIsSoldOut(ticket),
@@ -877,7 +887,7 @@ Page({
       waitlistRegistrationId: null,
       waitlistExpiresText: '',
       submitError: '',
-    }, () => {
+    }), () => {
       this.recalculateDiscount();
       this.loadWaitlistStatus();
     });
@@ -1434,7 +1444,7 @@ Page({
     that._workflow = createCheckoutWorkflow({
       createOrder: function (payload, cb) {
         const { activityId, selectedTicket, useDiscount, userInfo, quoteSign, marketingSign, requestId,
-          waitlistOfferId, waitlistOfferToken } = payload;
+          waitlistOfferId, waitlistOfferToken, childAge } = payload;
         var data = {
           ownerType: 2,
           ownerId: activityId,
@@ -1450,6 +1460,7 @@ Page({
           waitlistOfferId: waitlistOfferId || null,
           waitlistOfferToken: waitlistOfferToken || null
         };
+        if (childAge != null) data.childAge = childAge; // F12 亲子票儿童年龄
         // 3-5 票源归因:只有「捕获到的那一期」== 「正在下单的这一期」才带标记。
         // 期 = cms_activity.topicId;拿不到 topicId 就归平台,不拿 activityId 顶替(那是场次不是期)。
         Object.assign(data, ticketSource.attributionPayload(
@@ -1848,8 +1859,14 @@ Page({
       that._reqIdQuoteSign = that._quoteSign || '';
     }
 
+    // F12 亲子票:没选儿童年龄不下单(超出年龄段的选项根本不出,服务端同口径再判一次)
+    if (familyTicket.isFamily(that.data.selectedTicket) && that.data.childAge == null) {
+      toast('请选择儿童年龄');
+      return;
+    }
     const payload = {
       activityId: that.data.activityId,
+      childAge: familyTicket.isFamily(that.data.selectedTicket) ? that.data.childAge : null,
       selectedTicket: that.data.selectedTicket,
       useDiscount: that.data.useDiscount,
       userInfo: that.data.userInfo,
