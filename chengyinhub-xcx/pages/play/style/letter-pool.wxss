@@ -47,13 +47,13 @@
   color: var(--ink);
 }
 .lp__clear.is-off { color: var(--sub); }
-/* 打字题字符池的答案格:与逐字猜词的 .hm__cell 同形同色 */
+/* 打字题字符池的答案格:与逐字猜词的 .hm__cell 同色同描边;点已填格要退回,命中区按 44px 给足 */
 .lp__slots { display: flex; flex-wrap: wrap; justify-content: center; gap: 14rpx; margin-top: var(--cy-space-4); }   /* ds-ok 与 .hm__word-row 同距 */
 .lp__slot {
   flex: none;
-  width: 68rpx;                            /* ds-ok 与 .hm__cell 同尺寸 */
-  height: 84rpx;
-  line-height: 84rpx;
+  width: 88rpx;                            /* ds-ok 命中区 44px */
+  height: 88rpx;
+  line-height: 88rpx;
   text-align: center;
   box-sizing: border-box;
   border: 1rpx solid rgba(var(--lk-ink-rgb, 255, 255, 255), .2);   /* ds-ok 与 .hm__cell 同一条描边 */

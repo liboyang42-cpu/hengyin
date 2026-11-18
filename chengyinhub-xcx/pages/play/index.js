@@ -46,7 +46,7 @@ function readAudioPref(key) {
   try { return wx.getStorageSync(key) !== false; } catch (e) { return true; }
 }
 function writeAudioPref(key, on) {
-  try { wx.setStorageSync(key, !!on); } catch (e) { console.warn('[play] 声音偏好没存上', key, e); }
+  try { wx.setStorageSync(key, !!on); } catch (e) { console.warn('[play] audio preference not saved'); }   // 本局照常按开关走,只是下次进来不记得
 }
 /** 本局有没有旁白音频(章节 audioUrl / 站点语音讲解):没有就不在设置抽屉里出旁白开关。 */
 function hasNarration(d, nodes) {

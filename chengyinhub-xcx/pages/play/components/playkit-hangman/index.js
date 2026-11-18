@@ -121,6 +121,8 @@ Component({
     _syncPool(slots, solved, pool) {
       const wrong = this._pending && !solved;
       this._pending = false;
+      // 换了一道题(题面不同):上一题放的字不带过来;同一题的重读(交卷回执 / 去掉干扰字)才保留
+      if (this._poolTitle !== this.data.title) { this._pool = null; this._poolSlots = null; this._poolTitle = this.data.title; }
       this._pool = letterPool.sync(this._pool, slots, pool, this._poolSlots);
       this._poolSlots = slots;
       this._paintPool({ verdict: wrong ? 'no' : (solved ? 'ok' : this.data.verdict), active: -1, pop: -1 });
