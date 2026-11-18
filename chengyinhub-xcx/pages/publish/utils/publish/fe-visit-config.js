@@ -2,9 +2,9 @@
 /**
  * 自由探索(productType 2)每个地点的「到访方式」(FE-STORY 7.10),只给主题作者。
  *
- *   GET  /api/free-explore/visit-config?topicId=X
+ *   GET  /api/topic/free-explore/visit-config?topicId=X
  *        → data: [{ nodeId, name, chapterId, visitCheck: GPS|SCAN|ONLINE, visitRadius: Int|null, hasCoordinates }]
- *   POST /api/free-explore/visit-config  JSON { nodeId, visitCheck, visitRadius: Int|null } → 更新后的这一项
+ *   POST /api/topic/free-explore/visit-config  JSON { nodeId, visitCheck, visitRadius: Int|null } → 更新后的这一项
  *
  * 半径只有 GPS 才有:300 / 400 / 500 米,null 即默认 300。服务端是权威,这里只做选项与错误文字;
  * 错误写在字段下面,不只弹 toast。页面接线见 pages/publish/fabu/theme-fe-visit.js。

@@ -35,7 +35,7 @@ const methods = {
     const live = () => seq === this._feVisitSeq && this.data.feVisit.nodeId === nodeId;
     const loadFail = (msg) => { if (live()) this.setData(keepError ? { 'feVisit.loading': false } : { 'feVisit.loading': false, 'feVisit.error': msg }); };
     getApp().sendRequest({
-      url: '/api/free-explore/visit-config', method: 'GET', data: cfg.loadQuery(topicId), hideLoading: true, autoErrorToast: false,
+      url: '/api/topic/free-explore/visit-config', method: 'GET', data: cfg.loadQuery(topicId), hideLoading: true, autoErrorToast: false,
       success: (res) => {
         if (!live()) return;
         if (!cfg.isOk(res) || !Array.isArray(res.data)) {
@@ -81,7 +81,7 @@ const methods = {
     const readBack = () => { if (live()) this._readFeVisit(topicId, nodeId, seq, true); };
     this.setData({ 'feVisit.saving': true, 'feVisit.error': '', 'feVisit.check': check, 'feVisit.radius': check === 'GPS' ? Number(radius) : v.radius });
     getApp().sendRequest({
-      url: '/api/free-explore/visit-config', method: 'POST', data: JSON.stringify(cfg.saveBody(nodeId, check, radius)),
+      url: '/api/topic/free-explore/visit-config', method: 'POST', data: JSON.stringify(cfg.saveBody(nodeId, check, radius)),
       header: { 'Content-Type': 'application/json' }, hideLoading: true, autoErrorToast: false,
       success: (res) => {
         if (!cfg.isOk(res)) { reject(cfg.errorText(res)); return; }

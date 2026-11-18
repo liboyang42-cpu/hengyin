@@ -191,9 +191,9 @@ const MATRIX = [
   /* 2026-10-22 L21 BL-185 主题发布前试检查:ApiTopicStateKeyController.publishCheck 走 editableDenial ——
      登录 →(scope=MERCHANT 时 PROJECT_MANAGE 取 Owner 主体)→ 主题本人;只读不改状态。 */
   ['pages/publish/fabu/index.js', "url: '/api/topic/publish-check'", 'required', 'publisher', 'self-publisher'],
-  /* 2026-11-18 FE-STORY 7.10 地点到访方式:ApiFreeExploreVisitConfigController.list → FreeExploreVisitConfigApplication.authorGate ——
+  /* 2026-11-18 FE-STORY 7.10 地点到访方式:主题控制器下的到访方式读取 → FreeExploreVisitConfigApplication.authorGate ——
      未登录拒(401),非主题作者本人 403,非自由探索主题拒;只读本主题地点的到访方式。 */
-  ['pages/publish/fabu/theme-fe-visit.js', "url: '/api/free-explore/visit-config', method: 'GET'", 'required', 'publisher', 'self-publisher'],
+  ['pages/publish/fabu/theme-fe-visit.js', "url: '/api/topic/free-explore/visit-config', method: 'GET'", 'required', 'publisher', 'self-publisher'],
   // unknown 回执的权威回读：与 play/index 同一接口、同一 session 参数，权限档位一致。
   ['pages/play/merchant/index.js', "url: '/api/play/nodes'", 'required', 'member', 'current-session'],
   ['pages/play/utils/theme-backpack.js', "req('/api/play/theme/state'", 'required', 'member', 'current-session'],

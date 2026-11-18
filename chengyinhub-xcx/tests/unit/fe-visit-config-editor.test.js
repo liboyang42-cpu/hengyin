@@ -1,6 +1,6 @@
 'use strict';
 // FE-STORY 7.10:自由探索每个地点的「到访方式」(只给主题作者)。
-// 请求形状:GET /api/free-explore/visit-config?topicId=X;POST 同一路径,JSON { nodeId, visitCheck, visitRadius }。
+// 请求形状:GET /api/topic/free-explore/visit-config?topicId=X;POST 同一路径,JSON { nodeId, visitCheck, visitRadius }。
 // 半径只能 300 / 400 / 500 米(null = 默认 300);错误写在字段下面;保存结果不明只回读,不自动重发。
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -49,7 +49,7 @@ test('请求形状:GET 带 topicId;POST 是 JSON { nodeId, visitCheck, visitRadi
   open(page, 7);
   page.onFeVisitRadius({ detail: { value: 500 } });
   const post = requests[0];
-  assert.equal(post.url, '/api/free-explore/visit-config');
+  assert.equal(post.url, '/api/topic/free-explore/visit-config');
   assert.equal(post.method, 'POST');
   assert.equal(post.header['Content-Type'], 'application/json');
   assert.deepEqual(JSON.parse(post.data), { nodeId: 7, visitCheck: 'GPS', visitRadius: 500 });
@@ -100,7 +100,7 @@ test('打开:只有自由探索、已保存的主题、已入库的地点才读;
 
   const page = harness();
   page._openFeVisitConfig({ id: 8 });
-  assert.equal(requests[0].url, '/api/free-explore/visit-config');
+  assert.equal(requests[0].url, '/api/topic/free-explore/visit-config');
   assert.equal(requests[0].method, 'GET');
   assert.deepEqual(requests[0].data, { topicId: 42 });
   assert.equal(page.data.feVisit.loading, true);
