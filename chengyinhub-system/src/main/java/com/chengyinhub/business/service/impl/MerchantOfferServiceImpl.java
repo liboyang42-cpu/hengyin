@@ -131,11 +131,11 @@ public class MerchantOfferServiceImpl implements IMerchantOfferService {
     private ITopicSaleCanonicalMutationService canonicalMutationService;
 
     /** F10:作者自己承接时把本章站点绑到作者名下(开售 canonical 的 storeCluster 按点位归属核对)。 */
-    @Autowired
+    @Autowired(required = false)
     private com.chengyinhub.business.service.IChapterMerchantNodeService chapterMerchantNodeService;
 
     /** F10:位置全部有人承接 ⇒ 招募中自动进入待定价;出现空位 ⇒ 待定价回到招募中。 */
-    @Autowired
+    @Autowired(required = false)
     private com.chengyinhub.business.service.support.FreeExploreSlotProgress slotProgress;
 
     @Override
@@ -319,7 +319,7 @@ public class MerchantOfferServiceImpl implements IMerchantOfferService {
         invalidateApprovedCanonical(chapter.getTopicId(), "offer-enroll");
         // F10 §3.3:生效供给补齐最后一个必选位置时自动进入待定价(补位供给 status=0 不触发)。
         if (Integer.valueOf(1).equals(offer.getStatus())) {
-            slotProgress.tryAdvanceToPricing(chapter.getTopicId());
+            tryAdvanceToPricing(chapter.getTopicId());
         }
         return offer.getId();
     }
@@ -491,7 +491,7 @@ public class MerchantOfferServiceImpl implements IMerchantOfferService {
         applicationMapper.retireApprovedForSupplyExit(topic.getId(), chapterId, merchantId);
         invalidateApprovedCanonical(topic.getId(), "ordinary-chapter-supply-withdraw");
         // F10 §4:开售前商家退出 ⇒ 位置重新变空,待定价的主题回到招募中(票价区重新置灰)。
-        slotProgress.reopenRecruitingIfSlotOpen(topic.getId());
+        reopenRecruitingIfSlotOpen(topic.getId());
         registerOwnerWithdrawalNotice(offerId, topic.getMemberId(), "章节供给已退出",
                 "主题「" + topic.getName() + "」有章节供给退出。" + (required ? "已暂停新报名，请核对补位方案。" : "请核对已有玩家的履约安排。"));
         businessNotice.executeAfterCommit("chapter-supply-withdraw-players", offerId, () -> {
@@ -1001,6 +1001,7 @@ public class MerchantOfferServiceImpl implements IMerchantOfferService {
         assertMaxMerchant(chapter);
 
         // 站点归属:本章站点(作者建期留的占位点)绑到作者名下,开售 canonical 的店铺清单按它核对。
+        if (chapterMerchantNodeService == null) throw new IllegalStateException("站点服务不可用，暂不能自己承接");
         chapterMerchantNodeService.bindAuthorSelfSupplyNode(authorMemberId, topicId, chapterId);
 
         CoopPerk p = new CoopPerk();
@@ -1043,7 +1044,7 @@ public class MerchantOfferServiceImpl implements IMerchantOfferService {
             throw new IllegalStateException("你已承接本章节，请勿重复承接");
         }
         invalidateApprovedCanonical(topicId, "author-self-supply");
-        slotProgress.tryAdvanceToPricing(topicId);
+        tryAdvanceToPricing(topicId);
         return offer.getId();
     }
 
@@ -1078,11 +1079,22 @@ public class MerchantOfferServiceImpl implements IMerchantOfferService {
         if (offerMapper.deactivate(offerId) != 1) {
             throw new IllegalStateException("承接状态刚发生变化，请刷新后重试");
         }
-        chapterMerchantNodeService.releaseAuthorSelfSupplyNode(authorMemberId, topicId, chapterId);
+        if (chapterMerchantNodeService != null) {
+            chapterMerchantNodeService.releaseAuthorSelfSupplyNode(authorMemberId, topicId, chapterId);
+        }
         invalidateApprovedCanonical(topicId, "author-self-supply-withdraw");
-        slotProgress.reopenRecruitingIfSlotOpen(topicId);
+        reopenRecruitingIfSlotOpen(topicId);
         CmsTopic after = cmsTopicMapper.selectCmsTopicById(topicId);
         return after == null ? null : after.getLifecycle();
+    }
+
+    // 与 canonicalMutationService 同口径:装配缺失(单测/裁剪上下文)时不推进,生产由 Spring 注入。
+    private void tryAdvanceToPricing(Long topicId) {
+        if (slotProgress != null) slotProgress.tryAdvanceToPricing(topicId);
+    }
+
+    private void reopenRecruitingIfSlotOpen(Long topicId) {
+        if (slotProgress != null) slotProgress.reopenRecruitingIfSlotOpen(topicId);
     }
 
     /** 归属闸:按 topic.member_id 校验(AGENTS.md:写接口必须带 owner)。 */
