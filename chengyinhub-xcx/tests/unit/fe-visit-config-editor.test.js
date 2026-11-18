@@ -13,6 +13,7 @@ const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 let requests = [];
 global.getApp = () => ({ sendRequest: (r) => { requests.push(r); } });
 const cfg = require('../../pages/publish/utils/publish/fe-visit-config.js');
+const mixin = require('../../pages/publish/fabu/theme-fe-visit.js');
 
 const ROWS = [
   { nodeId: 7, name: '示例站点', chapterId: 3, visitCheck: 'GPS', visitRadius: null, hasCoordinates: true },
@@ -20,8 +21,8 @@ const ROWS = [
 ];
 
 function harness(extra) {
-  const page = Object.assign({}, cfg.methods(), {
-    data: Object.assign({ formData: { productType: 2 }, editingTopicId: '42', feVisit: Object.assign({}, cfg.data.feVisit) }, extra),
+  const page = Object.assign({}, mixin.methods, {
+    data: Object.assign({ formData: { productType: 2 }, editingTopicId: '42', feVisit: Object.assign({}, mixin.data.feVisit) }, extra),
     setData(patch) {
       Object.keys(patch).forEach((k) => {
         if (k.indexOf('.') > 0) { const [a, b] = k.split('.'); this.data[a] = Object.assign({}, this.data[a], { [b]: patch[k] }); }
@@ -40,14 +41,20 @@ function open(page, nodeId) {
 }
 
 test('请求形状:GET 带 topicId;POST 是 JSON { nodeId, visitCheck, visitRadius },非 GPS 半径为 null', () => {
-  assert.deepEqual(cfg.loadRequest('42'), { url: '/api/free-explore/visit-config', method: 'GET', data: { topicId: 42 } });
-  const gps = cfg.saveRequest('7', 'GPS', 400);
-  assert.equal(gps.url, '/api/free-explore/visit-config');
-  assert.equal(gps.method, 'POST');
-  assert.equal(gps.header['Content-Type'], 'application/json');
-  assert.deepEqual(JSON.parse(gps.data), { nodeId: 7, visitCheck: 'GPS', visitRadius: 400 });
-  assert.deepEqual(JSON.parse(cfg.saveRequest(7, 'SCAN', 400).data), { nodeId: 7, visitCheck: 'SCAN', visitRadius: null });
-  assert.deepEqual(JSON.parse(cfg.saveRequest(7, 'ONLINE').data), { nodeId: 7, visitCheck: 'ONLINE', visitRadius: null });
+  assert.deepEqual(cfg.loadQuery('42'), { topicId: 42 });
+  assert.deepEqual(cfg.saveBody('7', 'GPS', 400), { nodeId: 7, visitCheck: 'GPS', visitRadius: 400 });
+  assert.deepEqual(cfg.saveBody(7, 'SCAN', 400), { nodeId: 7, visitCheck: 'SCAN', visitRadius: null });
+  assert.deepEqual(cfg.saveBody(7, 'ONLINE'), { nodeId: 7, visitCheck: 'ONLINE', visitRadius: null });
+  const page = harness();
+  open(page, 7);
+  page.onFeVisitRadius({ detail: { value: 500 } });
+  const post = requests[0];
+  assert.equal(post.url, '/api/free-explore/visit-config');
+  assert.equal(post.method, 'POST');
+  assert.equal(post.header['Content-Type'], 'application/json');
+  assert.deepEqual(JSON.parse(post.data), { nodeId: 7, visitCheck: 'GPS', visitRadius: 500 });
+  assert.equal(post.silentError, undefined);
+  assert.equal(post.autoErrorToast, false, '错误写在字段下,不弹自动 toast');
   assert.deepEqual(cfg.CHECKS.map((c) => c.label), ['GPS（默认）', '扫码', '仅线上']);
 });
 
@@ -63,7 +70,7 @@ test('半径上下限:只认 300 / 400 / 500;null 显示为默认 300', () => {
   assert.equal(cfg.precheck({}, 'WALK', null), cfg.ERRORS.VISIT_CHECK_INVALID);
   const wxml = read('pages/publish/fabu/index.wxml');
   assert.match(wxml, /<cy-stepper label="到访范围" value="\{\{feVisit\.radius\}\}" min="\{\{feVisitRadiusMin\}\}" max="\{\{feVisitRadiusMax\}\}" step="\{\{feVisitRadiusStep\}\}"/);
-  assert.deepEqual([cfg.data.feVisitRadiusMin, cfg.data.feVisitRadiusMax, cfg.data.feVisitRadiusStep], [300, 500, 100]);
+  assert.deepEqual([mixin.data.feVisitRadiusMin, mixin.data.feVisitRadiusMax, mixin.data.feVisitRadiusStep], [300, 500, 100]);
 });
 
 test('错误映射:三个 errorCode 与 403 各有一句,写在字段下面', () => {
@@ -171,7 +178,8 @@ test('网络失败 / 5xx:不自动重发,只提示并回读 GET 看服务端实�
 
 test('编辑器接线:节点抽屉里只给自由探索地点出「到访方式」;开抽屉读、关抽屉清', () => {
   const js = read('pages/publish/fabu/index.js');
-  assert.match(js, /\.\.\.feVisitConfig\.methods\(\)/);
+  assert.match(js, /require\('\.\/theme-fe-visit\.js'\)/);
+  assert.match(js, /\.\.\.feVisitConfig\.methods,/);
   assert.match(js, /\.\.\.feVisitConfig\.data/);
   assert.equal((js.match(/this\._openFeVisitConfig\(node\);/g) || []).length, 2, '列表点开与地图点开两处');
   assert.match(js, /this\._closeFeVisitConfig\(\);\n    this\.setData\(\{\n      popChapterNodes: false,/);

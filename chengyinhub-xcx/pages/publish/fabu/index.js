@@ -254,7 +254,7 @@ const runtimeEditor = require('./theme-runtime.js'); const routeNames = require(
 const structure = require('./theme-runtime-structure.js'); // structure
 const survivalEditor = require('./theme-runtime-survival.js'); /* survival */ const lookEditor = require('./theme-look-editor.js'); /* 主题画面风格 */
 const zeroHpEditor = require('./theme-runtime-zero-hp.js'); // R5 HP 归零面板（与 runtimeEditor 内同一组方法，直接展开便于 handler 溯源）
-const feVisitConfig = require('../utils/publish/fe-visit-config.js'); // FE-STORY 7.10 地点到访方式
+const feVisitConfig = require('./theme-fe-visit.js'); // FE-STORY 7.10 地点到访方式
 const ownership = require('./theme-ownership.js'); const d20Page = require('./theme-d20-page.js'); const keysItems = require('./theme-keys-items.js'); const initialCarry = require('./theme-initial-carry.js'); // 文档二 L1;L2 线索与物品 · 物品一组;初始状态 · 开局带着
 const themeMedia = require('./theme-media.js');
 Page({
@@ -263,7 +263,7 @@ Page({
   ...structure.methods, // structure
   ...survivalEditor.methods, // survival
   ...zeroHpEditor.methods, /* R5 HP 归零 */ ...lookEditor.methods, /* 画面风格 */
-  ...ownership.methods, ...feVisitConfig.methods(), ...d20Page.methods, ...keysItems.methods, ...initialCarry.methods,
+  ...ownership.methods, ...feVisitConfig.methods, ...d20Page.methods, ...keysItems.methods, ...initialCarry.methods,
   _routeGraph: topicRouteGraph.emptyGraph(),
   _routeMappingSourceNodeId: '',
   _routeMappingReturnToNodeEditor: false,
