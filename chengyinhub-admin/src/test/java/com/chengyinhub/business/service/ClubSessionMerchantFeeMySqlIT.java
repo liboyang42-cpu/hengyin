@@ -891,16 +891,20 @@ class ClubSessionMerchantFeeMySqlIT {
                 "UPDATE ums_member SET balance=0.20 WHERE id=" + MERCHANT);
         var manual = verifiedManualCase(1950L);
         tx.executeWithoutResult(s -> refundService.recordVerifiedExploreManualRefund(manual));
-        assertMoney("0.00", balance(PRINCIPAL).add(balance(PLATFORM)).add(balance(MERCHANT)));
-        assertMoney("18.70", money("SELECT SUM(amount) FROM ums_member_settlement_debt"));
+        // F11:自由探索场次不再给店铺记 coop_merchant 行(店铺只有参考账),主理人留存全额 37.83 + 平台 1.17 = 39.00。
+        // 退一半 19.50 只冲真钱行:平台 1.17×½=0.585→0.59,余数行(主理人)19.50−0.59=18.91;
+        // 主理人余额 0.50 → 欠 18.41,平台 0.10 → 欠 0.49;店铺没有可冲的行,它自己的 0.20 不动、无欠款。
+        assertMoney("0.00", balance(PRINCIPAL).add(balance(PLATFORM)));
+        assertMoney("0.20", balance(MERCHANT));
+        assertMoney("18.90", money("SELECT SUM(amount) FROM ums_member_settlement_debt"));
         assertMoney("-19.50", money("SELECT SUM(settlement_amount) FROM settlement_detail WHERE source_type='refund'"));
-        assertMoney("14.41", money("SELECT amount FROM ums_member_settlement_debt WHERE member_id=" + PRINCIPAL));
+        assertMoney("18.41", money("SELECT amount FROM ums_member_settlement_debt WHERE member_id=" + PRINCIPAL));
         assertMoney("0.49", money("SELECT amount FROM ums_member_settlement_debt WHERE member_id=" + PLATFORM));
-        assertMoney("3.80", money("SELECT amount FROM ums_member_settlement_debt WHERE member_id=" + MERCHANT));
+        assertEquals(0, scalarInt("SELECT COUNT(*) FROM ums_member_settlement_debt WHERE member_id=" + MERCHANT));
         assertEquals(1, scalarInt("SELECT COUNT(*) FROM refund_application WHERE status=1 AND payout_status=4"));
         assertEquals(0, scalarInt("SELECT COUNT(*) FROM refund_application WHERE payout_status IN (0,5,6)"));
         assertThrows(RuntimeException.class, () -> tx.executeWithoutResult(s -> refundService.recordVerifiedExploreManualRefund(manual)));
-        assertEquals(3, scalarInt("SELECT COUNT(*) FROM ums_member_settlement_debt"));
+        assertEquals(2, scalarInt("SELECT COUNT(*) FROM ums_member_settlement_debt"));
         assertEquals(1, scalarInt("SELECT COUNT(*) FROM refund_application"));
         assertEquals(0, activityService.executeActivitySettlement());
     }
@@ -913,7 +917,9 @@ class ClubSessionMerchantFeeMySqlIT {
         execute("INSERT INTO refund_application(id,source_type,source_id,paid_amount,refund_amount,status,del_flag)"
                 + " VALUES (610,'registration',74,39.00,19.50,1,0)");
         clawBack(610L, 74L, "39.00", "19.50");
-        assertMoney("0.58", balance(PLATFORM)); assertMoney("14.92", balance(PRINCIPAL)); assertMoney("4.00", balance(MERCHANT));
+        // F11:结算时主理人 37.83(不再减店铺 8.00)、平台 1.17、店铺 0(只记参考账)。
+        // 先退一半:平台 0.585→0.59 剩 0.58,主理人冲 19.50−0.59=18.91 剩 18.92;店铺无真钱行可冲。
+        assertMoney("0.58", balance(PLATFORM)); assertMoney("18.92", balance(PRINCIPAL)); assertMoney("0.00", balance(MERCHANT));
         tx.executeWithoutResult(s -> refundService.recordVerifiedExploreManualRefund(verifiedManualCase(1950L)));
         assertMoney("0.00", balance(PRINCIPAL).add(balance(PLATFORM)).add(balance(MERCHANT)));
         assertEquals(0, scalarInt("SELECT COUNT(*) FROM ums_member_settlement_debt"), "两次退款不能因舍入多扣一分");
@@ -963,7 +969,10 @@ class ClubSessionMerchantFeeMySqlIT {
             club.setMemberId(991005L);
             execute("UPDATE coop_complaint SET status=3 WHERE id=9301");
             activityService.executeActivitySettlement();
-            assertMoney("29.83", balance(PRINCIPAL)); assertMoney("29.83", balance(991005L));
+            // F11:每张 39.00 主理人留存全额 37.83(不再减店铺 8.00)、平台 1.17;店铺两张各 8.00 只记参考行,不入余额。
+            assertMoney("37.83", balance(PRINCIPAL)); assertMoney("37.83", balance(991005L));
+            assertMoney("16.00", money("SELECT SUM(amount) FROM fe_reference_settlement WHERE merchant_id=" + MERCHANT
+                    + " AND basis='REVSHARE_HEAD' AND status='OPEN'"));
             assertEquals(PRINCIPAL, feeMapper.selectPayeeLinesForUpdate(75L).get(0).getReceiverId(),
                     "原生产补结只改status，没有重写按旧主理人冻结的receiver_id");
             var manual = verifiedManualCase(3900L);
@@ -973,8 +982,8 @@ class ClubSessionMerchantFeeMySqlIT {
                     s1 -> refundService.recordVerifiedExploreManualRefund(manual))).getMessage().contains("主理人原实收人"));
             assertEquals(0, scalarInt("SELECT COUNT(*) FROM refund_application"));
             assertEquals(0, scalarInt("SELECT COUNT(*) FROM ums_member_settlement_debt"));
-            assertMoney("29.83", balance(PRINCIPAL)); assertMoney("29.83", balance(991005L));
-            assertMoney("16.00", balance(MERCHANT)); assertMoney("2.34", balance(PLATFORM));
+            assertMoney("37.83", balance(PRINCIPAL)); assertMoney("37.83", balance(991005L));
+            assertMoney("0.00", balance(MERCHANT)); assertMoney("2.34", balance(PLATFORM));
         } finally {
             club.setMemberId(PRINCIPAL);
         }
