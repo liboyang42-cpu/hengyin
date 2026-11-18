@@ -22,6 +22,8 @@
         <result property="withdrawReason" column="withdraw_reason" />
         <result property="withdrawRequired" column="withdraw_required" />
         <result property="replacementOfOfferId" column="replacement_of_offer_id" />
+        <result property="supplierKind" column="supplier_kind" />
+        <result property="supplierMemberId" column="supplier_member_id" />
         <result property="createBy"    column="create_by"    />
         <result property="createTime"    column="create_time"    />
         <result property="updateBy"    column="update_by"    />
@@ -31,6 +33,7 @@
     <sql id="selectMerchantChapterOfferVo">
         select id, topic_id, chapter_id, merchant_id, perk_id, terms_mode, payer_club_id, per_head_fee,
                quota_total, quota_used, valid_end, allowed_validation_methods, max_node_xp, status, withdraw_reason, withdraw_required, replacement_of_offer_id,
+               supplier_kind, supplier_member_id,
                create_by, create_time, update_by, update_time
         from merchant_chapter_offer
     </sql>
@@ -52,6 +55,8 @@
             <if test="maxNodeXp != null">max_node_xp,</if>
             <if test="status != null">status,</if>
             <if test="replacementOfOfferId != null">replacement_of_offer_id,</if>
+            <if test="supplierKind != null">supplier_kind,</if>
+            <if test="supplierMemberId != null">supplier_member_id,</if>
             <if test="createBy != null">create_by,</if>
             <if test="createTime != null">create_time,</if>
             <if test="updateBy != null">update_by,</if>
@@ -72,6 +77,8 @@
             <if test="maxNodeXp != null">#{maxNodeXp},</if>
             <if test="status != null">#{status},</if>
             <if test="replacementOfOfferId != null">#{replacementOfOfferId},</if>
+            <if test="supplierKind != null">#{supplierKind},</if>
+            <if test="supplierMemberId != null">#{supplierMemberId},</if>
             <if test="createBy != null">#{createBy},</if>
             <if test="createTime != null">#{createTime},</if>
             <if test="updateBy != null">#{updateBy},</if>

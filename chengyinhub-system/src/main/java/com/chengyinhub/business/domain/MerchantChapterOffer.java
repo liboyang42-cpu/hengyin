@@ -22,6 +22,15 @@ public class MerchantChapterOffer extends BaseEntity {
     private Long replacementOfOfferId;
     /** ⚠️ 商家memberId,不是 mms_merchant.id —— 库里「商家」一词被三个东西共用,语义超载曾致一次资损 */
     private Long merchantId;
+
+    /** F10:供给方类型 MERCHANT(商家承接) | AUTHOR(作者自己承接)。AUTHOR 行的 merchantId = 作者 member_id。 */
+    public static final String SUPPLIER_MERCHANT = "MERCHANT";
+    public static final String SUPPLIER_AUTHOR = "AUTHOR";
+
+    private String supplierKind;
+
+    /** F10:AUTHOR 行 = 作者 member_id;MERCHANT 行为 null。 */
+    private Long supplierMemberId;
     /** 引用 coop_perk.id(申报层)。⚠️ 仅 PERK 档非空 —— TRAFFIC/REVSHARE 没有权益可引用 */
     private Long perkId;
     /**
@@ -206,4 +215,12 @@ public class MerchantChapterOffer extends BaseEntity {
     public void setMerchantPerkTotal(Integer merchantPerkTotal) { this.merchantPerkTotal = merchantPerkTotal; }
     public Integer getMerchantRevshareCount() { return merchantRevshareCount; }
     public void setMerchantRevshareCount(Integer merchantRevshareCount) { this.merchantRevshareCount = merchantRevshareCount; }
+
+    public String getSupplierKind() { return supplierKind; }
+    public void setSupplierKind(String supplierKind) { this.supplierKind = supplierKind; }
+    public Long getSupplierMemberId() { return supplierMemberId; }
+    public void setSupplierMemberId(Long supplierMemberId) { this.supplierMemberId = supplierMemberId; }
+
+    /** AUTHOR 行(作者自己承接)。存量与商家行 supplier_kind=MERCHANT/null。 */
+    public boolean isAuthorSupplied() { return SUPPLIER_AUTHOR.equals(supplierKind); }
 }

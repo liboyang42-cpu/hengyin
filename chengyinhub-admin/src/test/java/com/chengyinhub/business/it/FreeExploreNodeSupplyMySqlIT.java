@@ -150,6 +150,7 @@ class FreeExploreNodeSupplyMySqlIT {
         // 「先只读断言形状、再补列」的收口版,覆盖 offer 三列 + application 一列,只叠它,不叠两遍。
         MIGRATIONS.put("merchant_chapter_offer", List.of(
                 "migration_20261003_merchant_offer_withdrawal_columns.sql",
+                "migration_20261118_chapter_offer_author_self_supply.sql",
                 "migration_club_direct_merchant_receivable_20261004.sql"));
         MIGRATIONS.put("merchant_chapter_application", List.of(
                 "migration_20261003_merchant_offer_withdrawal_columns.sql",

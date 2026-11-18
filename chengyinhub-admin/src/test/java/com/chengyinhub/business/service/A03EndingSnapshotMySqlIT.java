@@ -98,7 +98,8 @@ class A03EndingSnapshotMySqlIT {
                     "sql/migration_20260823_topic_route_graph.sql",
                     "sql/migration_20260930_registration_first_successful_scan.sql",
                     "sql/migration_ordinary_chapter_offer_withdraw_20261003.sql",
-                    "sql/migration_20261003_merchant_offer_withdrawal_columns.sql");
+                    "sql/migration_20261003_merchant_offer_withdrawal_columns.sql",
+                    "sql/migration_20261118_chapter_offer_author_self_supply.sql");
         }
         Configuration cfg = new Configuration(new Environment("a03-ending", new SpringManagedTransactionFactory(), dataSource));
         cfg.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");

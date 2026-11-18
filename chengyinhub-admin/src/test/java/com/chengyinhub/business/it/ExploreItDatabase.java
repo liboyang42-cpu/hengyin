@@ -36,6 +36,7 @@ final class ExploreItDatabase {
             "sql/migration_20260823_topic_route_published_snapshot.sql",
             "sql/migration_ordinary_chapter_offer_withdraw_20261003.sql",
             "sql/migration_20261003_merchant_offer_withdrawal_columns.sql",
+            "sql/migration_20261118_chapter_offer_author_self_supply.sql",
             "sql/migration_20260930_registration_first_successful_scan.sql",
             "sql/migration_club_direct_merchant_receivable_20261004.sql",
             // 9307c39df 起 CmsTopicChapterMapper 读 video_url / video_poster_url(第十三轮 m6 资金闸复跑时补)。
