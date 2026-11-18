@@ -286,7 +286,7 @@
         <block wx:if="{{canSeeRoster}}">
           <cy-skeleton wx:if="{{membersState === 'loading'}}" type="list" count="2" />
           <cy-error load-failure class="cy-fade-in" wx:elif="{{membersState === 'business-error'}}" title="成员列表加载失败" retry="重新加载" bind:retry="loadMembers" />
-          <cy-error load-failure wx:elif="{{membersState === 'network-error'}}" title="网络连接失败" retry="重新加载" bind:retry="loadMembers" />
+          <cy-error class="cy-fade-in" load-failure wx:elif="{{membersState === 'network-error'}}" title="网络连接失败" retry="重新加载" bind:retry="loadMembers" />
           <block wx:elif="{{membersState === 'ready'}}">
             <view class="member" wx:for="{{members}}" wx:key="id">
               <cy-avatar class="member-avatar" size="72" src="{{item.avatar || '/images/d_profile.png'}}" name="{{item.nickname || '城瘾玩家'}}" clickable="{{true}}" catchtap="goMemberProfile" data-member-id="{{item.memberId}}" aria-role="button" aria-label="打开成员主页" hover-class="cy-pressed" hover-stay-time="80" />
@@ -425,7 +425,7 @@
       <view class="overview-section club-stats-section" wx:if="{{club.isOwner && !(ownerStage === 'publish' && topicState === 'ready' && !manageTopics.length)}}">
         <view class="overview-section-tit">成员与活动概况</view>
         <cy-skeleton wx:if="{{clubStatsState === 'loading'}}" type="list" count="2" />
-        <cy-error load-failure wx:elif="{{clubStatsState === 'error'}}" title="数据看板加载失败" sub="{{clubStatsError}}" retry="重新加载" bind:retry="loadClubStats" />
+        <cy-error class="cy-fade-in" load-failure wx:elif="{{clubStatsState === 'error'}}" title="数据看板加载失败" sub="{{clubStatsError}}" retry="重新加载" bind:retry="loadClubStats" />
         <block wx:elif="{{clubStatsState === 'ready'}}">
           <view class="club-stats-grid">
             <view class="club-stat"><text class="club-stat-value">{{clubStats.topicCount}}</text><text class="club-stat-label">项目</text></view>
@@ -451,7 +451,7 @@
         <view class="manage-group">
         <cy-skeleton wx:if="{{topicState === 'loading'}}" type="list" count="2" />
         <cy-error load-failure class="cy-fade-in" wx:elif="{{topicState === 'error'}}" title="项目列表加载失败" retry="重新加载" bind:retry="loadTopics" />
-        <view wx:elif="{{manageTopics.length}}" class="manage-project-list">
+        <view wx:elif="{{manageTopics.length}}" class="manage-project-list cy-fade-in">
           <view class="manage-project" wx:for="{{manageTopics}}" wx:key="id" data-id="{{item.id}}" bindtap="goManageTopic" hover-class="cy-pressed" hover-stay-time="80">
             <image class="manage-project-cover" src="{{item.imgUrl || '/images/route_free_cover.png'}}" mode="aspectFill" lazy-load="true" />
             <view class="manage-project-main">
@@ -470,8 +470,8 @@
             <cy-icon class="manage-chevron" name="arrow-right" size="28" />
           </view>
         </view>
-        <cy-empty wx:elif="{{club.isOwner || canManageActivities}}" title="还没有项目" cta="发布主题" bind:cta="onCreateTeam" />
-        <cy-empty wx:else title="暂无分配给你的项目" />
+        <cy-empty class="cy-fade-in" wx:elif="{{club.isOwner || canManageActivities}}" title="还没有项目" cta="发布主题" bind:cta="onCreateTeam" />
+        <cy-empty class="cy-fade-in" wx:else title="暂无分配给你的项目" />
           <view wx:if="{{club.isOwner || canManageActivities}}" class="manage-add-row" catchtap="onCreateTeam" aria-role="button" aria-label="发布主题" hover-class="cy-pressed" hover-stay-time="80">
             <cy-icon class="manage-add-sign" name="plus" size="32" /><text>发布主题</text>
           </view>
@@ -491,7 +491,7 @@
         <view class="manage-fold-panel" wx:if="{{openManageSection === 'editions'}}">
         <cy-skeleton wx:if="{{shareEditionState === 'loading'}}" type="list" count="1" />
         <cy-error load-failure class="cy-fade-in" wx:elif="{{shareEditionState === 'error'}}" title="期次加载失败" retry="重新加载" bind:retry="loadShareEditions" />
-        <view wx:elif="{{shareEditions.length}}" class="manage-project-list">
+        <view wx:elif="{{shareEditions.length}}" class="manage-project-list cy-fade-in">
           <view class="manage-project manage-project--edition" wx:for="{{shareEditions}}" wx:key="topicId">
             <view class="manage-project-main">
               <view class="manage-project-name">{{item.topicName || ('期次 #' + item.topicId)}}</view>
@@ -502,9 +502,9 @@
           </view>
         </view>
         <!-- W10a #26:空态原因只来自服务端 reasonCode(未承接 / 已承接未开售 / 无权限),不从空数组猜。 -->
-        <cy-empty wx:elif="{{shareEditionEmptyRetry}}" title="{{shareEditionEmptyTitle}}" sub="{{shareEditionEmptySub}}"
+        <cy-empty class="cy-fade-in" wx:elif="{{shareEditionEmptyRetry}}" title="{{shareEditionEmptyTitle}}" sub="{{shareEditionEmptySub}}"
                   cta="重新加载" bind:cta="loadShareEditions" />
-        <cy-empty wx:else title="{{shareEditionEmptyTitle}}" sub="{{shareEditionEmptySub}}" />
+        <cy-empty class="cy-fade-in" wx:else title="{{shareEditionEmptyTitle}}" sub="{{shareEditionEmptySub}}" />
         </view>
       </view>
 
@@ -563,9 +563,9 @@
         </view>
         <view class="manage-fold-panel" wx:if="{{openManageSection === 'coop-pool'}}">
           <cy-skeleton wx:if="{{coopPoolState === 'loading'}}" type="list" count="2" />
-          <cy-empty wx:elif="{{coopPoolState === 'permission'}}" size="sm" kind="no-permission"
+          <cy-empty class="cy-fade-in" wx:elif="{{coopPoolState === 'permission'}}" size="sm" kind="no-permission"
                     title="暂不能看可对接的活动" sub="{{coopPoolError}}" />
-          <cy-error load-failure wx:elif="{{coopPoolState === 'error'}}" title="合作池加载失败" sub="{{coopPoolError}}"
+          <cy-error class="cy-fade-in" load-failure wx:elif="{{coopPoolState === 'error'}}" title="合作池加载失败" sub="{{coopPoolError}}"
                     retry="重试" bind:retry="retryCoopPool" />
           <block wx:elif="{{coopPoolState === 'ready'}}">
             <cy-empty wx:if="{{!coopPool.length}}" size="sm" title="暂无开放承接的主题"
@@ -609,7 +609,7 @@
         <view class="manage-fold-panel" wx:if="{{openManageSection === 'received'}}">
         <cy-skeleton wx:if="{{messageState === 'loading'}}" type="list" count="2" />
         <cy-error load-failure class="cy-fade-in" wx:elif="{{messageState === 'error'}}" title="合作消息加载失败" retry="重新加载" bind:retry="reloadMessages" />
-        <view wx:elif="{{messages.length}}" class="manage-message-list">
+        <view wx:elif="{{messages.length}}" class="manage-message-list cy-fade-in">
           <!-- CU-C-53:收到的邀约原来是纯静态摘要,待确认的那几条没有去处理的地方,
                只能绕到「可对接商家 → 我的合作」 —— 整行接到同一个收件箱。
                不在行内直接接受/拒绝:接受/拒绝只在收件箱里做。 -->
@@ -621,7 +621,7 @@
             <cy-icon class="manage-chevron" name="arrow-right" size="28" />
           </view>
         </view>
-        <cy-empty wx:else title="暂无合作邀约" />
+        <cy-empty class="cy-fade-in" wx:else title="暂无合作邀约" />
         </view>
       </view>
 
@@ -638,7 +638,7 @@
         <view class="manage-fold-panel" wx:if="{{openManageSection === 'sent'}}">
         <cy-skeleton wx:if="{{inviteFeedbackState === 'loading'}}" type="list" count="2" />
         <cy-error load-failure class="cy-fade-in" wx:elif="{{inviteFeedbackState === 'error'}}" title="邀约反馈加载失败" retry="重新加载" bind:retry="reloadInviteFeedback" />
-        <view wx:elif="{{sentInvites.length}}" class="manage-invite-list">
+        <view wx:elif="{{sentInvites.length}}" class="manage-invite-list cy-fade-in">
           <view class="manage-invite" wx:for="{{sentInvites}}" wx:key="id" bindtap="goCooperation" hover-class="cy-pressed" hover-stay-time="80">
             <view class="manage-invite-main">
               <text class="manage-invite-partner">{{item.partnerName}}</text>
@@ -648,7 +648,7 @@
             <text class="manage-invite-status manage-invite-status--{{item.statusClass}}">{{item.statusText}}</text>
           </view>
         </view>
-        <cy-empty wx:else title="还没有发出邀约" />
+        <cy-empty class="cy-fade-in" wx:else title="还没有发出邀约" />
         </view>
       </view>
 
@@ -668,7 +668,7 @@
   <cy-sheet show="{{postRefPickerShow}}" title="带上一次游玩记录" handle closable maskClosable bind:close="closePostRefPicker">
     <view class="post-ref-pick">
       <cy-skeleton wx:if="{{postRefState === 'loading'}}" type="list" count="3" />
-      <cy-error load-failure wx:elif="{{postRefState === 'error'}}" title="游玩记录加载失败" sub="{{postRefErrorText}}" retry="重新加载" bind:retry="loadPostRefOptions" />
+      <cy-error class="cy-fade-in" load-failure wx:elif="{{postRefState === 'error'}}" title="游玩记录加载失败" sub="{{postRefErrorText}}" retry="重新加载" bind:retry="loadPostRefOptions" />
       <block wx:elif="{{postRefState === 'ready'}}">
         <view class="post-ref-opt" wx:for="{{postRefOptions}}" wx:key="key"
               data-index="{{index}}" catchtap="onPickPostRef"
@@ -763,7 +763,7 @@
         <button wx:if="{{club.isOwner || club.viewerIsAdmin}}" class="cset-panel-act" open-type="share" aria-label="邀请成员" hover-class="cy-pressed" hover-stay-time="80"><text>邀请成员</text><cy-icon name="arrow-right" size="24" /></button>
         <cy-skeleton wx:if="{{membersState === 'loading'}}" type="list" count="2" />
         <cy-error load-failure class="cy-fade-in" wx:elif="{{membersState === 'business-error'}}" title="成员列表加载失败" retry="重新加载" bind:retry="loadMembers" />
-        <cy-error load-failure wx:elif="{{membersState === 'network-error'}}" title="网络连接失败" retry="重新加载" bind:retry="loadMembers" />
+        <cy-error class="cy-fade-in" load-failure wx:elif="{{membersState === 'network-error'}}" title="网络连接失败" retry="重新加载" bind:retry="loadMembers" />
         <block wx:elif="{{membersState === 'ready'}}">
           <view class="member member--managed" wx:for="{{members}}" wx:key="id">
             <cy-avatar class="member-avatar" size="72" src="{{item.avatar || '/images/d_profile.png'}}" name="{{item.nickname || '城瘾玩家'}}" clickable="{{true}}" catchtap="goMemberProfile" data-member-id="{{item.memberId}}" aria-role="button" aria-label="打开成员主页" hover-class="cy-pressed" hover-stay-time="80" />

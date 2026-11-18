@@ -1,3 +1,4 @@
+@import '../../../../../style/fade-in.wxss';
 /* 俱乐部编辑表单样式沿用原页面;去掉页面 chrome(顶部交给 scene-sheet)。 */
 :host { display: block; height: 100%; }
 .cle { width:100%; min-height:100%; box-sizing:border-box; }

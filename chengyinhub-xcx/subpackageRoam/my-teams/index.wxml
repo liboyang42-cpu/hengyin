@@ -26,7 +26,7 @@
 
   <block wx:if="{{tab === 'mine'}}">
     <cy-skeleton wx:if="{{loading && !groups.length}}" type="list" count="2" />
-    <view class="mt-err" wx:elif="{{mineError}}" bindtap="reload" aria-role="button" aria-label="队伍获取失败，点按重试" hover-class="cy-pressed" hover-stay-time="80">队伍获取失败 · 点按重试</view>
+    <view class="mt-err cy-fade-in" wx:elif="{{mineError}}" bindtap="reload" aria-role="button" aria-label="队伍获取失败，点按重试" hover-class="cy-pressed" hover-stay-time="80">队伍获取失败 · 点按重试</view>
     <block wx:elif="{{groups.length}}">
       <block wx:for="{{groups}}" wx:for-item="g" wx:key="key">
         <view class="mt-sec">{{g.title}}</view>

@@ -7,17 +7,17 @@
   <cy-page-title title="触达记录" safe-top="{{false}}" />
 
   <cy-skeleton wx:if="{{pageState === 'loading'}}" type="list" count="4" />
-  <cy-error wx:elif="{{pageState === 'error'}}" fill size="lg"
+  <cy-error class="cy-fade-in" wx:elif="{{pageState === 'error'}}" fill size="lg"
             title="触达记录加载失败" sub="{{errorMessage}}"
             retry="重新加载" bind:retry="retry" auto-back />
-  <cy-error wx:elif="{{pageState === 'no-permission'}}" fill size="lg"
+  <cy-error class="cy-fade-in" wx:elif="{{pageState === 'no-permission'}}" fill size="lg"
             title="当前岗位没有营销数据查看权限"
             sub="请联系店主开通"
             retry="" bind:back="onNavBack" auto-back custom-back />
-  <cy-empty wx:elif="{{pageState === 'empty'}}" fill size="lg" kind="empty"
+  <cy-empty class="cy-fade-in" wx:elif="{{pageState === 'empty'}}" fill size="lg" kind="empty"
             title="还没有触达记录" />
 
-  <scroll-view wx:elif="{{pageState === 'ready'}}" scroll-y class="ccl-scroll"
+  <scroll-view wx:elif="{{pageState === 'ready'}}" scroll-y class="ccl-scroll cy-fade-in"
                enhanced show-scrollbar="{{false}}">
     <view class="ccl-shell">
       <view class="fin-card ccl-card">
@@ -44,7 +44,7 @@
   <cy-sheet show="{{detailOpen}}" title="{{detail ? detail.titleText : '触达明细'}}" bind:close="closeDetail">
     <view class="ccl-detail">
       <cy-skeleton wx:if="{{detailState === 'loading'}}" type="list" count="3" />
-      <cy-inline-error wx:elif="{{detailState === 'error'}}" kind="data"
+      <cy-inline-error class="cy-fade-in" wx:elif="{{detailState === 'error'}}" kind="data"
                        title="触达明细加载失败" sub="{{detailError}}"
                        action="重新加载" bind:action="retryDetail" />
       <block wx:elif="{{detailState === 'ready' && detail}}">

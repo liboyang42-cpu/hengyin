@@ -23,7 +23,7 @@
     <cy-tabs class="ledger-filter" wx:if="{{merchantAccess.canReadFinance}}" variant="chip" shared-slab tabs="{{redemptionTabs}}" active="{{redemptionFilter}}" bind:change="onRedemptionFilter" />
     <view class="ledger-redemption-content" aria-role="region" aria-label="核销与退款" aria-busy="{{loading ? 'true' : 'false'}}">
       <cy-skeleton wx:if="{{loading && !hasLoaded}}" type="list" count="{{3}}" />
-      <cy-error load-failure wx:elif="{{error && !hasLoaded}}" size="lg" fill title="核销记录加载失败" sub="请稍后重试" retry="重新加载" bind:retry="retry" />
+      <cy-error class="cy-fade-in" load-failure wx:elif="{{error && !hasLoaded}}" size="lg" fill title="核销记录加载失败" sub="请稍后重试" retry="重新加载" bind:retry="retry" />
       <block wx:else>
         <view class="ledger-inline-state" wx:if="{{(loading || error) && hasLoaded}}">
           <text class="ledger-sync" wx:if="{{loading && hasLoaded}}" aria-role="status">正在确认最新记录…</text>
@@ -63,7 +63,7 @@
 
   <block wx:elif="{{isProjectMessages}}">
     <cy-skeleton wx:if="{{loading && !hasLoaded}}" type="list" count="{{3}}" />
-    <cy-error load-failure wx:elif="{{error && !hasLoaded}}" fill size="lg" title="近期动态加载失败"
+    <cy-error class="cy-fade-in" load-failure wx:elif="{{error && !hasLoaded}}" fill size="lg" title="近期动态加载失败"
               sub="请稍后重试" retry="重新加载" bind:retry="retry" />
     <block wx:else>
       <text class="ledger-sync" wx:if="{{loading && hasLoaded}}" aria-role="status">正在更新近期动态…</text>

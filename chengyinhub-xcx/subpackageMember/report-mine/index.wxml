@@ -8,9 +8,9 @@
     <cy-page-title title="我的举报" safe-top="{{false}}" />
     <view class="rp__body">
       <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="3" />
-      <cy-state-shell wx:elif="{{state === 'error'}}" kind="data" title="举报记录加载失败"
+      <cy-state-shell class="cy-fade-in" wx:elif="{{state === 'error'}}" kind="data" title="举报记录加载失败"
                       primary="重试" bind:primary="retry" />
-      <cy-state-shell wx:elif="{{state === 'empty'}}" kind="empty" title="还没有举报记录"
+      <cy-state-shell class="cy-fade-in" wx:elif="{{state === 'empty'}}" kind="empty" title="还没有举报记录"
                       />
       <block wx:else>
         <cy-tabs variant="chip" tabs="{{tabs}}" active="{{tab}}" bind:change="onTab" />

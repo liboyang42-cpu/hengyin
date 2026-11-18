@@ -99,7 +99,7 @@
     custom-style="width:0;height:0;background:transparent;pointer-events:none"
     bind:afterleave="onChoiceSheetCancel" />
 </view>
-<cy-error load-failure wx:else fill title="页面暂时无法显示" retry="重试" bind:retry="retry" />
+<cy-error class="cy-fade-in" load-failure wx:else fill title="页面暂时无法显示" retry="重试" bind:retry="retry" />
     <view wx:if="{{interactionState !== 'idle'}}" class="poi-recovery poi-interaction-recovery"><cy-error title="{{interactionTitle}}" sub="{{interactionText}}" retry="{{interactionActionText}}" bind:retry="recoverInteraction" /></view>
 <view wx:if="{{checkinPending}}" class="poi-recovery">
   <text wx:if="{{pendingStatusText}}" class="poi-status">{{pendingStatusText}}</text>

@@ -13,19 +13,19 @@
   </view>
 
   <cy-skeleton wx:if="{{pageState === 'loading'}}" type="list" count="4" />
-  <cy-error wx:elif="{{pageState === 'error'}}" fill size="lg"
+  <cy-error class="cy-fade-in" wx:elif="{{pageState === 'error'}}" fill size="lg"
             title="核销记录加载失败" sub="{{errorMessage}}"
             retry="重新加载" bind:retry="retry" auto-back />
-  <cy-error wx:elif="{{pageState === 'no-permission'}}" fill size="lg"
+  <cy-error class="cy-fade-in" wx:elif="{{pageState === 'no-permission'}}" fill size="lg"
             title="当前岗位没有核销记录查看权限"
             sub="请联系店主开通"
             retry="" bind:back="onNavBack" auto-back custom-back />
 
-  <view wx:elif="{{pageState === 'empty'}}" class="vrl-shell">
+  <view wx:elif="{{pageState === 'empty'}}" class="vrl-shell cy-fade-in">
     <cy-empty fill size="lg" kind="empty" title="{{bucket === 'VERIFIED' ? '还没有已核销记录' : '没有已撤销记录'}}" />
   </view>
 
-  <scroll-view wx:elif="{{pageState === 'ready'}}" scroll-y class="vrl-scroll"
+  <scroll-view wx:elif="{{pageState === 'ready'}}" scroll-y class="vrl-scroll cy-fade-in"
                enhanced show-scrollbar="{{false}}">
     <view class="vrl-shell" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
       <view class="fin-group vrl-group" wx:for="{{groups}}" wx:for-item="group" wx:key="key" style="--pmi:{{index}};">

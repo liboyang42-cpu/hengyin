@@ -129,7 +129,7 @@
   <view class="list">
 
     <cy-skeleton wx:if="{{commentsState === 'loading' && !list.length}}" type="list" count="3" />
-    <cy-error load-failure wx:elif="{{commentsState === 'error' && commentLoadError && !list.length}}" title="评论加载失败" retry="重试" bind:retry="retryComments" />
+    <cy-error class="cy-fade-in" load-failure wx:elif="{{commentsState === 'error' && commentLoadError && !list.length}}" title="评论加载失败" retry="重试" bind:retry="retryComments" />
     <cy-empty wx:if="{{commentsState === 'ready' && nodata}}" kind="empty" title="还没有评论" />
 
     <view class="dl" wx:for="{{ list }}" wx:key="id">

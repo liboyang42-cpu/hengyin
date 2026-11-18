@@ -6,7 +6,7 @@
   <view class="mp__frame" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
     <cy-nav-bar plain custom-back bind:back="goBack" />
     <cy-skeleton wx:if="{{state === 'loading'}}" type="card" count="2" />
-    <cy-error wx:elif="{{state === 'error'}}" fill size="lg" title="{{errorTitle}}" retry="重试" bind:retry="load" />
+    <cy-error class="cy-fade-in" wx:elif="{{state === 'error'}}" fill size="lg" title="{{errorTitle}}" retry="重试" bind:retry="load" />
     <block wx:else>
       <cy-page-title title="{{card.name}}" safe-top="{{false}}" />
       <view class="mp__body">

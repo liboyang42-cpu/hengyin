@@ -22,9 +22,9 @@
       <cy-tabs variant="chip" tabs="{{tabs}}" active="{{tab}}" bind:change="onTab" />
       <block wx:if="{{tab === 'subs'}}">
         <cy-skeleton wx:if="{{subs.state === 'loading'}}" type="list" count="2" />
-        <cy-error wx:elif="{{subs.state === 'error'}}" title="读取失败" retry="重试" bind:retry="load" />
-        <cy-empty wx:elif="{{subs.state === 'empty'}}" class="vb-empty" kind="empty" title="还没有投稿" />
-        <view class="vb-group" wx:else>
+        <cy-error class="cy-fade-in" wx:elif="{{subs.state === 'error'}}" title="读取失败" retry="重试" bind:retry="load" />
+        <cy-empty wx:elif="{{subs.state === 'empty'}}" class="vb-empty cy-fade-in" kind="empty" title="还没有投稿" />
+        <view class="vb-group cy-fade-in" wx:else>
           <view class="vb-row" wx:for="{{subs.rows}}" wx:key="id">
             <view class="vb-row__main">
               <text class="vb-row__title">{{item.title}} · {{item.status}}</text>
@@ -41,9 +41,9 @@
       </block>
       <block wx:else>
         <cy-skeleton wx:if="{{accruals.state === 'loading'}}" type="list" count="2" />
-        <cy-error wx:elif="{{accruals.state === 'error'}}" title="读取失败" retry="重试" bind:retry="load" />
-        <cy-empty wx:elif="{{accruals.state === 'empty'}}" class="vb-empty" kind="empty" title="还没有应计记录" />
-        <view class="vb-group" wx:else>
+        <cy-error class="cy-fade-in" wx:elif="{{accruals.state === 'error'}}" title="读取失败" retry="重试" bind:retry="load" />
+        <cy-empty wx:elif="{{accruals.state === 'empty'}}" class="vb-empty cy-fade-in" kind="empty" title="还没有应计记录" />
+        <view class="vb-group cy-fade-in" wx:else>
           <view class="vb-row" wx:for="{{accruals.rows}}" wx:key="key">
             <view class="vb-row__main">
               <text class="vb-row__title">{{item.amount}}</text>

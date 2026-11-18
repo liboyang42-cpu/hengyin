@@ -1,3 +1,4 @@
+@import '../../../style/fade-in.wxss';
 /* J2 客户 · 主题内(T3 全屏弹窗)· Figma node 143:90
    面板本体由 cy-scene-sheet(variant=full)提供;这里只画面板里的内容。
    ⚠️ 面板底是玻璃(bg-glass),坐在它上面的卡要用 bg-raised 这一档,别用整页上的 bg-elevated。 */

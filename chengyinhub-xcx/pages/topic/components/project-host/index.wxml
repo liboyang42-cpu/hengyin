@@ -212,8 +212,8 @@
     <block wx:if="{{ clubCandidates.state }}">
       <view class="dg-label">可以邀约的俱乐部</view>
       <cy-skeleton wx:if="{{ clubCandidates.state === 'loading' }}" type="list" count="{{ 3 }}" />
-      <cy-inline-error wx:elif="{{ clubCandidates.state === 'error' }}" kind="data" title="俱乐部列表没读到" action="重试" data-act="loadClubCandidates" bind:action="emit" />
-      <view class="dcard cs-list" wx:elif="{{ clubCandidates.rows.length }}">
+      <cy-inline-error class="cy-fade-in" wx:elif="{{ clubCandidates.state === 'error' }}" kind="data" title="俱乐部列表没读到" action="重试" data-act="loadClubCandidates" bind:action="emit" />
+      <view class="dcard cs-list cy-fade-in" wx:elif="{{ clubCandidates.rows.length }}">
       <view class="dr" wx:for="{{ clubCandidates.rows }}" wx:key="id">
         <image class="dr-avatar dr-avatar--round" wx:if="{{ item.logo }}" src="{{ item.logo }}" mode="aspectFill" />
         <view class="dr-avatar dr-avatar--round dr-avatar--fallback" wx:else>{{ item.initial }}</view>
@@ -225,7 +225,7 @@
         <view class="cs-pill cs-pill--g" catchtap="emit" data-act="openClubHome" data-id="{{ item.id }}" aria-role="button" aria-label="打开 {{ item.name }} 主页" hover-class="cy-pressed" hover-stay-time="80">主页</view>
       </view>
       </view>
-      <cy-empty wx:else size="sm" title="附近暂时没有可以邀约的俱乐部" />
+      <cy-empty class="cy-fade-in" wx:else size="sm" title="附近暂时没有可以邀约的俱乐部" />
     </block>
     <cy-empty wx:if="{{ !clubSheet.items.length && !clubCandidates.state }}" title="还没有俱乐部带团" />
   </project-drawer>
@@ -576,7 +576,7 @@
   <!-- 俱乐部主页:主理人、四格数据(没有的写「—」)、标签与常去区域、完整介绍、最近带过的活动、最近动态与成员 -->
   <project-layer show="{{ layers.clubHome.show }}" depth="{{ layers.clubHome.depth }}" title="{{ layers.clubHome.name || '俱乐部' }}" data-act="closeLayer" data-layer="clubHome" bind:back="emit">
     <cy-skeleton wx:if="{{ layers.clubHome.state === 'loading' }}" type="list" count="{{ 3 }}" />
-    <cy-inline-error wx:elif="{{ layers.clubHome.state === 'error' }}" kind="data" title="俱乐部主页没读到" action="重试" data-act="reloadClubHome" bind:action="emit" />
+    <cy-inline-error class="cy-fade-in" wx:elif="{{ layers.clubHome.state === 'error' }}" kind="data" title="俱乐部主页没读到" action="重试" data-act="reloadClubHome" bind:action="emit" />
     <block wx:else>
       <image class="lv-cover" wx:if="{{ layers.clubHome.cover }}" src="{{ layers.clubHome.cover }}" mode="aspectFill" />
       <view class="lv-id">
@@ -651,8 +651,8 @@
   <project-layer show="{{ layers.shops.show }}" depth="{{ 2 }}" title="附近商家" data-act="closeLayer" data-layer="shops" bind:back="emit">
     <view class="lv-st">为「{{ layers.shops.name }}」找商家</view>
     <cy-skeleton wx:if="{{ layers.shops.state === 'loading' }}" type="list" count="{{ 4 }}" />
-    <cy-inline-error wx:elif="{{ layers.shops.state === 'error' }}" kind="data" title="附近商家没读到" action="重试" data-act="reloadShops" bind:action="emit" />
-    <view class="dcard cs-list" wx:elif="{{ layers.shops.rows.length }}">
+    <cy-inline-error class="cy-fade-in" wx:elif="{{ layers.shops.state === 'error' }}" kind="data" title="附近商家没读到" action="重试" data-act="reloadShops" bind:action="emit" />
+    <view class="dcard cs-list cy-fade-in" wx:elif="{{ layers.shops.rows.length }}">
       <view class="dr" wx:for="{{ layers.shops.rows }}" wx:key="memberId">
         <image class="dr-avatar" wx:if="{{ item.logo }}" src="{{ item.logo }}" mode="aspectFill" />
         <view class="dr-avatar dr-avatar--fallback" wx:else>{{ item.initial }}</view>
@@ -660,7 +660,7 @@
         <view class="cs-pill" catchtap="emit" data-act="openShopInvite" data-id="{{ item.memberId }}" aria-role="button" aria-label="邀约 {{ item.name }} 承接" hover-class="cy-pressed" hover-stay-time="80">邀约承接</view>
       </view>
     </view>
-    <cy-empty wx:else size="sm" title="附近暂时没有可以邀约的商家" />
+    <cy-empty class="cy-fade-in" wx:else size="sm" title="附近暂时没有可以邀约的商家" />
   </project-layer>
 
   <!-- 邀约承接:写的就是这一站的档与条件(只读);商家只能接受或拒绝,不能换档 -->

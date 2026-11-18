@@ -25,12 +25,12 @@
 
   <cy-skeleton wx:if="{{state === 'loading'}}" type="card" count="3" loading-label="正在加载协作详情" />
   <!-- p2 F-9:缺参不是加载失败,不能挂 load-failure 留白;只给原因标题 + 一个返回 -->
-  <cy-error wx:elif="{{state === 'missing'}}" fill size="lg" title="无法打开这条邀约"
+  <cy-error class="cy-fade-in" wx:elif="{{state === 'missing'}}" fill size="lg" title="无法打开这条邀约"
             retry="回协作邀请" bind:retry="goBack" />
-  <cy-error wx:elif="{{state === 'notfound'}}" fill size="lg" title="这条邀约不在当前列表里了"
+  <cy-error class="cy-fade-in" wx:elif="{{state === 'notfound'}}" fill size="lg" title="这条邀约不在当前列表里了"
             sub=""
             retry="回协作邀请" bind:retry="goBack" />
-  <cy-error load-failure wx:elif="{{state !== 'ready'}}" fill size="lg" title="协作详情加载失败" sub="{{errorText}}"
+  <cy-error class="cy-fade-in" load-failure wx:elif="{{state !== 'ready'}}" fill size="lg" title="协作详情加载失败" sub="{{errorText}}"
             auto-back custom-back bind:back="goBack" retry="重试" bind:retry="retry" />
 
   <block wx:else>
@@ -197,8 +197,8 @@
   <cy-sheet variant="full" class="theme-merchant" show="{{showPerkPick}}" title="申报本次供给" handle closable maskClosable bind:close="closePerkPick">
   <!-- 第十二轮 k6(p2 N-5):删去申报浮层的结算说明句:引流型合同不结算,标题「申报本次供给」已说清要做什么 -->
   <cy-skeleton wx:if="{{perkState === 'loading'}}" type="list" count="3" />
-  <cy-error load-failure wx:elif="{{perkState === 'error'}}" title="常备权益加载失败" sub="{{perkErrorText}}" bind:retry="retryPerkPick" />
-  <scroll-view wx:elif="{{perkState === 'ready'}}" scroll-y class="pk-list">
+  <cy-error class="cy-fade-in" load-failure wx:elif="{{perkState === 'error'}}" title="常备权益加载失败" sub="{{perkErrorText}}" bind:retry="retryPerkPick" />
+  <scroll-view wx:elif="{{perkState === 'ready'}}" scroll-y class="pk-list cy-fade-in">
     <view class="pk-item {{item.checked ? 'on' : ''}}" wx:for="{{perkTemplates}}" wx:key="id" catchtap="togglePerk" data-idx="{{index}}" aria-role="checkbox" aria-checked="{{item.checked}}" aria-label="选择供给：{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
       <view class="pk-box {{item.checked ? 'on' : ''}}"></view>
       <view class="pk-main">

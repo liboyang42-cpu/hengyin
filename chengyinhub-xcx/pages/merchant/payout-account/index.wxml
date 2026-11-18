@@ -4,20 +4,20 @@
   <cy-page-title title="收款账户" safe-top="{{false}}" />
 
   <cy-skeleton wx:if="{{pageState === 'loading'}}" type="list" count="2" />
-  <cy-error wx:elif="{{pageState === 'error'}}" fill size="lg"
+  <cy-error class="cy-fade-in" wx:elif="{{pageState === 'error'}}" fill size="lg"
             title="收款账户加载失败" sub="{{errorMessage}}"
             retry="重新加载" bind:retry="retry" auto-back />
-  <cy-error wx:elif="{{pageState === 'no-permission'}}" fill size="lg"
+  <cy-error class="cy-fade-in" wx:elif="{{pageState === 'no-permission'}}" fill size="lg"
             title="当前岗位没有财务查看权限"
             retry="" bind:back="onNavBack" auto-back custom-back />
-  <view wx:elif="{{pageState === 'unavailable'}}" class="pa-shell">
+  <view wx:elif="{{pageState === 'unavailable'}}" class="pa-shell cy-fade-in">
     <cy-empty fill size="lg" kind="empty" title="收款账户暂未开放" />
   </view>
-  <view wx:elif="{{pageState === 'none'}}" class="pa-shell">
+  <view wx:elif="{{pageState === 'none'}}" class="pa-shell cy-fade-in">
     <cy-empty fill size="lg" kind="empty" title="还没有开通收款账户" />
   </view>
 
-  <view wx:elif="{{pageState === 'ready'}}" class="pa-shell">
+  <view wx:elif="{{pageState === 'ready'}}" class="pa-shell cy-fade-in">
     <view class="fin-card pa-card">
       <view class="fin-row pa-row" aria-label="开通状态，{{account.stateText}}">
         <view class="fin-row__dot fin-row__dot--{{account.stateTone}}" aria-hidden="true" />

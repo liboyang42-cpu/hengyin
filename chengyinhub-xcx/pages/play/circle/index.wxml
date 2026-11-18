@@ -4,7 +4,7 @@
   <cy-modal-host id="cy-modal-host" />
   <cy-nav-bar title="自由探索" />
   <cy-skeleton wx:if="{{loading && !card}}" type="detail" count="{{1}}" loading-label="正在准备自由探索" />
-  <cy-state-shell wx:elif="{{errorText && !card}}" kind="{{errorKind}}"
+  <cy-state-shell class="cy-fade-in" wx:elif="{{errorText && !card}}" kind="{{errorKind}}"
                   title="{{errorText}}" sub="{{errorSub}}" primary="{{errorAction}}"
                   fill size="lg" bind:primary="onStateAction" auto-back custom-back bind:back="goBack" />
   <block wx:else>

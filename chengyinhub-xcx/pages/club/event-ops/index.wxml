@@ -11,10 +11,10 @@
   <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="4" />
   <!-- 2026-08-26:权限拒绝原来和加载失败共用一个 error 态,渲染成「暂时不可用 + 重新加载」——
        给了一个永远点不成功的重试按钮,用户不会知道是权限问题。现在拆成三条。 -->
-  <cy-error wx:elif="{{state === 'no-permission'}}" fill size="lg" retry=""
+  <cy-error class="cy-fade-in" wx:elif="{{state === 'no-permission'}}" fill size="lg" retry=""
             title="你没有活动运营的权限" sub="{{errorText || '需「活动运营」或「本场核销」权限'}}" auto-back />
-  <cy-error load-failure wx:elif="{{state === 'network-error'}}" title="网络连接失败" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" />
-  <cy-error load-failure wx:elif="{{state === 'error'}}" title="活动运营暂时不可用" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" />
+  <cy-error class="cy-fade-in" load-failure wx:elif="{{state === 'network-error'}}" title="网络连接失败" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" />
+  <cy-error class="cy-fade-in" load-failure wx:elif="{{state === 'error'}}" title="活动运营暂时不可用" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" />
 
   <block wx:elif="{{state === 'ready'}}">
     <!-- CU-C-146:「现场名册与核销」这个入口带着 activityId 进来,承诺的是**本场**,
@@ -85,7 +85,7 @@
       <cy-tabs class="roster-filter" variant="chip" tabs="{{rosterTabs}}"
         active="{{rosterTab}}" bind:change="chooseRosterTab" />
       <cy-skeleton wx:if="{{rosterState === 'loading'}}" type="list" count="3" />
-      <cy-error load-failure wx:elif="{{rosterState === 'error'}}" title="名册加载失败" sub="{{rosterError}}" retry="重试" bind:retry="loadRoster" />
+      <cy-error class="cy-fade-in" load-failure wx:elif="{{rosterState === 'error'}}" title="名册加载失败" sub="{{rosterError}}" retry="重试" bind:retry="loadRoster" />
       <block wx:elif="{{rosterState === 'ready'}}">
         <cy-empty wx:if="{{activeRoster.length === 0}}" size="sm" title="这一段暂时没有成员" />
         <view class="member-card" wx:for="{{activeRoster}}" wx:key="memberId">
@@ -118,8 +118,8 @@
       <text class="section-title">日期清单</text>
       <view class="card">
         <cy-skeleton wx:if="{{seriesState === 'loading'}}" type="list" count="2" />
-        <cy-error load-failure wx:elif="{{seriesState === 'error'}}" title="系列列表加载失败" sub="{{seriesError}}" retry="重试" bind:retry="loadSeries" />
-        <cy-empty wx:elif="{{seriesState === 'empty'}}" title="还没有系列场次" />
+        <cy-error class="cy-fade-in" load-failure wx:elif="{{seriesState === 'error'}}" title="系列列表加载失败" sub="{{seriesError}}" retry="重试" bind:retry="loadSeries" />
+        <cy-empty class="cy-fade-in" wx:elif="{{seriesState === 'empty'}}" title="还没有系列场次" />
         <block wx:else>
           <block wx:for="{{seriesRows}}" wx:key="id">
             <view class="row {{editingSeriesId === item.id ? 'row--active' : ''}}"
@@ -143,7 +143,7 @@
                  「已锁定 / 本场已取消」——「本场已取消」本身就是要看见的状态。 -->
             <view class="occurrence-list" wx:if="{{expandedSeriesId === item.id}}">
               <cy-skeleton wx:if="{{occurrenceState === 'loading'}}" type="list" count="2" />
-              <cy-error wx:elif="{{occurrenceState === 'error'}}" load-failure="{{true}}" />
+              <cy-error class="cy-fade-in" wx:elif="{{occurrenceState === 'error'}}" load-failure="{{true}}" />
               <text wx:elif="{{occurrenceState === 'empty'}}" class="occurrence-note">暂无场次</text>
               <block wx:else>
                 <view class="occurrence-row" wx:for="{{occurrenceRows}}" wx:for-item="occ" wx:key="occurrenceId">

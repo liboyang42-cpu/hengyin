@@ -10,10 +10,10 @@
   <!-- 说明改挂 page-title 的 subtitle:原来卡外还有一个同名「参与人信息」大标题 = 同页双标题(DS §3.1 禁止条) -->
   <cy-page-title title="参与人信息" subtitle="" />
   <cy-skeleton wx:if="{{bootstrapping}}" type="form-section" count="{{2}}" loading-label="正在读取参与人信息" />
-  <cy-state-shell wx:elif="{{bootstrapError}}" kind="{{bootstrapErrorKind}}"
+  <cy-state-shell class="cy-fade-in" wx:elif="{{bootstrapError}}" kind="{{bootstrapErrorKind}}"
                   title="{{bootstrapError}}" sub="{{bootstrapErrorSub}}" primary="重新加载"
                   fill size="lg" bind:primary="retryBootstrap" auto-back custom-back bind:back="onBack" />
-  <view class="add" wx:else>
+  <view class="add cy-fade-in" wx:else>
     <view class="add_li">
       <view class="add_li_left">姓名<text class="req" aria-hidden="true">*</text></view>
       <view class="add_li_right">

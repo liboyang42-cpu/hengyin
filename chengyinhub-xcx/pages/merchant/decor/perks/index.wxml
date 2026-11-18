@@ -9,7 +9,7 @@
   <cy-danger-confirm id="dc" bind:confirm="confirmDelete" bind:cancel="cancelDelete" />
 
   <cy-skeleton type="list" count="3" wx:if="{{loadState === 'loading'}}" />
-  <cy-empty
+  <cy-empty class="cy-fade-in"
     size="lg"
     fill
     wx:elif="{{loadState === 'permission'}}"
@@ -31,7 +31,7 @@
 
   <scroll-view
     scroll-y
-    class="dp-scroll"
+    class="dp-scroll cy-fade-in"
     wx:elif="{{loadState === 'ready' && !formVisible}}"
     enhanced
     show-scrollbar="{{false}}"

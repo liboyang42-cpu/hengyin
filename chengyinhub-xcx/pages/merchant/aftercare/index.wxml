@@ -14,22 +14,22 @@
   </view>
 
   <cy-skeleton wx:if="{{pageState === 'loading'}}" type="list" count="4" />
-  <cy-error load-failure wx:elif="{{pageState === 'error'}}" fill size="lg"
+  <cy-error class="cy-fade-in" load-failure wx:elif="{{pageState === 'error'}}" fill size="lg"
             title="售后列表加载失败" sub="{{errorMessage}}"
             retry="重新加载" bind:retry="retry" auto-back />
-  <cy-error wx:elif="{{pageState === 'no-permission'}}" fill size="lg"
+  <cy-error class="cy-fade-in" wx:elif="{{pageState === 'no-permission'}}" fill size="lg"
             title="当前岗位没有售后查看权限"
             sub="请联系店主开通"
             retry="" bind:back="onNavBack" auto-back custom-back />
 
-  <view wx:elif="{{pageState === 'empty'}}" class="acl-shell">
+  <view wx:elif="{{pageState === 'empty'}}" class="acl-shell cy-fade-in">
     <!-- CU-M-152:三个分段共用同一句「退款申请会按平台审核与款项真实状态显示在这里」——
          既不解释现在该做什么,也没有下一步,还把平台内部审核口径写进商家空态。分段标题已经
          说清了是哪一段,这里只留标题。 -->
     <cy-empty fill size="lg" kind="empty" title="{{bucket === 'PENDING' ? '没有待回应售后' : (bucket === 'PROCESSING' ? '没有处理中的售后' : '还没有已完成售后')}}" />
   </view>
 
-  <scroll-view wx:elif="{{pageState === 'ready'}}" scroll-y class="acl-scroll"
+  <scroll-view wx:elif="{{pageState === 'ready'}}" scroll-y class="acl-scroll cy-fade-in"
                enhanced show-scrollbar="{{false}}" bindscrolltolower="loadMore">
     <view class="acl-shell">
       <!-- 列表接口不支持关键词:只在已加载的数据里筛;没有其他真实可筛维度,所以不放「筛选」按钮。 -->

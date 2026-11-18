@@ -412,9 +412,9 @@
   <project-drawer show="{{ chapterSheet.show }}" title="{{ info.topicName || '本章' }}"
                   bind:close="emitCloseChapter">
     <cy-skeleton wx:if="{{ chapterSheet.state === 'loading' }}" type="card" count="{{ 2 }}" />
-    <cy-error load-failure wx:elif="{{ chapterSheet.state === 'error' }}" title="本章内容加载失败"
+    <cy-error class="cy-fade-in" load-failure wx:elif="{{ chapterSheet.state === 'error' }}" title="本章内容加载失败"
               sub="{{ chapterSheet.error }}" bind:retry="emitOpenChapter" />
-    <cy-empty wx:elif="{{ chapterSheet.state === 'empty' }}" kind="empty" size="lg"
+    <cy-empty class="cy-fade-in" wx:elif="{{ chapterSheet.state === 'empty' }}" kind="empty" size="lg"
               title="这条路线还没有章节" />
     <block wx:else>
       <view class="dgroup-head-row" wx:if="{{ chapterSheet.story }}">

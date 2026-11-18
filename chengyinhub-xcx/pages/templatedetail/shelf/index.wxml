@@ -15,8 +15,8 @@
   <!-- ===================== 主题 ===================== -->
   <block wx:if="{{ tab === 'topic' }}">
     <cy-skeleton wx:if="{{ !topicLoaded && !topicError }}" class="sh-state" type="list" count="3" />
-    <cy-error wx:elif="{{ topicError && !topicLoaded }}" class="sh-state" load-failure size="lg" title="{{ topicError }}" sub="" bindretry="retry" />
-    <cy-empty wx:elif="{{ !featTopics.length }}" class="sh-state" size="lg" kind="empty" title="还没有可复用的主题模板" sub="" />
+    <cy-error wx:elif="{{ topicError && !topicLoaded }}" class="sh-state cy-fade-in" load-failure size="lg" title="{{ topicError }}" sub="" bindretry="retry" />
+    <cy-empty wx:elif="{{ !featTopics.length }}" class="sh-state cy-fade-in" size="lg" kind="empty" title="还没有可复用的主题模板" sub="" />
     <block wx:else>
       <scroll-view class="sh-rail" scroll-x enhanced show-scrollbar="{{ false }}" paging-enabled bindscroll="onRailScroll">
         <view class="sh-rail__in">
@@ -96,8 +96,8 @@
   <!-- ===================== 玩法 ===================== -->
   <block wx:else>
     <cy-skeleton wx:if="{{ !gameLoaded && !gameError }}" class="sh-state" type="list" count="3" />
-    <cy-error wx:elif="{{ gameError && !gameLoaded }}" class="sh-state" load-failure size="lg" title="{{ gameError }}" sub="" bindretry="retry" />
-    <cy-empty wx:elif="{{ !featGames.length && !gameShelves.length }}" class="sh-state" size="lg" kind="empty" title="还没有玩法模板" sub="" />
+    <cy-error wx:elif="{{ gameError && !gameLoaded }}" class="sh-state cy-fade-in" load-failure size="lg" title="{{ gameError }}" sub="" bindretry="retry" />
+    <cy-empty wx:elif="{{ !featGames.length && !gameShelves.length }}" class="sh-state cy-fade-in" size="lg" kind="empty" title="还没有玩法模板" sub="" />
     <block wx:else>
       <scroll-view class="sh-rail" scroll-x enhanced show-scrollbar="{{ false }}" paging-enabled>
         <view class="sh-rail__in sh-rail__in--g">

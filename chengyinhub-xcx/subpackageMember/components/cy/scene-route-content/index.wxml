@@ -14,9 +14,9 @@
 <view wx:else class="src {{theme === 'merchant' ? 'src--merchant' : 'src--player'}}">
   <cy-skeleton wx:if="{{state === 'loading'}}" type="card" count="{{3}}" />
   <cy-error load-failure class="cy-fade-in" wx:elif="{{state === 'error'}}" fill size="lg" title="这一页没能打开" sub="{{errorText}}" retry="重试" bind:retry="reload" />
-  <cy-empty wx:elif="{{state === 'no-permission'}}" fill size="lg" kind="no-permission"
+  <cy-empty class="cy-fade-in" wx:elif="{{state === 'no-permission'}}" fill size="lg" kind="no-permission"
     title="当前岗位不能管理节点" sub="请联系店主开通" />
-  <cy-empty wx:elif="{{state === 'empty'}}" fill size="lg" title="{{emptyText}}" />
+  <cy-empty class="cy-fade-in" wx:elif="{{state === 'empty'}}" fill size="lg" title="{{emptyText}}" />
 
   <block wx:elif="{{state === 'ready'}}">
     <view class="src-summary" wx:if="{{metrics.length}}">

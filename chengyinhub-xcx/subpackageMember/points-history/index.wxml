@@ -7,8 +7,8 @@
     <cy-page-title title="积分明细" safe-top="{{false}}" />
     <view class="ph__body">
       <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="3" />
-      <cy-error wx:elif="{{state === 'error'}}" title="积分明细加载失败" retry="重试" bind:retry="load" />
-      <cy-empty fill class="cy-fill-state" size="lg" wx:elif="{{state === 'empty'}}" kind="empty" title="还没有积分记录" />
+      <cy-error class="cy-fade-in" wx:elif="{{state === 'error'}}" title="积分明细加载失败" retry="重试" bind:retry="load" />
+      <cy-empty fill class="cy-fill-state cy-fade-in" size="lg" wx:elif="{{state === 'empty'}}" kind="empty" title="还没有积分记录" />
       <block wx:else>
         <cy-tabs variant="chip" tabs="{{filters}}" active="{{filter}}" bind:change="onFilter" />
         <cy-empty fill class="cy-fill-state" size="lg" wx:if="{{filterEmpty}}" kind="empty" title="{{filter === 'income' ? '还没有获得积分的记录' : '还没有使用积分的记录'}}" />

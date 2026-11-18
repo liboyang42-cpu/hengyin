@@ -6,11 +6,11 @@
   <cy-page-title title="套票预约" safe-top="{{false}}" />
 
   <cy-skeleton wx:if="{{pageState === 'loading'}}" type="list" count="4" />
-  <cy-error wx:elif="{{pageState === 'error'}}" fill size="lg" title="预约加载失败" sub="{{errorMessage}}" retry="重新加载" bind:retry="retry" auto-back />
-  <cy-error wx:elif="{{pageState === 'no-permission'}}" fill size="lg" title="当前岗位没有查看预约的权限" retry="" bind:back="onNavBack" auto-back custom-back />
-  <cy-empty wx:elif="{{pageState === 'empty'}}" fill size="lg" kind="empty" title="近期没有套票预约" />
+  <cy-error class="cy-fade-in" wx:elif="{{pageState === 'error'}}" fill size="lg" title="预约加载失败" sub="{{errorMessage}}" retry="重新加载" bind:retry="retry" auto-back />
+  <cy-error class="cy-fade-in" wx:elif="{{pageState === 'no-permission'}}" fill size="lg" title="当前岗位没有查看预约的权限" retry="" bind:back="onNavBack" auto-back custom-back />
+  <cy-empty class="cy-fade-in" wx:elif="{{pageState === 'empty'}}" fill size="lg" kind="empty" title="近期没有套票预约" />
 
-  <scroll-view wx:else scroll-y class="bres-scroll" enhanced show-scrollbar="{{false}}">
+  <scroll-view wx:else scroll-y class="bres-scroll cy-fade-in" enhanced show-scrollbar="{{false}}">
     <view class="bres-shell">
       <view class="bres-card">
         <view class="bres-row" wx:for="{{rows}}" wx:key="id" aria-label="{{item.timeText}}，{{item.statusText}}">

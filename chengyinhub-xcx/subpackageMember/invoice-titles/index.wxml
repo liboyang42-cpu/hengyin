@@ -13,8 +13,8 @@
     <block wx:else>
       <cy-inline-error wx:if="{{titlePending}}" kind="data" title="上次保存结果未确认" sub="确认前请勿修改抬头" action="{{titleRequestId ? '查询结果' : ''}}" bind:action="queryTitleSave" />
       <cy-skeleton wx:if="{{loading && !loaded}}" type="list" count="3" />
-      <cy-error load-failure wx:elif="{{error && !loaded}}" fill size="lg" class="fill-slot" title="发票抬头加载失败" retry="重试" bind:retry="loadTitles" />
-      <cy-empty wx:elif="{{loaded && !titles.length}}" kind="empty" fill size="lg" class="fill-slot" title="还没有发票抬头" />
+      <cy-error load-failure wx:elif="{{error && !loaded}}" fill size="lg" class="fill-slot cy-fade-in" title="发票抬头加载失败" retry="重试" bind:retry="loadTitles" />
+      <cy-empty wx:elif="{{loaded && !titles.length}}" kind="empty" fill size="lg" class="fill-slot cy-fade-in" title="还没有发票抬头" />
       <view class="dz_li" wx:for="{{titles}}" wx:key="id">
         <view class="dz_li_left">
           <view class="dz_li_left_name">

@@ -9,10 +9,10 @@
   <cy-page-title title="核销详情" safe-top="{{false}}" flush="{{true}}" />
 
   <cy-skeleton wx:if="{{state === 'loading'}}" type="card" count="2" loading-label="正在加载核销详情" />
-  <cy-error wx:elif="{{state === 'denied'}}" fill size="lg"
+  <cy-error class="cy-fade-in" wx:elif="{{state === 'denied'}}" fill size="lg"
             title="核销记录不可见" sub="{{errorText}}" retry="" bind:back="goBack" auto-back custom-back />
-  <cy-empty wx:elif="{{state === 'missing'}}" kind="not-found" fill size="lg" title="{{errorText}}" cta="返回" bind:cta="goBack" />
-  <cy-error load-failure wx:elif="{{state !== 'ready'}}" fill size="lg" title="核销凭证加载失败"
+  <cy-empty class="cy-fade-in" wx:elif="{{state === 'missing'}}" kind="not-found" fill size="lg" title="{{errorText}}" cta="返回" bind:cta="goBack" />
+  <cy-error class="cy-fade-in" load-failure wx:elif="{{state !== 'ready'}}" fill size="lg" title="核销凭证加载失败"
             sub="{{errorText}}" retry="重新加载" bind:retry="retry" auto-back />
 
   <block wx:else>

@@ -51,13 +51,13 @@ module.exports = { valid: valid };
           bind:detail="onPostTap" bind:comment="onPostTap" bind:like="onLikePost" bind:follow="onFollowPost" bind:user="onPostUser" bind:club="onPostClub" bind:repost="onRepostPost"
           bind:playdetail="onPostReference" bind:play="onPostReference" />
       </block>
-      <cy-empty wx:elif="{{feedState === 'empty'}}" kind="empty" title="{{feedEmptyTitle}}" />
+      <cy-empty class="cy-fade-in" wx:elif="{{feedState === 'empty'}}" kind="empty" title="{{feedEmptyTitle}}" />
     </block>
 
     <block wx:else>
       <cy-skeleton wx:if="{{pageState === 'loading'}}" type="card" count="{{3}}" loading-label="合作对象加载中" />
       <!-- 未登录不再整屏拦:静默登录后自动加载;登录失败只留这条内联错误 + 重试。 -->
-      <cy-inline-error load-failure class="rel-inline-error" wx:elif="{{pageState === 'error'}}" kind="data"
+      <cy-inline-error load-failure class="rel-inline-error cy-fade-in" wx:elif="{{pageState === 'error'}}" kind="data"
         title="合作数据加载失败" sub="{{error}}" action="重新加载" bind:action="retryRelation" />
       <block wx:else>
         <view wx:if="{{refreshing}}" class="refresh-note" aria-role="status" aria-live="polite">

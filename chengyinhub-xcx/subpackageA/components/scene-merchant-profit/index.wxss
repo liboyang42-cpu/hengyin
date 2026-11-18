@@ -1,3 +1,4 @@
+@import '../../../style/fade-in.wxss';
 /* 分润明细样式沿用原页面;去掉页面 chrome(nav-bar / page-title,顶部交给 scene-sheet)。
    面板底色由 .ss__panel 出,这里不重刷。 */
 :host { display: block; height: 100%; min-height: 0; }
