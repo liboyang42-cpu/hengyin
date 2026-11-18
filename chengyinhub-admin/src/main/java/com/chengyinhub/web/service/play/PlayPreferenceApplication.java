@@ -164,7 +164,7 @@ public class PlayPreferenceApplication {
         if (mode == PlayMode.FREE_COLLECT
                 && !playNodeContext.isPureOnlineNode(out.node)
                 && !shopDayProofService.hasArrived(memberId, out.playCtx.actId, out.node.getId())) {
-            out.error = error("先扫店内静态码进店，再开始任务");
+            out.error = error("先点「我已到店」，再开始任务");
             return out;
         }
         // R18-FREEZE:偏好题判定配置(preferenceJson)按开局快照,老局快照没有该键时回退实时模板

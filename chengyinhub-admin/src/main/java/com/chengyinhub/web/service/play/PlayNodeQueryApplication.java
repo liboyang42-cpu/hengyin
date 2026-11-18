@@ -113,6 +113,8 @@ public class PlayNodeQueryApplication {
     private PlayCompletionFacts playCompletionFacts;
     @Autowired
     private PlayNodeContext playNodeContext;
+    @Autowired(required = false)
+    private com.chengyinhub.business.mapper.CmsTopicNodeMapper cmsTopicNodeMapper;
 
     /** 单条主键取券;查不到/查挂了一律 null ⇒ 调用方整块不下发,不让奖励拖垮 /nodes */
     public com.chengyinhub.business.domain.SmsCoupon resolveCoupon(Long couponId) {
@@ -224,6 +226,20 @@ public class PlayNodeQueryApplication {
         read.playableNodeIds = new java.util.HashSet<>();
         // 节点探索值真源缓存(模板 xp 按 templateId 去重查询),与 advanceProgress 的 resolveNodeXp 同一口径
         read.nodeXpCache = new HashMap<>();
+        read.firstStationId = com.chengyinhub.business.service.support.StationImageVisibility.firstStationId(read.nodeList);
+        read.visitedChapterIds = new java.util.HashSet<>();
+        read.placeChapterIds = new java.util.HashSet<>();
+        read.visitConfigByNode = new HashMap<>();
+        if (read.playMode == PlayMode.FREE_COLLECT && cmsTopicNodeMapper != null) {
+            try {
+                List<com.chengyinhub.business.domain.FreeExploreVisitConfig> configs = cmsTopicNodeMapper.selectVisitConfigByTopicId(read.tId);
+                if (configs != null) for (com.chengyinhub.business.domain.FreeExploreVisitConfig config : configs)
+                    if (config != null && config.getNodeId() != null) read.visitConfigByNode.put(config.getNodeId(), config);
+            } catch (Exception e) {
+                // 读不到配置按默认 GPS 300 米展示;到访判定本身在 /arrive 服务端再读一次,不受影响。
+                logger.warn("自由探索到访配置读取失败 topic={}", read.tId, e);
+            }
+        }
         return null;
     }
 
@@ -246,6 +262,17 @@ public class PlayNodeQueryApplication {
         m.put("longitude", n.getLongitude());
         m.put("latitude", n.getLatitude());
         m.put("imgUrl", n.getImgUrl());
+        // F07:城市定向后续站点的照片到站前不下发(第一站与本局已到达/已完成的站除外),端上显示剪影占位。
+        if (read.playMode != PlayMode.FREE_COLLECT) {
+            PlayerNodeProgress reachedProof = read.progressByNode.get(n.getId());
+            boolean reached = (reachedProof != null && reachedProof.getCheckinTime() != null)
+                    || read.completedNodeIds.contains(n.getId()) || read.doneNodeIds.contains(n.getId());
+            boolean firstStation = n.getId() != null && n.getId().equals(read.firstStationId);
+            if (!com.chengyinhub.business.service.support.StationImageVisibility.visible(read.playMode, firstStation, reached)) {
+                m.put("imgUrl", null);
+                m.put(com.chengyinhub.business.service.support.StationImageVisibility.HIDDEN_FIELD, true);
+            }
+        }
         m.put("description", n.getDescription());
         // 钩子一句话。实体与 NodeDTO 早就有这个字段,只是这里一直没下发 ——
         // 前端 hero 层读 node.hookText 读了个空,恒回落 description,于是章节正文被重复念一遍。
@@ -539,7 +566,77 @@ public class PlayNodeQueryApplication {
                     "question", "options", "gameTitle", "hint1", "hint2", "storyText",
                     "validationMethod", "sensorType", "sensorConfig"));
         }
+        if (read.playMode == PlayMode.FREE_COLLECT) projectFreeExploreVisit(read, n, m);
         read.nodes.add(m);
+    }
+
+    /**
+     * FE-STORY 5.3:自由探索只下发已到访地点的剧情。到访 = 到店行(扫码或 300 米内点「我已到店」,
+     * checkin_time 不为空)、本章已被店员核销(人就在店里)、或纯线上地点。
+     * 未到访只保留找地点需要的字段(名称、地址、坐标、营业时间、钩子、外观照片、权益)。
+     */
+    private void projectFreeExploreVisit(NodeProjection read, CmsTopicNode n, Map<String, Object> m) {
+        com.chengyinhub.business.domain.FreeExploreVisitConfig config = read.visitConfigByNode == null ? null
+                : read.visitConfigByNode.get(n.getId());
+        int check = com.chengyinhub.business.service.support.FreeExploreVisit.normalizeCheck(
+                config == null ? null : config.getVisitCheck());
+        PlayerNodeProgress proof = read.progressByNode.get(n.getId());
+        boolean arrived = proof != null && proof.getCheckinTime() != null;
+        RegistrationEntitlement entitlement = read.entitlementByChapter.get(n.getChapterId());
+        boolean redeemed = entitlement != null && Integer.valueOf(1).equals(entitlement.getStatus());
+        boolean online = playNodeContext.isPureOnlineNode(n)
+                || check == com.chengyinhub.business.service.support.FreeExploreVisit.CHECK_ONLINE;
+        boolean visited = arrived || redeemed || online;
+        m.put("visited", visited);
+        m.put("visitTime", arrived ? proof.getCheckinTime() : redeemed ? entitlement.getRedeemedAt() : null);
+        m.put("visitCheck", online ? "ONLINE" : com.chengyinhub.business.service.support.FreeExploreVisit.checkLabel(check));
+        m.put("visitRadius", com.chengyinhub.business.service.support.ArrivalPolicy.visitRadius(
+                config == null ? null : config.getVisitRadiusM()));
+        m.put("storyLocked", !visited);
+        if (n.getChapterId() != null) {
+            read.placeChapterIds.add(n.getChapterId());
+            if (visited) read.visitedChapterIds.add(n.getChapterId());
+        }
+        if (!visited) {
+            for (String key : Arrays.asList("description", "cardHookLong", "fragmentText", "storyText", "storyImg")) {
+                if (m.containsKey(key)) m.put(key, null);
+            }
+        }
+    }
+
+    /**
+     * FE-STORY 5.3 章节级:一章的地点一个都没到访 ⇒ 只给 id / 名称 / 排序。没有地点的章(纯文字章)不锁。
+     * 只在自由探索调用;城市定向章节一字不改。
+     */
+    static List<Map<String, Object>> gateFreeExploreChapters(List<Map<String, Object>> chapters,
+            Set<Long> placeChapterIds, Set<Long> visitedChapterIds) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Map<String, Object> chapter : chapters) {
+            Object rawId = chapter.get("chapterId");
+            Long chapterId = rawId instanceof Number ? Long.valueOf(((Number) rawId).longValue())
+                    : rawId == null ? null : parseLongOrNull(String.valueOf(rawId));
+            boolean locked = chapterId != null && placeChapterIds.contains(chapterId) && !visitedChapterIds.contains(chapterId);
+            if (!locked) {
+                Map<String, Object> open = new LinkedHashMap<>(chapter);
+                if (chapterId != null) open.put("chapterLocked", false);
+                out.add(open);
+                continue;
+            }
+            Map<String, Object> teaser = new LinkedHashMap<>();
+            teaser.put("chapterId", chapter.get("chapterId"));
+            teaser.put("name", chapter.get("name"));
+            teaser.put("sortId", chapter.get("sortId"));
+            teaser.put("description", null);
+            teaser.put("blocks", java.util.Collections.emptyList());
+            teaser.put("chapterLocked", true);
+            out.add(teaser);
+        }
+        return out;
+    }
+
+    private static Long parseLongOrNull(String raw) {
+        try { return Long.valueOf(raw.trim()); }
+        catch (NumberFormatException e) { return null; }
     }
 
     Map<String, Object> finishNodes(NodeProjection read) {
@@ -679,6 +776,11 @@ public class PlayNodeQueryApplication {
             data.put("runKey", read.routeState.getSessionId().toString());
         if (read.selfPlay) {
             data.put("expiresAt", read.passExpiresAt);
+        }
+        if (read.playMode == PlayMode.FREE_COLLECT) {
+            chapters = gateFreeExploreChapters(chapters, read.placeChapterIds, read.visitedChapterIds);
+            data.put("storyUnlocked", read.visitedChapterIds.size());
+            data.put("storyTotal", read.placeChapterIds.size());
         }
         data.put("chapters", chapters);
         data.put("nodes", read.nodes);
@@ -893,6 +995,14 @@ public class PlayNodeQueryApplication {
         int nowMinuteOfDay;
         java.util.Set<Long> playableNodeIds;
         Map<Long, Integer> nodeXpCache;
+        /** F07:城市定向第一站(到站前唯一下发站图的站)。 */
+        Long firstStationId;
+        /** FE-STORY:自由探索各地点到访配置(visit_check / visit_radius_m)。 */
+        Map<Long, com.chengyinhub.business.domain.FreeExploreVisitConfig> visitConfigByNode;
+        /** FE-STORY:本次投影里已到访(可读剧情)的章节。 */
+        Set<Long> visitedChapterIds;
+        /** FE-STORY:本次投影里有地点的章节。 */
+        Set<Long> placeChapterIds;
         /** 端能力声明(可选):不传 = 未声明,兼容结论为未确认,绝不当作不支持。 */
         com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration capabilityDeclaration =
                 com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration.NONE;

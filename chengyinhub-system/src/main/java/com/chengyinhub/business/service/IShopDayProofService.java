@@ -25,4 +25,29 @@ public interface IShopDayProofService {
 
     /** 游戏完成:进店行 status 0→1 条件更新;返回 true = 本次为首次完成(该发奖)。 */
     boolean markGameDone(Long memberId, Long activityId, Long topicId, Long nodeId);
+
+    /**
+     * F08:记下 {@link #markArrived} 写出的到店行的到达来源
+     * ({@link com.chengyinhub.business.service.support.ArrivalSource})。只写第一次:排队计时只认 QR。
+     */
+    default void recordArrivalSource(PlayerNodeProgress arrived, String arrivalSource) {
+    }
+
+    /**
+     * 自由探索到访(FE-STORY 5.2):在已写到店行的基础上记 visit_time / visit_method(只写第一次),
+     * 同章节已有到店行的兄弟节点一起标记。不改 status、不核销、不发分。
+     */
+    default void markVisited(PlayerNodeProgress arrived, CmsTopicNode node, int visitMethod,
+                             String longitude, String latitude) {
+    }
+
+    /** 自由探索到访配置;查不到返回 null(调用方按默认 GPS 300 米处理)。 */
+    default com.chengyinhub.business.domain.FreeExploreVisitConfig visitConfig(Long nodeId) {
+        return null;
+    }
+
+    /** 整个主题的到访配置,按 nodeId 索引;查不到返回空表。 */
+    default java.util.Map<Long, com.chengyinhub.business.domain.FreeExploreVisitConfig> visitConfigs(Long topicId) {
+        return java.util.Collections.emptyMap();
+    }
 }

@@ -226,4 +226,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{id}
         </foreach>
     </delete>
+    <select id="selectVisitConfigById" resultType="com.chengyinhub.business.domain.FreeExploreVisitConfig">
+        select id as nodeId, visit_check as visitCheck, visit_radius_m as visitRadiusM
+          from cms_topic_node where id = #{nodeId}
+    </select>
+
+    <select id="selectVisitConfigByTopicId" resultType="com.chengyinhub.business.domain.FreeExploreVisitConfig">
+        select id as nodeId, visit_check as visitCheck, visit_radius_m as visitRadiusM
+          from cms_topic_node where topic_id = #{topicId}
+    </select>
+
 </mapper>

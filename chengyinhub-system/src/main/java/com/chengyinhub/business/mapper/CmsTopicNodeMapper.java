@@ -71,4 +71,10 @@ public interface CmsTopicNodeMapper
      * @return 结果
      */
     public int deleteCmsTopicNodeByIds(Long[] ids);
+
+    /** 自由探索到访配置(单个节点)。列由 migration_20261118_fe_story_visit_gate.sql 新增。 */
+    com.chengyinhub.business.domain.FreeExploreVisitConfig selectVisitConfigById(@org.apache.ibatis.annotations.Param("nodeId") Long nodeId);
+
+    /** 自由探索到访配置(整个主题),/api/play/nodes 投影用。 */
+    List<com.chengyinhub.business.domain.FreeExploreVisitConfig> selectVisitConfigByTopicId(@org.apache.ibatis.annotations.Param("topicId") Long topicId);
 }

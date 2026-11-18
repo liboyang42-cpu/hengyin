@@ -34,6 +34,8 @@ import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.utils.StringUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.chengyinhub.business.service.support.ArrivalPolicy;
+import com.chengyinhub.business.service.support.ArrivalSource;
+import com.chengyinhub.business.service.support.FreeExploreVisit;
 import com.chengyinhub.business.service.support.ArrivalReading;
 
 import org.springframework.stereotype.Service;
@@ -172,9 +174,13 @@ public class PlayBasicCommandApplication {
                 // 码消费失败可能已改写码状态,不声称本次未执行。
                 if (consumed.kind != IPlayCheckinCodeService.ConsumeResult.Kind.OK) return PlayCommandErrorContract.unresolvedEffect(consumed.message, scanCodeCode(consumed));
             }
-            PlayerNodeProgress proof = shopDayProofService.markArrived(memberId, actId, node);
+            PlayerNodeProgress proof = arrivedWith(memberId, actId, node, ArrivalSource.QR);
+            // FE-STORY:扫码成功即到访(配置为 GPS 的地点扫码同样算,多一种方式,不更严格)。
+            if (proof != null) shopDayProofService.markVisited(proof, node, FreeExploreVisit.METHOD_SCAN, null, null);
             recordFirstSuccessfulScan(memberId, ctx);
-            return AjaxResult.success("已记录到店", playTaskPresentation.shopDayProofData(node, proof));
+            Map<String, Object> checkinData = playTaskPresentation.shopDayProofData(node, proof);
+            checkinData.put("visited", true);
+            return AjaxResult.success("已记录到店", checkinData);
         }
         // R18-FREEZE:完成方式闸按开局快照判定(冻结优先,老局快照回退实时模板)
         CmsMemberTemplate checkinTemplate = playNodeContext.effectiveTemplate(memberId, ctx.topicId, ctx.actId, node, originalRun);
@@ -196,7 +202,7 @@ public class PlayBasicCommandApplication {
         }
         boolean personalGameplay=originalRun.session()!=null && topicRouteRuntimeService!=null && topicRouteRuntimeService.genericPlayer(memberId,ctx.topicId,actId);
         if (sharedRoute != null || personalGameplay) {
-            PlayerNodeProgress proof = shopDayProofService.markArrived(memberId, actId, node);
+            PlayerNodeProgress proof = arrivedWith(memberId, actId, node, ArrivalSource.QR);
             Map<String,Object> arrivalData=playTaskPresentation.shopDayProofData(node,proof);
             if(personalGameplay)arrivalData.put("themeRuntime",topicRouteRuntimeService.recordPlayerArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,expectedRouteVersion));
             if(sharedRoute!=null)arrivalData.put("sharedRuntime",gameSessionRuntimeService.recordSharedBasicArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,"SCAN",runtimeInstance,authorityEpoch));
@@ -341,7 +347,7 @@ public class PlayBasicCommandApplication {
         if (playMode == PlayMode.FREE_COLLECT
                 && !playNodeContext.isPureOnlineNode(node)
                 && !shopDayProofService.hasArrived(memberId, actId, node.getId())) {
-            return PlayCommandErrorContract.rejected("先扫店内静态码进店，再开始任务", PlayCommandErrorContract.STORE_SCAN_REQUIRED);
+            return PlayCommandErrorContract.rejected("先点「我已到店」，再开始任务", PlayCommandErrorContract.STORE_SCAN_REQUIRED);
         }
 
         // 线性解锁校验（仅 mode=1 经典定向）
@@ -461,7 +467,7 @@ public class PlayBasicCommandApplication {
         return AjaxResult.success(firstTime ? "答对了！" : "该节点已完成", data);
     }
 
-    /** 开局时定位校验(300 米,精度 80 米);作答随带的定位与 arrive 同口径。null = 通过。 */
+    /** 开局时定位校验(F08 v2:300 米,定位差时最多放宽到 500 米,精度上限 200 米);作答随带的定位与 arrive 同口径。null = 通过。 */
     private FenceRejection startFenceError(CmsTopicNode node, String longitude, String latitude, String accuracy) {
         if (StringUtils.isBlank(longitude) || StringUtils.isBlank(latitude)) {
             return new FenceRejection("开局前请先开启定位", PlayCommandErrorContract.ARRIVE_LOCATION_MISSING);
@@ -482,7 +488,7 @@ public class PlayBasicCommandApplication {
         ArrivalPolicy.Fence fence = ArrivalPolicy.startViolation(dist, acc);
         if (fence == ArrivalPolicy.Fence.INVALID) return new FenceRejection("定位无效", PlayCommandErrorContract.ARRIVE_LOCATION_INVALID);
         if (fence == ArrivalPolicy.Fence.ACCURACY_LOW) {
-            return new FenceRejection("定位精度不足，请到开阔处再开局", PlayCommandErrorContract.ARRIVE_ACCURACY_LOW);
+            return new FenceRejection("定位不准，再试一次", PlayCommandErrorContract.ARRIVE_ACCURACY_LOW);
         }
         return fence == ArrivalPolicy.Fence.TOO_FAR
                 ? new FenceRejection("离起点太远，请到起点 300 米内再开始", PlayCommandErrorContract.ARRIVE_TOO_FAR) : null;
@@ -542,7 +548,7 @@ public class PlayBasicCommandApplication {
         int mode = playNodeContext.resolveMode(ctx.actId, ctx.topicId);
         if (mode == PlayMode.FREE_COLLECT && !playNodeContext.isPureOnlineNode(node)
                 && !shopDayProofService.hasArrived(memberId, ctx.actId, node.getId())) {
-            return PlayCommandErrorContract.rejected("先扫店内静态码进店，再开始任务", PlayCommandErrorContract.STORE_SCAN_REQUIRED);
+            return PlayCommandErrorContract.rejected("先点「我已到店」，再开始任务", PlayCommandErrorContract.STORE_SCAN_REQUIRED);
         }
         // R18-FREEZE:传感器判定配置按开局快照,老局快照没有该键时回退实时模板
         com.fasterxml.jackson.databind.JsonNode frozenAnswer = playNodeContext.frozenAnswer(memberId, ctx.topicId, ctx.actId, node.getId(), originalRun);
@@ -635,7 +641,8 @@ public class PlayBasicCommandApplication {
             if (playCompletionFacts.isExploreChapterRedeemed(memberId, actId, node.getChapterId())) {
                 return PlayCommandErrorContract.rejected("该章节已核销，不能补写到店时间", PlayCommandErrorContract.CHAPTER_REDEEMED);
             }
-            PlayerNodeProgress proof = shopDayProofService.markArrived(memberId, actId, node);
+            PlayerNodeProgress proof = arrivedWith(memberId, actId, node, ArrivalSource.ONLINE);
+            if (proof != null) shopDayProofService.markVisited(proof, node, FreeExploreVisit.METHOD_ONLINE, null, null);
             return AjaxResult.success("已完成本节", playTaskPresentation.shopDayProofData(node, proof));
         }
         // P1 带领场闸:集合中不可推进;行进中章节须队长已放行
@@ -645,8 +652,11 @@ public class PlayBasicCommandApplication {
         // 线性解锁校验（仅 mode=1 经典定向；mode=2 自由定向跳过）
         String unlockErr = playNodeContext.routeAccessError(memberId, actId, ctx.topicId, node, routeActionId);
         if (unlockErr != null) return PlayCommandErrorContract.rejected(unlockErr, PlayCommandErrorContract.ROUTE_LOCKED);
+        // F08 / FE-STORY(业主 FE-G2):实体店到店 = 300 米内点「我已到店」(定位一次);配置为扫码的地点仍走 /checkin。
+        // 写入的到店行记 arrival_source=GEO_TAP,排队计时 queue_joined_at / 店内负载只认 QR,
+        // 所以原注释担心的「手机说它在附近被当成扫了码」不会再撑虚排队数据。
         if (freeCollectStore && !shopDayProofService.hasArrived(memberId, actId, node.getId())) {
-            return PlayCommandErrorContract.rejected("请扫店内的码", PlayCommandErrorContract.STORE_SCAN_REQUIRED);
+            return freeExploreVisit(memberId, actId, ctx, node, longitude, latitude, accuracy);
         }
 
         // 验证方式闸：答题(1)/拍照(2)/选项(3)/扫码(4) 类节点必须走对应接口完成，
@@ -675,7 +685,13 @@ public class PlayBasicCommandApplication {
         }
 
         // 到店不等于游戏完成；实体免费收集只接受原局已核验的拍照/扫码玩法 proof。
-        if (freeCollectStore && !stationGameProof) return PlayCommandErrorContract.rejected("请扫店内的码", PlayCommandErrorContract.STORE_SCAN_REQUIRED);
+        // 已到店又点了一次「我已到店」:幂等回执(不重写到店时间、不发分、不判通关)。
+        if (freeCollectStore && !stationGameProof) {
+            PlayerNodeProgress proof = shopDayProofService.markArrived(memberId, actId, node);
+            Map<String, Object> again = playTaskPresentation.shopDayProofData(node, proof);
+            again.put("visited", true);
+            return AjaxResult.success("已到店", again);
+        }
 
         // GPS 围栏：节点有坐标才校验（gcj02，Haversine 50m）；无坐标则按到点即完成放行（前端引导走扫码）。
         // ⚠️ GPS(vm=5)节点是例外:它必须靠站点坐标才能判定"到没到",缺经或缺纬不能退化成
@@ -744,7 +760,7 @@ public class PlayBasicCommandApplication {
             }
             ArrivalPolicy.Fence fence = ArrivalPolicy.startViolation(dist, acc.doubleValue());
             if (fence == ArrivalPolicy.Fence.INVALID) return arriveRejected(PlayCommandErrorContract.retryable("定位无效", PlayCommandErrorContract.ARRIVE_LOCATION_INVALID), frozenStation);
-            if (fence == ArrivalPolicy.Fence.ACCURACY_LOW) return arriveRejected(PlayCommandErrorContract.retryable("定位精度不足，请到开阔处或扫码完成", PlayCommandErrorContract.ARRIVE_ACCURACY_LOW), frozenStation);
+            if (fence == ArrivalPolicy.Fence.ACCURACY_LOW) return arriveRejected(PlayCommandErrorContract.retryable("定位不准，再试一次", PlayCommandErrorContract.ARRIVE_ACCURACY_LOW), frozenStation);
             if (fence == ArrivalPolicy.Fence.TOO_FAR) return arriveRejected(PlayCommandErrorContract.retryable("离起点太远，请到起点 300 米内再开始", PlayCommandErrorContract.ARRIVE_TOO_FAR), frozenStation);
             // O-01 第 4–7 层(节流/速度/窗口位移/不确定性扣减):开关 off 时不读不写,行为与改动前一致。
             if (arriveLocationGuard != null) {
@@ -774,7 +790,7 @@ public class PlayBasicCommandApplication {
         JsonNode arrivalReading = frozenStation != null ? ArrivalReading.project(frozenStation)
                 : originalRun.session() == null ? null
                 : ArrivalReading.projectFrozen(originalRun.session().getConfigSnapshotJson(), nId);
-        if(!freeCollectStore && (personalArrival || sharedArrival!=null)) {PlayerNodeProgress proof=shopDayProofService.markArrived(memberId,actId,node);Map<String,Object> data=playTaskPresentation.shopDayProofData(node,proof);
+        if(!freeCollectStore && (personalArrival || sharedArrival!=null)) {PlayerNodeProgress proof=arrivedWith(memberId, actId, node, ArrivalSource.TAP);Map<String,Object> data=playTaskPresentation.shopDayProofData(node,proof);
             if(personalArrival)data.put("themeRuntime",topicRouteRuntimeService.recordPlayerArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,expectedRouteVersion,"GPS"));
             if(sharedArrival!=null)data.put("sharedRuntime",gameSessionRuntimeService.recordSharedBasicArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,"GPS",runtimeInstance,authorityEpoch));
             if(arrivalReading!=null)data.put("arrivalReading",arrivalReading);
@@ -803,6 +819,78 @@ public class PlayBasicCommandApplication {
         if (ctx.nightWarning) data.put("nightWarning", true); // M2 自玩夜间提示(不阻断)
         boolean firstTime = Boolean.TRUE.equals(data.get("firstTime"));
         return AjaxResult.success(firstTime ? "已到达，打卡成功" : "该节点已完成", data);
+    }
+
+    /**
+     * 自由探索实体店「我已到店」(F08 3.2 + FE-STORY 5.2)。宽松:不查模拟定位、不比轨迹、不限速度,
+     * 只按 {@link ArrivalPolicy#visitViolation} 判一次距离;不走城市定向的开局闸。
+     * 通过后写到店行(arrival_source=GEO_TAP)与到访事实(visit_method=GPS),不发分、不判通关、不核销。
+     */
+    private AjaxResult freeExploreVisit(Long memberId, Long actId, PlayCtx ctx, CmsTopicNode node,
+            String longitude, String latitude, String accuracy) {
+        if (playCompletionFacts.isExploreChapterRedeemed(memberId, actId, node.getChapterId())) {
+            return PlayCommandErrorContract.rejected("该章节已核销，不能补写到店时间", PlayCommandErrorContract.CHAPTER_REDEEMED);
+        }
+        com.chengyinhub.business.domain.FreeExploreVisitConfig config = shopDayProofService.visitConfig(node.getId());
+        int check = FreeExploreVisit.normalizeCheck(config == null ? null : config.getVisitCheck());
+        if (check == FreeExploreVisit.CHECK_SCAN) {
+            return PlayCommandErrorContract.rejected("这里需要扫码", PlayCommandErrorContract.VISIT_SCAN_REQUIRED);
+        }
+        if (check == FreeExploreVisit.CHECK_ONLINE) {
+            return visitRecorded(memberId, actId, ctx, node, ArrivalSource.ONLINE, FreeExploreVisit.METHOD_ONLINE, null, null);
+        }
+        Double nodeLat = PlayNodeContext.parseGeoCoordinate(node.getLatitude(), -90d, 90d);
+        Double nodeLng = PlayNodeContext.parseGeoCoordinate(node.getLongitude(), -180d, 180d);
+        if (nodeLat == null || nodeLng == null) {
+            return PlayCommandErrorContract.rejected("这里还没有设置位置，请扫店内的码", PlayCommandErrorContract.ARRIVE_COORD_NOT_CONFIGURED);
+        }
+        if (StringUtils.isBlank(longitude) || StringUtils.isBlank(latitude)) {
+            return PlayCommandErrorContract.retryable("请开启定位", PlayCommandErrorContract.ARRIVE_LOCATION_MISSING);
+        }
+        Double playerLat = PlayNodeContext.parseGeoCoordinate(latitude, -90d, 90d);
+        Double playerLng = PlayNodeContext.parseGeoCoordinate(longitude, -180d, 180d);
+        if (playerLat == null || playerLng == null) {
+            return PlayCommandErrorContract.retryable("定位无效", PlayCommandErrorContract.ARRIVE_LOCATION_INVALID);
+        }
+        Double acc = null;
+        if (StringUtils.isNotBlank(accuracy)) {
+            acc = PlayNodeContext.parseGeoCoordinate(accuracy, 0d, Double.MAX_VALUE);
+            if (acc == null) {
+                return PlayCommandErrorContract.retryable("定位无效",
+                        com.chengyinhub.business.service.support.ArriveLocationGuard.ACCURACY_INVALID);
+            }
+        }
+        double dist = GeoDistanceUtils.haversineMeters(playerLat, playerLng, nodeLat, nodeLng);
+        ArrivalPolicy.Fence fence = ArrivalPolicy.visitViolation(dist, acc, config == null ? null : config.getVisitRadiusM());
+        if (fence == ArrivalPolicy.Fence.INVALID) {
+            return PlayCommandErrorContract.retryable("定位无效", PlayCommandErrorContract.ARRIVE_LOCATION_INVALID);
+        }
+        if (fence == ArrivalPolicy.Fence.ACCURACY_LOW) {
+            return PlayCommandErrorContract.retryable("定位不准，再试一次", PlayCommandErrorContract.ARRIVE_ACCURACY_LOW);
+        }
+        if (fence == ArrivalPolicy.Fence.TOO_FAR) {
+            long rounded = Math.round(dist / 10d) * 10L;
+            return PlayCommandErrorContract.retryable("离这里还有约 " + rounded + " 米", PlayCommandErrorContract.ARRIVE_TOO_FAR)
+                    .put("distanceMeters", rounded);
+        }
+        return visitRecorded(memberId, actId, ctx, node, ArrivalSource.GEO_TAP, FreeExploreVisit.METHOD_GPS, longitude, latitude);
+    }
+
+    /** 写到店行并记下到达来源(F08);到店行本身仍是原 markArrived,兄弟节点共享规则不变。 */
+    private PlayerNodeProgress arrivedWith(Long memberId, Long actId, CmsTopicNode node, String arrivalSource) {
+        PlayerNodeProgress proof = shopDayProofService.markArrived(memberId, actId, node);
+        shopDayProofService.recordArrivalSource(proof, arrivalSource);
+        return proof;
+    }
+
+    private AjaxResult visitRecorded(Long memberId, Long actId, PlayCtx ctx, CmsTopicNode node, String arrivalSource,
+            int visitMethod, String longitude, String latitude) {
+        PlayerNodeProgress proof = arrivedWith(memberId, actId, node, arrivalSource);
+        if (proof != null) shopDayProofService.markVisited(proof, node, visitMethod, longitude, latitude);
+        recordFirstSuccessfulScan(memberId, ctx);
+        Map<String, Object> data = playTaskPresentation.shopDayProofData(node, proof);
+        data.put("visited", true);
+        return AjaxResult.success("已到店", data);
     }
 
     /** 端上定位时间(epoch 毫秒)；空白/非数字按缺失处理，由冻结策略决定是否拒绝。 */

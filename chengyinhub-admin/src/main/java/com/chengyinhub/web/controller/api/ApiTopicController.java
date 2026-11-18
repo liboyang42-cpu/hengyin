@@ -2308,6 +2308,10 @@ public class ApiTopicController extends BaseController {
                 chapterVOList.add(chapterVO);
             }
 
+            // F07:城市定向购买前只给第一站的站图(主题封面、章节封面照常);作者本人看全部,承接方看自己那一站。
+            if (!OwnershipUtils.isOwner(cmsTopic.getMemberId(), memberId)) {
+                hideLaterStationImages(chapterVOList, cmsTopic.getProductType(), ownFulfilledNodeIds);
+            }
             topicInfoVO.setChaptersList(chapterVOList);
             topicInfoVO.setPlayerCount(playerNodeProgressService.countPlayersByTopicId(topicId));
 
@@ -3201,6 +3205,39 @@ public class ApiTopicController extends BaseController {
      * 未解锁章节的预告 VO：只含非剧透字段，locked=true。
      * 节点只给 id/name/address/经纬度/imgUrl/sortId/businessTime；分支图主题不给任何节点。
      */
+    /** F07:站图可见性统一走 StationImageVisibility;第一站 = 全部章节里 sortId 最小的站。 */
+    static void hideLaterStationImages(List<TopicChapterVO> chapters, Integer productType, Set<Long> visibleNodeIds) {
+        if (chapters == null || !com.chengyinhub.business.service.support.StationImageVisibility.hidesLaterStations(productType)) return;
+        TopicNodeVO first = null;
+        for (TopicChapterVO chapter : chapters) {
+            if (chapter == null || chapter.getNodes() == null) continue;
+            for (TopicNodeVO node : chapter.getNodes()) {
+                if (node == null || node.getId() == null) continue;
+                if (first == null || stationBefore(node, first)) first = node;
+            }
+        }
+        for (TopicChapterVO chapter : chapters) {
+            if (chapter == null || chapter.getNodes() == null) continue;
+            for (TopicNodeVO node : chapter.getNodes()) {
+                if (node == null || node.getId() == null) continue;
+                boolean firstStation = node == first;
+                boolean own = visibleNodeIds != null && visibleNodeIds.contains(node.getId());
+                if (!com.chengyinhub.business.service.support.StationImageVisibility.visible(productType, firstStation, own)) {
+                    node.setImgUrl(null);
+                    node.setImgHidden(Boolean.TRUE);
+                }
+            }
+        }
+    }
+
+    private static boolean stationBefore(TopicNodeVO a, TopicNodeVO b) {
+        Long sa = a.getSortId(), sb = b.getSortId();
+        if (sa != null && sb != null && !sa.equals(sb)) return sa < sb;
+        if (sa != null && sb == null) return true;
+        if (sa == null && sb != null) return false;
+        return a.getId() < b.getId();
+    }
+
     private TopicChapterVO buildLockedChapterTeaser(CmsTopicChapter chapter, boolean branchGraphTeaser) {
         TopicChapterVO vo = new TopicChapterVO();
         vo.setId(chapter.getId());
