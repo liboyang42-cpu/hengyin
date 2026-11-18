@@ -487,6 +487,21 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
           and request_fingerprint is null
     </update>
 
+    <!-- F12 亲子票:下单时的人数构成与儿童年龄(只存年龄)。同一幂等请求重放须与首次一致,否则 0 行。 -->
+    <update id="bindPartySnapshot">
+        update cms_registration
+        set party_snapshot_json = #{partySnapshotJson}, update_time = now()
+        where id = #{id}
+          and (party_snapshot_json is null or party_snapshot_json = #{partySnapshotJson})
+    </update>
+
+    <select id="selectPartySnapshots" resultType="CmsRegistration">
+        select id, party_snapshot_json as partySnapshotJson
+        from cms_registration
+        where party_snapshot_json is not null and id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
     <update id="updateCmsRegistration" parameterType="CmsRegistration">
         update cms_registration
         <trim prefix="SET" suffixOverrides=",">

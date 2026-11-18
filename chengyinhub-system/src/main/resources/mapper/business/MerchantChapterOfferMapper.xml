@@ -22,6 +22,8 @@
         <result property="withdrawReason" column="withdraw_reason" />
         <result property="withdrawRequired" column="withdraw_required" />
         <result property="replacementOfOfferId" column="replacement_of_offer_id" />
+        <result property="familyAccepted" column="family_accepted" />
+        <result property="familyPerkText" column="family_perk_text" />
         <result property="createBy"    column="create_by"    />
         <result property="createTime"    column="create_time"    />
         <result property="updateBy"    column="update_by"    />
@@ -31,6 +33,7 @@
     <sql id="selectMerchantChapterOfferVo">
         select id, topic_id, chapter_id, merchant_id, perk_id, terms_mode, payer_club_id, per_head_fee,
                quota_total, quota_used, valid_end, allowed_validation_methods, max_node_xp, status, withdraw_reason, withdraw_required, replacement_of_offer_id,
+               family_accepted, family_perk_text,
                create_by, create_time, update_by, update_time
         from merchant_chapter_offer
     </sql>
@@ -52,6 +55,8 @@
             <if test="maxNodeXp != null">max_node_xp,</if>
             <if test="status != null">status,</if>
             <if test="replacementOfOfferId != null">replacement_of_offer_id,</if>
+            <if test="familyAccepted != null">family_accepted,</if>
+            <if test="familyPerkText != null">family_perk_text,</if>
             <if test="createBy != null">create_by,</if>
             <if test="createTime != null">create_time,</if>
             <if test="updateBy != null">update_by,</if>
@@ -72,6 +77,8 @@
             <if test="maxNodeXp != null">#{maxNodeXp},</if>
             <if test="status != null">#{status},</if>
             <if test="replacementOfOfferId != null">#{replacementOfOfferId},</if>
+            <if test="familyAccepted != null">#{familyAccepted},</if>
+            <if test="familyPerkText != null">#{familyPerkText},</if>
             <if test="createBy != null">#{createBy},</if>
             <if test="createTime != null">#{createTime},</if>
             <if test="updateBy != null">#{updateBy},</if>
@@ -322,6 +329,18 @@
          where id = #{id}
            and status = 1
            and quota_used &lt;= #{quotaTotal}
+    </update>
+
+    <!-- F12:承接方设置是否接受亲子票。归属在 where 里:只改本商家自己的生效供给(status=1)。 -->
+    <update id="updateFamilyAcceptance">
+        update merchant_chapter_offer
+           set family_accepted = #{familyAccepted},
+               family_perk_text = #{familyPerkText},
+               update_by = #{updateBy},
+               update_time = now()
+         where id = #{id}
+           and merchant_id = #{merchantId}
+           and status = 1
     </update>
 
     <select id="countAllByChapterAndMerchant" resultType="int">

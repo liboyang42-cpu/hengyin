@@ -204,7 +204,11 @@ public class RegistrationQueryApplication {
             // 订单详情展示 enrich:脱敏手机号 / 支付方式文案 / 退款截止文案 / 权益章节名
             com.chengyinhub.business.util.RegistrationDetailDisplay.enrich(registration, topicChapterService);
             registration.setSettlementSummary(settlementSummary(registration, memberId));
-            registration.setServerNow(System.currentTimeMillis());
+            registrationService.attachPartySnapshots(java.util.Collections.singletonList(registration));
+            long detailNow = System.currentTimeMillis();
+            registration.setServerNow(detailNow);
+            // F13/OR-012:订单详情和票夹同一口径判「已过期，票夹不再显示」
+            com.chengyinhub.business.service.support.TicketUsableWindow.stamp(registration, new Date(detailNow));
             return AjaxResult.success(registration);
         } catch (Exception e) {
             return AjaxResult.error(e.getMessage());
@@ -454,6 +458,7 @@ public class RegistrationQueryApplication {
         // 按 owner.end_date 隐藏结束超 7 天的单,会让这些 Tab 恒空 —— 真实商家号(有已支付订单)打开看到整屏空列表。
         // 7 天视觉收纳只为「我参与中」(myJoined,进行中 Tab)保留,那条链路独立调用该 helper。
         attachSoleTicketCancelAmounts(list);
+        registrationService.attachPartySnapshots(list);
         stampServerNow(list);
         return AjaxResult.success(list);
     }
@@ -491,6 +496,7 @@ public class RegistrationQueryApplication {
         all = filterEndedOverWeek(all, new Date());
         all.sort((a, b) -> b.getCreateTime().compareTo(a.getCreateTime()));
         attachSoleTicketCancelAmounts(all);
+        registrationService.attachPartySnapshots(all);
         stampServerNow(all);
         return AjaxResult.success(all);
     }
@@ -545,8 +551,12 @@ public class RegistrationQueryApplication {
     private static void stampServerNow(List<CmsRegistration> rows) {
         if (rows == null) return;
         long now = System.currentTimeMillis();
+        Date at = new Date(now);
         for (CmsRegistration row : rows) {
-            if (row != null) row.setServerNow(now);
+            if (row == null) continue;
+            row.setServerNow(now);
+            // F13:票夹可用窗口 / 通关标签与 serverNow 同一时刻判
+            com.chengyinhub.business.service.support.TicketUsableWindow.stamp(row, at);
         }
     }
 

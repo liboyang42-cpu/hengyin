@@ -810,6 +810,10 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
             copy.setRefundSupported(source.getRefundSupported());
             copy.setSyncWithTheme(source.getSyncWithTheme());
             copy.setNeedAudit(source.getNeedAudit());
+            copy.setAdultCount(source.getAdultCount());
+            copy.setChildCount(source.getChildCount());
+            copy.setChildAgeMin(source.getChildAgeMin());
+            copy.setChildAgeMax(source.getChildAgeMax());
             copy.setDelFlag(0);
             copy.setCreateBy("system_copy");
             copy.setCreateTime(new Date());

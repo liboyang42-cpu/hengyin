@@ -365,4 +365,19 @@ public class OmsTicket extends BaseEntity
             .append("updateTime", getUpdateTime())
             .toString();
     }
+
+    /** F12 亲子票:每张票含成人数(默认 1)/ 儿童数(0 或 1)/ 儿童年龄段(含两端)。 */
+    private Integer adultCount;
+    private Integer childCount;
+    private Integer childAgeMin;
+    private Integer childAgeMax;
+
+    public Integer getAdultCount() { return adultCount; }
+    public void setAdultCount(Integer adultCount) { this.adultCount = adultCount; }
+    public Integer getChildCount() { return childCount; }
+    public void setChildCount(Integer childCount) { this.childCount = childCount; }
+    public Integer getChildAgeMin() { return childAgeMin; }
+    public void setChildAgeMin(Integer childAgeMin) { this.childAgeMin = childAgeMin; }
+    public Integer getChildAgeMax() { return childAgeMax; }
+    public void setChildAgeMax(Integer childAgeMax) { this.childAgeMax = childAgeMax; }
 }

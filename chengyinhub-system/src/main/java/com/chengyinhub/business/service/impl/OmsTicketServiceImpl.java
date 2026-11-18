@@ -736,6 +736,11 @@ public class OmsTicketServiceImpl implements IOmsTicketService
         target.setGatherLat(source.getGatherLat());
         target.setRefundRule(source.getRefundRule());
         target.setNeedAudit(source.getNeedAudit());
+        // F12:场次票随主题票带上亲子票人数构成与儿童年龄段
+        target.setAdultCount(source.getAdultCount());
+        target.setChildCount(source.getChildCount());
+        target.setChildAgeMin(source.getChildAgeMin());
+        target.setChildAgeMax(source.getChildAgeMax());
         target.setDelFlag(0);
         target.setCreateBy("topic_copy");
         target.setCreateTime(DateUtils.getNowDate());

@@ -36,6 +36,9 @@ public interface IMerchantOfferService {
      */
     Long enroll(MerchantChapterOffer offer, Long merchantId);
 
+    /** F12:承接方设置是否接受亲子票(1 大 1 小同享)与儿童份说明;只能改本商家自己的生效供给。 */
+    void setFamilyAcceptance(Long offerId, Long merchantId, Integer familyAccepted, String familyPerkText);
+
     /** 商家重新确认自己的圈层供给事实；夜间供给需至少每7天调用一次。 */
     void reconfirmCircleSupply(Long offerId, MerchantCircleSupplyProfile profile, Long merchantId);
 
