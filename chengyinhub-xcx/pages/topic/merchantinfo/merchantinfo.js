@@ -1,6 +1,6 @@
 const cyModal = require('../../../utils/modal.js');
 const cyLoading = require('../../../utils/loading.js'); function openAddress() { return require('../../../utils/open-address.js') }
-const cyToast = require('../../../utils/toast.js');
+const cyToast = require('../../../utils/toast.js'); const feAuthorSale = require('../../../utils/fe-author-sale.js');
 const broadcastSheet = require('../utils/broadcast-sheet.js');
 const app = getApp();
 /* 原生 showModal / showActionSheet 由微信自己渲染,读不到 WXSS token,只收字面色值。
@@ -246,6 +246,7 @@ Page({
     // 主办视图(role=host)
     hostTopic: {},
     hostRecruit: {},
+    selfSupplySheet: { show: false },
     hostMerchants: [],
     hostPlayers: {},
     chapterImg: '',
@@ -2184,6 +2185,8 @@ Page({
         // 进度条按站点数等分。length:0 天然就是空数组,不用再判一次
         segments: Array.from({ length: nodeTotal }, (v, i) => i < nodeFilled),
         openNodes: recruit.openNodes || [],
+        // F10:作者自己承接的位置(位置卡写「自己承接」,开售前可撤回)
+        selfSupplied: recruit.selfSupplied || [],
       },
       hostMerchants: (host.merchants || []).map(function (m) {
         return Object.assign({}, m, {
@@ -2850,12 +2853,63 @@ Page({
   selfTakeNode(e) {
     const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
     const topicId = this.data.topicId || (this.data.info && this.data.info.topicId);
+    // F10(FE-G13/14):自由探索作者自己承接 = 直接填一张权益卡,跳过「申请 → 审核」(不再跳 merchantapply)。
+    if (this._isFreeExploreHost && ds.chapter && topicId) {
+      this.setData({ selfSupplySheet: { show: true, topicId: topicId, chapterId: ds.chapter, nodeName: ds.name || '',
+        name: '', redeemRule: '', capacity: '', validEnd: '', submitting: false } });
+      return;
+    }
     if (!ds.id || !topicId || this._navigating) return;
     this._navigating = true; this._clubSheetReturn = true;
     wx.navigateTo({
       url: '/pages/topic/merchantapply/index?topicId=' + topicId + '&nodeId=' + ds.id + '&templateId=0'
         + '&topicName=' + encodeURIComponent((this.data.hostTopic && this.data.hostTopic.name) || '') + '&nodeName=' + encodeURIComponent(ds.name || ''),
       complete: () => { this._navigating = false; },
+    });
+  },
+
+  onSelfSupplyInput(e) {
+    const key = e.currentTarget.dataset.key;
+    if (!/^(name|redeemRule|capacity|validEnd)$/.test(key || '')) return;
+    this.setData({ ['selfSupplySheet.' + key]: String(e.detail.value == null ? '' : e.detail.value) });
+  },
+
+  closeSelfSupply() { this.setData({ 'selfSupplySheet.show': false }); },
+
+  submitSelfSupply() {
+    const sheet = this.data.selfSupplySheet || {};
+    if (sheet.submitting) return;
+    let body;
+    try { body = feAuthorSale.selfSupplyBody(sheet.topicId, sheet.chapterId, sheet); }
+    catch (err) { cyToast(err.message); return; }
+    this.setData({ 'selfSupplySheet.submitting': true });
+    feAuthorSale.selfSupply(app, body.topicId, body.chapterId, body.perk).then(() => {
+      this.setData({ 'selfSupplySheet.show': false, 'selfSupplySheet.submitting': false });
+      cyToast('已自己承接');
+      this.loadProjectHome();
+    }).catch(err => {
+      this.setData({ 'selfSupplySheet.submitting': false });
+      if (!err.shown) cyToast(err.message || '承接失败，请重试');
+    });
+  },
+
+  withdrawSelfSupply(e) {
+    const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
+    const topicId = this.data.topicId || (this.data.info && this.data.info.topicId);
+    if (!ds.offer || !topicId || this._withdrawingSelf) return;
+    cyModal.show({
+      title: '撤回自己承接',
+      content: '撤回后这个位置重新空出，需要商家或你自己再次承接才能开售。',
+      confirmText: '撤回', cancelText: '保留',
+      success: (res) => {
+        if (!res.confirm) return;
+        this._withdrawingSelf = true;
+        feAuthorSale.withdrawSelfSupply(app, topicId, ds.offer).then(() => {
+          this._withdrawingSelf = false;
+          cyToast('已撤回');
+          this.loadProjectHome();
+        }).catch(err => { this._withdrawingSelf = false; if (!err.shown) cyToast(err.message || '撤回失败，请重试'); });
+      }
     });
   },
 
@@ -3475,7 +3529,7 @@ Page({
       closeClubSheet: 1, closePlayerSheet: 1, closeMerchantSheet: 1,
       closeMoreSheet: 1, onMorePick: 1,
       copyText: 1, goInviteClub: 1, onPlayerFilter: 1, inviteClubRow: 1, openClubHome: 1, loadClubCandidates: 1,
-      loadRegApplies: 1, confirmRegRow: 1, sendTermsInviteRow: 1, selfTakeNode: 1, recruitNode: 1, contactHost: 1, openBroadcast: 1, openClubNotify: 1,
+      loadRegApplies: 1, confirmRegRow: 1, sendTermsInviteRow: 1, selfTakeNode: 1, withdrawSelfSupply: 1, recruitNode: 1, contactHost: 1, openBroadcast: 1, openClubNotify: 1,
       // 2026-11-01 定向广播叠层与客户多选
       closeBroadcast: 1, onBroadcastInput: 1, sendBroadcast: 1, pickBroadcastRow: 1, setBroadcastScope: 1, clearBroadcastPicks: 1, togglePlayerPick: 1, pickPlayerRow: 1,
       // CU-C-67:客户名单读失败后的局部重试(错态与零单分开之后要有恢复动作)

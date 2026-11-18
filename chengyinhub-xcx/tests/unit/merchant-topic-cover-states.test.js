@@ -56,6 +56,8 @@ function merchantInfoPageFrom(source) {
       if (request === './host-layers.js') return require('../../pages/topic/merchantinfo/host-layers.js');
       // 2026-11-01 定向广播叠层的纯整形(加载期无副作用)
       if (request === '../utils/broadcast-sheet.js') return require('../../pages/topic/utils/broadcast-sheet.js');
+      // 2026-11-18 F10:自由探索作者路径(自己承接 / 填价发布)纯函数 + 请求包装,加载期无副作用
+      if (request === '../../../utils/fe-author-sale.js') return require('../../utils/fe-author-sale.js');
       throw new Error('unexpected require: ' + request);
     },
   };

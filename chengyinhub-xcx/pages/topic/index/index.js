@@ -1275,7 +1275,12 @@ Page({
     const lc = this.data.info && this.data.info.lifecycle;
     if (![1, 2, 7].includes(Number(lc))) return false;
     if (lc == 2 && this.data.info && this.data.info.isOwner == 1) {
-      if (!this._navigating) { this._navigating = true; wx.navigateTo({ url: '/pages/topic/pricing/index?topicId=' + this.data.id + (String(this.data.info.contentPublisherType || '').toUpperCase() === 'MERCHANT' ? '&scope=MERCHANT' : ''), complete: () => { this._navigating = false; } }); }
+      const merchantScope = String(this.data.info.contentPublisherType || '').toUpperCase() === 'MERCHANT' ? '&scope=MERCHANT' : '';
+      // F10(FE-G13/14):自由探索作者回编辑器顶部的「开售票价」区填价直接发布;定价页留给俱乐部 / 城市定向。
+      const url = Number(this.data.info.productType) === 2
+        ? '/pages/publish/fabu/index?id=' + this.data.id + merchantScope
+        : '/pages/topic/pricing/index?topicId=' + this.data.id + merchantScope;
+      if (!this._navigating) { this._navigating = true; wx.navigateTo({ url: url, complete: () => { this._navigating = false; } }); }
       return true;
     }
     toast(lc == 7 ? '该主题立项待审，暂未开售' : (lc == 1 ? '该主题招募中，暂未开售' : '该主题定价中，暂未开售'));

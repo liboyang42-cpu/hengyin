@@ -112,6 +112,8 @@ const MATRIX = [
   // 自由探索定价后状态/结算待处理：服务端按主题发布者(商家岗位解析店主)校验，只返回本人主题/本人场次。
   ['pages/topic/pricing/index.js', "url: '/api/topic/pricing/sale-status'", 'required', 'author/merchant', 'owned-merchant-resource'],
   ['pages/topic/pricing/index.js', "url: '/api/topic/pricing/settlement-pending'", 'required', 'author/merchant', 'owned-merchant-resource'],
+  // 2026-11-18 F10:自由探索作者位置承接进度,服务端按 topic.member_id 校验,只读作者本人主题。
+  ['utils/fe-author-sale.js', "url: '/api/topic/fe/sale-readiness'", 'required', 'author', 'self-publisher'],
   // 商家套票预约：VERIFY 岗位派生店主，只读本店预约。
   ['pages/merchant/bundle-reservations/index.js', "url: '/api/free-explore/bundle/merchant/reservations'", 'required', 'merchant/VERIFY', 'owned-merchant-or-club-receivable'],
   ['utils/deregister-flow.js', "sendUiStateRequest(app, '/api/user/deregister/status'", 'required', 'member', 'self-account'],
@@ -510,7 +512,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-11-14 free-explore-1114:定价页两处(已锁价状态、结算待处理)+商家套票预约一处,均已入 MATRIX,130 → 133。
   // 2026-11-14：公开成长榜与合并搜索 POST → GET，已登记两处调用，133 → 135。
   // 2026-11-14 合 master #840：封面署名新增一处直接 GET，135 → 136。
-  assert.equal(directCount, 136, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-11-18 F10:作者编辑器读位置承接进度 /api/topic/fe/sale-readiness,136 → 137。
+  assert.equal(directCount, 137, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。

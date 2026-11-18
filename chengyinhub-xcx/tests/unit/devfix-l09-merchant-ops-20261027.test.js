@@ -152,7 +152,8 @@ test('M-26:我的项目长按面板 = Threads 式菜单,编辑在首、删除单
   assert.equal((sheet.match(/<cy-icon class="tm-ico"/g) || []).length, keys.length, '每行都有图标');
   assert.match(read('style/threads-menu.wxss'), /\.tm-row--danger, \.tm-row--danger \.tm-ico \{ color: var\(--cy-color-status-danger\); \}/);
   const js = read('subpackageA/pages/myproject/index.js');
-  assert.match(js, /const editableTopic = p\.bizType === 'topic' && \(p\.state === 'draft' \|\| p\.state === 'rejected' \|\| p\.state === 'offline'\);/);
+  // 2026-11-18 F10:自由探索招募中/待定价(freeExplorePricing)也给「编辑」,草稿/驳回/下架口径不变。
+  assert.match(js, /const editableTopic = p\.bizType === 'topic'\s*&& \(p\.state === 'draft' \|\| p\.state === 'rejected' \|\| p\.state === 'offline' \|\| freeExplorePricing\);/);
   assert.match(js, /if \(k === 'edit' && p\.biz === 'topic'\) return this\.editTopic\(p\.id\);/);
 });
 

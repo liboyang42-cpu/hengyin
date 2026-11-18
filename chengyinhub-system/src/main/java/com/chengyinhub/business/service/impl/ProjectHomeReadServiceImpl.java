@@ -353,6 +353,30 @@ public class ProjectHomeReadServiceImpl implements IProjectHomeReadService {
                 }
             }
         }
+        // F10:作者自己承接(supplier_kind=AUTHOR)的位置同样算已承接;单列出来给「自己承接 / 撤回」用。
+        List<Map<String, Object>> selfSupplied = new ArrayList<>();
+        if (Integer.valueOf(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE).equals(topic.getProductType())
+                && merchantChapterOfferMapper != null) {
+            List<com.chengyinhub.business.domain.MerchantChapterOffer> offers =
+                    merchantChapterOfferMapper.selectByTopic(topic.getId());
+            for (com.chengyinhub.business.domain.MerchantChapterOffer offer : offers == null
+                    ? new ArrayList<com.chengyinhub.business.domain.MerchantChapterOffer>() : offers) {
+                if (offer == null || !offer.isAuthorSupplied() || !Integer.valueOf(1).equals(offer.getStatus())
+                        || !java.util.Objects.equals(offer.getMerchantId(), topic.getMemberId())) continue;
+                for (CmsTopicNode node : nodes == null ? new ArrayList<CmsTopicNode>() : nodes) {
+                    if (node.getId() != null && offer.getChapterId().equals(node.getChapterId())
+                            && java.util.Objects.equals(topic.getMemberId(), node.getMerchantMemberId())) {
+                        filledNodes.add(node.getId());
+                        Map<String, Object> row = new HashMap<>();
+                        row.put("nodeId", node.getId());
+                        row.put("nodeName", node.getName());
+                        row.put("chapterId", offer.getChapterId());
+                        row.put("offerId", offer.getId());
+                        selfSupplied.add(row);
+                    }
+                }
+            }
+        }
         int pendingInvites = 0;
         for (CoopInvite i : invites) {
             if (i.getStatus() != null && i.getStatus() == INVITE_PENDING) {
@@ -366,6 +390,7 @@ public class ProjectHomeReadServiceImpl implements IProjectHomeReadService {
                 Map<String, Object> row = new HashMap<>();
                 row.put("nodeId", n.getId());
                 row.put("nodeName", n.getName());
+                row.put("chapterId", n.getChapterId());
                 openNodes.add(row);
             }
         }
@@ -375,6 +400,7 @@ public class ProjectHomeReadServiceImpl implements IProjectHomeReadService {
         recruit.put("nodeFilled", filledNodes.size());
         recruit.put("pendingCount", pendingRegistrations + pendingInvites);
         recruit.put("openNodes", openNodes);
+        recruit.put("selfSupplied", selfSupplied);
         return recruit;
     }
 

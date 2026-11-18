@@ -361,6 +361,19 @@
       </view>
     </block>
 
+    <!-- F10:作者自己承接的位置,开售前可撤回 -->
+    <block wx:if="{{ hostRecruit.selfSupplied.length }}">
+      <view class="dg-label">自己承接</view>
+      <view class="dcard">
+      <view class="dn" wx:for="{{ hostRecruit.selfSupplied }}" wx:key="offerId">
+        <image class="dn-img" wx:if="{{ hostTopic.img }}" src="{{ hostTopic.img }}" mode="aspectFill" />
+        <view class="dn-img dn-img--none" wx:else><cy-icon name="image" size="{{ 32 }}" /></view>
+        <text class="dn-name">{{ item.nodeName || '未命名节点' }}</text>
+        <view class="cs-pill" catchtap="emit" data-act="withdrawSelfSupply" data-offer="{{ item.offerId }}" aria-role="button" aria-label="撤回自己承接 {{ item.nodeName }}" hover-class="cy-pressed" hover-stay-time="80">撤回</view>
+      </view>
+      </view>
+    </block>
+
     <block wx:if="{{ hostRecruit.openNodes.length }}">
       <view class="dg-label">还没人接</view>
       <view class="dcard">
@@ -368,7 +381,7 @@
         <image class="dn-img" wx:if="{{ hostTopic.img }}" src="{{ hostTopic.img }}" mode="aspectFill" />
         <view class="dn-img dn-img--none" wx:else><cy-icon name="image" size="{{ 32 }}" /></view>
         <text class="dn-name">{{ item.nodeName || '未命名节点' }}</text>
-        <view class="cs-pill cs-pill--g" catchtap="emit" data-act="selfTakeNode" data-id="{{ item.nodeId }}" data-name="{{ item.nodeName }}" aria-role="button" aria-label="自己承接 {{ item.nodeName }}" hover-class="cy-pressed" hover-stay-time="80">自己承接</view>
+        <view class="cs-pill cs-pill--g" catchtap="emit" data-act="selfTakeNode" data-id="{{ item.nodeId }}" data-chapter="{{ item.chapterId }}" data-name="{{ item.nodeName }}" aria-role="button" aria-label="自己承接 {{ item.nodeName }}" hover-class="cy-pressed" hover-stay-time="80">自己承接</view>
         <view class="cs-pill" catchtap="emit" data-act="recruitNode" data-id="{{ item.nodeId }}" aria-role="button" aria-label="为 {{ item.nodeName }} 招商" hover-class="cy-pressed" hover-stay-time="80">招商</view>
       </view>
       </view>
