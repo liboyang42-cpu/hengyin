@@ -18,6 +18,14 @@ public interface IAuditTaskService {
     /** 商业主题分阶段提审；同阶段未结单幂等复用，终态后重提创建新任务并追加 SUBMIT 记录。 */
     Long submitCommercialReview(String bizType, Long topicId, Long submitterId, String snapshotJson);
 
+    /**
+     * F10(FE-G13/14):自由探索作者「填完票价直接发布」。业主口径是作者发布即开售,不再等运营开售审核;
+     * 立项审核照常保留。这里把作者刚提交的开售审核单(TOPIC_SALE_REVIEW,待审)记为通过,
+     * 审批时间线写一条 reasonCode=AUTHOR_FE_SELF_PUBLISH 的记录,运营在工作台可见、可事后下架。
+     * 只改审核单状态,不触发开售;调用方随后显式 finalizeForSale。
+     */
+    void approveSaleReviewForAuthor(Long taskId, Long topicId, Long authorMemberId);
+
     /** 专业主题 V2 组合提审；锁定并刷新唯一开放 TOPIC 任务，终态后新建。 */
     Long submitOrRefreshTopicBundle(Long topicId, Long submitterId, String snapshotJson);
 

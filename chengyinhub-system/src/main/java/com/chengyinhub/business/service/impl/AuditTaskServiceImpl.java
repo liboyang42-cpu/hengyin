@@ -3025,4 +3025,36 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         if (AuditTask.STATUS_CANCELLED.equals(status)) return "CANCEL";
         return "REVIEW";
     }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void approveSaleReviewForAuthor(Long taskId, Long topicId, Long authorMemberId) {
+        if (taskId == null || topicId == null || authorMemberId == null) {
+            throw new IllegalArgumentException("开售记录参数不完整");
+        }
+        AuditTask task = auditTaskMapper.selectAuditTaskByIdForUpdate(taskId);
+        if (task == null || !AuditTask.BIZ_TOPIC_SALE_REVIEW.equals(task.getBizType())
+                || !topicId.equals(task.getBizId()) || !authorMemberId.equals(task.getSubmitterId())) {
+            throw new IllegalStateException("开售审核单与主题或作者不一致");
+        }
+        if (!AuditTask.STATUS_PENDING.equals(task.getStatus())) {
+            throw new IllegalStateException("开售审核单已处理，请刷新后重试");
+        }
+        Date now = DateUtils.getNowDate();
+        if (auditTaskMapper.updateAuditTaskReviewCas(taskId, task.getStatus(), AuditTask.STATUS_APPROVED,
+                authorMemberId, task.getVersion(), now) != 1) {
+            throw new IllegalStateException("开售审核单刚发生变化，请刷新后重试");
+        }
+        AuditRecord record = new AuditRecord();
+        record.setTaskId(taskId);
+        record.setAction(statusToAction(AuditTask.STATUS_APPROVED));
+        record.setOperatorId(authorMemberId);
+        record.setReasonCode("AUTHOR_FE_SELF_PUBLISH");
+        record.setReasonText("自由探索作者填价后直接发布开售(FE-G13/14),运营可事后下架");
+        record.setSnapshotJson(task.getSnapshotJson());
+        record.setCreateTime(now);
+        if (auditRecordMapper.insertAuditRecord(record) != 1) {
+            throw new ServiceException("审批时间线写入失败", HttpStatus.ERROR);
+        }
+    }
 }

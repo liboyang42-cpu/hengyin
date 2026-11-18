@@ -71,4 +71,7 @@ public interface CmsTopicNodeMapper
      * @return 结果
      */
     public int deleteCmsTopicNodeByIds(Long[] ids);
+
+    /** F10 撤回自己承接:只清作者本人在该点位上的承接归属与审核痕迹(带 owner 条件)。 */
+    int releaseAuthorSelfSupplyBinding(@Param("id") Long id, @Param("authorMemberId") Long authorMemberId);
 }

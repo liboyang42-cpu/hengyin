@@ -1024,4 +1024,21 @@ public class PerkLedgerServiceImpl implements IPerkLedgerService {
     private int nz(Integer v) {
         return v == null ? 0 : v;
     }
+
+    @Override
+    public boolean hasLiveAuthorSupply(Long topicId, Long memberId) {
+        if (topicId == null || memberId == null || memberId <= 0) return false;
+        List<MerchantChapterOffer> offers = offerMapper.selectByTopic(topicId);
+        if (offers == null) return false;
+        Date now = new Date();
+        for (MerchantChapterOffer offer : offers) {
+            if (offer != null && offer.isAuthorSupplied() && memberId.equals(offer.getMerchantId())
+                    && memberId.equals(offer.getSupplierMemberId())
+                    && Integer.valueOf(1).equals(offer.getStatus())
+                    && (offer.getValidEnd() == null || offer.getValidEnd().after(now))) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

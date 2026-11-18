@@ -252,6 +252,14 @@
            )
     </select>
 
+    <!-- F10:必选章总数,与上面 countRequiredChaptersWithoutLiveOffer 同口径(分母) -->
+    <select id="countRequiredChapters" resultType="int">
+        select count(*)
+          from cms_topic_chapter c
+         where c.topic_id = #{topicId}
+           and c.required = 1
+    </select>
+
     <!-- ============ 后台三档审核台(§4.2)============ -->
 
     <!-- 队列展示:基础列 + 连表展示字段(非本表列,只读) -->

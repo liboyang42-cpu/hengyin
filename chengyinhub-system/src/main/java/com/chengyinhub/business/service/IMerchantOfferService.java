@@ -76,4 +76,43 @@ public interface IMerchantOfferService {
      * 这是运营自担的应急权衡,本方法不拦:拦了就没有「拉闸」这个杆了。
      */
     void deactivate(Long id);
+
+    /**
+     * F10(FE-G13/14):作者自己承接自由探索主题的一个商家位置。只建 PERK 供给,跳过「申请 → 审核」;
+     * supplier_kind=AUTHOR,merchant_id=作者 member_id(该列本就存 member_id)。
+     * 主题须为作者本人的自由探索主题,且处于招募中或待定价。成功后若全部必选位置有承接,自动进入待定价。
+     *
+     * @return 新建 offer id
+     */
+    Long authorSelfSupply(Long authorMemberId, Long topicId, Long chapterId, AuthorSelfSupplyPerk perk);
+
+    /**
+     * F10:撤回作者自己承接。仅作者本人、主题尚未开售;撤回后若出现空位,主题从待定价回到招募中。
+     *
+     * @return 撤回后主题的 lifecycle
+     */
+    Integer withdrawAuthorSelfSupply(Long authorMemberId, Long topicId, Long offerId);
+
+    /** F10 作者自己承接时填写的权益卡。 */
+    final class AuthorSelfSupplyPerk {
+        private String name;
+        private String redeemRule;
+        private java.util.Date validEnd;
+        private Integer capacity;
+        private Integer perkType;
+        private java.math.BigDecimal retailValue;
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public String getRedeemRule() { return redeemRule; }
+        public void setRedeemRule(String redeemRule) { this.redeemRule = redeemRule; }
+        public java.util.Date getValidEnd() { return validEnd; }
+        public void setValidEnd(java.util.Date validEnd) { this.validEnd = validEnd; }
+        public Integer getCapacity() { return capacity; }
+        public void setCapacity(Integer capacity) { this.capacity = capacity; }
+        public Integer getPerkType() { return perkType; }
+        public void setPerkType(Integer perkType) { this.perkType = perkType; }
+        public java.math.BigDecimal getRetailValue() { return retailValue; }
+        public void setRetailValue(java.math.BigDecimal retailValue) { this.retailValue = retailValue; }
+    }
 }

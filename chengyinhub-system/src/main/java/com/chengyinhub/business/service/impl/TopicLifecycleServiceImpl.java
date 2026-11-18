@@ -102,7 +102,9 @@ public class TopicLifecycleServiceImpl implements ITopicLifecycleService {
             case RECRUITING:
                 return to == TopicLifecycleState.DRAFT || to == TopicLifecycleState.PRICING;
             case PRICING:
-                return to == TopicLifecycleState.SELLING;
+                // F10 §4:开售前位置重新变空(商家退出/作者撤回自己承接)⇒ 回到招募中。
+                // 只由 FreeExploreSlotProgress 在供给锁内、确认有空位且未锁价时调用。
+                return to == TopicLifecycleState.SELLING || to == TopicLifecycleState.RECRUITING;
             case SELLING:
                 return to == TopicLifecycleState.RUNNING;
             case RUNNING:

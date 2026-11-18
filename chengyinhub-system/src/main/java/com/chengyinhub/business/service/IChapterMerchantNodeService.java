@@ -105,4 +105,13 @@ public interface IChapterMerchantNodeService {
      */
     int auditAlongApplication(Long chapterId, Long merchantMemberId, Long actorMemberId,
                               boolean approve, String reason);
+
+    /**
+     * F10 作者自己承接:把本章站点绑到作者名下并置为已过审(作者就是主办,不再自审)。
+     * 优先用作者已绑定的点位,否则接管本章唯一的未归属占位点。调用方须已持有章节 → 主题锁。
+     */
+    CmsTopicNode bindAuthorSelfSupplyNode(Long authorMemberId, Long topicId, Long chapterId);
+
+    /** F10 撤回自己承接:解除作者在本章点位上的承接归属,点位回到占位状态。 */
+    void releaseAuthorSelfSupplyNode(Long authorMemberId, Long topicId, Long chapterId);
 }
