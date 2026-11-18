@@ -147,7 +147,7 @@
                 <view class="node-card__ico"><cy-icon name="coupon" size="32" /></view>
                 <view class="node-card__main">
                   <text class="node-card__title">{{ticket.name || '未命名票种'}}</text>
-                  <text class="node-card__value">{{ticket.price === '' || ticket.price === null ? (ticket.mode === 1 ? '未填票价' : '开售前定价') : (ticket.price > 0 ? '¥' + ticket.price : '免费')}} · {{ticket.mode === 1 ? '城市定向' : '自由探索'}} · {{ticket.totalStock || 0}} 张</text>
+                  <text class="node-card__value">{{ticket.price === '' || ticket.price === null ? (ticket.mode === 1 ? '未填票价' : '开售前定价') : (ticket.price > 0 ? '¥' + ticket.price : '免费')}} · {{ticket.mode === 1 ? '城市定向' : '自由探索'}} · {{ticket.totalStock || 0}} 张{{ticket.childCount == 1 ? ' · 1 大 1 小' : ''}}</text>
                 </view>
                 <!-- 2026-09-05:正在编辑的那一行要看得出来。编辑器就在下面展开着,
                      这一行却还写「编辑 ›」,读起来像"还能再点开一个",实际点了是收起。 -->
@@ -160,6 +160,11 @@
             <view class="slopes-add-chapter" wx:if="{{!showTicketEditor}}" bindtap="openTicketEditor" data-index="-1" aria-role="button" aria-label="{{formData.tickets.length ? '添加新票种' : '添加票种'}}" hover-class="cy-pressed" hover-stay-time="80">
               <view class="slopes-add-chapter__ico"><cy-icon name="plus" size="28" /></view>
               <text class="slopes-add-chapter__txt">{{formData.tickets.length ? '添加新票种' : '添加票种'}}</text>
+            </view>
+            <!-- F12 亲子票模板:一张票一个码,1 大 1 小同享,只登记儿童年龄段 -->
+            <view class="slopes-add-chapter" wx:if="{{!showTicketEditor}}" bindtap="openFamilyTicketEditor" aria-role="button" aria-label="添加亲子票（1 大 1 小）" hover-class="cy-pressed" hover-stay-time="80">
+              <view class="slopes-add-chapter__ico"><cy-icon name="plus" size="28" /></view>
+              <text class="slopes-add-chapter__txt">亲子票（1 大 1 小）</text>
             </view>
 
         <!-- 票种编辑器【就地展开】(Figma 2770:13325 自由探索档 / 2770:11762 城市定向档)。
@@ -277,6 +282,20 @@
                   </view>
                 </block>
               </block>
+            </view>
+
+            <view class="node-card" wx:if="{{editingTicket.childCount == 1}}">
+              <!-- F12 亲子票:构成固定 1 大 1 小,儿童只填年龄段(不要姓名);超出年龄段的玩家不能下单 -->
+              <view class="tk-grid">
+                <view class="tk-field">
+                  <text class="tk-label">儿童最小年龄 (岁)<text class="g-req">*</text></text>
+                  <input class="tk-input" type="number" placeholder="3" placeholder-class="slopes-story-placeholder" value="{{editingTicket.childAgeMin}}" bindinput="onEditTicketChange" data-field="childAgeMin" />
+                </view>
+                <view class="tk-field">
+                  <text class="tk-label">儿童最大年龄 (岁)<text class="g-req">*</text></text>
+                  <input class="tk-input" type="number" placeholder="12" placeholder-class="slopes-story-placeholder" value="{{editingTicket.childAgeMax}}" bindinput="onEditTicketChange" data-field="childAgeMax" />
+                </view>
+              </view>
             </view>
 
             <view class="node-card">

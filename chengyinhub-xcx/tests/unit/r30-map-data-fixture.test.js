@@ -145,7 +145,7 @@ test('synthetic record fetch → normalization → replay retains actual point o
   ])
   assert.equal(view.data.session.distance, 1.234)
   assert.equal(view.data.session.time, '0:01')
-  assert.equal(view.data.session.shopsText, '—')
+  assert.equal(view.data.session.shopsText, '0', 'F14a:缺字段写 0')
   assert.equal(view.data.routeSegs.length, 3)
   assert.deepEqual(view.data.routeSegs.map(s => s.deg), [-90, 0, 150], 'north, east, then southwest; no sorting or axis swap')
   assert.equal(view.data.session.coordinateSystem, undefined, 'absent datum stays unknown')

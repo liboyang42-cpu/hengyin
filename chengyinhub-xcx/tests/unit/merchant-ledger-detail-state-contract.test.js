@@ -324,7 +324,7 @@ function resolvedDetail(kind, payload) {
   return mounted.page.data.detail
 }
 
-test('资金 null/unknown 保持待定，不拼成 ¥0.00 或 ¥null；真实零值仍按业务展示', () => {
+test('资金 null/unknown 写 ¥0.00(F14a MC-011=B)，不拼成 ¥null 或「待定」；真实零值仍按业务展示', () => {
   ;[null, 'UNKNOWN'].forEach((value) => {
     const order = resolvedDetail('order', {
       settlementAmount: value,
@@ -334,7 +334,7 @@ test('资金 null/unknown 保持待定，不拼成 ¥0.00 或 ¥null；真实零
     })
     assert.equal(order.amountText, null)
     assert.equal(order.amountDisplay, null)
-    assert.equal(order.amountFallback, '待定')
+    assert.equal(order.amountFallback, '¥0.00')
 
     const batch = resolvedDetail('batch', {
       batch: { periodYm: '2026-08', amountTotal: value, netDirection: 'PLATFORM_PAYS_MERCHANT', paymentState: 'PENDING', invoiceState: 'NONE' },
@@ -343,8 +343,8 @@ test('资金 null/unknown 保持待定，不拼成 ¥0.00 或 ¥null；真实零
     })
     assert.equal(batch.batch.amountText, null)
     assert.equal(batch.batch.amountDisplay, null)
-    assert.equal(batch.batch.amountFallback, '待定')
-    assert.equal(batch.earningEntries[0].amountDisplay, '待定')
+    assert.equal(batch.batch.amountFallback, '¥0.00')
+    assert.equal(batch.earningEntries[0].amountDisplay, '¥0.00')
   })
 
   const zero = resolvedDetail('batch', {

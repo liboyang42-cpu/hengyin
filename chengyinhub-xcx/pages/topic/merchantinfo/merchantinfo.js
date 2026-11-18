@@ -1331,6 +1331,9 @@ Page({
       }
       payload.perkTemplateId = Number(draft.perkTemplateId);
       payload.quotaTotal = quotaTotal;
+      // F12:承接时一并声明是否接受亲子票与儿童份说明
+      payload.familyAccepted = draft.familyAccepted ? 1 : 0;
+      if (draft.familyAccepted && draft.familyPerkText) payload.familyPerkText = String(draft.familyPerkText);
       return payload;
     }
     if (termsMode === 'REVSHARE') {

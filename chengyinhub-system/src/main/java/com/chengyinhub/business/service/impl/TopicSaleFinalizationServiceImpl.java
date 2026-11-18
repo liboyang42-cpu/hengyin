@@ -46,6 +46,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.temporal.ChronoUnit;
+import com.chengyinhub.business.service.support.FamilyTicketRules;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -165,6 +166,7 @@ public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationS
         TopicSaleTimeValidator.assertValid(topic, tickets, finalizeNow, () -> hasRecruitedPartners(topicId));
         List<MerchantChapterOffer> offers = validOffers(topicId, finalizeNow);
         assertRequiredChapterCoverage(topic, offers);
+        assertFamilyTicketAccepted(topic, tickets, offers);
 
         CoopOrderLineupSource.ReadResult orderLineup = coopOrderLineupSource.readEffectiveLineup(topicId);
         if (!orderLineup.getRepairReasons().isEmpty()) {
@@ -292,7 +294,10 @@ public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationS
                 + String.valueOf(ticket.getSignupDeadline()) + '|' + String.valueOf(ticket.getMeetingPoint()) + '|'
                 + String.valueOf(ticket.getGatherLng()) + '|' + String.valueOf(ticket.getGatherLat()) + '|'
                 + String.valueOf(ticket.getSubType()) + '|' + String.valueOf(ticket.getRefundRule()) + '|'
-                + String.valueOf(ticket.getNeedAudit()) + '|' + String.valueOf(ticket.getTeamSize());
+                + String.valueOf(ticket.getNeedAudit()) + '|' + String.valueOf(ticket.getTeamSize()) + '|'
+                // F12:人数构成进投影键,亲子票与同名同价的普通票不会错配
+                + FamilyTicketRules.adults(ticket) + '|' + FamilyTicketRules.children(ticket) + '|'
+                + String.valueOf(ticket.getChildAgeMin()) + '|' + String.valueOf(ticket.getChildAgeMax());
     }
 
     private void assertTicketProjection(OmsTicket source, OmsTicket projected, CmsActivity activity) {
@@ -312,6 +317,10 @@ public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationS
         assertTicketField("SUB_TYPE", source.getSubType(), projected.getSubType());
         assertTicketField("REFUND_RULE", source.getRefundRule(), projected.getRefundRule());
         assertTicketField("NEED_AUDIT", source.getNeedAudit(), projected.getNeedAudit());
+        assertTicketField("ADULT_COUNT", FamilyTicketRules.adults(source), FamilyTicketRules.adults(projected));
+        assertTicketField("CHILD_COUNT", FamilyTicketRules.children(source), FamilyTicketRules.children(projected));
+        assertTicketField("CHILD_AGE_MIN", source.getChildAgeMin(), projected.getChildAgeMin());
+        assertTicketField("CHILD_AGE_MAX", source.getChildAgeMax(), projected.getChildAgeMax());
         // 未设置人数和默认 0 都表示不限制成团人数，正数仍须严格一致。
         assertTicketField("TEAM_SIZE", source.getTeamSize() == null ? 0 : source.getTeamSize(),
                 projected.getTeamSize() == null ? 0 : projected.getTeamSize());
@@ -415,6 +424,33 @@ public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationS
                 throw new IllegalStateException("「" + chapterName + "」还没有商家承接成功，不能开售。"
                         + (city ? "请主理人在这一章关闭商家承接，或等商家承接后再提交" : "请等商家承接后再提交")
                         + "(章节 " + (chapter == null ? null : chapter.getId()) + ")");
+            }
+        }
+    }
+
+    /**
+     * F12:主题里有亲子票(1 大 1 小)时,每个必选位置的每一家承接方都必须接受亲子票 ——
+     * 玩家拿亲子票可以去任一承接方核销,有一家不接受就会在店里被拒。口径与 assertRequiredChapterCoverage 同:
+     * 城市定向只看开了商家承接的章。
+     */
+    void assertFamilyTicketAccepted(CmsTopic topic, List<OmsTicket> tickets, List<MerchantChapterOffer> offers) {
+        if (!FamilyTicketRules.anyFamily(tickets)) return;
+        Long topicId = topic.getId();
+        if (pureContentExploreService != null && pureContentExploreService.isPureContent(topicId)) return;
+        List<CmsTopicChapter> required = chapterMapper.selectRequiredByTopic(topicId);
+        if (required == null) return;
+        boolean city = Integer.valueOf(ProductType.ORIENTEERING).equals(topic.getProductType());
+        for (CmsTopicChapter chapter : required) {
+            if (chapter == null || chapter.getId() == null) continue;
+            if (city && !Integer.valueOf(1).equals(chapter.getRecruitEnabled())) continue;
+            for (MerchantChapterOffer offer : offers) {
+                if (!chapter.getId().equals(offer.getChapterId()) || FamilyTicketRules.accepts(offer)) continue;
+                String chapterName = chapter.getName() == null || chapter.getName().trim().isEmpty()
+                        ? "未命名章节" : chapter.getName().trim();
+                String shop = offer.getMerchantName() != null && !offer.getMerchantName().trim().isEmpty()
+                        ? offer.getMerchantName().trim() : "「" + chapterName + "」的承接店铺";
+                throw new IllegalStateException(shop + "还没接受亲子票，不能发布带亲子票的主题。"
+                        + "请等店铺接受亲子票，或删掉亲子票、换掉这家店(章节 " + chapter.getId() + ")");
             }
         }
     }

@@ -569,4 +569,7 @@ public interface ICmsRegistrationService
      * 未被更晚的已付单取代），但不迁移 payment_status、不发起 JSAPI 尝试；过期只拒绝，关单交给带虚拟支付围栏的关单路径。
      */
     CmsRegistration requirePayableForXpay(Long registrationId, Long memberId);
+
+    /** F12:给订单行挂上亲子票人数构成(party);默认不做事,供测试替身沿用。 */
+    default void attachPartySnapshots(List<CmsRegistration> rows) { }
 }

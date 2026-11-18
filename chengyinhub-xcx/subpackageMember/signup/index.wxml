@@ -15,16 +15,13 @@
   <cy-nav-bar overlay pill pillDark tint="light" title="" />
   <!-- r3-visual 票夹(refs4/ticket-holder-frames):导航下一行 = 左「票夹」大标题,右「+」去探索拿票、本人头像回「我的」。
        没有状态筛选:业主 2026-10-28 定票夹只放能用的票、不做「可用 / 已用 / 已过期」切换。 -->
-  <!-- l-after(业主批准 proto/game wl-wallet):顶上「票夹 ▾」是筛选弹出(全部 / 即将开始 / 已通关,按服务端 topicCompleted 分),右边「+」加票 -->
+  <!-- F13(OR-011):不做筛选 —— 一个列表,可用的在前、即将开始的置灰排后;已通关 / 未通关是卡上的标签。右边「+」加票 -->
   <view class="wl-nav" style="top: {{navTop}}px;">
-    <view class="wl-nav__flt" bindtap="toggleWalFilter" aria-role="button" aria-expanded="{{walPop}}" aria-label="筛选：{{walFilterLabel}}" hover-class="cy-pressed" hover-stay-time="80">
-      <text aria-role="heading" class="wl-nav__b">{{walFilterLabel}}</text><view class="wl-nav__chev {{walPop ? 'is-open' : ''}}"><cy-icon name="chevron-right" size="28" /></view>
+    <view class="wl-nav__flt">
+      <text aria-role="heading" class="wl-nav__b">票夹</text>
     </view>
     <view class="wl-nav__add" bindtap="goExplore" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="去探索主题"><cy-icon name="plus" size="32" /></view>
     <view class="wl-nav__me" wx:if="{{meAvatar}}" bindtap="goMe" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="我的"><cy-avatar size="64" src="{{meAvatar}}" /></view>
-  </view>
-  <view class="wl-pop {{walPop ? 'is-open' : ''}}" style="top: {{navTop + 52}}px;" aria-role="menu" aria-hidden="{{!walPop}}">
-    <view class="wl-pop__i {{walFilter === item.key ? 'is-on' : ''}}" wx:for="{{walFilters}}" wx:key="key" data-key="{{item.key}}" bindtap="pickWalFilter" aria-role="menuitemradio" aria-checked="{{walFilter === item.key}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
   </view>
 
   <!-- 2026-07-31:优惠券已独立(subpackageMember/coupon),「票夹/优惠券」那层 tab 已删。
@@ -59,12 +56,13 @@
     <view class="deck {{deckStill ? 'deck--still' : ''}}" bindtouchstart="onDeckStart" bindtouchmove="onDeckMove" bindtouchend="onDeckEnd" bindtouchcancel="onDeckEnd">
       <!-- 2026-10-28 业主:点卡片翻到背面出示入场码,再点翻回;进游戏改由底部「开始游戏」。
            票夹只放能用的票(已付款、未核验、未过期),卡上不写状态。 -->
-      <view wx:for="{{ticketList}}" wx:key="wKey" class="wc" style="{{deckPoses[index]}}{{index === currentSwiperTicket ? '' : 'pointer-events: none;'}}" bindtap="onCardTap" data-index="{{index}}" hover-class="cy-pressed" hover-stay-time="80"
-        aria-role="button" aria-label="{{flipped && index === currentSwiperTicket ? '翻回正面' : '出示入场码'}}，{{item.wTitle}}" aria-hidden="{{index !== currentSwiperTicket}}">
+      <!-- F13:即将开始 / 退款中的票整卡置灰、不能点(aria-disabled),标签写「M月D日开始」/「退款中」 -->
+      <view wx:for="{{ticketList}}" wx:key="wKey" class="wc" style="{{deckPoses[index]}}{{index === currentSwiperTicket ? '' : 'pointer-events: none;'}}" bindtap="onCardTap" data-index="{{index}}" hover-class="{{item.wLocked ? 'none' : 'cy-pressed'}}" hover-stay-time="80"
+        aria-role="button" aria-disabled="{{item.wLocked}}" aria-label="{{item.wLocked ? item.wTag : (flipped && index === currentSwiperTicket ? '翻回正面' : '出示入场码')}}，{{item.wTitle}}" aria-hidden="{{index !== currentSwiperTicket}}">
         <view class="wc__flip {{flipped && index === currentSwiperTicket ? 'wc__flip--back' : ''}}">
-          <view class="wc__face wc__front">
+          <view class="wc__face wc__front {{item.wLocked ? 'wc__front--locked' : ''}}">
             <view class="wc__go" style="background: {{item.wColor}};"><image src="./icon_go.svg" mode="aspectFit" /></view>
-            <view class="wc__t"><text class="wc__b">{{item.wTitle}}</text><text class="wc__s">{{item.wSub}}</text></view>
+            <view class="wc__t"><text class="wc__b">{{item.wTitle}}</text><text class="wc__s">{{item.wSub}}</text><text wx:if="{{item.wTag}}" class="wc__tag {{item.wLocked ? 'wc__tag--locked' : ''}}">{{item.wTag}}</text></view>
             <view class="wc__im" wx:if="{{item.wImg}}"><image lazy-load="true" src="{{item.wImg}}" mode="aspectFill" /></view>
             <!-- x-fix2 P-18:没封面不拿假路线图充数(k8 F13),但卡身也不留一大块空:放一枚票夹插画 -->
             <view class="wc__im wc__im--illus cy-cover-fb" wx:else aria-hidden="true"><image class="cy-cover-fb__art" src="/images/cover-route.svg" mode="aspectFit" /></view>
@@ -72,7 +70,7 @@
             <!-- l-after 镜面:卷页时一道跟着手指走的高光带(--sx),静止时不出 -->
             <view class="wc__spec" aria-hidden="true"></view>
           </view>
-          <view class="wc__face wc__back" wx:if="{{index === currentSwiperTicket}}">
+          <view class="wc__face wc__back" wx:if="{{index === currentSwiperTicket && !item.wLocked}}">
             <text class="wc__bn ep1">{{item.wTitle}}</text>
             <view class="wc__qr" wx:if="{{!item.topicCompleted}}">
               <!-- 2026-10-29 业主:码居中、码心黑色 logo、彩色波动效(cy-dot-qr);翻到背面才挂画布 -->
@@ -102,7 +100,7 @@
       <cy-icon name="arrow-right" size="24" />
     </view>
   </view>
-  <view class="wl-start {{entering ? 'wl-start--go' : ''}} {{startLit ? 'wl-start--lit' : ''}}" wx:if="{{walletState === 'ready' && ticketList.length && !ticketList[currentSwiperTicket].wNoGame}}" bindtap="goTicket" data-index="{{currentSwiperTicket}}" data-go="1" aria-role="button" aria-label="{{ticketList[currentSwiperTicket].topicCompleted ? '查看记录' : '开始游戏'}}：{{ticketList[currentSwiperTicket].wTitle}}" hover-class="cy-pressed" hover-stay-time="80">
+  <view class="wl-start {{entering ? 'wl-start--go' : ''}} {{startLit ? 'wl-start--lit' : ''}}" wx:if="{{walletState === 'ready' && ticketList.length && !ticketList[currentSwiperTicket].wNoGame && !ticketList[currentSwiperTicket].wLocked}}" bindtap="goTicket" data-index="{{currentSwiperTicket}}" data-go="1" aria-role="button" aria-label="{{ticketList[currentSwiperTicket].topicCompleted ? '查看记录' : '开始游戏'}}：{{ticketList[currentSwiperTicket].wTitle}}" hover-class="cy-pressed" hover-stay-time="80">
     <view class="wl-start__fill"></view><view class="wl-start__shine" wx:if="{{!reduced}}"></view>
     <view class="wl-start__lbl"><image class="wl-start__play" src="./icon_play.svg" mode="aspectFit" /><text>{{ticketList[currentSwiperTicket].topicCompleted ? '查看记录' : '开始游戏'}}</text></view>
   </view>

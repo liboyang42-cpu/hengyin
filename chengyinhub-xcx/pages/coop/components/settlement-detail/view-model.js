@@ -145,7 +145,7 @@ function buildHostSettlementDetail(input) {
       line('verifiedSales', '核销销售额', money(record.verifiedSales)),
       line('platform', '平台服务费', money(record.platformAmount)),
       line('merchant', '商家应收', money(record.merchantTotal)),
-      line('income', '我的分润', settledIncome || '—', true),
+      line('income', '我的分润', settledIncome || '¥0.00', true),   // F14a:未结算/缺字段写 0,与 hero 同口径
     ]),
     timeline: buildHostTimeline(record, status),
   };

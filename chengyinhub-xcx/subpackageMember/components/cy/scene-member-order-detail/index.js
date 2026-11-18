@@ -313,7 +313,7 @@ Component({
       participateDateText: '',
       verificationTimeText: '',
       orderTimeline: [],
-      expiresAtText: '', expiresIsPass: false,
+      expiresAtText: '', expiresIsPass: false, walletExpired: false, partyText: '',
       primaryCta: '',
       ticketPriceShown: '',
       // 稿 578:2298:头图上的金额行/时间行与状态药丸,退款状态卡
@@ -979,7 +979,8 @@ Component({
             info.refundDisplayText = summary.refundText;
             info.refundDeadlineText = formatRefundDeadline(info.refundInfo && info.refundInfo.deadline);
             // 终态展示退款或关闭事实，不沿用退款资格文案。
-            if (['refunding', 'refunded', 'cancelled', 'expired'].includes(info.orderStateKey)) {
+            // F13:已完成(已核销 / 已结束)的单也不再说「可免费取消至…」
+            if (['refunding', 'refunded', 'cancelled', 'expired', 'completed'].includes(info.orderStateKey)) {
               info.refundDeadlineDisplay = '';
             } else if (!info.refundDeadlineDisplay) {
               if (info.refundInfo && info.refundInfo.refundable && info.refundDeadlineText) {
@@ -1126,6 +1127,10 @@ Component({
               orderTimeline: buildOrderTimeline(info),
               expiresAtText: isSelfPlayPass(info) ? passUntilText(info.expiresAt).replace(/^可玩至 /, '') : toDisplayTime(info.expiresAt),
               expiresIsPass: isSelfPlayPass(info),
+              // F13 / OR-012=B:过期票不进票夹,只在这里说一句;用服务端 usableState,与票夹同一口径
+              walletExpired: info.usableState === 'EXPIRED',
+              // F12:亲子票写「1 大 1 小（儿童 7 岁）」
+              partyText: partyText(info.party),
               primaryCta: primaryCta,
               ticketPriceShown: ticketPriceShown,
               loadState: 'ready', loadErrorText: '', loadFailureVisible: false
@@ -1148,3 +1153,9 @@ Component({
 
   },
 })
+
+/* F12 亲子票人数构成:{adultCount, childCount, childAge} →「1 大 1 小（儿童 7 岁）」;非亲子票空串 */
+function partyText(party) {
+  if (!party || !(Number(party.childCount) > 0)) return '';
+  return party.adultCount + ' 大 ' + party.childCount + ' 小' + (party.childAge != null ? '（儿童 ' + party.childAge + ' 岁）' : '');
+}

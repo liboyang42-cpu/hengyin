@@ -261,4 +261,10 @@ public class RegistrationRequest {
         this.waitlistOfferToken = waitlistOfferToken == null || waitlistOfferToken.trim().isEmpty()
                 ? null : waitlistOfferToken.trim();
     }
+
+    /** F12 亲子票:儿童年龄(只要年龄,不要姓名);非亲子票不传。 */
+    private Integer childAge;
+
+    public Integer getChildAge() { return childAge; }
+    public void setChildAge(Integer childAge) { this.childAge = childAge; }
 }

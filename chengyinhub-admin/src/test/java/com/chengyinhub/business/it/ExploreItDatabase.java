@@ -42,6 +42,8 @@ final class ExploreItDatabase {
             "sql/migration_20261105_chapter_video.sql",
             // D-82 起 CmsTopicChapterMapper 读 reward_text。
             "sql/migration_20261112_chapter_reward.sql",
+            // F12 亲子票:OmsTicketMapper 读人数构成,MerchantChapterOfferMapper 读 family_accepted。
+            "sql/migration_20261118_family_ticket.sql",
     };
 
     private final MysqlIntegrationTestConfig config;

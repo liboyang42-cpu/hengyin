@@ -108,8 +108,7 @@
         "merchantapply/index",
         "pricing/index",
         "pricing/partner/index",
-        "catalog/index",
-        "catalog/detail"
+        "catalog/index"
       ]
     },
     {

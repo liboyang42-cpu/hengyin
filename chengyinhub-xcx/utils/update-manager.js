@@ -23,8 +23,15 @@ function handlePageNotFound(res, wxApi) {
   const missing = String((res && res.path) || '').replace(/^\//, '');
   if (pageNotFoundHandled || missing === HOME_PAGE || !api || typeof api.reLaunch !== 'function') return false;
   pageNotFoundHandled = true;
-  api.reLaunch({ url: '/' + HOME_PAGE });
+  api.reLaunch({ url: retiredPageTarget(missing, res && res.query) || '/' + HOME_PAGE });
   return true;
 }
 
-module.exports = { HOME_PAGE, installUpdateManager, promptUpdateIfAvailable, handlePageNotFound };
+// F14c:已下线的合集详情旧分享卡带着主题 id,落到对应主题页;其余失效页回首页。
+function retiredPageTarget(path, query) {
+  const id = String((query && query.id) || '');
+  if (path === 'pages/topic/catalog/detail' && /^\d{1,19}$/.test(id)) return '/pages/topic/index/index?id=' + id;
+  return '';
+}
+
+module.exports = { HOME_PAGE, installUpdateManager, promptUpdateIfAvailable, handlePageNotFound, retiredPageTarget };

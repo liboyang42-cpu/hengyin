@@ -235,17 +235,13 @@
 /* ===== l-after 票夹(业主批准 proto/game wl-wallet):「票夹 ▾」筛选弹出、卷页镜面高光 + 卡下倒影 ===== */
 .wl-nav__flt { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8rpx; min-height: 88rpx; color: #fff; } /* ds-ok: 压在用户照片模糊底上,不随主题翻转 */
 .wl-nav__flt .wl-nav__b { flex: none; }
-.wl-nav__chev { display: flex; transform: rotate(90deg); transition: transform var(--cy-motion-fast) var(--cy-ease-out); } /* 右箭头转 90° 当下箭头(与榜单「更多」同做法) */
-.wl-nav__chev.is-open { transform: rotate(-90deg); }
-.wl-pop { position: fixed; left: var(--cy-page-x); z-index: 96; padding: 12rpx; border-radius: var(--cy-radius-md); background: var(--cy-comp-sheet-player-glass, var(--cy-color-bg-elevated)); box-shadow: 0 24rpx 60rpx rgba(0,0,0,.4); /* ds-ok 弹出投影 */
-  opacity: 0; transform: translateY(-16rpx); pointer-events: none; transition: opacity var(--cy-motion-fast) ease, transform var(--cy-motion-fast) var(--cy-ease-out); }
-.wl-pop.is-open { opacity: 1; transform: none; pointer-events: auto; }
-.wl-pop__i { min-width: 200rpx; min-height: 88rpx; display: flex; align-items: center; padding: 0 32rpx; border-radius: var(--cy-radius-sm); font-size: var(--cy-type-body); color: var(--cy-color-text-primary); }
-.wl-pop__i.is-on { background: var(--cy-comp-sheet-group-bg); font-weight: 600; }
+/* F13 票夹卡标签:已通关 / 未通关 / M月D日开始 / 退款中 */
+.wc__tag { align-self: center; margin-top: 12rpx; padding: 4rpx 16rpx; border-radius: var(--cy-radius-pill, 999rpx); font-size: 21rpx; letter-spacing: 2rpx; color: #fff; background: rgba(255,255,255,.16); } /* ds-ok: 压在票面深色底上,与 .wc__s 同一组定值 */
+/* 即将开始 / 退款中:整卡置灰、不能点(大麦电子票没到开演时间同做法) */
+.wc__front--locked { filter: grayscale(1); opacity: .55; }
 .wc__spec { position: absolute; top: 0; right: 0; bottom: 0; left: 0; border-radius: 54rpx; pointer-events: none; opacity: var(--spec, 0); mix-blend-mode: screen; /* ds-ok: 上线波次原型逐值(装饰 / 品牌色块) */
   background: linear-gradient(100deg, transparent calc(var(--sx, 120%) - 18%), rgba(255,255,255,.55) var(--sx, 120%), transparent calc(var(--sx, 120%) + 10%)); } /* ds-ok: 卷页镜面高光带 */
 .wc { -webkit-box-reflect: below 12rpx linear-gradient(transparent 62%, rgba(255,255,255,.18)); } /* ds-ok: 卡下倒影(proto wal3) */
-.signup--reduced .wl-pop { transition: none; }
 /* x-fix2 P-18:无封面票卡的插画位:居中,不叠封面压暗 */
 .wc__im--illus { display: flex; align-items: center; justify-content: center; }
 .wc__im--illus::after { display: none; }
@@ -258,9 +254,7 @@
 .wl-start { transition: var(--cy-tr-press); }
 
 /* 细节打磨二期 L1/L5/L7 */
-.wl-nav__flt { transition: var(--cy-tr-press); }
 .wl-nav__add { transition: var(--cy-tr-press); }
 .wl-nav__me { transition: var(--cy-tr-press); }
-.wl-pop__i { transition: var(--cy-tr-press); }
 .wc__qr-tip { transition: var(--cy-tr-press); }
 .team-entry { transition: var(--cy-tr-press); }

@@ -2215,8 +2215,98 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                     request.getSourceClubId(), request.getSourceChannelCode(), waitlistClaim,
                     request.getOfferCode(), request.getMarketingSign()));
         }
+        // F12 亲子票:只登记儿童年龄,超出年龄段不让下单;每单仍限 1 张(权益行 uk_entitlement 不变)。
+        // 放在建单之后、同一事务内:票种归属/候补/俱乐部等既有闸先判,这里抛错整单回滚。
+        FamilyOrderParty familyParty = resolveFamilyOrderParty(request);
         bindRequestFingerprint(created, normalizedRequestId, requestFingerprint);
+        bindFamilyParty(created, familyParty);
         return created;
+    }
+
+    @Override
+    public void attachPartySnapshots(List<CmsRegistration> rows) {
+        if (rows == null || rows.isEmpty()) return;
+        Map<Long, CmsRegistration> byId = new java.util.HashMap<>();
+        for (CmsRegistration row : rows) if (row != null && row.getId() != null) byId.put(row.getId(), row);
+        if (byId.isEmpty()) return;
+        List<CmsRegistration> snapshots = cmsRegistrationMapper.selectPartySnapshots(byId.keySet());
+        if (snapshots == null) return;
+        for (CmsRegistration snapshot : snapshots) {
+            CmsRegistration row = snapshot == null ? null : byId.get(snapshot.getId());
+            if (row != null) row.setPartySnapshotJson(snapshot.getPartySnapshotJson());
+        }
+    }
+
+    /** F12:本单要落库的亲子票人数构成(票种 id + party_snapshot_json)。 */
+    private static final class FamilyOrderParty {
+        private final Long ticketId;
+        private final String snapshotJson;
+
+        private FamilyOrderParty(Long ticketId, String snapshotJson) {
+            this.ticketId = ticketId;
+            this.snapshotJson = snapshotJson;
+        }
+    }
+
+    /**
+     * F12:下单前校验亲子票。自玩通行证(ownerType=1)没有票种,不带 childAge;
+     * 多票路径里亲子票只能单独一张下单(数量仍限 1,不放开)。非亲子票带 childAge 一律拒。
+     */
+    private FamilyOrderParty resolveFamilyOrderParty(RegistrationRequest request) {
+        Integer childAge = request.getChildAge();
+        if (Integer.valueOf(1).equals(request.getOwnerType())) {
+            if (childAge != null) throw new RuntimeException("所选票种不是亲子票");
+            return null;
+        }
+        Long ticketId = request.getTicketId();
+        if (request.getTickets() != null && !request.getTickets().isEmpty()) {
+            Long familyTicketId = null;
+            int lines = 0;
+            for (com.chengyinhub.business.domain.dto.RegistrationTicketItem item : request.getTickets()) {
+                if (item == null || item.getTicketId() == null) continue;
+                lines++;
+                OmsTicket ticket = omsTicketMapper.selectOmsTicketById(item.getTicketId());
+                if (com.chengyinhub.business.service.support.FamilyTicketRules.isFamily(ticket)) {
+                    if (familyTicketId != null || (item.getCount() != null && item.getCount() != 1)) {
+                        throw new RuntimeException(com.chengyinhub.business.service.support.FamilyTicketRules.ONLY_ONE_PLUS_ONE
+                                + "，每单限 1 张");
+                    }
+                    familyTicketId = item.getTicketId();
+                }
+            }
+            if (familyTicketId != null && lines > 1) throw new RuntimeException("亲子票请单独下单");
+            ticketId = familyTicketId;
+            if (ticketId == null) {
+                if (childAge != null) throw new RuntimeException("所选票种不是亲子票");
+                return null;
+            }
+        }
+        if (ticketId == null) {
+            if (childAge != null) throw new RuntimeException("所选票种不是亲子票");
+            return null;
+        }
+        OmsTicket ticket = omsTicketMapper.selectOmsTicketById(ticketId);
+        String snapshot;
+        try {
+            snapshot = com.chengyinhub.business.service.support.FamilyTicketRules.partySnapshotForOrder(ticket, childAge);
+        } catch (IllegalArgumentException invalid) {
+            throw new RuntimeException(invalid.getMessage());
+        }
+        return snapshot == null ? null : new FamilyOrderParty(ticketId, snapshot);
+    }
+
+    /** F12:把人数构成写到本单亲子票那一行;同一幂等请求重放时年龄必须与首次一致。 */
+    private void bindFamilyParty(List<CmsRegistration> created, FamilyOrderParty party) {
+        if (party == null || created == null) return;
+        for (CmsRegistration registration : created) {
+            if (registration == null || registration.getId() == null
+                    || !party.ticketId.equals(registration.getTicketId())) continue;
+            if (cmsRegistrationMapper.bindPartySnapshot(registration.getId(), party.snapshotJson) != 1) {
+                throw new com.chengyinhub.business.service.RegistrationRequestConflictException(
+                        "同一请求的儿童年龄与首次提交不一致");
+            }
+            registration.setPartySnapshotJson(party.snapshotJson);
+        }
     }
 
     /**

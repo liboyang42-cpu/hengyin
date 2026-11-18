@@ -637,7 +637,8 @@ test('A41 已取消票券由 WXS 消费真实 registrationStatus，而不是旧 
   // 2026-10-28 业主:票夹只放能用的票,状态判定从 wxs 挪到 JS 的 usableTicket(真实 registrationStatus / verificationStatus)
   const js = read('subpackageMember/signup/index.js')
   assert.match(js, /item\.registrationStatus\) !== 2/)
-  assert.match(js, /item\.verificationStatus == 1/)
+  // F13(OR-011):不限游玩次数,已核销不再剔出票夹;过期按服务端 usableState
+  assert.match(js, /item\.paymentStatus\) !== 2 \|\| refundedTicket\(item\)/)
   for (const data of [shots.A41.data, FIXTURES.A41.data]) {
     assert.equal(data.ticketList.length, 1)
     assert.equal(data.ticketList[0].registrationStatus, 3)

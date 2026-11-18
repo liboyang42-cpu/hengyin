@@ -1,7 +1,7 @@
 'use strict'
 /* l-after(2026-11-10)游戏主题库的数据口(业主批准 proto/game ps-library):
  * 列表读现有的公开目录 POST /api/public-catalog/list(真实接口,城市定向 / 自由探索按 product_type 1 / 2 筛),
- * 卡片字段复用 pages/topic/utils/public-catalog.cardView。
+ * 卡片字段复用本分包 utils/public-catalog.cardView(城市合集页已下线,F14c)。
  * 「¥0 可玩」只在服务端给了通行证覆盖事实时出(行上的 passCovered === true,由 l-pass 的通行证接口补);
  * 没有这个事实就不画价签,不把未知写成 0。换接口时只改这一个文件。 */
 // 分包不能互引资源(下载顺序不定,对方分包未就绪时 require 失败):用本分包里的逐字副本,单测守住与 pages/topic 原件一致

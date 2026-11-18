@@ -38,7 +38,7 @@
             </view>
             <view class="orderbox_li_con_info_name ep1">{{item.titleName}}</view>
             <view class="orderbox_li_con_info_time" wx:if="{{item.createText}}"><image lazy-load="true" class="moh-ico" src="/subpackageMember/images/d_orderIcon.png" mode="widthFix" />申请于 {{item.createText}}</view>
-            <view class="orderbox_li_con_info_txt ep1"><image lazy-load="true" class="moh-ico" src="/subpackageMember/images/d_orderIcon2.png" mode="widthFix" />{{item.issuerName ? item.issuerName + ' · ' : ''}}{{item.orderCount || '—'}} 笔订单</view>
+            <view class="orderbox_li_con_info_txt ep1"><image lazy-load="true" class="moh-ico" src="/subpackageMember/images/d_orderIcon2.png" mode="widthFix" />{{item.issuerName ? item.issuerName + ' · ' : ''}}{{item.orderCount || 0}} 笔订单</view>
           </view>
         </view>
         <view class="orderbox_li_bot">
