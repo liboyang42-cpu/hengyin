@@ -162,8 +162,8 @@ test('回前台续上 onHide 时在响的那几路(站点配乐 / 旁白),不再
   assert.doesNotMatch(show, /this\._themeBgm\.play\(\)/)
   const audioSession = require('../../pages/play/utils/audio-session.js').createAudioSession({})
   const make = () => ({ paused: false, plays: 0, pause() { this.paused = true }, play() { this.plays += 1; this.paused = false } })
-  const station = audioSession.register(make(), { kind: 'bgm' })
-  const theme = audioSession.register(Object.assign(make(), { paused: true }), { kind: 'bgm' })
+  const station = audioSession.register(make(), { kind: 'ambient' })
+  const theme = audioSession.register(Object.assign(make(), { paused: true }), { kind: 'ambient' })
   audioSession.pauseAll()
   audioSession.resumeAll()
   assert.equal(station.plays, 1, '站点配乐续上')
@@ -249,7 +249,7 @@ test('活跃一局切后台保留音乐，离开或已结束时暂停', () => {
   page._syncStationBgm({audioUrl:'https://x.test/upload/loop.mp3'});
   const music=audios[0]; page.initAudio(); page._audio.play();
   page._runStarted=true; page.onHide();
-  assert.equal(music.paused,false); assert.equal(music.obeyMuteSwitch,false);
+  assert.equal(music.paused,false); assert.equal(music.obeyMuteSwitch,true,'F06:背景音乐跟随静音键'); assert.equal(page._audio.obeyMuteSwitch,false,'旁白不跟随静音键');
   assert.equal(page._audio.paused,false);
   page._runStarted=false; page.onHide(); assert.equal(music.paused,true); assert.equal(page._audio.paused,true);
   page.destroyAudio(); page._stopStationBgm();
@@ -329,3 +329,72 @@ test('销毁后的旧旁白和换局前的回调不覆盖当前音频状态', ()
   assert.equal(page.data.audioPlaying, false);
   page.initAudio(); assert.equal(audios.length, 3, '新局取得自己的播放器回调');
 });
+
+// ---- F06 音频默认行为:背景音乐与旁白自动播,开关持久化;旁白可关 ----
+test('F06:旁白开关关掉后,章节旁白与站点语音讲解不自动播;点声音钮 / 任务页仍可听', () => {
+  const { page, audios } = loadPlay()
+  page.data.narrationOn = false
+  page.data.chapter = { id: 1, audioUrl: 'https://x.test/upload/chapter.mp3' }
+  page.playChapterAudio(true)
+  page._autoStationVoice({ nodeId: 5, audio: 'https://x.test/upload/station.mp3', done: false })
+  assert.equal(audios.length, 0, '一个播放器都不建 = 没有自动出声')
+  page.playChapterAudio()
+  assert.equal(audios.length, 1)
+  assert.equal(audios[0].plays, 1, '手动点声音钮照常播')
+  page.data.narrationOn = true
+  page._autoStationVoice({ nodeId: 5, audio: 'https://x.test/upload/station.mp3', done: false })
+  assert.match(audios[0].src, /station\.mp3$/, '开着旁白时站点语音讲解照常自动讲')
+})
+
+test('F06:背景音乐 / 旁白开关写进本机存储(play.bgmOn / play.narrationOn),下次进来按存的值;没存过 = 开', () => {
+  const { page } = loadPlay()
+  const saved = []
+  const realSet = wx.setStorageSync
+  wx.setStorageSync = (key, value) => { saved.push([key, value]); realSet(key, value) }
+  page.data.themeBgmOn = true
+  page.toggleThemeBgm()
+  page.toggleNarration()
+  assert.equal(page.data.narrationOn, false)
+  page.toggleNarration()
+  assert.deepEqual(saved, [['play.bgmOn', false], ['play.narrationOn', false], ['play.narrationOn', true]])
+  const js = read('pages/play/index.js')
+  const load = js.slice(js.indexOf('  onLoad(options) {'), js.indexOf('  onLoad(options) {') + 2600)
+  assert.match(load, /themeBgmOn: readAudioPref\(BGM_PREF_KEY\)/)
+  assert.match(load, /narrationOn: readAudioPref\(NARRATION_PREF_KEY\)/)
+  assert.match(js, /const BGM_PREF_KEY = 'play\.bgmOn';/)
+  assert.match(js, /const NARRATION_PREF_KEY = 'play\.narrationOn';/)
+  assert.match(js, /return wx\.getStorageSync\(key\) !== false;/, '只有明确存了 false 才是关')
+  const wxml = read('pages/play/index.wxml')
+  assert.match(wxml, /catchtap="toggleThemeBgm"[\s\S]{0,400}<view class="drow" wx:if="\{\{narrationAvailable\}\}">[\s\S]{0,300}catchtap="toggleNarration" aria-role="switch" aria-checked="\{\{narrationOn\}\}" aria-label="旁白"/, '旁白开关与背景音乐在同一个设置抽屉里')
+})
+
+test('F06:旁白正在自动讲时关掉旁白开关,这一段停下', () => {
+  const { page } = loadPlay()
+  page.data.chapter = { id: 2, audioUrl: 'https://x.test/upload/n.mp3' }
+  page.playChapterAudio(true)
+  assert.equal(page._audio.paused, false)
+  page.data.audioPlaying = true
+  page.toggleNarration()
+  assert.equal(page._audio.paused, true)
+})
+
+test('F06:店铺分身语音回复不自动播放,气泡上点「播放」才出声,再点停止', () => {
+  const { page, audios } = loadPlay()
+  page.data.shopNpc = Object.assign({}, page.data.shopNpc, { show: true, msgs: [] })
+  page._stopThinkBeat = () => {}
+  page._pushShopNpcReply('示例站点的回答', undefined, 'https://x.test/upload/reply.mp3')
+  assert.equal(audios.length, 0, '回复到了不自动出声')
+  assert.equal(page.data.shopNpc.msgs[0].audioUrl, 'https://x.test/upload/reply.mp3')
+  page.toggleNpcVoice({ currentTarget: { dataset: { idx: 0 } } })
+  assert.equal(audios.length, 1)
+  assert.equal(audios[0].plays, 1)
+  assert.equal(page.data.shopNpc.voiceId, page.data.shopNpc.msgs[0].id)
+  page.toggleNpcVoice({ currentTarget: { dataset: { idx: 0 } } })
+  assert.equal(audios[0].destroyed, true)
+  assert.equal(page.data.shopNpc.voiceId, 0)
+  page._pushShopNpcReply('没有语音的一条', undefined, undefined)
+  page.toggleNpcVoice({ currentTarget: { dataset: { idx: 1 } } })
+  assert.equal(audios.length, 1, '没语音的那条点了不建播放器')
+  const wxml = read('pages/play/index.wxml')
+  assert.match(wxml, /wx:if="\{\{item\.audioUrl\}\}" bindtap="toggleNpcVoice" data-idx="\{\{index\}\}"/)
+})

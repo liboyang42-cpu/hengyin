@@ -25,9 +25,9 @@ test('玩法段声明取自玩家端分发表 TYPE_OF,一段不多一段不少',
   assert.deepEqual(games, Object.keys(TYPE_OF).map(s => 'game.' + s.toLowerCase()).sort())
 })
 
-test('没有渲染或提交入口的能力不声明:App 传感器、双人视角、团队共解', () => {
+test('没有渲染或提交入口的能力不声明:App 传感器、团队共解', () => {
   const keys = caps.keys()
-  for (const absent of ['answer.sensor', 'role.views', 'game.teamcooperation']) {
+  for (const absent of ['answer.sensor', 'game.teamcooperation']) {
     assert.ok(!keys.includes(absent), absent + ' 本端没有实现,不能声明')
   }
   // 2026-11-10 staging 合流:qx-b2 的逐字猜词渲染器已进 play-kit 分发表(TYPE_OF.hangman),
@@ -70,4 +70,16 @@ test('准备/开赛与高级玩法开局都带声明;能力拒绝不当成结果
   assert.match(orient, /clientCapabilities\.UNSUPPORTED\]\.includes\(body\.err\)/)
   const advanced = read('pages/play/components/advanced-game/index.js')
   assert.match(advanced, /\/api\/play\/advanced\/start', 'POST', Object\.assign\(\{\}, scope, clientCapabilities\.declaration\(\)\)\)/)
+})
+
+test('F03 / F05 子能力只在渲染与提交路径真实存在时声明:hangman.pool / qa.letterPool / role.views', () => {
+  const keys = caps.keys()
+  for (const key of ['hangman.pool', 'qa.letterPool', 'role.views']) assert.ok(keys.includes(key), key + ' 应声明')
+  assert.deepEqual([...caps.FEATURES].sort(), ['hangman.pool', 'qa.letterPool', 'role.views'])
+  assert.match(read('pages/play/components/playkit-hangman/index.js'), /inputMode === 'pool'/, '逐字猜词有字母池分支')
+  assert.match(read('pages/play/components/playkit-qa/index.wxml'), /mode === 'type' && poolOn/, '打字题有字符池分支')
+  assert.match(read('pages/play/index.wxml'), /<cy-role-card wx:if="\{\{stationRole/, '站点卡挂了角色卡')
+  assert.ok(!/故意不声明|没有渲染器的段\(如 roleViews/.test(read('pages/play/utils/client-capabilities.js')), '「不声明 roleViews」的旧注释已删')
+  // role.views 是服务端已推导的键(roleViews.enabled 时必需);键名逐字对齐
+  assert.ok(read(JAVA + 'service/support/ContentCapabilityRequirements.java').includes('"role.views"'))
 })

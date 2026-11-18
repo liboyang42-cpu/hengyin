@@ -1,13 +1,14 @@
 <!-- UG-01 逐字猜词(l-kits 2026-11-10,照 proto/game gp-kit-full「玩法 · 全屏(逐字猜词 · 系统键盘)」):
      题面与格子整组居中;预填格深一档、当前格描边主色上浮;不画自定义键盘 —— 点格子唤起系统键盘,
      输入框就在格子下面,输入什么格子就填什么,每填一格弹一下;「提交」固定底部,填满才亮;答对格子依次变绿。
-     判定只在服务端:组件只收集玩家补的字,交 SUBMIT_HANGMAN {slots}。 -->
+     判定只在服务端:组件只收集玩家补的字,交 SUBMIT_HANGMAN {slots}。
+     F03 字母池(poolOn):不出输入框,格子下面是候选字(每行 7 个,用掉的置灰);点字填进第一个空格,点已填的格退回;「清空」「提交」。 -->
 <cy-play-stage id="cy-play-stage" skin="qadark" show="{{show}}" back-label="退出" bind:back="onClose">
   <view class="g-col hm {{inline ? 'hm--inline' : ''}} {{reducedMotion ? 'pk--reduced' : ''}} {{reducedMotion ? 'hm--reduced' : ''}}">
     <view class="hm__stage">
       <view class="hm__q pk-in" wx:if="{{title}}">{{title}}</view>
 
-      <view class="hm__board pk-in {{solved ? 'is-ok' : ''}} {{verdict === 'no' ? 'is-no' : ''}}" aria-role="group" aria-label="{{solved ? '答案：' + display : '点格子，用系统键盘输入'}}">
+      <view class="hm__board pk-in {{solved ? 'is-ok' : ''}} {{verdict === 'no' ? 'is-no' : ''}}" aria-role="group" aria-label="{{solved ? '答案：' + display : (poolOn ? '答案格，点已填的格子把字退回' : '点格子，用系统键盘输入')}}">
         <block wx:for="{{groups}}" wx:key="k" wx:for-item="g">
           <view wx:if="{{g.sep}}" class="hm__sep" aria-hidden="true">{{g.sep}}</view>
           <view wx:else class="hm__word-row">
@@ -15,14 +16,28 @@
                   class="hm__cell {{item.kind === 'PREFILLED' ? 'is-given' : ''}} {{item.ch && item.kind !== 'PREFILLED' ? 'is-typed' : ''}} {{active === item.i ? 'is-active' : ''}} {{pop === item.i ? 'is-pop' : ''}} {{solved ? 'is-ok' : ''}}"
                   style="--i:{{item.n < 8 ? item.n : 7}}"
                   data-i="{{item.i}}" data-kind="{{item.kind}}" data-n="{{item.n}}" bindtap="onPickCell"
-                  aria-role="{{item.kind === 'PREFILLED' || solved ? 'text' : 'button'}}"
-                  aria-label="第 {{item.i + 1}} 格{{item.ch ? '：' + item.ch : '：空'}}"
-                  hover-class="{{item.kind === 'PREFILLED' || solved ? '' : 'hm__press'}}" hover-stay-time="80">{{item.ch || ''}}</view>
+                  aria-role="{{item.kind === 'PREFILLED' || solved || (poolOn && !item.tap) ? 'text' : 'button'}}"
+                  aria-label="第 {{item.i + 1}} 格{{item.ch ? '：' + item.ch : '：空'}}{{poolOn && item.tap && !solved ? '，点一下退回' : ''}}"
+                  hover-class="{{item.kind === 'PREFILLED' || solved || (poolOn && !item.tap) ? '' : 'hm__press'}}" hover-stay-time="80">{{item.ch || ''}}</view>
           </view>
         </block>
       </view>
 
-      <block wx:if="{{!solved}}">
+      <block wx:if="{{!solved && poolOn}}">
+        <!-- 字母池:候选字网格,每行 7 个;用掉的置灰、不可再点 -->
+        <view class="lp__grid" aria-role="group" aria-label="候选字">
+          <view wx:for="{{poolRows}}" wx:for-item="row" wx:key="r" class="lp__row">
+            <view wx:for="{{row.keys}}" wx:key="k" class="lp__key {{item.used ? 'is-used' : ''}}"
+                  data-k="{{item.k}}" bindtap="onPickPool"
+                  aria-role="button" aria-label="候选字 {{item.ch}}{{item.used ? '，已用' : ''}}" aria-disabled="{{item.used}}"
+                  hover-class="{{item.used ? '' : 'lp__press'}}" hover-stay-time="80">{{item.ch}}</view>
+          </view>
+        </view>
+        <view class="hm__err {{verdict === 'no' ? 'is-show' : ''}}" aria-live="polite">{{verdict === 'no' ? '不对，再想想' : ''}}</view>
+        <view class="lp__clear {{canClear ? '' : 'is-off'}}" bindtap="onClearPool"
+              aria-role="button" aria-label="清空" aria-disabled="{{!canClear}}" hover-class="{{canClear ? 'lp__press' : ''}}" hover-stay-time="80">清空</view>
+      </block>
+      <block wx:elif="{{!solved}}">
         <!-- 系统键盘的接收框就在格子下面:输入什么,格子按顺序填什么 -->
         <input class="hm__in {{verdict === 'no' ? 'is-wrong' : ''}}" value="{{typedText}}" focus="{{focused}}" cursor="{{cursor}}" maxlength="{{blankCount}}"
                bindinput="onInput" bindfocus="onFocus" bindblur="onBlur" confirm-type="done" bindconfirm="onSubmit"

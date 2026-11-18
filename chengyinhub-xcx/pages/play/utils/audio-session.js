@@ -5,6 +5,11 @@
 //  - keepAwake(owner,on):按 owner 引用计数包 wx.setKeepScreenOn,全屏故事/长音频期间不熄屏,
 //    owner 全部释放才真的关;API 不存在时静默降级。
 // 全局的打断监听只注册一次(第一次 register 时),不随页面卸载反复挂。
+//  - kind(F06,照 Apple HIG 音频分类):'ambient' = 主题 / 站点背景音乐,跟随静音键(obeyMuteSwitch=true);
+//    'voice' = 旁白 / 站点语音讲解,不跟随静音键(内容消费)。其余(题面 / 玩法 / 店铺语音,都是点了才播)同 voice。
+const AMBIENT = 'ambient';
+const VOICE = 'voice';
+
 function createAudioSession(wxApi) {
   const api = wxApi || (typeof wx !== 'undefined' ? wx : {});
   const entries = new Map();   // ctx -> { kind, wasPlaying, interrupted }
@@ -48,8 +53,9 @@ function createAudioSession(wxApi) {
     // its identity; duplicate registration must retain pending resume state.
     if (entries.has(ctx)) return ctx;
     hook();
-    ctx.obeyMuteSwitch = false;
-    entries.set(ctx, { kind: (opts && opts.kind) || 'audio', wasPlaying: false, interrupted: false });
+    const kind = (opts && opts.kind) || 'audio';
+    ctx.obeyMuteSwitch = kind === AMBIENT;
+    entries.set(ctx, { kind, wasPlaying: false, interrupted: false });
     return ctx;
   }
   function unregister(ctx) { entries.delete(ctx); }
@@ -92,3 +98,5 @@ function createAudioSession(wxApi) {
 
 module.exports = createAudioSession();
 module.exports.createAudioSession = createAudioSession;
+module.exports.AMBIENT = AMBIENT;
+module.exports.VOICE = VOICE;

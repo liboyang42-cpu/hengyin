@@ -238,10 +238,14 @@ test('接口被闸掉时不许编借口,要把服务端原话端出来', () => {
   assert.doesNotMatch(send, /有点忙/)
 })
 
-test('店铺分身语音回复走独立播放器并在离场时停止', () => {
+test('店铺分身语音回复走独立播放器并在离场时停止;F06:不自动播,点气泡上的「播放」才出声', () => {
   assert.match(js, /_pushShopNpcReply\([\s\S]{0,180}replaceIdx, d\.audioUrl\)/)
   assert.match(js, /d\.data && d\.data\.audioUrl/)
-  assert.match(js, /_pushShopNpcReply\(text, replaceIdx, audioUrl\)[\s\S]{0,900}_playShopNpcVoice\(audioUrl\)/)
+  const push = js.slice(js.indexOf('  _pushShopNpcReply(text, replaceIdx, audioUrl) {'), js.indexOf('  toggleNpcVoice(e) {'))
+  assert.ok(push.length > 0)
+  assert.doesNotMatch(push, /_playShopNpcVoice\(/, '回复到了不自动播放')
+  assert.match(push, /audioUrl: voice/, '语音地址记在这条消息上')
+  assert.match(js, /toggleNpcVoice\(e\) \{[\s\S]{0,400}this\._playShopNpcVoice\(msg\.audioUrl, msg\.id\)/)
   assert.match(js, /closeShopNpc\(\) \{(?:(?!\n  \},)[\s\S])*_stopShopNpcVoice\(\)/)
   assert.match(js, /onUnload\(\)[\s\S]*?_stopShopNpcVoice\(\)/)
 })

@@ -14,6 +14,7 @@ function page() {
     } if (cb) cb(); }
   });
 }
+const unmute = p => p.toggleChapterVideoSound({ currentTarget: { dataset: { token: p.data.chapterVideo.token } } });
 test('video picker refuses wrong type, unknown limits, >30s and >10MB before any upload', () => {
   const file = { tempFilePath: 'clip.mp4', thumbTempFilePath: 'p.jpg', duration: 30, size: 10 * 1024 * 1024 };
   assert.equal(media.videoError(file), '');
@@ -22,10 +23,14 @@ test('video picker refuses wrong type, unknown limits, >30s and >10MB before any
   assert.match(media.videoError({ ...file, duration: NaN }), /30 秒/);
   assert.match(media.videoError({ ...file, tempFilePath: 'clip.mov' }), /mp4/);
 });
-test('video pauses music; decoded frames replace poster; skip restores music and chapter narration once', () => {
+test('F06 muted video keeps music; unmuting pauses it; decoded frames replace poster; skip restores music and chapter narration once', () => {
   const p = page();
   assert.equal(p.playChapterVideo(), true);
-  assert.equal(p._themeBgm.paused, true);
+  assert.equal(p.data.chapterVideoMuted, true, '静音自动播放');
+  assert.equal(p._themeBgm.paused, false, '静音视频不暂停背景音乐');
+  unmute(p);
+  assert.equal(p.data.chapterVideoMuted, false);
+  assert.equal(p._themeBgm.paused, true, '开了视频声音才暂停');
   const e = { currentTarget: { dataset: { token: p.data.chapterVideo.token } }, detail: { currentTime: 1 } };
   p.onChapterVideoPlay(e);
   assert.equal(p.data.chapterVideo.playing, false, 'play event is not a decoded frame');
@@ -45,14 +50,14 @@ test('video pauses music; decoded frames replace poster; skip restores music and
 });
 test('a slow network falls back in five seconds; stale video events cannot close the next chapter', t => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
-  const p = page(); p.playChapterVideo();
+  const p = page(); p.playChapterVideo(); unmute(p);
   const token = p.data.chapterVideo.token;
   p.onChapterVideoPlay({currentTarget:{dataset:{token}}});
   t.mock.timers.tick(5000);
   assert.equal(p.data.chapterVideo.show, false);
   assert.equal(p._themeBgm.paused, false);
   p.data.chapter = { id: 3, videoUrl: 'end.mp4', videoPosterUrl: 'end.jpg' };
-  p.playChapterVideo();
+  p.playChapterVideo(); unmute(p);
   p.finishChapterVideo({ currentTarget: { dataset: { token } } });
   assert.equal(p.data.chapterVideo.show, true);
   p.finishChapterVideo(null, false);
@@ -130,7 +135,7 @@ test('lost account, disposed page or switched session never resumes old audio fr
   t.mock.timers.enable({ apis: ['setTimeout'] });
   for (const invalidate of [p => { p._isPlayAccountCurrent = () => false; },
     p => { p._playDisposed = true; }, p => { p._routeState = { sessionId: 2 }; }]) {
-    const p = page(); p._routeState = { sessionId: 1 }; p.playChapterVideo();
+    const p = page(); p._routeState = { sessionId: 1 }; p.playChapterVideo(); unmute(p);
     invalidate(p); t.mock.timers.tick(5000);
     assert.equal(p.data.chapterVideo.show, false);
     assert.equal(p._themeBgm.paused, true);
@@ -139,7 +144,7 @@ test('lost account, disposed page or switched session never resumes old audio fr
 });
 
 test('video error/skip is idempotent; async finish callback cannot resume audio in a new chapter', () => {
-  const p = page(); p.playChapterVideo();
+  const p = page(); p.playChapterVideo(); unmute(p);
   const callbacks = [], set = p.setData;
   p.setData = function (patch, cb) { set.call(this, patch); if (cb) callbacks.push(cb); };
   p.finishChapterVideo(); p.finishChapterVideo();
@@ -166,14 +171,43 @@ test('missing poster callback times out without hiding text or starting a stale 
 test('switching chapters carries background music through the next video without reviving old narration', () => {
   const p = page();
   p._audio = { paused: false, plays: 0, play() { this.plays++; this.paused = false; }, pause() { this.paused = true; } };
-  p.playChapterVideo();
+  p.playChapterVideo(); unmute(p);
   assert.equal(p._audio.paused, true);
   p.data.chapter = { id: 3, videoUrl: 'ending.mp4', videoPosterUrl: 'ending.jpg' };
   p.playChapterVideo();
+  assert.equal(p._themeBgm.paused, false, '下一段视频静音起播,背景音乐接着放');
+  unmute(p);
   assert.equal(p._themeBgm.paused, true);
   assert.equal(p._audio.plays, 0);
   p.finishChapterVideo();
   assert.equal(p._themeBgm.paused, false);
   assert.equal(p._audio.plays, 0);
   assert.equal(p.narrations, 1);
+});
+
+test('F06 muted autoplay: narration keeps playing; mute again resumes what unmuting paused; stale token cannot toggle', () => {
+  const p = page();
+  p._audio = { paused: false, plays: 0, play() { this.plays++; this.paused = false; }, pause() { this.paused = true; } };
+  p.playChapterVideo();
+  assert.equal(p._audio.paused, false, '静音视频不暂停旁白');
+  p.toggleChapterVideoSound({ currentTarget: { dataset: { token: -1 } } });
+  assert.equal(p.data.chapterVideoMuted, true, '旧视频的点击不算');
+  unmute(p);
+  assert.equal(p._audio.paused, true);
+  assert.equal(p._themeBgm.paused, true);
+  unmute(p);
+  assert.equal(p.data.chapterVideoMuted, true);
+  assert.equal(p._audio.paused, false, '关声音放回旁白');
+  assert.equal(p._themeBgm.paused, false);
+  p.finishChapterVideo();
+  assert.equal(p.narrations, 1, '视频播完仍接本章旁白(只一次)');
+});
+
+test('F06 WXML: video carries muted binding and a bottom-right sound toggle that does not bubble into skip', () => {
+  const fs = require('node:fs'); const path = require('node:path');
+  const wxml = fs.readFileSync(path.join(__dirname, '../../pages/play/index.wxml'), 'utf8');
+  assert.match(wxml, /<video id="chapter-video"[^>]*muted="\{\{chapterVideoMuted\}\}"/);
+  assert.match(wxml, /<cover-view class="chapter-video__sound" data-token="\{\{chapterVideo\.token\}\}" catchtap="toggleChapterVideoSound"[^>]*>\{\{chapterVideoMuted \? '开声音' : '关声音'\}\}<\/cover-view>/);
+  const wxss = fs.readFileSync(path.join(__dirname, '../../pages/play/index.wxss'), 'utf8');
+  assert.match(wxss, /\.chapter-video__sound \{[^}]*bottom:[^}]*right: 32rpx;[^}]*min-height: 88rpx;/);
 });

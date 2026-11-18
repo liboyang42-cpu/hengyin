@@ -579,6 +579,8 @@ function pickPlayKit(view, now) {
         // 选项文案要给,**哪个是对的不给** —— 判定回来之后才知道
         /* UG-02:选项图只在服务端给了可显示地址时出现;没给或是 media-asset 引用就只显示文字 */
         options: questo.qaOptions(seg.options),
+        // F03 打字题字符池:服务端给了 letterPool 才出候选字,否则仍是输入框
+        letterPool: questo.qaLetterPool(seg),
         // 多选标记:老单选配置服务端不给这个字段,缺省按单选渲染(单选行为一字不变)
         multi: seg.judge !== false && !!seg.multi,
         judge: seg.judge !== false,
