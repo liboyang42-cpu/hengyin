@@ -2123,6 +2123,7 @@ page { background: var(--cy-color-bg-page); }
 .chapter-video { position: fixed; inset: 0; z-index: var(--cy-z-modal); background: var(--cy-color-play-page); }
 .chapter-video__film, .chapter-video__poster { position: absolute; width: 100%; height: 100%; top: 0; left: 0; }
 .chapter-video__skip { position: absolute; top: calc(env(safe-area-inset-top) + 100rpx); right: 32rpx; padding: 20rpx 28rpx; color: var(--cy-color-play-accent); background: var(--cy-color-play-surface); border-radius: var(--cy-radius-pill); }
+.chapter-video__sound { position: absolute; bottom: calc(env(safe-area-inset-bottom) + 64rpx); right: 32rpx; min-height: 88rpx; line-height: 48rpx; padding: 20rpx 28rpx; box-sizing: border-box; color: var(--cy-color-play-accent); background: var(--cy-color-play-surface); border-radius: var(--cy-radius-pill); } /* 与「跳过」同一枚胶囊,落右下;命中区 44px */
 /* a1-v3-10-53 故事流里整屏玩法的入口卡:封面 + 类型 + 名字,右侧一颗播放钮;不写「打开」。
    横排一张卡,封面方块在左(站点配图;没有图时是玩法图标),按下微缩;颜色走玩家弹层 token。 */
 .chfull__kitcard{ display:flex; box-sizing:border-box; margin:0 var(--cy-page-x); flex-direction:row; align-items:center; gap:var(--cy-space-3);
