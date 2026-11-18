@@ -137,6 +137,23 @@ class AdvancedGameRuntimeServiceImplTest {
         assertEquals(0, inserted.get().getVersion());
     }
 
+    /** 回归(2026-11-18 实测 P0):已发布的逐字猜词站带 outcomeRules.fail 时能正常开局,不再报「须且仅须一个主玩法」。 */
+    @Test
+    void hangmanStationWithOutcomeRulesStarts() {
+        when(templateMapper.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(template(
+                "{\"schemaVersion\":1,\"hangman\":{\"enabled\":true,\"answer\":\"ABC\"},"
+                        + "\"outcomeRules\":{\"version\":1,\"pass\":{\"reply\":\"继续\"},\"fail\":{\"reply\":\"还不对，再看看题面\"}}}"));
+        when(sessionMapper.insert(any())).thenAnswer(call -> {
+            GameRuntimeSession row = call.getArgument(0);
+            row.setId(52L);
+            return 1;
+        });
+
+        Map<String, Object> state = service.start(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID, null);
+
+        assertEquals("RUNNING", state.get("status"));
+    }
+
     @Test
     void explicitMissingOrOldCapabilityRejectsBeforeRuntimeOrRouteWrites() {
         when(templateMapper.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(template(randomOnlyConfig()));

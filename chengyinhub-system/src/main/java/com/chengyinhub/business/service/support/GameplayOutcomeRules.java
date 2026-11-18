@@ -8,7 +8,36 @@ import java.util.function.BiConsumer;
 /** 明确注册结果来源；客户端只写配置，不决定运行结果。 */
 public final class GameplayOutcomeRules {
     private GameplayOutcomeRules() { }
-    static final List<String> MAIN_GAMEPLAYS = Collections.unmodifiableList(Arrays.asList("qa", "pricePair", "blindTaste", "predict", "photoCheck", "coinFlip", "diceRoll", "random", "sort", "match", "classify", "estimate", "hiddenObject", "profile", "album", "note", "dailySign", "steps", "reaction", "ballShake", "quietHold", "compass", "shout", "countdown", "stopwatch", "typeIn", "check"));
+    static final List<String> MAIN_GAMEPLAYS = Collections.unmodifiableList(Arrays.asList("qa", "pricePair", "blindTaste", "predict", "photoCheck", "coinFlip", "diceRoll", "random", "sort", "match", "classify", "estimate", "hiddenObject", "profile", "album", "note", "dailySign", "steps", "reaction", "ballShake", "quietHold", "compass", "shout", "countdown", "stopwatch", "typeIn", "check", "hangman"));
+    /** 证据步:与其它主玩法同开时只作完成证据,不决定 PASS/FAIL(先答题、再拍照留证,同主流任务型 App 的多步任务)。 */
+    static final String EVIDENCE_STEP = "photoCheck";
+
+    /**
+     * 本块决定 PASS/FAIL 的主玩法。规则:
+     * <ul>
+     *   <li>只开一个主玩法 → 就是它(拍照单独开时仍是主玩法);</li>
+     *   <li>拍照与另一个主玩法同开 → 另一个是主玩法,拍照是证据步;</li>
+     *   <li>其它情况(零个、两个以上非拍照主玩法)→ null,保存/发布期拒绝。</li>
+     * </ul>
+     */
+    public static String mainKit(JsonNode block) {
+        List<String> mains = enabledMains(block);
+        if (mains.size() == 2 && mains.contains(EVIDENCE_STEP)) mains.remove(EVIDENCE_STEP);
+        return mains.size() == 1 ? mains.get(0) : null;
+    }
+
+    /** 拍照与另一个主玩法同开、只作证据步时为 true:拍照结果不结算 PASS/FAIL。 */
+    public static boolean isEvidenceStep(JsonNode block, String kit) {
+        if (!EVIDENCE_STEP.equals(kit) || block == null) return false;
+        String main = mainKit(block);
+        return main != null && !EVIDENCE_STEP.equals(main);
+    }
+
+    private static List<String> enabledMains(JsonNode block) {
+        List<String> mains = new ArrayList<>();
+        for (String kit : MAIN_GAMEPLAYS) if (block.path(kit).path("enabled").asBoolean()) mains.add(kit);
+        return mains;
+    }
 
     public static ObjectNode normalize(JsonNode source, JsonNode slots) {
         ThemeRuntimeConfig.fields(source, ThemeRuntimeConfig.set("version", "pass", "fail"));
@@ -27,11 +56,15 @@ public final class GameplayOutcomeRules {
         if (block.path("outcomeRules").has("fail") && "PARTICIPANTS".equals(block.path("interactionRules").path("targetScope").asText())) fail("interactionRules.targetScope: FAIL settlement has no frozen participant selection");
         Map<String, String> kinds = slots == null ? null : TemplateResourceSlots.declarations(slots, "模板");
         for(JsonNode step:block.path("branch").path("steps"))for(JsonNode option:step.path("options"))if(option.has("after"))fail("结果反馈分支不能再次配置 after");
-        List<String> mains = new ArrayList<>();
-        for (String kit : MAIN_GAMEPLAYS)
-            if (block.path(kit).path("enabled").asBoolean()) mains.add(kit);
-        if (mains.size() != 1) fail("须且仅须一个主玩法，扫码和分支不是主玩法");
-        boolean once = Arrays.asList("profile", "album", "note", "dailySign").contains(mains.get(0));
+        String main = mainKit(block);
+        if (main == null) {
+            List<String> mains = enabledMains(block);
+            if (mains.isEmpty()) fail(block.path("branch").path("enabled").asBoolean() || block.path("scan").path("enabled").asBoolean()
+                    ? "配了结果规则的站点还须开一个主玩法（如问答、逐字猜词）；扫码和分支不是主玩法，或去掉结果规则"
+                    : "配了结果规则的站点须开一个主玩法");
+            fail("须且仅须一个主玩法（拍照可作另一个主玩法之后的证据步），当前开了：" + String.join("、", mains));
+        }
+        boolean once = Arrays.asList("profile", "album", "note", "dailySign").contains(main);
         if (once == block.path("outcomeRules").has("fail")) fail(once ? "完成型玩法不配置 fail" : "须配置 fail");
         Set<String> steps = new HashSet<>();
         for (JsonNode step : block.path("branch").path("steps")) steps.add(step.path("id").asText());

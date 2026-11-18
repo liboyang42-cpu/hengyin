@@ -354,6 +354,9 @@ public final class AdvancedActionJudgement {
     ObjectNode serverGameplayDecision(String action, JsonNode config, ObjectNode state) {
         if ("SKIP_SENSOR_STATION".equals(action) && skippedSensorSection(state) != null)
             return objectMapper.createObjectNode().put("outcome", "SKIPPED");
+        // 拍照与另一个主玩法同开时只是证据步:结果(PASS/FAIL 与其结果规则)只由主玩法结算,拍照不结算。
+        if ("SUBMIT_PHOTO_CHECK".equals(action)
+                && com.chengyinhub.business.service.support.GameplayOutcomeRules.isEvidenceStep(config, "photoCheck")) return null;
         Boolean passed = judgedOutcome(action, state);
         if (passed == null) passed = passedFact(action, state);
         String kit = null;
