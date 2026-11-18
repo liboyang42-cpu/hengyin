@@ -250,12 +250,13 @@ iOS 现有三个动效的取值有改动：
 | PlayerJourneyViews（2 处） | push；详情以 sheet [.large] 打开 | 无 | 行用 `.plain` | — | 同上 | S ✅ |
 | CityPlayerView | push | 无 | 点位行用 `.plain` | — | 同上 | S ✅ |
 | MerchantOrdersView | push；详情 sheet [.medium,.large] | 无 | 行用 `.plain` | Mail 行按下高亮 | 同上 | S ✅ |
-| MerchantProjects / Operations / Content / TemplateBrowser | push | 无 | 卡片用 `.plain` | App Store 卡片按下会缩一下 | 同上 | S ✅ |
+| MerchantProjects / Content | push | 无 | 卡片用 `.plain` | App Store 卡片按下会缩一下 | 同上 | S ✅ |
+| MerchantOperations 入口 / TemplateBrowser 模板行 | push | 无 | 卡片用 `.plain` | 同上 | 改后 CI 中 MerchantTemplate* UI 流程用例失败，已恢复 `.plain`，留档待真机排查 | M（留档） |
 | DiscoveryHome / SocialGuideTemplate / ClubActivityList / ActivityPeople / FreeExploration（2 处） | push / 内嵌 | 无 | 用 `.plain` | — | 同上 | S ✅ |
 | CoopRelationDiscoveryView | push | 无 | 用 `.plain` | — | 契约 test_coop_profile_entry_lifetime 明确要求 plain 加矩形点击区，保持现状 | —（按契约保留） |
 | ObjectBadgeViews（徽章墙） | push | 无 | 用 `.plain` | — | 契约 test_object_badge_wall_layout 锁定了这个版式，保持现状 | —（按契约保留） |
 | ClubPostDiscussion（社区帖） | 内嵌在动态流里 | 无 | 帖子正文用 `.onTapGesture`，按下没有反馈；展开、收起没有动画 | Mail 会话展开有动画 | 改成 Button 加卡片样式，展开包 withAnimation | M（留档：要改手势语义，需真机核对滚动冲突） |
-| ClubOperationsWorkspaceView | sheet | Form 上有 `.easeInOut(0.18)` | 用了字面曲线；只认系统的减少动效设置，没认 App 内开关 | — | 改为 QuestifyMotion.content 加 @QuestifyReduceMotion | S ✅ |
+| ClubOperationsWorkspaceView | sheet | Form 上有 `.easeInOut(0.18)` | 用了字面曲线；只认系统的减少动效设置，没认 App 内开关 | — | 改为 QuestifyMotion.content 加 @QuestifyReduceMotion | 已回退：改后 CI 中 ClubOperationsFlowTests 两例失败，恢复原写法，留档待真机排查（M） |
 | GrowthCenter（成长中心） | 从账户页 push | 开了减少动效时去掉动画 | 只认系统设置 | — | 改用 @QuestifyReduceMotion | S ✅ |
 | PlayObjectCardRevealView | 内嵌在玩法里 | 帧切换 `.easeOut(0.12)` | 字面时长；只认系统设置 | — | 改为 QuestifyMotion.fast（140ms）加 @QuestifyReduceMotion | S ✅ |
 | PlayKitSensorChallengeView（指南针） | 玩法组件 | 指针 `.linear(0.1)` | 只认系统设置 | 指南针 App 的指针是线性跟随 | 改用 @QuestifyReduceMotion；保留 0.1s 线性（跟随传感器，不属于交互时长梯子） | S ✅ |
@@ -298,7 +299,7 @@ iOS 字面动画清单：
 ## 7. 结论
 
 - 小程序 S 项已全部落地：骨架屏分支淡入（92 个 wxml）、cy-tabs icon 档改用 token、loading-mask 转圈同速、双端 token 对照表加契约。
-- iOS 已落地的 S 项：token 镜像、5 处改用 App 自己的减少动效开关、17 处补按压反馈、活动列表淡切、双击缩放过渡、集章预览收起动画、发布结果「完成」常显。
+- iOS 已落地的 S 项：token 镜像、4 处改用 App 自己的减少动效开关、15 处补按压反馈（商家运营入口、模板行、俱乐部运营工作台三处因 CI UI 用例失败已回退，见第 4 节）、活动列表淡切、双击缩放过渡、集章预览收起动画、发布结果「完成」常显。
 - 没做的 S 项有 2 个：
   - ClubHome 定位态淡切：它是 List Section 里的 switch，phase 类型要先确认是否可比较（Equatable）；
   - 模板结果页触感：属于新增的反馈类型，要业主确认。
