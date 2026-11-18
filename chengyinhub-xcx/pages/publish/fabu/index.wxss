@@ -5507,7 +5507,7 @@ page { background: var(--cy-btn-solid-bg); }
 .sp-card__route { box-shadow: var(--cy-depth-rest); }
 
 /* F10 自由探索开售票价区:沿用编辑器卡片 token */
-.fe-pricing { margin: var(--cy-space-2) var(--cy-page-x) 0; padding: var(--cy-space-3); border-radius: var(--cy-radius-card); background: var(--cy-bg-card); border: 1rpx solid var(--cy-border-card); }
+.fe-pricing { margin: var(--cy-space-2) var(--cy-page-x) 0; padding: var(--cy-space-3); border-radius: var(--cy-radius-lg); background: var(--cy-bg-card); border: 1rpx solid var(--cy-border-card); }
 .fe-pricing__head { display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-2); margin-bottom: var(--cy-space-2); }
 .fe-pricing__title { font-size: var(--cy-font-body); font-weight: 700; color: var(--cy-text-title); }
 .fe-pricing__hint { font-size: var(--cy-font-caption); color: var(--cy-gold); }

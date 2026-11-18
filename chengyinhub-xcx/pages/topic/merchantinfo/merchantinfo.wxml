@@ -581,12 +581,12 @@
       <text class="ssp-label">可接待人次</text>
       <input class="ssp-input" type="number" value="{{selfSupplySheet.capacity}}" placeholder="至少 1 人次" data-key="capacity" bindinput="onSelfSupplyInput" disabled="{{selfSupplySheet.submitting}}" />
     </view>
-    <picker mode="date" value="{{selfSupplySheet.validEnd}}" data-key="validEnd" bindchange="onSelfSupplyInput" disabled="{{selfSupplySheet.submitting}}">
+    <cy-date-field mode="date" title="有效期至" value="{{selfSupplySheet.validEnd}}" data-key="validEnd" bind:change="onSelfSupplyInput" disabled="{{selfSupplySheet.submitting}}">
       <view class="ssp-field">
         <text class="ssp-label">有效期至</text>
         <text class="ssp-input {{selfSupplySheet.validEnd ? '' : 'ssp-input--empty'}}">{{selfSupplySheet.validEnd || '选择日期'}}</text>
       </view>
-    </picker>
+    </cy-date-field>
     <cy-btn variant="primary" class="ssp-cta" loading="{{selfSupplySheet.submitting}}" disabled="{{selfSupplySheet.submitting}}" bindtap="submitSelfSupply" aria-label="确认自己承接">确认承接</cy-btn>
   </view>
 </cy-sheet>
