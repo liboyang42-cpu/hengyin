@@ -94,7 +94,7 @@ Page({
           refundText: refundText(res.data.refundState),
           // p2 F-7:零现金记录不画「我的收入」与占位杠,由状态签说「无现金结算」
           noCash: canReadFinance && res.data.displayState === 'NO_CASH_SETTLEMENT',
-          amountFallback: canReadFinance && res.data.displayState !== 'NO_CASH_SETTLEMENT' ? '待定' : '',
+          amountFallback: canReadFinance && res.data.displayState !== 'NO_CASH_SETTLEMENT' ? yuan(0) : '',   // F14a:缺字段写 ¥0.00
           occurredAtText: res.data.occurredAt ? String(res.data.occurredAt).slice(0, 16).replace('T', ' ') : '',
           accrualRuleText: canReadFinance ? accrualRuleText(res.data) : '',
           timeline: canReadFinance ? buildTimeline(res.data) : [],

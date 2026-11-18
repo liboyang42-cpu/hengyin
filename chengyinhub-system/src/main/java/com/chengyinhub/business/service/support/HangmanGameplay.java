@@ -58,6 +58,8 @@ public final class HangmanGameplay {
     private static final int STATE_VERSION = 1;
     /** 未揭示槽位的占位符（实测槽位样式 {@code E____ S}）。 */
     private static final char BLANK = '_';
+    /** F03:本局字母池打乱种子（开局由运行时写入；缺省 0 仍是固定顺序）。 */
+    public static final String POOL_SEED = LetterPoolSupport.STATE_SEED;
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -86,6 +88,23 @@ public final class HangmanGameplay {
                 throw new IllegalArgumentException("逐字猜词别名与答案或其它别名重复");
             }
         }
+        // F03 字母池:空白槽要填的字必须能从池里取到(按次数);别名整词也要能用「池 + 题面已给的字」拼出来。
+        StringBuilder blanks = new StringBuilder();
+        StringBuilder given = new StringBuilder();
+        for (int i = 0; i < layout.cps.length; i++) {
+            if (layout.separator[i]) continue;
+            (layout.fixed[i] ? given : blanks).appendCodePoint(layout.cps[i]);
+        }
+        List<String> aliasesForPool = new ArrayList<>();
+        if (LetterPoolSupport.hangmanPool(section)) {
+            for (String alias : aliasTexts(section)) {
+                // 题面预填字不占池子:别名里与预填字相同的部分先扣掉,剩下的必须由池子供给
+                List<String> remaining = new ArrayList<>(LetterPoolSupport.keys(alias, sensitive));
+                for (String fixedKey : LetterPoolSupport.keys(given.toString(), sensitive)) remaining.remove(fixedKey);
+                aliasesForPool.add(String.join("", remaining));
+            }
+        }
+        LetterPoolSupport.validateHangman(section, blanks.toString(), aliasesForPool, sensitive);
     }
 
     /** F02 错答回复的保存闸用:这个整词会不会被判成答对(答案或别名,与 {@link #judge} 同一比较)。 */
@@ -121,6 +140,7 @@ public final class HangmanGameplay {
         safe.put("length", layout.cps.length);
         safe.put("blankCount", layout.blankCount());
         safe.put("caseSensitive", caseSensitive(section));
+        if (LetterPoolSupport.hangmanPool(section)) safe.put("inputMode", LetterPoolSupport.INPUT_MODE_POOL);
         return safe;
     }
 
@@ -150,7 +170,7 @@ public final class HangmanGameplay {
         Layout layout = layout(section);
         Map<Integer, String> filled = filledFrom(kitState);
         boolean solved = kitState != null && kitState.path("solved").asBoolean(false);
-        return projection(section, layout, filled, solved);
+        return projection(section, layout, filled, solved, kitState);
     }
 
     // ==================== 判定 ====================
@@ -182,7 +202,7 @@ public final class HangmanGameplay {
         Map<Integer, String> filled = filledFrom(kitState);
 
         if (kitState.path("solved").asBoolean(false)) {
-            ObjectNode done = projection(section, layout, filled, true);
+            ObjectNode done = projection(section, layout, filled, true, kitState);
             done.put("verdict", VERDICT_CORRECT);
             done.put("alreadySolved", true);
             return done;
@@ -194,6 +214,7 @@ public final class HangmanGameplay {
             requireComplete(layout, filled);
             String reconstructed = reconstruct(layout, filled);
             boolean correct = keyMatches(reconstructed.codePoints().toArray(), layout.cps, sensitive, section);
+            if (!correct) requirePoolChars(section, layout, kitState, blankChars(layout, filled), sensitive);
             return decide(section, layout, kitState, filled, reconstructed, correct);
         }
 
@@ -207,10 +228,21 @@ public final class HangmanGameplay {
             requireComplete(layout, filled);
             String reconstructed = reconstruct(layout, filled);
             boolean correct = keyMatches(reconstructed.codePoints().toArray(), layout.cps, sensitive, section);
+            if (!correct) requirePoolChars(section, layout, kitState, blankChars(layout, filled), sensitive);
             return decide(section, layout, kitState, filled, reconstructed, correct);
         }
         // 长度对不上槽位：整词候选，只能考答案/别名本身（别名通常比答案长）。命中则补满所有空白槽。
         boolean correct = keyMatches(input, layout.cps, sensitive, section);
+        if (!correct && LetterPoolSupport.hangmanPool(section)) {
+            // 整词候选:题面已给的字不占池子,扣掉后剩下的必须来自可见池
+            List<String> remaining = new ArrayList<>(LetterPoolSupport.keys(raw, sensitive));
+            for (int i = 0; i < layout.cps.length; i++) {
+                if (layout.fixed[i] && !layout.separator[i]) {
+                    remaining.remove(LetterPoolSupport.keys(new String(Character.toChars(layout.cps[i])), sensitive).get(0));
+                }
+            }
+            requirePoolChars(section, layout, kitState, String.join("", remaining), sensitive);
+        }
         if (correct) {
             for (int i = 0; i < layout.cps.length; i++) {
                 if (!layout.isFixed(i)) filled.put(i, new String(Character.toChars(layout.cps[i])));
@@ -240,7 +272,7 @@ public final class HangmanGameplay {
         filled.put(index, new String(Character.toChars(layout.cps[index])));
         if (!already) writeFilled(kitState, filled);
         boolean solved = kitState.path("solved").asBoolean(false);
-        ObjectNode view = projection(section, layout, filled, solved);
+        ObjectNode view = projection(section, layout, filled, solved, kitState);
         view.put("revealedIndex", index);
         view.put("alreadyRevealed", already);
         return view;
@@ -253,7 +285,7 @@ public final class HangmanGameplay {
         writeFilled(kitState, filled);
         kitState.put("solved", correct);
         kitState.put("lastVerdict", correct ? VERDICT_CORRECT : VERDICT_WRONG);
-        ObjectNode view = projection(section, layout, filled, correct);
+        ObjectNode view = projection(section, layout, filled, correct, kitState);
         view.put("verdict", correct ? VERDICT_CORRECT : VERDICT_WRONG);
         if (correct) view.put("answerText", reconstructed);
         return view;
@@ -531,9 +563,56 @@ public final class HangmanGameplay {
             node.put(String.valueOf(entry.getKey()), entry.getValue());
         }
     }
+    // ==================== 内部：字母池（F03）====================
+
+    /** 本局可见池:作者池按本局种子固定打乱,去掉 POOL_TRIM 移除的干扰字。 */
+    private static LetterPoolSupport.View poolView(JsonNode section, Layout layout, JsonNode kitState) {
+        StringBuilder blanks = new StringBuilder();
+        for (int i = 0; i < layout.cps.length; i++) if (!layout.fixed[i]) blanks.appendCodePoint(layout.cps[i]);
+        boolean shuffle = section.path("poolShuffle").asBoolean(true);
+        long seed = kitState == null ? 0L : kitState.path(POOL_SEED).asLong(0L);
+        return LetterPoolSupport.view(LetterPoolSupport.hangmanChars(section), blanks.toString(),
+                caseSensitive(section), shuffle, seed, kitState);
+    }
+
+    /** 判错之前先拒收池外字/超次数:抛错 = 本次提交不落状态、不计次数。 */
+    private static void requirePoolChars(JsonNode section, Layout layout, JsonNode kitState, String used,
+                                         boolean sensitive) {
+        if (!LetterPoolSupport.hangmanPool(section)) return;
+        if (!poolView(section, layout, kitState).allows(used, sensitive)) {
+            throw new IllegalArgumentException(LetterPoolSupport.REJECT_MESSAGE);
+        }
+    }
+
+    private static String blankChars(Layout layout, Map<Integer, String> filled) {
+        StringBuilder used = new StringBuilder();
+        for (int i = 0; i < layout.cps.length; i++) {
+            if (layout.fixed[i]) continue;
+            String ch = filled.get(i);
+            if (ch != null) used.append(ch);
+        }
+        return used.toString();
+    }
+
+    /**
+     * 记一次 POOL_TRIM 提示（同一层级只记一次）。返回本局投影。
+     *
+     * @param kitState 必填，{@code state.hangman}；本方法直接写入，调用方负责持久化
+     */
+    public static ObjectNode trimPool(JsonNode section, ObjectNode kitState, int level, int count) {
+        if (!LetterPoolSupport.hangmanPool(section)) throw new IllegalArgumentException("本题没有字母池");
+        if (kitState == null) {
+            throw new IllegalArgumentException("逐字猜词局状态缺失，请先用 initialState 初始化 " + STATE_KEY);
+        }
+        Layout layout = layout(section);
+        LetterPoolSupport.recordTrim(kitState, level, count);
+        return projection(section, layout, filledFrom(kitState), kitState.path("solved").asBoolean(false), kitState);
+    }
+
     // ==================== 内部：投影 ====================
 
-    private static ObjectNode projection(JsonNode section, Layout layout, Map<Integer, String> filled, boolean solved) {
+    private static ObjectNode projection(JsonNode section, Layout layout, Map<Integer, String> filled, boolean solved,
+                                         JsonNode kitState) {
         ObjectNode view = MAPPER.createObjectNode();
         view.put("length", layout.cps.length);
         view.put("blankCount", layout.blankCount());
@@ -564,6 +643,12 @@ public final class HangmanGameplay {
             }
         }
         view.put("display", display.toString());
+        if (LetterPoolSupport.hangmanPool(section)) {
+            LetterPoolSupport.View pool = poolView(section, layout, kitState);
+            view.put("inputMode", LetterPoolSupport.INPUT_MODE_POOL);
+            view.set("pool", pool.charsNode());
+            view.put("poolRemoved", pool.removed());
+        }
         return view;
     }
 

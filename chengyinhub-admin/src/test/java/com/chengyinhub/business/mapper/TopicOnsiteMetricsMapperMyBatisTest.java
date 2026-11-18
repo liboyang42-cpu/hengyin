@@ -45,7 +45,7 @@ class TopicOnsiteMetricsMapperMyBatisTest {
             s.execute("create table club_member(club_id bigint, member_id bigint, status int, del_flag int, join_time timestamp)");
             s.execute("create table registration_entitlement(registration_id bigint, chapter_id bigint, topic_id bigint, status int)");
             s.execute("create table cms_topic_node(id bigint primary key, chapter_id bigint, topic_id bigint)");
-            s.execute("create table player_node_progress(member_id bigint, activity_id bigint, topic_id bigint, node_id bigint, checkin_time timestamp, del_flag int)");
+            s.execute("create table player_node_progress(member_id bigint, activity_id bigint, topic_id bigint, node_id bigint, checkin_time timestamp, del_flag int, arrival_source varchar(16))");
             s.execute("create table redemption(id bigint primary key, registration_id bigint, chapter_id bigint, topic_id bigint, status varchar(16), create_time timestamp)");
             s.execute("create table coop_complaint(id bigint primary key, topic_id bigint, registration_id bigint, reporter_member_id bigint, status int, fault_ratio decimal(5,4), del_flag int)");
             s.execute("insert into cms_registration values(21,9,2,11,71,3,2,2,timestamp '2026-08-14 08:00:00')");
@@ -56,7 +56,7 @@ class TopicOnsiteMetricsMapperMyBatisTest {
             s.execute("insert into club values(81,91)");
             s.execute("insert into registration_entitlement values(21,31,7,0)");
             s.execute("insert into cms_topic_node values(41,31,7)");
-            s.execute("insert into player_node_progress values(9,11,7,41,timestamp '2026-08-15 10:00:00',0)");
+            s.execute("insert into player_node_progress values(9,11,7,41,timestamp '2026-08-15 10:00:00',0,'QR')");
             s.execute("insert into redemption values(51,21,31,7,'ACTIVE',timestamp '2026-08-15 10:12:00')");
         }
     }
@@ -77,6 +77,21 @@ class TopicOnsiteMetricsMapperMyBatisTest {
             List<TopicChapterLoadFact> loads = session.getMapper(TopicOnsiteMetricsMapper.class).selectInStoreLoads(7L);
             assertEquals(1, loads.size());
             assertEquals(1, loads.get(0).getInStoreLoad());
+        }
+    }
+
+    /** F08:300 米内点「我已到店」(GEO_TAP)是玩家自报位置,不进排队计时,也不算在店负载。 */
+    @Test
+    void geoTapArrivalNeverStartsQueueOrInStoreLoad() throws Exception {
+        try (SqlSession session = factory.openSession(true)) {
+            try (Statement s = session.getConnection().createStatement()) {
+                s.execute("update player_node_progress set arrival_source='GEO_TAP'");
+            }
+            TopicOnsiteMetricsMapper mapper = session.getMapper(TopicOnsiteMetricsMapper.class);
+            List<TopicWaitFact> facts = mapper.selectWaitFacts(7L);
+            assertEquals(1, facts.size(), "已核销仍有服务事实");
+            assertEquals(null, facts.get(0).getQueueJoinedAt());
+            assertEquals(0, mapper.selectInStoreLoads(7L).size());
         }
     }
 

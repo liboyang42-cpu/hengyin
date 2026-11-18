@@ -158,6 +158,9 @@ public final class ContentCapabilityRequirements {
                     keys.merge("game." + sanitize(section), DEFAULT_VERSION, Math::max);
                 }
             }
+            // F03 字母池:点字输入是新交互,不认识它的客户端只能弹系统键盘 —— 开局前就拦住,不让玩家看到用不了的界面。
+            if (LetterPoolSupport.hangmanPool(config.get("hangman"))) keys.merge("hangman.pool", DEFAULT_VERSION, Math::max);
+            if (LetterPoolSupport.qaPool(config.get("qa"))) keys.merge("qa.letterPool", DEFAULT_VERSION, Math::max);
             JsonNode roleViews = config.get("roleViews");
             if (roleViews != null && roleViews.isObject() && roleViews.path("enabled").asBoolean(false)) {
                 keys.merge("role.views", DEFAULT_VERSION, Math::max);

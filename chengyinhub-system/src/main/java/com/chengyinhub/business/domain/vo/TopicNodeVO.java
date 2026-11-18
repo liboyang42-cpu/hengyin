@@ -18,6 +18,8 @@ public class TopicNodeVO {
     private String longitude;
     private String latitude;
     private String imgUrl;
+    /** F07:后续站点照片到站前不下发时为 true(imgUrl 同时为空),端上显示剪影占位。 */
+    private Boolean imgHidden;
     private Integer nodeTime;
     private Long templateId;
     private String businessTime;
@@ -51,6 +53,8 @@ public class TopicNodeVO {
     public void setLatitude(String latitude) { this.latitude = latitude; }
     public String getImgUrl() { return imgUrl; }
     public void setImgUrl(String imgUrl) { this.imgUrl = imgUrl; }
+    public Boolean getImgHidden() { return imgHidden; }
+    public void setImgHidden(Boolean imgHidden) { this.imgHidden = imgHidden; }
     public Integer getNodeTime() { return nodeTime; }
     public void setNodeTime(Integer nodeTime) { this.nodeTime = nodeTime; }
     public Long getTemplateId() { return templateId; }

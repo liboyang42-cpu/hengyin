@@ -44,6 +44,21 @@ public final class PlayNarrativeSupport {
         return out;
     }
 
+    /**
+     * FE-STORY 5.4:自由探索的结局按「到访」驱动,不按核销。碎片按到访先后排列(任何顺序都成立);
+     * 全部地点都到访才给开场白,部分到访时开场白为空、只回已到访的碎片,端上显示「已集 X / N」。
+     */
+    public static Map<String, Object> buildVisitEnding(List<CmsTopicNode> visitedInOrder, int totalPlaces) {
+        Map<String, Object> out = buildEnding(visitedInOrder);
+        int visited = visitedInOrder == null ? 0 : visitedInOrder.size();
+        boolean complete = totalPlaces > 0 && visited >= totalPlaces;
+        if (!complete) out.put("opener", "");
+        out.put("visitedCount", visited);
+        out.put("total", totalPlaces);
+        out.put("complete", complete);
+        return out;
+    }
+
     // ===== S3: 自由定向"途中台词"位置槽(纯函数,零 LLM,按完成比例分三档) =====
 
     public static final String SLOT_EXPLORE_FIRST = "explore_first";

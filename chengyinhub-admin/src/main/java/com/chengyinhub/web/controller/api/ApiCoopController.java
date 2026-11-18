@@ -885,6 +885,37 @@ public class ApiCoopController extends BaseController {
         }
     }
 
+    /** F12 亲子票:承接方设置是否接受亲子票(1 大 1 小同享一份权益)与儿童份说明。归属在 service/mapper 双层校验。 */
+    @Operation(summary = "承接方设置是否接受亲子票")
+    @PostMapping("/offer/family")
+    public AjaxResult offerFamily(@RequestBody(required = false) Map<String, Object> body) {
+        Long principalMemberId;
+        try { principalMemberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        if (principalMemberId == null || principalMemberId <= 0) return error("请先登录");
+        Long ownerMemberId;
+        try {
+            ownerMemberId = merchantAccessService.require(
+                    principalMemberId, MerchantPermission.COOP_MANAGE).getOwnerMemberId();
+        } catch (ServiceException e) {
+            return new AjaxResult(e.getCode(), e.getMessage());
+        }
+        if (ownerMemberId == null || ownerMemberId <= 0) return error("请先登录");
+        Long offerId = body == null ? null : toLong(body.get("offerId"));
+        if (offerId == null || offerId <= 0) return error("缺少供给记录");
+        Object rawAccepted = body.get("familyAccepted");
+        Integer accepted = rawAccepted instanceof Boolean ? (((Boolean) rawAccepted) ? 1 : 0)
+                : rawAccepted instanceof Number ? ((Number) rawAccepted).intValue() : null;
+        if (accepted == null) return error("请选择是否接受亲子票");
+        Object rawText = body.get("familyPerkText");
+        if (rawText != null && !(rawText instanceof String)) return error("儿童份说明格式不正确");
+        try {
+            merchantOfferService.setFamilyAcceptance(offerId, ownerMemberId, accepted, (String) rawText);
+            return AjaxResult.success(accepted == 1 ? "已接受亲子票" : "已关闭亲子票");
+        } catch (IllegalStateException e) {
+            return error(e.getMessage());
+        }
+    }
+
     @Operation(summary = "圈层供给重新确认：刷新商家声明快照")
     @PostMapping("/offer/circle-supply/reconfirm")
     public AjaxResult reconfirmCircleSupply(@RequestBody MerchantCircleSupplyProfile body) {

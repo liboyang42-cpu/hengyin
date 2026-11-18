@@ -114,3 +114,6 @@
 
 /* 细节打磨二期 L1/L5/L7 */
 .cnf-note { transition: var(--cy-tr-press); }
+
+/* F12 接受亲子票:标签与开关同一行 */
+.cnf-label--row { display: flex; align-items: center; justify-content: space-between; }

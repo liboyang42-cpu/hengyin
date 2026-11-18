@@ -39,6 +39,8 @@ public final class PlayHelpUsagePolicy {
     public static final String TYPE_ANSWER = "ANSWER";
     public static final String TYPE_SKIP = "SKIP";
     public static final String TYPE_LOCATION = "LOCATION";
+    /** F03 字母池:去掉 N 个干扰字(payload=N,缺省 3);被去掉的字记在本局状态里,投影不再下发。 */
+    public static final String TYPE_POOL_TRIM = "POOL_TRIM";
 
     /** 该层可用。 */
     public static final String OK = null;
@@ -390,7 +392,7 @@ public final class PlayHelpUsagePolicy {
         if (cost.reason() != null) return cost.reason();
         if (TYPE_LOCATION.equals(type)) return REASON_LOCATION_NOT_WIRED;
         return switch (type) {
-            case TYPE_TEXT, TYPE_IMAGE, TYPE_LETTER, TYPE_DIGIT, TYPE_ANSWER, TYPE_SKIP -> OK;
+            case TYPE_TEXT, TYPE_IMAGE, TYPE_LETTER, TYPE_DIGIT, TYPE_ANSWER, TYPE_SKIP, TYPE_POOL_TRIM -> OK;
             default -> REASON_TYPE_UNSUPPORTED;
         };
     }

@@ -11,12 +11,8 @@ test('D8:卡面无图用 look 渐变 + 小路线插画,不再是整卡大图钉�
   assert.doesNotMatch(wxml, /fx-hero__ph"[^>]*><cy-icon name="pin" size="52"/)
 })
 
-test('D8:到店三步标题与步骤在同一个 block 里,没有步骤就没有标题', () => {
-  const i = wxml.indexOf('>到店三步</view>')
-  const open = wxml.lastIndexOf('<block wx:if="{{hero.node.isMerchant}}">', i)
-  const close = wxml.indexOf('</block>', i)
-  assert.ok(open > 0 && close > i)
-  const inner = wxml.slice(open, close)
-  assert.match(inner, /class="fx-step3/)
-  assert.equal((inner.match(/class="fx-step /g) || []).length, 3)
+test('D8 + F08:到店三步标题与步骤一起删掉,不留孤立标题', () => {
+  assert.equal(wxml.indexOf('>到店三步</view>'), -1)
+  assert.equal((wxml.match(/class="fx-step /g) || []).length, 0)
+  assert.doesNotMatch(wxml, /class="fx-step3/)
 })

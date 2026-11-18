@@ -625,8 +625,6 @@ const RAW = [
   ['F200', 'F200-poi-challenge-missing.png', '/pages/play/poi-challenge/index', 'player', 'missing-param', null, undefined, { selector: '.pc-page__state', min: 1 }, 'real-data', 'P1', '', '官方地点挑战缺 poiId 时显示真实错误和返回入口；完整拍照、答题、勋章另走真实账号 E2E，不以缺参态代替通关验收。'],
   // 2026-11-10 qx-green:上线波次新增的 14 条路由补矩阵行(真实运行时、不注入假数据;能拍的态先拍出来,常态 fixture 待总控首轮校准)
   ['F300', 'F300-video-bounty-missing-param.png', '/subpackageA/pages/video-bounty/index', 'player', 'missing-param', null, undefined, { selector: '.vb__body', min: 1 }, 'real-data', 'P1', '', '视频悬赏页:无活动参数时只给说明,不拼假活动'],
-  ['F301', 'F301-topic-catalog-normal.png', '/pages/topic/catalog/index', 'player', 'normal', null, undefined, { selector: '.catalog-nav-spacer', min: 1 }, 'real-data', 'P1', '', '公开主题目录:城市标题、筛选与卡片走真实公开接口'],
-  ['F302', 'F302-topic-catalog-detail-missing-param.png', '/pages/topic/catalog/detail', 'player', 'missing-param', null, undefined, { selector: '.cdetail', min: 1 }, 'real-data', 'P1', '', '目录作品详情:缺 id 时落到下架 / 加载失败态'],
   ['F303', 'F303-merchant-payout-account-normal.png', '/pages/merchant/payout-account/index', 'merchant', 'normal', null, undefined, { selector: 'cy-page-title', min: 1 }, 'real-data', 'P1', '', '商家收款账户(l-payout):进件状态只读服务端'],
   ['F304', 'F304-market-passes-normal.png', '/subpackageMember/market/passes/index', 'player', 'normal', null, undefined, { selector: '.mk__body', min: 1 }, 'real-data', 'P1', '', '通行证与礼品:积分余额与通行证入口'],
   ['F305', 'F305-market-pass-missing-param.png', '/subpackageMember/market/pass/index', 'player', 'missing-param', null, undefined, { selector: '.mp__frame', min: 1 }, 'real-data', 'P1', '', '通行证详情:缺商品参数时的错误态'],
@@ -691,11 +689,12 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-11-09 qx-a4 V3-42:时光胶囊页先删,F97 退场:total 350→349、P1 201→200、actionable 326→325(P1 194→193)、F 96→95、setData 184→183;blocked 与已验 fixture 不变。
 // 2026-11-12 club-payout-binding:新增 F315 个人收款页(missing-param 一行),total 366→367、P1 217→218、actionable P1 210→211 / total 342→343、F 112→113、real-data 59→60。
 // 2026-11-13 pass-mini:新增 F316 通行证订单详情页(missing-param 一行),total 367→368、P1 218→219、actionable P1 211→212 / total 343→344、F 113→114、real-data 60→61。
+// 2026-11-18 F14c(PG-025):城市合集两页下线,F301/F302 两行退场:total 369→367、P1 220→218、actionable P1 213→211 / total 345→343、F 114→112、real-data 61→59;catalog/index 重定向壳走 coverage-exemptions。
 const STATS = {
-  "total": 369,
+  "total": 367,
   "byPriority": {
     "P0": 139,
-    "P1": 220,
+    "P1": 218,
     "P2": 10
   },
   "blockedByPriority": {
@@ -705,9 +704,9 @@ const STATS = {
   },
   "actionable": {
     "P0": 130,
-    "P1": 213,
+    "P1": 211,
     "P2": 2,
-    "total": 345
+    "total": 343
   },
   "blocked": 24,
   "domains": {
@@ -716,12 +715,12 @@ const STATS = {
     "C": 57,
     "D": 52,
     "E": 26,
-    "F": 114
+    "F": 112
   },
   "control": {
     "setData": 186,
     "identity+setData": 115,
-    "real-data": 61,
+    "real-data": 59,
     "real-device": 7
   },
   "fixtureVerified": 16

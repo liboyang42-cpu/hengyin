@@ -31,6 +31,7 @@
     "cy-privacy-gate": "/components/cy/privacy-gate/index",
     "cy-tabs": "/components/cy/tabs/index",
     "cy-advanced-game": "/pages/play/components/advanced-game/index",
+    "cy-role-card": "/pages/play/components/role-card/index",
     "cy-play-roadmap": "/pages/play/components/roadmap/index",
     "cy-playkit": "/pages/play/components/playkit/index",
     "cy-play-verdict": "/pages/play/components/play-verdict/index",
@@ -51,6 +52,7 @@
     "cy-back-guard": "/components/cy/back-guard/index",
     "cy-look-transition": "/pages/play/components/look-transition/index",
     "cy-illus": "/pages/play/components/cy-illus/index",
+    "cy-station-silhouette": "/pages/play/components/station-silhouette/index",
     "cy-frames": "/pages/play/components/cy-frames/index"
   },
   "componentPlaceholder": {

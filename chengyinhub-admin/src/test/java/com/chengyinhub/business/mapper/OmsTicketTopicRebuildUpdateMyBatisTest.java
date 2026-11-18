@@ -57,7 +57,8 @@ class OmsTicketTopicRebuildUpdateMyBatisTest
                     + "min_people int, max_people int, "
                     + "signup_deadline timestamp, gather_lng decimal(12,6), gather_lat decimal(12,6), "
                     + "team_status int, refund_rule varchar(120), refund_supported tinyint, "
-                    + "sync_with_theme tinyint, need_audit int not null default 0, del_flag int, "
+                    + "sync_with_theme tinyint, need_audit int not null default 0, "
+                    + "adult_count tinyint not null default 1, child_count tinyint not null default 0, child_age_min tinyint, child_age_max tinyint, del_flag int, "
                     + "create_by varchar(32), create_time timestamp, update_by varchar(32), update_time timestamp)");
         }
     }

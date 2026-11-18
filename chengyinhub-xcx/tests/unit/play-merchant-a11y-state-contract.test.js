@@ -25,8 +25,10 @@ function assertStateSemantics(view) {
   assert.match(view, /class="mp-sheet__err mp-sheet__err--\{\{game\.receipt\}\}"[\s\S]{0,200}aria-role="\{\{game\.receipt === 'unknown' \? 'button' : 'alert'\}\}"[^>]*aria-live="polite"/)
   // unknown 也必须置灰:结果未知时重答等于重复写入,所以 aria-disabled 是两者之或。
   assert.match(view, /class="mp-sheet__btn [^"]+"[^>]*bindtap="submitGame"[^>]*aria-role="button"[^>]*aria-disabled="\{\{game\.submitting \|\| game\.receipt === 'unknown'\}\}"/)
-  assert.match(view, /class="mp-cta__main [^"]+"[^>]*bindtap="scanArrival"[^>]*aria-role="button"[^>]*aria-disabled="\{\{busy\}\}"/)
-  assert.match(view, /class="mp-cta__main [^"]+"[^>]*bindtap="uploadProof"[^>]*aria-role="button"[^>]*aria-disabled="\{\{busy\}\}"/)
+  // F08:主按钮第一步是「我已到店」;扫码与拍照收进「更多」,同样在 busy 时置灰
+  assert.match(view, /class="mp-cta__main [^"]+"[^>]*bindtap="arriveHere"[^>]*aria-role="button"[^>]*aria-disabled="\{\{busy\}\}"/)
+  assert.match(view, /class="mp-sheet__btn [^"]+"[^>]*bindtap="moreScan"[^>]*aria-role="button"[^>]*aria-disabled="\{\{busy\}\}"/)
+  assert.match(view, /class="mp-sheet__btn [^"]+"[^>]*bindtap="morePhoto"[^>]*aria-role="button"[^>]*aria-disabled="\{\{busy\}\}"/)
   assert.match(view, /class="mp-cta__main [^"]+"[^>]*bindtap="openVerifyCode"[^>]*aria-role="button"[^>]*aria-disabled="\{\{consentBusy\}\}"/)
 }
 

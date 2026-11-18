@@ -25,6 +25,8 @@ function componentFactory() {
       if (id.includes('media-denied')) return { guideIfDenied() { return false; } };
       if (id.endsWith('/utils/toast.js')) return () => {};
       if (id.includes('playkit-questo')) return require('../../pages/play/utils/playkit-questo.js');
+      // F03 字符池的纯状态函数(不判对错、不发请求)
+      if (id.endsWith('/utils/letter-pool.js')) return require('../../pages/play/utils/letter-pool.js');
       throw new Error('Unexpected component port ' + id);
     },
   }, { filename: file });

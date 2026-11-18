@@ -239,6 +239,43 @@ class AdvancedGameRuntimeServiceImplTest {
         verify(sessionMapper, never()).insert(any());
     }
 
+    /** F03:打字问答字符池 —— 视图下发打乱后的池子与答案字数;池外字拒收不计次;POOL_TRIM 落状态后少下发干扰字。 */
+    @Test
+    @SuppressWarnings("unchecked")
+    void qaLetterPoolProjectsRejectsOutsideCharsAndTrims() {
+        String config = "{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"title\":\"示例题\","
+                + "\"answerText\":\"ABC\",\"maxTries\":0,"
+                + "\"letterPool\":{\"enabled\":true,\"chars\":[\"A\",\"B\",\"C\",\"X\",\"Y\",\"Z\"],\"answerLength\":3}},"
+                + "\"hintLadder\":[{\"level\":1,\"type\":\"POOL_TRIM\",\"payload\":2}]}";
+        GameRuntimeSession session = runningSession(config, "{\"qa\":{\"poolSeed\":5}}");
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+        when(sessionMapper.selectPlayerByOwner(ACTIVITY_ID, TOPIC_ID, NODE_ID, MEMBER_ID)).thenReturn(session);
+        when(sessionMapper.updateStateCas(any())).thenReturn(1);
+
+        Map<String, Object> qa = (Map<String, Object>) ((Map<String, Object>) service.state(MEMBER_ID, 51L).get("playKit")).get("qa");
+        Map<String, Object> pool = (Map<String, Object>) qa.get("letterPool");
+        assertEquals(6, ((List<?>) pool.get("chars")).size());
+        assertEquals(3, pool.get("answerLength"));
+        assertFalse(qa.containsKey("answerText"), "答案不下发");
+
+        IllegalArgumentException outside = assertThrows(IllegalArgumentException.class,
+                () -> service.act(MEMBER_ID, 51L, 0, "pool-outside", "SUBMIT_QA", Collections.singletonMap("input", "QBC")));
+        assertEquals("只能使用给出的字", outside.getMessage());
+        verify(sessionMapper, never()).updateStateCas(any());
+
+        service.trimPool(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID, 1, 2);
+        Map<String, Object> trimmed = (Map<String, Object>) ((Map<String, Object>) ((Map<String, Object>)
+                service.state(MEMBER_ID, 51L).get("playKit")).get("qa")).get("letterPool");
+        List<String> chars = (List<String>) trimmed.get("chars");
+        assertEquals(4, chars.size());
+        assertTrue(chars.containsAll(Arrays.asList("A", "B", "C")));
+        assertEquals(2, trimmed.get("removed"));
+        // 同一级重看不再多去,也不再写状态
+        org.mockito.Mockito.clearInvocations(sessionMapper);
+        service.trimPool(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID, 1, 2);
+        verify(sessionMapper, never()).updateStateCas(any());
+    }
+
     @Test
     void activityEndRejectsAnExistingSessionActionWithoutWritingProgressOrAttempt() {
         activityMapper.selectCmsActivityById(ACTIVITY_ID).setEndDate(new Date(NOW - 1));

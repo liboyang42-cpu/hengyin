@@ -130,6 +130,8 @@ function receiptDetail(response) {
   if (!d) return out;
   if (typeof d.chapterName === 'string' && d.chapterName) out.stop = d.chapterName;
   if (typeof d.perkName === 'string' && d.perkName) out.perk = d.perkName;
+  // F12 亲子票:服务端给的「亲子票：1 大 1 小（儿童 7 岁）· 儿童份：xx」,店员按 1 大 1 小提供
+  if (record(d.party) && typeof d.party.label === 'string' && d.party.label) out.party = d.party.label;
   if (d.sessionNotToday === true && typeof d.sessionDate === 'string' && d.sessionDate) {
     out.warn = '这张票是 ' + d.sessionDate + ' 的场次';
   }
@@ -194,7 +196,7 @@ function verificationSheetView(result) {
     kind: success ? 'success' : 'fail',
     sub: success ? [stop, message].filter(Boolean).join(' · ') : stop,
     pill: success && r.perk ? '请提供：' + r.perk : '',
-    meta: r.warn || '',
+    meta: [r.party, r.warn].filter(Boolean).join(' · '),
     why: success ? '' : message,
   };
   if (r.state === 'review') view.review = true;

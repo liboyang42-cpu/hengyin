@@ -33,7 +33,8 @@ test('逐字猜词答错:保留已填的格子与输入框,不清空重来', () 
   const def = loadHangman()
   const inst = Object.assign({ data: Object.assign({}, def.data, { show: true, slots: SLOTS, solved: false, reducedMotion: true }),
     setData(p) { Object.assign(this.data, p) }, triggerEvent() {} }, def.methods)
-  const observe = (slots, solved) => def.observers['show, slots, solved'].call(inst, true, slots, solved)
+  const key = Object.keys(def.observers).find(k => k.startsWith('show, slots, solved'))
+  const observe = (slots, solved) => def.observers[key].call(inst, true, slots, solved, 'keyboard', [])
   observe(SLOTS, false)
   inst.onInput({ detail: { value: 'ABD' } })
   inst.onSubmit()
@@ -62,4 +63,9 @@ test('限时打字:服务端 lastFeedback 映射到 kit.wrongFeedback;通过后�
   assert.equal(wrong.wrongFeedback, '差一个字母')
   const passed = pickPlayKit(Object.assign({}, base, { playKit: { typeIn: { title: 't', target: 'ABC', seconds: 10, attempts: 1, passed: true, lastFeedback: '差一个字母' } } }), new Date())
   assert.equal(passed.wrongFeedback, '')
+})
+
+test('逐字猜词字母池(F03)答错:同样显示服务端回复(F02)', () => {
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-hangman/index.wxml'), 'utf8')
+  assert.equal((wxml.match(/wrongFeedback \|\| '还不对，再看看题面'/g) || []).length, 2, '键盘与字母池两种输入都显示')
 })

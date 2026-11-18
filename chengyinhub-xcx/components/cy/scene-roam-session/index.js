@@ -159,8 +159,9 @@ Component({
       const shops = nonNegativeInteger(raw.shops)
       const explorePct = nonNegativeNumber(raw.explorePct)
       const formattedDuration = formatDuration(raw.durSec, raw.time)
-      // 服务端已完成事实(serverFact)的 null 是服务端也不知道:显示「—」不伪造 0;本机旧记录仍按 UI-04 显示 0。
-      const unknownCount = raw.serverFact ? '—' : '0'
+      // F14a(MC-011=B):服务端已完成事实(serverFact)缺字段也写 0,与本机旧记录(UI-04)同一口径;
+      // 请求失败走组件自己的加载失败态,不会落到这里。
+      const unknownCount = '0'
       return {
         ...raw,
         dateFull: validDate ? `${date.month}月${date.day}日 周${WEEK[date.weekday]}` : '日期不可用',

@@ -177,7 +177,7 @@ function formatBatch(batch) {
   const item = Object.assign({}, batch);
   item.amountText = money(batch.amountTotal);
   item.amountDisplay = item.amountText == null ? null : yuan(item.amountText);
-  item.amountFallback = '待定';
+  item.amountFallback = yuan(0);   // F14a:缺字段写 ¥0.00
   item.paymentText = paymentText(item);
   item.invoiceText = { NONE: '未开票', ISSUED: '已开票', RED: '已红冲' }[item.invoiceState] || '—';
   item.isPaid = item.netDirection === 'PLATFORM_PAYS_MERCHANT' && item.paymentState === 'PAID';
@@ -201,7 +201,7 @@ function formatEntry(entry) {
   const item = Object.assign({}, entry);
   item.amountText = money(entry.signedAmount);
   item.amountDisplay = item.amountText == null
-    ? '待定'
+    ? yuan(0)   // F14a:缺字段写 ¥0.00
     : yuan(item.amountText, { signed: true });
   item.sourceText = entry.entryKind === 'REVERSAL' ? '冲正' : (entry.entryKind === 'CLAWBACK' ? '扣划' : ({ REDEMPTION_FEE: '核销计酬', COOP_SHARE: '合作分润', ACTIVITY_SHARE: '活动分润' }[entry.source] || '调整项'));
   return item;

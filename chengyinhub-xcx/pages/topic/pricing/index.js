@@ -13,7 +13,7 @@ function termsText(row) {
   if (row.termsMode === 'PERK') return '章节供给 · 给权益';
   if (row.termsMode === 'TRAFFIC') return '章节供给 · 引流';
   if (row.termsMode === 'REVSHARE') return '章节供给 · ¥' + money(row.fixedFee) + '/核销人次';
-  if (row.shareMode === 1) return '分成型 · ' + (row.shareRate != null && row.shareRate !== '' ? row.shareRate + '%' : '—');
+  if (row.shareMode === 1) return '分成型 · ' + (row.shareRate != null && row.shareRate !== '' ? row.shareRate : 0) + '%';
   if (row.shareMode === 2) return '固定 · ¥' + money(row.fixedFee) + '/人';
   return '引流型';
 }
@@ -55,7 +55,7 @@ Page({
     loading: true,
     hasPreview: false,
     errorText: '',
-    floorText: '—',
+    floorText: '',   // F14a:未取到写 ¥0.00(money.amount2 空值口径),不写「—」
     finalPrice: 0,
     sliderMax: 100,
     referenceText: '',

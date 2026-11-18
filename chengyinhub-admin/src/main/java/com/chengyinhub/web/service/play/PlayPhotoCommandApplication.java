@@ -144,7 +144,7 @@ public class PlayPhotoCommandApplication {
                     return error("该章节已核销，不能改写到店凭证");
                 }
                 if (photoFilter && !shopDayProofService.hasArrived(memberId, actId, node.getId())) {
-                    return error("先扫店内静态码进店，再开始任务");
+                    return error("先点「我已到店」，再开始任务");
                 }
                 // 已记录的到店凭证是权威事实:重试(同/异 URL)交给 submitPhoto 既有的幂等/不可覆盖
                 // 合同,不再用来源校验打断对象过期或密钥轮换后的正常恢复;首次记录(无 picUrl)仍严验来源。

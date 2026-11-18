@@ -25,7 +25,9 @@ for (const change of ['current', 'activity', 'account', 'sheet', 'closed', 'done
     if (change === 'load') h.page._playLoadEpoch = 1;
     h.requests[0].success({ code: 200, data: { allowedActions: ['check'], check: { checkId: 'fixture-check' } } });
     await new Promise(resolve => setImmediate(resolve));
-    if (change === 'current') assert.equal(h.patches[0].journeyCheck.checkId, 'fixture-check');
+    // F05:同一回包先落站点角色卡(stationRole);这里只核检定那一笔
+    const checks = h.patches.filter(p => p.journeyCheck);
+    if (change === 'current') assert.equal(checks[0].journeyCheck.checkId, 'fixture-check');
     else assert.deepEqual(h.patches, []);
   });
 }

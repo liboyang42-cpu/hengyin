@@ -385,7 +385,8 @@ test('视图模型不得把 boolean、array 与空白字符串格式化成零金
     }))
     assert.equal(host.amount, '¥0.00', JSON.stringify(value))   // D-119
     assert.equal(host.status, '金额待确认', JSON.stringify(value))
-    assert.equal(host.lines.some((item) => item.value === '¥0.00'), false, JSON.stringify(value))
+    // F14a(MC-011=B):只有「我的分润」这一行写 0;其余读不出数的行仍整行不渲染,不逐行补 ¥0.00。
+    assert.deepEqual(host.lines.filter((item) => item.value === '¥0.00').map((item) => item.key), ['income'], JSON.stringify(value))
   }
 })
 

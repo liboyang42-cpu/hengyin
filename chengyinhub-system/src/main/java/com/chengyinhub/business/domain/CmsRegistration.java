@@ -317,6 +317,36 @@ public class CmsRegistration extends BaseEntity
         this.topicCompleted = topicCompleted;
     }
 
+    /** F13 票夹可用窗口(瞬态,见 TicketUsableWindow):yyyy-MM-dd HH:mm:ss(Asia/Shanghai);null = 立即可用 / 一直可用。 */
+    private String usableFrom;
+    private String usableUntil;
+    /** F13:USABLE / UPCOMING / EXPIRED,按服务端此刻判。 */
+    private String usableState;
+    /** F13:CLEARED / NOT_CLEARED / NONE。只有城市定向主题票有通关概念。 */
+    private String clearState;
+
+    /** F12 亲子票下单时的人数构成与儿童年龄(JSON,只存年龄不存姓名)。 */
+    private String partySnapshotJson;
+
+    /** F12 读面:{adultCount, childCount, childAge};非亲子票为 null。由 partySnapshotJson 派生。 */
+    private java.util.Map<String, Object> party;
+
+    public String getUsableFrom() { return usableFrom; }
+    public void setUsableFrom(String usableFrom) { this.usableFrom = usableFrom; }
+    public String getUsableUntil() { return usableUntil; }
+    public void setUsableUntil(String usableUntil) { this.usableUntil = usableUntil; }
+    public String getUsableState() { return usableState; }
+    public void setUsableState(String usableState) { this.usableState = usableState; }
+    public String getClearState() { return clearState; }
+    public void setClearState(String clearState) { this.clearState = clearState; }
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public String getPartySnapshotJson() { return partySnapshotJson; }
+    public void setPartySnapshotJson(String partySnapshotJson) { this.partySnapshotJson = partySnapshotJson; }
+    public java.util.Map<String, Object> getParty() {
+        return party != null ? party : com.chengyinhub.business.service.support.FamilyTicketRules.partyOf(partySnapshotJson);
+    }
+    public void setParty(java.util.Map<String, Object> party) { this.party = party; }
+
     /** ③ 探索票进度读面(瞬态,见 ExploreTicketProgress):redeemed/required/completed/ended/active。其余恒 null。 */
     private java.util.Map<String, Object> exploreProgress;
 

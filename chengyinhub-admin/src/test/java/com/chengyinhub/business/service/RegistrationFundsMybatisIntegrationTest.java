@@ -363,7 +363,7 @@ class RegistrationFundsMybatisIntegrationTest {
                         + "start_time DATETIME, end_time DATETIME, sale_start_time DATETIME NULL, sale_end_time DATETIME NULL,"
                         + "total_inventory BIGINT, remaining_inventory BIGINT, mode INT, sub_type VARCHAR(64), meeting_point VARCHAR(255),"
                         + "meeting_point_address VARCHAR(255) NULL, team_size INT, min_people INT, max_people INT, signup_deadline DATETIME, gather_lng VARCHAR(64), gather_lat VARCHAR(64), team_status INT,"
-                        + "refund_rule VARCHAR(255), refund_supported TINYINT(1) NULL, sync_with_theme TINYINT(1) NULL, need_audit INT, del_flag INT, create_by VARCHAR(64), create_time DATETIME, update_by VARCHAR(64), update_time DATETIME) ENGINE=InnoDB",
+                        + "refund_rule VARCHAR(255), refund_supported TINYINT(1) NULL, sync_with_theme TINYINT(1) NULL, need_audit INT, adult_count TINYINT NOT NULL DEFAULT 1, child_count TINYINT NOT NULL DEFAULT 0, child_age_min TINYINT NULL, child_age_max TINYINT NULL, del_flag INT, create_by VARCHAR(64), create_time DATETIME, update_by VARCHAR(64), update_time DATETIME) ENGINE=InnoDB",
                 // RUN-01 自动核销闸只读这四列(在途退款排除),给最小列即可;全列语义由退款侧自己的用例负责。
                 // 同 cms_topic 的教训:本类里 refund_application 只能有这一条 CREATE。
                 "CREATE TABLE refund_application (id BIGINT PRIMARY KEY AUTO_INCREMENT, source_type VARCHAR(32),"

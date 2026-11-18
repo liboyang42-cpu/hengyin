@@ -40,6 +40,21 @@ public final class ArrivalPolicy {
      */
     public static final double START_RADIUS_METERS = 300d;
 
+    /**
+     * F08(业主 2026-11-17,合同 docs/contracts/arrival-policy.v2.json):定位差时开局半径最多放宽 200 米(即 500 米),
+     * 精度上限 200 米。判定 = 精度 &le; 200 且 距离 &minus; min(精度, 200) &le; 300。
+     */
+    public static final double START_MAX_RELAX_METERS = 200d;
+    public static final double START_MAX_ACCURACY_METERS = 200d;
+
+    /** 自由探索到访(FE-STORY 5.2):默认 300 米,可配 300–500 米;精度最多放宽 100 米,缺精度按 80 米算。 */
+    public static final int VISIT_DEFAULT_RADIUS_METERS = 300;
+    public static final int VISIT_MIN_RADIUS_METERS = 300;
+    public static final int VISIT_MAX_RADIUS_METERS = 500;
+    public static final double VISIT_MAX_RELAX_METERS = 100d;
+    public static final double VISIT_MISSING_ACCURACY_METERS = 80d;
+    public static final double VISIT_MAX_ACCURACY_METERS = 200d;
+
     public static final String FALLBACK_NONE = "NONE";
     public static final String FALLBACK_ALTERNATE_EVIDENCE = "ALTERNATE_EVIDENCE";
     public static final String FALLBACK_ALTERNATE_NODE = "ALTERNATE_NODE";
@@ -169,15 +184,36 @@ public final class ArrivalPolicy {
     }
 
     /**
-     * 开局校验:与首站(或集合点)距离 &le; {@link #START_RADIUS_METERS}。精度仍先于距离、互不抵扣,
-     * 低精度不能放大可开局范围;精度上限沿用旧 80m 基线。
+     * 开局校验(F08 v2):精度 &le; {@link #START_MAX_ACCURACY_METERS};距离先扣掉 min(精度, {@link #START_MAX_RELAX_METERS})
+     * 再与 {@link #START_RADIUS_METERS} 比 —— 定位差时最远放宽到 500 米,防止「人根本不在这个城市」就开局,
+     * 又不让室内/地铁口的定位漂移卡住开局。只用于开局一次,不影响作者冻结的逐站策略 {@link #fenceViolation}。
      */
     public static Fence startViolation(double distanceMeters, double accuracyMeters) {
-        if (!Double.isFinite(distanceMeters) || !Double.isFinite(accuracyMeters) || accuracyMeters < 0d) {
+        if (!Double.isFinite(distanceMeters) || !Double.isFinite(accuracyMeters) || accuracyMeters < 0d || distanceMeters < 0d) {
             return Fence.INVALID;
         }
-        if (accuracyMeters > LEGACY_MAX_ACCURACY_METERS) return Fence.ACCURACY_LOW;
-        if (distanceMeters > START_RADIUS_METERS) return Fence.TOO_FAR;
+        if (accuracyMeters > START_MAX_ACCURACY_METERS) return Fence.ACCURACY_LOW;
+        if (distanceMeters - Math.min(accuracyMeters, START_MAX_RELAX_METERS) > START_RADIUS_METERS) return Fence.TOO_FAR;
+        return Fence.PASS;
+    }
+
+    /** 自由探索到访半径:空 = 300;作者配置夹到 300–500。 */
+    public static int visitRadius(Integer configuredMeters) {
+        int radius = configuredMeters == null ? VISIT_DEFAULT_RADIUS_METERS : configuredMeters.intValue();
+        return Math.max(VISIT_MIN_RADIUS_METERS, Math.min(VISIT_MAX_RADIUS_METERS, radius));
+    }
+
+    /**
+     * 自由探索到访(FE-STORY 规则 1、2:宽松,不防作弊):距离 &le; 半径 + min(精度, 100);
+     * 缺精度按 80 米;精度 &gt; 200 米视为定位不准,请玩家再试一次(不是作弊判定)。
+     */
+    public static Fence visitViolation(double distanceMeters, Double accuracyMeters, Integer configuredRadiusMeters) {
+        double accuracy = accuracyMeters == null ? VISIT_MISSING_ACCURACY_METERS : accuracyMeters.doubleValue();
+        if (!Double.isFinite(distanceMeters) || distanceMeters < 0d || !Double.isFinite(accuracy) || accuracy < 0d) {
+            return Fence.INVALID;
+        }
+        if (accuracy > VISIT_MAX_ACCURACY_METERS) return Fence.ACCURACY_LOW;
+        if (distanceMeters > visitRadius(configuredRadiusMeters) + Math.min(accuracy, VISIT_MAX_RELAX_METERS)) return Fence.TOO_FAR;
         return Fence.PASS;
     }
 

@@ -221,9 +221,10 @@ class RegistrationReadContractMybatisIntegrationTest {
                 + " VALUES (1,888,'merchant888',1,1,0)");
         exec("INSERT INTO cms_topic_node(id,topic_id,chapter_id,name,merchant_member_id,status,node_audit_status) VALUES"
                 + " (1,1,11,'node-11',888,1,1),(2,2,22,'node-22',888,1,1)");
-        exec("INSERT INTO player_node_progress(id,member_id,activity_id,topic_id,node_id,status,checkin_time,del_flag)"
-                + " VALUES (1,42,100,1,1,1,date_sub(now(),interval 1 hour),0),"
-                + " (2,43,100,1,1,1,date_sub(now(),interval 2 hour),0)");
+        // 自由探索扫码到店(QR):F08 之后排队计时只认 QR
+        exec("INSERT INTO player_node_progress(id,member_id,activity_id,topic_id,node_id,status,checkin_time,del_flag,arrival_source)"
+                + " VALUES (1,42,100,1,1,1,date_sub(now(),interval 1 hour),0,'QR'),"
+                + " (2,43,100,1,1,1,date_sub(now(),interval 2 hour),0,'QR')");
         exec("INSERT INTO redemption(id,registration_id,chapter_id,topic_id,merchant_id,offer_id,"
                 + "operator_id,status,idempotency_key,create_time) VALUES"
                 + " (1,1001,11,1,888,1,1,'ACTIVE','k1',date_sub(now(),interval 30 minute)),"
@@ -483,9 +484,9 @@ class RegistrationReadContractMybatisIntegrationTest {
         exec("INSERT INTO registration_entitlement(id,registration_id,chapter_id,topic_id,status,create_time) VALUES ("
                 + reg + "," + reg + "," + chapter + "," + topic + "," + entitlementStatus + "," + created + ")");
         if (checkin != null) {
-            exec("INSERT INTO player_node_progress(id,member_id,activity_id,topic_id,node_id,status,checkin_time,del_flag)"
+            exec("INSERT INTO player_node_progress(id,member_id,activity_id,topic_id,node_id,status,checkin_time,del_flag,arrival_source)"
                     + " VALUES (" + reg + "," + member + "," + activity + "," + topic + "," + topic + ",1,'"
-                    + checkin.format(fmt) + "',0)");
+                    + checkin.format(fmt) + "',0,'QR')");
         }
         if (redeemed != null) {
             exec("INSERT INTO redemption(id,registration_id,chapter_id,topic_id,merchant_id,offer_id,operator_id,status,"
@@ -679,6 +680,7 @@ class RegistrationReadContractMybatisIntegrationTest {
         exec("ALTER TABLE cms_topic ADD COLUMN journey_story_json JSON NULL");                    // topic_journey_story_20260916
         exec("ALTER TABLE cms_topic ADD COLUMN theme_runtime_config_json MEDIUMTEXT NULL");       // theme_runtime_20261004
         exec("ALTER TABLE cms_topic ADD COLUMN published_theme_runtime_config_json MEDIUMTEXT NULL"); // theme_runtime_20261004
+        exec("ALTER TABLE player_node_progress ADD COLUMN arrival_source VARCHAR(16) NULL");      // 20261118_player_node_arrival_source
         exec("ALTER TABLE cms_topic_chapter ADD COLUMN circle_candidate_code VARCHAR(8) NULL");   // circle_theme_batch2_20260821
         exec("ALTER TABLE cms_topic_chapter ADD COLUMN circle_role VARCHAR(16) NULL");            // circle_theme_batch2_20260821
         exec("ALTER TABLE cms_topic_chapter ADD COLUMN circle_policy VARCHAR(24) NULL");          // circle_theme_batch2_20260821

@@ -83,6 +83,61 @@ public class ShopDayProofServiceImpl implements IShopDayProofService {
         }
     }
 
+    @Override
+    public void recordArrivalSource(PlayerNodeProgress arrived, String arrivalSource) {
+        if (arrived == null || arrived.getId() == null || StringUtils.isBlank(arrivalSource)) return;
+        // 只写第一次:先扫码后点到店仍记 QR;先点到店后扫码也不改(排队计时宁可少算,不把自报位置当扫码)。
+        playerNodeProgressMapper.updateArrivalSource(arrived.getId(), arrivalSource);
+    }
+
+    @Override
+    public void markVisited(PlayerNodeProgress arrived, CmsTopicNode node, int visitMethod,
+                            String longitude, String latitude) {
+        if (arrived == null || node == null || node.getId() == null || node.getTopicId() == null
+                || arrived.getMemberId() == null || arrived.getActivityId() == null
+                || StringUtils.isBlank(arrived.getPlayInstanceId())) {
+            throw new IllegalArgumentException("到访记录缺少归属");
+        }
+        List<Long> nodeIds = new java.util.ArrayList<>();
+        nodeIds.add(node.getId());
+        if (cmsTopicNodeMapper != null && node.getChapterId() != null) {
+            // 一章多个地点或同地点多个节点:任一到访即解锁本章(FE-STORY 7.13/7.14)。
+            // 只标记本人本局已有到店行的节点(SQL 带 checkin_time is not null),不凭空造行。
+            CmsTopicNode probe = new CmsTopicNode();
+            probe.setTopicId(node.getTopicId());
+            probe.setChapterId(node.getChapterId());
+            List<CmsTopicNode> siblings = cmsTopicNodeMapper.selectCmsTopicNodeList(probe);
+            if (siblings != null) {
+                for (CmsTopicNode sibling : siblings) {
+                    if (sibling != null && sibling.getId() != null && !nodeIds.contains(sibling.getId())) {
+                        nodeIds.add(sibling.getId());
+                    }
+                }
+            }
+        }
+        playerNodeProgressMapper.markVisited(arrived.getMemberId(), arrived.getActivityId(), node.getTopicId(),
+                arrived.getPlayInstanceId(), nodeIds, visitMethod, new Date(),
+                StringUtils.trimToNull(longitude), StringUtils.trimToNull(latitude));
+    }
+
+    @Override
+    public com.chengyinhub.business.domain.FreeExploreVisitConfig visitConfig(Long nodeId) {
+        if (nodeId == null || cmsTopicNodeMapper == null) return null;
+        return cmsTopicNodeMapper.selectVisitConfigById(nodeId);
+    }
+
+    @Override
+    public java.util.Map<Long, com.chengyinhub.business.domain.FreeExploreVisitConfig> visitConfigs(Long topicId) {
+        java.util.Map<Long, com.chengyinhub.business.domain.FreeExploreVisitConfig> out = new java.util.HashMap<>();
+        if (topicId == null || cmsTopicNodeMapper == null) return out;
+        List<com.chengyinhub.business.domain.FreeExploreVisitConfig> rows = cmsTopicNodeMapper.selectVisitConfigByTopicId(topicId);
+        if (rows == null) return out;
+        for (com.chengyinhub.business.domain.FreeExploreVisitConfig row : rows) {
+            if (row != null && row.getNodeId() != null) out.put(row.getNodeId(), row);
+        }
+        return out;
+    }
+
     /** 为同章节同地点的兄弟节点补写到店行;已存在(含并发写入)一律跳过,不覆盖任何既有事实。 */
     private void shareArrivalWithSiblings(Long memberId, Long activityId, CmsTopicNode node, Date checkinTime,
                                          String playInstanceId) {

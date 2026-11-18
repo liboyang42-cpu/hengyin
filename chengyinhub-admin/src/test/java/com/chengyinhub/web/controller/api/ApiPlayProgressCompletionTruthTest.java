@@ -230,19 +230,13 @@ class ApiPlayProgressCompletionTruthTest
     }
 
     /**
-     * ★ C1「进店用玩家扫店内静态码,不用 GPS(不准)」:③ 的 /arrive 必须整条拒绝。
-     *
-     * <p>此前这里是正控(GPS 到点即写到店凭证)。改判的理由是进店事实一旦有第二条来源,
-     * 就出现两个真源:GPS 那条用的是<b>客户端传的 lat/lng</b>(可伪造),而
-     * {@code player_node_progress.checkin_time} 正是 G2 硬门 {@code queue_joined_at} 的取值来源
-     * ——「手机说它在附近」会被当成「玩家在店门口扫了码」,把等待时长 P90 抬高数小时,
-     * 全程零告警零资损。审计 5 S1 同向:漫游客户端就是这条 GPS 路径的现成调用方。
-     *
-     * <p>2026-08-20 收窄口径:C1 的立论对象是「店」——本条固定给节点<b>坐标</b>,
-     * 代表真实门店点位;纯线上节点的例外见下一条,两边互为负控。
+     * F08(业主 FE-G2,2026-11-17):实体店到店改为「300 米内点『我已到店』」,不再只认扫码。
+     * 原来担心的「手机说它在附近被当成扫了码」由 arrival_source 解决:定位到店记 GEO_TAP,
+     * 排队计时 queue_joined_at / 店内负载只认 QR(见 TopicOnsiteMetricsMapper)。
+     * 本条钉住:没带定位的 /arrive 仍不写到店、不发分、不判通关。
      */
     @Test
-    void shopDayArriveIsRefusedSoGpsCanNeverManufactureAnInStoreFact()
+    void shopDayArriveWithoutLocationWritesNothing()
     {
         topic.setProductType(ProductType.FREE_EXPLORE);
         node.setLongitude("121.4737");
@@ -251,9 +245,8 @@ class ApiPlayProgressCompletionTruthTest
 
         AjaxResult result = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null);
 
-        assertEquals(500, result.get("code"));
-        assertEquals("请扫店内的码", result.get("msg"));
-        // 不写 player_node_progress ⇒ queue_joined_at / in_store_load / 七段漏斗 A 都不被污染
+        assertEquals("ARRIVE_LOCATION_MISSING", result.get("errorCode"));
+        assertEquals("请开启定位", result.get("msg"));
         verify(proofService, never()).markArrived(anyLong(), anyLong(), any());
         verify(perkLedgerService, never()).isExploreCompleted(anyLong(), anyLong());
         verify(completionAwardService, never()).grantOnce(anyLong(), anyLong(), anyLong(), any());
@@ -262,7 +255,7 @@ class ApiPlayProgressCompletionTruthTest
     }
 
     /**
-     * 商家节点即使暂缺坐标,也不许 /arrive:到店事实仍只有 /checkin 一条来源。
+     * 商家节点暂缺坐标:无法按距离判到店,仍不许 /arrive(只能扫店内码)。
      * (没有这条,「纯线上例外」会被「商家忘填坐标」静默扩大成商家节点全放行。)
      */
     @Test
@@ -274,7 +267,7 @@ class ApiPlayProgressCompletionTruthTest
         AjaxResult result = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null);
 
         assertEquals(500, result.get("code"));
-        assertEquals("请扫店内的码", result.get("msg"));
+        assertEquals("ARRIVE_COORD_NOT_CONFIGURED", result.get("errorCode"));
         verify(proofService, never()).markArrived(anyLong(), anyLong(), any());
     }
 
@@ -488,7 +481,7 @@ class ApiPlayProgressCompletionTruthTest
         assertEquals("ARRIVE_FIRST", noFix.get("errorCode"));
         AjaxResult far = BasicPlayCommandFixtures.answerAt(controller, a, n, "乱写一个", null, "121.4837", "31.2304", "10");
         assertEquals("ARRIVE_FIRST", far.get("errorCode"));
-        AjaxResult blurry = BasicPlayCommandFixtures.answerAt(controller, a, n, "乱写一个", null, "121.4737", "31.2304", "200");
+        AjaxResult blurry = BasicPlayCommandFixtures.answerAt(controller, a, n, "乱写一个", null, "121.4737", "31.2304", "201");
         assertEquals("ARRIVE_FIRST", blurry.get("errorCode"));
         verify(progressService, never()).insertPlayerNodeProgress(any());
 

@@ -284,6 +284,38 @@ class PlayHelpApplicationTest {
         verifyNoInteractions(quotaApplication);
     }
 
+    /** F03:POOL_TRIM 层在扣费同一事务里把「去掉 N 个干扰字」写进本局状态;没配 payload 时按 3 个。 */
+    @Test
+    void poolTrimLevelRecordsRemovalInRunState() {
+        givenAuthorisedRun("{\"nodeAnswers\":{\"31\":{\"hintLadder\":["
+                + "{\"level\":1,\"type\":\"POOL_TRIM\",\"payload\":2},"
+                + "{\"level\":2,\"type\":\"POOL_TRIM\"}],"
+                + "\"questionAnswer\":\"ABC\"}}}");
+        givenCharge(new PlayHelpCostApplication.Charge(true, false, 1, 0, 1000L, "bk"));
+
+        PlayHelpUseVO first = application.use(MEMBER, String.valueOf(RUN), String.valueOf(NODE),
+                1, "help", "req-trim-1");
+        assertEquals("POOL_TRIM", first.type());
+        assertEquals("已去掉 2 个干扰字", first.content());
+        verify(runtimeService).trimPool(eq(MEMBER), any(), eq(TOPIC), eq(NODE), eq(1), eq(2));
+
+        givenUnlocked(1);   // F01:第 2 层要先看过第 1 层
+        PlayHelpUseVO second = application.use(MEMBER, String.valueOf(RUN), String.valueOf(NODE),
+                2, "help", "req-trim-2");
+        assertEquals("已去掉 3 个干扰字", second.content());
+        verify(runtimeService).trimPool(eq(MEMBER), any(), eq(TOPIC), eq(NODE), eq(2), eq(3));
+    }
+
+    /** 非 POOL_TRIM 层不碰运行时状态。 */
+    @Test
+    void textLevelNeverTouchesPoolState() {
+        givenAuthorisedRun(LADDER_ANSWER);
+        givenUnlocked(1);   // F01:第 2 层要先看过第 1 层
+        givenCharge(new PlayHelpCostApplication.Charge(true, false, 2, 30, 970L, "bk"));
+        application.use(MEMBER, String.valueOf(RUN), String.valueOf(NODE), 2, "help", "req-letter-2");
+        verify(runtimeService, never()).trimPool(any(), any(), any(), any(), anyInt(), anyInt());
+    }
+
     @Test
     void firstLetterLevelRevealsOnlyOneCharacter() {
         givenAuthorisedRun(LADDER_ANSWER);

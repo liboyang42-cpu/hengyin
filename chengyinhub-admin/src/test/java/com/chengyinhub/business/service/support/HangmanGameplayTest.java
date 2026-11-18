@@ -390,4 +390,130 @@ class HangmanGameplayTest {
         assertEquals(0, state.path("filled").size());
         assertFalse(state.path("solved").asBoolean());
     }
+
+    // ---------- F03 字母池(inputMode=pool) ----------
+
+    private static ObjectNode pool(String answer, String... chars) {
+        ObjectNode section = config(answer);
+        section.put("inputMode", "pool");
+        ArrayNode pool = section.putArray("pool");
+        for (String ch : chars) pool.add(ch);
+        return section;
+    }
+
+    @Test void poolModeAcceptsCorrectAndWrongSubmissionsMadeFromThePool() {
+        ObjectNode section = pool("ABC", "A", "B", "C", "X", "Y", "Z");
+        HangmanGameplay.validate(section);
+        ObjectNode state = HangmanGameplay.initialState(section);
+
+        ObjectNode wrong = HangmanGameplay.judge(section, state, slots("0", "X", "1", "B", "2", "C"));
+        assertEquals(HangmanGameplay.VERDICT_WRONG, wrong.path("verdict").asText());
+        assertEquals("pool", wrong.path("inputMode").asText());
+        assertEquals(6, wrong.path("pool").size());
+
+        ObjectNode right = HangmanGameplay.judge(section, state, slots("0", "A", "1", "B", "2", "C"));
+        assertEquals(HangmanGameplay.VERDICT_CORRECT, right.path("verdict").asText());
+        assertTrue(state.path("solved").asBoolean());
+    }
+
+    @Test void charOutsidePoolOrOverusedIsRejectedWithoutTouchingState() {
+        ObjectNode section = pool("ABC", "A", "B", "C", "X");
+        ObjectNode state = HangmanGameplay.initialState(section);
+
+        IllegalArgumentException outside = assertThrows(IllegalArgumentException.class,
+                () -> HangmanGameplay.judge(section, state, slots("0", "Q", "1", "B", "2", "C")));
+        assertEquals(LetterPoolSupport.REJECT_MESSAGE, outside.getMessage());
+        IllegalArgumentException overused = assertThrows(IllegalArgumentException.class,
+                () -> HangmanGameplay.judge(section, state, slots("0", "X", "1", "X", "2", "C")));
+        assertEquals(LetterPoolSupport.REJECT_MESSAGE, overused.getMessage());
+        // 拒收 = 不计次数也不落状态:玩家补入字符与判定结论都没变
+        assertEquals(0, state.path("filled").size());
+        assertEquals("", state.path("lastVerdict").asText());
+    }
+
+    @Test void keyboardModeKeepsLegacyProjectionShape() {
+        ObjectNode view = HangmanGameplay.publicProjection(config("ABC"), null);
+        assertFalse(view.has("inputMode"));
+        assertFalse(view.has("pool"));
+        assertFalse(HangmanGameplay.safeConfig(config("ABC")).has("inputMode"));
+        assertEquals("pool", HangmanGameplay.safeConfig(pool("ABC", "A", "B", "C")).path("inputMode").asText());
+    }
+
+    @Test void prefilledAndSeparatorSlotsDoNotConsumePoolChars() {
+        ObjectNode section = pool("AB C", "B", "C", "Z");
+        section.set("format", format("AB C", 0));
+        HangmanGameplay.validate(section); // A 是预填、空格是分隔符:池里只要有 B、C
+        ObjectNode state = HangmanGameplay.initialState(section);
+        ObjectNode view = HangmanGameplay.judge(section, state, slots("1", "B", "3", "C"));
+        assertEquals(HangmanGameplay.VERDICT_CORRECT, view.path("verdict").asText());
+    }
+
+    @Test void poolMustSpellAnswerAndAliasesCountingRepeats() {
+        assertTrue(assertThrows(IllegalArgumentException.class,
+                () -> HangmanGameplay.validate(pool("BOOK", "B", "O", "K", "X"))).getMessage().contains("拼不出答案"));
+        HangmanGameplay.validate(pool("BOOK", "B", "O", "O", "K", "X"));
+
+        ObjectNode alias = pool("BOOK", "B", "O", "O", "K");
+        alias.putArray("aliases").add("BOOKS");
+        assertTrue(assertThrows(IllegalArgumentException.class, () -> HangmanGameplay.validate(alias))
+                .getMessage().contains("别名"));
+        assertThrows(IllegalArgumentException.class, () -> HangmanGameplay.validate(pool("ABC")));
+        ObjectNode multi = pool("ABC", "A", "BC", "C");
+        assertThrows(IllegalArgumentException.class, () -> HangmanGameplay.validate(multi));
+        ObjectNode badMode = config("ABC");
+        badMode.put("inputMode", "wheel");
+        assertThrows(IllegalArgumentException.class, () -> HangmanGameplay.validate(badMode));
+    }
+
+    @Test void poolShuffleIsStablePerRunAndDiffersAcrossSeeds() {
+        ObjectNode section = pool("ABC", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J");
+        ObjectNode state = HangmanGameplay.initialState(section);
+        state.put(HangmanGameplay.POOL_SEED, 7L);
+        JsonNode first = HangmanGameplay.publicProjection(section, state).path("pool");
+        assertEquals(first, HangmanGameplay.publicProjection(section, state).path("pool"), "同一局刷新顺序不变");
+        ObjectNode other = HangmanGameplay.initialState(section);
+        other.put(HangmanGameplay.POOL_SEED, 8L);
+        assertNotEquals(first, HangmanGameplay.publicProjection(section, other).path("pool"));
+
+        section.put("poolShuffle", false);
+        assertEquals("[\"A\",\"B\",\"C\",\"D\",\"E\",\"F\",\"G\",\"H\",\"I\",\"J\"]",
+                HangmanGameplay.publicProjection(section, state).path("pool").toString());
+    }
+
+    @Test void poolTrimRemovesOnlyDecoysOncePerLevelAndBlocksTheirUse() {
+        ObjectNode section = pool("ABC", "A", "B", "C", "X", "Y", "Z", "W");
+        ObjectNode state = HangmanGameplay.initialState(section);
+
+        ObjectNode trimmed = HangmanGameplay.trimPool(section, state, 2, 3);
+        assertEquals(3, trimmed.path("poolRemoved").asInt());
+        List<String> visible = new ArrayList<>();
+        trimmed.path("pool").forEach(ch -> visible.add(ch.asText()));
+        assertEquals(4, visible.size());
+        assertTrue(visible.containsAll(Arrays.asList("A", "B", "C")), "答案字永远不会被去掉:" + visible);
+
+        // 同一级重看不再多去
+        assertEquals(4, HangmanGameplay.trimPool(section, state, 2, 3).path("pool").size());
+        // 被去掉的干扰字不能再用
+        String gone = null;
+        for (String decoy : Arrays.asList("X", "Y", "Z", "W")) if (!visible.contains(decoy)) gone = decoy;
+        final String removed = gone;
+        assertEquals(LetterPoolSupport.REJECT_MESSAGE, assertThrows(IllegalArgumentException.class,
+                () -> HangmanGameplay.judge(section, state, slots("0", removed, "1", "B", "2", "C"))).getMessage());
+        // 下一级再去,干扰字不够时只去到 0 为止
+        assertEquals(3, HangmanGameplay.trimPool(section, state, 3, 3).path("pool").size());
+    }
+
+    @Test void chineseCharacterSetPoolWorksWithFullwidthNormalisation() {
+        ObjectNode section = pool("示例站点", "示", "例", "站", "点", "车", "路");
+        HangmanGameplay.validate(section);
+        ObjectNode state = HangmanGameplay.initialState(section);
+        ObjectNode view = HangmanGameplay.judge(section, state, input("示例站点"));
+        assertEquals(HangmanGameplay.VERDICT_CORRECT, view.path("verdict").asText());
+
+        ObjectNode latin = pool("ABC", "A", "B", "C");
+        HangmanGameplay.validate(latin);
+        ObjectNode latinState = HangmanGameplay.initialState(latin);
+        assertEquals(HangmanGameplay.VERDICT_CORRECT,
+                HangmanGameplay.judge(latin, latinState, input("ＡＢＣ")).path("verdict").asText());
+    }
 }

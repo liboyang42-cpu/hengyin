@@ -762,6 +762,8 @@ public final class AdvancedActionJudgement {
                             .matchesAdvancedType(cfg.path("answerText").asText(""), input)
                     : policy.matchesAny(com.chengyinhub.business.service.support.AnswerPolicy
                             .answerTextCandidates(cfg.path("answerText").asText("")), input);
+            // F03 字符池:判错的提交里用了池外的字(或超次数)直接拒收,不计这次作答。
+            if (!correct) com.chengyinhub.business.service.support.LetterPoolSupport.requireQaChars(cfg, node, input);
             node.put("lastInput", input);
             // F02:判错先查作者的错答表(同一归一口径),命中给那一条话,没命中给通用错答。
             if (correct) com.chengyinhub.business.service.support.WrongReplies.clear(node);

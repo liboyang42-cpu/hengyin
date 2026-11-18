@@ -237,13 +237,18 @@ public class ActivityTicketRequest implements Serializable {
                 Objects.equals(description, that.description) &&
                 Objects.equals(mode, that.mode) &&
                 Objects.equals(meetingPoint, that.meetingPoint) &&
-                Objects.equals(teamSize, that.teamSize);
+                Objects.equals(teamSize, that.teamSize) &&
+                Objects.equals(adultCount, that.adultCount) &&
+                Objects.equals(childCount, that.childCount) &&
+                Objects.equals(childAgeMin, that.childAgeMin) &&
+                Objects.equals(childAgeMax, that.childAgeMax);
     }
 
     // hashCode 方法
     @Override
     public int hashCode() {
-        return Objects.hash(name, price, startTime, endTime, totalStock, description, mode, meetingPoint, teamSize);
+        return Objects.hash(name, price, startTime, endTime, totalStock, description, mode, meetingPoint, teamSize,
+                adultCount, childCount, childAgeMin, childAgeMax);
     }
 
     // toString 方法
@@ -276,4 +281,19 @@ public class ActivityTicketRequest implements Serializable {
         this.totalStock = totalStock;
         this.description = description;
     }
+
+    /** F12 亲子票:每张票含成人数(默认 1)/ 儿童数(0 或 1)/ 儿童年龄段(含两端)。 */
+    private Integer adultCount;
+    private Integer childCount;
+    private Integer childAgeMin;
+    private Integer childAgeMax;
+
+    public Integer getAdultCount() { return adultCount; }
+    public void setAdultCount(Integer adultCount) { this.adultCount = adultCount; }
+    public Integer getChildCount() { return childCount; }
+    public void setChildCount(Integer childCount) { this.childCount = childCount; }
+    public Integer getChildAgeMin() { return childAgeMin; }
+    public void setChildAgeMin(Integer childAgeMin) { this.childAgeMin = childAgeMin; }
+    public Integer getChildAgeMax() { return childAgeMax; }
+    public void setChildAgeMax(Integer childAgeMax) { this.childAgeMax = childAgeMax; }
 }

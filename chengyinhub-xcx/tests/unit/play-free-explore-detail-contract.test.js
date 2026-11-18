@@ -238,10 +238,14 @@ test('接口被闸掉时不许编借口,要把服务端原话端出来', () => {
   assert.doesNotMatch(send, /有点忙/)
 })
 
-test('店铺分身语音回复走独立播放器并在离场时停止', () => {
+test('店铺分身语音回复走独立播放器并在离场时停止;F06:不自动播,点气泡上的「播放」才出声', () => {
   assert.match(js, /_pushShopNpcReply\([\s\S]{0,180}replaceIdx, d\.audioUrl\)/)
   assert.match(js, /d\.data && d\.data\.audioUrl/)
-  assert.match(js, /_pushShopNpcReply\(text, replaceIdx, audioUrl\)[\s\S]{0,900}_playShopNpcVoice\(audioUrl\)/)
+  const push = js.slice(js.indexOf('  _pushShopNpcReply(text, replaceIdx, audioUrl) {'), js.indexOf('  toggleNpcVoice(e) {'))
+  assert.ok(push.length > 0)
+  assert.doesNotMatch(push, /_playShopNpcVoice\(/, '回复到了不自动播放')
+  assert.match(push, /audioUrl: voice/, '语音地址记在这条消息上')
+  assert.match(js, /toggleNpcVoice\(e\) \{[\s\S]{0,400}this\._playShopNpcVoice\(msg\.audioUrl, msg\.id\)/)
   assert.match(js, /closeShopNpc\(\) \{(?:(?!\n  \},)[\s\S])*_stopShopNpcVoice\(\)/)
   assert.match(js, /onUnload\(\)[\s\S]*?_stopShopNpcVoice\(\)/)
 })
@@ -329,4 +333,23 @@ test('负控:检查器本身不是空的', () => {
   assert.doesNotMatch(fake, /m\.put\("hookText", n\.getHookText\(\)\)/)
   const fakeSettle = 'if (ln.in) return ln'
   assert.doesNotMatch(fakeSettle, /if \(ln\.in && !inView\) return \{ \.\.\.ln, in: false/)
+})
+
+test('FE-STORY:未到访的章打不开,锁卡主按钮是「我已到达 / 扫码解锁」,不进玩法', () => {
+  const story = js.slice(js.indexOf('  openChapStory() {'), js.indexOf('  closeChapStory() {'))
+  assert.match(story, /if \(v\.storyLocked === true\) return;/, '锁定的章在打开前就返回')
+  assert.match(wxml, /<cy-btn wx:if="\{\{hero\.node\.storyLocked\}\}" variant="primary" style="width:100%" bindtap="onVisitTap"/)
+  const enter = between(js, '  heroEnter(e) {', '  onHeroNativeBack() {', 'heroEnter')
+  assert.match(enter, /this\.data\.storyGate && node\.storyLocked === true\) return;/)
+  assert.match(heroView(), /this\.data\.storyGate && node\.storyLocked === true \? feVisit\.tileView\(node/)
+})
+
+test('F08:没有玩法的店点「到店打卡」不进 startGame,直接去本店权益与核销码', () => {
+  const enter = between(js, '  heroEnter(e) {', '  onHeroNativeBack() {', 'heroEnter')
+  const noGame = enter.indexOf('!node.hasGame && !node.hasAdvanced')
+  const start = enter.indexOf('this.startGame(node)')
+  assert.ok(noGame > 0 && start > noGame, '无玩法分支必须先于 startGame')
+  assert.match(enter, /\/pages\/play\/merchant\/index\?nodeId=' \+ id \+ '&verify=1'/)
+  const merchant = fs.readFileSync(path.join(ROOT, 'pages/play/merchant/index.js'), 'utf8')
+  assert.match(merchant, /String\(query && query\.verify\) === '1' && node\.arrived && !node\.done\) this\.openVerifyCode\(\)/)
 })

@@ -12,7 +12,6 @@ const PAGE_JS = path.join(ROOT, 'pages/play/index.js')
 const BG_TRACKER = path.join(ROOT, 'utils/location/bg-tracker.js')
 
 // 完成 / 核验类接口:任何一个出现在"取消扫码"或"仅定位到达"的请求里都算违规
-const COMPLETION_OR_VERIFY = /\/(checkin|answer|verify|redeem|complete|finish|submit|scan|game|evidence|proof)/i
 
 function loadPage() {
   const original = { getApp: global.getApp, Page: global.Page, wx: global.wx }
@@ -146,9 +145,7 @@ test('仅定位到达:vm0/vm5 节点定位回调缺精度/精度非法时不自�
   }
 })
 
-test('仅定位到达:vm0/vm5 节点只调用到达接口 /api/play/arrive,不调用任何完成/核验接口', async (t) => {
-  // 到达收尾里的震动/飞字/动画是纯展示 setTimeout,冻结掉,避免在测试结束后访问已复原的 wx
-  t.mock.timers.enable({ apis: ['setTimeout'] })
+test('仅定位到达:vm0/vm5 节点走到 50 米内只点亮「我已到达」,不自动发 /api/play/arrive 或任何完成/核验接口(F08)', async () => {
   for (const vm of [0, 5]) {
     const harness = loadPage()
     try {
@@ -157,33 +154,10 @@ test('仅定位到达:vm0/vm5 节点只调用到达接口 /api/play/arrive,不�
       page.watchLocation()
       harness.platform.locationHandlers[0]({ latitude: 31.3, longitude: 120.7, accuracy: 15 })
       await settle()
-      // 基础写入先只读原局身份(GET /api/play/action-context),绑定后才发到达写
-      const context = harness.requests[0]
-      assert.equal(context && context.url, '/api/play/action-context', 'vm' + vm)
-      assert.equal(context.method, 'GET')
-      context.success({ code: 200, data: { routeSessionId: '77', expectedRouteVersion: 0 } })
-      await settle()
-      const urls = harness.requests.map((r) => r.url)
-      assert.deepEqual(urls, ['/api/play/action-context', '/api/play/arrive'], 'vm' + vm)
-      assert.equal(urls.some((url) => COMPLETION_OR_VERIFY.test(url)), false)
-      assert.equal(harness.platform.scans.length, 0, '定位到达不能顺带调起扫码')
-      // 到达回执落地后,本地收尾也不得再补发完成/核验写(服务端终态回执带 intentTerminal)
-      harness.requests[1].success({ code: 200, intentTerminal: true, data: { nodeId: 501 } })
-      await settle()
-      assert.equal(page.data.nodes[0].done, true, 'vm' + vm + ' 回执已走到本地完成收尾(onComplete 未抛错)')
-      const after = harness.requests.slice(2).map((r) => r.url)
-      assert.equal(after.some((url) => COMPLETION_OR_VERIFY.test(url)), false, 'vm' + vm + ' 回执后补发了: ' + after.join(','))
-      // 远处(>50m)的定位点不触发任何写
-      const far = loadPage()
-      try {
-        const farPage = createContext(far.definition, { nodes: [NODE(vm)], nextNode: { nodeId: 501 } })
-        farPage.watchLocation()
-        far.platform.locationHandlers[0]({ latitude: 31.31, longitude: 120.7 })
-        await settle()
-        assert.equal(far.requests.length, 0)
-      } finally {
-        far.restore()
-      }
+      assert.deepEqual(harness.requests.map((r) => r.url), [], 'vm' + vm + ' 到达必须由玩家点「我已到达」')
+      assert.equal(page.data.nearNodeId, 501, 'vm' + vm + ' 靠近只点亮按钮')
+      assert.equal(harness.platform.scans.length, 0, '定位不能顺带调起扫码')
+      assert.equal(page.data.nodes[0].done, false)
     } finally {
       harness.restore()
     }

@@ -31,16 +31,34 @@ class ArrivalPolicyTest {
         return station;
     }
 
-    /** 业主 2026-11-13:开局一次 300 米校验;精度先于距离、互不抵扣。 */
+    /** F08 v2:开局 300 米,定位差时最多放宽到 500 米,精度上限 200 米。 */
     @Test
-    void startCheckAllowsUpToThreeHundredMetres() {
+    void startCheckRelaxesUpToFiveHundredMetresWhenAccuracyIsPoor() {
         assertEquals(300d, ArrivalPolicy.START_RADIUS_METERS, 0d);
         assertEquals(ArrivalPolicy.Fence.PASS, ArrivalPolicy.startViolation(0d, 10d));
-        assertEquals(ArrivalPolicy.Fence.PASS, ArrivalPolicy.startViolation(300d, 80d));
-        assertEquals(ArrivalPolicy.Fence.TOO_FAR, ArrivalPolicy.startViolation(301d, 10d));
-        assertEquals(ArrivalPolicy.Fence.ACCURACY_LOW, ArrivalPolicy.startViolation(10d, 80.01d));
+        assertEquals(ArrivalPolicy.Fence.PASS, ArrivalPolicy.startViolation(300d, 0d));
+        assertEquals(ArrivalPolicy.Fence.TOO_FAR, ArrivalPolicy.startViolation(301d, 0d));
+        assertEquals(ArrivalPolicy.Fence.PASS, ArrivalPolicy.startViolation(420d, 150d));
+        assertEquals(ArrivalPolicy.Fence.TOO_FAR, ArrivalPolicy.startViolation(460d, 150d));
+        assertEquals(ArrivalPolicy.Fence.PASS, ArrivalPolicy.startViolation(500d, 200d));
+        assertEquals(ArrivalPolicy.Fence.ACCURACY_LOW, ArrivalPolicy.startViolation(10d, 200.01d));
+        assertEquals(ArrivalPolicy.Fence.ACCURACY_LOW, ArrivalPolicy.startViolation(10d, 250d));
         assertEquals(ArrivalPolicy.Fence.INVALID, ArrivalPolicy.startViolation(Double.NaN, 10d));
         assertEquals(ArrivalPolicy.Fence.INVALID, ArrivalPolicy.startViolation(10d, -1d));
+    }
+
+    /** FE-STORY 5.2:自由探索到访半径默认 300,夹到 300–500,精度最多放宽 100,缺精度按 80。 */
+    @Test
+    void freeExploreVisitIsLenientButBounded() {
+        assertEquals(300, ArrivalPolicy.visitRadius(null));
+        assertEquals(300, ArrivalPolicy.visitRadius(50));
+        assertEquals(500, ArrivalPolicy.visitRadius(900));
+        assertEquals(ArrivalPolicy.Fence.PASS, ArrivalPolicy.visitViolation(290d, 5d, null));
+        assertEquals(ArrivalPolicy.Fence.TOO_FAR, ArrivalPolicy.visitViolation(310d, 5d, null));
+        assertEquals(ArrivalPolicy.Fence.PASS, ArrivalPolicy.visitViolation(370d, null, null));
+        assertEquals(ArrivalPolicy.Fence.TOO_FAR, ArrivalPolicy.visitViolation(390d, null, null));
+        assertEquals(ArrivalPolicy.Fence.ACCURACY_LOW, ArrivalPolicy.visitViolation(10d, 250d, null));
+        assertEquals(ArrivalPolicy.Fence.INVALID, ArrivalPolicy.visitViolation(Double.NaN, 5d, null));
     }
 
     @Test

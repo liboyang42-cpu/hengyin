@@ -437,7 +437,7 @@ test('同账号商家资格被撤销后，返回页面必须重验并清除客�
   assert.equal(ledger.data.hasLoaded, false)
 })
 
-test('账本刷新失败保留已确认记录，未知金额不格式化为 ¥0', () => {
+test('账本刷新失败保留已确认记录；成功回包里缺金额字段写 ¥0.00(F14a MC-011=B)', () => {
   const ledger = loadPage('pages/merchant/ledger/index.js')
   const row = { recordKey: 'r1', dayKey: '2026-08-23' }
   ledger.data.hasLoaded = true
@@ -459,9 +459,9 @@ test('账本刷新失败保留已确认记录，未知金额不格式化为 ¥0'
   assert.equal(ledger.data.error, true)
 
   assert.equal(ledger.entryRow({ signedAmount: null, occurredAt: '', displayState: 'PENDING_SETTLEMENT' }).amountDisplay,
-    '待定')
+    '¥0.00')
   assert.equal(ledger.batchRow({ amountTotal: null, displayState: 'PENDING_SETTLEMENT' }).amountDisplay,
-    '待定')
+    '¥0.00')
 })
 
 test('结算身份重验与断网时保留旧金额，但全程显式标记 stale 状态', () => {
@@ -516,7 +516,7 @@ test('结算概览未知净额不得被描述成已净入账', () => {
   ;[null, undefined, '', 'bad'].forEach((value) => {
     const overview = ledger.overviewRow({ personalArrivedThisMonthNet: value })
     assert.equal(overview.netLabel, '状态待定')
-    assert.equal(overview.personalNetDisplay, '待定')
+    assert.equal(overview.personalNetDisplay, '¥0.00', 'F14a:金额写 0;「状态待定」是状态文字,保留')
   })
   assert.equal(ledger.overviewRow({ personalArrivedThisMonthNet: -2 }).netLabel, '净调整')
   assert.equal(ledger.overviewRow({ personalArrivedThisMonthNet: 2 }).netLabel, '净入账')
@@ -724,7 +724,7 @@ test('客户换搜索条件后不在新条件下展示上一查询的姓名和�
   assert.equal(requests[0].url, '/api/merchant/crm/customers/list')
 })
 
-test('负控：恢复整页互斥错误或把未知金额写成零时必须判红', () => {
+test('负控：恢复整页互斥错误或把缺字段金额写回「待定」时必须判红', () => {
   const ai = read('pages/merchant/marketing/ai-insight/index.wxml')
   const customer = read('pages/merchant/customer/index.wxml')
   const ledger = read('pages/merchant/ledger/index.wxml')
@@ -736,10 +736,11 @@ test('负控：恢复整页互斥错误或把未知金额写成零时必须判�
 
   const page = loadPage('pages/merchant/ledger/index.js')
   const mutant = Object.assign({}, page, {
-    entryRow(row) { return { amountDisplay: `¥${Number(row.signedAmount || 0).toFixed(2)}` } },
+    entryRow(row) { return { amountDisplay: row.signedAmount == null ? '待定' : `¥${Number(row.signedAmount).toFixed(2)}` } },
   })
-  assert.notEqual(mutant.entryRow({ signedAmount: null }).amountDisplay, '待定',
-    '负控必须能制造未知金额冒充 ¥0')
+  assert.notEqual(mutant.entryRow({ signedAmount: null }).amountDisplay,
+    page.entryRow({ signedAmount: null, occurredAt: '' }).amountDisplay,
+    '负控必须能区分把缺字段金额写回「待定」与 F14a 的 ¥0.00 口径')
 
   const fabricatedAi = ai.replace(/factState\s*===\s*'unknown'/g, "factState === 'empty'")
   assert.throws(() => assertSecondaryStateMarkup(fabricatedAi, customer, ledger), /区分事实未知/)

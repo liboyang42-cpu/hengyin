@@ -355,11 +355,29 @@ class ApiPlayGpsGeofenceValidationTest
     @Test
     void startBeyondThreeHundredMetresIsRejectedWithBusinessMessage()
     {
-        AjaxResult result = arrive(NODE_LNG, "31.23312");   // ≈ 302m
+        AjaxResult result = arrive(NODE_LNG, "31.2334");    // ≈ 334m,精度 15m 只能抵 15m
 
         assertNotEquals(200, result.get("code"));
         assertEquals("ARRIVE_TOO_FAR", result.get("errorCode"));
         assertEquals("离起点太远，请到起点 300 米内再开始", result.get("msg"));
+        verifyNoProgressAndNoReward();
+    }
+
+    /** F08 v2:定位差(精度 150m)时开局最远放宽到 300+150;再远仍拒。 */
+    @Test
+    void startRelaxesWithPoorAccuracyButStaysBounded()
+    {
+        assertEquals(200, BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE),
+                NODE_LNG, "31.23418", null, null, null, "150").get("code"));   // ≈ 420m
+        verify(pointsAwardService).award(PLAYER, 12L, NODE, "节点打卡");
+    }
+
+    @Test
+    void startStillRejectedBeyondRelaxedRadius()
+    {
+        AjaxResult result = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE),
+                NODE_LNG, "31.23454", null, null, null, "150");                // ≈ 460m
+        assertEquals("ARRIVE_TOO_FAR", result.get("errorCode"));
         verifyNoProgressAndNoReward();
     }
 
@@ -545,10 +563,10 @@ class ApiPlayGpsGeofenceValidationTest
     @Test
     void accuracyAboveLimitIsRejectedBeforeDistanceCheckWithoutProgressOrReward()
     {
-        AjaxResult result = arriveWithAccuracy("81");
+        AjaxResult result = arriveWithAccuracy("201");   // F08 v2:开局精度上限 200 米
 
         assertNotEquals(200, result.get("code"));
-        assertEquals("定位精度不足，请到开阔处或扫码完成", result.get("msg"));
+        assertEquals("定位不准，再试一次", result.get("msg"));
         verifyNoProgressAndNoReward();
     }
 
@@ -604,7 +622,8 @@ class ApiPlayGpsGeofenceValidationTest
     @Test
     void freeCollectStoreProofWithoutCheckinCannotCreateArrivalOrCompletion() {
         freeCollectStation(4, false, true);
-        assertEquals("请扫店内的码", arrive(null, null).get("msg"));
+        // F08:实体店不再只认扫码;未到店时 /arrive 走「我已到店」定位判定,没带定位就拒,不写到店也不完成。
+        assertEquals("ARRIVE_LOCATION_MISSING", arrive(null, null).get("errorCode"));
         verifyNoProgressAndNoReward();
         verify(fixture(IShopDayProofService.class, "shopDayProofService"), never()).markArrived(anyLong(), anyLong(), any());
     }
@@ -613,9 +632,89 @@ class ApiPlayGpsGeofenceValidationTest
     void freeCollectStoreOrdinaryArrivalCannotUseASolvedGameAsStationProof() {
         var advanced = freeCollectStation(0, true, true);
         when(advanced.solvedForArrival(PLAYER, ACTIVITY, TOPIC, NODE)).thenReturn(true);
-        assertEquals("请扫店内的码", arrive(NODE_LNG, NODE_LAT).get("msg"));
+        // 已到店再点「我已到店」:幂等回执,解开的玩法不当到站凭证、不发分不完成。
+        assertEquals("已到店", arrive(NODE_LNG, NODE_LAT).get("msg"));
         verify(advanced, never()).hasStationGameProof(anyLong(), anyLong(), anyLong(), anyLong());
         verifyNoProgressAndNoReward();
+    }
+
+    // ---- F08 3.2 / FE-STORY 5.2:自由探索 300 米内点「我已到店」 ----
+    // 纬度 0.00255° ≈ 284m,0.00279° ≈ 310m,0.00432° ≈ 480m(1° ≈ 111.2km)
+
+    private PlayerNodeProgress stubStoreArrival() {
+        PlayerNodeProgress row = new PlayerNodeProgress();
+        row.setId(9100L); row.setMemberId(PLAYER); row.setActivityId(ACTIVITY); row.setTopicId(TOPIC);
+        row.setNodeId(NODE); row.setPlayInstanceId("run-1"); row.setCheckinTime(new Date());
+        when(fixture(IShopDayProofService.class, "shopDayProofService").markArrived(eq(PLAYER), eq(ACTIVITY), any()))
+                .thenReturn(row);
+        // 到店即开始使用这张票(与扫码同一个首次使用时间)
+        when(fixture(com.chengyinhub.business.mapper.CmsRegistrationMapper.class, "cmsRegistrationMapper")
+                .markFirstSuccessfulScan(any(), any(), any(), any(), any())).thenReturn(1);
+        return row;
+    }
+
+    private AjaxResult storeTap(String latitude, String accuracy) {
+        return BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE),
+                NODE_LNG, latitude, null, null, null, accuracy);
+    }
+
+    @Test
+    void freeCollectStoreTapWithinThreeHundredMetresRecordsGeoTapArrivalAndVisit() {
+        freeCollectStation(0, false, false);
+        PlayerNodeProgress row = stubStoreArrival();
+        IShopDayProofService proof = fixture(IShopDayProofService.class, "shopDayProofService");
+
+        AjaxResult result = storeTap("31.23295", "5");
+
+        assertEquals(200, result.get("code"));
+        assertEquals("已到店", result.get("msg"));
+        verify(proof).recordArrivalSource(row, com.chengyinhub.business.service.support.ArrivalSource.GEO_TAP);
+        verify(proof).markVisited(eq(row), any(), eq(com.chengyinhub.business.service.support.FreeExploreVisit.METHOD_GPS),
+                eq(NODE_LNG), eq("31.23295"));
+        verifyNoProgressAndNoReward();
+    }
+
+    @Test
+    void freeCollectStoreTapBeyondRadiusIsRejectedWithDistance() {
+        freeCollectStation(0, false, false);
+        AjaxResult result = storeTap("31.23319", "5");
+
+        assertEquals("ARRIVE_TOO_FAR", result.get("errorCode"));
+        assertEquals(310L, result.get("distanceMeters"));
+        assertEquals("离这里还有约 310 米", result.get("msg"));
+        verify(fixture(IShopDayProofService.class, "shopDayProofService"), never()).markArrived(anyLong(), anyLong(), any());
+        verifyNoProgressAndNoReward();
+    }
+
+    @Test
+    void freeCollectStoreTapUsesConfiguredRadiusUpToFiveHundredMetres() {
+        freeCollectStation(0, false, false);
+        stubStoreArrival();
+        when(fixture(IShopDayProofService.class, "shopDayProofService").visitConfig(NODE))
+                .thenReturn(new com.chengyinhub.business.domain.FreeExploreVisitConfig(NODE, 0, 500));
+
+        assertEquals(200, storeTap("31.23472", "5").get("code"));
+    }
+
+    @Test
+    void freeCollectStoreConfiguredForScanRejectsLocation() {
+        freeCollectStation(0, false, false);
+        when(fixture(IShopDayProofService.class, "shopDayProofService").visitConfig(NODE))
+                .thenReturn(new com.chengyinhub.business.domain.FreeExploreVisitConfig(NODE, 1, null));
+
+        AjaxResult result = storeTap(NODE_LAT, "5");
+
+        assertEquals("VISIT_SCAN_REQUIRED", result.get("errorCode"));
+        verify(fixture(IShopDayProofService.class, "shopDayProofService"), never()).markArrived(anyLong(), anyLong(), any());
+    }
+
+    @Test
+    void freeCollectStoreTapWithPoorAccuracyAsksToRetry() {
+        freeCollectStation(0, false, false);
+        AjaxResult result = storeTap(NODE_LAT, "250");
+
+        assertEquals("ARRIVE_ACCURACY_LOW", result.get("errorCode"));
+        assertEquals("定位不准，再试一次", result.get("msg"));
     }
 
     @Test

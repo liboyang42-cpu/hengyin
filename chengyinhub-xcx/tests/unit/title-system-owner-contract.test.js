@@ -98,8 +98,6 @@ const EXPECTED_NAV_ROUTES = [
   'pages/team/detail/index', 'pages/team/join/index',
   // 2026-09-19 +1:批复1-a=2 partner 页复活(cy-nav-bar 出标题,无 cy-page-title)。
   'pages/topic/pricing/partner/index',
-  'pages/topic/catalog/detail',
-  'pages/topic/catalog/index',
   'pages/topic/pricing/index',
   'pages/play/circle/index',
   'pages/merchant/apply/index', 'pages/merchant/ledger/index', 'pages/merchant/ledger/order-detail/index', 'pages/merchant/ledger/batch-detail/index', 'pages/merchant/profile/index',
@@ -372,9 +370,10 @@ function assertTitleInventory(readSource = read) {
   // 2026-11-11 l-icons +1(custom 导航):通行证钥匙开场 subpackagePass/reveal ⇒ 171;custom 170。
   // 2026-11-12 club-payout-binding +1(custom 导航):个人收款 pages/club/payout-receiver ⇒ 172;custom 171。
   // 2026-11-14 free-explore-1114 +1(custom 导航):商家套票预约 pages/merchant/bundle-reservations ⇒ 174;custom 173。
-  assert.equal(rows.length, 174, '注册页面盘点数量发生漂移,需重新核对标题规范')
+  // 2026-11-18 F14c(PG-025)−1:合集详情 catalog/detail 下线;catalog/index 只留无内容的重定向页(custom 导航,无 cy-nav-bar)⇒ 173;custom 172。
+  assert.equal(rows.length, 173, '注册页面盘点数量发生漂移,需重新核对标题规范')
   // 2026-11-13 pass-mini +1(custom 导航):通行证订单详情 market/pass-order ⇒ 173;custom 172。
-  assert.equal(rows.filter((row) => row.custom).length, 173)
+  assert.equal(rows.filter((row) => row.custom).length, 172)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
   //   均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 = 133；custom 导航 129 + 2 = 131。
   const knownRoutes = new Set(routes)

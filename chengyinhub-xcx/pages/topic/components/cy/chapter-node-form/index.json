@@ -5,6 +5,7 @@
     "cy-btn": "/components/cy/btn/index",
     "cy-dropdown": "/components/cy/dropdown/index",
     "cy-icon": "/components/cy/icon/index",
+    "cy-switch": "/components/cy/switch/index",
     "cy-inline-error": "/components/cy/inline-error/index"
   }
 }

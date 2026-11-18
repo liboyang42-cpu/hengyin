@@ -115,7 +115,8 @@ class P0FreeExploreSupplyRecoveryMySqlIT {
         MIGRATIONS.put("cms_topic_node", List.of("migration_node_unlock_after_20260820.sql"));
         MIGRATIONS.put("merchant_chapter_offer", List.of(
                 "migration_20261003_merchant_offer_withdrawal_columns.sql",
-                "migration_club_direct_merchant_receivable_20261004.sql"));
+                "migration_club_direct_merchant_receivable_20261004.sql",
+                "migration_20261118_family_ticket.sql"));
         MIGRATIONS.put("merchant_chapter_application", List.of(
                 "migration_20261003_merchant_offer_withdrawal_columns.sql",
                 "migration_20261024_d_chapter_application_round.sql"));

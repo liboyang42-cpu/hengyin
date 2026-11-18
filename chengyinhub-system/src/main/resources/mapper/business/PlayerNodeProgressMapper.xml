@@ -257,4 +257,21 @@
          limit 1
     </select>
 
+    <update id="updateArrivalSource">
+        update player_node_progress set arrival_source = #{arrivalSource}
+         where id = #{id} and arrival_source is null
+    </update>
+
+    <update id="markVisited">
+        update player_node_progress
+           set visit_time = coalesce(visit_time, #{visitTime}),
+               visit_method = coalesce(visit_method, #{visitMethod}),
+               longitude = coalesce(longitude, #{longitude}),
+               latitude = coalesce(latitude, #{latitude})
+         where member_id = #{memberId} and activity_id = #{activityId} and topic_id = #{topicId}
+           and play_instance_id = #{playInstanceId} and del_flag = 0 and checkin_time is not null
+           and node_id in
+           <foreach collection="nodeIds" item="nodeId" open="(" separator="," close=")">#{nodeId}</foreach>
+    </update>
+
 </mapper>

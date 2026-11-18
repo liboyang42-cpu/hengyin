@@ -3,6 +3,11 @@
   "generatedAt": "2026-08-19",
   "exemptions": [
     {
+      "pagePath": "pages/topic/catalog/index",
+      "reason": "F14c(PG-025 业主定下线):城市合集两页已下线,本页只留旧分享卡重定向壳 —— onLoad 第一句就 redirectTo 主题页或 reLaunch 首页,wxml 只有一个空的 theme-dark view,没有可截的界面。原矩阵行 F301/F302 随页面一并删除。",
+      "altVerification": "tests/unit/qx-b8-public-catalog.test.js(锁住带 id 进主题页、其余回首页,以及旧 catalog/detail 分享卡经 onPageNotFound 转到主题页)。"
+    },
+    {
       "pagePath": "pages/publish/topicadd/topicadd",
       "reason": "页面已退役:PR #685 把它降级成纯重定向壳,wxml 只剩一行注释,没有任何可截的界面。原矩阵行 B47/E22 的 DOM 断言 .topicadd-page 这个 class 也随之不存在 —— 硬补拍等于连断言一起造假。",
       "altVerification": "tests/unit/topicadd-shell-redirect-contract.test.js(锁住「转跳到哪」),职责已并入 pages/publish/fabu 第一屏的名称输入框与模式切换器,那两处由 E17 拍到。"

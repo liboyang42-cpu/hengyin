@@ -25,7 +25,28 @@
       <view class="qa__lead" wx:if="{{lead && mode !== 'shot'}}">{{lead}}</view>
 
       <!-- ① 打字作答 -->
-      <block wx:if="{{mode === 'type'}}">
+      <!-- ①′ 字符池(F03,服务端给了 letterPool):空格在上、候选字在下(每行 7 个,用掉的置灰);点字填进第一个空格,点已填的格退回 -->
+      <block wx:if="{{mode === 'type' && poolOn}}">
+        <view class="lp__slots" aria-role="group" aria-label="答案格，点已填的格子把字退回">
+          <view wx:for="{{poolCells}}" wx:key="i"
+                class="lp__slot {{item.next ? 'is-next' : ''}} {{typeWrong ? 'is-wrong' : ''}} {{passed ? 'is-ok' : ''}}"
+                data-i="{{item.i}}" bindtap="onPoolSlot"
+                aria-role="{{item.tap && !passed && !finished ? 'button' : 'text'}}"
+                aria-label="第 {{item.i + 1}} 格{{item.ch ? '：' + item.ch : '：空'}}{{item.tap && !passed && !finished ? '，点一下退回' : ''}}"
+                hover-class="{{item.tap && !passed && !finished ? 'lp__press' : ''}}" hover-stay-time="80">{{item.ch}}</view>
+        </view>
+        <view class="lp__grid" wx:if="{{!passed && !finished}}" aria-role="group" aria-label="候选字">
+          <view wx:for="{{poolRows}}" wx:for-item="row" wx:key="r" class="lp__row">
+            <view wx:for="{{row.keys}}" wx:key="k" class="lp__key {{item.used ? 'is-used' : ''}}"
+                  data-k="{{item.k}}" bindtap="onPickPool"
+                  aria-role="button" aria-label="候选字 {{item.ch}}{{item.used ? '，已用' : ''}}" aria-disabled="{{item.used}}"
+                  hover-class="{{item.used ? '' : 'lp__press'}}" hover-stay-time="80">{{item.ch}}</view>
+          </view>
+        </view>
+        <view class="lp__clear {{poolCanClear ? '' : 'is-off'}}" wx:if="{{!passed && !finished}}" bindtap="onClearPool"
+              aria-role="button" aria-label="清空" aria-disabled="{{!poolCanClear}}" hover-class="{{poolCanClear ? 'lp__press' : ''}}" hover-stay-time="80">清空</view>
+      </block>
+      <block wx:elif="{{mode === 'type'}}">
         <input class="qa__input {{typeWrong ? 'qa__input--wrong' : ''}}" value="{{typed}}" bindinput="onInput" confirm-type="done"
                disabled="{{passed || finished}}" focus="{{typeWrong && selectAll > 0}}"
                selection-start="{{typeWrong && selectAll > 0 ? 0 : -1}}" selection-end="{{typeWrong && selectAll > 0 ? selectAll : -1}}"

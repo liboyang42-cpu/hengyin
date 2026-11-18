@@ -131,7 +131,9 @@ class FreeSelfPlayCreateRealDbIT {
                     "migration_merchant_category_ids_20261022.sql",
                     "migration_merchant_wechat_qrcode_20261022.sql",
                     "migration_20261105_chapter_video.sql",
-                    "migration_20261112_chapter_reward.sql"}) {
+                    "migration_20261112_chapter_reward.sql",
+                    // F12 亲子票:票种/供给/订单的新列,OmsTicketMapper 与 MerchantChapterOfferMapper 的投影已读
+                    "migration_20261118_family_ticket.sql"}) {
                 java.io.File migration = new java.io.File("sql/" + name);
                 if (!migration.exists()) {
                     // surefire 工作目录是模块目录时走 ../;两种都认,别再犯 ExploreItDatabase 被 cwd 咬的错。
