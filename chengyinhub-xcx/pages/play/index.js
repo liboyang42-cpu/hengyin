@@ -43,7 +43,8 @@ const { createPlayTrail } = require('./utils/play-trail.js');
 const teamTrailKit = require('./utils/team-trail.js');
 const routeCard = require('./utils/route-card.js'); const routeCardMap = require('./utils/route-card-map.js');
 const playAccuracy = require('./utils/play-accuracy.js');       // 到达定位精度阈值(80m)与提示
-const { ARRIVAL_RADIUS_METERS, ARRIVAL_START_RADIUS_METERS, ARRIVAL_START_RADIUS_TEXT } = require('./utils/arrival-radius.js'); // 开局校验 300m(与后端 ArrivalPolicy.START_RADIUS_METERS 同值);50m 仅作靠近自动点亮的提示半径
+const arrivalPolicy = require('./utils/arrival-radius.js'); const { ARRIVAL_RADIUS_METERS, ARRIVAL_START_RADIUS_TEXT } = arrivalPolicy; // 到达判定 v2 合同(开局 300m,精度放宽至多 200m);50m 只点亮「我已到达」,不自动到达
+const START_ACCURACY_LOW_TEXT = '定位不准，再试一次';
 const {
   normalizePlayerProjection,
   buildPlayerChoiceInput,
@@ -504,7 +505,7 @@ Page({
     mode: 1, serverMode: 1, modeLabel: '城市定向',
     routeNotice: '', routeRefreshing: false, journeyAttributes: [],
     screen: '',                 // '' | intro | gameLaunch | gamePlay
-    gpsOk: false, gpsLowAcc: false, gpsHint: '开始后可开启定位，也可扫码到达',
+    gpsOk: false, gpsLowAcc: false, gpsHint: '开始后可开启定位，也可扫码到达', nearNodeId: null,
     // 底部运行栈三态(Figma 3957:12602 / 3962:14212 / 3962:14341)。
     // idle = 进了地图但还没按「开始」;running / paused 跟着 _sessionClock 走,不另存一份真值。
     runState: 'idle',
@@ -5209,7 +5210,7 @@ Page({
             if (!current()) return;
             that._loc = arrivalReading.stamp({ longitude: loc.longitude, latitude: loc.latitude, accuracy: loc.accuracy });
             that._locationRequesting = false;
-            that.setData({ gpsOk: true, gpsHint: Number(that.data.mode) === 1 ? '定位已开启 · 仅开局核验，后续各站无需定位' : '定位已开启 · 靠近后会自动点亮' }, () => {
+            that.setData({ gpsOk: true, gpsHint: Number(that.data.mode) === 1 ? '定位已开启 · 仅开局核验，后续各站无需定位' : '定位已开启' }, () => {
               if (!current()) return;
               that._noteLocAccuracy(loc.accuracy);
               that.rebuild();
@@ -5228,7 +5229,7 @@ Page({
     const low = playAccuracy.isLowAccuracy(accuracy);
     if (low === !!this.data.gpsLowAcc) return;
     if (low) this.setData({ gpsLowAcc: true, gpsHint: playAccuracy.LOW_ACCURACY_HINT });
-    else this.setData({ gpsLowAcc: false, gpsHint: Number(this.data.mode) === 1 ? '定位已开启 · 仅开局核验，后续各站无需定位' : '定位已开启 · 靠近后会自动点亮' });
+    else this.setData({ gpsLowAcc: false, gpsHint: Number(this.data.mode) === 1 ? '定位已开启 · 仅开局核验，后续各站无需定位' : '定位已开启' });
   },
   /* 第九轮 m2 第 1 项:我走过的路(亮线 + 光晕),只在地图露出、页面在前台时推给地图 */
   _playTrail() {
@@ -5415,7 +5416,11 @@ Page({
                (2026-10-30 复核:霍山公园连线被 GPS 到达直接跳过;服务端同样以 ADVANCED_FIRST 拒)。 */
             const arrivesHere = ((node.vm === 0 || node.vm === 5) && (!node.hasAdvanced || that._advancedReadyNodeId === node.nodeId || that._questAwaitsArrival(node.nodeId)))
               || ([8, 9, 10].includes(node.vm) && that._advancedReadyNodeId === node.nodeId);
-            if (d <= ARRIVAL_RADIUS_METERS && !node.done && arrivesHere && playAccuracy.canAutoArrive(loc.accuracy)) { that.arrive(node.nodeId, 'gps'); break; }
+            // F08:50 米内只点亮「我已到达」,不自动到达 —— 到达必须由玩家自己点
+            if (d <= ARRIVAL_RADIUS_METERS && !node.done && arrivesHere && playAccuracy.canAutoArrive(loc.accuracy)) {
+              if (that.data.nearNodeId !== node.nodeId) that.setData({ nearNodeId: node.nodeId });
+              break;
+            }
           }
           }
         };
@@ -7441,9 +7446,10 @@ Page({
   diegetic(msg) { cyToast(msg); },
   /** 开局太远:不是一闪而过的 toast,而是停住的弹窗 + 「重新定位」重试(数字不断行) */
   _startRefusal(message, retry) {
-    const text = keepMeasure(message || ('离起点太远，请到起点 ' + ARRIVAL_START_RADIUS_TEXT + '内再开始'));
+    const lowAccuracy = message === START_ACCURACY_LOW_TEXT;
+    const text = lowAccuracy ? '' : keepMeasure(message || ('离起点太远，请到起点 ' + ARRIVAL_START_RADIUS_TEXT + '内再开始'));
     const session = this._sessionKey();
-    cyModal.show({ title: '还没到起点', content: text, confirmText: this._playLocationDeclined ? '开启定位' : '重新定位', cancelText: '知道了',
+    cyModal.show({ title: lowAccuracy ? START_ACCURACY_LOW_TEXT : '还没到起点', content: text, confirmText: this._playLocationDeclined ? '开启定位' : '重新定位', cancelText: '知道了',
       success: (result) => {
         if (!result.confirm || !this._isPlayAccountCurrent() || session !== this._sessionKey()) return;
         if (this._playLocationDeclined) { this._setPendingStart(retry); this.onEnableLocation(); return; }
@@ -7462,7 +7468,10 @@ Page({
     if (!node || Number(this.data.mode) !== 1 || this.data.isPreview || this.data.isMock || !this._loc
       || !node.lat || !node.lng || !this._startLocationNeeded()) return '';
     const dist = this.haversine(this._loc.latitude, this._loc.longitude, node.lat, node.lng);
-    return dist > ARRIVAL_START_RADIUS_METERS ? '离起点太远，请到起点 ' + ARRIVAL_START_RADIUS_TEXT + '内再开始' : '';
+    // v2 合同(docs/contracts/arrival-policy.v2.json):精度差时最多放宽 200 米;精度超过 200 米先请玩家重新定位
+    const verdict = arrivalPolicy.startVerdict(dist, this._loc.accuracy);
+    if (verdict === arrivalPolicy.ACCURACY_LOW) return START_ACCURACY_LOW_TEXT;
+    return verdict === arrivalPolicy.PASS ? '' : '离起点太远，请到起点 ' + ARRIVAL_START_RADIUS_TEXT + '内再开始';
   },
   /** §27.3:真实到达成功回执里的读数,按本人+本局+节点只记一次;同回执重读、重试不再追加。 */
   _noteArrivalReading(nodeId, raw) {

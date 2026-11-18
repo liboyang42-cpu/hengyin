@@ -29,14 +29,17 @@ function checkArrivalAccuracy(source) {
       const node = { nodeId: 12, lat: 31, lng: 121, vm, hasAdvanced: advanced, done: false };
       const { page, arrivals } = locationHandler(source, node, quest);
       page._playLocationHandler({ latitude: 31, longitude: 121, accuracy });
-      assert.equal(arrivals.length, A.canAutoArrive(accuracy) && (!advanced || quest) ? 1 : 0);
+      // F08:50 米内只点亮「我已到达」,永远不自动到达
+      assert.equal(arrivals.length, 0);
+      assert.equal(page.data.nearNodeId === 12, A.canAutoArrive(accuracy) && (!advanced || quest));
       assert.equal(page._loc.accuracy, accuracy, 'carry the raw measured accuracy into arrival');
     }
     for (const vm of [1, 2, 3, 4, 8, 9, 10]) for (const ready of [false, true]) {
       const node = { nodeId: 12, lat: 31, lng: 121, vm, hasAdvanced: true, done: false };
       const { page, arrivals } = locationHandler(source, node, false, ready);
       page._playLocationHandler({ latitude: 31, longitude: 121, accuracy });
-      assert.equal(arrivals.length, A.canAutoArrive(accuracy) && vm >= 8 && ready ? 1 : 0);
+      assert.equal(arrivals.length, 0);
+      assert.equal(page.data.nearNodeId === 12, A.canAutoArrive(accuracy) && vm >= 8 && ready);
     }
   }
 }
@@ -84,7 +87,7 @@ test('精度阈值 80m:>80 不足,=80/缺失/非法放行', () => {
   assert.equal(A.LOW_ACCURACY_HINT, '定位精度不足 · 可扫码完成');
 });
 
-test('O-01 删空精度放行:自动到达只在精度已知且 ≤80m 时发(缺失/非法后端必拒 ARRIVE_ACCURACY_MISSING/INVALID)', () => {
+test('O-01 删空精度放行:靠近点亮只在精度已知且 ≤80m 时出,且不自动到达(缺失/非法后端必拒 ARRIVE_ACCURACY_MISSING/INVALID)', () => {
   assert.equal(A.canAutoArrive(0), true);
   assert.equal(A.canAutoArrive(80), true);
   assert.equal(A.canAutoArrive(80.1), false);

@@ -1096,7 +1096,7 @@
     <block wx:else>
       <view class="{{mode!=2 ? 'sheet-row' : ''}}"><view class="lk-btn lk-btn--ghost" wx:if="{{mode!=2 && sheet.node.lat && sheet.node.lng}}" bindtap="sheetNav" aria-role="button" aria-label="导航到{{sheet.node.name}}" hover-class="cy-pressed" hover-stay-time="80">导航</view>
       <cy-btn wx:if="{{mode!=2 && guardAppealView && guardAppealView.reference.nodeId == sheet.node.nodeId && guardAppealView.state === 'FOUND' && guardAppealView.result.canReverify}}" variant="primary" style="margin-top:var(--cy-space-3-5)" bindtap="reverifyGuardArrival">我已到达此站</cy-btn>
-      <cy-btn wx:elif="{{mode!=2 && sheet.node.lat && !gpsOk && !isPreview && locAsked}}" variant="primary" style="margin-top:var(--cy-space-3-5)" bindtap="onScanArrive">扫码到达</cy-btn><cy-btn wx:else variant="primary" style="margin-top:var(--cy-space-3-5)" bindtap="onSheetGoTap">{{mode==2 ? '去这家' : (!sheet.node.lat ? '开始' : (gpsOk ? '到了' : '开启定位'))}}</cy-btn></view>
+      <cy-btn wx:elif="{{mode!=2 && sheet.node.lat && !gpsOk && !isPreview && locAsked}}" variant="primary" style="margin-top:var(--cy-space-3-5)" bindtap="onScanArrive">扫码到达</cy-btn><cy-btn wx:else variant="primary" class="{{mode!=2 && nearNodeId == sheet.node.nodeId ? 'sheet-go--near' : ''}}" style="margin-top:var(--cy-space-3-5)" bindtap="onSheetGoTap">{{mode==2 ? '去这家' : (!sheet.node.lat ? '开始' : '我已到达')}}</cy-btn></view>
       <!-- 文档二 L5 B T-34 / X8:到站被拦 —— 同一行一句话 + 一个动作 -->
       <block wx:if="{{mode!=2 && guardAppealView && guardAppealView.reference.nodeId == sheet.node.nodeId && guardAppealView.command}}">
         <view class="sheet-note" wx:if="{{guardAppealView.state === 'FOUND' && guardAppealView.result.canReverify}}">申诉已通过，请在本节点重新确认到达</view>
