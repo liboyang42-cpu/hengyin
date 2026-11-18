@@ -2530,7 +2530,7 @@ Page({
     return {
       nodeId: node.nodeId,
       chapterId: node.chapterId, isMerchant: Number(node.merchantId) > 0,
-      name: node.name, imgUrl: String(node.imgUrl || '').split(',')[0], done: !!node.done,
+      name: node.name, imgUrl: String(node.imgUrl || '').split(',')[0], imgHidden: !!node.imgHidden, done: !!node.done,
       entryDisabled: this._heroEntryDisabled(node),
       // ① 章节
       chapMeta: chap ? ('本章 · ' + (chap.meta || '')) : '',
@@ -4671,6 +4671,7 @@ Page({
       // 第十一轮 i1(j3 F14):作者没写简介就不写,不替作者编一句「走到这里，留意四周」
       description: n.description || n.question || '',
       imgUrl: n.imgUrl || '',
+      imgHidden: !n.imgUrl && n.imgHidden === true,          // F07:服务端遮掉的后续站照片,展示点改放剪影占位
       businessTime: n.businessTime || '',
       openStatus: n.openStatus || '',                       // S4 服务端营业态三态(营业中/即将打烊/已打烊);空则大卡回退客户端 inBizWindow
       lng: Number(n.longitude) || 0, lat: Number(n.latitude) || 0,
@@ -4775,12 +4776,10 @@ Page({
     }));
   },
 
-  /** 背景封面:章节图优先,没有就退到第一个有图的商家。
-   *  没有兜底时整屏是纯黑 —— 「主题封面 + 玻璃蒙版」这层就静默不存在了。 */
-  _coverOf(chapterCover, nodes) {
-    if (chapterCover) return chapterCover;
-    const withImg = (nodes || []).find((n) => n && n.imgUrl);
-    return withImg ? String(withImg.imgUrl).split(/[,;]/)[0] : '';
+  /** 背景封面:章节图优先,没有就退到主题封面。
+   *  F07:不再拿站点图兜底 —— 后面站点的照片到站前不显示,章节封面不能绕过去把它露出来。 */
+  _coverOf(chapterCover, topicCover) {
+    return chapterCover || String(topicCover || '').split(/[,;]/)[0] || '';
   },
 
   buildChapter(d, nodes) {
@@ -4799,7 +4798,7 @@ Page({
       name: displayChapterName(c.name, 0, d.topicName || '城市探索'),
       // 第十一轮 i1(j3 F14):只放作者自己写的章节简介,没写就不出
       description: c.description || '',
-      cover: this._coverOf(c.imgArr ? String(c.imgArr).split(/[,;]/)[0] : (c.cover || ''), nodes),
+      cover: this._coverOf(c.imgArr ? String(c.imgArr).split(/[,;]/)[0] : (c.cover || ''), d.topicCover),
       mileage: c.totalMileage ? (c.totalMileage + 'km') : '',
       timeText: c.totalTime ? Math.round(c.totalTime / 60) + ' 分钟' : '',
       atmospherePreset: normalizeAtmosphere(this._themePalette(c.atmospherePreset)),
@@ -4912,6 +4911,7 @@ Page({
         return [titled ? '' : c.meta, c.title].filter(Boolean).join(' · ');
       })(),
       imgUrl: String(x.imgUrl || '').split(',')[0],
+      imgHidden: !!x.imgHidden,
       playName: x.gameTitle || '',
       locked: !!x.locked,
       // ⚠️ normNode() 产的是 businessTime/openStatus,**从来不产 openText** ——
@@ -5012,8 +5012,6 @@ Page({
     if (this._chapterReadCursor && history) {
       card = history.chapters.find(chapter => chapter.id === String(card.id)) || card;
     }
-    const coverNodes = !this._chapterReadCursor && !card.history && card.id != null
-      ? this.data.nodes.filter(node => String(node.chapterId) === String(card.id)) : [];
     return {
       id: card.id,
       complete: card.history === true || chapterTrail.chapterReadState(card, this.data.nodes, this._historyNodes) === 'completed',
@@ -5021,7 +5019,7 @@ Page({
       idxLabel: card.meta,
       name: card.title,
       description: card.description || card.sub || '',
-      cover: this._coverOf(card.cover || '', coverNodes),
+      cover: this._coverOf(card.cover || '', this.data.topicCover),
       mileage: card.mileage || '',
       timeText: card.timeText || '',
       blocks: card.blocks || null,

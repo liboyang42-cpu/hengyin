@@ -2267,3 +2267,5 @@ page { background: var(--cy-color-bg-page); }
 .gp2__card { box-shadow: var(--cy-depth-rest); }
 /* F08:人在站点 50 米内时点亮「我已到达」(只提示,不自动到达) */
 .sheet-go--near { display: block; border-radius: var(--cy-radius-pill, 999rpx); box-shadow: 0 0 0 6rpx var(--cy-color-play-accent-soft); }
+/* F07:到站前的站点封面换成剪影占位,铺满封面区 */
+.sheet-cover__ss { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }

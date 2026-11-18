@@ -69,7 +69,7 @@ function methods() {
       const tasks = readOnly ? [] : storyTasks(nodes, (this.data.chapter || {}).id, legacy, this._playKitNodeId);
       const show = tasks.some((n) => Number(n.num) >= 100) || tasks.length > 1;
       // a1-v3-15:半屏每行带站点配图 / 地址(服务端节点字段原样),没有就不显示
-      const rows = show ? tasks.map((n, i) => ({ nodeId: n.nodeId, name: n.name || '', no: i + 1, img: n.imgUrl || '', address: n.address || '', desc: String(n.description || n.story || '').slice(0, 80) })) : [];   // l-play:翻页卡上的一句说明(节点字段原样,没有不出)
+      const rows = show ? tasks.map((n, i) => ({ nodeId: n.nodeId, name: n.name || '', no: i + 1, img: n.imgUrl || '', imgHidden: !n.imgUrl && !!n.imgHidden, address: n.address || '', desc: String(n.description || n.story || '').slice(0, 80) })) : [];   // l-play:翻页卡上的一句说明(节点字段原样,没有不出)
       if (rows.length) items.push({ kind: 'tasks', count: rows.length, mood });
       this.setData({ storyTasks: { show: false, rows } });
     },

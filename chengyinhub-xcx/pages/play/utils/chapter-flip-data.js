@@ -16,7 +16,8 @@ function face(card, i, nodes) {
     cover: firstImg(card && card.cover),
     style: STYLES[i % 2],
     label: faceLabel(pad2(i + 1), card && card.title),
-    photos: chapterNodes(nodes, card && card.id).map((n) => firstImg(n.imgUrl)).filter(Boolean).slice(0, 3),
+    // F07:只取本局已到达或已完成的站 —— 后面站点的照片到站前不露
+    photos: chapterNodes(nodes, card && card.id).filter((n) => n.done || n.arrived).map((n) => firstImg(n.imgUrl)).filter(Boolean).slice(0, 3),
   };
 }
 function goldFace(cover, topicName) { return { cover: firstImg(cover), style: 'gold', label: topicName ? '通关 · ' + String(topicName).slice(0, 6) : '通关', photos: [] }; }
