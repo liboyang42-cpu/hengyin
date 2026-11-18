@@ -33,6 +33,12 @@ public final class GameplayOutcomeRules {
         return main != null && !EVIDENCE_STEP.equals(main);
     }
 
+    /** qa 选项题且关闭对错判断:每个选项都算完成。 */
+    static boolean isNoRightAnswerChoice(JsonNode block, String main) {
+        JsonNode qa = block.path("qa");
+        return "qa".equals(main) && "PICK".equals(qa.path("mode").asText()) && qa.has("judge") && !qa.path("judge").asBoolean(true);
+    }
+
     private static List<String> enabledMains(JsonNode block) {
         List<String> mains = new ArrayList<>();
         for (String kit : MAIN_GAMEPLAYS) if (block.path(kit).path("enabled").asBoolean()) mains.add(kit);
@@ -65,7 +71,10 @@ public final class GameplayOutcomeRules {
             fail("须且仅须一个主玩法（拍照可作另一个主玩法之后的证据步），当前开了：" + String.join("、", mains));
         }
         boolean once = Arrays.asList("profile", "album", "note", "dailySign").contains(main);
-        if (once == block.path("outcomeRules").has("fail")) fail(once ? "完成型玩法不配置 fail" : "须配置 fail");
+        // 无对错选择题(qa PICK + judge:false):任何一项都算完成,不会没通过 → 不要求 fail。
+        // 已发布内容(SH01 等)里有的写了 fail「本关没有错误答案」,保留可选、不拒绝,运行期永远不会用到。
+        boolean noRightAnswer = isNoRightAnswerChoice(block, main);
+        if (!noRightAnswer && once == block.path("outcomeRules").has("fail")) fail(once ? "完成型玩法不配置 fail" : "须配置 fail");
         Set<String> steps = new HashSet<>();
         for (JsonNode step : block.path("branch").path("steps")) steps.add(step.path("id").asText());
         final boolean[] costs = {false};

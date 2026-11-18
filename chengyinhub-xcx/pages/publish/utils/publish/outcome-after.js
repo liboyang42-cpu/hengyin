@@ -11,6 +11,8 @@ const mains = config => {
   return list.length === 2 && list.includes(EVIDENCE_STEP) ? list.filter(key => key !== EVIDENCE_STEP) : list;
 };
 const once = config => mains(config).some(key => ONCE.includes(key));
+// 无对错选择题(qa PICK + judge:false):任何一项都算完成,fail 可写可不写(服务端同口径)
+const noRightAnswer = config => mains(config)[0] === 'qa' && config.qa?.mode === 'PICK' && config.qa?.judge === false;
 const empty = () => ({ reply: '', images: [], costs: [], effects: [], next: '' });
 // 成功/失败反馈配图：最多 3 张，与服务端 GameplayOutcomeRules.images 同一口径。
 const IMAGE_MAX = 3;
@@ -70,7 +72,7 @@ function validate(config) {
     ? '配了结果规则的站点还须开一个主玩法（如问答、逐字猜词）；扫码和分支不是主玩法，或去掉结果规则'
     : '配了结果规则的站点须开一个主玩法';
   if (mains(config).length !== 1) return '须且仅须一个主玩法（拍照可作另一个主玩法之后的证据步）';
-  if (!rules.pass || (!once(config) && !rules.fail)) return '请配置通过和没通过之后';
+  if (!rules.pass || (!once(config) && !noRightAnswer(config) && !rules.fail)) return '请配置通过和没通过之后';
   if (once(config) && rules.fail != null) return '完成型玩法只配置完成之后';
   if (config.interactionTools?.plans?.length || config.interactionTools?.votePolicy || config.interactionTools?.decidesEnding) return '投票与结果规则不能同时使用';
   if (rules.fail != null && config.interactionRules?.targetScope === 'PARTICIPANTS') return '没通过之后不能作用于已参与的队伍';

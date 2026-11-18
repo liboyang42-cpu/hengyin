@@ -57,4 +57,19 @@ class GameplayOutcomeMainKitTest {
         assertTrue(refused.getMessage().contains("分支不是主玩法"), refused.getMessage());
         assertTrue(refused.getMessage().contains("问答"), "告诉作者怎么改");
     }
+
+    /** SH04 实测:无对错选择题没写 fail 也能保存/开局;写了 fail(SH01 已有内容)同样接受;判对错的选项题仍须 fail。 */
+    @Test
+    void noRightAnswerChoiceDoesNotRequireFail() throws Exception {
+        String pick = "\"qa\":{\"enabled\":true,\"mode\":\"PICK\",\"judge\":false,\"title\":\"示例站点\","
+                + "\"options\":[{\"id\":\"A\",\"label\":\"甲\"},{\"id\":\"B\",\"label\":\"乙\"}]}";
+        JsonNode passOnly = block(pick + ",\"outcomeRules\":{\"version\":1,\"pass\":{\"reply\":\"继续\"}}");
+        assertDoesNotThrow(() -> validator.validateAndNormalize(passOnly.toString()));
+        JsonNode withFail = block(pick + "," + RULES);
+        assertDoesNotThrow(() -> validator.validateAndNormalize(withFail.toString()));
+        JsonNode judged = block(pick.replace("\"judge\":false,", "").replace("\"label\":\"甲\"", "\"label\":\"甲\",\"correct\":true")
+                + ",\"outcomeRules\":{\"version\":1,\"pass\":{\"reply\":\"继续\"}}");
+        IllegalArgumentException refused = assertThrows(IllegalArgumentException.class, () -> GameplayOutcomeRules.validateBlock(judged));
+        assertTrue(refused.getMessage().contains("须配置 fail"));
+    }
 }
