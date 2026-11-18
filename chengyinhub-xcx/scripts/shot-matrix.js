@@ -689,11 +689,12 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-11-09 qx-a4 V3-42:时光胶囊页先删,F97 退场:total 350→349、P1 201→200、actionable 326→325(P1 194→193)、F 96→95、setData 184→183;blocked 与已验 fixture 不变。
 // 2026-11-12 club-payout-binding:新增 F315 个人收款页(missing-param 一行),total 366→367、P1 217→218、actionable P1 210→211 / total 342→343、F 112→113、real-data 59→60。
 // 2026-11-13 pass-mini:新增 F316 通行证订单详情页(missing-param 一行),total 367→368、P1 218→219、actionable P1 211→212 / total 343→344、F 113→114、real-data 60→61。
+// 2026-11-18 F14c(PG-025):城市合集两页下线,F301/F302 两行退场:total 369→367、P1 220→218、actionable P1 213→211 / total 345→343、F 114→112、real-data 61→59;catalog/index 重定向壳走 coverage-exemptions。
 const STATS = {
-  "total": 369,
+  "total": 367,
   "byPriority": {
     "P0": 139,
-    "P1": 220,
+    "P1": 218,
     "P2": 10
   },
   "blockedByPriority": {
@@ -703,9 +704,9 @@ const STATS = {
   },
   "actionable": {
     "P0": 130,
-    "P1": 213,
+    "P1": 211,
     "P2": 2,
-    "total": 345
+    "total": 343
   },
   "blocked": 24,
   "domains": {
@@ -714,12 +715,12 @@ const STATS = {
     "C": 57,
     "D": 52,
     "E": 26,
-    "F": 114
+    "F": 112
   },
   "control": {
     "setData": 186,
     "identity+setData": 115,
-    "real-data": 61,
+    "real-data": 59,
     "real-device": 7
   },
   "fixtureVerified": 16

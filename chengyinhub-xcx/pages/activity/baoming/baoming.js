@@ -782,7 +782,11 @@ Page({
           // 确保总金额保留两位小数
           const totalAmount = selectedTicket ? parseFloat(selectedTicket.price.toFixed(2)) : 0;
 
-          that.setData(Object.assign(familyTicket.familyAgeState(selectedTicket), {
+          const familyAge = familyTicket.familyAgeState(selectedTicket);
+          that.setData({
+            childAgeOptions: familyAge.childAgeOptions,
+            childAgeLabels: familyAge.childAgeLabels,
+            childAge: familyAge.childAge,
             activityInfo: activityInfo,
             merchantClosed: activityInfo.merchantClosed === true,
             ticketList: ticketList,
@@ -803,7 +807,7 @@ Page({
             pageState: 'ready',
             everLoaded: true,
             loadErrorMsg: ''
-          }), () => {
+          }, () => {
             // 数据设置完成后重新计算折扣
             that.recalculateDiscount();
             that.loadWaitlistStatus();
@@ -873,7 +877,11 @@ Page({
     if (selected && ticket.id == selected.id) return;
     // 与首次加载同一套状态重置:金额/售罄/候补都跟着新票种走,报价由 recalculateDiscount
     // 末尾的 refreshQuote 重新向服务端要(quoteSign 是绑定 ticketId 的,不能复用旧的)。
-    this.setData(Object.assign(familyTicket.familyAgeState(ticket), {
+    const familyAge = familyTicket.familyAgeState(ticket); // F12:换票种时重置儿童年龄
+    this.setData({
+      childAgeOptions: familyAge.childAgeOptions,
+      childAgeLabels: familyAge.childAgeLabels,
+      childAge: familyAge.childAge,
       selectedTicket: ticket,
       totalAmount: parseFloat(Number(ticket.price).toFixed(2)),
       ticketSoldOut: ticketIsSoldOut(ticket),
@@ -887,7 +895,7 @@ Page({
       waitlistRegistrationId: null,
       waitlistExpiresText: '',
       submitError: '',
-    }), () => {
+    }, () => {
       this.recalculateDiscount();
       this.loadWaitlistStatus();
     });

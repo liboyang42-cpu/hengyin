@@ -669,7 +669,7 @@ test('审核通过后的供给提交只写 offer/enroll，并在成功后重新�
   assert.equal(requests.length, 1);
   assert.equal(requests[0].url, '/api/coop/offer/enroll');
   assert.deepEqual(JSON.parse(requests[0].data), {
-    chapterId: 33, termsMode: 'PERK', perkTemplateId: 7, quotaTotal: 12,
+    chapterId: 33, termsMode: 'PERK', perkTemplateId: 7, quotaTotal: 12, familyAccepted: 0, // F12:没打开就明确不接受亲子票
   });
   requests[0].success({ code: '200' });
   assert.equal(page.data.chapterNodeFormVisible, false);

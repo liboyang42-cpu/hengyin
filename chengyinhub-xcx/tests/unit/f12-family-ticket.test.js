@@ -49,9 +49,9 @@ test('购票:亲子票只选儿童年龄(年龄段内每一岁),没选不下单,
   const js = read('pages/activity/baoming/baoming.js')
   assert.match(js, /if \(familyTicket\.isFamily\(that\.data\.selectedTicket\) && that\.data\.childAge == null\) \{\s*toast\('请选择儿童年龄'\);/)
   assert.match(js, /if \(childAge != null\) data\.childAge = childAge;/)
-  assert.match(js, /this\.setData\(Object\.assign\(familyTicket\.familyAgeState\(ticket\), \{/, '换票种时重置年龄')
+  assert.match(js, /const familyAge = familyTicket\.familyAgeState\(ticket\);[^\n]*\n    this\.setData\(\{\n      childAgeOptions: familyAge\.childAgeOptions,/, '换票种时重置年龄')
   const wxml = read('pages/activity/baoming/baoming.wxml')
-  assert.match(wxml, /<picker wx:if="\{\{childAgeOptions\.length\}\}" mode="selector" range="\{\{childAgeLabels\}\}" bindchange="onChildAgeChange">/)
+  assert.match(wxml, /<cy-dropdown wx:if="\{\{childAgeOptions\.length\}\}" range="\{\{childAgeLabels\}\}" bind:change="onChildAgeChange">/)
   assert.doesNotMatch(wxml, /儿童姓名/)
 })
 
