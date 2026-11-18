@@ -26,6 +26,7 @@ public final class PlayHelpContent {
     public static final String TYPE_DIGIT = "DIGIT";
     public static final String TYPE_ANSWER = PlayHelpUsagePolicy.TYPE_ANSWER;
     public static final String TYPE_SKIP = PlayHelpUsagePolicy.TYPE_SKIP;
+    public static final String TYPE_POOL_TRIM = PlayHelpUsagePolicy.TYPE_POOL_TRIM;
 
     private PlayHelpContent() {
     }
@@ -56,6 +57,9 @@ public final class PlayHelpContent {
                 return answerText(frozenAnswer);
             case TYPE_SKIP:
                 return null;
+            case TYPE_POOL_TRIM:
+                // 去字本身由运行时写进本局状态;这里给玩家看到的一句结果
+                return "已去掉 " + LetterPoolSupport.trimCount(payloadNode) + " 个干扰字";
             default:
                 return null;
         }

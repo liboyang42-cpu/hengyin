@@ -56,6 +56,13 @@ public interface IAdvancedGameRuntimeService {
     Map<String, Object> skip(Long memberId, Long activityId, Long topicId, Long nodeId, String requestId);
 
     /**
+     * F03 POOL_TRIM 提示:在本局状态里记下「第 level 级去掉 count 个干扰字」,之后投影不再下发被去掉的字。
+     * 同一级只记一次(重看同一级不再多去);只改本局状态,不动次数、分数与奖励。
+     * 调用方(提示入口)负责授权与代价;本方法只核验本人本局。
+     */
+    Map<String, Object> trimPool(Long memberId, Long activityId, Long topicId, Long nodeId, int level, int count);
+
+    /**
      * 该节点本局是否已按「跳过·辅助完成」收尾。完成链({@code advanceProgress})据此把
      * 分数固定为 0、完成方式写 {@code SKIPPED}、奖励降为探索值+徽章。只读。
      */

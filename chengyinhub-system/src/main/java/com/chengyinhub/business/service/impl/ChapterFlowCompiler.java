@@ -741,6 +741,8 @@ final class ChapterFlowCompiler
                     if (block.getLevel() != null) row.put("level", block.getLevel());
                     if (!ChapterNarrativeBlocks.isNarrativeBlock(block) && block.getWhen() != null) row.put("when", block.getWhen());
                     if (block.getStyle() != null) row.put("style", block.getStyle());
+                    // 可选阅读只在为 true 时落库:老块的存储形状一字不变
+                    if (Boolean.TRUE.equals(block.getOptional()) && !ChapterNarrativeBlocks.isNarrativeBlock(block)) row.put("optional", true);
                     if (block.getMarks() != null && !block.getMarks().isEmpty())
                     {
                         List<Map<String, Object>> marks = new ArrayList<>();
