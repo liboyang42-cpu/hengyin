@@ -3,6 +3,7 @@
   "enablePullDownRefresh": true,
   "usingComponents": {
     "cy-club-direct-ledger": "/components/cy/club-direct-ledger/index",
+    "cy-fe-reference-settlement": "/components/cy/fe-reference-settlement/index",
     "cy-empty": "/components/cy/empty/index",
     "cy-error": "/components/cy/error/index",
     "cy-icon": "/components/cy/icon/index",

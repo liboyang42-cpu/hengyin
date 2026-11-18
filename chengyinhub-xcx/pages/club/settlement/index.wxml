@@ -7,6 +7,8 @@
   <cy-nav-bar custom-back bind:back="goBack" />
   <cy-page-title title="俱乐部结算" safe-top="{{false}}" />
   <cy-club-direct-ledger class="section" wx:if="{{summary && !summary.personal && clubId}}" kind="club" club-id="{{clubId}}" />
+  <!-- F11:本人作为场次收款人的自由探索参考结算,可「标记已结清」;没有就不摆。 -->
+  <cy-fe-reference-settlement class="section" wx:if="{{summary && clubId}}" kind="payer" />
   <!-- 9-16 晚拍板第 5 条 + 9-17 总控:余额三段只给主理人本人,管理员不显示(isOwner 由 summary 接口判定) -->
   <cy-funds-stages class="section" wx:if="{{summary && (summary.isOwner || summary.personal) && (state === 'ready' || state === 'empty')}}" bind:stages="onStages" />
 

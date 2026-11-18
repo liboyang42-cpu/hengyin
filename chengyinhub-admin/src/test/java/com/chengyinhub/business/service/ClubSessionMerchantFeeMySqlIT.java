@@ -194,6 +194,12 @@ class ClubSessionMerchantFeeMySqlIT {
         ReflectionTestUtils.setField(entries, "settlementClaimService",
                 new SettlementClaimServiceImpl(template.getMapper(SettlementClaimMapper.class)));
         ReflectionTestUtils.setField(activityService, "settlementEntryService", entries);
+        // F11:自由探索场次的计酬只记参考账(fe_reference_settlement),走真实 mapper。
+        com.chengyinhub.business.service.impl.FeReferenceSettlementServiceImpl reference =
+                new com.chengyinhub.business.service.impl.FeReferenceSettlementServiceImpl();
+        ReflectionTestUtils.setField(reference, "mapper",
+                template.getMapper(com.chengyinhub.business.mapper.FeReferenceSettlementMapper.class));
+        ReflectionTestUtils.setField(activityService, "feReferenceSettlementService", reference);
 
         // 第十二轮 k11:结算后退款走真实的 RefundServiceImpl 冲销(真表的分账行、余额、余额流水、欠款)。
         registrationMapper = template.getMapper(CmsRegistrationMapper.class);
@@ -231,7 +237,8 @@ class ClubSessionMerchantFeeMySqlIT {
                 "DROP TABLE IF EXISTS coop_group_verify", "DROP TABLE IF EXISTS settlement_claim",
                 "DROP TABLE IF EXISTS cms_registration_seat", "DROP TABLE IF EXISTS club_lead_checkin",
                 "DROP TABLE IF EXISTS club_event_attendance_correction", "DROP TABLE IF EXISTS player_node_progress");
-        execute("DROP TABLE IF EXISTS redemption", "DROP TABLE IF EXISTS merchant_payable", "DROP TABLE IF EXISTS club_direct_merchant_receivable");
+        execute("DROP TABLE IF EXISTS redemption", "DROP TABLE IF EXISTS merchant_payable", "DROP TABLE IF EXISTS club_direct_merchant_receivable",
+                "DROP TABLE IF EXISTS fe_reference_settlement");
         execute(
                 "CREATE TABLE redemption (id BIGINT PRIMARY KEY AUTO_INCREMENT, registration_id BIGINT, topic_id BIGINT, chapter_id BIGINT,"
                         + " merchant_id BIGINT, offer_id BIGINT, status VARCHAR(16)) ENGINE=InnoDB",
@@ -324,6 +331,8 @@ class ClubSessionMerchantFeeMySqlIT {
         try (Connection connection = dataSource.getConnection()) {
             ScriptUtils.executeSqlScript(connection,
                     new FileSystemResource("sql/migration_complaint_period_funds_gate_20260917.sql"));
+            ScriptUtils.executeSqlScript(connection,
+                    new FileSystemResource("sql/migration_20261118_fe_reference_settlement.sql"));
         }
     }
 
@@ -811,8 +820,9 @@ class ClubSessionMerchantFeeMySqlIT {
         }
     }
 
+    /** F11(FE-G22):自由探索场次的店铺计酬按原口径算完整,只记参考账,不入店铺余额、不扣主理人份额。 */
     @Test
-    void explorationFeesCountEachShopScannedTicketOnceWithoutGroupCodes() throws Exception {
+    void explorationFeesCountEachShopScannedTicketOnceAsOfflineReference() throws Exception {
         seedSession(ACTIVITY, 15);
         for (long id = 74; id <= 76; id++) seedPaid(id, ACTIVITY);
         freezeOrdinaryExplore(ordinaryExplore());
@@ -826,17 +836,24 @@ class ClubSessionMerchantFeeMySqlIT {
         assertMoney("0.00", balance(MERCHANT));
         var estimates = new SqlSessionTemplate(buildFactory(dataSource)).getMapper(SettlementDetailMapper.class)
                 .selectUnsettledFeeEstimates(MERCHANT, null);
-        assertMoney("16.00", estimates.get(0).getAmount());
+        assertTrue(estimates.isEmpty(), "线下结款的参考账不估入店铺钱包「待入账」");
         assertEquals(1, activityService.executeActivitySettlement());
-        assertMoney("16.00", balance(MERCHANT)); assertMoney("5.00", balance(9005L));
-        assertMoney("3.51", balance(PLATFORM)); assertMoney("92.49", balance(PRINCIPAL));
-        assertEquals(3, scalarInt("SELECT COUNT(*) FROM settlement_detail WHERE receiver_type='coop_merchant'"));
+        assertMoney("0.00", balance(MERCHANT)); assertMoney("0.00", balance(9005L));
+        assertMoney("3.51", balance(PLATFORM)); assertMoney("113.49", balance(PRINCIPAL));
+        assertEquals(0, scalarInt("SELECT COUNT(*) FROM settlement_detail WHERE receiver_type='coop_merchant'"));
+        assertEquals(1, scalarInt("SELECT COUNT(*) FROM fe_reference_settlement WHERE merchant_id=" + MERCHANT
+                + " AND basis='REVSHARE_HEAD' AND quantity=2 AND amount=16.00 AND status='OPEN'"
+                + " AND payer_kind='CLUB' AND payer_id=" + CLUB + " AND activity_id=" + ACTIVITY));
+        assertEquals(1, scalarInt("SELECT COUNT(*) FROM fe_reference_settlement WHERE merchant_id=9005"
+                + " AND basis='REVSHARE_HEAD' AND quantity=1 AND amount=5.00 AND status='OPEN'"));
         assertEquals(0, activityService.executeActivitySettlement());
-        assertMoney("117.00", balance(PRINCIPAL).add(balance(PLATFORM)).add(balance(MERCHANT)).add(balance(9005L)));
+        assertEquals(2, scalarInt("SELECT COUNT(*) FROM fe_reference_settlement"), "重跑不重复记参考账");
+        assertMoney("117.00", balance(PRINCIPAL).add(balance(PLATFORM)));
     }
 
+    /** F11:冻结人头费按到店人头去重算参考额;参考额不受主理人份额封顶(不划款),已有线下应收仍拒结待人工核对。 */
     @Test
-    void frozenExploreOfferFeeCountsUniqueShopHeadsAndRefusesExcessOrOfflineLiability() throws Exception {
+    void frozenExploreOfferFeeCountsUniqueShopHeadsAsReferenceAndRefusesOfflineLiability() throws Exception {
         seedSession(ACTIVITY, 15); seedPaid(74L, ACTIVITY);
         execute("UPDATE coop_order SET status=2");
         var canonical = ordinaryExplore();
@@ -849,20 +866,19 @@ class ClubSessionMerchantFeeMySqlIT {
         for (var store : canonical.getStoreCluster()) ((com.fasterxml.jackson.databind.node.ObjectNode) store).put("merchantMemberId", MERCHANT);
         freezeOrdinaryExplore(canonical);
         exploreScan(74, MERCHANT, 100); exploreScan(74, MERCHANT, 101);
+        execute("INSERT INTO club_direct_merchant_receivable(redemption_id,status) SELECT MIN(id),'OPEN' FROM redemption");
         assertThrows(RuntimeException.class, () -> activityService.executeActivitySettlement());
         assertMoney("0.00", balance(PRINCIPAL).add(balance(PLATFORM)).add(balance(MERCHANT)));
         assertEquals(0, scalarInt("SELECT is_settlement FROM cms_activity WHERE id=" + ACTIVITY));
-        execute("UPDATE topic_sale_snapshot SET canonical_json=JSON_SET(canonical_json,"
-                + "'$.merchantCashSettlementMode.offers[0].perHeadFee','8.00','$.merchantCashSettlementMode.offers[1].perHeadFee','8.00',"
-                + "'$.microExperienceCatalog.offers[0].perHeadFee','8.00','$.microExperienceCatalog.offers[1].perHeadFee','8.00')",
-                "INSERT INTO club_direct_merchant_receivable(redemption_id,status) SELECT MIN(id),'OPEN' FROM redemption");
-        assertThrows(RuntimeException.class, () -> activityService.executeActivitySettlement());
-        assertEquals(0, scalarInt("SELECT COUNT(*) FROM settlement_detail WHERE receiver_type='coop_merchant'"));
+        assertEquals(0, scalarInt("SELECT COUNT(*) FROM fe_reference_settlement"));
         // Only the isolated fixture's hypothetical debt is removed; no production migration or cleanup exists.
         execute("DELETE FROM club_direct_merchant_receivable");
         assertEquals(1, activityService.executeActivitySettlement());
-        assertMoney("8.00", balance(MERCHANT)); assertMoney("29.83", balance(PRINCIPAL));
-        assertEquals(1, scalarInt("SELECT COUNT(*) FROM settlement_detail WHERE receiver_type='coop_merchant'"));
+        assertMoney("0.00", balance(MERCHANT)); assertMoney("37.83", balance(PRINCIPAL));
+        assertEquals(0, scalarInt("SELECT COUNT(*) FROM settlement_detail WHERE receiver_type='coop_merchant'"));
+        assertEquals(1, scalarInt("SELECT COUNT(*) FROM fe_reference_settlement WHERE merchant_id=" + MERCHANT
+                + " AND basis='REVSHARE_HEAD' AND quantity=1 AND unit_amount=50.00 AND amount=50.00 AND offer_id=400"
+                + " AND chapter_id=100 AND status='OPEN'"), "同一张票扫两章只算一个人头;参考额不受份额封顶");
     }
 
     @Test
@@ -1036,6 +1052,8 @@ class ClubSessionMerchantFeeMySqlIT {
         addMapper(configuration, UmsMemberSettlementDebtMapper.class, "mapper/business/UmsMemberSettlementDebtMapper.xml");
         addMapper(configuration, CoopOrderMapper.class, "mapper/business/CoopOrderMapper.xml");
         addMapper(configuration, SettlementClaimMapper.class, "mapper/business/SettlementClaimMapper.xml");
+        addMapper(configuration, com.chengyinhub.business.mapper.FeReferenceSettlementMapper.class,
+                "mapper/business/FeReferenceSettlementMapper.xml");
         addMapper(configuration, CoopSettlementMapper.class, "mapper/business/CoopSettlementMapper.xml");
         addMapper(configuration, CoopSettlementEvidenceMapper.class, "mapper/business/CoopSettlementEvidenceMapper.xml");
         addMapper(configuration, CoopSettlementOriginalMapper.class, "mapper/business/CoopSettlementOriginalMapper.xml");

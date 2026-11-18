@@ -270,3 +270,6 @@ chengyinhub-xcx/pages/merchant/payout-account/index.js 2  # 2026-11-10 l-payout 
 chengyinhub-xcx/pages/topic/catalog/detail.js 1  # 2026-11-09 qx-b8 公开目录作品详情 /api/public-catalog/info:settle 把成功/下架/失败分成 ok/gone/error 三态落页,失败写页内错误文案(网络或服务端原话)并收起分享入口;seq 丢弃迟到回包。通用 toast 会与页内错误态双弹。qx-final 补登记。
 chengyinhub-xcx/pages/merchant/relation/index.js 1  # 2026-11-10 l-misc 商家发现页 /api/club/my 成员关系背景读取:只决定本人所在俱乐部帖文卡是否出「转发」;读失败按「未加入」处理,不出转发(服务端可见性与参与闸照旧),帖文流本身不受影响、页面没有可给的重试动作,通用 toast 会把背景读失败报成页面出错。qx-final 补登记。
 chengyinhub-xcx/subpackageMember/components/cy/profile/index.js 1  # 2026-11-10 l-after 统一邀请页个人码 /api/user/player-code 背景读取:读不到就不画码格(不占位、不写假码),卡片其余内容与「发给微信好友」照常可用;_playerCodeLoading 防重入,下次打开邀请页再读。通用 toast 会盖在邀请卡上把可选装饰报成失败。qx-final 补登记。
+chengyinhub-xcx/components/cy/fe-reference-settlement/index.js 1  # F11 自由探索参考结算读取失败由 cy-inline-error 显示「参考结算暂未取回」并提供重试；旧请求和切号响应被 epoch 拒绝，关闭全局 toast 避免重复提示。写操作(结清/异议)不静默。
+chengyinhub-xcx/pages/topic/components/cy/chapter-node-form/index.js 1  # F11 权益卡表单里的线下结算说明是附加说明，取不到就整行不显示、不影响填写与提交；不弹全局 toast 打断表单。
+chengyinhub-xcx/utils/fe-author-sale.js 4  # F10 自由探索作者路径(承接进度/填价发布/自己承接/撤回):每处 fail/非 200 都在 helper 内 toast 服务端原话并 reject(shown=true),页面不再重复提示;关闭全局 toast 只为避免同一失败弹两次。
