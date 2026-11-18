@@ -659,7 +659,7 @@
         <view class="fx-tile__c" wx:if="{{item.storyLocked}}">
           <view class="fx-tile__n fx-tile__lockn"><cy-icon name="lock" size="24" /><text>{{item.name}}</text></view>
           <text class="fx-tile__p" wx:if="{{item.distText || item.hookText}}">{{item.distText}}{{item.distText && item.hookText ? ' · ' : ''}}{{item.hookText}}</text>
-          <view class="fx-tile__visit {{visitBusyId == item.nodeId ? 'is-busy' : ''}}" catchtap="onVisitTap" data-id="{{item.nodeId}}" aria-role="button" aria-label="{{item.visitBtn}}，{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">{{item.visitBtn}}</view>
+          <view class="fx-tile__visit {{visitBusyId == item.nodeId ? 'is-busy' : ''}}" catchtap="onVisitTap" data-id="{{item.nodeId}}" aria-role="button" aria-label="{{storyOffline ? '联网后才能解锁' : item.visitBtn}}，{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">{{storyOffline ? '联网后才能解锁' : item.visitBtn}}</view>
         </view>
         <view class="fx-tile__c" wx:elif="{{storyGate}}">
           <text class="fx-tile__n">{{item.chapterName || item.name}}</text>
@@ -867,7 +867,7 @@
     </scroll-view>
     <view class="fx-hero__cta fx-hero__in" style="--i:3">
       <cy-btn wx:if="{{hero.node.storyLocked}}" variant="primary" style="width:100%" bindtap="onVisitTap" data-id="{{hero.node.nodeId}}"
-              accessibility-label="{{hero.node.visitBtn}}">{{hero.node.visitBtn}}</cy-btn>
+              accessibility-label="{{storyOffline ? '联网后才能解锁' : hero.node.visitBtn}}">{{storyOffline ? '联网后才能解锁' : hero.node.visitBtn}}</cy-btn>
       <cy-btn variant="{{hero.node.entryDisabled ? 'disabled' : 'primary'}}" style="width:100%" bindtap="heroEnter" wx:else
               accessibility-label="{{hero.node.entryDisabled ? '这一家已核销' : (hero.node.done ? '继续本店未完成玩法' : '到店打卡，进入本店玩法')}}">{{hero.node.entryDisabled ? '已核销' : (hero.node.done ? '继续互动' : '到店打卡')}}</cy-btn>
     </view>

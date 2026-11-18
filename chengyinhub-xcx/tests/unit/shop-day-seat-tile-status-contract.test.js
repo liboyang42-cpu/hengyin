@@ -40,7 +40,7 @@ test('FE-STORY 集章格:seatTiles 带到访投影,锁卡/章卡都由 WXML 消�
   assert.match(block, /this\.data\.storyGate \? Object\.assign\(feVisit\.tileView\(x, this\._loc \? this\._distText\(x\) : ''\)/)
   const wxml = read('pages/play/index.wxml')
   assert.match(wxml, /<view class="fx-tile__c" wx:if="\{\{item\.storyLocked\}\}">/)
-  assert.match(wxml, /catchtap="onVisitTap" data-id="\{\{item\.nodeId\}\}"[^>]*>\{\{item\.visitBtn\}\}<\/view>/)
+  assert.match(wxml, /catchtap="onVisitTap" data-id="\{\{item\.nodeId\}\}"[^>]*>\{\{storyOffline \? '联网后才能解锁' : item\.visitBtn\}\}<\/view>/)
   assert.match(wxml, /<text class="fx-tile__n">\{\{item\.chapterName \|\| item\.name\}\}<\/text>\s*<text class="fx-tile__p" wx:if="\{\{item\.visitText\}\}">/)
   assert.match(wxml, /已解锁 <text class="fx-unlock__n">\{\{storyUnlocked\}\} \/ \{\{storyTotal\}\}<\/text> 章/)
   // 三态/拥挤角标不受影响

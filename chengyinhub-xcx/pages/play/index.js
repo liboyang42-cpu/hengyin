@@ -551,7 +551,7 @@ Page({
     themeBgmOn: true,
     topicCover: '',               // 卡包首屏底图:主题长图,虚化后铺底(没有就退回 chapter.cover)
     topicDesc: '',                // 通行证首屏那段简介:同理,chapters[0].description 讲的是第一家店的事
-    seatTiles: [], storyGate: false, storyUnlocked: 0, storyTotal: 0, visitBusyId: null, packOpen: false, packShake: false, packBurst: false,
+    seatTiles: [], storyGate: false, storyUnlocked: 0, storyTotal: 0, storyOffline: false, visitBusyId: null, packOpen: false, packShake: false, packBurst: false,
     // 点卡 hero 层:show 挂节点,open 驱动过渡(先 show 再下一帧 open,过渡才有起点)
     hero: { show: false, open: false, node: null, style: '', bodyTop: 0, ry: 0, spun: false, turned: false, sx: 0, ss: '1', faded: false, collapsed: false, scrollTop: 0 },
     // 店铺分身对话(自由探索卡片详情 → 点店铺卡)。started 一旦为真,居中的大字问候让位给消息流。
@@ -4490,6 +4490,7 @@ Page({
         return;
       }
       if (res.code != 200 && res.code != '200') {
+        if (res.netFail && that._applyFeOfflineCache()) return;   // 自由探索:断网时读已解锁章节的本地缓存
         var isAuth = (res.msg && (res.msg.indexOf('登录') >= 0 || res.msg.indexOf('认证') >= 0));
         that.setData({ loading: false, emptyTip: isAuth ? '登录已过期，请重新登录' : (res.msg || '加载失败，请重试'), emptyKind: isAuth ? 'auth' : 'error' });
         return;
@@ -4547,7 +4548,7 @@ Page({
         loading: false, emptyTip: '', emptyKind: '', topicId: d.topicId || '', topicName, topicDesc: d.topicDesc || '', topicAudioUrl: d.topicAudioUrl || '', topicCover: d.topicCover || '', topicAiGenerated: d.topicAiGenerated === true,
         mode, serverMode: mode, playContact: playOverlays.contact(d.contact), packOpen: skipPack || that.data.packOpen, headIn: skipPack || that.data.headIn,
         modeLabel: mode == 2 ? '自由探索' : '城市定向',
-        storyGate: mode === 2 && d.storyTotal != null, storyUnlocked: Number(d.storyUnlocked) || 0, storyTotal: Number(d.storyTotal) || 0,
+        storyGate: mode === 2 && d.storyTotal != null, storyUnlocked: Number(d.storyUnlocked) || 0, storyTotal: Number(d.storyTotal) || 0, storyOffline: false,
         routeNotice: that._routeNoticeForState(routeState),
         journeyAttributes: routeState.attributes,
         timeBanner: d.playable === false ? (d.timeNote || '') : '',
@@ -4602,6 +4603,7 @@ Page({
         if (routeState.sessionId) that.refreshThemeBackpack();
         that._consumePendingStart();
         that._consumeVisitOpen();
+        if (mode === 2) that._saveFeStoryCache(d);   // 已解锁章节离线可读(按账号 + 局号)
         // 中途重进一局(开场已看过 / 卡包已拆):主题配乐接着放,原来只在开场与拆包时起播,重进就没了(实走 A7 复核)
         const resumed = storyResume.read(that._runSessionScope());
         if (resumed.intro || resumed.packOpened) that._startThemeBgm();
@@ -4616,6 +4618,7 @@ Page({
         console.error('[play] 首屏数据已落地，后处理异常');
         return;
       }
+      if (that._applyFeOfflineCache()) return;
       that.setData({ loading: false, emptyTip: '加载失败，请重试', emptyKind: 'error' });
     });
   },

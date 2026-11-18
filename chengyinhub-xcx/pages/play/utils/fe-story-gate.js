@@ -9,6 +9,7 @@ const cyToast = require('../../../utils/toast.js');
 const playAccuracy = require('./play-accuracy.js');
 const { deniedBySystem } = require('./play-location-once.js');
 const visit = require('./fe-story-visit.js');
+const feStoryCache = require('./fe-story-cache.js');
 
 const PURPOSE_TITLE = '用一次位置确认你到了这里';
 
@@ -24,6 +25,7 @@ function methods() {
       const node = this._feNode(id);
       if (!node || Number(this.data.mode) !== 2 || !this.data.storyGate || node.storyLocked !== true) return;
       if (this.data.isPreview || this.data.isMock || this._visitBusy || !this._isPlayAccountCurrent()) return;
+      if (this.data.storyOffline) { cyToast('联网后才能解锁'); return; }   // 到访必须联网,不排队、不补发
       // 上一次结果未知:只核对,不重发
       if (this._visitUnknown) { this._visitReadback(); return; }
       if (visit.normCheck(node.visitCheck) === 'SCAN') { this._visitScan(node); return; }
@@ -172,6 +174,23 @@ function methods() {
       const tile = (this.data.seatTiles || []).find((t) => String(t.nodeId) === String(id)) || {};
       try { wx.vibrateShort({ type: 'medium' }); } catch (e) {}
       this.setData({ 'hero.node': Object.assign({}, tile, this._heroView(node)) }, () => this.openChapStory());
+    },
+    _saveFeStoryCache(d) {
+      if (this.data.isPreview || this.data.isMock) return;
+      feStoryCache.save(this._runSessionScope(), d);
+    },
+    /** 断网打不开 /nodes 时:有本局缓存就只读显示已解锁章节,锁卡写「联网后才能解锁」。没有缓存返回 false */
+    _applyFeOfflineCache() {
+      if (this.data.isPreview || this.data.isMock) return false;
+      const cached = feStoryCache.read(this._runSessionScope());
+      if (!cached) return false;
+      const nodes = cached.nodes.map((n, i) => this.normNode(n, i, 2));
+      this.setData({ loading: false, emptyTip: '', emptyKind: '', mode: 2, serverMode: 2, modeLabel: '自由探索',
+        topicName: cached.topicName || this.data.topicName, topicCover: cached.topicCover || '',
+        storyGate: true, storyOffline: true, storyUnlocked: cached.storyUnlocked, storyTotal: cached.storyTotal,
+        nodes, total: nodes.length, doneCount: nodes.filter((n) => n.done).length, packOpen: true, headIn: true,
+        chapterCards: this.buildChapterCards({ chapters: cached.chapters }, this.data.chapter) }, () => this.rebuild());
+      return true;
     },
     /** 选章面板里点了锁定的章:打开该章第一个地点的锁卡 */
     _openChapterLockedCard(card) {
