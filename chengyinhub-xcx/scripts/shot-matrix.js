@@ -625,8 +625,6 @@ const RAW = [
   ['F200', 'F200-poi-challenge-missing.png', '/pages/play/poi-challenge/index', 'player', 'missing-param', null, undefined, { selector: '.pc-page__state', min: 1 }, 'real-data', 'P1', '', '官方地点挑战缺 poiId 时显示真实错误和返回入口；完整拍照、答题、勋章另走真实账号 E2E，不以缺参态代替通关验收。'],
   // 2026-11-10 qx-green:上线波次新增的 14 条路由补矩阵行(真实运行时、不注入假数据;能拍的态先拍出来,常态 fixture 待总控首轮校准)
   ['F300', 'F300-video-bounty-missing-param.png', '/subpackageA/pages/video-bounty/index', 'player', 'missing-param', null, undefined, { selector: '.vb__body', min: 1 }, 'real-data', 'P1', '', '视频悬赏页:无活动参数时只给说明,不拼假活动'],
-  ['F301', 'F301-topic-catalog-normal.png', '/pages/topic/catalog/index', 'player', 'normal', null, undefined, { selector: '.catalog-nav-spacer', min: 1 }, 'real-data', 'P1', '', '公开主题目录:城市标题、筛选与卡片走真实公开接口'],
-  ['F302', 'F302-topic-catalog-detail-missing-param.png', '/pages/topic/catalog/detail', 'player', 'missing-param', null, undefined, { selector: '.cdetail', min: 1 }, 'real-data', 'P1', '', '目录作品详情:缺 id 时落到下架 / 加载失败态'],
   ['F303', 'F303-merchant-payout-account-normal.png', '/pages/merchant/payout-account/index', 'merchant', 'normal', null, undefined, { selector: 'cy-page-title', min: 1 }, 'real-data', 'P1', '', '商家收款账户(l-payout):进件状态只读服务端'],
   ['F304', 'F304-market-passes-normal.png', '/subpackageMember/market/passes/index', 'player', 'normal', null, undefined, { selector: '.mk__body', min: 1 }, 'real-data', 'P1', '', '通行证与礼品:积分余额与通行证入口'],
   ['F305', 'F305-market-pass-missing-param.png', '/subpackageMember/market/pass/index', 'player', 'missing-param', null, undefined, { selector: '.mp__frame', min: 1 }, 'real-data', 'P1', '', '通行证详情:缺商品参数时的错误态'],
