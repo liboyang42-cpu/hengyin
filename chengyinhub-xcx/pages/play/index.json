@@ -31,6 +31,7 @@
     "cy-privacy-gate": "/components/cy/privacy-gate/index",
     "cy-tabs": "/components/cy/tabs/index",
     "cy-advanced-game": "/pages/play/components/advanced-game/index",
+    "cy-role-card": "/pages/play/components/role-card/index",
     "cy-play-roadmap": "/pages/play/components/roadmap/index",
     "cy-playkit": "/pages/play/components/playkit/index",
     "cy-play-verdict": "/pages/play/components/play-verdict/index",

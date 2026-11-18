@@ -547,6 +547,7 @@ Page({
     topicName: '', topicAiGenerated: false, // 卡包印刷用:一章一商家后 chapter.name 只是第一章,不能拿它当主题名
     topicAudioUrl: '',            // 主题配乐:游玩页循环底乐(作者媒体)
     themeBgmOn: true,
+    stationRole: null,            // F05 站点卡角色卡:{ nodeId, view } —— view 原样是 encounter 的 roleView
     topicCover: '',               // 卡包首屏底图:主题长图,虚化后铺底(没有就退回 chapter.cover)
     topicDesc: '',                // 通行证首屏那段简介:同理,chapters[0].description 讲的是第一家店的事
     seatTiles: [], packOpen: false, packShake: false, packBurst: false,
@@ -8370,6 +8371,8 @@ Page({
           || !sheet.show || !sheet.node || String(sheet.node.nodeId) !== String(node.nodeId)
           || !currentNode || currentNode.done) return;
       if (!(r.code == 200 || r.code == '200') || !r.data) return;
+      // F05 角色卡:roleView 与检定无关,先落(没配 roleViews 时服务端不给,这里清掉上一站的)
+      this.setData({ stationRole: r.data.roleView && typeof r.data.roleView === 'object' ? { nodeId: node.nodeId, view: r.data.roleView } : null });
       if (r5PlayerRuntime.isR5(r.data)) {
         if ((r.data.allowedActions || []).includes('check')) this.setData({
           'sheet.show': false, journeyCheck: { show: false }, advancedPlay: { show: true, node },
