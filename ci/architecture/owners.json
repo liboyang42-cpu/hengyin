@@ -2096,6 +2096,49 @@
         "module": "chengyinhub-admin",
         "members": ["com.chengyinhub.web.controller.api.ApiPlayFeedbackController"],
         "forbidden_backrefs": ["com.chengyinhub.business.mapper.PlayRunFeedbackMapper"]
+      },
+      {
+        "id": "FE_AUTHOR_SALE_API",
+        "module": "chengyinhub-admin",
+        "members": ["com.chengyinhub.web.controller.api.ApiFreeExploreAuthorController"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.impl.TopicAuthorSaleServiceImpl"]
+      },
+      {
+        "id": "FE_AUTHOR_SALE_PORT",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.ITopicAuthorSaleService"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiFreeExploreAuthorController"]
+      },
+      {
+        "id": "FE_AUTHOR_SALE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.impl.TopicAuthorSaleServiceImpl"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiFreeExploreAuthorController"]
+      },
+      {
+        "id": "FE_REFERENCE_SETTLEMENT_API",
+        "module": "chengyinhub-admin",
+        "members": ["com.chengyinhub.web.controller.api.ApiFeReferenceSettlementController"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.impl.FeReferenceSettlementServiceImpl", "com.chengyinhub.business.mapper.FeReferenceSettlementMapper"]
+      },
+      {
+        "id": "FE_REFERENCE_SETTLEMENT_PORT",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.IFeReferenceSettlementService"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiFeReferenceSettlementController"]
+      },
+      {
+        "id": "FE_REFERENCE_SETTLEMENT",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.impl.FeReferenceSettlementServiceImpl"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiFeReferenceSettlementController"]
+      },
+      {
+        "id": "FE_REFERENCE_SETTLEMENT_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.FeReferenceSettlementMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.IFeReferenceSettlementService", "com.chengyinhub.business.service.impl.FeReferenceSettlementServiceImpl"],
+        "allowed_consumers": ["com.chengyinhub.business.service.impl.FeReferenceSettlementServiceImpl"]
       }
     ],
     "allowed_directions": [
@@ -2619,7 +2662,13 @@
       ["Q_WORKSHOP", "Q_WORKSHOP_STORAGE"],
       ["Q_WORKSHOP_API", "Q_WORKSHOP"],
       ["P_PLAY_FEEDBACK", "P_PLAY_FEEDBACK_STORAGE"],
-      ["P_PLAY_FEEDBACK_API", "P_PLAY_FEEDBACK"]
+      ["P_PLAY_FEEDBACK_API", "P_PLAY_FEEDBACK"],
+      ["FE_AUTHOR_SALE_API", "FE_AUTHOR_SALE_PORT"],
+      ["FE_AUTHOR_SALE", "FE_AUTHOR_SALE_PORT"],
+      ["FE_AUTHOR_SALE", "SHARED_BUSINESS_AUDIT_PORT"],
+      ["FE_REFERENCE_SETTLEMENT_API", "FE_REFERENCE_SETTLEMENT_PORT"],
+      ["FE_REFERENCE_SETTLEMENT", "FE_REFERENCE_SETTLEMENT_PORT"],
+      ["FE_REFERENCE_SETTLEMENT", "FE_REFERENCE_SETTLEMENT_STORAGE"]
     ],
     "exact_directions": [
       {
