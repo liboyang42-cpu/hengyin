@@ -1,4 +1,4 @@
-package com.chengyinhub.web.service.freeexplore;
+package com.chengyinhub.business.service.support;
 
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.CmsTopicNode;
@@ -9,7 +9,6 @@ import com.chengyinhub.business.service.ICmsTopicService;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -24,26 +23,23 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /** FE-STORY 7.10:作者逐个地点选 GPS(300–500 米)/ 扫码 / 仅线上;只有主题作者本人可读写。 */
-class FreeExploreVisitConfigApplicationTest {
+class FreeExploreVisitConfigRulesTest {
 
     private static final long AUTHOR = 7L;
     private static final long TOPIC = 70L;
     private static final long NODE = 700L;
 
-    private FreeExploreVisitConfigApplication app;
+    private FreeExploreVisitConfigRules app;
     private CmsTopicNodeMapper mapper;
     private CmsTopic topic;
     private CmsTopicNode node;
 
     @BeforeEach
     void setUp() {
-        app = new FreeExploreVisitConfigApplication();
         ICmsTopicService topics = mock(ICmsTopicService.class);
         ICmsTopicNodeService nodes = mock(ICmsTopicNodeService.class);
         mapper = mock(CmsTopicNodeMapper.class);
-        ReflectionTestUtils.setField(app, "cmsTopicService", topics);
-        ReflectionTestUtils.setField(app, "cmsTopicNodeService", nodes);
-        ReflectionTestUtils.setField(app, "cmsTopicNodeMapper", mapper);
+        app = new FreeExploreVisitConfigRules(topics, nodes, mapper);
         topic = new CmsTopic();
         topic.setId(TOPIC);
         topic.setMemberId(AUTHOR);

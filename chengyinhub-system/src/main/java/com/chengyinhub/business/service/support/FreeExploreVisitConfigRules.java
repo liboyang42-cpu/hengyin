@@ -1,4 +1,4 @@
-package com.chengyinhub.web.service.freeexplore;
+package com.chengyinhub.business.service.support;
 
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.CmsTopicNode;
@@ -6,15 +6,10 @@ import com.chengyinhub.business.domain.FreeExploreVisitConfig;
 import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
 import com.chengyinhub.business.service.ICmsTopicNodeService;
 import com.chengyinhub.business.service.ICmsTopicService;
-import com.chengyinhub.business.service.support.ArrivalPolicy;
-import com.chengyinhub.business.service.support.FreeExploreVisit;
 import com.chengyinhub.common.constant.PlayMode;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.utils.OwnershipUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,21 +20,25 @@ import java.util.Map;
 /**
  * FE-STORY 7.10:自由探索作者逐个地点选到访方式 —— GPS(默认,半径 300–500 米)/ 扫码 / 仅线上。
  * 只有主题作者本人可读写;只改 cms_topic_node.visit_check / visit_radius_m 两列,不碰内容与审核状态。
+ * 纯规则类,由 {@code ApiTopicController} 以既有依赖构造调用(不新增 Spring 边界)。
  */
-@Service
-public class FreeExploreVisitConfigApplication {
+public final class FreeExploreVisitConfigRules {
 
     public static final String VISIT_CHECK_INVALID = "VISIT_CHECK_INVALID";
     public static final String VISIT_RADIUS_INVALID = "VISIT_RADIUS_INVALID";
     public static final String VISIT_GPS_COORD_REQUIRED = "VISIT_GPS_COORD_REQUIRED";
     public static final String NOT_FREE_EXPLORE = "NOT_FREE_EXPLORE";
 
-    @Autowired
-    private ICmsTopicService cmsTopicService;
-    @Autowired
-    private ICmsTopicNodeService cmsTopicNodeService;
-    @Autowired
-    private CmsTopicNodeMapper cmsTopicNodeMapper;
+    private final ICmsTopicService cmsTopicService;
+    private final ICmsTopicNodeService cmsTopicNodeService;
+    private final CmsTopicNodeMapper cmsTopicNodeMapper;
+
+    public FreeExploreVisitConfigRules(ICmsTopicService cmsTopicService, ICmsTopicNodeService cmsTopicNodeService,
+                                       CmsTopicNodeMapper cmsTopicNodeMapper) {
+        this.cmsTopicService = cmsTopicService;
+        this.cmsTopicNodeService = cmsTopicNodeService;
+        this.cmsTopicNodeMapper = cmsTopicNodeMapper;
+    }
 
     public AjaxResult list(Long memberId, Long topicId) {
         AjaxResult denied = authorGate(memberId, topicId);
@@ -58,7 +57,6 @@ public class FreeExploreVisitConfigApplication {
         return AjaxResult.success(out);
     }
 
-    @Transactional(rollbackFor = Exception.class)
     public AjaxResult update(Long memberId, Long nodeId, String visitCheck, Integer visitRadius) {
         if (nodeId == null || nodeId <= 0L) return AjaxResult.error("参数有误");
         CmsTopicNode node = cmsTopicNodeService.selectCmsTopicNodeById(nodeId);
