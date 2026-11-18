@@ -420,6 +420,23 @@ public class PlayHistoryQueryApplication {
         boolean historyBlocked = playCompletionFacts.topicHistoryBlocked(historyTopic);
         boolean participated = !historyBlocked && (!doneList.isEmpty() || (selfPlay
                 ? playCompletionFacts.hasSelfPlayRegistration(memberId, tId) : playCompletionFacts.isRegistered(memberId, progActId)));
+        if (Integer.valueOf(com.chengyinhub.common.constant.PlayMode.FREE_COLLECT).equals(historyTopic.getProductType())) {
+            // FE-STORY 5.4:自由探索结局按到访(到店行 checkin_time 不为空)驱动,按到访先后排,不看核销。
+            List<CmsTopicNode> visitedInOrder = new ArrayList<>();
+            if (participated) {
+                List<PlayerNodeProgress> visits = new ArrayList<>(doneList);
+                visits.sort(Comparator.comparing(PlayerNodeProgress::getCheckinTime,
+                        Comparator.nullsLast(Comparator.naturalOrder())));
+                Set<Long> seenVisits = new HashSet<>();
+                for (PlayerNodeProgress p : visits) {
+                    if (p.getCheckinTime() == null || p.getNodeId() == null || !seenVisits.add(p.getNodeId())) continue;
+                    CmsTopicNode n = byId.get(p.getNodeId());
+                    if (n == null) n = playCompletionFacts.historyReadableNode(p.getNodeId(), historyTopic);
+                    if (n != null) visitedInOrder.add(n);
+                }
+            }
+            return AjaxResult.success(PlayNarrativeSupport.buildVisitEnding(visitedInOrder, nodeList.size()));
+        }
         List<CmsTopicNode> completedInOrder = new ArrayList<>();
         if (participated) {
             doneList.sort(Comparator.comparing(PlayerNodeProgress::getCheckinTime,
