@@ -5,6 +5,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -380,6 +381,123 @@ public class PlayHistoryQueryApplication {
         return (List<Map<String, Object>>) node.get("results");
     }
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.business.mapper.PlayerNodeProgressMapper visitProgressMapper;
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.business.service.ICmsTopicChapterService visitChapterService;
+
+    /**
+     * FE-STORY 7.4 / T-B8:自由探索票过期(或场次结束)后,过期前到访过的章节永远可读。
+     * 只读:不看通行证/场次时效,只看本人参与事实;只下发本人或队友到访过的地点与章节,未到访的一律不给。
+     * 新增到访仍由 /api/play/arrive、/checkin 的会话校验拒绝(过期后不能再解锁)。
+     */
+    public AjaxResult freeExploreVisitedHistory(Long memberId, Long activityId, Long topicId)
+    {
+        if (memberId == null || memberId <= 0) return error("请先登录");
+        if (activityId == null || activityId < 0 || topicId == null || topicId <= 0) return error("必须提供原游玩会话");
+        com.chengyinhub.business.domain.CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
+        if (topic == null || playCompletionFacts.topicHistoryBlocked(topic)) return error("历史内容不可用");
+        if (!Integer.valueOf(com.chengyinhub.common.constant.PlayMode.FREE_COLLECT).equals(topic.getProductType())) {
+            return error("必须提供原游玩会话");
+        }
+        if (activityId > 0) {
+            CmsActivity activity = cmsActivityService.selectCmsActivityById(activityId);
+            if (activity == null || !topicId.equals(activity.getTopicId())) return error("活动或主题不存在");
+        }
+        List<PlayerNodeProgress> own = visitProgressMapper == null ? java.util.Collections.<PlayerNodeProgress>emptyList()
+                : visitProgressMapper.selectOwnVisits(memberId, activityId, topicId);
+        if (own == null) own = java.util.Collections.emptyList();
+        boolean participated = !own.isEmpty() || (activityId == 0L
+                ? playCompletionFacts.hasSelfPlayRegistration(memberId, topicId)
+                : playCompletionFacts.isRegistered(memberId, activityId));
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("readOnly", true);
+        data.put("mode", com.chengyinhub.common.constant.PlayMode.FREE_COLLECT);
+        data.put("activityId", activityId.toString());
+        data.put("topicId", topicId.toString());
+        List<Map<String, Object>> chapters = new ArrayList<>();
+        List<Map<String, Object>> nodes = new ArrayList<>();
+        CmsTopicNode probe = new CmsTopicNode();
+        probe.setTopicId(topicId);
+        probe.setStatus(1L);
+        List<CmsTopicNode> nodeList = cmsTopicNodeService.selectCmsTopicNodeList(probe);
+        if (nodeList == null) nodeList = new ArrayList<>();
+        Set<Long> placeChapters = new HashSet<>();
+        for (CmsTopicNode n : nodeList) if (n.getChapterId() != null) placeChapters.add(n.getChapterId());
+        if (!participated) {
+            data.put("storyUnlocked", 0);
+            data.put("storyTotal", placeChapters.size());
+            data.put("chapters", chapters);
+            data.put("nodes", nodes);
+            return AjaxResult.success(data);
+        }
+        Map<Long, CmsTopicNode> byId = new LinkedHashMap<>();
+        for (CmsTopicNode n : nodeList) byId.put(n.getId(), n);
+        Map<Long, Date> ownVisitTime = new LinkedHashMap<>();
+        for (PlayerNodeProgress p : own) {
+            if (p.getNodeId() != null && !ownVisitTime.containsKey(p.getNodeId())) ownVisitTime.put(p.getNodeId(), p.getCheckinTime());
+        }
+        Set<Long> teamNodes = new HashSet<>();
+        if (visitProgressMapper != null) {
+            List<Long> team = visitProgressMapper.selectTeamVisitedNodeIds(memberId, activityId, topicId);
+            if (team != null) teamNodes.addAll(team);
+        }
+        Set<Long> visitedChapters = new HashSet<>();
+        Set<Long> ownChapters = new HashSet<>();
+        for (Long nodeId : ownVisitTime.keySet()) {
+            CmsTopicNode n = byId.containsKey(nodeId) ? byId.get(nodeId) : playCompletionFacts.historyReadableNode(nodeId, topic);
+            if (n != null && n.getChapterId() != null) { visitedChapters.add(n.getChapterId()); ownChapters.add(n.getChapterId()); byId.putIfAbsent(nodeId, n); }
+        }
+        for (Long nodeId : teamNodes) {
+            CmsTopicNode n = byId.get(nodeId);
+            if (n != null && n.getChapterId() != null) visitedChapters.add(n.getChapterId());
+        }
+        Set<Long> readableNodeIds = new HashSet<>();
+        for (CmsTopicNode n : byId.values()) {
+            if (n.getChapterId() == null || !visitedChapters.contains(n.getChapterId())) continue;
+            readableNodeIds.add(n.getId());
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("nodeId", n.getId().toString());
+            m.put("name", n.getName());
+            m.put("chapterId", n.getChapterId().toString());
+            m.put("address", n.getAddress());
+            m.put("description", n.getDescription());
+            m.put("hookText", n.getHookText());
+            m.put("cardHookLong", n.getCardHookLong());
+            m.put("fragmentText", n.getFragmentText());
+            m.put("visitTime", ownVisitTime.get(n.getId()));
+            m.put("visitedByTeam", !ownChapters.contains(n.getChapterId()));
+            m.put("history", true);
+            nodes.add(m);
+        }
+        if (visitChapterService != null && !visitedChapters.isEmpty()) {
+            com.chengyinhub.business.domain.CmsTopicChapter chapterProbe = new com.chengyinhub.business.domain.CmsTopicChapter();
+            chapterProbe.setTopicId(topicId);
+            List<com.chengyinhub.business.domain.CmsTopicChapter> list = visitChapterService.selectCmsTopicChapterList(chapterProbe);
+            if (list != null) for (com.chengyinhub.business.domain.CmsTopicChapter c : list) {
+                if (c == null || c.getId() == null || !visitedChapters.contains(c.getId())) continue;
+                Map<String, Object> cm = new LinkedHashMap<>();
+                cm.put("chapterId", c.getId().toString());
+                cm.put("name", c.getName());
+                cm.put("sortId", c.getSortId());
+                cm.put("description", c.getDescription());
+                List<Object> blocks = java.util.Collections.emptyList();
+                if (com.chengyinhub.business.util.ChapterBlockReadSupport.isRequiredChapter(c)) {
+                    blocks = com.chengyinhub.business.util.ChapterBlockReadSupport.projectForPlayer(
+                            com.chengyinhub.business.util.ChapterBlockReadSupport.resolveFromTopicNodes(c, new ArrayList<>(byId.values())),
+                            readableNodeIds);
+                }
+                cm.put("blocks", blocks);
+                chapters.add(cm);
+            }
+        }
+        data.put("storyUnlocked", visitedChapters.size());
+        data.put("storyTotal", placeChapters.size());
+        data.put("chapters", chapters);
+        data.put("nodes", nodes);
+        return AjaxResult.success(data);
+    }
+
     public AjaxResult ending(Long actorMemberId, Long activityId, Long topicId)
     {
         Long memberId = actorMemberId;
@@ -434,6 +552,15 @@ public class PlayHistoryQueryApplication {
                     if (p.getCheckinTime() == null || p.getNodeId() == null || !seenVisits.add(p.getNodeId())) continue;
                     CmsTopicNode n = byId.get(p.getNodeId());
                     if (n == null) n = playCompletionFacts.historyReadableNode(p.getNodeId(), historyTopic);
+                    if (n != null) visitedInOrder.add(n);
+                }
+            }
+            if (participated && visitProgressMapper != null) {
+                // FE-STORY 5.5:队友到访的地点也算本队已集,排在本人到访之后。
+                List<Long> team = visitProgressMapper.selectTeamVisitedNodeIds(memberId, progActId, tId);
+                if (team != null) for (Long nodeId : team) {
+                    if (nodeId == null || visitedInOrder.stream().anyMatch(v -> nodeId.equals(v.getId()))) continue;
+                    CmsTopicNode n = byId.get(nodeId);
                     if (n != null) visitedInOrder.add(n);
                 }
             }

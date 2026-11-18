@@ -536,4 +536,32 @@ class ShopDayExperienceLayerContractTest
         assertEquals("/store-front.jpg", m.get("imgUrl"), "F07:自由探索店铺照片用来找店,不遮");
         assertFalse(m.containsKey("imgHidden"));
     }
+
+    /** FE-STORY 5.5 / T-B5:同票或同队的队友到访过,本人没去也解锁本章;权益不共享(核销仍按本人票)。 */
+    @Test
+    void teammateVisitUnlocksTheChapterForTheWholeTeam() {
+        storyFixture();
+        when(progressService.selectPlayerNodeProgressList(any())).thenReturn(Collections.emptyList());
+        com.chengyinhub.business.mapper.PlayerNodeProgressMapper progressMapper =
+                mock(com.chengyinhub.business.mapper.PlayerNodeProgressMapper.class);
+        when(progressMapper.selectTeamVisitedNodeIds(eq(PLAYER), eq(ACTIVITY), eq(TOPIC)))
+                .thenReturn(Collections.singletonList(NODE));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressMapper", progressMapper);
+
+        AjaxResult result = controller.nodes(ACTIVITY, null);
+        Map<String, Object> m = firstNode(result);
+
+        assertEquals(Boolean.TRUE, m.get("visited"));
+        assertEquals(Boolean.TRUE, m.get("visitedByTeam"));
+        assertEquals(Boolean.FALSE, m.get("arrived"), "队友到访不替本人记到店");
+        assertEquals("示例站点的章节正文", m.get("description"));
+        assertEquals(1, data(result).get("storyUnlocked"));
+    }
+
+    @Test
+    void ownVisitIsNotReportedAsTeamVisit() {
+        storyFixture();
+        Map<String, Object> m = firstNode(controller.nodes(ACTIVITY, null));
+        assertEquals(Boolean.FALSE, m.get("visitedByTeam"));
+    }
 }
