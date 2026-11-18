@@ -531,7 +531,8 @@ Page({
     const item = Object.assign({}, row);
     item.amountText = money(row.signedAmount);
     item.amountPrefix = item.amountText != null && Number(item.amountText) >= 0 ? '+' : '';
-    item.amountDisplay = item.amountText == null ? '待定' : yuan(item.amountText, { signed: true });
+    // F14a(MC-011=B):金额字段缺失写 ¥0.00,不写「待定」;请求失败走页面自己的错误/重试,不会到这里。
+    item.amountDisplay = item.amountText == null ? yuan(0) : yuan(item.amountText, { signed: true });
     item.amountTone = item.amountText == null ? 'mute' : (Number(item.amountText) < 0 ? 'neg' : 'pos');
     item.timeText = row.occurredAt ? String(row.occurredAt).slice(5, 10) : '';
     item.sourceText = { REDEMPTION_FEE: '核销计酬', COOP_SHARE: '合作分润', ACTIVITY_SHARE: '活动分润', MERCHANT_CLAWBACK: '已执行扣划' }[row.source] || '调整';
@@ -548,7 +549,7 @@ Page({
   batchRow(row) {
     const item = Object.assign({}, row);
     item.amountText = money(row.amountTotal);
-    item.amountDisplay = item.amountText == null ? '待定' : yuan(item.amountText);
+    item.amountDisplay = item.amountText == null ? yuan(0) : yuan(item.amountText);
     item.tone = row.displayState === 'LEDGER_ERROR' ? 'void' : (row.paymentState === 'PAID' ? 'settled' : 'pending');
     item.stateText = row.displayState === 'LEDGER_ERROR' ? '结算数据对不上，请联系客服' : (row.netDirection === 'ZERO' ? '本期无需打款' : (row.netDirection === 'MERCHANT_OWES_PLATFORM' ? '调整待处理' : batchStateText(row)));
     item.stateVariant = row.displayState === 'LEDGER_ERROR' ? 'danger'
@@ -763,9 +764,10 @@ function summaryView(summary, canReadFinance) {
   };
 }
 
+// F14a(MC-011=B):缺字段写 ¥0.00;「状态待定」这类状态文字不是数值,照旧。
 function moneyDisplay(value) {
   const amount = money(value);
-  return amount == null ? '待定' : yuan(amount);
+  return amount == null ? yuan(0) : yuan(amount);
 }
 
 function financeStateText(item) {

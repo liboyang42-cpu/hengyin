@@ -41,7 +41,7 @@
         <view class="tj-seat" wx:for="{{openSeats}}" wx:key="*this" style="--tj-d: {{(joinedSeats.length + index) * 70}}ms"><cy-icon name="plus" size="32" /></view>
       </view>
       <view class="tj-facts">
-        <view class="tj-fact"><text class="tj-fact__v">{{team.joinedCount != null ? team.joinedCount : '—'}} / {{team.maxMembers != null ? team.maxMembers : '—'}}</text><text class="team-meta-key">当前成员</text></view>
+        <view class="tj-fact"><text class="tj-fact__v">{{team.joinedCount || 0}} / {{team.maxMembers || 0}}</text><text class="team-meta-key">当前成员</text></view>
         <view class="tj-fact"><text class="tj-fact__v">{{team.joinMode == 2 ? '公开招募' : '仅邀请'}}</text><text class="team-meta-key">加入方式</text></view>
       </view>
       <view class="tj-invite" wx:if="{{inviteText}}"><cy-icon name="clock" size="28" /><text class="tj-invite__v">{{inviteText}}</text></view>

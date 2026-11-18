@@ -1,3 +1,4 @@
+<wxs src="../../../../utils/wxs/money.wxs" module="money" />
 <view class="txjl-scene {{theme === 'merchant' ? 'txjl-scene--merchant' : ''}}">
   <cy-skeleton wx:if="{{loading && !list.length}}" type="list" count="{{4}}" />
   <view class="txjl cy-fade-in" wx:elif="{{list.length > 0}}">
@@ -7,7 +8,7 @@
         <text class="txjl-li__time">{{item.createTimeText}}</text>
       </view>
       <view class="txjl_li_right">
-        <text class="txjl-li__amount">{{item.receivedAmountText != null ? '-' + item.receivedAmountText : '—'}}</text>
+        <text class="txjl-li__amount">{{item.receivedAmountText != null ? '-' + item.receivedAmountText : money.amount2(item.receivedAmountText)}}</text>
         <text class="txjl-st txjl-st--{{item.statusVariant}}">{{item.statusText}}</text>
       </view>
     </view>

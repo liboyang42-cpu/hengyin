@@ -160,7 +160,7 @@ test('我的发布严格区分 0 与 unknown，未知状态、对象、方式和
   assert.equal(page.data.broadcasts[0]._st, '状态待确认');
   assert.equal(page.data.broadcasts[0]._aud, '—');
   assert.equal(page.data.broadcasts[0]._mode, '—');
-  assert.equal(page.data.broadcasts[0]._reach, '—');
+  assert.equal(page.data.broadcasts[0]._reach, '站内触达 0 人', 'F14a:读不出触达数写 0');
   assert.equal(page.data.broadcasts[0]._city, '—');
   assert.equal(page.data.broadcasts[1]._reach, '站内触达 0 人', '数值 0 必须保留为真实零触达');
 });

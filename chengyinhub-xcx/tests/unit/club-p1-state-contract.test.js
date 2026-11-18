@@ -278,7 +278,7 @@ test('管理看板按当前 clubId 请求，坏响应不降级成假 0', () => {
   assert.match(view, /clubStatsState === 'ready'/)
 })
 
-test('零游玩人次不展示完成百分比，有游玩但无人完成仍显示 0.0%', () => {
+test('零游玩人次完成率写 0.0%(F14a MC-011=B)，有游玩但无人完成同样 0.0%', () => {
   const zero = createDetailHarness()
   zero.page.data.club = { id: 9, isOwner: true }
   zero.page.loadClubStats()
@@ -289,14 +289,14 @@ test('零游玩人次不展示完成百分比，有游玩但无人完成仍显�
       { topicId: 102, participants: 3, completed: 0, completionRate: 0 },
     ],
   } })
-  assert.equal(zero.page.data.clubStats.overallRateText, '—')
-  assert.equal(zero.page.data.clubStats.topics[0].completionRateText, '—')
+  assert.equal(zero.page.data.clubStats.overallRateText, '0.0%')
+  assert.equal(zero.page.data.clubStats.topics[0].completionRateText, '0.0%')
   assert.equal(zero.page.data.clubStats.topics[1].completionRateText, '0.0%')
 })
 
-// 2026-10-23 owner D4(P1-094):后端 /api/stats/club 零分母改回 null(SafeRatio),看板照常 ready 并显示「—」,
+// 2026-10-23 owner D4(P1-094):后端 /api/stats/club 零分母改回 null(SafeRatio),看板照常 ready(F14a 起显示 0.0%),
 // 不能因为 null 把整张看板判成坏回包。
-test('零分母完成率为 null 时看板仍可用并显示「—」(D4 新合同)', () => {
+test('零分母完成率为 null 时看板仍可用并显示 0.0%(D4 + F14a)', () => {
   const nullRates = createDetailHarness()
   nullRates.page.data.club = { id: 9, isOwner: true }
   nullRates.page.loadClubStats()
@@ -308,7 +308,7 @@ test('零分母完成率为 null 时看板仍可用并显示「—」(D4 新合�
     ],
   } })
   assert.equal(nullRates.page.data.clubStatsState, 'ready')
-  assert.equal(nullRates.page.data.clubStats.topics[0].completionRateText, '—')
+  assert.equal(nullRates.page.data.clubStats.topics[0].completionRateText, '0.0%')
   assert.equal(nullRates.page.data.clubStats.topics[1].completionRateText, '33.3%')
 
   const empty = createDetailHarness()
@@ -318,7 +318,7 @@ test('零分母完成率为 null 时看板仍可用并显示「—」(D4 新合�
     clubId: 9, topicCount: 0, participants: 0, completed: 0, overallRate: null, topics: [],
   } })
   assert.equal(empty.page.data.clubStatsState, 'ready')
-  assert.equal(empty.page.data.clubStats.overallRateText, '—')
+  assert.equal(empty.page.data.clubStats.overallRateText, '0.0%')
 })
 
 function declarations(source, selector) {

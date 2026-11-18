@@ -38,7 +38,7 @@
         <image class="team-cover" src="{{team.imgUrl || '/images/route_city_cover.png'}}" mode="aspectFill" lazy-load="true" />
         <view class="team-main">
           <view class="team-name ep1">{{team.name || '未命名团'}}</view>
-          <view class="team-meta">{{team.dateText || '时间待定'}} · 已报名 {{team.signupCount != null ? team.signupCount + ' 人' : '—'}}</view>
+          <view class="team-meta">{{team.dateText || '时间待定'}} · 已报名 {{ team.signupCount || 0 }} 人</view>
         </view>
         <cy-icon class="team-arrow {{team._open ? 'open' : ''}}" name="arrow-right" size="32" />
       </view>
@@ -50,7 +50,7 @@
         <cy-error load-failure wx:elif="{{team._detailState === 'network-error'}}" title="网络连接失败" retry="重试" bind:retry="retryTeamDetail" data-index="{{ti}}" data-topic-id="{{team.id}}" />
         <block wx:elif="{{team._detailState === 'ready'}}">
           <view class="team-summary" wx:if="{{team.summary}}">
-            已支付 {{team.summary.paidCount != null ? team.summary.paidCount + ' 人' : '—'}} · 可退款 {{ team.summary.refundableCount || 0 }} 人
+            已支付 {{ team.summary.paidCount || 0 }} 人 · 可退款 {{ team.summary.refundableCount || 0 }} 人
             <text wx:if="{{team.summary.signupDeadlineText}}"> · 截止 {{team.summary.signupDeadlineText}}</text>
           </view>
           <!-- C-13:每场票款,与库逐分对账;只有主理人收得到金额。 -->
@@ -68,7 +68,7 @@
               <view class="ticket-name ep1">{{tk.name || '票种'}}</view>
               <!-- 「已报名 12 人 · 上限 20」两行压成一行分数:同屏比对多个票种时,
                    分数一列对齐才看得出哪个票要卖完了。 -->
-              <view class="ticket-num">{{tk.signups != null ? tk.signups : '—'}}<text wx:if="{{tk.totalInventory}}"> / {{tk.totalInventory}}</text><text wx:else> 人</text></view>
+              <view class="ticket-num">{{tk.signups || 0}}<text wx:if="{{tk.totalInventory}}"> / {{tk.totalInventory}}</text><text wx:else> 人</text></view>
             </view>
             <!-- 报名者名单 -->
             <view class="regs" wx:if="{{tk.regs.length > 0}}">

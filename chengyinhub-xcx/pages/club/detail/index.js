@@ -250,7 +250,7 @@ function shapeClubStats(raw, expectedClubId) {
       participants: rowParticipants,
       completed: rowCompleted,
       completionRate,
-      completionRateText: rowParticipants > 0 ? completionRate.toFixed(1) + '%' : '—',
+      completionRateText: rowParticipants > 0 ? completionRate.toFixed(1) + '%' : '0.0%',
     });
   }
   return {
@@ -258,7 +258,7 @@ function shapeClubStats(raw, expectedClubId) {
     participants,
     completed,
     overallRate,
-    overallRateText: participants > 0 ? overallRate.toFixed(1) + '%' : '—',
+    overallRateText: participants > 0 ? overallRate.toFixed(1) + '%' : '0.0%',
     topics: topics.slice(0, 5),
   };
 }

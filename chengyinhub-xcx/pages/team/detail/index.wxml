@@ -28,7 +28,7 @@
       <view class="team-title">{{teamTitle || team.title || '一起出发的玩家队伍'}}</view>
       <view wx:if="{{!(leader && team.status == 0)}}" class="team-sub">{{team.joinMode == 2 ? '公开招募' : '仅邀请'}}</view>
       <view class="team-meta">
-        <view class="team-meta-item"><text class="team-meta-value">{{team.joinedCount != null ? team.joinedCount : '—'}} / {{team.maxMembers != null ? team.maxMembers : '—'}}</text><text class="team-meta-key">当前成员</text></view>
+        <view class="team-meta-item"><text class="team-meta-value">{{team.joinedCount || 0}} / {{team.maxMembers || 0}}</text><text class="team-meta-key">当前成员</text></view>
         <view class="team-meta-item"><text class="team-meta-value">{{expireText || '待定'}}</text><text class="team-meta-key">场次开始</text></view>
       </view>
     </view>
@@ -118,7 +118,7 @@
       title="{{boardState === 'login' ? boardMessage : '队伍进度加载失败'}}" action="{{boardState === 'login' ? '登录' : '重试'}}" bind:action="retryBoard" />
     <block wx:if="{{boardState === 'ready' && board}}">
       <view class="team-card">
-        <view class="team-member tm-sum"><view class="team-member-main"><view class="team-member-name">全队已完成 {{board.summary.teamDoneCount}} / {{board.summary.totalTasks === 0 ? 0 : (board.summary.totalTasks || '—')}} 个节点</view></view></view>
+        <view class="team-member tm-sum"><view class="team-member-main"><view class="team-member-name">全队已完成 {{board.summary.teamDoneCount}} / {{board.summary.totalTasks || 0}} 个节点</view></view></view>
         <cy-empty wx:if="{{!board.tasks.length}}" title="暂无节点" />
         <scroll-view wx:else scroll-x class="tm-matrix" enhanced show-scrollbar="{{false}}">
           <view class="tm-mx">
@@ -139,7 +139,7 @@
         <view class="team-member" wx:for="{{boardRanks}}" wx:key="teamId">
           <text class="tm-rank">{{item.rank}}</text>
           <view class="team-member-main"><view class="team-member-name">{{item.title}}{{item.mine ? ' · 我的队伍' : ''}}</view></view>
-          <text class="tm-val">{{item.teamDoneCount}} / {{item.totalTasks === 0 ? 0 : (item.totalTasks || '—')}}</text>
+          <text class="tm-val">{{item.teamDoneCount}} / {{item.totalTasks || 0}}</text>
         </view>
       </view>
     </block>

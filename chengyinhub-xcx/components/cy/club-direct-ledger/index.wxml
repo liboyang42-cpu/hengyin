@@ -2,7 +2,7 @@
 <view class="direct-ledger" wx:if="{{!(kind === 'club' && state === 'ready' && ledger && !ledger.rows.length)}}">
   <view class="direct-head">
     <text class="direct-title">{{kind === 'club' ? '商家计酬' : '俱乐部计酬'}}</text>
-    <text class="direct-count" wx:if="{{ledger}}">{{ledger.activeCount != null ? ledger.activeCount + ' 人次' : '—'}}</text>
+    <text class="direct-count" wx:if="{{ledger}}">{{ledger.activeCount || 0}} 人次</text>
   </view>
   <text class="direct-sub">俱乐部直接付款</text>
   <cy-skeleton wx:if="{{state === 'loading'}}" type="amount" count="{{1}}" />
