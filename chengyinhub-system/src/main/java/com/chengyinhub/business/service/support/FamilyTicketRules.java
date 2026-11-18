@@ -132,7 +132,7 @@ public final class FamilyTicketRules {
                 .append(party.get("childCount")).append(" 小");
         if (party.get("childAge") != null) out.append("（儿童 ").append(party.get("childAge")).append(" 岁）");
         Object perk = party.get("familyPerkText");
-        if (perk != null) out.append(" · 儿童份：").append(perk);
+        if (perk != null) out.append("· 儿童份：").append(perk);
         return out.toString();
     }
 
