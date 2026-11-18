@@ -3,7 +3,8 @@
 // ★ 答案不在客户端:槽位形状(预填/空槽/分隔符)与本局已补字符都来自服务端 publicProjection。
 //   组件只收集玩家补的字,交给 SUBMIT_HANGMAN {slots};对错、重建整词、别名比对全在服务端。
 // 不画自定义键盘:格子下面一个输入框接系统键盘,输入什么,可编辑格按顺序填什么;点某一格 = 把光标挪到它。
-// 交失败(缺槽/越界/冲突)由页面按原错误提示,本组件**不清空**玩家已填内容;服务端判「没解开」才清空重来(原型)。
+// 交失败(缺槽/越界/冲突)由页面按原错误提示,本组件**不清空**玩家已填内容;服务端判「没解开」也保留已填的格子(F02),
+// 下面显示服务端回的那句话(错答表命中那条或通用错答),没有才用兜底句。
 
 const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js');
 const motion = require('../../../../utils/motion.js');
@@ -75,18 +76,18 @@ Component({
     solved: { type: Boolean, value: false },
     display: { type: String, value: '' },
     feedback: { type: String, value: '' },
+    wrongFeedback: { type: String, value: '' },
   },
   data: { groups: [], active: -1, pop: -1, typedText: '', focused: false, cursor: 0, blankCount: 0, verdict: '', canSubmit: false },
   observers: {
     'show, slots, solved': function (show, slots, solved) {
       if (!show) { this._typed = {}; this._pending = false; this._clearPop(); return; }
-      /* 刚交过、服务端回来仍未解开:整体提示「不对」并清空重来(原型 hangSubmit 失败分支;服务端不给逐格对错) */
+      /* 刚交过、服务端回来仍未解开:提示一句,保留已填的格子让玩家直接改(F02;服务端不给逐格对错) */
       const wrong = this._pending && !solved;
       this._pending = false;
-      if (wrong) this._typed = {};
       if (this._typed == null) { this._typed = distribute(slots, initialText(slots)); }
       const cells = paintCells(slots, this._typed);
-      const text = wrong ? '' : (this.data.typedText || initialText(slots));
+      const text = this.data.typedText || initialText(slots);
       this.setData({
         groups: groupCells(cells),
         blankCount: editable(slots).length,

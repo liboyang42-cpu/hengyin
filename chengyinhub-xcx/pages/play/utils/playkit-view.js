@@ -488,6 +488,8 @@ function buildTypeIn(seg) {
     startConfirmed: seg.started === true,
     startFailureSeq: 0,
     terminalSkin: !!seg.terminalSkin,   // 终端样式(原型 hello world),纯外观
+    // F02:判错后服务端回的那句话(错答表命中那条或通用错答);错答表本身不下发
+    wrongFeedback: !seg.passed && typeof seg.lastFeedback === 'string' ? seg.lastFeedback : '',
   };
 }
 

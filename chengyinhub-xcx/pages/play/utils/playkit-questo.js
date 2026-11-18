@@ -54,6 +54,8 @@ function hangmanKit(seg) {
     solved: s.solved === true,
     display: s.solved === true ? String(s.display || '') : '',
     feedback: s.solved === true && typeof s.feedback === 'string' ? s.feedback : '',   // 服务端没带时页面补本站文字反馈(hangmanStationText)
+    // F02:没解开时服务端回的那句话(错答表命中那条或通用错答);没有就由组件兜底
+    wrongFeedback: s.solved !== true && typeof s.lastFeedback === 'string' ? s.lastFeedback : '',
   };
 }
 

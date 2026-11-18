@@ -78,6 +78,8 @@
 .pp__poster.is-dim { opacity: .34; filter: saturate(.4); }   /* ds-ok 原型 .poster.dim */
 .pp__poster.is-right .pp__tile { box-shadow: inset 0 0 0 6rpx var(--ok); }
 .pp__poster.is-wrong .pp__tile { box-shadow: inset 0 0 0 6rpx var(--accent); }
+/* F04 确认前选中的那一张:描主色边,可以换 */
+.pp__poster.is-on .pp__tile { box-shadow: inset 0 0 0 6rpx var(--ink); }
 
 /* 发牌:几张先侧着、缩着进来,一张接一张 —— 原型 dealin .62s。
    直接淡入的话几张同时到位,看不出「这是一副牌」。每张的延时写在行内。 */

@@ -7,10 +7,10 @@
     <view class="pp__grid">
       <!-- 名字在图**外面**:压在色块里看起来就是「标题在图片里」。
            色块只装图和判定角标,名字和说明落在页面底色上、左对齐。 -->
-      <view class="pp__poster pp__poster--deal {{item.state}}" wx:for="{{posters}}" wx:key="id"
+      <view class="pp__poster pp__poster--deal {{item.state}} {{!item.state && chosen === index ? 'is-on' : ''}}" wx:for="{{posters}}" wx:key="id"
             style="animation-delay:{{index * 70}}ms"
             data-i="{{index}}" bindtap="onPick"
-            aria-role="button" aria-label="{{item.name}}"
+            aria-role="button" aria-label="{{item.name}}" aria-selected="{{chosen === index}}"
             hover-class="pp__press" hover-stay-time="80">
         <view class="pp__tile" style="background:{{item.tint}};color:{{item.ink}}">
           <image class="pp__art" wx:if="{{item.imageUrl}}" src="{{item.imageUrl}}" mode="aspectFill" />
@@ -27,4 +27,8 @@
       </view>
     </view>
   </view>
+
+  <!-- F04:先选、可以换,按这里才算 -->
+  <view class="g-btn {{chosen < 0 || submitted ? 'g-btn--disabled' : ''}}" wx:if="{{!revealed}}" bindtap="onConfirm"
+        aria-role="button" aria-label="确认选择" aria-disabled="{{chosen < 0 || submitted}}" hover-class="g-btn--press" hover-stay-time="80">确认选择</view>
 </cy-play-stage>
