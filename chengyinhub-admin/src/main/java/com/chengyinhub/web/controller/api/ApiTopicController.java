@@ -63,6 +63,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -2151,6 +2153,33 @@ public class ApiTopicController extends BaseController {
             if (rows != null && !rows.isEmpty()) return true;
         }
         return false;
+    }
+
+    @Autowired(required = false)
+    private com.chengyinhub.business.mapper.CmsTopicNodeMapper visitConfigNodeMapper;
+
+    /** FE-STORY 7.10:作者读本主题各地点的到访方式(GPS / 扫码 / 仅线上)与 GPS 半径。仅主题作者本人。 */
+    @GetMapping("/free-explore/visit-config")
+    public AjaxResult freeExploreVisitConfig(@RequestParam("topicId") Long topicId) {
+        return visitConfigRules().list(optionalAppUserId(), topicId);
+    }
+
+    /** FE-STORY 7.10:作者设置单个地点的到访方式与半径(300–500 米);只改这两列。 */
+    @PostMapping("/free-explore/visit-config")
+    public AjaxResult updateFreeExploreVisitConfig(@RequestBody FreeExploreVisitConfigRequest request) {
+        if (request == null) return error("参数有误");
+        return visitConfigRules().update(optionalAppUserId(), request.nodeId, request.visitCheck, request.visitRadius);
+    }
+
+    private com.chengyinhub.business.service.support.FreeExploreVisitConfigRules visitConfigRules() {
+        return new com.chengyinhub.business.service.support.FreeExploreVisitConfigRules(
+                cmsTopicService, cmsTopicNodeService, visitConfigNodeMapper);
+    }
+
+    public static class FreeExploreVisitConfigRequest {
+        public Long nodeId;
+        public String visitCheck;
+        public Integer visitRadius;
     }
 
     @PostMapping("/info-to-user")

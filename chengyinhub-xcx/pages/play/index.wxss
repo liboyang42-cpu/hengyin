@@ -2281,4 +2281,6 @@ page { background: var(--cy-color-bg-page); }
 .fx-tile__visit { display: inline-flex; align-items: center; margin-top: var(--cy-space-2); padding: 8rpx 22rpx; border-radius: var(--cy-radius-pill);
   font-size: var(--cy-type-caption); font-weight: 600; color: var(--cy-color-play-ink); background: var(--cy-color-play-accent); }
 .fx-tile__visit.is-busy { opacity: .5; }
+.fx-tile__expired { display: block; margin-top: var(--cy-space-2); font-size: var(--cy-type-caption); color: var(--cy-color-text-tertiary); }
+.fx-hero__expired { display: block; text-align: center; font-size: var(--cy-type-body); color: var(--cy-color-text-tertiary); }
 .chpick__row.is-visit .chpick__cover { opacity: .5; }

@@ -170,6 +170,9 @@ const MATRIX = [
   ['pages/play/index.js', "req('/api/play/nodes'", 'required', 'member', 'current-session'],
   // R29C:只读登录会员的原会话快照，服务端逐项校验会话/会员/场次/主题及历史可读性。
   ['pages/play/index.js', "req('/api/play/history'", 'required', 'member', 'current-session'],
+  /* 2026-11-18 FE-STORY 7.4 票过期只读集章册:同一 ApiPlayProgressController.history,不带 routeSessionId 时
+     走 freeExploreVisitedHistory —— 未登录拒,只下发本人(或同票同队)到访过的章节与地点,非自由探索拒。 */
+  ['pages/play/utils/fe-story-gate.js', "req('/api/play/history'", 'required', 'member', 'current-session'],
   // qx-b1 UG-05/07:提示阶梯层级与只读分数明细。服务端按 topic_route_session.id 解析原局并校验本人、主题与节点,不含正文。
   ['pages/play/index.js', "req('/api/play/help', 'GET'", 'required', 'member', 'current-session'],
   ['pages/play/index.js', "req('/api/play/help/receipt', 'GET'", 'required', 'member', 'current-session'],
@@ -188,6 +191,9 @@ const MATRIX = [
   /* 2026-10-22 L21 BL-185 主题发布前试检查:ApiTopicStateKeyController.publishCheck 走 editableDenial ——
      登录 →(scope=MERCHANT 时 PROJECT_MANAGE 取 Owner 主体)→ 主题本人;只读不改状态。 */
   ['pages/publish/fabu/index.js', "url: '/api/topic/publish-check'", 'required', 'publisher', 'self-publisher'],
+  /* 2026-11-18 FE-STORY 7.10 地点到访方式:主题控制器下的到访方式读取 → FreeExploreVisitConfigApplication.authorGate ——
+     未登录拒(401),非主题作者本人 403,非自由探索主题拒;只读本主题地点的到访方式。 */
+  ['pages/publish/fabu/theme-fe-visit.js', "url: '/api/topic/free-explore/visit-config', method: 'GET'", 'required', 'publisher', 'self-publisher'],
   // unknown 回执的权威回读：与 play/index 同一接口、同一 session 参数，权限档位一致。
   ['pages/play/merchant/index.js', "url: '/api/play/nodes'", 'required', 'member', 'current-session'],
   ['pages/play/utils/theme-backpack.js', "req('/api/play/theme/state'", 'required', 'member', 'current-session'],
@@ -510,7 +516,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-11-14 free-explore-1114:定价页两处(已锁价状态、结算待处理)+商家套票预约一处,均已入 MATRIX,130 → 133。
   // 2026-11-14：公开成长榜与合并搜索 POST → GET，已登记两处调用，133 → 135。
   // 2026-11-14 合 master #840：封面署名新增一处直接 GET，135 → 136。
-  assert.equal(directCount, 136, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-11-18 FE-STORY 7.10:fabu 节点抽屉读本主题地点到访方式一处(作者本人,已入 MATRIX),136 → 137。
+  assert.equal(directCount, 137, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。
@@ -528,7 +535,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-11-09 V3-35:漫游入口地图把目录地点画成图钉,另读一次 /api/roam/pois(与地图页同端点同权限档),46 → 47。
   // 2026-11-10 staging 合流:再叠加 qx-a4 +1,49 → 50。
   // 2026-11-11 f-pages:漫游护照「官方路线」大卡探一次公开路线目录(已入 MATRIX),50 → 51。
-  assert.equal(wrapperCount, 51, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-11-18 FE-STORY 7.4:自由探索票过期后读只读历史一处(同 /api/play/history 权限档,已入 MATRIX),51 → 52。
+  assert.equal(wrapperCount, 52, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
   assert.equal(ownMediaWrapperCount, 5, '作者媒体实际GET调用点变化需显式复核');
   assert.equal(MATRIX.length, directCount + wrapperCount + ownMediaWrapperCount);
 

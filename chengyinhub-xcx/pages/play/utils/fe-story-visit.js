@@ -22,6 +22,16 @@ function visitDateText(visitTime) {
   return p ? p.month + '月' + p.day + '日到访' : '';
 }
 
+/** 已解锁卡的到访说明:队友到访解锁的写「队友已到访」(这时可能没有本人的到访时间),否则写日期 */
+const TEAM_VISIT_TEXT = '队友已到访';
+function visitedText(node) {
+  if (!node) return '';
+  return node.visitedByTeam === true ? TEAM_VISIT_TEXT : visitDateText(node.visitTime);
+}
+
+/** 票过期后的只读集章册:锁卡不再给到访按钮,只写这一句 */
+const EXPIRED_TEXT = '已过期，不能再解锁';
+
 /** 卡包进度:只写「已解锁 X / N 章」,不写百分比、不写还差几章 */
 function progressText(unlocked, total) {
   return '已解锁 ' + (Number(unlocked) || 0) + ' / ' + (Number(total) || 0) + ' 章';
@@ -64,10 +74,10 @@ function tileView(node, distText) {
     storyLocked: locked,
     visitCheck: normCheck(node.visitCheck),
     visitBtn: visitButtonText(node.visitCheck),
-    visitText: locked ? '' : visitDateText(node.visitTime),
+    visitText: locked ? '' : visitedText(node),
     distText: locked ? (distText || '') : '',
     hookText: locked ? (node.hookText || '') : '',
   };
 }
 
-module.exports = { normCheck, visitButtonText, visitDateText, progressText, fragmentTitle, outcome, rejection, tileView };
+module.exports = { normCheck, visitButtonText, visitDateText, visitedText, TEAM_VISIT_TEXT, EXPIRED_TEXT, progressText, fragmentTitle, outcome, rejection, tileView };

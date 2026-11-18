@@ -231,7 +231,7 @@ test('选章面板:锁定的章打开该章锁卡', () => {
   const js = read('pages/play/index.js');
   assert.match(js, /if \(card && this\.data\.storyGate && card\.chapterLocked\) \{ this\._openChapterLockedCard\(card\); return true; \}/);
   const wxml = read('pages/play/index.wxml');
-  assert.match(wxml, /<text class="chpick__sub" wx:if="\{\{chapterPick\.states\[index\] === 'visit'\}\}">到访后解锁<\/text>/);
+  assert.match(wxml, /<text class="chpick__sub" wx:if="\{\{chapterPick\.states\[index\] === 'visit'\}\}">\{\{storyExpired \? '已过期，不能再解锁' : '到访后解锁'\}\}<\/text>/);
 });
 
 test('锁卡不渲染正文;锁定的章打不开;碎片卡标题按到访数', () => {

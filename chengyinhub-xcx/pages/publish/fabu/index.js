@@ -254,6 +254,7 @@ const runtimeEditor = require('./theme-runtime.js'); const routeNames = require(
 const structure = require('./theme-runtime-structure.js'); // structure
 const survivalEditor = require('./theme-runtime-survival.js'); /* survival */ const lookEditor = require('./theme-look-editor.js'); /* 主题画面风格 */
 const zeroHpEditor = require('./theme-runtime-zero-hp.js'); // R5 HP 归零面板（与 runtimeEditor 内同一组方法，直接展开便于 handler 溯源）
+const feVisitConfig = require('./theme-fe-visit.js'); // FE-STORY 7.10 地点到访方式
 const ownership = require('./theme-ownership.js'); const d20Page = require('./theme-d20-page.js'); const keysItems = require('./theme-keys-items.js'); const initialCarry = require('./theme-initial-carry.js'); // 文档二 L1;L2 线索与物品 · 物品一组;初始状态 · 开局带着
 const themeMedia = require('./theme-media.js');
 Page({
@@ -262,7 +263,7 @@ Page({
   ...structure.methods, // structure
   ...survivalEditor.methods, // survival
   ...zeroHpEditor.methods, /* R5 HP 归零 */ ...lookEditor.methods, /* 画面风格 */
-  ...ownership.methods, ...d20Page.methods, ...keysItems.methods, ...initialCarry.methods,
+  ...ownership.methods, ...feVisitConfig.methods, ...d20Page.methods, ...keysItems.methods, ...initialCarry.methods,
   _routeGraph: topicRouteGraph.emptyGraph(),
   _routeMappingSourceNodeId: '',
   _routeMappingReturnToNodeEditor: false,
@@ -274,7 +275,7 @@ Page({
     ...runtimeEditor.data, ...routeNames.data,
     ...structure.data, // structure
     ...survivalEditor.data, /* survival */ ...lookEditor.data, /* 画面风格 */
-    ...ownership.data, ...d20Page.data, ...keysItems.data, ...initialCarry.data,
+    ...ownership.data, ...feVisitConfig.data, ...d20Page.data, ...keysItems.data, ...initialCarry.data,
     // 氛围块的选择器:cy-dropdown 吃 {value,label} 数组(全仓禁原生 picker),块上回显要 key→中文的映射。
     moodOptions: CHAPTER_ATMOSPHERES,
     storyWhenOptions: [], storyWhenLabelOf: {},
@@ -5014,6 +5015,7 @@ Page({
       inlineEdit: { chapterIndex: Number(chapterIndex), nodeIndex: Number(nodeIndex) },
     })
     this._openNodeBinding(nodesForm);
+    this._openFeVisitConfig(node);
     this._refreshStructureSummary(); // structure
     if (node.templateId && !(nodesForm.templateInfo && Object.prototype.hasOwnProperty.call(nodesForm.templateInfo, 'advancedConfigJson')))
       this._loadNodeTemplateDetail(node);
@@ -5050,6 +5052,7 @@ Page({
       selectedNodeLid: m.nodeLid, // 点 marker → 列表同步高亮
     });
     this._openNodeBinding(nodesForm);
+    this._openFeVisitConfig(node);
     this._refreshStructureSummary(); // structure
     if (node.templateId && !(nodesForm.templateInfo && Object.prototype.hasOwnProperty.call(nodesForm.templateInfo, 'advancedConfigJson')))
       this._loadNodeTemplateDetail(node);
@@ -5080,6 +5083,7 @@ Page({
     this._rollbackNodeRouteEdit();
     this._nodeBindingSlots = [];
     this._nodeBindingDraft = null;
+    this._closeFeVisitConfig();
     this.setData({
       popChapterNodes: false,
       nodeSheetView: 'detail',

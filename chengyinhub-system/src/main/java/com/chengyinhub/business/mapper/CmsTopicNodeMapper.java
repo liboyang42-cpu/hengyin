@@ -77,4 +77,9 @@ public interface CmsTopicNodeMapper
 
     /** 自由探索到访配置(整个主题),/api/play/nodes 投影用。 */
     List<com.chengyinhub.business.domain.FreeExploreVisitConfig> selectVisitConfigByTopicId(@org.apache.ibatis.annotations.Param("topicId") Long topicId);
+
+    /** 自由探索作者设置地点到访方式与半径(FE-STORY 7.10);只改这两列。 */
+    int updateVisitConfig(@org.apache.ibatis.annotations.Param("nodeId") Long nodeId,
+                          @org.apache.ibatis.annotations.Param("visitCheck") Integer visitCheck,
+                          @org.apache.ibatis.annotations.Param("visitRadiusM") Integer visitRadiusM);
 }

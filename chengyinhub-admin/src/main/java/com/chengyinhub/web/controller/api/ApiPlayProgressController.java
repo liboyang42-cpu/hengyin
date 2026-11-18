@@ -99,8 +99,10 @@ public class ApiPlayProgressController extends BaseController {
     @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @GetMapping("/history")
     public AjaxResult history(@RequestParam Long activityId, @RequestParam Long topicId,
-            @RequestParam Long routeSessionId)
+            @RequestParam(required = false) Long routeSessionId)
     {
+        // FE-STORY 7.4:自由探索票过期后不带 routeSessionId,按到访事实读已解锁章节(只读)。
+        if (routeSessionId == null) return playHistoryQueryApplication.freeExploreVisitedHistory(currentMemberId(), activityId, topicId);
         return playHistoryQueryApplication.history(currentMemberId(), activityId, topicId, routeSessionId);
     }
 

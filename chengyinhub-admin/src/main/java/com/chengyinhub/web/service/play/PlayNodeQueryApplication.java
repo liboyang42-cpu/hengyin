@@ -115,6 +115,8 @@ public class PlayNodeQueryApplication {
     private PlayNodeContext playNodeContext;
     @Autowired(required = false)
     private com.chengyinhub.business.mapper.CmsTopicNodeMapper cmsTopicNodeMapper;
+    @Autowired(required = false)
+    private com.chengyinhub.business.mapper.PlayerNodeProgressMapper playerNodeProgressMapper;
 
     /** 单条主键取券;查不到/查挂了一律 null ⇒ 调用方整块不下发,不让奖励拖垮 /nodes */
     public com.chengyinhub.business.domain.SmsCoupon resolveCoupon(Long couponId) {
@@ -238,6 +240,22 @@ public class PlayNodeQueryApplication {
             } catch (Exception e) {
                 // 读不到配置按默认 GPS 300 米展示;到访判定本身在 /arrive 服务端再读一次,不受影响。
                 logger.warn("自由探索到访配置读取失败 topic={}", read.tId, e);
+            }
+        }
+        read.teamVisitedChapterIds = new java.util.HashSet<>();
+        if (read.playMode == PlayMode.FREE_COLLECT && playerNodeProgressMapper != null) {
+            try {
+                List<Long> teamNodes = playerNodeProgressMapper.selectTeamVisitedNodeIds(read.memberId,
+                        read.progActId == null ? 0L : read.progActId, read.tId);
+                if (teamNodes != null && !teamNodes.isEmpty()) {
+                    java.util.Set<Long> ids = new java.util.HashSet<>(teamNodes);
+                    for (CmsTopicNode n : read.nodeList)
+                        if (n != null && n.getChapterId() != null && ids.contains(n.getId()))
+                            read.teamVisitedChapterIds.add(n.getChapterId());
+                }
+            } catch (Exception e) {
+                // 队友到访读不到只影响「全队共享解锁」,本人到访照常判定。
+                logger.warn("自由探索队友到访读取失败 topic={}", read.tId, e);
             }
         }
         return null;
@@ -586,8 +604,13 @@ public class PlayNodeQueryApplication {
         boolean redeemed = entitlement != null && Integer.valueOf(1).equals(entitlement.getStatus());
         boolean online = playNodeContext.isPureOnlineNode(n)
                 || check == com.chengyinhub.business.service.support.FreeExploreVisit.CHECK_ONLINE;
-        boolean visited = arrived || redeemed || online;
+        boolean ownVisit = arrived || redeemed || online;
+        // FE-STORY 5.5:同票队友(已领取席位)或同队成员任一人到访,全队解锁本章;权益不共享。
+        boolean teamVisit = !ownVisit && n.getChapterId() != null && read.teamVisitedChapterIds != null
+                && read.teamVisitedChapterIds.contains(n.getChapterId());
+        boolean visited = ownVisit || teamVisit;
         m.put("visited", visited);
+        m.put("visitedByTeam", teamVisit);
         m.put("visitTime", arrived ? proof.getCheckinTime() : redeemed ? entitlement.getRedeemedAt() : null);
         m.put("visitCheck", online ? "ONLINE" : com.chengyinhub.business.service.support.FreeExploreVisit.checkLabel(check));
         m.put("visitRadius", com.chengyinhub.business.service.support.ArrivalPolicy.visitRadius(
@@ -1003,6 +1026,8 @@ public class PlayNodeQueryApplication {
         Set<Long> visitedChapterIds;
         /** FE-STORY:本次投影里有地点的章节。 */
         Set<Long> placeChapterIds;
+        /** FE-STORY 5.5:队友到访过的章节(同票席位 / 同队)。 */
+        Set<Long> teamVisitedChapterIds;
         /** 端能力声明(可选):不传 = 未声明,兼容结论为未确认,绝不当作不支持。 */
         com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration capabilityDeclaration =
                 com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration.NONE;

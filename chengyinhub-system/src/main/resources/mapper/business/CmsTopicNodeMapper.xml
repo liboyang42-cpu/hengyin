@@ -236,4 +236,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
           from cms_topic_node where topic_id = #{topicId}
     </select>
 
+    <update id="updateVisitConfig">
+        update cms_topic_node set visit_check = #{visitCheck}, visit_radius_m = #{visitRadiusM}
+         where id = #{nodeId}
+    </update>
+
 </mapper>

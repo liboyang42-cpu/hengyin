@@ -274,4 +274,45 @@
            <foreach collection="nodeIds" item="nodeId" open="(" separator="," close=")">#{nodeId}</foreach>
     </update>
 
+    <select id="selectTeamVisitedNodeIds" resultType="java.lang.Long">
+        select distinct p.node_id
+          from player_node_progress p
+         where p.topic_id = #{topicId} and p.activity_id = #{activityId}
+           and p.del_flag = 0 and p.checkin_time is not null and p.member_id &lt;&gt; #{memberId}
+           and p.member_id in (
+               select r.member_id from cms_registration r
+                where r.id in (
+                      select own.id from cms_registration own
+                       where own.member_id = #{memberId} and own.payment_status = 2
+                         and ((own.owner_type = 2 and own.owner_id = #{activityId})
+                           or (own.owner_type = 1 and own.owner_id = #{topicId}))
+                      union
+                      select seat.registration_id from cms_registration_seat_invitation seat
+                       where seat.invitee_member_id = #{memberId} and seat.status = 1)
+               union
+               select i.invitee_member_id from cms_registration_seat_invitation i
+                where i.status = 1 and i.invitee_member_id is not null
+                  and i.registration_id in (
+                      select own2.id from cms_registration own2
+                       where own2.member_id = #{memberId} and own2.payment_status = 2
+                         and ((own2.owner_type = 2 and own2.owner_id = #{activityId})
+                           or (own2.owner_type = 1 and own2.owner_id = #{topicId}))
+                      union
+                      select seat2.registration_id from cms_registration_seat_invitation seat2
+                       where seat2.invitee_member_id = #{memberId} and seat2.status = 1)
+               union
+               select mate.member_id from play_team_member me
+                 join play_team t on t.id = me.team_id and t.status &lt;&gt; 4
+                      and ((t.owner_type = 2 and t.owner_id = #{activityId}) or (t.owner_type = 1 and t.owner_id = #{topicId}))
+                 join play_team_member mate on mate.team_id = t.id and mate.status = 1
+                where me.member_id = #{memberId} and me.status = 1)
+    </select>
+
+    <select id="selectOwnVisits" resultMap="PlayerNodeProgressResult">
+        <include refid="selectPlayerNodeProgressVo"/>
+         where member_id = #{memberId} and activity_id = #{activityId} and topic_id = #{topicId}
+           and del_flag = 0 and checkin_time is not null
+         order by checkin_time asc, id asc
+    </select>
+
 </mapper>
