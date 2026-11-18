@@ -1080,6 +1080,19 @@
         <textarea class="pending-node-description" value="{{nodesForm.description}}" bindinput="onNodesDescriptionInputChange" placeholder="玩家到这里要观察、寻找或完成什么？" placeholder-class="slopes-story-placeholder" maxlength="500" auto-height fixed="{{true}}" />
       </view>
 
+      <!-- FE-STORY 7.10 到访方式(只给主题作者):已保存的自由探索地点才有。点选即存(POST),错误写在字段下 -->
+      <view class="node-card fe-visit" wx:if="{{formData.productType === 2 && popChapterNodesAction==1 && feVisit.show && nodesForm.id == feVisit.nodeId}}">
+        <text class="node-card__title">到访方式</text>
+        <view class="tk-segment">
+          <view wx:for="{{feVisitChecks}}" wx:key="key" class="tk-segment__item {{feVisit.check === item.key ? 'is-active' : ''}}" data-check="{{item.key}}" bindtap="onFeVisitCheck" aria-role="button" aria-label="到访方式选{{item.label}}" aria-disabled="{{feVisit.saving || feVisit.loading}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
+        </view>
+        <view class="node-card__row fe-visit__radius" wx:if="{{feVisit.check === 'GPS'}}">
+          <view class="node-card__main"><text class="node-binding__label">范围（米）</text></view>
+          <cy-stepper label="到访范围" value="{{feVisit.radius}}" min="{{feVisitRadiusMin}}" max="{{feVisitRadiusMax}}" step="{{feVisitRadiusStep}}" disabled="{{feVisit.saving || feVisit.loading}}" bind:change="onFeVisitRadius" />
+        </view>
+        <cy-inline-error class="node-binding__error" wx:if="{{feVisit.error}}" kind="error" title="{{feVisit.error}}" />
+      </view>
+
       <view class="node-card node-card--danger" bindtap="deleteNode" wx:if="{{popChapterNodesAction==1}}" hover-class="cy-pressed" hover-stay-time="80">删除节点</view>
     </block>
 
