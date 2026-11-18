@@ -144,25 +144,27 @@ test('我的项目页:每一档裸文本都从页面安全边距起排', () => {
 
   // 判据本身不能是空转:先确认顶档确实被认出来,且报障那一档在集合里。
   const textBands = collectBands(wxml, 'mp-page').filter((b) => b.hasOwnText).map((b) => b.classes.join(' '))
-  assert.ok(textBands.length >= 3, `只认出 ${textBands.length} 档裸文本顶档，收集器八成漂了`)
+  // 2026-11-17 PG-084:「长按卡片管理」提示(.mp-longtip)随卡片「···」按钮上线删除,
+  // 判据改由仍在的裸文本顶档 .mp-more(「仅显示最近 200 条」)兜住。
+  assert.ok(textBands.length >= 2, `只认出 ${textBands.length} 档裸文本顶档，收集器八成漂了`)
   assert.ok(
-    textBands.some((c) => c.includes('mp-longtip')),
-    `走查报障的 .mp-longtip 没进顶档集合，判据对它无效:\n${textBands.join('\n')}`,
+    textBands.some((c) => c.split(' ').includes('mp-more')),
+    `.mp-more 没进顶档集合，判据对它无效:\n${textBands.join('\n')}`,
   )
 
   assert.deepEqual(flushLeftTextBands(wxml, wxss, 'mp-page'), [], '以下顶档裸文本贴 x=0，会被刘海/安全区裁掉首字')
 })
 
-test('负控:把 .mp-longtip 的左安全边距撤掉必须判红', () => {
+test('负控:把 .mp-more 的内距撤掉必须判红', () => {
   const wxss = read(`${PAGE}.wxss`)
   const mutated = wxss.replace(
-    /\.mp-longtip\s*\{([^}]*)padding:0 var\(--cy-page-x\);/,
-    (all, head) => `.mp-longtip {${head}`,
+    /\.mp-more\s*\{([^}]*)padding:32rpx;/,
+    (all, head) => `.mp-more {${head}`,
   )
   assert.notEqual(mutated, wxss, '变异锚点漂了，负控本身是假的')
   assert.deepEqual(
     flushLeftTextBands(read(`${PAGE}.wxml`), mutated, 'mp-page'),
-    ['mp-longtip'],
+    ['mp-more'],
     '撤掉修复却判绿，说明这条契约没真读到 padding',
   )
 })
