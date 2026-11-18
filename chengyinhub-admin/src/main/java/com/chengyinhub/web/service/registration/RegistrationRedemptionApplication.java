@@ -264,6 +264,8 @@ public class RegistrationRedemptionApplication {
         if (perkLedgerService == null || registration == null) return null;
         try {
             registrationService.attachPartySnapshots(java.util.Collections.singletonList(registration));
+            // 非亲子票不再去读供给(核销回执的只读查询保持原样)
+            if (com.chengyinhub.business.service.support.FamilyTicketRules.partyOf(registration.getPartySnapshotJson()) == null) return null;
             return perkLedgerService.redemptionParty(registration.getPartySnapshotJson(), chapterId, merchantOwnerMemberId);
         } catch (RuntimeException e) {
             logger.warn("核销回包亲子票构成读取失败 registrationId={}", registration.getId(), e);
