@@ -1964,11 +1964,24 @@ class MergedMasterBoundaryPolicyTest(unittest.TestCase):
         self.assertTrue(all(o["forbidden_backrefs"] and "allowed_consumers" not in o for o in p_owners))
         self.assertEqual({("P_PLAY_FEEDBACK", "P_PLAY_FEEDBACK_STORAGE"), ("P_PLAY_FEEDBACK_API", "P_PLAY_FEEDBACK")},
                          {tuple(e) for e in now["allowed_directions"] if any(n.startswith("P_") for n in e)})
-        self.assertEqual(old["owners"], [o for o in now["owners"] if not o["id"].startswith(("M_", "Q_", "P_"))
+        # 2026-11-18 自由探索作者发布 + 参考结算(F10/F11,lead 审阅):7 个 FE_ 职责各登记 1 个类型,
+        # 只有 API→端口、实现→端口/存储、作者开售→共享业务审计 6 条前向边;只有存储登记 allowed_consumers。
+        fe_owners = [o for o in now["owners"] if o["id"].startswith("FE_")]
+        self.assertEqual(7, len(fe_owners))
+        self.assertEqual([1] * 7, [len(o["members"]) for o in fe_owners])
+        self.assertTrue(all(o["forbidden_backrefs"] for o in fe_owners))
+        self.assertEqual(["FE_REFERENCE_SETTLEMENT_STORAGE"], [o["id"] for o in fe_owners if "allowed_consumers" in o])
+        self.assertEqual({("FE_AUTHOR_SALE_API", "FE_AUTHOR_SALE_PORT"), ("FE_AUTHOR_SALE", "FE_AUTHOR_SALE_PORT"),
+                          ("FE_AUTHOR_SALE", "SHARED_BUSINESS_AUDIT_PORT"),
+                          ("FE_REFERENCE_SETTLEMENT_API", "FE_REFERENCE_SETTLEMENT_PORT"),
+                          ("FE_REFERENCE_SETTLEMENT", "FE_REFERENCE_SETTLEMENT_PORT"),
+                          ("FE_REFERENCE_SETTLEMENT", "FE_REFERENCE_SETTLEMENT_STORAGE")},
+                         {tuple(e) for e in now["allowed_directions"] if any(n.startswith("FE_") for n in e)})
+        self.assertEqual(old["owners"], [o for o in now["owners"] if not o["id"].startswith(("M_", "Q_", "P_", "FE_"))
                                          and o["id"] not in l8_owners and o["id"] not in r9_owners
                                          and o["id"] not in r28_owners])
         self.assertEqual(old["allowed_directions"], [e for e in now["allowed_directions"]
-                         if not any(n.startswith(("M_", "Q_", "P_")) for n in e) and tuple(e) not in self.original_intent_edges
+                         if not any(n.startswith(("M_", "Q_", "P_", "FE_")) for n in e) and tuple(e) not in self.original_intent_edges
                          and tuple(e) not in l8_edges and not any(n in r28_owners for n in e)])
         self.assertEqual(self.original_intent_edges, {tuple(e) for e in now["allowed_directions"]
                                                     if tuple(e) in self.original_intent_edges})
