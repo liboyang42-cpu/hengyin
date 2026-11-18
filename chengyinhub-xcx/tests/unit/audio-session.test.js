@@ -74,8 +74,19 @@ test('API 缺失时静默降级,不抛', () => {
   assert.doesNotThrow(() => s2.keepAwake('s', true));
 });
 
-test('游玩音轨不受静音键限制；结束/卸载后不再被回前台或打断结束复活', () => {
-  const w=fakeWx(), s=createAudioSession(w), bgm=s.register(fakeCtx(true), {kind:'bgm'});
+test('F06 按 kind 定静音键:背景音乐(ambient)跟随,旁白(voice)与其余点播音轨不跟随', () => {
+  const s=createAudioSession(fakeWx()), mod=require('../../pages/play/utils/audio-session.js');
+  assert.equal(mod.AMBIENT,'ambient'); assert.equal(mod.VOICE,'voice');
+  assert.equal(s.register(fakeCtx(true), {kind:'ambient'}).obeyMuteSwitch,true);
+  assert.equal(s.register(fakeCtx(true), {kind:'voice'}).obeyMuteSwitch,false);
+  for (const kind of ['npc','kit','chapter',undefined]) assert.equal(s.register(fakeCtx(true), kind ? {kind} : undefined).obeyMuteSwitch,false,String(kind));
+  const js=require('node:fs').readFileSync(require('node:path').join(__dirname,'../../pages/play/index.js'),'utf8');
+  assert.equal((js.match(/\{ kind: audioSession\.AMBIENT \}/g)||[]).length,2,'主题配乐 + 站点配乐');
+  assert.match(js,/\{ kind: audioSession\.VOICE \}\);   \/\/ F06:旁白 \/ 站点语音讲解/);
+});
+
+test('游玩音轨结束/卸载后不再被回前台或打断结束复活', () => {
+  const w=fakeWx(), s=createAudioSession(w), bgm=s.register(fakeCtx(true), {kind:'voice'});
   assert.equal(bgm.obeyMuteSwitch,false);
   fire(w.begin); s.pauseAll(false); fire(w.end); s.resumeAll();
   assert.deepEqual(bgm.calls,['pause']);

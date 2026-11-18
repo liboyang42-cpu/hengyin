@@ -1,4 +1,5 @@
 @import "/pages/play/style/play-surface.wxss";
+@import "/pages/play/style/letter-pool.wxss";
 
 /* cy-playkit-hangman · 逐字猜词(UG-01,l-kits 2026-11-10 照 proto/game page.css .hang / .tiles / .tile / .hang__in,px × 2 = rpx)。
    问答暗版皮肤;整屏居中;格子 68×84rpx;圆角 / 切角 / 字体读主题外观 --lk-*,没有外观时落回皮肤色。 */

@@ -38,7 +38,7 @@ import static org.mockito.Mockito.when;
 /**
  * R16-DUO 双人视角只读合同(/api/play/encounter 的 roleView):
  * 单人 / 不在队伍 → two halves(SOLO);队伍里 A 只见 A、B 只见 B、另给对方 label;
- * 超过 2 人按在册次序回卷轮转(1A、2B、3A、4B……);在册名单里查不到本人 → roleMissing
+ * 超过 2 人按在册次序回卷轮转(1A、2B、3A、4B……);只剩 1 人 / 多队歧义 / 查不到本人 → SOLO 全量(F05)
  * 且一个 view 都不给;冻结后改模板不影响进行中的局。
  *
  * <p>判定来源是现有队伍机制(play_team + play_team_member 的在册次序),
@@ -306,15 +306,102 @@ class ApiPlayEncounterRoleViewTest {
         assertEquals("查档案", roleView.get("otherRoleLabel"));
     }
 
-    /** 在册名单里查不到本人(半个队员):同样 roleMissing,不外泄任何一半。 */
+    /** F05 单人兜底:在册名单里查不到本人时按 SOLO 给全量(以前是 roleMissing、一个视图都不给,单人会卡住)。 */
     @Test
-    void memberMissingFromActiveRosterGetsRoleMissing() {
+    void memberMissingFromActiveRosterFallsBackToSolo() {
         givenTeam(ACTIVITY, PlayTeam.STATUS_STARTED, member(PARTNER), member(THIRD));
 
         Map<String, Object> roleView = roleView(controller.encounter(TOPIC, null, NODE));
 
-        assertEquals(Boolean.TRUE, roleView.get("roleMissing"));
-        assertTrue(views(roleView).isEmpty());
+        assertEquals("SOLO", roleView.get("role"));
+        assertFalse(roleView.containsKey("roleMissing"));
+        assertEquals(2, views(roleView).size());
+    }
+
+    /** F05:队伍只剩 1 个在册队员(其余都退了)= 单人,给全部视图,不能只拿到 A。 */
+    @Test
+    void teamWithOnlyOneActiveMemberGetsSoloFullView() throws Exception {
+        givenTeam(ACTIVITY, PlayTeam.STATUS_STARTED, member(MEMBER));
+
+        Map<String, Object> roleView = roleView(controller.encounter(TOPIC, null, NODE));
+
+        assertEquals("SOLO", roleView.get("role"));
+        List<Map<String, Object>> views = views(roleView);
+        assertEquals(2, views.size());
+        assertEquals("看实物", views.get(0).get("label"));
+        assertEquals("查档案", views.get(1).get("label"));
+        String json = new ObjectMapper().writeValueAsString(roleView);
+        assertTrue(json.contains("A 的实物清单") && json.contains("B 的档案摘录"), json);
+    }
+
+    /** F05:中途退队只剩自己 —— 下一次拉取立即回到 SOLO 全量。 */
+    @Test
+    void partnerLeavingMidRunTurnsMemberIntoSolo() {
+        givenTeam(ACTIVITY, PlayTeam.STATUS_STARTED, member(PARTNER), member(MEMBER));
+        assertEquals("B", roleView(controller.encounter(TOPIC, null, NODE)).get("role"));
+
+        when(teamMapper.selectActiveMembers(TEAM)).thenReturn(Collections.singletonList(member(MEMBER)));
+
+        Map<String, Object> roleView = roleView(controller.encounter(TOPIC, null, NODE));
+        assertEquals("SOLO", roleView.get("role"));
+        assertEquals(2, views(roleView).size());
+    }
+
+    /** F05:同一场次在两支队伍里(分不清按哪支算)按 SOLO 给全量,不再什么都不给。 */
+    @Test
+    void ambiguousTeamsFallBackToSolo() {
+        givenTeam(ACTIVITY, PlayTeam.STATUS_STARTED, member(MEMBER), member(PARTNER));
+        PlayTeam first = new PlayTeam();
+        first.setId(TEAM);
+        first.setOwnerType(2);
+        first.setOwnerId(ACTIVITY);
+        first.setStatus(PlayTeam.STATUS_STARTED);
+        PlayTeam second = new PlayTeam();
+        second.setId(TEAM + 1);
+        second.setOwnerType(2);
+        second.setOwnerId(ACTIVITY);
+        second.setStatus(PlayTeam.STATUS_STARTED);
+        when(teamMapper.selectMyTeams(MEMBER)).thenReturn(Arrays.asList(first, second));
+
+        Map<String, Object> roleView = roleView(controller.encounter(TOPIC, null, NODE));
+
+        assertEquals("SOLO", roleView.get("role"));
+        assertFalse(roleView.containsKey("roleMissing"));
+        assertEquals(2, views(roleView).size());
+    }
+
+    /** F05:3 个角色 3 个队员,依在册次序分别拿到 A、B、C;本人只见自己那份,其余给 label。 */
+    @Test
+    void threeRolesThreeMembersGetABC() throws Exception {
+        template.setAdvancedConfigJson("{\"schemaVersion\":1,\"roleViews\":{\"enabled\":true,"
+                + "\"roles\":[{\"id\":\"A\",\"label\":\"看实物\"},{\"id\":\"B\",\"label\":\"查档案\"},"
+                + "{\"id\":\"C\",\"label\":\"听口述\"}],"
+                + "\"views\":[{\"roleId\":\"A\",\"title\":\"A 的实物清单\"},"
+                + "{\"roleId\":\"B\",\"title\":\"B 的档案摘录\"},"
+                + "{\"roleId\":\"C\",\"title\":\"C 的口述笔记\"}]}}");
+        String[] expected = {"A", "B", "C"};
+        Long[][] rosters = {
+                {MEMBER, PARTNER, THIRD},
+                {PARTNER, MEMBER, THIRD},
+                {PARTNER, THIRD, MEMBER}};
+        for (int i = 0; i < 3; i++) {
+            PlayTeamMember[] roster = new PlayTeamMember[3];
+            for (int j = 0; j < 3; j++) roster[j] = member(rosters[i][j]);
+            givenTeam(ACTIVITY, PlayTeam.STATUS_STARTED, roster);
+
+            Map<String, Object> roleView = roleView(controller.encounter(TOPIC, null, NODE));
+
+            assertEquals(expected[i], roleView.get("role"));
+            List<Map<String, Object>> views = views(roleView);
+            assertEquals(1, views.size());
+            assertEquals(expected[i], views.get(0).get("roleId"));
+            assertEquals(2, ((List<?>) roleView.get("otherRoleLabels")).size());
+        }
+        Map<String, Object> asC = roleView(controller.encounter(TOPIC, null, NODE));
+        assertEquals("听口述", asC.get("roleLabel"));
+        assertEquals(Arrays.asList("看实物", "查档案"), asC.get("otherRoleLabels"));
+        String json = new ObjectMapper().writeValueAsString(asC);
+        assertFalse(json.contains("A 的实物清单") || json.contains("B 的档案摘录"), json);
     }
 
     /** 已结束 / 已解散的队伍不算队伍(与 inferTeamId 同一 status ≤ STARTED 过滤),回单人完整版。 */

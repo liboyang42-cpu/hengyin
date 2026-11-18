@@ -149,6 +149,15 @@ public class PlayHelpApplication {
                 resolved.memberId, resolved.scope, level, resolved.freeUsesPerRun,
                 spec.freeQuota(), spec.costPoints(), requestId.trim());
         PlayHelpCostApplication.Charge charge = outcome.charge();
+        if (PlayHelpUsagePolicy.TYPE_POOL_TRIM.equals(spec.type())) {
+            // F03:去掉干扰字要真的落进本局状态(投影不再下发被去掉的字);同一级重看不再多去。
+            // 与扣费同一事务:落不进去就整体回滚,不会出现「扣了分却没去字」。
+            advancedGameRuntimeService.trimPool(resolved.memberId, resolved.scope.activityId(),
+                    resolved.scope.topicId(), resolved.nodeId, level,
+                    com.chengyinhub.business.service.support.LetterPoolSupport.trimCount(
+                            ladderEntry(resolved.ladder, level) == null ? null
+                                    : ladderEntry(resolved.ladder, level).path("payload")));
+        }
         return new PlayHelpUseVO(resolved.runId, resolved.nodeId, level, spec.type(), content,
                 charge.applied(), charge.alreadyUnlocked(), charge.chargedPoints(), charge.balanceAfter());
     }

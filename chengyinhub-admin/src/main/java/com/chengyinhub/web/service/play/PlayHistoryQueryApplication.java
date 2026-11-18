@@ -355,6 +355,8 @@ public class PlayHistoryQueryApplication {
             if (!java.util.Arrays.asList("text", "image", "audio", "voice", "thought", "dream", "divider").contains(type)) continue;
             Map<String, Object> row = new LinkedHashMap<>(); row.put("type", type);
             copyHistoryText(row, block, "key", "content", "url", "altText", "who", "thoughtKey", "title");
+            // 可选阅读(延伸阅读卡)在回看里同样折叠
+            if ("text".equals(type) && block.path("optional").asBoolean(false)) row.put("optional", true);
             if ("dream".equals(type) && block.path("images").isArray()) {
                 List<Map<String, Object>> images = new ArrayList<>();
                 for (JsonNode image : block.path("images")) {

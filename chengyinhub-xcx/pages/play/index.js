@@ -38,6 +38,20 @@ const audioSession = require('./utils/audio-session.js');       // 音频打断/
 // 配乐音量:平时 / 旁白在讲时(压低一档,旁白听得清,音乐不断)
 const BGM_VOLUME = { theme: 0.25, station: 0.35 };
 const BGM_DUCKED = { theme: 0.1, station: 0.14 };
+/* F06 声音偏好(本机,跨局记住):背景音乐(主题配乐 + 站点配乐同一个开关)与旁白(章节旁白 + 站点语音讲解)。
+   没存过 / 读不到 = 开;只有明确存了 false 才是关。 */
+const BGM_PREF_KEY = 'play.bgmOn';
+const NARRATION_PREF_KEY = 'play.narrationOn';
+function readAudioPref(key) {
+  try { return wx.getStorageSync(key) !== false; } catch (e) { return true; }
+}
+function writeAudioPref(key, on) {
+  try { wx.setStorageSync(key, !!on); } catch (e) { console.warn('[play] audio preference not saved'); }   // 本局照常按开关走,只是下次进来不记得
+}
+/** 本局有没有旁白音频(章节 audioUrl / 站点语音讲解):没有就不在设置抽屉里出旁白开关。 */
+function hasNarration(d, nodes) {
+  return ((d && d.chapters) || []).some((c) => c && c.audioUrl) || (nodes || []).some((n) => n && n.audio);
+}
 const { createPoller } = require('./utils/poller.js');           // 带领场进度:退避轮询
 const { createPlayTrail } = require('./utils/play-trail.js');
 const teamTrailKit = require('./utils/team-trail.js');
@@ -549,13 +563,17 @@ Page({
     topicName: '', topicAiGenerated: false, // 卡包印刷用:一章一商家后 chapter.name 只是第一章,不能拿它当主题名
     topicAudioUrl: '',            // 主题配乐:游玩页循环底乐(作者媒体)
     themeBgmOn: true,
+    chapterVideoMuted: true,      // F06 章节视频静音自动播放;玩家点「开声音」才出声
+    narrationOn: true,            // F06 旁白开关(章节旁白 / 站点语音讲解自动播放);持久化在 play.narrationOn
+    narrationAvailable: false,    // 本局有旁白音频才在设置抽屉里出旁白开关
+    stationRole: null,            // F05 站点卡角色卡:{ nodeId, view } —— view 原样是 encounter 的 roleView
     topicCover: '',               // 卡包首屏底图:主题长图,虚化后铺底(没有就退回 chapter.cover)
     topicDesc: '',                // 通行证首屏那段简介:同理,chapters[0].description 讲的是第一家店的事
     seatTiles: [], storyGate: false, storyUnlocked: 0, storyTotal: 0, storyOffline: false, visitBusyId: null, packOpen: false, packShake: false, packBurst: false,
     // 点卡 hero 层:show 挂节点,open 驱动过渡(先 show 再下一帧 open,过渡才有起点)
     hero: { show: false, open: false, node: null, style: '', bodyTop: 0, ry: 0, spun: false, turned: false, sx: 0, ss: '1', faded: false, collapsed: false, scrollTop: 0 },
     // 店铺分身对话(自由探索卡片详情 → 点店铺卡)。started 一旦为真,居中的大字问候让位给消息流。
-    shopNpc: { show: false, open: false, name: '', greeting: '', started: false, msgs: [], input: '', thinking: false, thinkPhase: 0, nodeId: 0, ry: 0, recording: false },
+    shopNpc: { show: false, open: false, name: '', greeting: '', started: false, msgs: [], input: '', thinking: false, thinkPhase: 0, nodeId: 0, ry: 0, recording: false, voiceId: 0 },
     // 章节剧情全屏故事流(自由探索卡片详情 → 点大卡片)。lines 逐行显形,不是整段一次淡入。
     chapStory: { show: false, open: false, title: '', lines: [], audio: '', audioDur: '', playing: false, barAway: false, frames: 0 },
     // 升级2/3:俱乐部角色卡(首入弹一次) + 同行者榜 sheet
@@ -685,6 +703,9 @@ Page({
       topicId: options.topicId || '',
       regId: options.registrationId || options.regId || '',
       reducedMotion: readReducedMotion(),
+      // F06:背景音乐 / 旁白开关是本机偏好,跨局记住;没存过 = 开
+      themeBgmOn: readAudioPref(BGM_PREF_KEY),
+      narrationOn: readAudioPref(NARRATION_PREF_KEY),
     });
     if (options.mock && app.isDevEnv && app.isDevEnv()) {
       this.setData({
@@ -2085,7 +2106,7 @@ Page({
       shopNpc: {
         show: true, open: false, name: v.npcName,
         greeting: authored || (hi + '，我是' + v.npcName + '，欢迎来到' + (v.name || '我们店铺')),
-        started: false, msgs: [], input: '', thinking: false, thinkPhase: 0, nodeId: v.nodeId, ry: 0, recording: false,
+        started: false, msgs: [], input: '', thinking: false, thinkPhase: 0, nodeId: v.nodeId, ry: 0, recording: false, voiceId: 0,
       },
     }, () => { this._npcTimer = setTimeout(() => { this.setData({ 'shopNpc.open': true }); this._startNpcFigure(); }, 30); });
   },
@@ -2351,32 +2372,45 @@ Page({
     });
   },
 
-  /** @param replaceIdx 传了就改写这一条(重答),不传则追加。 */
+  /** @param replaceIdx 传了就改写这一条(重答),不传则追加。
+   *  F06:语音回复不再自动播放 —— 音频地址记在这条消息上,气泡下出「播放」,玩家点了才出声。 */
   _pushShopNpcReply(text, replaceIdx, audioUrl) {
     this._stopThinkBeat();
     if (!this.data.shopNpc.show) return;   // 已经收起来了就别再往里塞
     const old = this.data.shopNpc.msgs;
     const target = old[replaceIdx];
+    const voice = typeof audioUrl === 'string' ? audioUrl : '';
+    // 重答换掉的那条正在播:旧语音已经不是这段话了,停掉
+    if (target && target.role === 'ai' && this.data.shopNpc.voiceId === target.id) this._stopShopNpcVoice();
     const msgs = target && target.role === 'ai'
       // id 保持不变:换了 id 会让 wx:key 判成新节点,整条重新入场闪一下
-      ? old.map((m, i) => (i === replaceIdx ? { ...m, text } : m))
-      : old.concat([{ id: old.length + 1, role: 'ai', text }]);
+      ? old.map((m, i) => (i === replaceIdx ? { ...m, text, audioUrl: voice } : m))
+      : old.concat([{ id: old.length + 1, role: 'ai', text, audioUrl: voice }]);
     this.setData({ 'shopNpc.msgs': msgs, 'shopNpc.thinking': false, 'shopNpc.thinkPhase': 0 });
-    this._playShopNpcVoice(audioUrl);
   },
 
-  _playShopNpcVoice(audioUrl) {
+  /** 回复气泡上的「播放 / 停止」:点哪条播哪条,再点同一条停。 */
+  toggleNpcVoice(e) {
+    const msg = (this.data.shopNpc.msgs || [])[Number(e && e.currentTarget && e.currentTarget.dataset.idx)];
+    if (!msg || msg.role !== 'ai' || !msg.audioUrl) return;
+    if (this.data.shopNpc.voiceId === msg.id) { this._stopShopNpcVoice(); return; }
+    this._playShopNpcVoice(msg.audioUrl, msg.id);
+  },
+
+  _playShopNpcVoice(audioUrl, msgId) {
     if (!audioUrl) return;
     this._stopShopNpcVoice();
     const audio = audioSession.register(wx.createInnerAudioContext(), { kind: 'npc' });
     this._shopNpcVoiceAudio = audio;
     audio.src = secureOwnMedia(audioUrl);
-    audio.onEnded(() => this._stopShopNpcVoice());
-    audio.onError(() => this._stopShopNpcVoice());
+    audio.onEnded(() => { if (this._shopNpcVoiceAudio === audio) this._stopShopNpcVoice(); });
+    audio.onError(() => { if (this._shopNpcVoiceAudio === audio) { this._stopShopNpcVoice(); cyToast('这段语音放不出来'); } });
+    this.setData({ 'shopNpc.voiceId': msgId || 0 });
     audio.play();
   },
 
   _stopShopNpcVoice() {
+    if (this.data.shopNpc && this.data.shopNpc.voiceId) this.setData({ 'shopNpc.voiceId': 0 });
     if (!this._shopNpcVoiceAudio) return;
     audioSession.unregister(this._shopNpcVoiceAudio);
     try { this._shopNpcVoiceAudio.stop(); this._shopNpcVoiceAudio.destroy(); } catch (e) {}
@@ -3898,7 +3932,11 @@ Page({
           if (read) { const previousOdd = curOdd; curOdd = read.level; push(read.log); curOdd = previousOdd; }
           continue;
         }
-        if (b.type === 'text') {
+        if (b.type === 'text' && b.optional === true) {
+          /* 延伸阅读(作者标 optional):折成一张卡,默认收起,点开读全文;who 作副标题。整卡仍是**一个** .chfull__para。 */
+          const lines = String(b.content || '').split(/\n+/).map((x) => keepNumerals(applyStoryVars(x.trim(), vars))).filter(Boolean);
+          if (lines.length) items.push({ kind: 'optional', who: b.who ? String(b.who) : '', lines, open: false, mood: curMood, odd: curOdd, cond: condOf(b) });
+        } else if (b.type === 'text') {
           const previousOdd = curOdd;
           if (b.level != null) curOdd = Math.max(0, Math.min(3, Number(b.level) || 0));
           push(b.who ? String(b.who) + '：' + String(b.content || '') : b.content, condOf(b));
@@ -3996,6 +4034,13 @@ Page({
       if (!readOnly) this._enterThemeChapter();
     });
   },
+  /** 延伸阅读卡:点一下展开 / 收起。高度变了要重量一次几何(measureChapter 按 .chfull__para 对齐焦点)。 */
+  toggleOptionalRead(e) {
+    const i = Number(e && e.currentTarget && e.currentTarget.dataset.i);
+    const item = (this.data.chapterParas || [])[i];
+    if (!item || item.kind !== 'optional') return;
+    this.setData({ ['chapterParas[' + i + '].open']: !item.open }, () => this.measureChapter());
+  },
   /** 内嵌玩法读到就铺开(原型:登记表、选择题、「在现场」都直接嵌在故事流里),每站只自动开一次 */
   _autoInline(nodeId) {
     this._autoInlined = this._autoInlined || {};
@@ -4026,7 +4071,7 @@ Page({
    *  重听仍走任务页上的「一段留给你的录音」。 */
   _autoStationVoice(node) {
     const url = node && node.audio;
-    if (!url || node.done || this.data.isPreview) return;
+    if (!url || node.done || this.data.isPreview || this.data.narrationOn === false) return;   // F06:旁白关了不自动讲,任务页仍可点着听
     const key = String(node.nodeId);
     this._stationVoiceDone = this._stationVoiceDone || new Set();
     if (this._stationVoiceDone.has(key)) return;
@@ -4044,7 +4089,7 @@ Page({
   _startThemeBgm() {
     const url = this.data.topicAudioUrl;
     if (!url || !this.data.themeBgmOn || this.data.isPreview || this._themeBgm) return;
-    const ctx = audioSession.register(wx.createInnerAudioContext(), { kind: 'bgm' });
+    const ctx = audioSession.register(wx.createInnerAudioContext(), { kind: audioSession.AMBIENT });
     ctx.src = secureOwnMedia(url);
     ctx.loop = true;
     ctx.volume = this._duckSources && this._duckSources.size ? BGM_DUCKED.theme : BGM_VOLUME.theme;
@@ -4107,7 +4152,7 @@ Page({
     if (this._stationBgm && sameFile(this._stationBgmSrc) === sameFile(src)) return;
     this._stopStationBgm();
     if (this._themeBgm) { try { this._themeBgm.pause(); } catch (e) {} }
-    const ctx = audioSession.register(wx.createInnerAudioContext(), { kind: 'bgm' });
+    const ctx = audioSession.register(wx.createInnerAudioContext(), { kind: audioSession.AMBIENT });
     ctx.src = secureOwnMedia(src);
     ctx.loop = music.loop !== false;
     ctx.volume = this._duckSources && this._duckSources.size ? BGM_DUCKED.station : BGM_VOLUME.station;
@@ -4131,7 +4176,17 @@ Page({
   toggleThemeBgm() {
     const on = !this.data.themeBgmOn;
     this.setData({ themeBgmOn: on });
+    writeAudioPref(BGM_PREF_KEY, on);
     if (on) this._startThemeBgm(); else { this._stopStationBgm(); this._stopThemeBgm(); }
+  },
+  /** F06 旁白开关:关掉后章节旁白与站点语音讲解不再自动播(仍可点着听);正在自动讲的那段一并停下。 */
+  toggleNarration() {
+    const on = !this.data.narrationOn;
+    this.setData({ narrationOn: on });
+    writeAudioPref(NARRATION_PREF_KEY, on);
+    const key = this.data.audioNodeId;
+    const narrating = key === 'chapter' || (key != null && (this.data.nodes || []).some((n) => n && n.nodeId === key));
+    if (!on && narrating && this.data.audioPlaying && this._audio) { try { this._audio.pause(); } catch (e) {} }
   },
   startStoryIntro() {
     if (!this.data.storyIntro.show || this.data.storyIntro.out) return;
@@ -4283,6 +4338,7 @@ Page({
   playChapterAudio(auto) {
     const url = this.data.chapter && this.data.chapter.audioUrl;
     if (!url) return;
+    if (auto && this.data.narrationOn === false) return;   // F06:旁白关了不自动播;右上角声音钮仍可点着听
     // 自动播每章只一次:故事流每次重铺(开任务、拍照回来、回前台重读)都会走到这里,
     // 放完了再从头放一遍就是「点一下就重来」。重听走右上角的声音钮(toggleStoryAudio,不带 auto)。
     const autoKey = String((this.data.chapter || {}).id || '') + '|' + String(url).split('?')[0];
@@ -4546,6 +4602,7 @@ Page({
       // 作者配得再对,一取这个名字就被顶掉,看到的仍是写死在 JS 里的那份。
       that.setData({
         loading: false, emptyTip: '', emptyKind: '', topicId: d.topicId || '', topicName, topicDesc: d.topicDesc || '', topicAudioUrl: d.topicAudioUrl || '', topicCover: d.topicCover || '', topicAiGenerated: d.topicAiGenerated === true,
+        narrationAvailable: hasNarration(d, nodes),
         mode, serverMode: mode, playContact: playOverlays.contact(d.contact), packOpen: skipPack || that.data.packOpen, headIn: skipPack || that.data.headIn,
         modeLabel: mode == 2 ? '自由探索' : '城市定向',
         storyGate: mode === 2 && d.storyTotal != null, storyUnlocked: Number(d.storyUnlocked) || 0, storyTotal: Number(d.storyTotal) || 0, storyOffline: false,
@@ -4643,6 +4700,7 @@ Page({
     that._passExpiresAt = d.expiresAt || '';
     this.setData({
       loading: false, emptyTip: '', emptyKind: '', topicId: d.topicId || '', topicName: d.topicName || this._entryTopicName || '', topicDesc: d.topicDesc || '', topicAudioUrl: d.topicAudioUrl || '', topicCover: d.topicCover || '', topicAiGenerated: d.topicAiGenerated === true, mode, serverMode: mode,
+      narrationAvailable: hasNarration(d, nodes),
       modeLabel: mode == 2 ? '自由探索' : '城市定向', packOpen: skipPack || that.data.packOpen, headIn: skipPack || that.data.headIn,
       routeNotice: that._routeNoticeForState(routeState),
         journeyAttributes: routeState.attributes,
@@ -8397,6 +8455,8 @@ Page({
           || !sheet.show || !sheet.node || String(sheet.node.nodeId) !== String(node.nodeId)
           || !currentNode || currentNode.done) return;
       if (!(r.code == 200 || r.code == '200') || !r.data) return;
+      // F05 角色卡:roleView 与检定无关,先落(没配 roleViews 时服务端不给,这里清掉上一站的)
+      this.setData({ stationRole: r.data.roleView && typeof r.data.roleView === 'object' ? { nodeId: node.nodeId, view: r.data.roleView } : null });
       if (r5PlayerRuntime.isR5(r.data)) {
         if ((r.data.allowedActions || []).includes('check')) this.setData({
           'sheet.show': false, journeyCheck: { show: false }, advancedPlay: { show: true, node },
@@ -9570,7 +9630,7 @@ Page({
     if (this._audio) this.destroyAudio();
     this._audioScope = scope;
     const that = this;
-    const audio = audioSession.register(wx.createInnerAudioContext(), { kind: 'guide' });
+    const audio = audioSession.register(wx.createInnerAudioContext(), { kind: audioSession.VOICE });   // F06:旁白 / 站点语音讲解
     const current = () => that._audio === audio && that._isPlayAccountCurrent()
       && sessionKey === that._sessionKey() && routeSessionId === String((that._routeState || {}).sessionId || '');
     audio.obeyMuteSwitch = false;       // 静音开关下也出声（语音导览属于内容消费）

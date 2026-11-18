@@ -207,6 +207,18 @@
              不必重铺整章。show 传 true —— 它在流里露着,不由弹层那套控制。 -->
         <!-- 终章反转:对面回的话,左侧气泡;读到这一块整章翻成对话框(.chfull.is-chat) -->
         <view wx:elif="{{item.kind === 'divider'}}" class="chfull__divider" aria-hidden="true"></view>
+        <!-- 延伸阅读(作者标 optional 的文字块):折叠卡,默认收起,点一下展开 / 收起;who 作副标题。整卡仍是一个 .chfull__para -->
+        <view wx:elif="{{item.kind === 'optional'}}" class="chfull__opt {{item.open ? 'is-open' : ''}}" data-i="{{item.i}}" bindtap="toggleOptionalRead"
+              aria-role="button" aria-expanded="{{item.open}}" aria-label="延伸阅读{{item.who ? '，' + item.who : ''}}，{{item.open ? '点一下收起' : '点一下展开'}}" hover-class="cy-pressed" hover-stay-time="80">
+          <text class="chfull__cond" wx:if="{{item.cond}}">{{item.cond}}</text>
+          <view class="chfull__opt-h">
+            <view class="chfull__opt-copy"><text class="chfull__opt-t">延伸阅读</text><text class="chfull__opt-s" wx:if="{{item.who}}">{{item.who}}</text></view>
+            <view class="chfull__opt-chev" aria-hidden="true"><cy-icon name="chevron-right" size="28" /></view>
+          </view>
+          <view wx:if="{{item.open}}" class="chfull__opt-b">
+            <view class="chfull__opt-p cy-story-hand" wx:for="{{lk.rows(item.lines)}}" wx:for-item="line" wx:key="key">{{line.text}}</view>
+          </view>
+        </view>
         <view wx:elif="{{item.kind === 'reveal'}}" class="chfull__reveal" aria-role="text" aria-label="{{item.who || '对面'}}回复">
           <view wx:if="{{item.who}}" class="chfull__reveal-who">{{item.who}}</view>
           <view class="chfull__reveal-b cy-story-hand" wx:for="{{lk.rows(item.lines)}}" wx:for-item="line" wx:key="key">{{line.text}}</view>
@@ -435,6 +447,11 @@
           <view class="dic pic pic--play"></view>
           <view class="dcopy"><text class="dt">背景音乐</text></view>
           <view class="dsw {{themeBgmOn ? 'is-on' : ''}}" catchtap="toggleThemeBgm" aria-role="switch" aria-checked="{{themeBgmOn}}" aria-label="背景音乐" hover-class="cy-pressed" hover-stay-time="80"><view class="dsw-i"></view></view>
+        </view>
+        <view class="drow" wx:if="{{narrationAvailable}}">
+          <view class="dic pic pic--play"></view>
+          <view class="dcopy"><text class="dt">旁白</text></view>
+          <view class="dsw {{narrationOn ? 'is-on' : ''}}" catchtap="toggleNarration" aria-role="switch" aria-checked="{{narrationOn}}" aria-label="旁白" hover-class="cy-pressed" hover-stay-time="80"><view class="dsw-i"></view></view>
         </view>
         <view class="drow">
           <view class="dic pic pic--gear"></view>
@@ -939,6 +956,8 @@
              ⚠️ 用文字不用图标:图标集是生成物(scripts/ds-build-icons.py,源 coolicons)不许手改,
              而里面没有「复制」这个字形;硬拿别的图标顶会比文字更难认。 -->
         <view class="fx-msg__ops" wx:if="{{item.role=='ai'}}">
+          <view class="fx-msg__op" wx:if="{{item.audioUrl}}" bindtap="toggleNpcVoice" data-idx="{{index}}"
+                aria-role="button" aria-label="{{shopNpc.voiceId === item.id ? '停止语音' : '播放语音'}}" hover-class="cy-pressed" hover-stay-time="80">{{shopNpc.voiceId === item.id ? '停止' : '播放'}}</view>
           <view class="fx-msg__op" bindtap="copyNpcMsg" data-text="{{item.text}}"
                 aria-role="button" aria-label="复制这条回答" hover-class="cy-pressed" hover-stay-time="80">复制</view>
           <view class="fx-msg__op" bindtap="retryNpcMsg" data-idx="{{index}}"
@@ -1061,6 +1080,8 @@
     <view class="sheet-name serif">{{stationTitle.text(sheet.node.name)}}</view>
     <view class="sheet-meta">{{sheet.node.metaLine}}</view>
     <view class="sheet-desc serif" wx:if="{{sheet.node.description}}">{{sheet.node.description}}</view>
+    <!-- F05 组队角色卡:encounter 下发了 roleView 才出(组队只看本人那一份,单人合并全部) -->
+    <cy-role-card wx:if="{{stationRole && stationRole.nodeId == sheet.node.nodeId}}" view="{{stationRole.view}}" />
     <!-- l-play 地点卡(proto gp-place):三个数字只写拿得到的 —— 距离(有定位 / 上一站才算)、步行分钟、开放时段 -->
     <view class="sheet-dist" wx:if="{{mode!=2 && (sheet.node.distText || sheet.node.hoursText)}}"><view wx:if="{{sheet.node.distText}}"><text class="sheet-dist__n lk-num">{{sheetShown ? sheetShown.dist : sheet.node.distText}}</text><text class="sheet-dist__k">距离</text></view><view wx:if="{{sheet.node.walkText}}"><text class="sheet-dist__n lk-num">{{sheetShown ? sheetShown.walk : sheet.node.walkText}}</text><text class="sheet-dist__k">分钟步行</text></view><view wx:if="{{sheet.node.hoursText}}"><text class="sheet-dist__n lk-num">{{sheet.node.hoursText}}</text><text class="sheet-dist__k">开放</text></view></view>
 
@@ -2032,7 +2053,9 @@
 </cy-sheet>
 
 <view wx:if="{{chapterVideo.show}}" class="chapter-video" data-token="{{chapterVideo.token}}" catchtap="finishChapterVideo" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="跳过视频">
-  <video id="chapter-video" class="chapter-video__film" src="{{chapterVideo.url}}" poster="{{chapterVideo.poster}}" autoplay="{{true}}" controls="{{false}}" show-center-play-btn="{{false}}" show-play-btn="{{false}}" show-fullscreen-btn="{{false}}" enable-progress-gesture="{{false}}" object-fit="contain" data-token="{{chapterVideo.token}}" bindtap="finishChapterVideo" aria-role="button" aria-label="跳过视频" hover-class="cy-pressed" hover-stay-time="80" bindplay="onChapterVideoPlay" bindtimeupdate="onChapterVideoTime" bindwaiting="onChapterVideoWaiting" bindended="finishChapterVideo" binderror="finishChapterVideo" />
+  <video id="chapter-video" class="chapter-video__film" src="{{chapterVideo.url}}" poster="{{chapterVideo.poster}}" autoplay="{{true}}" muted="{{chapterVideoMuted}}" controls="{{false}}" show-center-play-btn="{{false}}" show-play-btn="{{false}}" show-fullscreen-btn="{{false}}" enable-progress-gesture="{{false}}" object-fit="contain" data-token="{{chapterVideo.token}}" bindtap="finishChapterVideo" aria-role="button" aria-label="跳过视频" hover-class="cy-pressed" hover-stay-time="80" bindplay="onChapterVideoPlay" bindtimeupdate="onChapterVideoTime" bindwaiting="onChapterVideoWaiting" bindended="finishChapterVideo" binderror="finishChapterVideo" />
   <cover-image wx:if="{{!chapterVideo.playing}}" class="chapter-video__poster" src="{{chapterVideo.poster}}" />
   <cover-view class="chapter-video__skip" data-token="{{chapterVideo.token}}" bindtap="finishChapterVideo" hover-class="cy-pressed" hover-stay-time="80">跳过</cover-view>
+  <!-- F06:静音自动播放,右下角开 / 关声音(catchtap:不冒泡成「跳过」) -->
+  <cover-view class="chapter-video__sound" data-token="{{chapterVideo.token}}" catchtap="toggleChapterVideoSound" aria-role="button" aria-label="{{chapterVideoMuted ? '开声音' : '关声音'}}" hover-class="cy-pressed" hover-stay-time="80">{{chapterVideoMuted ? '开声音' : '关声音'}}</cover-view>
 </view>

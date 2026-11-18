@@ -46,6 +46,30 @@ class ChapterTextFormatFlowTest {
         assertEquals(rows.get(1), again.get(1));
     }
 
+    /** 内容 1117:可选阅读块(optional:true)落库保留、重开再存一致;普通段不多出字段;非正文块不许设。 */
+    @Test
+    void optionalReadingBlockRoundTripsAndOnlyAppliesToText() throws Exception {
+        ChapterBlockDTO side = text("side", "示例站点的掌故。");
+        side.setWho("几个人一起来的话");
+        side.setOptional(Boolean.TRUE);
+        ChapterBlockDTO main = text("main", "你站在示例站点门口。");
+        JsonNode rows = json.readTree(ChapterFlowCompiler.compileChapterFlow(
+                Collections.singletonList(chapter(side, main))).getChapters().get(0)
+                .materializeBlocks(Collections.singletonList(91L)));
+        assertTrue(rows.get(0).path("optional").asBoolean());
+        assertEquals("几个人一起来的话", rows.get(0).path("who").asText());
+        assertFalse(rows.get(1).has("optional"));
+
+        ChapterBlockDTO reopened = json.treeToValue(rows.get(0), ChapterBlockDTO.class);
+        assertEquals(Boolean.TRUE, reopened.getOptional());
+
+        ChapterBlockDTO divider = new ChapterBlockDTO();
+        divider.setType("divider");
+        divider.setKey("d");
+        divider.setOptional(Boolean.TRUE);
+        assertRejected(divider);
+    }
+
     @Test
     void rejectsUnknownStyleBadMarksAndFormatOnNonTextOrSpeakerBlocks() {
         ChapterBlockDTO badStyle = text("a", "甲乙");

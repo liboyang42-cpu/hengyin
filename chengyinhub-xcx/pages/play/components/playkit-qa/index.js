@@ -11,12 +11,17 @@
 //
 // ★ 正确答案永远不下发。这里收到的 options 里没有对错位,判定要么由服务端回,
 // 要么(打字题)由服务端比对 —— 组件只负责报玩家输入了什么。
+//
+// F03 打字题字符池(letterPool):不出输入框,画 answerLength 个空格 + 服务端给的候选字(每行 7 个);
+// 点字填进第一个空格,点已填的格退回,可清空;交卷仍是 SUBMIT_QA {input: 按格序拼起来的字}。
+// 与逐字猜词字母池同一份状态逻辑(utils/letter-pool.js);错答后已放的字保留(F03 §3.3 / F02),描红提示再改。
 
 const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js');
 const motion = require('../../../../utils/motion.js');
 const mediaDenied = require('../../utils/media-denied.js');
 const cyToast = require('../../../../utils/toast.js');
 const { stripOptionKey } = require('../../utils/playkit-questo.js');
+const letterPool = require('../../utils/letter-pool.js');
 
 const KEYS = ['A', 'B', 'C', 'D'];
 /* 反馈上面那行小字。原型只有这两个词 —— 「答错了」这种判决式说法在这一格里读着太重,
@@ -65,6 +70,7 @@ Component({
     audioUrl: { type: String, value: '' },
     lead: { type: String, value: '' },
     options: { type: Array, value: [] },
+    letterPool: { type: Object, value: null },    // F03:{ chars, answerLength };只在打字题且服务端给了时才有
     shotLead: { type: String, value: '' },
     shotNote: { type: String, value: '' },
     limitSeconds: { type: Number, value: 0 },
@@ -115,10 +121,15 @@ Component({
     triesCap: 0,
     ctaLabel: '提交',
     ctaDisabled: true,
+    poolOn: false,
+    poolCells: [],
+    poolRows: [],
+    poolCanClear: false,
   },
   observers: {
     acceptedInput(value) {
       if (value && this.data.mode === 'type' && this.data.passed) this.setData({ typed: value });
+      if (value && this.data.poolOn && this.data.passed) this._syncQaPool();
     },
     /* P-10:故事流里的打字题,页面不调 settle(),判过只回流 attempts / feedbackText。
        次数涨了且仍没过 = 刚答错:清掉输入框、描红、写一句;首次挂载(_seenTypeAttempts 未定)不算。 */
@@ -129,7 +140,10 @@ Component({
       if (seen == null || now <= seen) return;
       if (this.data.mode !== 'type' || this.data.passed || this.data.finished) return;
       this.setData({ typed: '', typeWrong: true, ctaDisabled: true, fbHead: HEAD_NO, feedback: this.data.feedbackText || (this.data.authoredOutcome === 'FAIL' ? '' : RETRY_TEXT) });
+      if (this.data.poolOn) this._paintQaPool();   // 字符池:已放的字不清,按钮按「填满没有」重新亮
     },
+    /* F03:服务端重读后候选字变了(提示去掉了干扰字)→ 对一遍已放的字 */
+    letterPool: function () { if (this._qaVisible) this._syncQaPool(); },
     /* P-10 第四轮 rig 实测:作者的结果反馈(authoredOutcome)可能比 attempts 晚一拍落到组件上 ——
        先到的 attempts 已写了兜底句,这里补清;判定屏摆作者的话,题屏只留描红。 */
     authoredOutcome: function (value) {
@@ -187,6 +201,7 @@ Component({
         // 多选一进来一个都没勾,按钮就得是灰的 —— 亮着一颗按不动的按钮比灰着更糟
         ctaDisabled: !passed && (finished || mode === 'type' || isMultiPick || confirmPick),
       });
+      this._syncQaPool(fresh);
       const stage = this.selectComponent('#cy-play-stage');
       if (stage) {
         if (finished) stage._stopAll();
@@ -230,6 +245,74 @@ Component({
     },
 
     _cappedTries: cappedTries,
+
+    /** F03 字符池是否生效:打字题 + 服务端给了 chars 与 answerLength。 */
+    _poolSpec() {
+      const lp = this.data.letterPool;
+      if (this.data.mode !== 'type' || !lp || !Array.isArray(lp.chars) || !lp.chars.length) return null;
+      const slots = letterPool.blankSlots(lp.answerLength);
+      return slots.length ? { slots, chars: lp.chars } : null;
+    },
+    /** 字符池对一遍:换题(fresh)从空开始;通过后按服务端认可的输入摆好(只读);其余保留已放的字。 */
+    _syncQaPool(fresh) {
+      const spec = this._poolSpec();
+      if (!spec) { this._qaPool = null; this._qaPoolSlots = null; if (this.data.poolOn) this.setData({ poolOn: false, poolCells: [], poolRows: [], poolCanClear: false }); return; }
+      if (fresh) { this._qaPool = null; this._qaPoolSlots = null; }
+      this._qaPool = letterPool.sync(this._qaPool, spec.slots, spec.chars, this._qaPoolSlots);
+      this._qaPoolSlots = spec.slots;
+      const accepted = this.data.passed ? Array.from(String(this.data.acceptedInput || this._submittedText || '')) : [];
+      if (accepted.length === spec.slots.length && !letterPool.complete(this._qaPool, spec.slots)) {
+        const locked = {};
+        spec.slots.forEach((slot, at) => { locked[slot.i] = accepted[at]; });
+        this._qaPool = { picks: {}, locked };
+      }
+      this._paintQaPool();
+    },
+    _paintQaPool() {
+      const spec = this._poolSpec();
+      if (!spec) return;
+      const state = this._qaPool || letterPool.empty();
+      const v = letterPool.view(state, spec.slots, spec.chars);
+      const done = this.data.passed || this.data.finished;
+      const next = done ? -1 : (v.cells.find((c) => !c.ch) || { i: -1 }).i;
+      this.setData({
+        poolOn: true,
+        poolCells: v.cells.map((c) => Object.assign(c, { next: c.i === next })),
+        poolRows: v.rows,
+        poolCanClear: !done && v.filled > 0,
+        ctaDisabled: !done && !(v.complete && !this.data.submitted),
+      });
+    },
+    /** 点候选字:填进第一个空格。 */
+    onPickPool(e) {
+      if (!this.data.poolOn || this.data.passed || this.data.finished || this.data.submitted) return;
+      const spec = this._poolSpec();
+      if (!spec) return;
+      const res = letterPool.fill(this._qaPool || letterPool.empty(), spec.slots, spec.chars, Number(e.currentTarget.dataset.k));
+      if (res.slot < 0) return;
+      this._qaPool = res.state;
+      motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' });
+      this.setData({ typeWrong: false });
+      this._paintQaPool();
+    },
+    /** 点已填的格:字退回候选区。 */
+    onPoolSlot(e) {
+      if (!this.data.poolOn || this.data.passed || this.data.finished || this.data.submitted) return;
+      const state = this._qaPool || letterPool.empty();
+      const next = letterPool.giveBack(state, Number(e.currentTarget.dataset.i));
+      if (next === state) return;
+      this._qaPool = next;
+      motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' });
+      this.setData({ typeWrong: false });
+      this._paintQaPool();
+    },
+    onClearPool() {
+      if (!this.data.poolOn || !this.data.poolCanClear || this.data.passed || this.data.finished || this.data.submitted) return;
+      this._qaPool = letterPool.clear(this._qaPool || letterPool.empty());
+      motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' });
+      this.setData({ typeWrong: false });
+      this._paintQaPool();
+    },
 
     onRun() { this.triggerEvent('run'); },
     onInput(e) {
@@ -319,6 +402,15 @@ Component({
         } else if (this.data.multi) this._submitPick();
         return;
       }
+      if (this.data.poolOn) {
+        const spec = this._poolSpec();
+        const input = spec ? letterPool.joined(this._qaPool || letterPool.empty(), spec.slots) : '';
+        if (!input) return;
+        this._submittedText = input;
+        motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
+        this.triggerEvent('submit', { mode: 'type', input });
+        return;
+      }
       if (!String(this.data.typed || '').trim()) return;
       this._submittedText = this.data.typed;
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
@@ -384,6 +476,7 @@ Component({
         ctaLabel: pick ? '知道了' : (exhausted ? this.data.ctaLabel : '再试一次'),
         ctaDisabled: exhausted || this.data.mode === 'type',
       });
+      if (this.data.poolOn && !exhausted) this._paintQaPool();   // 字符池:已放的字保留,填满就能直接再交
       if (exhausted && stage) stage.fail(false);
     },
 
