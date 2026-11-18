@@ -10,10 +10,11 @@ const playAccuracy = require('./play-accuracy.js');
 const { deniedBySystem } = require('./play-location-once.js');
 const visit = require('./fe-story-visit.js');
 const feStoryCache = require('./fe-story-cache.js');
+const feExpired = require('./fe-story-expired.js');
 
 const PURPOSE_TITLE = '用一次位置确认你到了这里';
 
-function methods() {
+function methods(req) {
   const api = {
     _feNode(id) {
       return (this.data.nodes || []).find((n) => n && String(n.nodeId) === String(id)) || null;
@@ -25,6 +26,8 @@ function methods() {
       const node = this._feNode(id);
       if (!node || Number(this.data.mode) !== 2 || !this.data.storyGate || node.storyLocked !== true) return;
       if (this.data.isPreview || this.data.isMock || this._visitBusy || !this._isPlayAccountCurrent()) return;
+      // 票过期 / 场次结束(FE-STORY 7.4):只读集章册,不再新增到访,也绝不调 /api/play/arrive
+      if (this.data.storyExpired || this._playable === false) return;
       if (this.data.storyOffline) { cyToast('联网后才能解锁'); return; }   // 到访必须联网,不排队、不补发
       // 上一次结果未知:只核对,不重发
       if (this._visitUnknown) { this._visitReadback(); return; }
@@ -179,18 +182,48 @@ function methods() {
       if (this.data.isPreview || this.data.isMock) return;
       feStoryCache.save(this._runSessionScope(), d);
     },
-    /** 断网打不开 /nodes 时:有本局缓存就只读显示已解锁章节,锁卡写「联网后才能解锁」。没有缓存返回 false */
-    _applyFeOfflineCache() {
+    /** 断网打不开 /nodes 时:有本局缓存就只读显示已解锁章节,锁卡写「联网后才能解锁」。没有缓存返回 false。
+     *  expired:已知票过期(402)时,锁卡改写「已过期，不能再解锁」;缓存本身就是过期只读册时同样如此。 */
+    _applyFeOfflineCache(expired) {
       if (this.data.isPreview || this.data.isMock) return false;
       const cached = feStoryCache.read(this._runSessionScope());
       if (!cached) return false;
-      const nodes = cached.nodes.map((n, i) => this.normNode(n, i, 2));
+      return this._applyFeStoryBook(cached, { offline: true, expired: expired === true || cached.readOnly === true });
+    },
+    /** 把 /nodes 同形的集章册(缓存或过期历史)落到页面。只读:不出到访按钮,锁卡只写一句 */
+    _applyFeStoryBook(book, opts) {
+      const o = opts || {};
+      const expired = o.expired === true;
+      const nodes = book.nodes.map((n, i) => this.normNode(n, i, 2));
+      if (expired) this._playable = false;
       this.setData({ loading: false, emptyTip: '', emptyKind: '', mode: 2, serverMode: 2, modeLabel: '自由探索',
-        topicName: cached.topicName || this.data.topicName, topicCover: cached.topicCover || '',
-        storyGate: true, storyOffline: true, storyUnlocked: cached.storyUnlocked, storyTotal: cached.storyTotal,
+        topicName: book.topicName || this.data.topicName, topicCover: book.topicCover || '',
+        storyGate: true, storyOffline: !expired && o.offline === true, storyExpired: expired,
+        storyUnlocked: book.storyUnlocked, storyTotal: book.storyTotal,
         nodes, total: nodes.length, doneCount: nodes.filter((n) => n.done).length, packOpen: true, headIn: true,
-        chapterCards: this.buildChapterCards({ chapters: cached.chapters }, this.data.chapter) }, () => this.rebuild());
+        chapterCards: this.buildChapterCards({ chapters: book.chapters }, this.data.chapter) }, () => this.rebuild());
       return true;
+    },
+    /**
+     * 票过期(/nodes 回 402 或 playable:false)的自由探索:读 /api/play/history(不带 routeSessionId),
+     * 只显示已到访的章节,其余锁定且写「已过期，不能再解锁」。结果也存进 fe-story-cache,断网时同样可读。
+     * 返回 Promise<boolean>:false = 不是自由探索只读历史 / 读不到,调用方照旧落「获取通行证」。
+     * 这里只读,不调 /api/play/arrive,也不重发任何写。
+     */
+    _loadFeExpiredHistory(isCurrent) {
+      if (this.data.isPreview || this.data.isMock) return Promise.resolve(false);
+      const query = feExpired.historyQuery(this.data.activityId, this.data.topicId);
+      if (!query || typeof req !== 'function') return Promise.resolve(false);
+      const current = typeof isCurrent === 'function' ? isCurrent : () => this._isPlayAccountCurrent();
+      return Promise.resolve(req('/api/play/history', 'GET', query, undefined, true)).catch(() => ({ netFail: true })).then((res) => {
+        if (!current()) return true;   // 已换局/换号:旧结果作废,也不再落空态
+        const ok = res && (res.code == 200 || res.code == '200');
+        const scope = this._runSessionScope();
+        const book = ok ? feExpired.merge(res.data, feStoryCache.read(scope)) : null;
+        if (!book) return !ok && (res && res.netFail) ? this._applyFeOfflineCache(true) : false;
+        feStoryCache.save(scope, book);
+        return this._applyFeStoryBook(book, { expired: true });
+      });
     },
     /** 选章面板里点了锁定的章:打开该章第一个地点的锁卡 */
     _openChapterLockedCard(card) {

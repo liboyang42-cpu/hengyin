@@ -491,7 +491,7 @@ Page({
   ...themeTrade.methods(req),
   ...themePlans.methods(req),
   ...playerOps.methods(req),
-  ...playOverlays.methods(req, uuid4), ...playTopbar.methods(req), ...playLook.methods(), ...locOnce.methods(), ...feStoryGate.methods(),
+  ...playOverlays.methods(req, uuid4), ...playTopbar.methods(req), ...playLook.methods(), ...locOnce.methods(), ...feStoryGate.methods(req),
   _routeState: normalizeRouteState(null),
 
   data: {
@@ -569,7 +569,7 @@ Page({
     stationRole: null,            // F05 站点卡角色卡:{ nodeId, view } —— view 原样是 encounter 的 roleView
     topicCover: '',               // 卡包首屏底图:主题长图,虚化后铺底(没有就退回 chapter.cover)
     topicDesc: '',                // 通行证首屏那段简介:同理,chapters[0].description 讲的是第一家店的事
-    seatTiles: [], storyGate: false, storyUnlocked: 0, storyTotal: 0, storyOffline: false, visitBusyId: null, packOpen: false, packShake: false, packBurst: false,
+    seatTiles: [], storyGate: false, storyUnlocked: 0, storyTotal: 0, storyOffline: false, storyExpired: false, visitBusyId: null, packOpen: false, packShake: false, packBurst: false,
     // 点卡 hero 层:show 挂节点,open 驱动过渡(先 show 再下一帧 open,过渡才有起点)
     hero: { show: false, open: false, node: null, style: '', bodyTop: 0, ry: 0, spun: false, turned: false, sx: 0, ss: '1', faded: false, collapsed: false, scrollTop: 0 },
     // 店铺分身对话(自由探索卡片详情 → 点店铺卡)。started 一旦为真,居中的大字问候让位给消息流。
@@ -2651,6 +2651,7 @@ Page({
     const node = (this.data.nodes || []).find((n) => String(n.nodeId) === String(id));
     if (node && this._heroEntryDisabled(node)) return;
     if (node && this.data.storyGate && node.storyLocked === true) return;   // 锁卡的主按钮是「我已到达 / 扫码解锁」,不进玩法
+    if (this.data.storyExpired) return;   // 票过期的只读集章册:只读章节,不进玩法、不到店
     if (this._heroTimer) clearTimeout(this._heroTimer);
     this.setData({ hero: { show: false, open: false, node: null, style: '', bodyTop: 0, ry: 0, spun: false, turned: false, sx: 0, ss: '1', faded: false, collapsed: false, scrollTop: 0 } });
     // F08 / FE-GAPS G1:没有玩法的店不进 startGame —— 直接到这家的权益与核销码(商家页「我已到店」→「出示核销码」)
@@ -4542,7 +4543,9 @@ Page({
       if (res.code == 402 || res.code == '402') {
         // C-26:未购/过期自玩通行证 → needPass 空态 + 「获取通行证」按钮(goGetPass 跳主题详情)。
         // 不再落 registered=false 的「你还没有报名这个场次」——自玩没有报名这个动作,那句指引是错的。
-        that.setData({ loading: false, emptyTip: app.getRequestErrorMessage(res, '请先购买自玩通行证后再开始'), emptyKind: 'needPass' });
+        const needPass = () => that.setData({ loading: false, emptyTip: app.getRequestErrorMessage(res, '请先购买自玩通行证后再开始'), emptyKind: 'needPass' });
+        // FE-STORY 7.4:自由探索票过期后,过期前到访过的章节仍可读 —— 先读只读历史,不是自由探索 / 读不到再落 needPass
+        that._loadFeExpiredHistory(isCurrent).then((shown) => { if (!shown && isCurrent()) needPass(); });
         return;
       }
       if (res.code != 200 && res.code != '200') {
@@ -4606,6 +4609,7 @@ Page({
         mode, serverMode: mode, playContact: playOverlays.contact(d.contact), packOpen: skipPack || that.data.packOpen, headIn: skipPack || that.data.headIn,
         modeLabel: mode == 2 ? '自由探索' : '城市定向',
         storyGate: mode === 2 && d.storyTotal != null, storyUnlocked: Number(d.storyUnlocked) || 0, storyTotal: Number(d.storyTotal) || 0, storyOffline: false,
+        storyExpired: mode === 2 && d.storyTotal != null && d.playable === false,   // FE-STORY 7.4:过期只读,锁卡不出到访按钮
         routeNotice: that._routeNoticeForState(routeState),
         journeyAttributes: routeState.attributes,
         timeBanner: d.playable === false ? (d.timeNote || '') : '',
@@ -4661,6 +4665,7 @@ Page({
         that._consumePendingStart();
         that._consumeVisitOpen();
         if (mode === 2) that._saveFeStoryCache(d);   // 已解锁章节离线可读(按账号 + 局号)
+        if (mode === 2 && d.storyTotal != null && d.playable === false) that._loadFeExpiredHistory(isCurrent);   // FE-STORY 7.4:改读只读历史
         // 中途重进一局(开场已看过 / 卡包已拆):主题配乐接着放,原来只在开场与拆包时起播,重进就没了(实走 A7 复核)
         const resumed = storyResume.read(that._runSessionScope());
         if (resumed.intro || resumed.packOpened) that._startThemeBgm();
@@ -4806,7 +4811,8 @@ Page({
       hookText: n.hookText || '',
       // 自由探索到访(服务端只在 mode 2 下发;锁定时正文字段已由服务端置空)
       ...(shopDay ? { visited: n.visited === true, visitTime: n.visitTime || null, visitCheck: feVisit.normCheck(n.visitCheck),
-        visitRadius: n.visitRadius == null ? null : Number(n.visitRadius), storyLocked: n.storyLocked === true } : {}),
+        visitRadius: n.visitRadius == null ? null : Number(n.visitRadius), storyLocked: n.storyLocked === true,
+        visitedByTeam: n.visitedByTeam === true } : {}),
       npc: n.npc || null,
       perk: n.perk || null
     };
