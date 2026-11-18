@@ -2196,8 +2196,6 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         if (originalActivity != null) {
             RegistrationTopicFence.requireCurrentActivity(originalActivity, cmsActivityMapper);
         }
-        // F12 亲子票:只登记儿童年龄,超出年龄段不让下单;每单仍限 1 张(权益行 uk_entitlement 不变)。
-        FamilyOrderParty familyParty = resolveFamilyOrderParty(request);
         if (Integer.valueOf(1).equals(request.getOwnerType())) {
             if (waitlistClaim != null) throw new RuntimeException("自玩通行证不支持候补 offer");
             created.add(createSelfPlayPassInternal(memberId, request.getOwnerId(),
@@ -2217,6 +2215,9 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                     request.getSourceClubId(), request.getSourceChannelCode(), waitlistClaim,
                     request.getOfferCode(), request.getMarketingSign()));
         }
+        // F12 亲子票:只登记儿童年龄,超出年龄段不让下单;每单仍限 1 张(权益行 uk_entitlement 不变)。
+        // 放在建单之后、同一事务内:票种归属/候补/俱乐部等既有闸先判,这里抛错整单回滚。
+        FamilyOrderParty familyParty = resolveFamilyOrderParty(request);
         bindRequestFingerprint(created, normalizedRequestId, requestFingerprint);
         bindFamilyParty(created, familyParty);
         return created;

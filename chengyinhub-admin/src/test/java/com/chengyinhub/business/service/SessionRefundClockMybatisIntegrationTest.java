@@ -118,6 +118,8 @@ class SessionRefundClockMybatisIntegrationTest {
                 + "COMMENT '支持随时退款 0否1是(发布页填写;仅落库回显,退款规则未接)' AFTER refund_rule, "
                 + "ADD COLUMN sync_with_theme TINYINT(1) NULL "
                 + "COMMENT '售票时间与主题日期同步 0否1是(发布页填写;仅落库回显,同步逻辑未接)' AFTER refund_supported");
+        jdbc.execute("ALTER TABLE oms_ticket ADD COLUMN adult_count TINYINT NOT NULL DEFAULT 1, ADD COLUMN child_count TINYINT NOT NULL DEFAULT 0,"
+                + " ADD COLUMN child_age_min TINYINT NULL, ADD COLUMN child_age_max TINYINT NULL"); // migration_20261118_family_ticket.sql
         jdbc.execute("ALTER TABLE cms_topic ADD COLUMN team_mode TINYINT NOT NULL DEFAULT 0, "
                 + "ADD COLUMN team_max_members INT NOT NULL DEFAULT 4");
 
