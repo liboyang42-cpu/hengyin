@@ -22,7 +22,7 @@ test('k2 j1 N1:订单页「查看记录」与票夹「开始游戏」都按 tick
   assert.match(order, /playQuery\(value\) && ticketHasGame\(value\)\) return 'record'/);
   assert.doesNotMatch(order, /return 'play'/);
   const wxml = read('subpackageMember/signup/index.wxml');
-  assert.match(wxml, /class="wl-start[^"]*"[^>]*wx:if="\{\{walletState === 'ready' && ticketList\.length && !ticketList\[currentSwiperTicket\]\.wNoGame\}\}"/);
+  assert.match(wxml, /class="wl-start[^"]*"[^>]*wx:if="\{\{walletState === 'ready' && ticketList\.length && !ticketList\[currentSwiperTicket\].wNoGame && !ticketList\[currentSwiperTicket\]\.wLocked\}\}"/);
   const js = read('subpackageMember/signup/index.js');
   assert.match(js, /wNoGame: !activityHasGame\(item\.cmsActivity\)/);
   assert.match(js, /_showQrIfNoGame\(\) \{[\s\S]{0,200}this\.setData\(\{ flipped: true \}\)/);

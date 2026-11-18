@@ -47,14 +47,15 @@ function assertWalletContract(wxml, wxss, json) {
   assert.match(wxml, /src="\{\{item\.wImg\}\}"/)
   assert.match(wxml, /class="wc__b">\{\{item\.wTitle\}\}/)
   /* 2026-10-28 业主:点卡翻面出示入场码,卡上不写状态;读屏只读「出示入场码 / 翻回正面」+ 票名 */
-  assert.match(wxml, /aria-label="\{\{flipped && index === currentSwiperTicket \? '翻回正面' : '出示入场码'\}\}，\{\{item\.wTitle\}\}"/,
+  // F13:置灰的票读屏读它的标签(「12月1日开始」/「退款中」),不说「出示入场码」
+  assert.match(wxml, /aria-label="\{\{item\.wLocked \? item\.wTag : \(flipped && index === currentSwiperTicket \? '翻回正面' : '出示入场码'\)\}\}，\{\{item\.wTitle\}\}"/,
     '票名必须以 aria-label 保留(读屏等价物)')
   /* 2026-10-22 业主:票夹标题放回顶栏居中。仍是悬浮(overlay)导航 —— 不长出实底导航条。 */
   assert.match(wxml, /<cy-nav-bar overlay pill pillDark tint="light" title=""\s*\/>/,
     '全屏主题图上只保留悬浮导航(返回),不得重新长出实底导航条')
-  // 2026-11-10 l-after(业主批准 proto/game wl-wallet):顶栏大标题是「票夹 ▾」筛选弹出,标题字走 walFilterLabel(默认「票夹」)
-  assert.match(wxml, /class="wl-nav__b">\{\{walFilterLabel\}\}</, 'l-after:导航下一行左对齐「票夹 ▾」(proto wl-wallet)')
-  assert.match(read('subpackageMember/signup/index.js'), /walFilterLabel: '票夹'/)
+  // F13(OR-011):顶栏大标题就是「票夹」,不再是筛选弹出
+  assert.match(wxml, /class="wl-nav__b">票夹</, '导航下一行左对齐「票夹」')
+  assert.doesNotMatch(read('subpackageMember/signup/index.js'), /walFilterLabel/)
   assert.match(wxss, /\.signup \.ztbg\s*\{[^}]*pointer-events:\s*none/s)
   assert.match(wxss, /\.davidwu\s*\{[^}]*position:\s*relative;[^}]*z-index:\s*1/s,
     '加载/失败/空态必须浮在主题背景之上')
@@ -69,6 +70,9 @@ function assertWalletContract(wxml, wxss, json) {
   assert.match(wxml, /bindtap="goTicket" data-index="\{\{currentSwiperTicket\}\}" data-go="1"/)
   // P-27(2026-11-02):城市定向通关后同一颗按钮写「查看记录」,其余仍是「开始游戏」
   assert.match(wxml, /<text>\{\{ticketList\[currentSwiperTicket\]\.topicCompleted \? '查看记录' : '开始游戏'\}\}<\/text>/)
+  // F13:置灰(即将开始 / 退款中)的卡不出背面、不出「开始游戏 / 查看记录」
+  assert.match(wxml, /class="wc__face wc__back" wx:if="\{\{index === currentSwiperTicket && !item\.wLocked\}\}"/)
+  assert.match(wxml, /!ticketList\[currentSwiperTicket\]\.wNoGame && !ticketList\[currentSwiperTicket\]\.wLocked\}\}"/)
   assert.doesNotMatch(wxml, /去支付|查看详情|wl-tab/, '票夹不放待支付的单,也没有可用/已用/已过期切换')
   assert.equal(json.usingComponents?.['cy-icon'], '/components/cy/icon/index')
 }
