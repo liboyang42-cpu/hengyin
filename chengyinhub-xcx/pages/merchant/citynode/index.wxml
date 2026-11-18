@@ -37,9 +37,9 @@
     icon="empty-state" wx:elif="{{accessState === 'error' || (accessState === 'ready' && loadErr)}}" fill
     title="{{accessState === 'error' ? '商家权限加载失败' : '节点加载失败'}}"
     sub="{{accessState === 'error' ? accessErrorText : ''}}" retry="重试" bind:retry="retry" auto-back="{{accessState === 'error' || !listEverLoaded}}" />
-  <cy-error class="cy-fade-in" size="lg" style="flex:1;min-height:0;" retry=""
+  <cy-error size="lg" style="flex:1;min-height:0;" retry=""
     wx:elif="{{accessState === 'no-permission'}}" fill
-    title="当前岗位不能管理节点" sub="请联系店主开通" auto-back />
+    title="当前岗位不能管理节点" sub="请联系店主开通" auto-back class="cy-fade-in" />
 
   <block wx:elif="{{accessState === 'ready' && !loading && !loadErr}}">
     <view class="cn-node-wrap" wx:for="{{applications}}" wx:key="id">
@@ -101,7 +101,7 @@
         title="可认领节点加载失败" sub="{{claimError}}" retry="重试" bind:retry="retryClaimable" />
       <cy-inline-error load-failure class="cn-claim-state cy-fade-in" wx:elif="{{claimState === 'error'}}" kind="network"
         title="可认领节点没有更新" sub="{{claimError}}" action="重试" bind:action="retryClaimable" />
-      <cy-empty class="cy-fade-in" wx:elif="{{claimState === 'ready' && !claimable.length}}" title="还没有可认领的节点" />
+      <cy-empty wx:elif="{{claimState === 'ready' && !claimable.length}}" title="还没有可认领的节点" class="cy-fade-in" />
       <view class="cn-claim-row" wx:for="{{claimable}}" wx:key="id">
         <view class="cn-node cn-node--sheet">
           <view class="cn-node-main">

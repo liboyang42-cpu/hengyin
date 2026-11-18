@@ -259,7 +259,7 @@ test('F-W1-12 商家入驻:游客的引导按钮是「登录」并走 retryLogin
 
 test('F-W1-12 商家口碑:缺商家参数是缺参说明(可返回),不再落 load-failure 留白', () => {
   const wxml = read('pages/merchant/reviews/index.wxml')
-  assert.match(wxml, /<cy-empty wx:elif="\{\{pageState === 'missing'\}\}" kind="missing-param"[^>]*cta="返回" bind:cta="onNavBack" \/>/)
+  assert.match(wxml, /<cy-empty wx:elif="\{\{pageState === 'missing'\}\}" kind="missing-param"[^>]*cta="返回" bind:cta="onNavBack"(?: class="cy-fade-in")? \/>/)
   assert.match(read('pages/merchant/reviews/index.js'), /pageState: 'missing', errorMessage: '商家信息不完整'/)
   // 管理态的未登录态本来就有登录出口(access-gate 登录 + 页内「重新登录」),保持不变
   assert.match(wxml, /pageState === 'login-required'[^>]*action="重新登录" bind:action="retryLogin"/)

@@ -25,10 +25,10 @@
                    title="登录后查看口碑管理" sub="{{errorMessage}}" action="重新登录" bind:action="retryLogin" />
   <cy-inline-error load-failure class="review-inline-error cy-fade-in" wx:elif="{{pageState === 'error'}}" kind="error"
                    title="评价加载失败" sub="{{errorMessage}}" action="重新加载" bind:action="retry" />
-  <cy-empty class="cy-fade-in" wx:elif="{{pageState === 'missing'}}" kind="missing-param" fill size="lg"
-            title="商家信息不完整" cta="返回" bind:cta="onNavBack" />
-  <cy-empty class="cy-fade-in" wx:elif="{{pageState === 'empty'}}" fill size="lg" kind="empty"
-            title="还没有真实到店评价" />
+  <cy-empty wx:elif="{{pageState === 'missing'}}" kind="missing-param" fill size="lg"
+            title="商家信息不完整" cta="返回" bind:cta="onNavBack" class="cy-fade-in" />
+  <cy-empty wx:elif="{{pageState === 'empty'}}" fill size="lg" kind="empty"
+            title="还没有真实到店评价" class="cy-fade-in" />
 
   <scroll-view wx:elif="{{pageState === 'ready'}}" class="review-scroll cy-fade-in" scroll-y enhanced
                show-scrollbar="{{false}}" lower-threshold="160" bindscrolltolower="loadMore">

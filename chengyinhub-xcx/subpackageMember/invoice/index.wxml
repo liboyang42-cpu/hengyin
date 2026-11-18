@@ -22,7 +22,7 @@
     </view>
     <view class="moh-body">
       <cy-skeleton wx:if="{{loading && !loaded}}" type="list" count="3" />
-      <cy-error class="cy-fade-in" load-failure wx:elif="{{error && !loaded}}" fill size="lg" title="发票记录加载失败" retry="重试" bind:retry="loadRecords" />
+      <cy-error load-failure wx:elif="{{error && !loaded}}" fill size="lg" title="发票记录加载失败" retry="重试" bind:retry="loadRecords" class="cy-fade-in" />
       <cy-empty wx:elif="{{loaded && !records.length}}" fill size="lg" class="cy-fill-state cy-fade-in" kind="empty" title="还没有发票申请" />
       <cy-empty wx:elif="{{loaded && !rows.length}}" fill size="lg" class="cy-fill-state cy-fade-in" kind="empty" title="当前筛选暂无发票申请" />
       <view class="orderbox_li" wx:for="{{rows}}" wx:key="id" bindtap="go" data-page="detail" data-id="{{item.id}}" hover-class="orderbox_li--press" hover-stay-time="80" aria-role="button" aria-label="发票申请，{{item.playerStatus}}，{{item.titleName}}">

@@ -11,11 +11,11 @@
     <!-- 章节这一侧的四种取数结局分开说:拉取中 / 拉失败 / 没填品类 / 拉到了。
          合成一句「暂时没有开放的章节」会把「我还没读到」说成「主办方没开」。 -->
     <cy-skeleton wx:if="{{chaptersState === 'loading'}}" type="card" count="{{1}}" />
-    <cy-error class="cy-fade-in" load-failure wx:elif="{{chaptersState === 'error'}}" title="可承接章节加载失败"
-              sub="{{chaptersError}}" retry="重试" bind:retry="onRetryChapters" />
-    <cy-empty class="cy-fade-in" wx:elif="{{chaptersState === 'category-missing'}}" kind="no-permission" size="lg"
+    <cy-error load-failure wx:elif="{{chaptersState === 'error'}}" title="可承接章节加载失败"
+              sub="{{chaptersError}}" retry="重试" bind:retry="onRetryChapters" class="cy-fade-in" />
+    <cy-empty wx:elif="{{chaptersState === 'category-missing'}}" kind="no-permission" size="lg"
               title="请先选择行业类型" sub=""
-              cta="去选择行业类型" bind:cta="onGoCategory" />
+              cta="去选择行业类型" bind:cta="onGoCategory" class="cy-fade-in" />
     <scroll-view wx:else class="ctp-scroll cy-fade-in" scroll-x enable-flex>
       <view class="ctp-card {{pickedChapterId === item.id ? 'is-on' : ''}}"
             wx:for="{{rows}}" wx:key="id" data-id="{{item.id}}" bindtap="onPickChapter"
@@ -35,8 +35,8 @@
     <view class="ctp-h">选择玩法模板</view>
     <cy-skeleton wx:if="{{templatesState === 'loading'}}" type="card" count="{{1}}" />
     <!-- 读不到 ≠ 一个都没有:分开说,否则商家会去重新建一个自己已经有的玩法 -->
-    <cy-error class="cy-fade-in" load-failure wx:elif="{{templatesState === 'error'}}" title="玩法模板没读出来"
-              sub="{{templatesError}}" retry="重试" bind:retry="loadTemplates" />
+    <cy-error load-failure wx:elif="{{templatesState === 'error'}}" title="玩法模板没读出来"
+              sub="{{templatesError}}" retry="重试" bind:retry="loadTemplates" class="cy-fade-in" />
     <scroll-view wx:else class="ctp-scroll cy-fade-in" scroll-x enable-flex>
       <!-- 稿 159:346:封面方图是主体,名称与描述在图下方(不套卡) -->
       <view class="ctp-tpl {{pickedTemplateId === item.id ? 'is-on' : ''}}"

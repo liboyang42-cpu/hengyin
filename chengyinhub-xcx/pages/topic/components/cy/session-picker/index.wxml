@@ -25,13 +25,13 @@
     <!-- R11 p1 F-11:半屏里不放空态大图,一行原因,出口在底栏「去加入俱乐部」(原来第二行被底栏压住) -->
     <view wx:elif="{{ticketsState === 'gate'}}" class="sp-gate cy-fade-in" aria-role="alert">{{ticketsGateText}}</view>
     <!-- 读不到 ≠ 这场没票可买:分开说,否则玩家会以为卖光了 -->
-    <cy-error class="cy-fade-in" load-failure wx:elif="{{ticketsState === 'error'}}" title="票种没读出来"
-              sub="{{ticketsError}}" retry="重试" bind:retry="retryTickets" />
-    <cy-empty class="cy-fade-in" wx:elif="{{ticketsState === 'empty'}}" kind="empty" size="lg"
-              title="暂无可买票种" sub="{{singleDay ? '放票后可购买' : '换个日期试试'}}" />
-    <cy-empty class="cy-fade-in" wx:elif="{{ticketsState === 'idle'}}" kind="empty" size="lg"
-              title="先选一个日期" />
-    <view class="cy-fade-in" wx:else>
+    <cy-error load-failure wx:elif="{{ticketsState === 'error'}}" title="票种没读出来"
+              sub="{{ticketsError}}" retry="重试" bind:retry="retryTickets" class="cy-fade-in" />
+    <cy-empty wx:elif="{{ticketsState === 'empty'}}" kind="empty" size="lg"
+              title="暂无可买票种" sub="{{singleDay ? '放票后可购买' : '换个日期试试'}}" class="cy-fade-in" />
+    <cy-empty wx:elif="{{ticketsState === 'idle'}}" kind="empty" size="lg"
+              title="先选一个日期" class="cy-fade-in" />
+    <view wx:else class="cy-fade-in">
       <view class="sp-ticket {{pickedTicketId === item.id ? 'is-on' : ''}} {{item.windowText ? 'is-off' : ''}}"
             wx:for="{{tickets}}" wx:key="id" data-id="{{item.id}}" bindtap="onPickTicket"
             aria-role="button" aria-label="选择 {{item.name}}" aria-disabled="{{!!item.windowText}}"

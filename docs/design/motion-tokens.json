@@ -1,5 +1,5 @@
 {
-  "$comment": "城瘾双端共用动效 token(motion-1118)。小程序真源 chengyinhub-xcx/style/tokens.wxss 的 --cy-motion-* / --cy-ease-*;iOS 镜像 chengyin-ios App/QuestifyMotion.swift 的 QuestifyMotionToken 与 docs/motion-tokens.json(同一份拷贝)。改值三处同改,两端契约测试判红。",
+  "$comment": "城瘾双端共用动效 token(motion-1118)。小程序真源 chengyinhub-xcx/style/tokens.wxss 的 --cy-motion-* / --cy-ease-*;iOS 镜像 chengyin-ios App/QuestifyMotion.swift 的 QuestifyMotionToken,拷贝在 chengyin-ios docs/motion-tokens.json。改值三处同改,两端契约测试判红。",
   "version": "1118",
   "durationMs": {
     "press": 80,

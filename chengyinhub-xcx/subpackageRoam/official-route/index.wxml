@@ -7,8 +7,8 @@
     <cy-page-title title="{{route.name || '线路详情'}}" subtitle="{{route.metaText}}" safe-top="{{false}}" />
     <view class="orr__body">
       <cy-skeleton wx:if="{{state === 'loading'}}" type="feed-card" count="2" />
-      <cy-error class="cy-fade-in" wx:elif="{{state === 'error'}}" title="线路加载失败" retry="重试" bind:retry="load" />
-      <cy-empty class="cy-fade-in" wx:elif="{{state === 'notfound'}}" kind="empty" title="这条线路不存在或已下架" />
+      <cy-error wx:elif="{{state === 'error'}}" title="线路加载失败" retry="重试" bind:retry="load" class="cy-fade-in" />
+      <cy-empty wx:elif="{{state === 'notfound'}}" kind="empty" title="这条线路不存在或已下架" class="cy-fade-in" />
       <block wx:else>
         <image wx:if="{{route.cover}}" class="orr__cover cy-fade-in" src="{{route.cover}}" mode="aspectFill" />
         <text class="orr__sec cy-fade-in">节点（{{route.nodes.length}}）</text>

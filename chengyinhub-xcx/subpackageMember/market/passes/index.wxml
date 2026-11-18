@@ -14,7 +14,7 @@
       </view>
       <cy-tabs variant="chip" tabs="{{tabs}}" active="{{tab}}" bind:change="onTab" />
       <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="3" />
-      <cy-error class="cy-fade-in" wx:elif="{{state === 'error'}}" title="加载失败" retry="重试" bind:retry="load" />
+      <cy-error wx:elif="{{state === 'error'}}" title="加载失败" retry="重试" bind:retry="load" class="cy-fade-in" />
       <block wx:elif="{{tab === 'shop'}}">
         <!-- l-pass 通行证(平台会员):服务端 enabled 才出;点进通行证页购买 -->
         <view class="mk-member" wx:if="{{member}}" bindtap="goMembership" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="通行证 {{member.side}}">

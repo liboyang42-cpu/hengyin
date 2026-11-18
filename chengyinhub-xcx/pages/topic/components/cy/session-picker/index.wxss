@@ -1,3 +1,4 @@
+@import '../../../../../style/fade-in.wxss';
 /* isolated 组件内全局 .cy-pressed 进不来,本地定义一份。 */
 .cy-pressed { opacity: .88; }
 

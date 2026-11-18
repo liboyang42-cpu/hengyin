@@ -8,7 +8,7 @@
 
   <cy-skeleton wx:if="{{loading}}" type="list" count="3" />
   <cy-error load-failure class="cy-fade-in" wx:elif="{{error}}" fill size="lg" title="邀约加载失败" sub="{{error}}" bind:retry="fetch" auto-back />
-  <cy-empty class="cy-fade-in" wx:elif="{{!invites.length}}" fill size="lg" kind="empty" title="暂无待处理的活动职责" />
+  <cy-empty wx:elif="{{!invites.length}}" fill size="lg" kind="empty" title="暂无待处理的活动职责" class="cy-fade-in" />
   <view wx:else class="oi-list cy-fade-in">
     <view wx:if="{{refreshing}}" class="oi-refreshing" aria-role="status" aria-live="polite">正在同步最新邀约…</view>
     <view wx:for="{{invites}}" wx:key="partyId" class="oi-card">

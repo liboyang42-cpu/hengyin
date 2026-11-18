@@ -15,9 +15,9 @@
   <cy-nav-bar back />
   <cy-page-title title="队伍详情" safe-top="{{false}}" flush="{{true}}" />
   <cy-skeleton wx:if="{{loading && !team}}" type="detail" count="{{1}}" loading-label="正在加载队伍详情" />
-  <cy-state-shell class="cy-fade-in" wx:elif="{{error && !team}}" kind="{{errorKind}}"
+  <cy-state-shell wx:elif="{{error && !team}}" kind="{{errorKind}}"
                   title="{{error}}" sub="{{errorSub}}" primary="{{errorAction}}"
-                  fill size="lg" bind:primary="onErrorAction" auto-back="{{errorKind !== 'missing-param'}}" />
+                  fill size="lg" bind:primary="onErrorAction" auto-back="{{errorKind !== 'missing-param'}}" class="cy-fade-in" />
   <block wx:else>
     <view class="team-refresh-state">
       <text wx:if="{{refreshing && team}}" class="team-sync" aria-role="status">正在确认队伍状态…</text>
@@ -76,7 +76,7 @@
     <block wx:if="{{applicantsState}}">
       <view class="team-section-title">入队申请{{applicants.length ? ' · ' + applicants.length : ''}}</view>
       <cy-skeleton wx:if="{{applicantsState === 'loading'}}" type="list" count="1" loading-label="正在读取入队申请" />
-      <cy-inline-error class="cy-fade-in" wx:elif="{{applicantsState === 'error'}}" title="入队申请没读到" action="重试" bind:action="retryApplicants" />
+      <cy-inline-error wx:elif="{{applicantsState === 'error'}}" title="入队申请没读到" action="重试" bind:action="retryApplicants" class="cy-fade-in" />
       <view wx:else class="team-card cy-fade-in">
         <view wx:if="{{!applicants.length}}" class="team-member"><view class="team-member-main"><view class="team-member-role">暂无申请</view></view></view>
         <view class="team-member" wx:for="{{applicants}}" wx:key="memberId">

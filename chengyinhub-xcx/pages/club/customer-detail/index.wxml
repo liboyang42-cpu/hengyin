@@ -9,15 +9,15 @@
 
   <cy-skeleton wx:if="{{state === 'loading'}}" type="card" count="4" loading-label="正在加载客户详情" />
   <!-- K2-D 无客户权限 -->
-  <cy-error class="cy-fade-in" wx:elif="{{state === 'no-permission'}}" fill size="lg"
+  <cy-error wx:elif="{{state === 'no-permission'}}" fill size="lg"
             title="当前岗位没有客户查看权限" sub="{{errorText}}"
-            retry="" bind:back="goBack" auto-back custom-back />
-  <cy-empty class="cy-fade-in" wx:elif="{{state === 'refused'}}" kind="not-found" fill size="lg" title="{{errorText}}" cta="返回" bind:cta="goBack" />
+            retry="" bind:back="goBack" auto-back custom-back class="cy-fade-in" />
+  <cy-empty wx:elif="{{state === 'refused'}}" kind="not-found" fill size="lg" title="{{errorText}}" cta="返回" bind:cta="goBack" class="cy-fade-in" />
   <!-- K2-E 加载失败 -->
-  <cy-error class="cy-fade-in" load-failure wx:elif="{{state === 'network-error'}}" fill size="lg" title="客户详情加载失败"
-            sub="{{errorText}}" retry="重试加载" bind:retry="retry" auto-back />
-  <cy-error class="cy-fade-in" load-failure wx:elif="{{state === 'error'}}" fill size="lg" title="客户详情加载失败"
-            sub="{{errorText}}" retry="重试加载" bind:retry="retry" auto-back />
+  <cy-error load-failure wx:elif="{{state === 'network-error'}}" fill size="lg" title="客户详情加载失败"
+            sub="{{errorText}}" retry="重试加载" bind:retry="retry" auto-back class="cy-fade-in" />
+  <cy-error load-failure wx:elif="{{state === 'error'}}" fill size="lg" title="客户详情加载失败"
+            sub="{{errorText}}" retry="重试加载" bind:retry="retry" auto-back class="cy-fade-in" />
 
   <block wx:elif="{{state === 'ready'}}">
     <!-- 客户名就是本页 L1 大标题(稿子里 26px 那行),交给共享的 cy-page-title 出间距;

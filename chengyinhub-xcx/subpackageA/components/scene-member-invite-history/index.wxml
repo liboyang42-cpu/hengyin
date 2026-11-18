@@ -34,10 +34,10 @@
   </view>
 
   <cy-skeleton wx:if="{{loading && !groups.length}}" type="list" count="{{4}}" />
-  <cy-error class="cy-fade-in" load-failure="{{!authRequired && !accessDenied}}" wx:elif="{{loadErr && !groups.length}}" fill size="lg"
-    title="{{authRequired ? '登录后查看邀请记录' : accessDenied ? '当前账号无法查看邀请记录' : '邀请记录加载失败'}}" retry="{{authRequired ? '登录' : '重试'}}" bind:retry="retry" />
-  <cy-empty class="cy-fade-in" wx:elif="{{empty}}" fill size="lg" kind="empty"
-    title="还没有人接受你的邀请" />
+  <cy-error load-failure="{{!authRequired && !accessDenied}}" wx:elif="{{loadErr && !groups.length}}" fill size="lg"
+    title="{{authRequired ? '登录后查看邀请记录' : accessDenied ? '当前账号无法查看邀请记录' : '邀请记录加载失败'}}" retry="{{authRequired ? '登录' : '重试'}}" bind:retry="retry" class="cy-fade-in" />
+  <cy-empty wx:elif="{{empty}}" fill size="lg" kind="empty"
+    title="还没有人接受你的邀请" class="cy-fade-in" />
 
   <block wx:else>
     <view class="ir-group" wx:for="{{groups}}" wx:for-item="group" wx:key="label">

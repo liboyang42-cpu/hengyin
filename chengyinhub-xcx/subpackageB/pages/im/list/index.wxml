@@ -96,17 +96,17 @@
 
   <!-- 错误 -->
   <!-- PR10 F-W1-12:未登录(无会话 / 401)给登录引导,不与加载失败一起留白 -->
-  <cy-empty class="cy-fade-in" wx:elif="{{error && loginRequired}}" kind="no-permission" fill size="lg"
-            title="登录后查看消息" cta="登录" bind:cta="loginConversations" />
+  <cy-empty wx:elif="{{error && loginRequired}}" kind="no-permission" fill size="lg"
+            title="登录后查看消息" cta="登录" bind:cta="loginConversations" class="cy-fade-in" />
   <cy-error load-failure class="cy-fade-in" wx:elif="{{error}}" title="加载失败" sub="{{errorMsg}}" retry="重试" bind:retry="retryConversations" />
 
   <!-- 空态 -->
-  <cy-empty class="cy-fade-in" wx:elif="{{loaded && viewList.length === 0 && !(activeTab === 'in' ? invitesIn.length : invitesOut.length)}}"
+  <cy-empty wx:elif="{{loaded && viewList.length === 0 && !(activeTab === 'in' ? invitesIn.length : invitesOut.length)}}"
             fill
             size="lg"
             title="{{activeTab === 'in' ? '还没有消息' : '还没有发出的邀请'}}"
             cta="{{activeTab === 'in' && communityPostRead ? '去发现找人' : ''}}"
-            bindcta="onEmptyCta" />
+            bindcta="onEmptyCta" class="cy-fade-in" />
 
   <!-- 列表 -->
   <scroll-view class="body" wx:else scroll-y enhanced show-scrollbar="{{false}}" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">

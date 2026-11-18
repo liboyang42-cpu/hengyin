@@ -65,7 +65,7 @@ function assertAddressStateContract(wxml, jsonText) {
     '编辑态预填时必须用表单同构骨架')
   assert.match(wxml, /<cy-state-shell\b[^>]*wx:elif="\{\{bootstrapError\}\}"[^>]*bind:primary="retryBootstrap"/,
     '预填失败不能落成空白新增表单')
-  assert.match(wxml, /<view class="add" wx:else>/,
+  assert.match(wxml, /<view class="add(?: cy-fade-in)?" wx:else>/,
     '只有新建态或预填成功后才显示可编辑表单')
   assert.match(wxml, /<cy-progress-status\b[^>]*wx:if="\{\{saving \|\| saveSucceeded\}\}"/,
     '保存中和成功需要可读状态/回执')

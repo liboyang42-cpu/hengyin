@@ -230,8 +230,8 @@
   <cy-sheet show="{{routePickerOpen}}" title="选择路线" bind:close="closeRoutePicker">
     <cy-search placeholder="搜索路线" value="{{routeKeyword}}" bind:input="onRouteSearch" />
     <cy-skeleton wx:if="{{routeLoading}}" type="list" count="{{4}}" />
-    <cy-inline-error class="cy-fade-in" load-failure wx:elif="{{routeError}}" kind="network" title="路线没有加载" sub="{{routeError}}" action="重试" bind:action="retryRoutes" />
-    <cy-empty class="cy-fade-in" wx:elif="{{!routeList.length}}" title="没有找到路线" sub="换个关键词试试" />
+    <cy-inline-error load-failure wx:elif="{{routeError}}" kind="network" title="路线没有加载" sub="{{routeError}}" action="重试" bind:action="retryRoutes" class="cy-fade-in" />
+    <cy-empty wx:elif="{{!routeList.length}}" title="没有找到路线" sub="换个关键词试试" class="cy-fade-in" />
     <scroll-view wx:else class="route-picker cy-fade-in" scroll-y enhanced show-scrollbar="{{false}}">
       <view class="route-item" wx:for="{{routeList}}" wx:key="id"
             hover-class="cy-pressed-bg" hover-stay-time="80"

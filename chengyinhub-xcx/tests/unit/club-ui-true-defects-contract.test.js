@@ -218,7 +218,7 @@ function assertEditErrorViewContract(wxml, json, js) {
   assert.match(wxml, /<cy-error\b[^>]*wx:elif="\{\{loadState === 'permission'\}\}"[^>]*retry="返回俱乐部"[^>]*bind:retry="onBack"/, '非主理人必须进入只读权限终态，不能露出编辑表单')
   assert.match(wxml, /<cy-error\b[^>]*wx:elif="\{\{loadState === 'business-error'\}\}"[^>]*bind:retry="loadClub"/, '业务加载失败必须原位重试')
   assert.match(wxml, /<cy-error\b[^>]*wx:elif="\{\{loadState === 'network-error'\}\}"[^>]*bind:retry="loadClub"/, '网络加载失败必须原位重试')
-  assert.match(wxml, /<view class="body" wx:elif="\{\{loadState === 'ready'\}\}">/, '表单只能处在错误链后的 ready 终态')
+  assert.match(wxml, /<view class="body(?: cy-fade-in)?" wx:elif="\{\{loadState === 'ready'\}\}">/, '表单只能处在错误链后的 ready 终态')
   assert.match(wxml, /class="bottom" wx:if="\{\{loadState === 'ready'\}\}"[\s\S]*?<cy-error\b[^>]*wx:if="\{\{saveErrorText\}\}"[^>]*bind:retry="save"[\s\S]*?<cy-btn wx:else/, '保存失败必须在固定动作区可见，且与保存按钮互斥')
   assert.doesNotMatch(js, /wx\.showModal\s*\(/, '玩家域可恢复错误不得退回系统白色 showModal')
   assert.doesNotMatch(js, /owned\[0\]\.id/, '缺参不能静默编辑第一个自有俱乐部')
@@ -448,7 +448,7 @@ test('negative control：明显退化会命中对应视觉与错误态闸门', (
   )
 
   const badErrorView = read(EDIT_SCENE_WXML).replace(
-    /(<view class="body" )wx:elif=/,
+    /(<view class="body(?: cy-fade-in)?" )wx:elif=/,
     '$1wx:if=',
   )
   assert.throws(

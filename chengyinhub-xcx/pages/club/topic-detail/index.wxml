@@ -473,8 +473,8 @@
       </view>
 
     <cy-skeleton wx:if="{{settingState === 'loading'}}" type="list" count="2" />
-    <cy-empty class="cy-fade-in" wx:elif="{{settingState === 'denied'}}" title="暂时不能查看主题设置" sub="{{settingErrorText}}" />
-    <cy-error class="cy-fade-in" load-failure wx:elif="{{settingState !== 'ready'}}" title="主题设置获取失败" sub="{{settingErrorText}}" retry="重试" bind:retry="loadTopicSetting" />
+    <cy-empty wx:elif="{{settingState === 'denied'}}" title="暂时不能查看主题设置" sub="{{settingErrorText}}" class="cy-fade-in" />
+    <cy-error load-failure wx:elif="{{settingState !== 'ready'}}" title="主题设置获取失败" sub="{{settingErrorText}}" retry="重试" bind:retry="loadTopicSetting" class="cy-fade-in" />
     <block wx:else>
       <view class="tset-head">
         <text class="tset-name">{{setting.topicName}}</text>
@@ -550,8 +550,8 @@
 <cy-scene-sheet show="{{merchantSheetVisible}}" variant="half" title="商家" closable maskClosable bind:close="closeMerchants">
   <view class="tset">
     <cy-skeleton wx:if="{{merchantState === 'loading'}}" type="list" count="2" />
-    <cy-empty class="cy-fade-in" wx:elif="{{merchantState === 'denied'}}" title="{{merchantDeniedReason || '商家信息获取失败'}}" />
-    <cy-error class="cy-fade-in" load-failure wx:elif="{{merchantState !== 'ready'}}" title="商家信息获取失败" retry="重试" bind:retry="loadMerchants" />
+    <cy-empty wx:elif="{{merchantState === 'denied'}}" title="{{merchantDeniedReason || '商家信息获取失败'}}" class="cy-fade-in" />
+    <cy-error load-failure wx:elif="{{merchantState !== 'ready'}}" title="商家信息获取失败" retry="重试" bind:retry="loadMerchants" class="cy-fade-in" />
     <block wx:else>
       <cy-empty wx:if="{{!merchantRows.length}}" title="这个主题还没有承接商家" />
       <view wx:for="{{merchantRows}}" wx:key="nodeId" class="cli-row {{index === 0 ? 'cli-row--first' : ''}}">
@@ -580,7 +580,7 @@
 <cy-scene-sheet show="{{customerSheetVisible}}" variant="half" title="报名参与者" closable maskClosable bind:close="closeCustomers">
   <view class="tset">
     <cy-skeleton wx:if="{{customerState === 'loading'}}" type="list" count="2" />
-    <cy-error class="cy-fade-in" load-failure wx:elif="{{customerState !== 'ready'}}" title="报名名单获取失败" sub="{{customerErrorReason}}" retry="重试" bind:retry="loadCustomers" />
+    <cy-error load-failure wx:elif="{{customerState !== 'ready'}}" title="报名名单获取失败" sub="{{customerErrorReason}}" retry="重试" bind:retry="loadCustomers" class="cy-fade-in" />
     <block wx:else>
       <view class="cli-stats">
         <text wx:for="{{customerStats}}" wx:key="key"
@@ -632,8 +632,8 @@
     <block wx:if="{{trendState !== 'idle'}}">
       <text class="tset-label">按参与日期 · 报名人数</text>
       <cy-skeleton wx:if="{{trendState === 'loading'}}" type="list" count="1" />
-      <cy-error class="cy-fade-in" wx:elif="{{trendState === 'error'}}" title="报名趋势获取失败" sub="{{trendError}}" retry="重试" bind:retry="loadRegistrationTrend" />
-      <cy-empty class="cy-fade-in" wx:elif="{{!trendRows.length}}" title="还没有带参与日期的报名" />
+      <cy-error wx:elif="{{trendState === 'error'}}" title="报名趋势获取失败" sub="{{trendError}}" retry="重试" bind:retry="loadRegistrationTrend" class="cy-fade-in" />
+      <cy-empty wx:elif="{{!trendRows.length}}" title="还没有带参与日期的报名" class="cy-fade-in" />
       <view wx:for="{{trendRows}}" wx:key="key" class="cli-row {{index === 0 ? 'cli-row--first' : ''}}">
         <view class="cli-main"><text class="cli-name">{{item.dateText}}</text></view>
         <view class="cli-right"><text class="cli-state">{{item.countText}}</text></view>

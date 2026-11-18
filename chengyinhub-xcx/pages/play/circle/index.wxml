@@ -4,9 +4,9 @@
   <cy-modal-host id="cy-modal-host" />
   <cy-nav-bar title="自由探索" />
   <cy-skeleton wx:if="{{loading && !card}}" type="detail" count="{{1}}" loading-label="正在准备自由探索" />
-  <cy-state-shell class="cy-fade-in" wx:elif="{{errorText && !card}}" kind="{{errorKind}}"
+  <cy-state-shell wx:elif="{{errorText && !card}}" kind="{{errorKind}}"
                   title="{{errorText}}" sub="{{errorSub}}" primary="{{errorAction}}"
-                  fill size="lg" bind:primary="onStateAction" auto-back custom-back bind:back="goBack" />
+                  fill size="lg" bind:primary="onStateAction" auto-back custom-back bind:back="goBack" class="cy-fade-in" />
   <block wx:else>
     <!-- receipt=unknown:点它只重读不重写,所以文案是「再核对」不是「重试」。
          与商家页同一套状态条形制:色只在圆点,叙述交给排版。 -->

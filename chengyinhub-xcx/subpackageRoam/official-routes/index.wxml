@@ -7,8 +7,8 @@
     <cy-page-title title="官方线路" subtitle="" safe-top="{{false}}" />
     <view class="orl__body">
       <cy-skeleton wx:if="{{state === 'loading'}}" type="feed-card" count="3" />
-      <cy-error class="cy-fade-in" wx:elif="{{state === 'error'}}" title="线路加载失败" retry="重试" bind:retry="load" />
-      <cy-empty class="cy-fade-in" wx:elif="{{state === 'empty'}}" kind="empty" title="还没有上架的官方线路" />
+      <cy-error wx:elif="{{state === 'error'}}" title="线路加载失败" retry="重试" bind:retry="load" class="cy-fade-in" />
+      <cy-empty wx:elif="{{state === 'empty'}}" kind="empty" title="还没有上架的官方线路" class="cy-fade-in" />
       <block wx:else>
         <view class="orl-card" wx:for="{{routes}}" wx:key="id" data-id="{{item.id}}" bindtap="openRoute"
               aria-role="button" aria-label="查看线路 {{item.name}}" hover-class="cy-pressed" hover-stay-time="80" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">

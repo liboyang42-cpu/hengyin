@@ -48,8 +48,8 @@
       </view>
 
       <cy-skeleton type="detail" wx:if="{{!shopLoaded}}" />
-      <cy-inline-error class="cy-fade-in" load-failure wx:elif="{{shopLoadError}}" kind="network" title="店铺资料没读出来"
-        sub="{{shopLoadError}}" action="重试" bind:action="loadShop" />
+      <cy-inline-error load-failure wx:elif="{{shopLoadError}}" kind="network" title="店铺资料没读出来"
+        sub="{{shopLoadError}}" action="重试" bind:action="loadShop" class="cy-fade-in" />
       <block wx:elif="{{picked}}">
         <view class="cy-addr-tap" bindtap="viewPicked" aria-role="button" aria-label="在地图中查看店址" hover-class="cy-pressed" hover-stay-time="80">
           <view class="cnc-addr">{{picked.name || '我的店'}}</view>

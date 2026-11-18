@@ -32,9 +32,9 @@
 
   <cy-skeleton wx:if="{{tplLoading}}" type="card" count="3" />
   <cy-error load-failure class="cy-fade-in" wx:elif="{{tplError}}" title="现成玩法加载失败" sub="{{tplError}}" retry="重新加载" bind:retry="loadTemplates" />
-  <cy-empty class="cy-fade-in" wx:elif="{{!templates.length}}" kind="empty" title="还没有上架的现成玩法"
+  <cy-empty wx:elif="{{!templates.length}}" kind="empty" title="还没有上架的现成玩法"
             
-            cta="去发布广场" bind:cta="goTemplateSquare" />
+            cta="去发布广场" bind:cta="goTemplateSquare" class="cy-fade-in" />
   <block wx:else>
     <view class="gl-tpl" wx:for="{{templates}}" wx:key="id" bindtap="goTemplateDetail" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
       <image wx:if="{{item.imgUrl}}" class="gl-tpl-pic" src="{{item.imgUrl}}" mode="aspectFill" lazy-load="true" />
