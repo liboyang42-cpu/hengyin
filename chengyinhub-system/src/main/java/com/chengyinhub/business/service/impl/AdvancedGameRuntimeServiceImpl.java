@@ -3340,14 +3340,19 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             value.put("passed", st.path("passed").asBoolean(false));
             value.put("started", st.path("startedAtMs").asLong(0L) > 0L);
             value.put("submitted", st.path("submitted").asBoolean(false));
+            // F02:判错后的回复(错答表命中那条或通用错答),判完才有;错答表本身不下发。
+            putText(value, "lastFeedback", st);
             kit.put("typeIn", value);
         }
         /* 逐字猜词:槽位形状(预填字符/空槽/分隔符)就是题面,必须下发;
            玩家已补入的字符与 solved 来自本局状态,答案与别名一个字都不在回包里。 */
         if (enabled(config.path("hangman"))) {
-            kit.put("hangman", objectMapper.convertValue(
+            Map<String, Object> hangman = objectMapper.convertValue(
                     HangmanGameplay.publicProjection(config.path("hangman"), state.path(HangmanGameplay.STATE_KEY)),
-                    new TypeReference<Map<String, Object>>() {}));
+                    new TypeReference<Map<String, Object>>() {});
+            // F02:判错后的回复,判完才有;错答表本身不下发。
+            putText(hangman, "lastFeedback", state.path(HangmanGameplay.STATE_KEY));
+            kit.put("hangman", hangman);
         }
         /* 罗盘指向:目标方位**就是题面**,开局即下发 —— 玩家得先知道往哪转才谈得上对准。
            这与扫码的显形图相反(那是答案,扫中之前一个字都不许出现在回包里)。

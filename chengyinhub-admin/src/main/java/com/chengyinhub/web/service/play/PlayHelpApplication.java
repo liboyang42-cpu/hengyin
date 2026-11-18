@@ -15,6 +15,7 @@ import com.chengyinhub.business.mapper.TopicRouteSessionMapper;
 import com.chengyinhub.business.service.support.NodeJourneySnapshot;
 import com.chengyinhub.business.service.support.PlayHelpContent;
 import com.chengyinhub.business.service.support.PlayHelpCostApplication;
+import com.chengyinhub.business.service.support.PlayHelpOutcomeSupport;
 import com.chengyinhub.business.service.support.PlayHelpUsagePolicy;
 import com.chengyinhub.business.service.support.PlayHelpReceiptReadModel;
 import com.chengyinhub.business.service.support.PlayHelpRunQuotaApplication;
@@ -137,6 +138,10 @@ public class PlayHelpApplication {
         if (spec == null) throw new HelpRefusal("该级帮助未配置");
         if (!spec.usable()) {
             throw new HelpRefusal("该层不可用（" + spec.reason() + "），未扣除任何代价");
+        }
+        // F01:逐级解锁由服务端裁决,不只靠客户端置灰。SKIP 不走这里(上面已拒),任何时候都能跳。
+        if (outOfOrder(resolved, level)) {
+            throw new HelpRefusal(PlayHelpOutcomeSupport.LEVEL_OUT_OF_ORDER, "请先查看上一层提示");
         }
         // 先证明这层内容拿得出来,再动钱;拿不出来既不解锁也不扣款。
         String content = PlayHelpContent.approved(level, spec.type(),
@@ -683,6 +688,22 @@ public class PlayHelpApplication {
         return unlocked;
     }
 
+    /**
+     * F01 逐级:按作者书写顺序,请求层之前**最近一层可用的非 SKIP 层**必须已看过;
+     * 已看过的层重看不受限(回放)。前一层又要求它的前一层,于是整条阶梯按顺序解锁。
+     */
+    private boolean outOfOrder(Resolved resolved, int level) {
+        LevelSpec previous = null;
+        for (LevelSpec spec : resolved.specs) {
+            if (spec.level() == level) break;
+            if (!spec.usable() || PlayHelpUsagePolicy.TYPE_SKIP.equals(spec.type())) continue;
+            previous = spec;
+        }
+        if (previous == null) return false;
+        Set<Integer> unlocked = unlockedLevels(resolved);
+        return !unlocked.contains(level) && !unlocked.contains(previous.level());
+    }
+
     private static LevelSpec levelOf(List<LevelSpec> specs, int level) {
         for (LevelSpec spec : specs) if (spec.level() == level) return spec;
         return null;
@@ -738,11 +759,23 @@ public class PlayHelpApplication {
     }
 
     /** 明确的业务拒绝(4xx 文案),与意外异常区分;必须穿过事务边界交给控制器。 */
-    static class HelpRefusal extends IllegalArgumentException {
+    public static class HelpRefusal extends IllegalArgumentException {
         private static final long serialVersionUID = 1L;
 
+        /** 机器可读的拒绝码(如 LEVEL_OUT_OF_ORDER);旧拒绝没有码时为 null。 */
+        private final String code;
+
         HelpRefusal(String message) {
+            this(null, message);
+        }
+
+        HelpRefusal(String code, String message) {
             super(message);
+            this.code = code;
+        }
+
+        public String code() {
+            return code;
         }
     }
 }

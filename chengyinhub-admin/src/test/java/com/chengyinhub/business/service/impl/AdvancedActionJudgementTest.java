@@ -115,5 +115,84 @@ class AdvancedActionJudgementTest {
         assertEquals("body",draw.state().path("draws").path(0).path("content").asText());
     }
 
+    // ==================== F02 按错答回复 ====================
+
+    private static final String WRONG = ",\"wrongReplies\":[{\"match\":[\"ABD\",\"abx\"],\"reply\":\"前两个字母对了\"}]";
+
+    @Test void qaTypeNearMissReturnsItsOwnReplyAndStillCountsTheAttempt() throws Exception {
+        JsonNode config=json.readTree("{\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"answerText\":\"ABC\",\"maxTries\":3"+WRONG+"},"
+                +"\"outcomeRules\":{\"version\":1,\"pass\":{},\"fail\":{\"reply\":\"还差一点\"}}}");
+        Plan miss=judge().evaluate(Action.SUBMIT_QA,new Input(config,json.createObjectNode(),Map.of("input","abd"),0,7L));
+        JsonNode qa=miss.state().path("qa");
+        assertEquals("前两个字母对了",qa.path("lastFeedback").asText());
+        assertTrue(qa.path("lastNearMiss").asBoolean());
+        assertEquals(1,qa.path("attempts").asInt());
+        assertFalse(qa.path("finished").asBoolean());
+        assertEquals(0,miss.score(),"错答回复不给奖励也不扣分");
+
+        Plan generic=judge().evaluate(Action.SUBMIT_QA,new Input(config,miss.state(),Map.of("input","XYZ"),0,7L));
+        assertEquals("还差一点",generic.state().path("qa").path("lastFeedback").asText(),"没命中回退到 fail.reply");
+        assertFalse(generic.state().path("qa").path("lastNearMiss").asBoolean());
+        assertEquals(2,generic.state().path("qa").path("attempts").asInt());
+    }
+
+    @Test void qaTypeNearMissIgnoresCaseAndFullWidth() throws Exception {
+        JsonNode config=json.readTree("{\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"answerText\":\"ABC\""+WRONG+"}}");
+        Plan miss=judge().evaluate(Action.SUBMIT_QA,new Input(config,json.createObjectNode(),Map.of("input","ＡＢＸ"),0,7L));
+        assertEquals("前两个字母对了",miss.state().path("qa").path("lastFeedback").asText());
+        Plan pass=judge().evaluate(Action.SUBMIT_QA,new Input(config,miss.state(),Map.of("input","abc"),0,7L));
+        assertTrue(pass.state().path("qa").path("passed").asBoolean());
+        assertFalse(pass.state().path("qa").has("lastNearMiss"),"答对后清掉上一次的错答痕迹");
+    }
+
+    @Test void finalNearMissCarriesItsReplyIntoTheFailOutcome() throws Exception {
+        JsonNode config=json.readTree("{\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"answerText\":\"ABC\",\"maxTries\":1"+WRONG+"},"
+                +"\"outcomeRules\":{\"version\":1,\"pass\":{},\"fail\":{\"reply\":\"还差一点\"}}}");
+        Plan miss=judge().evaluate(Action.SUBMIT_QA,new Input(config,json.createObjectNode(),Map.of("input","ABD"),0,7L));
+        ObjectNode decision=judge().serverGameplayDecision("SUBMIT_QA",config,miss.state());
+        assertEquals("FAIL",decision.path("outcome").asText());
+        assertEquals(0,decision.path("selection").path("wrongReplyIndex").asInt());
+        JsonNode after=com.chengyinhub.business.service.support.GameplayOutcomeRules.select(config,decision);
+        assertEquals("前两个字母对了",after.path("reply").asText());
+    }
+
+    @Test void typeInNearMissUsesTheSharedNormalizer() throws Exception {
+        JsonNode config=json.readTree("{\"typeIn\":{\"enabled\":true,\"title\":\"t\",\"target\":\"ABC\",\"seconds\":30,\"tries\":0"+WRONG+"},"
+                +"\"outcomeRules\":{\"version\":1,\"pass\":{},\"fail\":{\"reply\":\"还差一点\"}}}");
+        ObjectNode state=json.createObjectNode();state.putObject("typeIn").put("startedAtMs",99_000L);
+        Plan miss=judge().evaluate(Action.SUBMIT_TYPE_IN,new Input(config,state,Map.of("text","ａｂｄ","elapsedMs",500),0,7L));
+        assertEquals("前两个字母对了",miss.state().path("typeIn").path("lastFeedback").asText());
+        assertEquals(1,miss.state().path("typeIn").path("attempts").asInt());
+        ObjectNode again=miss.state().deepCopy();((ObjectNode)again.path("typeIn")).put("startedAtMs",99_000L);
+        Plan generic=judge().evaluate(Action.SUBMIT_TYPE_IN,new Input(config,again,Map.of("text","QQQ","elapsedMs",500),0,7L));
+        assertEquals("还差一点",generic.state().path("typeIn").path("lastFeedback").asText());
+    }
+
+    @Test void hangmanNearMissRepliesAndKeepsFilledSlots() throws Exception {
+        JsonNode config=json.readTree("{\"hangman\":{\"enabled\":true,\"answer\":\"ABC\""+WRONG+"}}");
+        Plan miss=judge().evaluate(Action.SUBMIT_HANGMAN,new Input(config,json.createObjectNode(),Map.of("input","abd"),0,7L));
+        JsonNode kit=miss.state().path(com.chengyinhub.business.service.support.HangmanGameplay.STATE_KEY);
+        assertEquals("WRONG",kit.path("lastVerdict").asText());
+        assertEquals("前两个字母对了",kit.path("lastFeedback").asText());
+        Plan generic=judge().evaluate(Action.SUBMIT_HANGMAN,new Input(config,miss.state(),Map.of("input","QQQ"),0,7L));
+        JsonNode genericKit=generic.state().path(com.chengyinhub.business.service.support.HangmanGameplay.STATE_KEY);
+        assertEquals("",genericKit.path("lastFeedback").asText(),"没配 fail.reply 时不编一句,由客户端兜底");
+        assertFalse(genericKit.path("lastNearMiss").asBoolean());
+    }
+
+    // ==================== F04 确认后锁定 ====================
+
+    @Test void confirmedChoiceCannotBeSubmittedAgain() throws Exception {
+        JsonNode config=json.readTree("{\"qa\":{\"enabled\":true,\"mode\":\"PICK\",\"options\":[{\"id\":\"a\",\"correct\":true},{\"id\":\"b\"}]}}");
+        Plan confirmed=judge().evaluate(Action.SUBMIT_QA,new Input(config,json.createObjectNode(),Map.of("optionId","a"),0,7L));
+        IllegalStateException again=assertThrows(IllegalStateException.class,
+                ()->judge().evaluate(Action.SUBMIT_QA,new Input(config,confirmed.state(),Map.of("optionId","b"),0,7L)));
+        assertEquals("这一题已经答完了",again.getMessage());
+        JsonNode open=json.readTree("{\"qa\":{\"enabled\":true,\"mode\":\"PICK\",\"judge\":false,\"options\":[{\"id\":\"a\"},{\"id\":\"b\"}]}}");
+        Plan picked=judge().evaluate(Action.SUBMIT_QA,new Input(open,json.createObjectNode(),Map.of("optionId","b"),0,7L));
+        assertThrows(IllegalStateException.class,
+                ()->judge().evaluate(Action.SUBMIT_QA,new Input(open,picked.state(),Map.of("optionId","a"),0,7L)));
+    }
+
     private AdvancedActionJudgement judge() {return new AdvancedActionJudgement(json,()->new Date(100_000),bound->0,()->42);}
 }
