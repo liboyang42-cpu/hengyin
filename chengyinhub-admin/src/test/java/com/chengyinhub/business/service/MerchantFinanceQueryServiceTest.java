@@ -147,6 +147,44 @@ class MerchantFinanceQueryServiceTest {
         assertEquals("本次合作不产生现金分润", page.getRows().get(0).getNoCashReason(), "第三条零现金原因必须由服务端给出");
     }
 
+    /** F11:权益核销的「主办方：X」取这次核销所属场次的收款人(跨俱乐部场次不再指向主题俱乐部)。 */
+    @Test
+    void perkRedemptionNamesTheSessionPayeeAsOrganizer() {
+        MerchantFinanceQueryService service = new MerchantFinanceQueryService();
+        RedemptionMapper redemptionMapper = org.mockito.Mockito.mock(RedemptionMapper.class);
+        MerchantPayableMapper payableMapper = org.mockito.Mockito.mock(MerchantPayableMapper.class);
+        MerchantPayableBatchMapper batchMapper = org.mockito.Mockito.mock(MerchantPayableBatchMapper.class);
+        com.chengyinhub.business.mapper.MerchantChapterOfferMapper offerMapper =
+                org.mockito.Mockito.mock(com.chengyinhub.business.mapper.MerchantChapterOfferMapper.class);
+        IFeReferenceSettlementService reference = org.mockito.Mockito.mock(IFeReferenceSettlementService.class);
+        ReflectionTestUtils.setField(service, "redemptionMapper", redemptionMapper);
+        ReflectionTestUtils.setField(service, "payableMapper", payableMapper);
+        ReflectionTestUtils.setField(service, "batchMapper", batchMapper);
+        ReflectionTestUtils.setField(service, "offerMapper", offerMapper);
+        ReflectionTestUtils.setField(service, "feReferenceSettlementService", reference);
+        wireEmptyPersonalAccount(service);
+        Redemption redemption = new Redemption();
+        redemption.setId(41L);
+        redemption.setOfferId(5L);
+        redemption.setStatus("ACTIVE");
+        redemption.setCreateTime(atShanghai(2026, Calendar.NOVEMBER, 18, 9, 0));
+        com.chengyinhub.business.domain.MerchantChapterOffer offer = new com.chengyinhub.business.domain.MerchantChapterOffer();
+        offer.setId(5L);
+        offer.setTermsMode("PERK");
+        when(offerMapper.selectById(5L)).thenReturn(offer);
+        when(redemptionMapper.selectByMerchant(7L)).thenReturn(Collections.singletonList(redemption));
+        when(payableMapper.selectByMerchant(7L)).thenReturn(Collections.<MerchantPayable>emptyList());
+        when(batchMapper.selectByMerchant(7L)).thenReturn(Collections.<MerchantPayableBatch>emptyList());
+        when(reference.offlineSettlementNoteForRedemption(redemption))
+                .thenReturn("票款由主办方收取；店铺如需结算，请联系主办方线下处理 · 主办方：示例主办方");
+
+        MerchantFinancePage<MerchantRedemptionView> page = service.redemptions(7L, "all", 1, 20);
+
+        assertEquals("票款由主办方收取；店铺如需结算，请联系主办方线下处理 · 主办方：示例主办方",
+                page.getRows().get(0).getNoCashReason());
+        org.mockito.Mockito.verify(reference).offlineSettlementNoteForRedemption(redemption);
+    }
+
     /** 2026-11-01 业主:主题工作台「台账」带 topicId,只看这个主题的核销;不带时与原来全店一致。 */
     @Test
     void topicIdNarrowsRedemptionsToThatTopic() {

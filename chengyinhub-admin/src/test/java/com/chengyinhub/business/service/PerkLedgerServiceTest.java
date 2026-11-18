@@ -39,6 +39,7 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -642,6 +643,47 @@ class PerkLedgerServiceTest {
         assertEquals(OPERATOR, r.getOperatorId());
         assertEquals("redeem:" + REG + ":" + CH1 + ":" + MERCHANT, r.getIdempotencyKey(),
                 "幂等键构造变了会让重试无法与「另一家抢核销」区分");
+    }
+
+    /** F11:核销成功后同一事务写参考结算行(交给参考账服务按 offer 判档 / 作者自营)。 */
+    @Test
+    void redeem_recordsFreeExploreReferenceSettlement() {
+        givenRedeemable();
+        IFeReferenceSettlementService reference = mock(IFeReferenceSettlementService.class);
+        ReflectionTestUtils.setField(service, "feReferenceSettlementService", reference);
+
+        service.redeemChapter(REG, CH1, MERCHANT, OPERATOR);
+
+        ArgumentCaptor<Redemption> redemption = ArgumentCaptor.forClass(Redemption.class);
+        ArgumentCaptor<MerchantChapterOffer> offer = ArgumentCaptor.forClass(MerchantChapterOffer.class);
+        verify(reference).recordPerkRedemption(redemption.capture(), offer.capture());
+        assertEquals(CH1, redemption.getValue().getChapterId());
+        assertEquals(OFFER, offer.getValue().getId());
+    }
+
+    /** F11:撤销核销 ⇒ 参考行作废;重复撤销(CAS 返 0)不再碰参考账。 */
+    @Test
+    void reverse_voidsReferenceSettlementOnlyOnce() {
+        IFeReferenceSettlementService reference = mock(IFeReferenceSettlementService.class);
+        ReflectionTestUtils.setField(service, "feReferenceSettlementService", reference);
+        when(redemptionMapper.selectById(3L)).thenReturn(activeRedemption());
+        when(redemptionMapper.reverse(eq(3L), anyString())).thenReturn(1, 0);
+
+        assertTrue(service.reverseRedemption(3L, "店员误扫", SYS_OPERATOR));
+        assertFalse(service.reverseRedemption(3L, "重复点击", SYS_OPERATOR));
+
+        verify(reference, times(1)).voidForReversedRedemption(3L);
+    }
+
+    /** F11:整单退款 ⇒ 这一单未核销的参考行作废(已核销行由 SQL 保持 OPEN)。 */
+    @Test
+    void releaseOnRefund_voidsUnredeemedReferenceRows() {
+        IFeReferenceSettlementService reference = mock(IFeReferenceSettlementService.class);
+        ReflectionTestUtils.setField(service, "feReferenceSettlementService", reference);
+
+        service.releaseOnRefund(REG, "REFUND");
+
+        verify(reference).voidUnredeemedOnRefund(REG);
     }
 
     /**

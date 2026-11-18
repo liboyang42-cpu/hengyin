@@ -63,6 +63,8 @@ public class MerchantFinanceQueryService {
     @Autowired private CmsTopicChapterMapper chapterMapper;
     @Autowired private IMmsMerchantService merchantService;
     @Autowired private PiiCryptoService piiCryptoService;
+    /** F11:店铺侧「主办方：X」按场次收款人取。 */
+    @Autowired private com.chengyinhub.business.service.IFeReferenceSettlementService feReferenceSettlementService;
     /** 第十二轮 k5:俱乐部场次结算付给本商家的核销费(按场次一行)。 */
     @Autowired(required = false) private com.chengyinhub.business.mapper.ClubMapper clubMapper;
     @Autowired(required = false) private com.chengyinhub.business.mapper.SettlementDetailMapper sessionFeeMapper;
@@ -559,24 +561,13 @@ public class MerchantFinanceQueryService {
         return result;
     }
 
-    /** 全权益核销:票款归主办方(发布主题的俱乐部;商家发布的主题则是该商家),店铺与主办方线下结算。 */
-    private String perkNoCashReason(CmsTopic topic) {
-        String base = "票款由主办方收取；店铺如需结算，请联系主办方线下处理";
-        String organizer = organizerName(topic);
-        return organizer == null ? base : base + " · 主办方：" + organizer;
-    }
-
-    private String organizerName(CmsTopic topic) {
-        if (topic == null) return null;
-        String name = null;
-        if (topic.getClubId() != null && topic.getClubId() > 0) {
-            com.chengyinhub.business.domain.Club club = clubMapper == null ? null : clubMapper.selectClubById(topic.getClubId());
-            name = club == null ? null : club.getName();
-        } else if (topic.getMemberId() != null && merchantService != null) {
-            MmsMerchant publisher = merchantService.selectMmsMerchantByMemberId(topic.getMemberId());
-            name = publisher == null ? null : publisher.getName();
-        }
-        return name == null || name.trim().isEmpty() ? null : name.trim();
+    /**
+     * 全权益核销:票款归场次收款人(主办方),店铺与主办方线下结算。
+     * F11:主办方按这次核销所属场次的收款人取(与结算入账同一规则,见 SessionPayeeResolver);
+     * 旧实现按主题的俱乐部/发布者取,跨俱乐部场次会指错人。
+     */
+    private String perkNoCashReason(Redemption redemption) {
+        return feReferenceSettlementService.offlineSettlementNoteForRedemption(redemption);
     }
 
     private MerchantRedemptionView toRedemptionView(Redemption redemption, List<MerchantPayable> payables,
@@ -600,7 +591,7 @@ public class MerchantFinanceQueryService {
         if (offer != null && "PERK".equals(offer.getTermsMode())) {
             row.setSettlementRoute("NONE");
             row.setSettlementState("NOT_APPLICABLE");
-            row.setNoCashReason(perkNoCashReason(topic));
+            row.setNoCashReason(perkNoCashReason(redemption));
             row.setDisplayState(MerchantFinanceStateResolver.resolve(row.getFulfillmentState(), row.getSettlementState()));
             return row;
         }
