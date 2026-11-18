@@ -317,6 +317,7 @@ const BUILDERS = {
     r5: false, deadlineAt: 0,
     caseSensitive: !!c.caseSensitive, tries: num(c.tries, 0), attempts: 0, passed: false, startConfirmed: false, startFailureSeq: 0,
     terminalSkin: !!c.terminalSkin,   // 终端样式,纯外观
+    wrongFeedback: '',                // 试玩不判错答,与玩家页字段对齐
   }),
   note: (c) => ({
     type: 'note', title: txt(c.title), prompt: txt(c.prompt), maxLength: num(c.maxLength, 40) || 40,

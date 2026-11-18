@@ -20,6 +20,8 @@ function emptyForm(address) {
     perkTemplateId: 0,
     perkName: '',
     quotaTotal: '',
+    familyAccepted: false, // F12:是否接受亲子票(1 大 1 小同享一份权益)
+    familyPerkText: '',    // F12:儿童份说明,如「儿童份小杯」
     perHeadFee: '',
     supplyName: '',
     supplyKind: 'SERVICE',
@@ -262,6 +264,13 @@ Component({
           that.setData({ perkTemplatesLoading: false });
         },
       });
+    },
+
+    // F12:接受亲子票开关(关掉时清空儿童份说明)
+    onFamilyAcceptedChange(e) {
+      if (this.data.submitting) return;
+      const on = !!(e && e.detail && e.detail.value);
+      this.setData({ form: Object.assign({}, this.data.form, { familyAccepted: on, familyPerkText: on ? this.data.form.familyPerkText : '' }) });
     },
 
     onInput(e) {
@@ -510,6 +519,8 @@ Component({
       if (termsMode === 'PERK') {
         detail.perkTemplateId = Number(form.perkTemplateId);
         detail.quotaTotal = quotaTotal;
+        detail.familyAccepted = form.familyAccepted ? 1 : 0;
+        detail.familyPerkText = form.familyAccepted ? String(form.familyPerkText || '').trim().slice(0, 200) : '';
       }
       if (termsMode === 'REVSHARE') detail.perHeadFee = perHeadFee;
       this.triggerEvent('submit', detail);

@@ -3,7 +3,8 @@ const fs = require('node:fs')
 const path = require('node:path')
 const test = require('node:test')
 
-// x-fix7 P-5：自由探索站点详情的滚动内容尾部垫「底栏高度 + 安全区」，到店三步不被固定的到店打卡条压住。
+// x-fix7 P-5：自由探索站点详情的滚动内容尾部垫「底栏高度 + 安全区」，尾部内容不被固定的到店打卡条压住。
+// F08:到店三步说明块已删,尾垫改为跟在最后一段(玩法)之后。
 const css = fs.readFileSync(path.join(__dirname, '../../pages/play/index.wxss'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
 const wxml = fs.readFileSync(path.join(__dirname, '../../pages/play/index.wxml'), 'utf8')
 
@@ -19,9 +20,10 @@ test('滚动内容尾垫 = 底栏高度（按钮高 + 124rpx）+ 安全区', () 
   assert.match(body('.fx-hero__cta'), /padding:\s*96rpx var\(--cy-page-x\) calc\(28rpx \+ env\(safe-area-inset-bottom\)\)/)
 })
 
-test('尾垫在三步之后、仍在滚动容器里', () => {
+test('尾垫在最后一段之后、仍在滚动容器里;到店三步说明块已删', () => {
   const scroll = wxml.slice(wxml.indexOf('<scroll-view class="fx-hero__body"'), wxml.indexOf('<view class="fx-hero__cta'))
-  const steps = scroll.indexOf('class="fx-step3')
+  assert.equal(scroll.indexOf('class="fx-step3'), -1, 'F08:到店三步说明删掉')
+  const game = scroll.indexOf('<!-- ③ 游戏')
   const pad = scroll.indexOf('<view class="fx-hero__pad"></view>')
-  assert.ok(steps > 0 && pad > steps)
+  assert.ok(game > 0 && pad > game)
 })

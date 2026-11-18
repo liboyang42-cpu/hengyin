@@ -175,6 +175,9 @@ public class ApiPlayHelpController extends BaseController {
         if (refused instanceof PlayHelpCostApplication.PlayHelpCostException costRefusal) {
             return AjaxResult.error(400, costRefusal.getMessage()).put("reasonCode", costRefusal.code());
         }
+        if (refused instanceof PlayHelpApplication.HelpRefusal helpRefusal && helpRefusal.code() != null) {
+            return AjaxResult.error(400, helpRefusal.getMessage()).put("reasonCode", helpRefusal.code());
+        }
         if (refused instanceof IllegalArgumentException || refused instanceof IllegalStateException) {
             return AjaxResult.error(400, refused.getMessage());
         }

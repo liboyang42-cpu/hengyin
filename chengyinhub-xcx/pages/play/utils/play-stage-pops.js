@@ -153,7 +153,10 @@ function methods() {
     },
     /** f-play V3-09:选章每一行的状态,与 onPickChapter 放行同一判据(chapterReadState):completed 写「已完成」、locked 压暗不可点 */
     _chapterPickStates() {
-      return (this.data.chapterCards || []).map((c) => chapterTrail.chapterReadState(c, this.data.nodes, this._historyNodes));
+      // 自由探索按到访解锁:锁定的章标 visit(锁图标 +「到访后解锁」,点开锁卡),其余照旧
+      const gate = !!this.data.storyGate;
+      return (this.data.chapterCards || []).map((c) => (gate && c && c.chapterLocked ? 'visit'
+        : chapterTrail.chapterReadState(c, this.data.nodes, this._historyNodes)));
     },
     /** 回看打不开 / 没有可读内容时:只在「走完后回看」这一次里按走完离开 */
     _afterFinishLeave() {

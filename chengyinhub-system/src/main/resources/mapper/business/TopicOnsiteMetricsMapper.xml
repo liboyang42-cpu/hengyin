@@ -83,7 +83,8 @@
            and t.del_flag = 0
     </select>
 
-    <!-- queue_joined_at 只认 player_node_progress.checkin_time；service_started_at 只认 redemption.create_time。 -->
+    <!-- queue_joined_at 只认扫码到店(arrival_source='QR')的 checkin_time；GEO_TAP(玩家自报位置)不进排队计时(F08)。
+         service_started_at 只认 redemption.create_time。 -->
     <select id="selectWaitFacts" resultMap="waitFact">
         select e.registration_id,
                e.chapter_id,
@@ -95,7 +96,7 @@
           join <include refid="topicTickets"/> topic_ticket on topic_ticket.id = r.ticket_id
           left join cms_topic_node n on n.chapter_id = e.chapter_id and n.topic_id = #{topicId}
           left join player_node_progress p on p.member_id = r.member_id and p.activity_id = r.owner_id
-                 and p.topic_id = #{topicId} and p.node_id = n.id and p.del_flag = 0
+                 and p.topic_id = #{topicId} and p.node_id = n.id and p.del_flag = 0 and p.arrival_source = 'QR'
           left join redemption rd on rd.registration_id = r.id and rd.chapter_id = e.chapter_id
                  and rd.topic_id = #{topicId} and rd.status = 'ACTIVE'
          where e.topic_id = #{topicId}
@@ -122,7 +123,8 @@
            )
     </select>
 
-    <!-- 店内负载只数“已支付且本章未核销、已有到店时间”的票；绝不读取 quota_total/quota_used。 -->
+    <!-- 店内负载只数“已支付且本章未核销、已扫码到店”的票；绝不读取 quota_total/quota_used。
+         与排队计时同口径:只认 arrival_source='QR',300 米内点「我已到店」(GEO_TAP)不算在店里排队(F08)。 -->
     <select id="selectInStoreLoads" resultMap="loadFact">
         select e.chapter_id, count(distinct e.registration_id) in_store_load
           from registration_entitlement e
@@ -133,6 +135,7 @@
           join cms_topic_node n on n.chapter_id = e.chapter_id and n.topic_id = #{topicId}
           join player_node_progress p on p.member_id = r.member_id and p.activity_id = r.owner_id
              and p.topic_id = #{topicId} and p.node_id = n.id and p.checkin_time is not null and p.del_flag = 0
+             and p.arrival_source = 'QR'
          where e.topic_id = #{topicId} and e.status = 0
          group by e.chapter_id
     </select>

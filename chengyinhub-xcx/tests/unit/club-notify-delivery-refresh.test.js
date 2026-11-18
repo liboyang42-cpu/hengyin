@@ -84,7 +84,7 @@ test('处理中的投递卡补出「待投递」与处理中字样，不是光�
 
   const wxml = read('pages/club/notify/index.wxml')
   assert.match(wxml, /待投递/, '卡面必须真有这一行，不能只存在于 js 的字段里')
-  assert.match(wxml, /\{\{campaign\.pendingCount != null \? campaign\.pendingCount : '—'\}\}/, '没有这个数也要显示 0，不空着')
+  assert.match(wxml, /\{\{campaign\.pendingCount \|\| 0\}\}/, '没有这个数也要显示 0，不空着')
   assert.match(wxml, /\{\{campaign\.statusText\}\}/)
 })
 

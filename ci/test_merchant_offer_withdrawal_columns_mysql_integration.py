@@ -22,6 +22,8 @@ ROUND_MIGRATION = SQL_DIR / "migration_20261024_d_chapter_application_round.sql"
 # 2026-11-18 F10:已发布的 offer 投影同时读 supplier_kind / supplier_member_id(作者自己承接),
 # 投影断言前须一并落这份独立迁移;本文件被测的退出列迁移本身不变。
 AUTHOR_SUPPLY_MIGRATION = SQL_DIR / "migration_20261118_chapter_offer_author_self_supply.sql"
+# F12:当前 selectMerchantChapterOfferVo 也读 family_accepted/family_perk_text;投影前叠上这份后续迁移。
+FAMILY_MIGRATION = SQL_DIR / "migration_20261118_family_ticket.sql"
 PREFIX = "cy_offer_withdraw_columns_it_"
 TABLES = ("merchant_chapter_offer", "merchant_chapter_application")
 TARGET_COLUMNS = ("withdraw_reason", "withdraw_required", "replacement_of_offer_id")
@@ -169,6 +171,7 @@ class MerchantOfferWithdrawalColumnsMysqlIntegrationTest(unittest.TestCase):
             (TABLES[0], "withdraw_reason", "varchar(500)", "YES", None),
             (TABLES[0], "withdraw_required", "tinyint(1)", "YES", None),
         ), self.new_columns())
+        self.migrate(FAMILY_MIGRATION)
         with self.connect() as connection, connection.cursor() as cursor:
             for mapper, sql_id in (("MerchantChapterOfferMapper", "selectMerchantChapterOfferVo"),
                                    ("MerchantChapterApplicationMapper", "selectMerchantChapterApplicationVo")):
@@ -191,6 +194,7 @@ class MerchantOfferWithdrawalColumnsMysqlIntegrationTest(unittest.TestCase):
         expected = self.snapshot()
         self.migrate()
         self.assertEqual(expected, self.snapshot())
+        self.migrate(FAMILY_MIGRATION)
         with self.connect() as connection, connection.cursor() as cursor:
             columns, rows = self.projection(cursor, "MerchantChapterOfferMapper", "selectMerchantChapterOfferVo")
             self.assertEqual(reason, rows[0][columns.index("withdraw_reason")])

@@ -59,6 +59,8 @@ public class ApiPublicContentCatalogController extends BaseController {
      */
     @Anonymous
     @Operation(summary = "城市目录(只含真实有作品的城市)")
+    /** F14c(PG-025):城市合集两页已下线,本接口已无小程序/iOS 调用方;先标记、不删,观察期后再移除。 */
+    @Deprecated
     @PostMapping("/city/list")
     public AjaxResult cityList() {
         try {
@@ -125,6 +127,8 @@ public class ApiPublicContentCatalogController extends BaseController {
     /** 地图轻投影：同筛选，仅返回落点与最少卡片字段；无公开坐标的作品不带坐标(不用城市中心猜)。 */
     @Anonymous
     @Operation(summary = "公开目录地图轻投影")
+    /** F14c(PG-025):城市合集两页已下线,本接口已无小程序/iOS 调用方;先标记、不删,观察期后再移除。 */
+    @Deprecated
     @PostMapping("/map")
     public AjaxResult map(String city_code, String locale, String keyword, Integer product_type,
                           String delivery_mode, Integer group_eligible, Integer school_eligible,
@@ -149,6 +153,8 @@ public class ApiPublicContentCatalogController extends BaseController {
             @Parameter(name = "ids", description = "逗号分隔的主题 id，最多 100 个"),
             @Parameter(name = "locale", description = "请求语言")
     })
+    /** F14c(PG-025):城市合集两页已下线,本接口已无小程序/iOS 调用方;先标记、不删,观察期后再移除。 */
+    @Deprecated
     @PostMapping("/ids")
     public AjaxResult byIds(String ids, String locale) {
         List<Long> topicIds = new ArrayList<Long>();
@@ -177,6 +183,8 @@ public class ApiPublicContentCatalogController extends BaseController {
             @Parameter(name = "id", description = "主题 id"),
             @Parameter(name = "locale", description = "请求语言")
     })
+    /** F14c(PG-025):城市合集两页已下线,本接口已无小程序/iOS 调用方;先标记、不删,观察期后再移除。 */
+    @Deprecated
     @PostMapping("/info")
     public AjaxResult info(String id, String locale) {
         try {
@@ -189,6 +197,8 @@ public class ApiPublicContentCatalogController extends BaseController {
     /** 合法筛选项：城市/玩法/交付形态/语言全部来自真实数据；空集合即空集合。 */
     @Anonymous
     @Operation(summary = "公开目录合法筛选项")
+    /** F14c(PG-025):城市合集两页已下线,本接口已无小程序/iOS 调用方;先标记、不删,观察期后再移除。 */
+    @Deprecated
     @PostMapping("/filters")
     public AjaxResult filters() {
         try {

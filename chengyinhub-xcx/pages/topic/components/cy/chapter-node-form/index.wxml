@@ -103,6 +103,16 @@
       <input class="cnf-input" type="number" value="{{form.quotaTotal}}" placeholder="至少 1 人次"
         disabled="{{submitting}}" placeholder-class="cnf-placeholder" data-key="quotaTotal" bindinput="onInput" />
     </view>
+    <!-- F12 亲子票:一张亲子票 1 大 1 小同享一份权益、只占 1 个名额;主题带亲子票时每个必选位置都要接受才能发布 -->
+    <view class="cnf-field" wx:if="{{termsMode === 'PERK'}}">
+      <view class="cnf-label cnf-label--row"><text>接受亲子票（1 大 1 小同享）</text>
+        <cy-switch checked="{{form.familyAccepted}}" disabled="{{submitting}}" accessibilityLabel="接受亲子票" bind:change="onFamilyAcceptedChange" /></view>
+    </view>
+    <view class="cnf-field" wx:if="{{termsMode === 'PERK' && form.familyAccepted}}">
+      <view class="cnf-label"><text>儿童份说明</text></view>
+      <input class="cnf-input" value="{{form.familyPerkText}}" placeholder="例如：儿童份小杯" maxlength="200"
+        disabled="{{submitting}}" placeholder-class="cnf-placeholder" data-key="familyPerkText" bindinput="onInput" />
+    </view>
   </view>
 
   <block wx:if="{{formMode !== 'offer'}}">

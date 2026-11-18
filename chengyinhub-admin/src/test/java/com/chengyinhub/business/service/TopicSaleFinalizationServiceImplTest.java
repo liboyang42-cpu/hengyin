@@ -573,6 +573,37 @@ class TopicSaleFinalizationServiceImplTest {
     }
 
     @Test
+    void projectionKeyAndFieldsIncludeFamilyComposition() {
+        OmsTicket family = validTicket();
+        family.setAdultCount(1);
+        family.setChildCount(1);
+        family.setChildAgeMin(3);
+        family.setChildAgeMax(12);
+        OmsTicket plain = validTicket();
+        String familyKey = ReflectionTestUtils.invokeMethod(service, "ticketProjectionKey", family, new CmsActivity());
+        String plainKey = ReflectionTestUtils.invokeMethod(service, "ticketProjectionKey", plain, new CmsActivity());
+        assertTrue(!familyKey.equals(plainKey), "亲子票与同名同价普通票的投影键必须不同");
+        // 未写构成的存量票按 1+0 处理,与显式 1+0 等价
+        OmsTicket explicitPlain = validTicket();
+        explicitPlain.setAdultCount(1);
+        explicitPlain.setChildCount(0);
+        assertEquals(plainKey, ReflectionTestUtils.invokeMethod(service, "ticketProjectionKey", explicitPlain, new CmsActivity()));
+        ReflectionTestUtils.invokeMethod(service, "assertTicketProjection", plain, explicitPlain, new CmsActivity());
+
+        IllegalStateException childMismatch = assertThrows(IllegalStateException.class,
+                () -> ReflectionTestUtils.invokeMethod(service, "assertTicketProjection", family, plain, new CmsActivity()));
+        assertEquals("SALE_TICKET_PROJECTION_MISMATCH_CHILD_COUNT", childMismatch.getMessage());
+        OmsTicket ageDrift = validTicket();
+        ageDrift.setAdultCount(1);
+        ageDrift.setChildCount(1);
+        ageDrift.setChildAgeMin(3);
+        ageDrift.setChildAgeMax(10);
+        IllegalStateException ageMismatch = assertThrows(IllegalStateException.class,
+                () -> ReflectionTestUtils.invokeMethod(service, "assertTicketProjection", family, ageDrift, new CmsActivity()));
+        assertEquals("SALE_TICKET_PROJECTION_MISMATCH_CHILD_AGE_MAX", ageMismatch.getMessage());
+    }
+
+    @Test
     void projectionStillRejectsDifferentPositiveTeamSize() {
         OmsTicket source = validTicket();
         OmsTicket projected = validTicket();

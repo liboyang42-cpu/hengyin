@@ -159,6 +159,14 @@ public interface IPerkLedgerService {
      */
     default String livePerkName(Long chapterId, Long merchantId) { return null; }
 
+    /**
+     * F12:亲子票核销回执的人数构成 {adultCount, childCount, childAge, familyPerkText, label};
+     * 非亲子票或读不到返回 null。只读,只供店员核销结果页展示。
+     */
+    default java.util.Map<String, Object> redemptionParty(String partySnapshotJson, Long chapterId, Long merchantId) {
+        return com.chengyinhub.business.service.support.FamilyTicketRules.redemptionParty(partySnapshotJson, null);
+    }
+
     /** 调用方须先按 activity→registration 锁序复核有效票；锁读同 key 的真实回执与权益。 */
     Long findReplayableChapterRedemptionIdForUpdate(Long registrationId, Long topicId,
                                                    Long chapterId, Long merchantId);

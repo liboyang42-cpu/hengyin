@@ -67,8 +67,8 @@ test('P-10:故事流打字题答错(只回流 attempts)也描红并写一句;首
   assert.equal(ctx.data.typeWrong, false);
   def.observers.attempts.call(ctx, 1);
   assert.equal(ctx.data.typeWrong, true);
-  assert.equal(ctx.data.typed, '');
-  assert.equal(ctx.data.feedback, '不对。把它清掉，再试一次。');
+  assert.equal(ctx.data.typed, '黄浦江', 'F02:答错保留输入');
+  assert.equal(ctx.data.feedback, '还不对，再看看题面');
   ctx.data.typeWrong = false; ctx.data.passed = true;
   def.observers.attempts.call(ctx, 2);   // 答对:不描红
   assert.equal(ctx.data.typeWrong, false);

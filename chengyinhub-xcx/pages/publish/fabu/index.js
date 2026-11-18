@@ -3,6 +3,7 @@ const { readReducedMotion } = require('../../../utils/motion-preference.js'); co
 const modal = require('../../../utils/modal.js'); const feAuthorSale = require('../../../utils/fe-author-sale.js');
 const cyLoading = require('../../../utils/loading.js');
 const cyToast = require('../../../utils/toast.js');
+const familyTicket = require('../../../utils/family-ticket.js'); // F12 亲子票
 const { toTimestamp } = require('../../../utils/datetime.js');
 let app = getApp();
 const { memberId, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../utils/session/login-reload.js');
@@ -253,6 +254,7 @@ const runtimeEditor = require('./theme-runtime.js'); const routeNames = require(
 const structure = require('./theme-runtime-structure.js'); // structure
 const survivalEditor = require('./theme-runtime-survival.js'); /* survival */ const lookEditor = require('./theme-look-editor.js'); /* 主题画面风格 */
 const zeroHpEditor = require('./theme-runtime-zero-hp.js'); // R5 HP 归零面板（与 runtimeEditor 内同一组方法，直接展开便于 handler 溯源）
+const feVisitConfig = require('./theme-fe-visit.js'); // FE-STORY 7.10 地点到访方式
 const ownership = require('./theme-ownership.js'); const d20Page = require('./theme-d20-page.js'); const keysItems = require('./theme-keys-items.js'); const initialCarry = require('./theme-initial-carry.js'); // 文档二 L1;L2 线索与物品 · 物品一组;初始状态 · 开局带着
 const themeMedia = require('./theme-media.js');
 Page({
@@ -261,7 +263,7 @@ Page({
   ...structure.methods, // structure
   ...survivalEditor.methods, // survival
   ...zeroHpEditor.methods, /* R5 HP 归零 */ ...lookEditor.methods, /* 画面风格 */
-  ...ownership.methods, ...d20Page.methods, ...keysItems.methods, ...initialCarry.methods,
+  ...ownership.methods, ...feVisitConfig.methods, ...d20Page.methods, ...keysItems.methods, ...initialCarry.methods,
   _routeGraph: topicRouteGraph.emptyGraph(),
   _routeMappingSourceNodeId: '',
   _routeMappingReturnToNodeEditor: false,
@@ -273,7 +275,7 @@ Page({
     ...runtimeEditor.data, ...routeNames.data,
     ...structure.data, // structure
     ...survivalEditor.data, /* survival */ ...lookEditor.data, /* 画面风格 */
-    ...ownership.data, ...d20Page.data, ...keysItems.data, ...initialCarry.data,
+    ...ownership.data, ...feVisitConfig.data, ...d20Page.data, ...keysItems.data, ...initialCarry.data,
     // 氛围块的选择器:cy-dropdown 吃 {value,label} 数组(全仓禁原生 picker),块上回显要 key→中文的映射。
     moodOptions: CHAPTER_ATMOSPHERES,
     storyWhenOptions: [], storyWhenLabelOf: {},
@@ -5017,6 +5019,7 @@ Page({
       inlineEdit: { chapterIndex: Number(chapterIndex), nodeIndex: Number(nodeIndex) },
     })
     this._openNodeBinding(nodesForm);
+    this._openFeVisitConfig(node);
     this._refreshStructureSummary(); // structure
     if (node.templateId && !(nodesForm.templateInfo && Object.prototype.hasOwnProperty.call(nodesForm.templateInfo, 'advancedConfigJson')))
       this._loadNodeTemplateDetail(node);
@@ -5053,6 +5056,7 @@ Page({
       selectedNodeLid: m.nodeLid, // 点 marker → 列表同步高亮
     });
     this._openNodeBinding(nodesForm);
+    this._openFeVisitConfig(node);
     this._refreshStructureSummary(); // structure
     if (node.templateId && !(nodesForm.templateInfo && Object.prototype.hasOwnProperty.call(nodesForm.templateInfo, 'advancedConfigJson')))
       this._loadNodeTemplateDetail(node);
@@ -5083,6 +5087,7 @@ Page({
     this._rollbackNodeRouteEdit();
     this._nodeBindingSlots = [];
     this._nodeBindingDraft = null;
+    this._closeFeVisitConfig();
     this.setData({
       popChapterNodes: false,
       nodeSheetView: 'detail',
@@ -6308,7 +6313,11 @@ Page({
           saleEndTime: ticket.saleEndTime || '',
           description: ticket.description || '',
           refundSupported: ticket.refundSupported !== false,
-          syncWithTheme: ticket.syncWithTheme || false
+          syncWithTheme: ticket.syncWithTheme || false,
+          // F12 亲子票人数构成
+          childCount: Number(ticket.childCount) === 1 ? 1 : 0,
+          childAgeMin: ticket.childAgeMin == null ? '' : ticket.childAgeMin,
+          childAgeMax: ticket.childAgeMax == null ? '' : ticket.childAgeMax
         }
       }, () => { this.refreshTicketSaveState(); this._revealTicketEditor(); });
     } else {
@@ -6333,10 +6342,25 @@ Page({
           saleEndTime: '',
           description: '',
           refundSupported: true,
-          syncWithTheme: false
+          syncWithTheme: false,
+          childCount: 0,
+          childAgeMin: '',
+          childAgeMax: ''
         }
       }, () => { this.refreshTicketSaveState(); this._revealTicketEditor(); });
     }
+  },
+
+  // F12「亲子票」模板按钮:新建一张 1 大 1 小的票种,构成和常见年龄段(3–12 岁)预填好
+  openFamilyTicketEditor() {
+    this.openTicketEditor({ currentTarget: { dataset: { index: -1 } } });
+    const draft = familyTicket.familyTicketDraft();
+    this.setData({
+      'editingTicket.name': draft.name,
+      'editingTicket.childCount': draft.childCount,
+      'editingTicket.childAgeMin': draft.childAgeMin,
+      'editingTicket.childAgeMax': draft.childAgeMax
+    }, () => this.refreshTicketSaveState());
   },
 
   // x-fix5 A-3:编辑器在票种列表底部展开时,「添加票种 / 收起」这一行会落在底栏(返回/预览)下面够不着。
@@ -6377,7 +6401,7 @@ Page({
     if (Number(et.mode) === 1 && !nonEmpty(et.meetingPoint)) return '请选择集合地点';
     // 只有自由探索能开售前定价;从自由探索切到城市定向时留下的空价必须补上
     if (Number(et.mode) === 1 && (et.price === '' || et.price == null)) return '请填写票价';
-    return '';
+    return familyTicket.familyBlockReason(et);
   },
 
   // 票种保存的第一条拦截原因(与 refreshTicketSaveState 的可用态同一套判据)。
@@ -6425,6 +6449,7 @@ Page({
       refundSupported: et.refundSupported,
       syncWithTheme: et.syncWithTheme
     };
+    Object.assign(ticketData, familyTicket.familyFields(et)); // F12 亲子票人数构成(普通票 1+0、不带年龄段)
     const savedTicketId = Number(et.id);
     if (Number.isSafeInteger(savedTicketId) && savedTicketId > 0) ticketData.id = savedTicketId;
     let tickets = [...this.data.formData.tickets];

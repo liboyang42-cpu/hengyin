@@ -56,7 +56,7 @@ public class AdvancedGameConfigValidator {
      * LOCATION 留在册里只为把它显式拒掉:位置类帮助会绕过既有到达与权限判定。
      */
     private static final Set<String> HINT_LEVEL_TYPES = setOf(
-            "TEXT", "IMAGE", "LETTER", "DIGIT", "ANSWER", "SKIP", "LOCATION");
+            "TEXT", "IMAGE", "LETTER", "DIGIT", "ANSWER", "SKIP", "LOCATION", "POOL_TRIM");
     /*
      * 免费额度的**已定稿语义**（用户 2026-11-08 裁决）：整局共享 N 次免费 ——
      * 首次解锁一层消耗一次，已解锁层重看始终免费；N 由作者显式给出，平台不给默认值。
@@ -223,8 +223,10 @@ public class AdvancedGameConfigValidator {
     /** 对照题可以交几次(可选):1 至 10;缺省 = 不限,与排序题的 0 同一条口径 */
     private static final int MIN_COMPARE_ATTEMPTS = 1;
     private static final int MAX_COMPARE_ATTEMPTS = 10;
-    /** 双人视角(roleViews):恰好 A、B 两个角色,每个角色恰好一个 view,items 有上限。 */
-    private static final Set<String> ROLE_VIEW_IDS = setOf("A", "B");
+    /** 角色视角(roleViews):2 至 4 个角色(组队上限 4 人),id 取 A/B/C/D,每个角色恰好一个 view,items 有上限。 */
+    private static final Set<String> ROLE_VIEW_IDS = setOf("A", "B", "C", "D");
+    private static final int MIN_ROLE_VIEWS = 2;
+    private static final int MAX_ROLE_VIEWS = 4;
     private static final int MAX_ROLE_VIEW_ITEMS = 8;
     private static final int MAX_ROLE_VIEW_TEXT = 200;
     /** 预制人生建档:问题 key 以字母开头,1 至 16 位字母、数字或下划线(契约 §2.1) */
@@ -372,6 +374,10 @@ public class AdvancedGameConfigValidator {
         validateHintFreeUsesPerRun(root);
         // G1 逐字猜词:只补空白槽、按 format 数组重建;答案/别名/format 都是秘密,投影里不下发。
         HangmanGameplay.validate(root.get("hangman"));
+        // F03 字母池:打字问答的字符池(内容侧字段 qa.letterPool)按同一份池子规则校验;
+        // POOL_TRIM 提示只对有池子的题有意义,没有池子却配了就拒,免得玩家点了却什么都没去掉。
+        LetterPoolSupport.validateQa(root.get("qa"));
+        requirePoolForTrim(root);
         validateScan(root.get("scan"));
         // R3 三个新玩法。它们与老玩法同一套形状:答案留在服务端,投影只下发题面。
         validateSort(root.get("sort"));
@@ -386,6 +392,8 @@ public class AdvancedGameConfigValidator {
         validateAlbum(root.get("album"),root.path("outcomeRules").path("version").asInt()==1);
         validateNote(root.get("note"));
         validateTypeIn(root.get("typeIn"));
+        // F02 按错答回复:qa(打字)/typeIn/hangman 三段同一形状;写法不能和正确答案或别名重叠。
+        validateWrongReplies(root);
         // 旅程体验模组化:三个阶段共用的三个**可选**顶层字段。缺省 = 老配置,照旧通过,
         // 所以 schemaVersion 保持 1 不升版。这里只查配置形状,**不查键注册表** ——
         // 键有没有被主题注册由发布期对账,运行期只保证每处引用都是合法键名 + 合法 op。
@@ -1354,6 +1362,17 @@ public class AdvancedGameConfigValidator {
      * {@code hintFreeUsesPerRun}(见 {@link #validateHintFreeUsesPerRun});层内 {@code freeQuota}
      * 只接受 0,>0 直接拒并指向根层字段。
      */
+    private void requirePoolForTrim(JsonNode root) {
+        JsonNode ladder = root.get("hintLadder");
+        if (ladder == null || !ladder.isArray()) return;
+        for (JsonNode level : ladder) {
+            if (!"POOL_TRIM".equals(level.path("type").asText("").trim().toUpperCase(Locale.ROOT))) continue;
+            if (!LetterPoolSupport.hangmanPool(root.get("hangman")) && !LetterPoolSupport.qaPool(root.get("qa"))) {
+                throw new IllegalArgumentException("去掉干扰字提示只能配在有字母池的题上");
+            }
+        }
+    }
+
     private void validateHintLadder(JsonNode ladder) {
         if (ladder == null || ladder.isNull()) return;
         if (!ladder.isArray() || ladder.size() == 0 || ladder.size() > MAX_HINT_LEVELS) {
@@ -1373,7 +1392,7 @@ public class AdvancedGameConfigValidator {
             // 在运行期会被识别,保存闸不能反而把它拒了。
             String type = level.path("type").asText("").trim().toUpperCase(Locale.ROOT);
             if (!HINT_LEVEL_TYPES.contains(type)) {
-                throw new IllegalArgumentException("提示类型只能是文字、图片、首字、数字、答案或跳过");
+                throw new IllegalArgumentException("提示类型只能是文字、图片、首字、数字、答案、去掉干扰字或跳过");
             }
             if ("LOCATION".equals(type)) {
                 throw new IllegalArgumentException("位置类帮助会绕过既有到达与权限判定,当前不可配置");
@@ -1453,6 +1472,13 @@ public class AdvancedGameConfigValidator {
                     throw new IllegalArgumentException("答案级揭示文案必须是文字");
                 }
             }
+            case "POOL_TRIM" -> {
+                // 去掉几个干扰字:缺省 3;写了就必须是 1 至 MAX_POOL 的整数
+                if (payload == null || payload.isNull()) return;
+                if (!payload.isIntegralNumber() || payload.asInt() < 1 || payload.asInt() > LetterPoolSupport.MAX_POOL) {
+                    throw new IllegalArgumentException("去掉干扰字的数量须为 1 至 " + LetterPoolSupport.MAX_POOL + " 的整数");
+                }
+            }
             case "DIGIT", "SKIP" -> {
                 // 这两类没有可下发内容:数字由冻结答案首位数字现算,跳过不发任何东西。
                 // 空值/空串放行(老草稿常见的空键),但作者写了实际内容就拒 ——
@@ -1472,6 +1498,15 @@ public class AdvancedGameConfigValidator {
     private void validateHintCost(JsonNode cost) {
         if (cost == null || cost.isNull()) return;
         requireObject(cost, "提示代价格式不正确");
+        // F01:运行期 PlayHelpUsagePolicy 只认 points/gems/coins,其余键(如 xp)会让这一层用不了;
+        // 保存时就拒,不能存进去之后运行期才失效。
+        var fields = cost.fieldNames();
+        while (fields.hasNext()) {
+            String field = fields.next();
+            if (!"points".equals(field) && !"gems".equals(field) && !"coins".equals(field)) {
+                throw new IllegalArgumentException("提示代价只支持积分 points，不支持 " + field);
+            }
+        }
         // 与运行期 PlayHelpUsagePolicy 同一口径:只有非零的宝石/金币才是"要扣",零值等价于没配。
         if (nonZeroCost(cost.get("gems")) || nonZeroCost(cost.get("coins"))) {
             throw new IllegalArgumentException("宝石与金币代价没有真实账本,不可配置");
@@ -2085,6 +2120,40 @@ public class AdvancedGameConfigValidator {
         validateXp(typeIn, "限时打字");
     }
 
+    /**
+     * F02 {@code wrongReplies} 保存闸:各段用自己判对时的归一口径检查重叠,不引入模糊匹配。
+     * qa 只在打字模式下有意义(选项题已有逐项 after/fb)。
+     */
+    private void validateWrongReplies(JsonNode root) {
+        JsonNode qa = root.get("qa");
+        if (qa != null && qa.isObject() && qa.has(WrongReplies.FIELD)) {
+            if (!"TYPE".equals(qa.path("mode").asText(""))) {
+                throw new IllegalArgumentException("错答回复只用于打字问答，选项题请在选项上写反馈");
+            }
+            AnswerPolicy policy = AnswerPolicy.of(root.path(AnswerPolicy.FIELD));
+            String answerText = qa.path("answerText").asText("");
+            WrongReplies.validate(qa, "问答",
+                    text -> policy.isEmpty() ? AnswerPolicy.matchesAdvancedType(answerText, text)
+                            : policy.matchesAny(AnswerPolicy.answerTextCandidates(answerText), text),
+                    (a, b) -> AnswerPolicy.legacy().matches(a, b));
+        }
+        JsonNode typeIn = root.get("typeIn");
+        if (typeIn != null && typeIn.isObject() && typeIn.has(WrongReplies.FIELD)) {
+            boolean sensitive = typeIn.path("caseSensitive").asBoolean(false);
+            String target = typeIn.path("target").asText("");
+            WrongReplies.Matcher matcher = sensitive ? AnswerNormalizer::equivalentKeepCase : AnswerNormalizer::equivalent;
+            WrongReplies.validate(typeIn, "限时打字",
+                    text -> (sensitive ? text.equals(target) : text.equalsIgnoreCase(target)) || matcher.same(target, text),
+                    matcher);
+        }
+        JsonNode hangman = root.get("hangman");
+        if (hangman != null && hangman.isObject() && hangman.has(WrongReplies.FIELD)) {
+            boolean sensitive = hangman.path("caseSensitive").asBoolean(false);
+            WrongReplies.validate(hangman, "逐字猜词", text -> HangmanGameplay.acceptsWord(hangman, text),
+                    sensitive ? AnswerNormalizer::equivalentKeepCase : AnswerNormalizer::equivalent);
+        }
+    }
+
     // ==================== 旅程体验模组化:requires / effects / check ====================
 
     /**
@@ -2492,23 +2561,23 @@ public class AdvancedGameConfigValidator {
      * roleViews:同一节点按 A / B 角色分半的只读内容。单人游玩时两半都下发,
      * 队伍里只下发本人那一半(下发给谁由运行期按队员次序判定,见 PlayEncounterServiceImpl)。
      *
-     * <p>形状约束:恰好两个角色且 id 只能是 A / B;每个角色恰好一个 view,
-     * view 的 roleId 必须指向这两个角色之一且不重复;一切文本 ≤200;items ≤8。
+     * <p>形状约束:2 至 4 个角色且 id 只能是 A / B / C / D;每个角色恰好一个 view,
+     * view 的 roleId 必须指向已配角色之一且不重复;一切文本 ≤200;items ≤8。
      * 缺省 / enabled=false = 老配置照旧,这一段不下发也不校验。
      */
     private void validateRoleViews(JsonNode roleViews) {
         if (!enabled(roleViews)) return;
         requireObject(roleViews, "角色视角配置格式不正确");
         JsonNode roles = roleViews.get("roles");
-        if (!(roles instanceof ArrayNode) || roles.size() != ROLE_VIEW_IDS.size()) {
-            throw new IllegalArgumentException("角色视角的角色必须恰好是 A、B 两个");
+        if (!(roles instanceof ArrayNode) || roles.size() < MIN_ROLE_VIEWS || roles.size() > MAX_ROLE_VIEWS) {
+            throw new IllegalArgumentException("角色视角须为 " + MIN_ROLE_VIEWS + " 至 " + MAX_ROLE_VIEWS + " 个角色");
         }
         Set<String> roleIds = new HashSet<>();
         for (JsonNode role : roles) {
             requireObject(role, "角色视角的角色格式不正确");
             String id = role.path("id").asText("").trim();
             if (!ROLE_VIEW_IDS.contains(id)) {
-                throw new IllegalArgumentException("角色视角的角色 id 只能是 A 或 B");
+                throw new IllegalArgumentException("角色视角的角色 id 只能是 A、B、C 或 D");
             }
             if (!roleIds.add(id)) throw new IllegalArgumentException("角色视角的角色 id 不能重复");
             requiredText(role, "label", MAX_ROLE_VIEW_TEXT,

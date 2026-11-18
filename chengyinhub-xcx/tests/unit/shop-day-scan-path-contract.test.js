@@ -48,3 +48,10 @@ test('mutation 负控:删掉无坐标到店拦截时契约确实变红', () => {
     .replace('if (that.data.mode === 2 && !completedReceipt) { that.onShopDayArrived(nodeId, r.data); return; }', '')
   assert.throws(() => assertCoordinateArrivalContract(js), assert.AssertionError)
 })
+
+test('FE-STORY 到访:扫码走 /api/play/checkin、GPS 走 /api/play/arrive,解锁后留在卡包打开本章,不跳商家页', () => {
+  const gate = read('pages/play/utils/fe-story-gate.js')
+  assert.match(gate, /this\._sendVisit\(node, '\/api\/play\/checkin', \{ nodeId: node\.nodeId, code: r\.result/)
+  assert.match(gate, /this\._sendVisit\(node, '\/api\/play\/arrive', \{ nodeId: node\.nodeId, longitude: loc\.longitude, latitude: loc\.latitude/)
+  assert.doesNotMatch(gate, /merchant\/index|onShopDayArrived|onComplete\(/, '到访只解锁剧情,不走进店三步条也不本地置完成')
+})

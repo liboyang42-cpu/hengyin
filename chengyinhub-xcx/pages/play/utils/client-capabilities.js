@@ -5,7 +5,10 @@
 //   服务端从冻结内容推导需求,声明里缺了必需项就在开局前 409 CONTENT_CAPABILITY_UNSUPPORTED,
 //   不会让玩家进到半截才发现某块内容看不见。
 // ★ 玩法段(game.*)不手抄:直接取玩家端分发表 playkit-view TYPE_OF 的键 —— 渲染器加一个段,声明就跟着多一个;
-//   没有渲染器的段(如 roleViews、团队共解)不在表里,也就不声明。
+//   没有渲染器的段(如团队共解)不在表里,也就不声明。
+// ★ 段内的子能力(FEATURES)逐条对应一个真实渲染 / 提交路径,同样不手抄空键:
+//   hangman.pool = playkit-hangman 字母池;qa.letterPool = playkit-qa 打字题字符池(utils/letter-pool.js);
+//   role.views = 站点卡上的角色卡(components/role-card,读 GET /api/play/encounter 的 roleView)。
 // ★ 未声明 ≠ 声明为空:本模块总是给出非空声明;旧入口不调用本模块时请求里根本不带这三个字段。
 const { TYPE_OF } = require('./playkit-view.js');
 
@@ -20,6 +23,8 @@ const ANSWER_METHODS = ['answer.arrive', 'answer.text', 'answer.photo', 'answer.
   'answer.preference'];
 const SECTION_ANSWERS = { estimate: 'answer.estimate', pricePair: 'answer.pricePair', hiddenObject: 'answer.hiddenObject' };
 
+const FEATURES = ['hangman.pool', 'qa.letterPool', 'role.views'];
+
 const BASE = ['chapter.blocks', 'station.list', 'media.image', 'media.audio', 'media.photo', 'location.gps',
   'route.branch', 'theme.runtime'];
 
@@ -27,6 +32,7 @@ function keys() {
   const out = new Set(BASE);
   STORY_BLOCKS.forEach(type => out.add('chapter.blocks.' + type));
   ANSWER_METHODS.forEach(key => out.add(key));
+  FEATURES.forEach(key => out.add(key));
   Object.keys(TYPE_OF).forEach(section => {
     out.add('game.' + section.toLowerCase());
     if (SECTION_ANSWERS[section]) out.add(SECTION_ANSWERS[section]);
@@ -60,4 +66,4 @@ function unsupportedNotice(body) {
   return '当前版本无法完整呈现本局内容，请更新微信后重新进入';
 }
 
-module.exports = { declaration, keys, unsupportedNotice, STORY_BLOCKS, PLATFORM, VERSION, UNSUPPORTED };
+module.exports = { declaration, keys, unsupportedNotice, STORY_BLOCKS, FEATURES, PLATFORM, VERSION, UNSUPPORTED };

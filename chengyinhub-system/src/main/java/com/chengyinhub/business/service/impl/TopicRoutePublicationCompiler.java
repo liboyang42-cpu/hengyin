@@ -782,6 +782,10 @@ final class TopicRoutePublicationCompiler {
         if (declarations != null) {
             JourneyInitialState.freezeKeys(frozen, declarations, journeyRules(topic), topic.getId());
         }
+        // F01/F02:城市定向每道有判定的题都有完整提示阶梯(含答案与跳过);没写错答话术的补通用一句。
+        // 只改冻结副本,模板与已开局的 run 不受影响。
+        com.chengyinhub.business.service.support.PublishedHelpDefaults.apply(frozen,
+                Integer.valueOf(com.chengyinhub.common.constant.ProductType.ORIENTEERING).equals(topic.getProductType()));
         validateGameplayRuntime(frozen);
         return write(frozen);
     }

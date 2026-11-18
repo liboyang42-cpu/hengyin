@@ -52,4 +52,28 @@ public interface PlayerNodeProgressMapper
     /** 分支主题榜外的「我」:本人最新一局;没开过局返回 null。 */
     com.chengyinhub.business.domain.vo.LeaderboardItemVO selectRouteLeaderboardRow(
             @Param("activityId") Long activityId, @Param("topicId") Long topicId, @Param("memberId") Long memberId);
+
+    /** F08:记录到达来源;只写第一次(已有来源不覆盖)。 */
+    int updateArrivalSource(@Param("id") Long id, @Param("arrivalSource") String arrivalSource);
+
+    /**
+     * 自由探索到访(FE-STORY 5.2):本人本局同章节已有到店行的节点写 visit_time / visit_method,只写第一次。
+     * 坐标只在原行没有时补写。
+     */
+    int markVisited(@Param("memberId") Long memberId, @Param("activityId") Long activityId,
+                    @Param("topicId") Long topicId, @Param("playInstanceId") String playInstanceId,
+                    @Param("nodeIds") java.util.List<Long> nodeIds, @Param("visitMethod") Integer visitMethod,
+                    @Param("visitTime") java.util.Date visitTime,
+                    @Param("longitude") String longitude, @Param("latitude") String latitude);
+
+    /**
+     * FE-STORY 5.5:队友到访过的节点(不含本人)。队友 = 本人在本场/本主题票上的同票成员
+     * (购票人 + 已领取席位的受邀人) ∪ 同一 play_team 的已加入成员。只读到店行(checkin_time 不为空)。
+     */
+    List<Long> selectTeamVisitedNodeIds(@Param("memberId") Long memberId, @Param("activityId") Long activityId,
+                                        @Param("topicId") Long topicId);
+
+    /** 本人在本场/本主题到访过的节点(任意一局)。过期后只读剧情用(FE-STORY 7.4)。 */
+    List<PlayerNodeProgress> selectOwnVisits(@Param("memberId") Long memberId, @Param("activityId") Long activityId,
+                                             @Param("topicId") Long topicId);
 }

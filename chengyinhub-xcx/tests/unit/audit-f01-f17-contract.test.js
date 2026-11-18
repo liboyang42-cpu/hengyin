@@ -89,9 +89,12 @@ test('F14 票夹卡上的可见文字只有类型 · 剩几天;只放能用的�
   const wxml = read('subpackageMember/signup/index.wxml')
   assert.match(wxml, /class="wc__s">\{\{item\.wSub\}\}/)
   const js = read('subpackageMember/signup/index.js')
-  assert.match(js, /this\._usable = all\.filter\(usableTicket\); const list = filterTickets\(this\._usable, this\.data\.walFilter\)/ /* 2026-11-10 l-after:能用的票先存 _usable,再按「票夹 ▾」筛选(全部 / 即将开始 / 已通关),票夹仍只放能用的票 */)
-  // P-03(2026-11-02):探索票核销过一家仍可用,直到服务端 exploreProgress.active=false;其余票照旧核验即离开票夹
-  assert.match(js, /Number\(item\.registrationStatus\) !== 2 \|\| Number\(item\.paymentStatus\) !== 2 \|\| \(item\.verificationStatus == 1 && !exploreActive\)/)
+  // F13(OR-011/OR-012=B):一个列表,能用的票按服务端 usableState 判,过期票不进票夹
+  assert.match(js, /const list = walletOrder\(all\.filter\(usableTicket\)\);/)
+  // 不限游玩次数:usableTicket 只排除未支付、已退款、已过 usableUntil 的票,已核销不再剔除
+  assert.match(js, /if \(Number\(item\.registrationStatus\) !== 2 \|\| Number\(item\.paymentStatus\) !== 2 \|\| refundedTicket\(item\)\) return false;/)
+  assert.match(js, /if \(item\.usableState\) return item\.usableState !== 'EXPIRED';/)
+  assert.doesNotMatch(js.slice(js.indexOf('function usableTicket')), /verificationStatus/)
 })
 
 test('F17 共享活动详情的可空头像在传入 cy-avatar 前归一为空串', () => {

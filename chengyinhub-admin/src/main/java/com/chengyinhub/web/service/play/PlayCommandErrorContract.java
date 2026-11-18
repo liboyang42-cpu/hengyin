@@ -75,8 +75,10 @@ public final class PlayCommandErrorContract
     public static final String NODE_DELISTED = "NODE_DELISTED";
     /** 该站须先完成对应任务(传感器 / 滤镜 / 答题)。 */
     public static final String TASK_REQUIRED = "TASK_REQUIRED";
-    /** 该站只认店内扫码进店,GPS 不能替代。 */
+    /** 自由探索:还没到店(未扫码、也未在 300 米内点「我已到店」),不能开始本店任务。/arrive 不再返回此码(F08)。 */
     public static final String STORE_SCAN_REQUIRED = "STORE_SCAN_REQUIRED";
+    /** 自由探索:该地点配置为扫码到访(cms_topic_node.visit_check=1),定位不能替代(FE-STORY 5.2)。 */
+    public static final String VISIT_SCAN_REQUIRED = "VISIT_SCAN_REQUIRED";
     public static final String CHAPTER_REDEEMED = "CHAPTER_REDEEMED";
     /** 配置缺合同(模板悬空 / 未配置答题 / 本局缺冻结到达配置)。 */
     public static final String CONFIG_INVALID = "CONFIG_INVALID";

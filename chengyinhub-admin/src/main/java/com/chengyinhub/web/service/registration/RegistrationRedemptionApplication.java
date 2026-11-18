@@ -259,6 +259,20 @@ public class RegistrationRedemptionApplication {
         }
     }
 
+    /** F12:核销回包的亲子票人数构成;核销已成立,读失败只少显示一行,不影响结果。 */
+    private Map<String, Object> familyParty(CmsRegistration registration, Long chapterId, Long merchantOwnerMemberId) {
+        if (perkLedgerService == null || registration == null) return null;
+        try {
+            registrationService.attachPartySnapshots(java.util.Collections.singletonList(registration));
+            // 非亲子票不再去读供给(核销回执的只读查询保持原样)
+            if (registration.getParty() == null) return null;
+            return perkLedgerService.redemptionParty(registration.getPartySnapshotJson(), chapterId, merchantOwnerMemberId);
+        } catch (RuntimeException e) {
+            logger.warn("核销回包亲子票构成读取失败 registrationId={}", registration.getId(), e);
+            return null;
+        }
+    }
+
     /** 核销回包的章节名;核销已成立,查名失败只降级为「章节 id」,与 describeChapters 的兜底一致。 */
     private String chapterDisplayName(Long chapterId) {
         try {
@@ -580,6 +594,9 @@ public class RegistrationRedemptionApplication {
         putSessionDateWarning(d, activity, new Date());
         String perkName = perkDisplayName(chapterId, merchantOwnerMemberId);
         if (perkName != null) d.put("perkName", perkName);
+        // F12:亲子票核销结果页显示「亲子票：1 大 1 小（儿童 7 岁）· 儿童份：xx」
+        Map<String, Object> party = familyParty(registration, chapterId, merchantOwnerMemberId);
+        if (party != null) d.put("party", party);
         if (redemption.isReplayed()) {
             d.put("replayed", true);
             return AjaxResult.success("该章节已核销，请勿重复提供权益", d);

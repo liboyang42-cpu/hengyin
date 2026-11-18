@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * R16-DUO 双人视角(roleViews)配置合同:
- * 校验只放行「恰好 A、B 两个角色、每个角色恰好一个 view、文本 ≤200、items ≤8」;
+ * 校验只放行「2–4 个角色(A–D)、每个角色恰好一个 view、文本 ≤200、items ≤8」;
  * 公开投影(模板详情等无局场景的玩家可见面)一个字都不许出现。
  */
 class RoleViewsConfigTest {
@@ -73,19 +73,48 @@ class RoleViewsConfigTest {
                 "{\"schemaVersion\":1,\"roleViews\":{\"enabled\":false,\"roles\":[],\"views\":[]}}"));
     }
 
-    /** 负控:roles 不是恰好 A、B 两个(1 个 / 3 个 / id 不是 A、B / 重复)全部拦下。 */
+    /** 负控:角色数不在 2–4、id 不在 A–D、重复、或 views 与 roles 不一一对应,全部拦下。 */
     @Test
-    void roleSetMustBeExactlyAAndB() {
+    void roleSetMustBeTwoToFourFromAToD() {
         for (String roles : Arrays.asList(
                 "[{\"id\":\"A\",\"label\":\"看实物\"}]",
                 "[{\"id\":\"A\",\"label\":\"看实物\"},{\"id\":\"B\",\"label\":\"查档案\"},"
                         + "{\"id\":\"C\",\"label\":\"第三人\"}]",
-                "[{\"id\":\"A\",\"label\":\"看实物\"},{\"id\":\"C\",\"label\":\"查档案\"}]",
+                "[{\"id\":\"A\",\"label\":\"看实物\"},{\"id\":\"E\",\"label\":\"查档案\"}]",
                 "[{\"id\":\"A\",\"label\":\"看实物\"},{\"id\":\"A\",\"label\":\"又是 A\"}]")) {
             assertThrows(IllegalArgumentException.class,
                     () -> validator.validateAndNormalize(config(roles, VIEWS)),
                     "该 roles 配置应被拒绝:" + roles);
         }
+    }
+
+    /** F05:组队上限 4 人 —— 4 个角色(各一 view)可以保存,5 个拒绝。 */
+    @Test
+    void fourRolesSaveFiveRolesRejected() {
+        assertNotNull(validator.validateAndNormalize(config(roles(4), views(4))));
+        assertNotNull(validator.validateAndNormalize(config(roles(3), views(3))));
+        assertThrows(IllegalArgumentException.class,
+                () -> validator.validateAndNormalize(config(roles(5), views(5))));
+    }
+
+    private static String roles(int count) {
+        String ids = "ABCDE";
+        StringBuilder builder = new StringBuilder("[");
+        for (int i = 0; i < count; i++) {
+            if (i > 0) builder.append(',');
+            builder.append("{\"id\":\"").append(ids.charAt(i)).append("\",\"label\":\"角色").append(i).append("\"}");
+        }
+        return builder.append(']').toString();
+    }
+
+    private static String views(int count) {
+        String ids = "ABCDE";
+        StringBuilder builder = new StringBuilder("[");
+        for (int i = 0; i < count; i++) {
+            if (i > 0) builder.append(',');
+            builder.append("{\"roleId\":\"").append(ids.charAt(i)).append("\",\"title\":\"视图").append(i).append("\"}");
+        }
+        return builder.append(']').toString();
     }
 
     /** 负控:每个角色恰好一个 view —— 缺一个 / 同一个角色配两个 / 引用不存在的角色都拦下。 */

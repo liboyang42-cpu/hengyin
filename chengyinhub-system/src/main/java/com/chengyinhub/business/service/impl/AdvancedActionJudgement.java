@@ -160,6 +160,17 @@ public final class AdvancedActionJudgement {
             // 第十一轮 i1:弹球(加速度)、安静挑战 / 喊一嗓子(麦克风)、计步(微信运动)同罗盘一条规则 ——
             // 设备读不出数或玩家拒了权限,站点不能把人困住(业主规则:站点永远不许把玩家困住)。
             Arrays.asList("compass", "ballShake", "quietHold", "shout", "steps"));
+    /** F02:qa TYPE 错答表与正确答案同一归一(LEGACY_V1:去空白、全角转半角、忽略大小写 + 共享归一器)。 */
+    static final com.chengyinhub.business.service.support.WrongReplies.Matcher QA_TYPE_WRONG_MATCHER =
+            (authored, submitted) -> com.chengyinhub.business.service.support.AnswerPolicy.legacy().matches(authored, submitted);
+
+    /** F02:限时打字与逐字猜词用共享归一器,大小写开关与判对同一口径。 */
+    static com.chengyinhub.business.service.support.WrongReplies.Matcher normalizerMatcher(JsonNode section) {
+        boolean sensitive = section != null && section.path("caseSensitive").asBoolean(false);
+        return sensitive ? com.chengyinhub.business.service.support.AnswerNormalizer::equivalentKeepCase
+                : com.chengyinhub.business.service.support.AnswerNormalizer::equivalent;
+    }
+
     /** 本人连续读取失败几次后才许跳过 */
     static final int SKIP_AFTER_FAILED_READS = 2;
     /** 失败次数只为跨过门槛,封顶免得刷成大数 */
@@ -372,6 +383,8 @@ public final class AdvancedActionJudgement {
             ObjectNode selection = decision.putObject("selection").put("kit", kit);
             if ("check".equals(kit))selection.put("nat",state.path("check").path("nat").asText());
             else if ("qa".equals(kit) && !config.path(kit).path("multi").asBoolean() && "PICK".equals(config.path(kit).path("mode").asText())) selection.put("optionId", state.path(kit).path("lastOptionId").asText());
+            else if ("qa".equals(kit) && !passed && state.path(kit).path(com.chengyinhub.business.service.support.WrongReplies.STATE_INDEX).isIntegralNumber())
+                selection.put("wrongReplyIndex", state.path(kit).path(com.chengyinhub.business.service.support.WrongReplies.STATE_INDEX).asInt());
             else if ("pricePair".equals(kit)) selection.put("optionId", state.path(kit).path("lastPickId").asText());
             else if ("blindTaste".equals(kit)) selection.put("optionId", state.path(kit).path("lastKey").asText());
             else if ("coinFlip".equals(kit)) selection.put("side", "HEADS".equals(state.path(kit).path("side").asText()) ? "heads" : "tails");
@@ -749,7 +762,14 @@ public final class AdvancedActionJudgement {
                             .matchesAdvancedType(cfg.path("answerText").asText(""), input)
                     : policy.matchesAny(com.chengyinhub.business.service.support.AnswerPolicy
                             .answerTextCandidates(cfg.path("answerText").asText("")), input);
+            // F03 字符池:判错的提交里用了池外的字(或超次数)直接拒收,不计这次作答。
+            if (!correct) com.chengyinhub.business.service.support.LetterPoolSupport.requireQaChars(cfg, node, input);
             node.put("lastInput", input);
+            // F02:判错先查作者的错答表(同一归一口径),命中给那一条话,没命中给通用错答。
+            if (correct) com.chengyinhub.business.service.support.WrongReplies.clear(node);
+            else com.chengyinhub.business.service.support.WrongReplies.record(config, "qa", node,
+                    com.chengyinhub.business.service.support.WrongReplies.match(cfg,
+                            java.util.Collections.singletonList(input), QA_TYPE_WRONG_MATCHER));
         } else if ("PICK".equals(mode)) {
             boolean judge = cfg.path("judge").asBoolean(true);
             if (!judge) {
@@ -1166,6 +1186,10 @@ public final class AdvancedActionJudgement {
         node.put("attempts", attempts);
         node.remove("startedAtMs");     // 重来要重新开表,老表不留给下一次
         node.put("lastText", typed);
+        if (same) com.chengyinhub.business.service.support.WrongReplies.clear(node);
+        else com.chengyinhub.business.service.support.WrongReplies.record(config, "typeIn", node,
+                com.chengyinhub.business.service.support.WrongReplies.match(cfg,
+                        java.util.Collections.singletonList(typed), normalizerMatcher(cfg)));
         if (same) {
             node.put("submitted", true);
             node.put("passed", true);
@@ -1194,6 +1218,17 @@ public final class AdvancedActionJudgement {
                 ? state.with(HangmanGameplay.STATE_KEY)
                 : HangmanGameplay.initialState(cfg);
         HangmanGameplay.judge(cfg, kit, payload == null ? null : objectMapper.valueToTree(payload));
+        // F02:整词/补齐后的词判错时查错答表;答对清掉旧回复。
+        if (kit.path("solved").asBoolean(false)) {
+            com.chengyinhub.business.service.support.WrongReplies.clear(kit);
+        } else if ("WRONG".equals(kit.path("lastVerdict").asText())) {
+            List<String> submitted = new ArrayList<>();
+            Object raw = payload == null ? null : payload.get("input");
+            if (raw != null) submitted.add(String.valueOf(raw).trim());
+            submitted.add(HangmanGameplay.filledWord(cfg, kit));
+            com.chengyinhub.business.service.support.WrongReplies.record(config, "hangman", kit,
+                    com.chengyinhub.business.service.support.WrongReplies.match(cfg, submitted, normalizerMatcher(cfg)));
+        }
         state.set(HangmanGameplay.STATE_KEY, kit.deepCopy());
     }
 

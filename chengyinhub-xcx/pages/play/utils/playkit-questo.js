@@ -54,7 +54,22 @@ function hangmanKit(seg) {
     solved: s.solved === true,
     display: s.solved === true ? String(s.display || '') : '',
     feedback: s.solved === true && typeof s.feedback === 'string' ? s.feedback : '',   // 服务端没带时页面补本站文字反馈(hangmanStationText)
+    // F03 字母池:只有服务端说 pool 才走候选字;pool 是本局已打乱、已去掉提示移除的干扰字的候选字(可重复)
+    inputMode: s.inputMode === 'pool' ? 'pool' : 'keyboard',
+    pool: s.inputMode === 'pool' && Array.isArray(s.pool) ? s.pool.filter((c) => typeof c === 'string' && c !== '') : [],
+    // F02:没解开时服务端回的那句话(错答表命中那条或通用错答);没有就由组件兜底
+    wrongFeedback: s.solved !== true && typeof s.lastFeedback === 'string' ? s.lastFeedback : '',
   };
+}
+
+/** F03 打字题字符池:服务端 playKit.qa.letterPool {chars, answerLength} → 组件 props;没有 / 不完整给 null(照旧系统键盘)。 */
+function qaLetterPool(seg) {
+  const raw = seg && seg.mode === 'TYPE' && seg.letterPool;
+  if (!raw || typeof raw !== 'object') return null;
+  const chars = Array.isArray(raw.chars) ? raw.chars.filter((c) => typeof c === 'string' && c !== '') : [];
+  const answerLength = Number.isSafeInteger(raw.answerLength) && raw.answerLength > 0 ? raw.answerLength : 0;
+  if (!chars.length || !answerLength) return null;
+  return { chars, answerLength };
 }
 
 /** 作者在选项文案里自己写了「A 」「A.」「A、」「（A）」时去掉,界面已经画了字母(否则「A A 许禾自述」)。
@@ -193,5 +208,5 @@ function accusationKit(view, qaSeg, resolve) {
   };
 }
 
-module.exports = { displayImage, qaOptions, hangmanSlots, hangmanKit, hangmanStationText, stripOptionKey, codePoints, hangmanPayload,
+module.exports = { displayImage, qaOptions, hangmanSlots, hangmanKit, qaLetterPool, hangmanStationText, stripOptionKey, codePoints, hangmanPayload,
   screenBlocks, accusationOutcome, accusationKit, OUTCOME_LABEL };

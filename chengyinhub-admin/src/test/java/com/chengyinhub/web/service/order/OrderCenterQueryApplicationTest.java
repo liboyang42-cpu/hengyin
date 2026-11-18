@@ -121,7 +121,7 @@ class OrderCenterQueryApplicationTest {
         field(canonical, "registrationService", reader); field(canonical, "activityService", activities);
         field(canonical, "refundService", refunds); field(app, "registrationQueryApplication", canonical);
         assertSnapshot(controllerDetail("REG123"), "REGISTRATION", "11", "REG123", "12.30", "已支付");
-        verify(reader).selectCmsRegistrationById(11L); verifyNoMoreInteractions(reader);
+        verify(reader).selectCmsRegistrationById(11L); verify(reader).attachPartySnapshots(any()); verifyNoMoreInteractions(reader); // F12:详情只读挂亲子票构成
         verify(activities).selectCmsActivityById(81L); verifyNoMoreInteractions(activities);
         // 两次都是只读、限本人报名退款:本报名最新退款单 + 订单级结算汇总(U07-04/05)。
         org.mockito.ArgumentCaptor<RefundApplication> refundQueries = org.mockito.ArgumentCaptor.forClass(RefundApplication.class);

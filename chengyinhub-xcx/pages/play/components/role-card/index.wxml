@@ -1,0 +1,14 @@
+<!-- F05 角色卡:组队 = 抬头「你的角色：X」+ 本角色那一份 + 底部「队友在看另一份」;SOLO = 全部视图一张卡,每段角色名小标题 -->
+<view wx:if="{{card}}" class="rc {{card.mode === 'solo' ? 'rc--solo' : ''}}" aria-role="region" aria-label="{{card.heading || '角色信息'}}">
+  <view wx:if="{{card.heading}}" class="rc__head">{{card.heading}}</view>
+  <view wx:for="{{card.sections}}" wx:key="k" class="rc__sec">
+    <view wx:if="{{item.label}}" class="rc__label">{{item.label}}</view>
+    <view wx:if="{{item.title}}" class="rc__title">{{item.title}}</view>
+    <text wx:if="{{item.body}}" class="rc__body" user-select>{{item.body}}</text>
+    <view wx:for="{{item.items}}" wx:for-item="row" wx:key="k" class="rc__item">
+      <text wx:if="{{row.label}}" class="rc__item-k">{{row.label}}</text>
+      <text class="rc__item-v" user-select>{{row.text}}</text>
+    </view>
+  </view>
+  <view wx:if="{{card.footer}}" class="rc__foot">{{card.footer}}</view>
+</view>

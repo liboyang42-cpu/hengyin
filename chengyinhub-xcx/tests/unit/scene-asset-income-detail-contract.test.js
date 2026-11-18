@@ -176,7 +176,9 @@ test('失败页重试保留既有流水，连续失败后加载更多仍重试�
 test('wxml 的占位分支确实存在(否则上面的 null 无处落地)', () => {
   const wxml = fs.readFileSync(path.join(ROOT, 'subpackageA/components/scene-asset-income-detail/index.wxml'), 'utf8')
   // 符号已经进了 amountText,wxml 不许再自己拼 —— 拼了支出就会变成 +¥-50.00
-  assert.match(wxml, /\{\{item\.amountText \|\| '—'\}\}/)
+  // F14a(MC-011=B):金额缺字段走 money.wxs 写 ¥0.00,不再写「—」
+  assert.match(wxml, /\{\{item\.amountText \|\| money\.amount2\(item\.amountText\)\}\}/)
+  assert.match(wxml, /<wxs src="[^"]*utils\/wxs\/money\.wxs" module="money" \/>/)
   assert.doesNotMatch(wxml, /'\+¥'\s*\+/, "wxml 不得硬拼 '+¥',方向符号由 formatList 给")
   // 收支两档各自挂色；方向未知必须保持中性色，不能掉进支出红色
   assert.match(wxml, /item\.directionKnown\s*\?/)

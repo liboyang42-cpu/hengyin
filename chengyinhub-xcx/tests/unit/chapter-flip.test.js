@@ -62,7 +62,12 @@ test('章节开场:上一章玩过才先出「上一章完成」,成绩只写真
   assert.equal(g.faces[0].cover, 'https://x/a.jpg', '第一面 = 上一章封面(取第一张)')
   assert.equal(g.faces[0].style, 'riso')
   assert.equal(g.faces[1].style, 'engrave')
-  assert.deepEqual(g.faces[1].photos, ['https://x/p2.jpg'])
+  assert.deepEqual(g.faces[1].photos, [], 'F07:未到达、未完成的站不进翻页')
+  assert.deepEqual(g.faces[0].photos, ['https://x/p1.jpg'], '已完成的站照常进翻页')
+  const arrivedNodes = nodes.map(n => n.nodeId === 21 ? Object.assign({}, n, { arrived: true }) : n)
+  assert.deepEqual(buildGateFlip({ cards, chapterId: 2, nodes: arrivedNodes }).faces[1].photos, ['https://x/p2.jpg'], '已到达的站可以进翻页')
+  const hidden = nodes.map(n => n.nodeId === 21 ? Object.assign({}, n, { imgUrl: null, imgHidden: true, arrived: true }) : n)
+  assert.deepEqual(buildGateFlip({ cards, chapterId: 2, nodes: hidden }).faces[1].photos, [], '服务端遮掉的图不补')
   assert.equal(g.faces[2].style, 'gold')
 
   const first = buildGateFlip({ cards, chapterId: 1, nodes, desc: '' })

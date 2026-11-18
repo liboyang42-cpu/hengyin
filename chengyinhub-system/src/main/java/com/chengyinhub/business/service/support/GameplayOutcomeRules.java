@@ -124,6 +124,14 @@ public final class GameplayOutcomeRules {
                 for (JsonNode option : step.path("options")) if (selection.path("optionId").asText().equals(option.path("id").asText())) row = option;
         }
         if (row != null && row.has("after")) selected = row.get("after");
+        // F02:最后一次错答命中作者错答表时,FAIL 的话换成那一条;费用/效果仍按 fail 原样。
+        JsonNode nearMiss = "FAIL".equals(outcome) ? WrongReplies.replyRow(block, kit, selection.get("wrongReplyIndex")) : null;
+        if (nearMiss != null && selected.isObject()) {
+            ObjectNode replaced = ((ObjectNode) selected).deepCopy();
+            replaced.put("reply", nearMiss.path("reply").asText());
+            if (nearMiss.path("images").isArray() && nearMiss.path("images").size() > 0) replaced.set("images", nearMiss.get("images").deepCopy());
+            selected = replaced;
+        }
         after(selected, null);
         return selected.deepCopy();
     }

@@ -58,7 +58,7 @@ test('断网不是零历史，失败可重试且分页倒退保留已读记录',
   assert.equal(view.data.list[0].sessionId, '10')
 })
 
-test('历史原会话详情从服务端回读，未知值不伪造零且不采集照片轨迹', async () => {
+test('历史原会话详情从服务端回读，缺字段写 0(F14a MC-011=B)且不采集照片轨迹', async () => {
   const view = loadComponent('scene-roam-session')
   view.data.ts = 'server:9007199254740995'
   const pending = view._load()
@@ -66,8 +66,8 @@ test('历史原会话详情从服务端回读，未知值不伪造零且不采�
   respond(requests[0], fact('9007199254740995', { shops: null, distanceM: null }))
   await pending
   assert.equal(view.data.state, 'ready')
-  assert.equal(view.data.session.shopsText, '—')
-  assert.equal(view.data.session.distanceText, '—')
+  assert.equal(view.data.session.shopsText, '0')
+  assert.equal(view.data.session.distanceText, '0')
   assert.deepEqual(view.data.session.photos, [])
   assert.deepEqual(view.data.session.track, [])
   view.share(); assert.equal(view.event, undefined)

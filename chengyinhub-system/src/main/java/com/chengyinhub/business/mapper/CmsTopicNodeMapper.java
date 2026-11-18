@@ -74,4 +74,14 @@ public interface CmsTopicNodeMapper
 
     /** F10 撤回自己承接:只清作者本人在该点位上的承接归属与审核痕迹(带 owner 条件)。 */
     int releaseAuthorSelfSupplyBinding(@Param("id") Long id, @Param("authorMemberId") Long authorMemberId);
+    /** 自由探索到访配置(单个节点)。列由 migration_20261118_fe_story_visit_gate.sql 新增。 */
+    com.chengyinhub.business.domain.FreeExploreVisitConfig selectVisitConfigById(@org.apache.ibatis.annotations.Param("nodeId") Long nodeId);
+
+    /** 自由探索到访配置(整个主题),/api/play/nodes 投影用。 */
+    List<com.chengyinhub.business.domain.FreeExploreVisitConfig> selectVisitConfigByTopicId(@org.apache.ibatis.annotations.Param("topicId") Long topicId);
+
+    /** 自由探索作者设置地点到访方式与半径(FE-STORY 7.10);只改这两列。 */
+    int updateVisitConfig(@org.apache.ibatis.annotations.Param("nodeId") Long nodeId,
+                          @org.apache.ibatis.annotations.Param("visitCheck") Integer visitCheck,
+                          @org.apache.ibatis.annotations.Param("visitRadiusM") Integer visitRadiusM);
 }

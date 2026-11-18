@@ -127,6 +127,19 @@ class AdvancedGameHelpWiringTest {
         assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize(coins));
     }
 
+    /** F01:代价只认 points;cost:{xp:30} 运行期用不了,保存期就拒。points:0 照常通过。 */
+    @Test
+    void hintCostWithUnknownCurrencyIsRejectedAtSave() {
+        String xp = config("{\"level\":2,\"type\":\"TEXT\",\"payload\":\"再看物证\","
+                + "\"cost\":{\"xp\":30}}");
+        IllegalArgumentException refused = assertThrows(IllegalArgumentException.class,
+                () -> validator.validateAndNormalize(xp));
+        assertTrue(refused.getMessage().contains("xp"));
+        String zero = config("{\"level\":2,\"type\":\"TEXT\",\"payload\":\"再看物证\","
+                + "\"cost\":{\"points\":0}}");
+        assertDoesNotThrow(() -> validator.validateAndNormalize(zero));
+    }
+
     /** 位置类工具会绕过既有到达与权限判定,本期不可配置。 */
     @Test
     void locationHintLevelIsRejected() {

@@ -373,6 +373,13 @@ public final class AdvancedGamePublicProjection {
         value.put("xp", source.path("xp").asInt(0));
         // 多选标记只在开启时给:老单选配置的投影形状保持一字不变,客户端缺省按单选渲染
         if (source.path("multi").asBoolean(false)) value.put("multi", true);
+        // F03 字符池:候选字就是题面(含干扰字),答案不下发;本局打乱顺序由会话视图给出。
+        if (com.chengyinhub.business.service.support.LetterPoolSupport.qaPool(source)) {
+            ObjectNode pool = value.putObject("letterPool");
+            ArrayNode chars = pool.putArray("chars");
+            for (String ch : com.chengyinhub.business.service.support.LetterPoolSupport.qaChars(source)) chars.add(ch);
+            pool.put("answerLength", com.chengyinhub.business.service.support.LetterPoolSupport.qaAnswerLength(source));
+        }
         ArrayNode options = value.putArray("options");
         for (JsonNode option : source.path("options")) {
             ObjectNode safeOption = options.addObject();

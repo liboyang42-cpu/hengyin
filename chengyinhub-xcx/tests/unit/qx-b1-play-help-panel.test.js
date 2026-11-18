@@ -96,7 +96,8 @@ test('跳过:只在服务端给 SKIP 层时可点;确认文案固定;成功后�
   t.p.onHelpSkipped = (nodeId, body) => { skipped = [nodeId, body.skipped] }
   await t.p.loadHelpLadder()
   t.p.tapHelpSkip(); await new Promise(r => setImmediate(r))
-  assert.equal(modalCalls.at(-1).content, '本题记 0 分并标辅助完成')
+  assert.equal(modalCalls.at(-1).title, '跳过这一关')
+  assert.equal(modalCalls.at(-1).content, '这一关记 0 分')
   assert.equal(t.sent[1].url, '/api/play/help/skip')
   assert.match(t.sent[1].data.requestId, /^[A-Za-z0-9]{16,40}$/)
   assert.deepEqual(skipped, ['11', true])
@@ -130,4 +131,29 @@ test('页面接线:任务页进入时读阶梯;旧提示入口与新面板互斥
   assert.match(sheet, /<view class="phl-pop" wx:if="\{\{helpPanel\.show\}\}">/)
   assert.match(sheet, /class="phl-pop-mask" bindtap="closeHelpPanel"/)
   assert.ok(!/0 分<\/text>/.test(sheet))
+})
+
+test('F01:跳过单独放在面板最底下一行,文案「跳过，继续剧情」,提示句末不带句号', () => {
+  const fs = require('fs')
+  const path = require('path')
+  const wxml = fs.readFileSync(path.join(__dirname, '../../pages/play/play-help.wxml'), 'utf8')
+  const skipAt = wxml.indexOf('bindtap="tapHelpSkip"')
+  assert.ok(skipAt > 0)
+  assert.ok(skipAt > wxml.indexOf('bindtap="tapHelpRow"'), '跳过在各级提示之后')
+  assert.ok(skipAt > wxml.indexOf('bindtap="toggleHelpReceipt"'), '跳过在分数明细之后,是最后一行')
+  assert.match(wxml, /跳过，继续剧情/)
+  const { TYPE_LABEL } = require('../../pages/play/utils/play-help-panel.js')
+  assert.equal(TYPE_LABEL.SKIP, '跳过，继续剧情')
+  for (const text of Object.values(TYPE_LABEL).concat(['跳过这一关', '这一关记 0 分'])) assert.doesNotMatch(text, /。$/)
+})
+
+test('F01:服务端越级拒绝(LEVEL_OUT_OF_ORDER)如实显示,不解锁也不留请求号', async () => {
+  for (const k of Object.keys(store)) delete store[k]
+  const t = page([{ code: 200, data: view({ layers: [{ level: 1, type: 'TEXT', usable: true, unlocked: false, free: true, costPoints: 0 }] }) },
+    { code: 400, msg: '请先查看上一层提示', reasonCode: 'LEVEL_OUT_OF_ORDER' }])
+  await t.p.loadHelpLadder()
+  t.p.tapHelpRow({ currentTarget: { dataset: { level: 1 } } }); await new Promise(r => setImmediate(r))
+  assert.equal(t.p.data.helpPanel.rows[0].error, '请先查看上一层提示')
+  assert.equal(t.p.data.helpPanel.rows[0].content, null)
+  assert.deepEqual(store['play-help-pending:v1'], {})
 })

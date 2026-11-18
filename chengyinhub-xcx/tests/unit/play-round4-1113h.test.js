@@ -91,7 +91,7 @@ test('3 开局太远:数字单位不断行;定位已知且超 300 米时在出�
   assert.match(read('pages/play/utils/play-location-once.js'), /ARRIVE_TOO_FAR/);
   const api = { _startLocationNeeded: () => true, haversine: (a, b, c, d) => Math.hypot(a - c, b - d) * 111000 };
   const tooFar = src.match(/  _startTooFar\(node\) \{[\s\S]*?\n  \},/)[0].replace('  _startTooFar(node) {', 'function f(node) {').replace(/\n  \},$/, '\n}');
-  const f = new Function('ARRIVAL_START_RADIUS_METERS', 'ARRIVAL_START_RADIUS_TEXT', tooFar + '; return f;')(300, '300 米');
+  const f = new Function('arrivalPolicy', 'START_ACCURACY_LOW_TEXT', 'ARRIVAL_START_RADIUS_TEXT', tooFar + '; return f;')(require('../../pages/play/utils/arrival-radius.js'), '定位不准，再试一次', '300 米');
   const ctx = (data, loc) => Object.assign({ data, _loc: loc }, api);
   const node = { lat: 31, lng: 121 };
   assert.match(f.call(ctx({ mode: 1 }, { latitude: 31.01, longitude: 121 }), node), /离起点太远/);

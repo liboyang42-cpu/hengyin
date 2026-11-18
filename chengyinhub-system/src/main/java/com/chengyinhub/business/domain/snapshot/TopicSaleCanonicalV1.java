@@ -187,6 +187,16 @@ public class TopicSaleCanonicalV1 {
         // 2026-11-02 业主裁决(C-22)取消每人限 1 张：旧快照里的 maxTicketPerAccount 原样保留、不再校验或执行。
         if (participationUnitPolicy.path("adultCount").asInt(0) <= 0
                 || participationUnitPolicy.path("petMax").asInt(-1) < 0) fail(code);
+        // F12 亲子票:首版只有 1+0 / 1+1。childrenPolicy 带 childCount 时只能是 0 或 1,adultCount 只能是 1。
+        JsonNode children = participationUnitPolicy.get("childrenPolicy");
+        JsonNode childCount = children != null && children.isObject() ? children.get("childCount")
+                : participationUnitPolicy.get("childCount");
+        if (childCount != null && !childCount.isNull()) {
+            if (!childCount.canConvertToInt() || (childCount.asInt() != 0 && childCount.asInt() != 1)
+                    || (childCount.asInt() == 1 && participationUnitPolicy.path("adultCount").asInt(0) != 1)) {
+                fail("SALE_SNAPSHOT_INVALID_FAMILY_COMPOSITION");
+            }
+        }
     }
 
     private void validateSessionVenues() {

@@ -85,25 +85,25 @@
              数字会紧跟标题,和下面用了 row-text 的「失败」行对不齐(2026-09-02 截图实证)。 -->
         <view class="row">
           <view class="row-text"><text class="row-title">总人数</text></view>
-          <text class="row-value row-value--primary">{{campaign.totalCount != null ? campaign.totalCount : '—'}}</text>
+          <text class="row-value row-value--primary">{{campaign.totalCount || 0}}</text>
         </view>
         <view class="row">
           <view class="row-text"><text class="row-title">已送达站内</text></view>
-          <text class="row-value row-value--success">{{campaign.successCount != null ? campaign.successCount : '—'}}</text>
+          <text class="row-value row-value--success">{{campaign.successCount || 0}}</text>
         </view>
         <view class="row">
           <view class="row-text">
             <text class="row-title">待投递</text>
             <text class="row-desc" wx:if="{{campaign.processing}}">投递中</text>
           </view>
-          <text class="row-value">{{campaign.pendingCount != null ? campaign.pendingCount : '—'}}</text>
+          <text class="row-value">{{campaign.pendingCount || 0}}</text>
         </view>
         <view class="row">
           <view class="row-text">
             <text class="row-title">失败</text>
             <text class="row-desc" wx:if="{{campaign.failedCount > 0}}">重试</text>
           </view>
-          <text class="row-value row-value--danger">{{campaign.failedCount != null ? campaign.failedCount : '—'}}</text>
+          <text class="row-value row-value--danger">{{campaign.failedCount || 0}}</text>
         </view>
       </view>
       <button class="retry-btn" wx:if="{{campaign.failedCount > 0}}" loading="{{retrying}}" disabled="{{retrying}}" bindtap="retryFailed">

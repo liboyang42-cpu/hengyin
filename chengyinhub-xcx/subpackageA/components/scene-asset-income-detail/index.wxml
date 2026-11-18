@@ -1,3 +1,4 @@
+<wxs src="../../../utils/wxs/money.wxs" module="money" />
 <view class="aid {{surface === 'page' ? 'aid--page' : ''}}">
   <!-- 2026-08-11 走查:这里原有一个 Revolut 大标题「收益明细」,但三个宿主(深链壳 cy-sheet、
        earnings 的 cy-scene-sheet、scene-deep-link)都已经在弹层头渲染同名标题 ⇒ 每次都重复两遍。
@@ -30,7 +31,7 @@
           <!-- ⚠️ 缺金额时不能吃到 --out(红):红在这一页是**支出**语义,而「没有数」不是支出。
              原来 amountText 为空会渲染成一根**红色横线**,在资金页上读起来像负数
              (2026-08-19 D32 实拍)。缺值走中性字色。 -->
-          <text class="id-item-amount {{!item.amountText ? '' : (item.directionKnown ? (item.isIncome ? 'id-item-amount--in' : 'id-item-amount--out') : '')}}">{{item.amountText || '—'}}</text>
+          <text class="id-item-amount {{!item.amountText ? '' : (item.directionKnown ? (item.isIncome ? 'id-item-amount--in' : 'id-item-amount--out') : '')}}">{{item.amountText || money.amount2(item.amountText)}}</text>
         </view>
       </view>
       <view class="id-more" wx:if="{{hasMore && !loading}}" bindtap="loadMore" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">加载更多</view>

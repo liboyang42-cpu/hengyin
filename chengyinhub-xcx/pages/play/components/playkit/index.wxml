@@ -128,7 +128,7 @@
   session-id="{{kit.sessionId}}" node-id="{{kit.nodeId}}"
   show="{{show}}" mode="{{kit.mode}}" theme="{{kit.theme}}" title="{{kit.title}}"
   image-url="{{kit.imageUrl}}" audio-url="{{kit.audioUrl}}" lead="{{kit.lead}}"
-  options="{{kit.options}}" shot-lead="{{kit.shotLead}}" shot-note="{{kit.shotNote}}"
+  options="{{kit.options}}" letter-pool="{{kit.letterPool}}" shot-lead="{{kit.shotLead}}" shot-note="{{kit.shotNote}}"
   limit-seconds="{{kit.limitSeconds}}" max-tries="{{kit.maxTries}}" reveal="{{kit.reveal}}"
   accepted-input="{{kit.acceptedInput}}" answer-text="{{kit.answerText}}" answer-id="{{kit.answerId}}" answer-ids="{{kit.answerIds}}" judge="{{kit.judge !== false}}"
   last-option-id="{{kit.lastOptionId}}" last-option-ids="{{kit.lastOptionIds}}"
@@ -140,7 +140,8 @@
   bind:verdict="onVerdict" bind:close="onClose" />
 
 <cy-playkit-hangman wx:elif="{{kit.type === 'hangman'}}" inline="{{inline}}"
-  show="{{show}}" title="{{kit.title}}" slots="{{kit.slots}}" solved="{{kit.solved}}" display="{{kit.display}}" feedback="{{kit.feedback}}"
+  show="{{show}}" title="{{kit.title}}" slots="{{kit.slots}}" solved="{{kit.solved}}" display="{{kit.display}}" feedback="{{kit.feedback}}" wrong-feedback="{{kit.wrongFeedback}}"
+  input-mode="{{kit.inputMode}}" pool="{{kit.pool}}"
   bind:submit="onSubmit" bind:close="onClose" bind:continue="onContinue" />
 
 <cy-playkit-accusation wx:elif="{{kit.type === 'accusation'}}" inline="{{inline}}"
@@ -245,7 +246,7 @@
 <cy-playkit-typein wx:elif="{{kit.type === 'typein'}}"
   show="{{show}}" title="{{kit.title}}" target="{{kit.target}}" seconds="{{kit.seconds}}"
   r5="{{kit.r5}}" deadline-at="{{kit.deadlineAt}}"
-  case-sensitive="{{kit.caseSensitive}}" tries="{{kit.tries}}" attempts="{{kit.attempts}}"
+  case-sensitive="{{kit.caseSensitive}}" tries="{{kit.tries}}" attempts="{{kit.attempts}}" wrong-feedback="{{kit.wrongFeedback}}"
   passed="{{kit.passed}}" terminal-skin="{{kit.terminalSkin}}" start-confirmed="{{kit.startConfirmed}}" start-failure-seq="{{kit.startFailureSeq}}"
   bind:start="onStart" bind:submit="onSubmit" bind:refresh="onRefresh" bind:close="onClose" />
 

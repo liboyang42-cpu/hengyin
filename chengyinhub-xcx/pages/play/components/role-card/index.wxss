@@ -1,0 +1,18 @@
+/* cy-role-card · 站点卡里的角色卡:与站点卡同一套玩家暗色 token,不新造色 */
+.rc {
+  margin-top: var(--cy-space-4);
+  padding: var(--cy-space-4);
+  border-radius: var(--cy-radius-lg);
+  background: var(--cy-color-bg-surface);
+  box-shadow: inset 0 0 0 1rpx var(--cy-color-border-default);
+}
+.rc__head { font-size: var(--cy-type-label); font-weight: 700; letter-spacing: 2rpx; color: var(--cy-color-text-secondary); }
+.rc__sec + .rc__sec { margin-top: var(--cy-space-4); padding-top: var(--cy-space-4); border-top: 1rpx solid var(--cy-color-border-subtle); }
+.rc__head + .rc__sec { margin-top: var(--cy-space-3); }
+.rc__label { font-size: var(--cy-type-caption); font-weight: 700; letter-spacing: 2rpx; color: var(--cy-color-text-tertiary); }
+.rc__title { margin-top: var(--cy-space-1); font-size: var(--cy-type-card-title); font-weight: 700; color: var(--cy-color-text-primary); }
+.rc__body { display: block; margin-top: var(--cy-space-2); font-size: var(--cy-type-body); line-height: 1.7; color: var(--cy-color-text-primary); white-space: pre-wrap; }
+.rc__item { display: flex; gap: var(--cy-space-3); margin-top: var(--cy-space-2); font-size: var(--cy-type-body); line-height: 1.6; }
+.rc__item-k { flex: none; color: var(--cy-color-text-tertiary); }
+.rc__item-v { flex: 1; min-width: 0; color: var(--cy-color-text-primary); word-break: break-all; }
+.rc__foot { margin-top: var(--cy-space-4); font-size: var(--cy-type-caption); color: var(--cy-color-text-tertiary); }

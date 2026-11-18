@@ -276,7 +276,7 @@ test('待支付和已取消票不得进 play，报名成功才带齐 id 开玩',
   assert.match(sandbox.navigations[2].url, /^\/pages\/play\/index\?topicId=504&/)
 })
 
-test('票夹只放能用的票:待支付 / 已核验 / 已取消 / 已过期不进票夹(2026-10-28 业主)', () => {
+test('票夹只放能用的票:待支付 / 已取消 / 已过期不进票夹;已核验的票留下(F13 不限游玩次数)', () => {
   const { page, sandbox } = loadPage()
   const order = { id: 990058, ownerId: 930007, registrationStatus: 2, paymentStatus: 2,
     verificationStatus: 0, firstSuccessfulScanAt: '2026-10-01 18:16:47' }
@@ -286,7 +286,7 @@ test('票夹只放能用的票:待支付 / 已核验 / 已取消 / 已过期不�
     { ...order, id: 990062, registrationStatus: 4 }, { ...order, id: 990063, verificationStatus: 1 },
     { ...order, id: 990064, cmsActivity: { endTime: '2000-01-01 00:00:00' } }], state: 'ready' }
   page.rebuildTicketList()
-  assert.deepEqual(Array.from(page.data.ticketList, item => item.id), [990058, 990059])
+  assert.deepEqual(Array.from(page.data.ticketList, item => item.id), [990058, 990059, 990063])
   assert.equal(page.data.walletState, 'ready')
   assert.doesNotMatch(page.data.ticketList[0].wSub, /待使用|待支付|已核验|已过期|已取消/)
   page.goTicket({ currentTarget: { dataset: { index: 0 } } })
@@ -316,7 +316,7 @@ test('报名已成功但付款未确认、关闭、退款或缺失时，不显�
   assert.deepEqual(sandbox.navigations, [])
 })
 
-test('P-03:探索票核销一家后仍留在票夹,卡面写已核销几家;全部核销后才离开', () => {
+test('P-03:探索票核销一家后仍留在票夹,卡面写已核销几家;F13 全部核销 / 已核销也不再离开(不限次数)', () => {
   const { page, sandbox } = loadPage()
   page.onLoad({})
   sandbox.requests.find(request => request.data.owner_type === 1).success({ code: 200, data: { rows: [], total: 0 } })
@@ -330,7 +330,7 @@ test('P-03:探索票核销一家后仍留在票夹,卡面写已核销几家;全�
       { id: 33, registrationStatus: 2, paymentStatus: 2, verificationStatus: 1, cmsActivity: { name: '已核销的普通场次' } },
     ], total: 3 },
   })
-  assert.equal(JSON.stringify(page.data.ticketList.map(t => t.id)), '[31]')
+  assert.equal(JSON.stringify(page.data.ticketList.map(t => t.id)), '[31,32,33]')
   assert.match(page.data.ticketList[0].wSub, /已核销 1\/4 家/)
 })
 
@@ -346,7 +346,7 @@ test('P-27:场次票卡面写开场时间与地点,不写「场次 · 今天过�
   assert.equal(page.data.ticketList[0].wSub, '11月2日 13:35 · 外滩源 33 号门前')
 })
 
-test('P-27:城市定向通关后卡面写「已通关」,底部按钮是「查看记录」', () => {
+test('P-27 / F13:城市定向通关后卡上标签写「已通关」(标签不是筛选),底部按钮是「查看记录」', () => {
   const { page, sandbox } = loadPage()
   page.onLoad({})
   sandbox.requests.find(request => request.data.owner_type === 1).success({ code: 200, data: { rows: [], total: 0 } })
@@ -355,6 +355,7 @@ test('P-27:城市定向通关后卡面写「已通关」,底部按钮是「查�
     data: { rows: [{ id: 51, registrationStatus: 2, paymentStatus: 2, topicCompleted: true,
       cmsActivity: { name: '外滩钟声', startDate: '2099-11-02 13:35:00', endDate: '2099-11-02 23:59:59' } }], total: 1 },
   })
-  assert.equal(page.data.ticketList[0].wSub, '已通关')
+  assert.equal(page.data.ticketList[0].wTag, '已通关')
+  assert.equal(page.data.ticketList[0].wSub, '11月2日 13:35')
   assert.match(wxml(), /topicCompleted \? '查看记录' : '开始游戏'/)
 })

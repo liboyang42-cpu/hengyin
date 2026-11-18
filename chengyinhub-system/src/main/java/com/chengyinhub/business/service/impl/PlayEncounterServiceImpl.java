@@ -746,17 +746,17 @@ public class PlayEncounterServiceImpl implements IPlayEncounterService {
         return StringUtils.isBlank(text) ? null : text;
     }
 
-    // ==================== R16-DUO 双人视角:roleView 按角色分半 ====================
+    // ==================== R16-DUO / F05 角色视角:roleView 按角色分发 ====================
     // 判定来源全部复用现有多人 / 角色机制,自己不建表、不引跨设备共享状态:
     //   在不在队伍里 = play_team(owner_type=2, owner_id=本局 activity_id)且本人在册
     //     (play_team_member.status=1),与 AdvancedGameRuntimeServiceImpl.inferTeamId 同一过滤;
-    //   是 A 还是 B = 本人在 selectActiveMembers 里的次序映射 roleViews.roles 的次序
-    //     (队员列表按 role desc, create_time asc, id asc 排),与 multiplayer 的 assignAutomaticRoles
-    //     「按队员次序轮转」同一口径;队员比角色多时按 roles.size() 回卷(第 1 人 A、
-    //     第 2 人 B、第 3 人 A、第 4 人 B……),与 assignAutomaticRoles 的 i % order.size() 一致。
-    // 单人 / 不在队伍(含自玩局 activityId=0)→ role=SOLO,两半都给;队伍里只给本人那一半,
-    // 另给一个对方角色的 label;多队歧义 / 队员行在在册名单里查不到 → roleMissing=true,
-    // 一个 view 都不给。
+    //   是哪个角色 = 本人在 selectActiveMembers 里的次序映射 roleViews.roles 的次序
+    //     (队员列表按 role desc, create_time asc, id asc 排),队员比角色多时按 roles.size() 回卷,
+    //     与 multiplayer 的 assignAutomaticRoles「i % order.size()」一致。新队员按加入时间排在末尾,
+    //     不会改动已在册队员的角色;有人退出才重算。
+    // F05(CG-ALL-10=B)单人兜底:角色卡只给组队加乐趣,绝不卡单人 ——
+    //   不在队伍 / 自玩局 / 队伍只剩 1 个在册队员 / 同场多队分不清 / 本人不在在册名单
+    //   一律按 SOLO 给全部视图(以前后两种情况返回 roleMissing,一个视图都不给)。
 
     /** 角色视角段:配了且 enabled 才出;老配置(没这一段)响应形状一字不变。 */
     private void appendRoleView(Map<String, Object> view, JsonNode config, TopicRouteSession run, Long memberId) {
@@ -780,8 +780,8 @@ public class PlayEncounterServiceImpl implements IPlayEncounterService {
                     || !activityId.equals(row.getOwnerId())
                     || row.getStatus() == null || row.getStatus() > PlayTeam.STATUS_STARTED) continue;
             if (team != null && !team.getId().equals(row.getId())) {
-                // 同一场次多队:分不清该按哪支队算,按未分配处理(绝不把对方那一半漏出去)
-                view.put("roleView", missingRoleView());
+                // 同一场次多队:分不清该按哪支队算 —— 按单人给全量,不卡人
+                view.put("roleView", soloRoleView(raw, roles));
                 return;
             }
             team = row;
@@ -790,30 +790,40 @@ public class PlayEncounterServiceImpl implements IPlayEncounterService {
             view.put("roleView", soloRoleView(raw, roles));
             return;
         }
-        int index = activeMemberIndex(team.getId(), memberId);
-        if (index < 0) {
-            view.put("roleView", missingRoleView());
+        List<PlayTeamMember> members = playTeamMapper.selectActiveMembers(team.getId());
+        int index = memberIndex(members, memberId);
+        // 只剩自己(或查不到本人)= 单人:按 SOLO 给全部视图,单人必须能独立通关
+        if (index < 0 || members.size() <= 1) {
+            view.put("roleView", soloRoleView(raw, roles));
             return;
         }
-        String roleId = roles.get(index % roles.size()).path("id").asText("");
-        Map<String, Object> own = roleViewOf(raw, roleId);
+        JsonNode ownRole = roles.get(index % roles.size());
+        String roleId = ownRole.path("id").asText("");
+        Map<String, Object> own = roleViewOf(raw, roleId, textOrNull(ownRole, "label"));
         if (own == null) {
-            view.put("roleView", missingRoleView());
+            view.put("roleView", soloRoleView(raw, roles));
             return;
         }
         Map<String, Object> mine = new LinkedHashMap<String, Object>();
         mine.put("role", roleId);
+        mine.put("roleLabel", textOrNull(ownRole, "label"));
         mine.put("views", Collections.singletonList(own));
         JsonNode other = roles.get((index + 1) % roles.size());
         mine.put("otherRoleLabel", textOrNull(other, "label"));
+        List<String> others = new ArrayList<String>();
+        for (int i = 1; i < roles.size(); i++) {
+            String label = textOrNull(roles.get((index + i) % roles.size()), "label");
+            if (label != null) others.add(label);
+        }
+        mine.put("otherRoleLabels", others);
         view.put("roleView", mine);
     }
 
-    /** 单人版:两半都下发,roll 成同一条 roleView 形状(views 是数组,role=SOLO)。 */
+    /** 单人版:全部角色视图都下发,同一条 roleView 形状(views 是数组,role=SOLO),每段带角色名。 */
     private Map<String, Object> soloRoleView(JsonNode raw, List<JsonNode> roles) {
         List<Map<String, Object>> views = new ArrayList<Map<String, Object>>();
         for (JsonNode role : roles) {
-            Map<String, Object> one = roleViewOf(raw, role.path("id").asText(""));
+            Map<String, Object> one = roleViewOf(raw, role.path("id").asText(""), textOrNull(role, "label"));
             if (one != null) views.add(one);
         }
         Map<String, Object> solo = new LinkedHashMap<String, Object>();
@@ -822,20 +832,13 @@ public class PlayEncounterServiceImpl implements IPlayEncounterService {
         return solo;
     }
 
-    /** 队伍里分配不到本人角色:两个 view 都不给,只留一个可渲染的空态标记。 */
-    private static Map<String, Object> missingRoleView() {
-        Map<String, Object> missing = new LinkedHashMap<String, Object>();
-        missing.put("roleMissing", Boolean.TRUE);
-        missing.put("views", Collections.emptyList());
-        return missing;
-    }
-
     /** 本人这条角色对应的 view(标题 / 正文 / items),配置怎么写就怎么下发。 */
-    private Map<String, Object> roleViewOf(JsonNode raw, String roleId) {
+    private Map<String, Object> roleViewOf(JsonNode raw, String roleId, String label) {
         for (JsonNode entry : raw.path("views")) {
             if (entry == null || !entry.isObject() || !roleId.equals(entry.path("roleId").asText(""))) continue;
             Map<String, Object> view = new LinkedHashMap<String, Object>();
             view.put("roleId", roleId);
+            view.put("label", label);
             view.put("title", textOrNull(entry, "title"));
             view.put("body", textOrNull(entry, "body"));
             List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
@@ -853,8 +856,7 @@ public class PlayEncounterServiceImpl implements IPlayEncounterService {
     }
 
     /** 本人在册队员里的次序;查不到返回 -1(selectActiveMembers 的口径即分配次序)。 */
-    private int activeMemberIndex(Long teamId, Long memberId) {
-        List<PlayTeamMember> members = playTeamMapper.selectActiveMembers(teamId);
+    private static int memberIndex(List<PlayTeamMember> members, Long memberId) {
         if (members == null) return -1;
         for (int i = 0; i < members.size(); i++) {
             PlayTeamMember member = members.get(i);

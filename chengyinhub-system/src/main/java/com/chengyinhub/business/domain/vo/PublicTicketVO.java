@@ -68,6 +68,10 @@ public class PublicTicketVO {
                     ? com.chengyinhub.business.util.RefundPolicy.SESSION_REFUND_RULE_TEXT
                     : source.getRefundRule());
             out.setNeedAudit(source.getNeedAudit());
+            out.setAdultCount(source.getAdultCount());
+            out.setChildCount(source.getChildCount());
+            out.setChildAgeMin(source.getChildAgeMin());
+            out.setChildAgeMax(source.getChildAgeMax());
         }
         List<PublicRegistrationSummaryVO> summaries = new ArrayList<>();
         if (registrations != null) {
@@ -130,4 +134,19 @@ public class PublicTicketVO {
     public void setRegistrationCount(Integer registrationCount) { this.registrationCount = registrationCount; }
     public List<PublicRegistrationSummaryVO> getCmsRegistrationList() { return cmsRegistrationList; }
     public void setCmsRegistrationList(List<PublicRegistrationSummaryVO> cmsRegistrationList) { this.cmsRegistrationList = cmsRegistrationList; }
+
+    /** F12 亲子票人数构成与儿童年龄段(购票页按它出年龄选择)。 */
+    private Integer adultCount;
+    private Integer childCount;
+    private Integer childAgeMin;
+    private Integer childAgeMax;
+
+    public Integer getAdultCount() { return adultCount; }
+    public void setAdultCount(Integer adultCount) { this.adultCount = adultCount; }
+    public Integer getChildCount() { return childCount; }
+    public void setChildCount(Integer childCount) { this.childCount = childCount; }
+    public Integer getChildAgeMin() { return childAgeMin; }
+    public void setChildAgeMin(Integer childAgeMin) { this.childAgeMin = childAgeMin; }
+    public Integer getChildAgeMax() { return childAgeMax; }
+    public void setChildAgeMax(Integer childAgeMax) { this.childAgeMax = childAgeMax; }
 }

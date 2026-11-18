@@ -329,12 +329,13 @@
       "LETTER",
       "DIGIT",
       "ANSWER",
-      "SKIP"
+      "SKIP",
+      "POOL_TRIM"
      ],
      "description": "运行期保存前 trim + 大写。LOCATION 在册但保存期显式拒绝：位置类帮助会绕过既有到达与权限判定。"
     },
     "payload": {
-     "description": "标量，类型随 type 定。TEXT=非空文字；IMAGE=https/站内路径/media-asset；LETTER=1 起整数（揭示第几个字符）；ANSWER=可选揭示文案；DIGIT/SKIP 不得有内容。",
+     "description": "标量，类型随 type 定。TEXT=非空文字；IMAGE=https/站内路径/media-asset；LETTER=1 起整数（揭示第几个字符）；ANSWER=可选揭示文案；DIGIT/SKIP 不得有内容。POOL_TRIM=可选 1–30 整数（去掉几个干扰字，缺省 3；只能配在有字母池的题上）。",
      "x-cy-private": true,
      "x-cy-conditionals": {
       "TEXT": {
@@ -365,12 +366,20 @@
         "null"
        ],
        "maxLength": 0
+      },
+      "POOL_TRIM": {
+       "type": [
+        "integer",
+        "null"
+       ],
+       "minimum": 1,
+       "maximum": 30
       }
      }
     },
     "cost": {
      "type": "object",
-     "additionalProperties": true,
+     "additionalProperties": false,
      "description": "只认已有真实账本的类型：本树只有积分 ums_member_points_detail。",
      "properties": {
       "points": {
@@ -386,7 +395,7 @@
        "description": "无真实账本；非零保存期拒绝、运行期该层不可用。"
       }
      },
-     "x-cy-gap": "保存闸只检查 points/gems/coins；未知代价键（如 xp）保存期通过，但运行期 PlayHelpUsagePolicy.parseCost 会判为该层配置无效。"
+     "x-cy-historical": "F01（2026-11-18）起未知代价键（如 xp）保存期直接拒绝；提示统一 points:0，惩罚只体现在本题得分。"
     },
     "freeQuota": {
      "const": 0,
@@ -445,6 +454,32 @@
      "type": "boolean",
      "default": false,
      "description": "缺省不区分大小写（canon = lowercase(uppercase(cp))）。"
+    },
+    "inputMode": {
+     "enum": [
+      "keyboard",
+      "pool"
+     ],
+     "default": "keyboard",
+     "description": "F03 输入方式。pool = 「疯狂猜图」式候选字池：点字填入第一个空槽，点已填槽退回；需客户端能力 hangman.pool。"
+    },
+    "pool": {
+     "type": "array",
+     "minItems": 1,
+     "maxItems": 30,
+     "description": "F03 候选字（含干扰字）。每项 1 个字母/数字/汉字；空白槽要填的字按次数都必须能取到，别名扣掉预填字后也必须能拼出。inputMode=pool 时必填。",
+     "items": {
+      "type": "string",
+      "minLength": 1
+     }
+    },
+    "poolShuffle": {
+     "type": "boolean",
+     "default": true,
+     "description": "F03 每局按本局种子固定打乱下发顺序；false = 作者顺序。"
+    },
+    "wrongReplies": {
+     "$ref": "#/$defs/wrongReplies"
     }
    }
   },
@@ -468,6 +503,10 @@
     },
     "caseSensitive": {
      "type": "boolean"
+    },
+    "inputMode": {
+     "const": "pool",
+     "description": "F03 仅字母池模式出现。"
     }
    },
    "additionalProperties": false
@@ -525,6 +564,22 @@
        }
       }
      }
+    },
+    "inputMode": {
+     "const": "pool",
+     "description": "F03 仅字母池模式出现；缺省 = 键盘输入。"
+    },
+    "pool": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "description": "F03 本局可见候选字：按本局种子固定打乱，POOL_TRIM 去掉的干扰字不再出现。提交里用池外字或超次数 = 拒收不计次。"
+    },
+    "poolRemoved": {
+     "type": "integer",
+     "minimum": 0,
+     "description": "F03 POOL_TRIM 已去掉的干扰字数。"
     }
    },
    "additionalProperties": false
@@ -1457,9 +1512,11 @@
        "id": {
         "enum": [
          "A",
-         "B"
+         "B",
+         "C",
+         "D"
         ],
-        "description": "恰好 A、B 两个角色，且不重复。"
+        "description": "2–4 个角色，id 取 A–D，且不重复。"
        },
        "label": {
         "type": "string",
@@ -1473,7 +1530,7 @@
       ]
      },
      "minItems": 2,
-     "maxItems": 2
+     "maxItems": 4
     },
     "views": {
      "type": "array",
@@ -1484,7 +1541,9 @@
        "roleId": {
         "enum": [
          "A",
-         "B"
+         "B",
+         "C",
+         "D"
         ],
         "description": "必须指向 roles 里的角色，且每个角色恰好一个 view。"
        },
@@ -1526,10 +1585,10 @@
       ]
      },
      "minItems": 2,
-     "maxItems": 2
+     "maxItems": 4
     }
    },
-   "description": "双人视角（validateRoleViews）。不投影：由 Encounter 按本人角色下发。"
+   "description": "角色视角（validateRoleViews）。2–4 个角色（A–D），每个角色恰好一个 view。不投影：由 Encounter 按本人角色下发；单人、队伍只剩 1 人、多队歧义、查不到本人一律 SOLO 全量。"
   },
   "timerSection": {
    "type": "object",
@@ -2501,6 +2560,38 @@
      },
      "minItems": 2,
      "maxItems": 4
+    },
+    "letterPool": {
+     "type": "object",
+     "additionalProperties": true,
+     "description": "F03 打字问答字符池（TYPE 模式）。主答案（answerText 第一个写法）必须能从 chars 按次数拼出；别名不要求。需客户端能力 qa.letterPool。会话视图下发 letterPool{chars(本局打乱、去掉 POOL_TRIM 移除的干扰字),answerLength,removed}。",
+     "properties": {
+      "enabled": {
+       "type": "boolean"
+      },
+      "chars": {
+       "type": "array",
+       "minItems": 1,
+       "maxItems": 30,
+       "items": {
+        "type": "string",
+        "minLength": 1
+       }
+      },
+      "answerLength": {
+       "type": "integer",
+       "minimum": 1,
+       "description": "可选；给了必须等于主答案字数。"
+      },
+      "shuffle": {
+       "type": "boolean",
+       "default": true
+      }
+     }
+    },
+    "wrongReplies": {
+     "$ref": "#/$defs/wrongReplies",
+     "description": "只用于 mode=TYPE；选项题用 options[].fb/after。"
     }
    }
   },
@@ -3221,6 +3312,9 @@
      "minimum": 0,
      "maximum": 1000,
      "description": "段内奖励分上限 1000（validateXp）。"
+    },
+    "wrongReplies": {
+     "$ref": "#/$defs/wrongReplies"
     }
    }
   },
@@ -3581,6 +3675,45 @@
      "minimum": 0,
      "maximum": 1000,
      "description": "段内奖励分上限 1000（validateXp）。"
+    }
+   }
+  },
+  "wrongReplies": {
+   "type": "array",
+   "maxItems": 20,
+   "description": "F02 按错答回复（解谜赛中间答案表）。只留服务端；判错命中某条写法时回那一条 reply，没命中回 outcomeRules.fail.reply。次数、得分、奖励不变。投影不下发错答表，只下发判错后的 lastFeedback。",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "match",
+     "reply"
+    ],
+    "properties": {
+     "match": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 10,
+      "items": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 200
+      },
+      "description": "按该玩法判对的同一归一口径比较（qa TYPE：LEGACY_V1；typeIn/hangman：AnswerNormalizer），不做模糊匹配。不能与正确答案或别名重叠，同一写法不能出现在两条里。"
+     },
+     "reply": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+     },
+     "images": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+       "type": "string",
+       "maxLength": 512
+      }
+     }
     }
    }
   }

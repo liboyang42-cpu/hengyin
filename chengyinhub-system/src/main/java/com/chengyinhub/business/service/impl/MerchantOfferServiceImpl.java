@@ -288,6 +288,14 @@ public class MerchantOfferServiceImpl implements IMerchantOfferService {
                 throw new IllegalStateException("补位供给不能改变付款俱乐部");
             com.chengyinhub.business.support.OrdinarySupplyReplacementPolicy.assertCompatible(original, offer);
         }
+        // F12:承接时一并声明是否接受亲子票(1 大 1 小同享一份权益)与儿童份说明;不传 = 不接受。
+        try {
+            offer.setFamilyPerkText(com.chengyinhub.business.service.support.FamilyTicketRules
+                    .normalizePerkText(offer.getFamilyAccepted(), offer.getFamilyPerkText()));
+        } catch (IllegalArgumentException invalid) {
+            throw new IllegalStateException(invalid.getMessage());
+        }
+        if (offer.getFamilyAccepted() == null) offer.setFamilyAccepted(0);
         offer.setQuotaUsed(0);
         offer.setStatus(original == null ? 1 : 0); // 补位供给经点位与条款重审后才生效。
         offer.setCreateTime(DateUtils.getNowDate());
@@ -971,8 +979,7 @@ public class MerchantOfferServiceImpl implements IMerchantOfferService {
         return String.valueOf(mode);
     }
 
-    // ===================== F10 作者自己承接 =====================
-
+    // ===================== F10 作者自己承接 ==============
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long authorSelfSupply(Long authorMemberId, Long topicId, Long chapterId, AuthorSelfSupplyPerk perk) {
@@ -1148,6 +1155,41 @@ public class MerchantOfferServiceImpl implements IMerchantOfferService {
             if (perk.getRetailValue() != null && perk.getRetailValue().signum() < 0) {
                 throw new IllegalStateException("权益价值不能为负");
             }
+        }
+    }
+
+    /**
+     * F12:承接方设置「接受亲子票」与儿童份说明。只能改本商家自己的生效供给;
+     * 主题锁价/开售后不许取消接受(已售亲子票要在这家店核销),打开不受限。
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void setFamilyAcceptance(Long offerId, Long merchantId, Integer familyAccepted, String familyPerkText) {
+        if (offerId == null || merchantId == null) throw new IllegalStateException("缺少供给");
+        if (familyAccepted == null) throw new IllegalStateException("请选择是否接受亲子票");
+        String text;
+        try {
+            text = com.chengyinhub.business.service.support.FamilyTicketRules.normalizePerkText(familyAccepted, familyPerkText);
+        } catch (IllegalArgumentException invalid) {
+            throw new IllegalStateException(invalid.getMessage());
+        }
+        MerchantChapterOffer offer = offerMapper.selectByIdForUpdate(offerId);
+        if (offer == null || !merchantId.equals(offer.getMerchantId()) || !Integer.valueOf(1).equals(offer.getStatus())) {
+            throw new IllegalStateException("供给不存在或不属于当前商家");
+        }
+        CmsTopic topic = offer.getTopicId() == null ? null : cmsTopicMapper.selectCmsTopicByIdForUpdate(offer.getTopicId());
+        if (topic != null && TopicLifecycleState.commercialTermsFrozen(topic.getLifecycle())
+                && Integer.valueOf(1).equals(offer.getFamilyAccepted()) && familyAccepted == 0) {
+            throw new IllegalStateException("主题已锁价，不能取消接受亲子票");
+        }
+        MerchantChapterOffer patch = new MerchantChapterOffer();
+        patch.setId(offerId);
+        patch.setMerchantId(merchantId);
+        patch.setFamilyAccepted(familyAccepted);
+        patch.setFamilyPerkText(text);
+        patch.setUpdateBy(String.valueOf(merchantId));
+        if (offerMapper.updateFamilyAcceptance(patch) != 1) {
+            throw new IllegalStateException("供给已变化，请刷新后重试");
         }
     }
 }

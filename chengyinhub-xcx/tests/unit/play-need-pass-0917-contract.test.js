@@ -54,6 +54,12 @@ test('C-26 自玩无通行证 402 → needPass 空态,不再落「未报名」�
   assert.equal(requests.length, 1);
   requests[0].success({ code: 402, msg: '请先购买自玩通行证' });
   await new Promise((resolve) => setImmediate(resolve));
+  // FE-STORY 7.4:先读只读历史(不带局号);不是自由探索只读历史就照旧落 needPass
+  assert.equal(requests.length, 2);
+  assert.equal(requests[1].url, '/api/play/history');
+  assert.equal('routeSessionId' in requests[1].data, false);
+  requests[1].success({ code: 200, data: { mode: 1, nodes: [] } });
+  await new Promise((resolve) => setImmediate(resolve));
 
   assert.equal(page.data.loading, false);
   assert.equal(page.data.emptyKind, 'needPass', '必须落 needPass,不许落 signup');

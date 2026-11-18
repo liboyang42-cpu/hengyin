@@ -4127,6 +4127,14 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             ticket.setPrice(ticketDTO.getPrice());
             ticket.setCreateBy(username);
             ticket.setCreateTime(new Date());
+            // F12 亲子票:人数构成只允许 1+0 / 1+1,亲子票年龄段必填。坏构成草稿也不收。
+            ticket.setAdultCount(ticketDTO.getAdultCount() == null ? 1 : ticketDTO.getAdultCount());
+            ticket.setChildCount(ticketDTO.getChildCount() == null ? 0 : ticketDTO.getChildCount());
+            try {
+                com.chengyinhub.business.service.support.FamilyTicketRules.validateComposition(ticket);
+            } catch (IllegalArgumentException invalid) {
+                throw new ServiceException(invalid.getMessage(), HttpStatus.BAD_REQUEST);
+            }
 
             // 成团已下线(2026-07-15):此处原有 min_people/signup_deadline 兜底,随成团引擎一并移除。
             // 两列保留不物理删(回滚/审计),但不再写入、不再被任何代码读取。

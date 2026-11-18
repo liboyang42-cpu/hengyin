@@ -375,4 +375,10 @@ public interface CmsRegistrationMapper
     /** 续买后把被上一段结束时刻截断的派生票顺延（不新增票）。 */
     int extendPassDerivedTicket(@Param("registrationId") long registrationId, @Param("lo") java.util.Date lo,
                                 @Param("hi") java.util.Date hi, @Param("newEnd") java.util.Date newEnd);
+
+    /** F12:写亲子票人数构成;已有且不同则 0 行(幂等重放冲突由调用方拒)。 */
+    int bindPartySnapshot(@Param("id") Long id, @Param("partySnapshotJson") String partySnapshotJson);
+
+    /** F12:按订单 id 读人数构成(只读 id + party_snapshot_json,不进通用列清单)。 */
+    java.util.List<CmsRegistration> selectPartySnapshots(@Param("ids") java.util.Collection<Long> ids);
 }

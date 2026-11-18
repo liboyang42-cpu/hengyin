@@ -95,6 +95,13 @@ public class ChapterBlockDTO implements Serializable
 
     public String getStyle() { return style; }
     public void setStyle(String style) { this.style = style; }
+
+    /* F03/内容 1117:正文外的可选阅读(史话、地方掌故、组队分工说明)。客户端折叠成「延伸阅读」卡,点开才展开。 */
+    @Schema(description = "可选阅读；仅普通 text 块。true = 客户端折叠为「延伸阅读」卡，不影响主线", example = "true")
+    private Boolean optional;
+
+    public Boolean getOptional() { return optional; }
+    public void setOptional(Boolean optional) { this.optional = optional; }
     public List<TextMarkDTO> getMarks() { return marks; }
     public void setMarks(List<TextMarkDTO> marks) { this.marks = marks; }
 

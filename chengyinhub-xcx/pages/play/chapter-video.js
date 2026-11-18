@@ -1,4 +1,6 @@
 'use strict';
+// 章节视频(F06):静音自动播放(信息流做法),右下角「开声音」。静音播放时背景音乐与旁白照常;
+// 只有玩家开了视频声音才暂停它们,再关声音 / 视频收起时放回来。
 const methods = {
   _chapterVideoSessionScope() {
     return JSON.stringify([this._playOwner, this.data.topicId, this.data.activityId, (this._routeState || {}).sessionId]);
@@ -48,12 +50,27 @@ const methods = {
       if (!current()) return;
       if (!this._isChapterVideoCurrent(token)) { this.finishChapterVideo(null, false); return; }
       clearTimeout(this._chapterVideoTimer);
-      this._videoPausedAudio = [this._themeBgm, this._stationBgm, this._audio].filter(ctx => ctx && ctx.paused === false);
-      this._videoPausedAudio.forEach(ctx => { try { ctx.pause(); } catch (_) {} });
-      this.setData({ chapterVideo: { show: true, playing: false, token, url: chapter.videoUrl, poster: image.path || chapter.videoPosterUrl } });
+      this._videoPausedAudio = [];   // 静音起播:不动背景音乐与旁白
+      this.setData({ chapterVideoMuted: true, chapterVideo: { show: true, playing: false, token, url: chapter.videoUrl, poster: image.path || chapter.videoPosterUrl } });
       this._armChapterVideoTimeout(token);
     }, fail: () => { if (current()) this.finishChapterVideo(); } });
     return true;
+  },
+  /** 「开声音 / 关声音」:开声音时暂停正在放的背景音乐与旁白(记下是谁),关声音时把它们放回来。 */
+  toggleChapterVideoSound(e) {
+    if (!this._currentChapterVideo(e)) return;
+    const muted = !this.data.chapterVideoMuted;
+    if (!muted) {
+      this._videoPausedAudio = [this._themeBgm, this._stationBgm, this._audio].filter(ctx => ctx && ctx.paused === false);
+      this._videoPausedAudio.forEach(ctx => { try { ctx.pause(); } catch (_) {} });
+    } else {
+      const paused = this._videoPausedAudio || [];
+      this._videoPausedAudio = [];
+      paused.forEach(ctx => {
+        if ([this._themeBgm, this._stationBgm, this._audio].includes(ctx)) { try { ctx.play(); } catch (_) {} }
+      });
+    }
+    this.setData({ chapterVideoMuted: muted });
   },
   onChapterVideoPlay(e) {
     if (!this._currentChapterVideo(e)) return;

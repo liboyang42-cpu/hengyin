@@ -284,9 +284,42 @@ class PlayHelpApplicationTest {
         verifyNoInteractions(quotaApplication);
     }
 
+    /** F03:POOL_TRIM 层在扣费同一事务里把「去掉 N 个干扰字」写进本局状态;没配 payload 时按 3 个。 */
+    @Test
+    void poolTrimLevelRecordsRemovalInRunState() {
+        givenAuthorisedRun("{\"nodeAnswers\":{\"31\":{\"hintLadder\":["
+                + "{\"level\":1,\"type\":\"POOL_TRIM\",\"payload\":2},"
+                + "{\"level\":2,\"type\":\"POOL_TRIM\"}],"
+                + "\"questionAnswer\":\"ABC\"}}}");
+        givenCharge(new PlayHelpCostApplication.Charge(true, false, 1, 0, 1000L, "bk"));
+
+        PlayHelpUseVO first = application.use(MEMBER, String.valueOf(RUN), String.valueOf(NODE),
+                1, "help", "req-trim-1");
+        assertEquals("POOL_TRIM", first.type());
+        assertEquals("已去掉 2 个干扰字", first.content());
+        verify(runtimeService).trimPool(eq(MEMBER), any(), eq(TOPIC), eq(NODE), eq(1), eq(2));
+
+        givenUnlocked(1);   // F01:第 2 层要先看过第 1 层
+        PlayHelpUseVO second = application.use(MEMBER, String.valueOf(RUN), String.valueOf(NODE),
+                2, "help", "req-trim-2");
+        assertEquals("已去掉 3 个干扰字", second.content());
+        verify(runtimeService).trimPool(eq(MEMBER), any(), eq(TOPIC), eq(NODE), eq(2), eq(3));
+    }
+
+    /** 非 POOL_TRIM 层不碰运行时状态。 */
+    @Test
+    void textLevelNeverTouchesPoolState() {
+        givenAuthorisedRun(LADDER_ANSWER);
+        givenUnlocked(1);   // F01:第 2 层要先看过第 1 层
+        givenCharge(new PlayHelpCostApplication.Charge(true, false, 2, 30, 970L, "bk"));
+        application.use(MEMBER, String.valueOf(RUN), String.valueOf(NODE), 2, "help", "req-letter-2");
+        verify(runtimeService, never()).trimPool(any(), any(), any(), any(), anyInt(), anyInt());
+    }
+
     @Test
     void firstLetterLevelRevealsOnlyOneCharacter() {
         givenAuthorisedRun(LADDER_ANSWER);
+        givenUnlocked(1);
         givenCharge(new PlayHelpCostApplication.Charge(true, false, 2, 30, 970L, "bk"));
 
         PlayHelpUseVO result = application.use(MEMBER, String.valueOf(RUN), String.valueOf(NODE),
@@ -302,6 +335,7 @@ class PlayHelpApplicationTest {
     @Test
     void reReadingAnUnlockedLevelChargesNothing() {
         givenAuthorisedRun(LADDER_ANSWER);
+        givenUnlocked(3);
         givenCharge(new PlayHelpCostApplication.Charge(false, true, 3, 0, 970L, null));
 
         PlayHelpUseVO result = application.use(MEMBER, String.valueOf(RUN), String.valueOf(NODE),
@@ -543,6 +577,7 @@ class PlayHelpApplicationTest {
     @Test
     void costRefusalPropagatesSoTheTransactionRollsBack() {
         givenAuthorisedRun(LADDER_ANSWER);
+        givenUnlocked(1);
         when(quotaApplication.use(anyLong(), any(), anyInt(), any(), anyInt(), anyInt(), any()))
                 .thenThrow(new PlayHelpCostApplication.PlayHelpCostException("POINTS_INSUFFICIENT", "积分不足"));
 
@@ -552,6 +587,56 @@ class PlayHelpApplicationTest {
 
         assertEquals("积分不足", refused.getMessage());
         assertEquals("POINTS_INSUFFICIENT", refused.code());
+    }
+
+    /** F01:没看过上一层就请求下一层,服务端拒绝(LEVEL_OUT_OF_ORDER),不解锁也不动钱。 */
+    @Test
+    void skippingAheadInTheLadderIsRefusedWithOutOfOrder() {
+        givenAuthorisedRun(LADDER_ANSWER);
+        givenUnlocked(1);
+
+        PlayHelpApplication.HelpRefusal refused = assertThrows(PlayHelpApplication.HelpRefusal.class,
+                () -> application.use(MEMBER, String.valueOf(RUN), String.valueOf(NODE), 3, "HELP", "req-ahead"));
+
+        assertEquals(com.chengyinhub.business.service.support.PlayHelpOutcomeSupport.LEVEL_OUT_OF_ORDER, refused.code());
+        assertEquals("请先查看上一层提示", refused.getMessage());
+        verifyNoInteractions(quotaApplication);
+    }
+
+    /** F01:第 1 层永远可以直接看;看过第 1 层后第 2 层放行。 */
+    @Test
+    void ladderUnlocksInAuthorOrder() {
+        givenAuthorisedRun(LADDER_ANSWER);
+        givenCharge(new PlayHelpCostApplication.Charge(true, false, 1, 0, 1000L, "bk"));
+
+        assertEquals("观察屋檐下的年份", application.use(MEMBER, String.valueOf(RUN), String.valueOf(NODE),
+                1, "HELP", "req-1").content());
+        assertThrows(PlayHelpApplication.HelpRefusal.class,
+                () -> application.use(MEMBER, String.valueOf(RUN), String.valueOf(NODE), 2, "HELP", "req-2"));
+        givenUnlocked(1);
+        assertEquals("B", application.use(MEMBER, String.valueOf(RUN), String.valueOf(NODE),
+                2, "HELP", "req-2b").content());
+    }
+
+    /** F01:SKIP 不受顺序限制 —— 一层提示都没看也能直接跳过。 */
+    @Test
+    void skipIgnoresLadderOrder() {
+        givenAuthorisedRun("{\"nodeAnswers\":{\"31\":{\"hintLadder\":["
+                + "{\"level\":1,\"type\":\"TEXT\",\"payload\":\"方向\"},"
+                + "{\"level\":2,\"type\":\"TEXT\",\"payload\":\"关键步骤\"},"
+                + "{\"level\":3,\"type\":\"ANSWER\"},"
+                + "{\"level\":4,\"type\":\"SKIP\"}],"
+                + "\"questionAnswer\":\"ABC\"}}}");
+        when(runtimeService.skip(eq(MEMBER), any(), eq(TOPIC), eq(NODE), eq("req-skip-first")))
+                .thenReturn(Map.of("status", "COMPLETED"));
+        when(completionApplication.advanceProgress(anyLong(), any(), any(), any(), anyInt(), any(), any(),
+                any(), any(), any(), any(), any())).thenReturn(Map.of("firstTime", true));
+
+        Map<String, Object> result = application.skip(MEMBER, String.valueOf(RUN), String.valueOf(NODE),
+                "req-skip-first");
+
+        assertEquals(true, result.get("skipped"));
+        assertEquals(0, result.get("score"));
     }
 
     /**
@@ -626,6 +711,12 @@ class PlayHelpApplicationTest {
         // 有 hintLadder 但没有显式 N = 整局 N 默认 0（新规则不送免费次数），仍走 G7 额度入口。
         when(quotaApplication.use(eq(MEMBER), any(), anyInt(), eq(0), anyInt(), anyInt(), any()))
                 .thenReturn(new PlayHelpRunQuotaApplication.QuotaOutcome(charge, false, false, 0));
+    }
+
+    private void givenUnlocked(int... levels) {
+        for (int level : levels) {
+            when(attemptMapper.selectByIdempotencyKey(factKey(level))).thenReturn(fact(level));
+        }
     }
 
     private static String factKey(int level) {

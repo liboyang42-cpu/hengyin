@@ -34,6 +34,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="refundSupported"    column="refund_supported"    />
         <result property="syncWithTheme"    column="sync_with_theme"    />
         <result property="needAudit"    column="need_audit"    />
+        <result property="adultCount"    column="adult_count"    />
+        <result property="childCount"    column="child_count"    />
+        <result property="childAgeMin"    column="child_age_min"    />
+        <result property="childAgeMax"    column="child_age_max"    />
         <result property="delFlag"    column="del_flag"    />
         <result property="createBy"    column="create_by"    />
         <result property="createTime"    column="create_time"    />
@@ -42,7 +46,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectOmsTicketVo">
-        select id, member_id, owner_type, owner_id, source_ticket_id, name, price, start_time, end_time, sale_start_time, sale_end_time, total_inventory, remaining_inventory, mode, sub_type, meeting_point, meeting_point_address, team_size, min_people, max_people, signup_deadline, gather_lng, gather_lat, team_status, refund_rule, refund_supported, sync_with_theme, need_audit, del_flag, create_by, create_time, update_by, update_time,
+        select id, member_id, owner_type, owner_id, source_ticket_id, name, price, start_time, end_time, sale_start_time, sale_end_time, total_inventory, remaining_inventory, mode, sub_type, meeting_point, meeting_point_address, team_size, min_people, max_people, signup_deadline, gather_lng, gather_lat, team_status, refund_rule, refund_supported, sync_with_theme, need_audit, adult_count, child_count, child_age_min, child_age_max, del_flag, create_by, create_time, update_by, update_time,
         (owner_type = 2 and source_ticket_id is not null
           and (sub_type is null or sub_type = '' or sub_type = 'self')
           and exists (select 1 from cms_activity a join cms_topic t on t.id = a.topic_id
@@ -115,6 +119,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="refundSupported != null">refund_supported,</if>
             <if test="syncWithTheme != null">sync_with_theme,</if>
             <if test="needAudit != null">need_audit,</if>
+            <if test="adultCount != null">adult_count,</if>
+            <if test="childCount != null">child_count,</if>
+            <if test="childAgeMin != null">child_age_min,</if>
+            <if test="childAgeMax != null">child_age_max,</if>
             <if test="delFlag != null">del_flag,</if>
             <if test="createBy != null">create_by,</if>
             <if test="createTime != null">create_time,</if>
@@ -149,6 +157,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="refundSupported != null">#{refundSupported},</if>
             <if test="syncWithTheme != null">#{syncWithTheme},</if>
             <if test="needAudit != null">#{needAudit},</if>
+            <if test="adultCount != null">#{adultCount},</if>
+            <if test="childCount != null">#{childCount},</if>
+            <if test="childAgeMin != null">#{childAgeMin},</if>
+            <if test="childAgeMax != null">#{childAgeMax},</if>
             <if test="delFlag != null">#{delFlag},</if>
             <if test="createBy != null">#{createBy},</if>
             <if test="createTime != null">#{createTime},</if>
@@ -186,6 +198,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="refundSupported != null">refund_supported = #{refundSupported},</if>
             <if test="syncWithTheme != null">sync_with_theme = #{syncWithTheme},</if>
             <if test="needAudit != null">need_audit = #{needAudit},</if>
+            <if test="adultCount != null">adult_count = #{adultCount},</if>
+            <if test="childCount != null">child_count = #{childCount},</if>
+            <if test="childAgeMin != null">child_age_min = #{childAgeMin},</if>
+            <if test="childAgeMax != null">child_age_max = #{childAgeMax},</if>
             <if test="delFlag != null">del_flag = #{delFlag},</if>
             <if test="createBy != null">create_by = #{createBy},</if>
             <if test="createTime != null">create_time = #{createTime},</if>
@@ -234,6 +250,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             refund_supported = #{refundSupported},
             sync_with_theme = #{syncWithTheme},
             need_audit = coalesce(#{needAudit}, need_audit),
+            adult_count = coalesce(#{adultCount}, adult_count),
+            child_count = coalesce(#{childCount}, child_count),
+            child_age_min = #{childAgeMin},
+            child_age_max = #{childAgeMax},
             update_by = #{updateBy},
             update_time = #{updateTime}
         where id = #{id}

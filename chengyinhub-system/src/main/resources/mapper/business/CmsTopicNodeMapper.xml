@@ -233,4 +233,19 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                node_audit_member_id = null, node_audit_time = null, update_time = now()
          where id = #{id} and merchant_member_id = #{authorMemberId}
     </update>
+    <select id="selectVisitConfigById" resultType="com.chengyinhub.business.domain.FreeExploreVisitConfig">
+        select id as nodeId, visit_check as visitCheck, visit_radius_m as visitRadiusM
+          from cms_topic_node where id = #{nodeId}
+    </select>
+
+    <select id="selectVisitConfigByTopicId" resultType="com.chengyinhub.business.domain.FreeExploreVisitConfig">
+        select id as nodeId, visit_check as visitCheck, visit_radius_m as visitRadiusM
+          from cms_topic_node where topic_id = #{topicId}
+    </select>
+
+    <update id="updateVisitConfig">
+        update cms_topic_node set visit_check = #{visitCheck}, visit_radius_m = #{visitRadiusM}
+         where id = #{nodeId}
+    </update>
+
 </mapper>

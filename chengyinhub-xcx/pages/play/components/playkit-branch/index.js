@@ -33,12 +33,13 @@ Component({
   },
   /* ⚠️ ended 是**属性**,内部要用的那份叫 isEnd —— observer 监听它、内部又写它
      会自己触发自己,死循环把运行时打挂,而且一条错都不报。 */
-  data: { feedback: '', isEnd: false, picked: -1 },
+  /* F04:chosen = 确认前选中的那一条(可以换);picked = 已确认、等服务端给下一步(锁住) */
+  data: { feedback: '', isEnd: false, picked: -1, chosen: -1 },
   observers: {
     'show, body, ended, writable, stepId, failureSeq': function (show) {
       if (!show) return;
       const ended = !!this.data.ended;
-      this.setData({ feedback: '', isEnd: ended, picked: -1 });
+      this.setData({ feedback: '', isEnd: ended, picked: -1, chosen: -1 });
       /* 走到终点就是走完了 —— 分支不判对错,一律按通过收。
          这一句要在 begin() 之前:begin 会把上一局的判定屏清掉。 */
       if (ended) {
@@ -52,13 +53,24 @@ Component({
   },
   methods: {
 
+    /* F04(照 Duolingo):点选项只是选中,确认前可以换;按「确认选择」才报给服务端。 */
     onPick(e) {
       if (this.data.isEnd || this.data.writable === false || this.data.picked >= 0) return;
       const i = Number(e.currentTarget.dataset.i);
-      const opt = this.data.options[i] || {};
+      if (!this.data.options[i]) return;
+      this.setData({ chosen: i });
+      // 只有一条(如反馈段的「继续」)时没有可改的选择,点它就是确认
+      if (this.data.options.length === 1) { this.onConfirm(); return; }
+      motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' });
+    },
+    onConfirm() {
+      if (this.data.isEnd || this.data.writable === false || this.data.picked >= 0) return;
+      const i = this.data.chosen;
+      const opt = this.data.options[i];
+      if (!opt) return;
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
-      /* 选中就锁住,等服务端给下一步。不锁的话手快的人能连点两条,
-         而第二条会带着上一步的 id 发出去 —— 服务端那边是「当前步骤没有这个选项」。 */
+      /* 确认就锁住,等服务端给下一步。不锁的话手快的人能连点两次,
+         而第二次会带着上一步的 id 发出去 —— 服务端那边是「当前步骤没有这个选项」。 */
       this.setData({ picked: i });
       this.triggerEvent('choose', { index: i, optionId: opt.id || '' });
     },

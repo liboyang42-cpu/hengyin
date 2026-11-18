@@ -108,24 +108,49 @@ test('邀请入口全部走统一邀请页:同行席位(带席位数 + 信封插
   assert.match(read('subpackageMember/components/cy/profile/index.wxml'), /<cy-share-card wx:if="\{\{isSelf\}\}" show="\{\{inviteShow\}\}" card="\{\{inviteCard\}\}" bind:close="closeInvite" \/>/)
 })
 
-test('票夹(proto wl-wallet):「票夹 ▾」筛选只按 topicCompleted 分;卷页时镜面高光带 --sx 跟手;卡下倒影', () => {
+test('票夹(F13 / OR-011):一个列表,可用在前按到期升序、即将开始置灰排后;已通关/未通关是标签;卷页镜面与倒影', () => {
   const P = path.join(root, 'subpackageMember/signup/index.js')
   delete require.cache[P]
   global.getApp = () => ({ globalData: {}, getImgUrl: (x) => x })
   global.Page = () => {}
   global.wx = { getStorageSync: () => '' }
-  const { filterTickets, pagePoses } = require(P)
-  const list = [{ wKey: 'a', topicCompleted: true }, { wKey: 'b', topicCompleted: false }, { wKey: 'c' }]
-  assert.deepEqual(filterTickets(list, 'all').map(t => t.wKey), ['a', 'b', 'c'])
-  assert.deepEqual(filterTickets(list, 'done').map(t => t.wKey), ['a'])
-  assert.deepEqual(filterTickets(list, 'upcoming').map(t => t.wKey), ['b', 'c'], '没有通关事实的票算还没通关,不算已通关')
+  const { walletOrder, walletCard, usableTicket, pagePoses } = require(P)
+  const paid = { registrationStatus: 2, paymentStatus: 2 }
+  const card = (o) => walletCard(Object.assign({ kind: 'topic', wType: '城市定向' }, paid, o))
+  const list = [
+    card({ wKey: 'later', usableState: 'USABLE', wUntil: '2026-12-31 23:59:59', clearState: 'CLEARED', topicCompleted: true }),
+    card({ wKey: 'soon-start-2', usableState: 'UPCOMING', usableFrom: '2026-12-20 00:00:00', clearState: 'NOT_CLEARED' }),
+    card({ wKey: 'nodate', usableState: 'USABLE', wUntil: '', clearState: 'NONE' }),
+    card({ wKey: 'soon-end', usableState: 'USABLE', wUntil: '2026-11-20 23:59:59', clearState: 'NOT_CLEARED' }),
+    card({ wKey: 'soon-start-1', usableState: 'UPCOMING', usableFrom: '2026-12-01 00:00:00', clearState: 'NOT_CLEARED' }),
+  ]
+  assert.deepEqual(walletOrder(list).map(t => t.wKey), ['soon-end', 'later', 'nodate', 'soon-start-1', 'soon-start-2'])
+  const byKey = Object.fromEntries(list.map(t => [t.wKey, t]))
+  assert.equal(byKey.later.wTag, '已通关')
+  assert.equal(byKey['soon-end'].wTag, '未通关')
+  assert.equal(byKey.nodate.wTag, '', '没有通关概念(NONE)不写标签')
+  assert.equal(byKey['soon-start-1'].wTag, '12月1日开始')
+  assert.equal(byKey['soon-start-1'].wLocked, true, '即将开始的票置灰不能点')
+  assert.equal(byKey.later.wLocked, false)
+  // 已核销 / 已通关的票照样留在票夹(不限次数);过期、未支付、已退款的不进票夹
+  assert.equal(usableTicket(Object.assign({ verificationStatus: 1, usableState: 'USABLE' }, paid)), true)
+  assert.equal(usableTicket(Object.assign({ usableState: 'EXPIRED' }, paid)), false)
+  assert.equal(usableTicket({ registrationStatus: 2, paymentStatus: 1, usableState: 'USABLE' }), false)
+  assert.equal(usableTicket(Object.assign({ usableState: 'USABLE', refundApplication: { status: 1, payoutStatus: 1 } }, paid)), false)
+  const refunding = card({ wKey: 'r', usableState: 'USABLE', refundApplication: { status: 0, refundAmount: 10 } })
+  assert.equal(usableTicket(refunding), true)
+  assert.equal(refunding.wTag, '退款中')
+  assert.equal(refunding.wLocked, true)
+  // F12:亲子票卡面写「1 大 1 小同享」
+  assert.match(card({ wKey: 'f', usableState: 'USABLE', party: { adultCount: 1, childCount: 1, childAge: 7 } }).wSub, /1 大 1 小同享/)
   const left = pagePoses(3, 0, -150, 300)
   assert.match(left[0], /--spec: 0\.750/)
   assert.match(left[0], /--sx: 45\.0%/)
   assert.match(left[0], /skewY\(-2\.0deg\)/)
   const wxml = read('subpackageMember/signup/index.wxml')
-  assert.match(wxml, /class="wl-pop \{\{walPop \? 'is-open' : ''\}\}"/)
-  assert.match(wxml, /bindtap="pickWalFilter"/)
+  assert.doesNotMatch(wxml, /wl-pop|pickWalFilter/, '没有筛选弹层')
+  assert.match(wxml, /class="wc__face wc__front \{\{item\.wLocked \? 'wc__front--locked' : ''\}\}"/)
+  assert.match(wxml, /<text wx:if="\{\{item\.wTag\}\}" class="wc__tag/)
   const wxss = read('subpackageMember/signup/index.wxss')
   assert.match(wxss, /\.wc__spec \{[^}]*opacity: var\(--spec, 0\)/)
   assert.match(wxss, /\.wc \{ -webkit-box-reflect: below 12rpx/)

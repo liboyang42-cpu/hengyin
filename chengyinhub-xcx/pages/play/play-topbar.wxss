@@ -43,6 +43,19 @@
 .chfull__tasks{ min-height:104rpx; padding:0 var(--cy-space-4) 0 var(--cy-space-2); box-shadow:0 0 0 1rpx var(--cy-comp-sheet-player-border-strong);
   transition:transform var(--cy-motion-fast) var(--cy-ease-standard); }
 .chfull__tasks--press{ transform:scale(.98); }
+/* 延伸阅读(作者标 optional 的文字块):与延伸任务入口同一套玩家弹层 token;默认收起成一行,点开在卡内读全文 */
+.chfull__opt{ margin:0 var(--cy-page-x); padding:0 var(--cy-space-4); border-radius:var(--cy-radius-lg); background:var(--cy-comp-sheet-player-surface);
+  box-shadow:0 0 0 1rpx var(--cy-comp-sheet-player-border-strong); text-align:left; color:var(--cy-color-text-primary); }
+.chfull__opt-h{ display:flex; align-items:center; gap:var(--cy-space-2); min-height:104rpx; }
+.chfull__opt-copy{ flex:1; min-width:0; display:flex; flex-direction:column; }
+.chfull__opt-t{ font-size:var(--cy-type-body); font-weight:700; line-height:1.4; }
+.chfull__opt-s{ font-size:var(--cy-type-caption); line-height:1.4; color:var(--cy-color-text-tertiary); }
+.chfull__opt-chev{ flex:none; display:flex; transition:transform var(--cy-motion-fast) var(--cy-ease-standard); }
+.chfull__opt.is-open .chfull__opt-chev{ transform:rotate(90deg); }
+.chfull__opt-b{ padding-bottom:var(--cy-space-4); }
+.chfull__opt-p{ font-size:var(--cy-type-body); line-height:1.85; }
+.chfull__opt-p + .chfull__opt-p{ margin-top:var(--cy-space-3); }
+@media (prefers-reduced-motion: reduce){ .chfull__opt-chev{ transition:none; } }
 .chfull__tasks-ico{ flex:none; width:72rpx; height:72rpx; border-radius:50%; display:flex; align-items:center; justify-content:center;
   background:var(--cy-color-play-accent-soft); color:var(--cy-color-play-accent); }
 .chfull__tasks-n{ min-width:44rpx; height:44rpx; padding:0 var(--cy-space-2); box-sizing:border-box; border-radius:var(--cy-radius-pill); display:flex; align-items:center; justify-content:center;

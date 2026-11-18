@@ -1021,6 +1021,13 @@ public class PerkLedgerServiceImpl implements IPerkLedgerService {
         return perk == null || perk.getName() == null || perk.getName().trim().isEmpty() ? null : perk.getName();
     }
 
+    @Override
+    public java.util.Map<String, Object> redemptionParty(String partySnapshotJson, Long chapterId, Long merchantId) {
+        if (com.chengyinhub.business.service.support.FamilyTicketRules.partyOf(partySnapshotJson) == null) return null;
+        MerchantChapterOffer offer = chapterId == null || merchantId == null ? null : findLiveOffer(chapterId, merchantId);
+        return com.chengyinhub.business.service.support.FamilyTicketRules.redemptionParty(partySnapshotJson, offer);
+    }
+
     /** uk_offer_merchant_chapter 保证一个商家一章最多一行,故取到即唯一。 */
     private MerchantChapterOffer findLiveOffer(Long chapterId, Long merchantId) {
         List<MerchantChapterOffer> offers = offerMapper.selectByChapter(chapterId);

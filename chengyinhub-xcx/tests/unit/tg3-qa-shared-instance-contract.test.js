@@ -25,6 +25,8 @@ function componentFactory() {
       if (id.includes('media-denied')) return { guideIfDenied() { return false; } };
       if (id.endsWith('/utils/toast.js')) return () => {};
       if (id.includes('playkit-questo')) return require('../../pages/play/utils/playkit-questo.js');
+      // F03 字符池的纯状态函数(不判对错、不发请求)
+      if (id.endsWith('/utils/letter-pool.js')) return require('../../pages/play/utils/letter-pool.js');
       throw new Error('Unexpected component port ' + id);
     },
   }, { filename: file });
@@ -117,11 +119,11 @@ test('the active photo error and success branches retain the original payload an
 });
 test('only server receipt updates produce pass/failure feedback; the next theme starts clean', () => {
   const factory = componentFactory(), source = FIRST(); source.playKit.qa.judge = true;
-  const mounted = factory.mount(source); pick(mounted.instance, 0);
+  const mounted = factory.mount(source); pick(mounted.instance, 0); mounted.instance.onCta();
   assert.equal(mounted.instance.data.passed, false); assert.equal(mounted.instance.data.feedback, '');
   const wrong = FIRST(); Object.assign(wrong.playKit.qa, { judge: true, attempts: 1, lastFeedback: '原服务端错误回执' });
   mounted.render(wrong); assert.equal(mounted.instance.data.feedback, '原服务端错误回执');
-  assert.equal(mounted.instance.data.ctaLabel, '提交');
+  assert.equal(mounted.instance.data.ctaLabel, '确认选择', 'F04:单选答错后仍是先选再确认');
   const passed = FIRST(); Object.assign(passed.playKit.qa, { judge: true, passed: true, finished: true, attempts: 2, lastFeedback: '原服务端成功回执' });
   mounted.render(passed); assert.equal(mounted.instance.data.ctaLabel, '继续');
   mounted.instance.onCta(); assert.equal(mounted.events.at(-1).name, 'continue');

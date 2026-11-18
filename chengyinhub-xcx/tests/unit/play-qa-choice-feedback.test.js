@@ -136,13 +136,41 @@ test('feedback images preview uses only the server receipt list', () => {
   assert.deepEqual(previews, [{ current: '/profile/b.png', urls: ['/profile/a.png', '/profile/b.png'] }]);
 });
 
-test('legacy and explicit judge=true preserve immediate single-pick submit', () => {
+test('F04:judge=true 单选点选项不提交,可以改选,确认后提交最后选中的那一条', () => {
   for (const fields of [{}, { judge: true }]) {
     const { inst, events } = mount(view(fields));
+    assert.equal(inst.data.ctaLabel, '确认选择');
+    assert.equal(inst.data.ctaDisabled, true, '没选时确认是灰的');
     pick(inst, 1);
-    assert.deepEqual(events, [{ name: 'submit', detail: { mode: 'pick', index: 1, optionId: 'latte' } }]);
+    assert.equal(events.length, 0, '点选项只是选中,不提交');
+    assert.deepEqual(inst.data.optionList.map(o => o.state), ['', 'is-on']);
+    assert.equal(inst.data.ctaDisabled, false);
+    pick(inst, 0);
+    assert.deepEqual(inst.data.optionList.map(o => o.state), ['is-on', ''], '确认前可以换');
+    pick(inst, 1);
+    inst.onCta(); inst.onCta();
+    assert.deepEqual(events, [{ name: 'submit', detail: { mode: 'pick', index: 1, optionId: 'latte' } }], '只提交一次,是最后选中的');
+    assert.deepEqual(serverPayload('qa', 'submit', events[0].detail), { optionId: 'latte' });
+    pick(inst, 0);
+    assert.equal(events.length, 1, '确认后等回执期间锁定');
     assert.equal(inst.data.triesCap, 1);
   }
+});
+
+test('F04:单选答错后标红保留,另选一条再确认;选中项带 aria-selected', () => {
+  const { inst, events } = mount(view({ judge: true, maxTries: 3, options: [{ id: 'a', t: '甲' }, { id: 'b', t: '乙' }, { id: 'c', t: '丙' }] }));
+  inst.selectComponent = () => ({ miss: () => false, nudge() {} });
+  pick(inst, 0); inst.onCta();
+  inst.settle(false, { index: 0 });
+  assert.deepEqual(inst.data.optionList.map(o => o.state), ['is-wrong', '', '']);
+  assert.equal(inst.data.ctaLabel, '确认选择');
+  assert.equal(inst.data.ctaDisabled, true, '要先另选一条');
+  pick(inst, 2);
+  assert.deepEqual(inst.data.optionList.map(o => o.state), ['is-wrong', '', 'is-on']);
+  inst.onCta();
+  assert.deepEqual(events.map(e => e.detail.optionId), ['a', 'c']);
+  const source = fs.readFileSync(path.join(__dirname, '../../pages/play/components/playkit-qa/index.wxml'), 'utf8');
+  assert.equal((source.match(/aria-selected="\{\{item.state === 'is-on'\}\}"/g) || []).length, 2);
 });
 
 test('completed choice label and preview handler are reachable in WXML; no tries or reveal for judge=false', () => {

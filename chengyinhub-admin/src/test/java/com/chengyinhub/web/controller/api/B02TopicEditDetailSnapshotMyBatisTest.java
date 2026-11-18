@@ -321,6 +321,8 @@ class B02TopicEditDetailSnapshotMyBatisTest {
         jdbc.execute("ALTER TABLE oms_ticket ADD source_ticket_id BIGINT, ADD sale_start_time DATETIME,"
                 + " ADD sale_end_time DATETIME, ADD meeting_point_address VARCHAR(255),"
                 + " ADD refund_supported TINYINT, ADD sync_with_theme TINYINT");
+        jdbc.execute("ALTER TABLE oms_ticket ADD COLUMN adult_count TINYINT NOT NULL DEFAULT 1, ADD COLUMN child_count TINYINT NOT NULL DEFAULT 0,"
+                + " ADD COLUMN child_age_min TINYINT NULL, ADD COLUMN child_age_max TINYINT NULL"); // migration_20261118_family_ticket.sql
         // The repository has no view_collaborators DDL. Reproduce its mapper projection over fixture rows.
         jdbc.execute("CREATE TABLE b02_collaborator_rows(id BIGINT PRIMARY KEY,data_type BIGINT,data_id BIGINT,member_id BIGINT,"
                 + "create_by VARCHAR(64),create_time DATETIME,update_by VARCHAR(64),update_time DATETIME,"

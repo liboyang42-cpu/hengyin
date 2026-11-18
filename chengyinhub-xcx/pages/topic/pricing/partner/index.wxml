@@ -61,11 +61,11 @@
         </view>
         <view class="pr-row" wx:if="{{shareMode===1}}">
           <text class="pr-row-label">分成比例</text>
-          <text class="pr-row-value">{{shareRate !== '' ? shareRate + '%' : '—'}}</text>
+          <text class="pr-row-value">{{shareRate || 0}}%</text>
         </view>
         <view class="pr-row" wx:if="{{shareMode===2}}">
           <text class="pr-row-label">固定合作费</text>
-          <text class="pr-row-value">{{fixedFee !== '' ? money.amount(fixedFee) + '/人' : '—'}}</text>
+          <text class="pr-row-value">{{money.amount(fixedFee)}}/人</text>
         </view>
         <view class="pr-row">
           <text class="pr-row-label">锁定时间</text>

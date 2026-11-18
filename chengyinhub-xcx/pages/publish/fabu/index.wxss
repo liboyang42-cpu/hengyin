@@ -4315,6 +4315,7 @@ page { background: var(--cy-btn-solid-bg); }
 .node-binding { margin-top: var(--cy-space-3); padding-top: var(--cy-space-3); border-top: 2rpx solid var(--cy-color-border-subtle); }
 .node-binding__row { display: flex; align-items: center; gap: var(--cy-space-3); margin-top: var(--cy-space-3); }
 .node-binding__label { font-size: var(--cy-font-label); color: var(--cy-color-text-primary); }
+.fe-visit__radius { margin-top: var(--cy-space-3); }
 .node-binding__error { display: block; margin-top: var(--cy-space-2); font-size: var(--cy-font-caption); color: var(--cy-color-status-danger); }
 .node-shared { margin-top: 0; }
 .node-shared__site { display: block; margin-top: var(--cy-space-1); }

@@ -37,6 +37,7 @@ import com.chengyinhub.business.service.support.AccusationOutcomePolicy;
 import com.chengyinhub.business.service.support.AccusationTemplateSupport;
 import com.chengyinhub.business.service.support.AdvancedGameRandom;
 import com.chengyinhub.business.service.support.HangmanGameplay;
+import com.chengyinhub.business.service.support.LetterPoolSupport;
 import com.chengyinhub.business.service.support.PlayHelpUsagePolicy;
 import com.chengyinhub.business.util.AdvancedGamePublicProjection;
 import com.chengyinhub.business.util.StoryVars;
@@ -1253,6 +1254,45 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> trimPool(Long memberId, Long activityId, Long topicId, Long nodeId, int level, int count) {
+        if (memberId == null || memberId <= 0 || topicId == null || topicId <= 0 || nodeId == null || nodeId <= 0
+                || level <= 0) {
+            throw new IllegalArgumentException("参数有误");
+        }
+        long actId = activityId == null ? 0L : activityId;
+        GameRuntimeSession session = existingSession(memberId, actId, topicId, nodeId);
+        if (session == null) throw new IllegalStateException("该节点尚未开局玩法，不能使用字母池提示");
+        session = expireIfNeeded(session, memberId);
+        if (!Integer.valueOf(GameRuntimeSession.STATUS_RUNNING).equals(session.getStatus())) {
+            throw new IllegalStateException("本局已结束，不能使用提示");
+        }
+        JsonNode config = readJson(session.getConfigSnapshotJson(), "玩法配置不可用");
+        ObjectNode state = objectState(session.getStateJson());
+        boolean changed;
+        if (LetterPoolSupport.hangmanPool(config.path("hangman"))) {
+            ObjectNode kit = state.path(HangmanGameplay.STATE_KEY).isObject()
+                    ? (ObjectNode) state.get(HangmanGameplay.STATE_KEY)
+                    : HangmanGameplay.initialState(config.path("hangman"));
+            changed = LetterPoolSupport.recordTrim(kit, level, count);
+            state.set(HangmanGameplay.STATE_KEY, kit);
+        } else if (LetterPoolSupport.qaPool(config.path("qa"))) {
+            changed = LetterPoolSupport.recordTrim(state.with("qa"), level, count);
+        } else {
+            throw new IllegalArgumentException("本题没有字母池");
+        }
+        if (!changed) return viewOf(session, memberId);
+        int oldVersion = session.getVersion();
+        session.setUpdateTime(clock.now());
+        session.setStateJson(writeJson(state));
+        if (sessionMapper.updateStateCas(session) != 1) {
+            throw new IllegalStateException("状态已更新，请刷新后重试");
+        }
+        session.setVersion(oldVersion + 1);
+        return viewOf(session, memberId);
+    }
+
+    @Override
     public boolean skippedAssistedCompletion(Long memberId, Long activityId, Long topicId, Long nodeId) {
         if (memberId == null || topicId == null || nodeId == null) return false;
         GameRuntimeSession session = existingSession(memberId, activityId == null ? 0L : activityId, topicId, nodeId);
@@ -1734,7 +1774,14 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         // 逐字猜词:开局只记「玩家补进空白槽的字符」;预填字符与分隔符由冻结配置推导,
         // 不复制进状态,状态里就不会出现第二份答案副本。
         if (enabled(config.get("hangman"))) {
-            state.set(HangmanGameplay.STATE_KEY, HangmanGameplay.initialState(config.path("hangman")));
+            ObjectNode hangman = HangmanGameplay.initialState(config.path("hangman"));
+            // F03 字母池:本局固定的打乱种子,刷新/重登顺序不变,不同局顺序不同。
+            if (LetterPoolSupport.hangmanPool(config.path("hangman")))
+                hangman.put(LetterPoolSupport.STATE_SEED, random.nextInt(Integer.MAX_VALUE));
+            state.set(HangmanGameplay.STATE_KEY, hangman);
+        }
+        if (LetterPoolSupport.qaPool(config.path("qa"))) {
+            state.with("qa").put(LetterPoolSupport.STATE_SEED, random.nextInt(Integer.MAX_VALUE));
         }
         return state;
     }
@@ -2998,6 +3045,15 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                 for (JsonNode one : st.path("lastOptionIds")) lastIds.add(one.asText(""));
                 value.put("lastOptionIds", lastIds);
             }
+            // F03 字符池:候选字按本局固定顺序打乱,POOL_TRIM 去掉的干扰字不再下发;答案本身不下发。
+            if (LetterPoolSupport.qaPool(cfg)) {
+                LetterPoolSupport.View pool = LetterPoolSupport.qaView(cfg, st);
+                Map<String, Object> letterPool = new LinkedHashMap<>();
+                letterPool.put("chars", pool.chars());
+                letterPool.put("answerLength", LetterPoolSupport.qaAnswerLength(cfg));
+                letterPool.put("removed", pool.removed());
+                value.put("letterPool", letterPool);
+            }
             kit.put("qa", value);
         }
         /* 扫码:**回复内容扫完才给**。扫之前就下发,那句话在网络面板里就能看见,
@@ -3340,14 +3396,19 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             value.put("passed", st.path("passed").asBoolean(false));
             value.put("started", st.path("startedAtMs").asLong(0L) > 0L);
             value.put("submitted", st.path("submitted").asBoolean(false));
+            // F02:判错后的回复(错答表命中那条或通用错答),判完才有;错答表本身不下发。
+            putText(value, "lastFeedback", st);
             kit.put("typeIn", value);
         }
         /* 逐字猜词:槽位形状(预填字符/空槽/分隔符)就是题面,必须下发;
            玩家已补入的字符与 solved 来自本局状态,答案与别名一个字都不在回包里。 */
         if (enabled(config.path("hangman"))) {
-            kit.put("hangman", objectMapper.convertValue(
+            Map<String, Object> hangman = objectMapper.convertValue(
                     HangmanGameplay.publicProjection(config.path("hangman"), state.path(HangmanGameplay.STATE_KEY)),
-                    new TypeReference<Map<String, Object>>() {}));
+                    new TypeReference<Map<String, Object>>() {});
+            // F02:判错后的回复,判完才有;错答表本身不下发。
+            putText(hangman, "lastFeedback", state.path(HangmanGameplay.STATE_KEY));
+            kit.put("hangman", hangman);
         }
         /* 罗盘指向:目标方位**就是题面**,开局即下发 —— 玩家得先知道往哪转才谈得上对准。
            这与扫码的显形图相反(那是答案,扫中之前一个字都不许出现在回包里)。

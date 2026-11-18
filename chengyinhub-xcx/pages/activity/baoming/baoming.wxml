@@ -153,6 +153,13 @@
     <view class="setly_li_left">{{selectedTicket.name}}</view>
     <view class="setly_li_right"><text>{{money.amount(selectedTicket.price)}}</text></view>
   </view>
+  <!-- F12 亲子票:1 大 1 小一张票,只选儿童年龄(不要姓名),选项只在票种年龄段内 -->
+  <cy-dropdown wx:if="{{childAgeOptions.length}}" range="{{childAgeLabels}}" bind:change="onChildAgeChange">
+    <view class="setly_li" aria-role="button" aria-label="儿童年龄，{{childAge !== null ? childAge + ' 岁' : '请选择'}}" hover-class="cy-pressed" hover-stay-time="80">
+      <view class="setly_li_left">儿童年龄</view>
+      <view class="setly_li_right"><text>{{childAge !== null ? childAge + ' 岁' : '请选择'}}</text><cy-icon name="arrow-right" size="28" /></view>
+    </view>
+  </cy-dropdown>
   <!-- 第十二轮 k9(p1 N-11):订单金额只在下面有减项时出现;一张票没有优惠时它和票种行、总计是同一个数 -->
   <view wx:if="{{clubMemberDiscountAmount > 0 || (pointsUsable !== false && selectedTicket.price > 0 && userInfo.point != 0)}}" class="setly_li">
     <view class="setly_li_left">订单金额</view>

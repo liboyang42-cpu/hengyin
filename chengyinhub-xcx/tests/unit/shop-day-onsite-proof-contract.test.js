@@ -14,14 +14,24 @@ function assertVisibleFailureContract(wxml) {
   assert.match(wxml, />\{\{degradedMessage\}\}/)
 }
 
-test('探店日三段式凭证由真实 handler 驱动且失败态被 WXML 消费', () => {
+test('探店日凭证由真实 handler 驱动且失败态被 WXML 消费(F08:「我已到店」→「出示核销码」,扫码与拍照在「更多」)', () => {
   const js = read('pages/play/merchant/index.js')
   const wxml = read('pages/play/merchant/index.wxml')
-  for (const handler of ['scanArrival', 'uploadProof', 'openVerifyCode']) {
+  for (const handler of ['arriveHere', 'scanArrival', 'uploadProof', 'openVerifyCode']) {
     assert.match(js, new RegExp(handler + '\\s*\\('))
+  }
+  for (const handler of ['arriveHere', 'moreScan', 'morePhoto', 'openVerifyCode', 'openMore']) {
     assert.match(wxml, new RegExp('bindtap="' + handler + '"'))
   }
+  assert.match(js, /moreScan\(\) \{ this\.setData\(\{ 'more\.show': false \}\); this\.scanArrival\(\) \}/)
+  assert.match(js, /morePhoto\(\) \{ this\.setData\(\{ 'more\.show': false \}\); this\.uploadProof\(\) \}/)
+  // 主按钮顺序:没到店 =「我已到店」,到店后直接「出示核销码」;拍照不再挡在核销码前面
+  const cta = wxml.slice(wxml.indexOf('<view class="mp-cta">'))
+  assert.ok(cta.indexOf('bindtap="arriveHere"') > 0 && cta.indexOf('bindtap="openVerifyCode"') > cta.indexOf('bindtap="arriveHere"'))
+  assert.doesNotMatch(cta, /class="mp-cta__main[^"]*" bindtap="(scanArrival|uploadProof)"/)
   assertVisibleFailureContract(wxml)
+  assert.match(js, /\/api\/play\/arrive/)
+  assert.match(js, /wx\.getLocation\(\{ type: 'gcj02', isHighAccuracy: true/)
   assert.match(js, /\/api\/play\/checkin/)
   assert.match(js, /\/api\/play\/photo/)
   assert.match(wxml, /记录到店时间/)

@@ -52,7 +52,7 @@ Page({
        ⚠️ 不要为了「合并」去动后端:两类票的字段和落点本来就不同,合到一个接口只会把
           差异塞进 if,还丢掉各自的分页。 */
     ticketList: [],
-    currentSwiperTicket: 0, deckPoses: [], deckStill: false, wbg: ['', ''], wbgOn: 0, navH: appGlobal.navBarHeight || 44, walFilter: 'all', walFilterLabel: '票夹', walPop: false, walFilters: walFilters(), // v13 卡堆 / 两层模糊背景;l-after:票夹 ▾ 筛选(全部 / 即将开始 / 已通关)
+    currentSwiperTicket: 0, deckPoses: [], deckStill: false, wbg: ['', ''], wbgOn: 0, navH: appGlobal.navBarHeight || 44, // v13 卡堆 / 两层模糊背景;F13 删掉「票夹 ▾」筛选,一个列表
     flipped: false, qrState: 'idle', qrUrl: '', entering: false, startLit: false, reduced: false, meAvatar: '', // 2026-10-28 翻面入场码 + 开始游戏;r3-visual 顶栏本人头像(app.getAvatar,没有就不出)
     walletState: 'loading', // loading | ready | error | login | empty —— 由两条支线的状态合成
     walletErrorMsg: '',
@@ -272,7 +272,7 @@ Page({
         kind: 'topic',
         wKey: 'topic-' + item.id,
         wTitle: t.name || '—',
-        wImg: t.imgUrl || '', wType: Number(t.productType) === 2 ? '自由探索' : '城市定向', wColor: Number(t.productType) === 2 ? '#7CF0A0' : '#5AA9FF', wUntil: item.expiresAt || t.endDate || '', // ds-ok v13 类型色
+        wImg: t.imgUrl || '', wType: Number(t.productType) === 2 ? '自由探索' : '城市定向', wColor: Number(t.productType) === 2 ? '#7CF0A0' : '#5AA9FF', wUntil: item.usableUntil !== undefined ? (item.usableUntil || '') : (item.expiresAt || t.endDate || ''), // ds-ok v13 类型色;F13 到期口径以服务端 usableUntil 为准
       });
     });
     const activities = ((this._activity && this._activity.list) || []).map(function (item) {
@@ -282,7 +282,7 @@ Page({
         wKey: 'activity-' + item.id,
         wTitle: a.name || '—',
         wImg: a.imgUrl || '', // 第十二轮 k8 F13:没封面就不出图,不拿通用路线示意图(假路线 + 灰条)充数
-        wType: '场次', wColor: '#E8B86B', wUntil: a.endTime || a.endDate || '', wProgress: exploreProgressOf(item), wNoGame: !activityHasGame(item.cmsActivity), // ds-ok v13 卡角色;k2 j1 N1 没有游戏的票直接出码
+        wType: '场次', wColor: '#E8B86B', wUntil: item.usableUntil !== undefined ? (item.usableUntil || '') : (a.endTime || a.endDate || ''), wProgress: exploreProgressOf(item), wNoGame: !activityHasGame(item.cmsActivity), // ds-ok v13 卡角色;k2 j1 N1 没有游戏的票直接出码
       });
     });
     const seen = new Set();
@@ -292,8 +292,8 @@ Page({
       if (seen.has(id)) return false;
       seen.add(id); return true;
     }).map(walletCard);
-    // 2026-10-28 业主:票夹只放能用的票 —— 待支付、已核验、已取消、已过期都不进票夹
-    this._usable = all.filter(usableTicket); const list = filterTickets(this._usable, this.data.walFilter); // l-after:再按「票夹 ▾」筛选
+    // F13(OR-011 / OR-012=B):一个列表 —— 可用的在前(快过期的先),即将开始的置灰排后;已通关/未通关是标签不是筛选;过期票不进票夹
+    const list = walletOrder(all.filter(usableTicket));
     const ts = (this._topic || {}).state;
     const as = (this._activity || {}).state;
     let state;
@@ -325,7 +325,7 @@ Page({
   goTicket(e) {
     const ds = e.currentTarget.dataset;
     const item = (this.data.ticketList || [])[ds.index];
-    if (!item || this.data.entering) return;
+    if (!item || this.data.entering || item.wLocked) return; // F13:即将开始 / 退款中的票不能点
     const kind = item.kind === 'activity' ? 'activity' : 'topic';
     // 2026-10-28「开始游戏」(data-go):按钮填满 → 票卡往前冲出 → 黑色铺满,再进游戏;减动效直接进
     if (!ds.go || this.data.reduced || typeof setTimeout !== 'function') { this._openTicket(item, kind); return; }
@@ -345,7 +345,7 @@ Page({
   // 第十二轮 k2(j1 N1):没有游戏的票,票面就是入场码 —— 落到它时直接翻到码面,不需要玩家先猜「点一下」
   _showQrIfNoGame() {
     const item = (this.data.ticketList || [])[this.data.currentSwiperTicket];
-    if (!item || !item.wNoGame || this.data.flipped) return;
+    if (!item || !item.wNoGame || item.wLocked || this.data.flipped) return;
     this.setData({ flipped: true });
     if (String(item.id) !== this._qrFor || !(this._qrExpiresAt > Date.now() + QR_REFRESH_LEAD_MS)) this._loadQr(item);
   },
@@ -353,6 +353,7 @@ Page({
     if (this._moved || this._throwing || this.data.entering) return;
     const index = Number(e.currentTarget.dataset.index);
     if (index !== this.data.currentSwiperTicket) return;
+    if (((this.data.ticketList || [])[index] || {}).wLocked) return; // F13:置灰的票不翻面、不出码
     const flipped = !this.data.flipped;
     this.setData({ flipped });
     const item = (this.data.ticketList || [])[index];
@@ -705,14 +706,6 @@ Page({
     }, 520);
   },
   goExplore() { wx.switchTab({ url: '/pages/index/index' }); },
-  toggleWalFilter() { this.setData({ walPop: !this.data.walPop }); },
-  pickWalFilter(e) {
-    const key = e.currentTarget.dataset.key;
-    const f = walFilters().find(x => x.key === key);
-    if (!f) return;
-    this.setData({ walPop: false, walFilter: key, walFilterLabel: f.title, flipped: false, qrState: 'idle', qrUrl: '' });
-    if (this._usable) this.rebuildTicketList();
-  },
   goMe() { wx.switchTab({ url: '/pages/member/index/index' }); },
 })
 
@@ -767,9 +760,35 @@ function walletCard(item) {
   const progress = item.wProgress ? ' · 已核销 ' + item.wProgress.redeemed + '/' + item.wProgress.required + ' 家' : '';
   // P-27:场次票卡面写「几点 · 在哪」,到期留在背面(wExpiry);读不到开场时间才回落「场次 · 剩几天」
   const session = item.kind === 'activity' ? sessionLine(item.cmsActivity) : '';
-  const head = item.topicCompleted === true ? '已通关' : (session || (days === null ? item.wType : item.wType + (days === 0 ? ' · 今天过期' : ' · 剩 ' + days + ' 天')));
+  const upcoming = item.usableState === 'UPCOMING';
+  const refunding = refundingTicket(item);
+  const head = upcoming ? item.wType : (session || (days === null ? item.wType : item.wType + (days === 0 ? ' · 今天过期' : ' · 剩 ' + days + ' 天')));
+  // F12:亲子票卡面写「1 大 1 小同享」
+  const party = item.party && Number(item.party.childCount) > 0 ? ' · ' + item.party.adultCount + ' 大 ' + item.party.childCount + ' 小同享' : '';
+  // F13:标签 —— 即将开始写「M月D日开始」;退款中写「退款中」;可用的城市定向写「已通关 / 未通关」,其余不写
+  const tag = upcoming ? startTag(item.usableFrom) : refunding ? '退款中'
+    : item.clearState === 'CLEARED' ? '已通关' : item.clearState === 'NOT_CLEARED' ? '未通关'
+    : !item.clearState && item.topicCompleted === true ? '已通关' : ''; // 旧响应没有 clearState 时按 topicCompleted 兜底
   // 第十二轮 k4(j2 F-22):已通关的票不再出入场码,也不写「今天过期」
-  return Object.assign(item, { wSub: head + progress, wExpiry: item.topicCompleted === true ? '' : passExpiryText(item.wUntil) });
+  return Object.assign(item, { wSub: head + progress + party, wTag: tag, wLocked: upcoming || refunding,
+    wExpiry: item.topicCompleted === true || upcoming ? '' : passExpiryText(item.wUntil) });
+}
+/* F13:服务端 usableFrom(yyyy-MM-dd HH:mm:ss,北京时间)→「M月D日开始」 */
+function startTag(usableFrom) {
+  const m = String(usableFrom || '').match(/^\d{4}-(\d{2})-(\d{2})/);
+  return m ? Number(m[1]) + '月' + Number(m[2]) + '日开始' : '即将开始';
+}
+/* 退款在途(审核中 / 正在退款 / 人工售后):卡留在票夹里写「退款中」,不能点;钱已退回(payout 1/4)的不进票夹 */
+function refundedTicket(item) {
+  const r = item && item.refundApplication;
+  return !!r && (Number(r.payoutStatus) === 1 || Number(r.payoutStatus) === 4);
+}
+function refundingTicket(item) {
+  const r = item && item.refundApplication;
+  if (item && item.manualRefundCaseStatus) return true;
+  if (!r || refundedTicket(item)) return false;
+  if (r.status !== undefined && r.status !== null && r.status !== '' && Number(r.status) === 2) return false; // 驳回:票照常可用
+  return !(r.refundAmount !== undefined && r.refundAmount !== null && !(Number(r.refundAmount) > 0));
 }
 /* 场次开场时间(服务端 yyyy-MM-dd HH:mm:ss,北京时间)+ 地点;缺开场时间返回空串 */
 function sessionLine(a) {
@@ -784,26 +803,27 @@ function exploreProgressOf(item) {
   if (!p || !(Number(p.required) > 0)) return null;
   return { redeemed: Number(p.redeemed) || 0, required: Number(p.required), active: p.active === true };
 }
-/* 能用的票:已报名(已付款 / 免费)、没核验、没取消没过期,到期日也还没过 */
+/* F13 能进票夹的票:已报名已付款、没退款、没过 usableUntil。
+   已核销 / 已通关不再剔除 —— 我们不限游玩次数,通关是标签(OR-011);能不能再进游戏由 play 端 run 权限决定。
+   过期判断用服务端 usableState(与订单详情「已过期，票夹不再显示」同一口径),旧响应没有时才按 wUntil 兜底。 */
 function usableTicket(item) {
-  // P-03:探索票核销过一家仍可用,直到必选章全部核销或场次结束(服务端 exploreProgress.active)
-  const exploreActive = !!(item.wProgress && item.wProgress.active);
-  if (Number(item.registrationStatus) !== 2 || Number(item.paymentStatus) !== 2 || (item.verificationStatus == 1 && !exploreActive)) return false;
-  if (item.wProgress && !item.wProgress.active) return false;
+  if (Number(item.registrationStatus) !== 2 || Number(item.paymentStatus) !== 2 || refundedTicket(item)) return false;
+  if (item.usableState) return item.usableState !== 'EXPIRED';
   const until = item.wUntil ? new Date(String(item.wUntil).replace(/-/g, '/')) : null;
   return !(until && !isNaN(until.getTime()) && until.getTime() < Date.now());
+}
+/* F13 排序:可用的在前,按 usableUntil 升序(快过期的在前,没有到期日的排可用组最后);即将开始的在后,按 usableFrom 升序 */
+function walletOrder(list) {
+  const ts = (v) => { const d = v ? new Date(String(v).replace(/-/g, '/')) : null; return d && !isNaN(d.getTime()) ? d.getTime() : Infinity; };
+  return (list || []).map((item, i) => ({ item, i })).sort((a, b) => {
+    const ua = a.item.usableState === 'UPCOMING' ? 1 : 0, ub = b.item.usableState === 'UPCOMING' ? 1 : 0;
+    if (ua !== ub) return ua - ub;
+    const ka = ua ? ts(a.item.usableFrom) : ts(a.item.wUntil), kb = ub ? ts(b.item.usableFrom) : ts(b.item.wUntil);
+    return ka !== kb ? (ka < kb ? -1 : 1) : a.i - b.i;
+  }).map(x => x.item);
 }
 
 /* 入场动画最长时长(最后一张起步 + 过渡 + 余量)后放开重排 */
 function __end(page, n, arrive) { setTimeout(() => { page._entering = false; }, 40 + Math.max(arrive ? 320 : 0, (n - 1) * 90) + 900); }
 
-/* l-after 票夹筛选(proto wl-wallet「票夹 ▾」):全部 / 即将开始(还没通关)/ 已通关,只按服务端 topicCompleted 分;
-   票夹本身仍只放能用的票(业主 2026-10-28),这里不是「可用 / 已用 / 已过期」。
-   写成函数声明(提升)放在文件尾,是为了不动 U5 基线锚定的行号(signup/index.js:425)。 */
-function walFilters() { return [{ key: 'all', label: '全部', title: '票夹' }, { key: 'upcoming', label: '即将开始', title: '即将开始' }, { key: 'done', label: '已通关', title: '已通关' }]; }
-function filterTickets(list, key) {
-  if (key === 'done') return list.filter(t => t.topicCompleted === true);
-  if (key === 'upcoming') return list.filter(t => t.topicCompleted !== true);
-  return list;
-}
-if (typeof module !== 'undefined') module.exports = { pagePoses, pageTurn, filterTickets, topicTicketIndex };
+if (typeof module !== 'undefined') module.exports = { pagePoses, pageTurn, topicTicketIndex, usableTicket, walletOrder, walletCard };

@@ -223,4 +223,13 @@ public class MerchantChapterOffer extends BaseEntity {
 
     /** AUTHOR 行(作者自己承接)。存量与商家行 supplier_kind=MERCHANT/null。 */
     public boolean isAuthorSupplied() { return SUPPLIER_AUTHOR.equals(supplierKind); }
+    /** F12:是否接受亲子票(1 大 1 小同享一份权益),0/1。 */
+    private Integer familyAccepted;
+    /** F12:儿童份说明,如「儿童份小杯」。 */
+    private String familyPerkText;
+
+    public Integer getFamilyAccepted() { return familyAccepted; }
+    public void setFamilyAccepted(Integer familyAccepted) { this.familyAccepted = familyAccepted; }
+    public String getFamilyPerkText() { return familyPerkText; }
+    public void setFamilyPerkText(String familyPerkText) { this.familyPerkText = familyPerkText; }
 }

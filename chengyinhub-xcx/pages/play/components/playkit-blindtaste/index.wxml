@@ -23,13 +23,13 @@
     </view>
     <view class="bt__hint" wx:if="{{stage === 1}}">{{stage === 0 ? '' : '按住按钮就闭眼，松手就是睁眼'}}</view>
 
-    <!-- 睁眼作答:细线行,点一条就是作答(不可撤销,所以选中后锁住) -->
+    <!-- 睁眼作答:细线行,先选、可以换,按「确认选择」才作答(不可撤销,所以确认后锁住) -->
     <view class="bt__opts {{opened ? 'is-open' : ''}}" wx:if="{{stage === 2}}">
       <view class="bt__hint bt__hint--q">刚才那杯是哪一种？</view>
-      <view class="bt__opt {{selectedKey === item.key ? 'is-on' : ''}} {{index === 0 ? 'bt__opt--first' : ''}}"
+      <view class="bt__opt {{selectedKey === item.key || (!selectedKey && chosenKey === item.key) ? 'is-on' : ''}} {{index === 0 ? 'bt__opt--first' : ''}}"
             wx:for="{{options}}" wx:key="key" data-key="{{item.key}}" bindtap="onPick"
             style="transition-delay:{{index * 80}}ms"
-            aria-role="button" aria-label="选择 {{item.key}} {{item.label}}" aria-disabled="{{locked || !!selectedKey}}"
+            aria-role="button" aria-label="选择 {{item.key}} {{item.label}}" aria-selected="{{chosenKey === item.key}}" aria-disabled="{{locked || !!selectedKey}}"
             hover-class="bt__press" hover-stay-time="80">
         <text class="bt__opt-k">{{item.key}}</text>
         <text class="bt__opt-t">{{item.label}}</text>
@@ -50,4 +50,6 @@
         aria-role="button" aria-label="小样拿到了" hover-class="g-btn--press" hover-stay-time="80">小样拿到了</view>
   <view class="g-btn" wx:elif="{{stage === 1}}" bindtouchstart="onEyesClose" bindtouchend="onEyesOpen" bindtouchcancel="onEyesOpen" bindtap="onEyesTap"
         aria-role="button" aria-label="按住闭眼，尝完松手" hover-class="g-btn--press" hover-stay-time="80">按住，闭上眼</view>
+  <view class="g-btn {{!chosenKey || answering ? 'g-btn--disabled' : ''}}" wx:elif="{{stage === 2 && !selectedKey && !locked}}" bindtap="onConfirm"
+        aria-role="button" aria-label="确认选择" aria-disabled="{{!chosenKey || answering}}" hover-class="g-btn--press" hover-stay-time="80">确认选择</view>
 </cy-play-stage>
