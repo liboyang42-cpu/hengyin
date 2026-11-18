@@ -125,20 +125,24 @@ Component({
       if (this._poolTitle !== this.data.title) { this._pool = null; this._poolSlots = null; this._poolTitle = this.data.title; }
       this._pool = letterPool.sync(this._pool, slots, pool, this._poolSlots);
       this._poolSlots = slots;
-      this._paintPool({ verdict: wrong ? 'no' : (solved ? 'ok' : this.data.verdict), active: -1, pop: -1 });
+      this._paintPool(wrong ? 'no' : (solved ? 'ok' : this.data.verdict), -1, -1);
       if (solved) motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
       else if (wrong) motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' });
     },
-    _paintPool(extra) {
+    /** 字母池重画。字段写死成字面量(不拼 patch):动态 setData 门禁核不出写了哪些顶层字段。 */
+    _paintPool(verdict, active, pop) {
       const v = letterPool.view(this._pool || letterPool.empty(), this.data.slots, this.data.pool);
-      this.setData(Object.assign({
+      this.setData({
         poolOn: true,
         groups: groupCells(v.cells),
         poolRows: v.rows,
         blankCount: letterPool.fillable(this.data.slots).length,
         canSubmit: !this.data.solved && !!letterPool.hangmanPayload(this._pool || letterPool.empty(), this.data.slots),
         canClear: !this.data.solved && v.filled > 0,
-      }, extra));
+        verdict,
+        active,
+        pop,
+      });
     },
     _popPool(slot) {
       this._clearPop();
@@ -153,7 +157,7 @@ Component({
       if (res.slot < 0) return;
       this._pool = res.state;
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' });
-      this._paintPool({ verdict: '', pop: res.slot });
+      this._paintPool('', this.data.active, res.slot);
       this._popPool(res.slot);
     },
     /** 清空:放进去的字全部退回候选区。 */
@@ -161,7 +165,7 @@ Component({
       if (this.data.solved || !this.data.poolOn || !this.data.canClear) return;
       this._pool = letterPool.clear(this._pool || letterPool.empty());
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' });
-      this._paintPool({ verdict: '', pop: -1 });
+      this._paintPool('', this.data.active, -1);
     },
     /** 点格子:把光标挪到它、唤起系统键盘。预填 / 分隔符不响应;点格子板空白处 = 接着往下填。
      *  字母池:点已填的格子 = 把字退回候选区。 */
@@ -175,7 +179,7 @@ Component({
         if (next === this._pool) return;
         this._pool = next;
         motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' });
-        this._paintPool({ verdict: '', pop: -1 });
+        this._paintPool('', this.data.active, -1);
         return;
       }
       const i = Number(e.currentTarget.dataset.i);
