@@ -14,8 +14,9 @@ const morph = require('../../../utils/morph-success.js');
 
 const BASE = '/api/play/help';
 const PENDING_KEY = 'play-help-pending:v1';
-const TYPE_LABEL = { TEXT: '文字提示', IMAGE: '图片提示', LETTER: '首字', DIGIT: '一个数字', ANSWER: '答案', SKIP: '跳过本题' };
-const RENDERABLE = ['TEXT', 'IMAGE', 'LETTER', 'DIGIT', 'ANSWER'];
+// POOL_TRIM(F03 字母池):去掉 N 个干扰字;回包 content 是一句文字(如「已去掉 3 个干扰字」),候选字要重读会话视图才少。
+const TYPE_LABEL = { TEXT: '文字提示', IMAGE: '图片提示', LETTER: '首字', DIGIT: '一个数字', ANSWER: '答案', SKIP: '跳过本题', POOL_TRIM: '去掉干扰字' };
+const RENDERABLE = ['TEXT', 'IMAGE', 'LETTER', 'DIGIT', 'ANSWER', 'POOL_TRIM'];
 
 const data = { helpPanel: { show: false, loading: false, enabled: false, error: '', nodeId: '', runId: '',
   freeLeft: null, rows: [], skip: null, notice: '', receipt: null, receiptOpen: false, receiptError: '', busy: false,
@@ -200,6 +201,8 @@ function methods(send) {
               if (this._helpCurrent(c) && this.data.helpPanel.doneLevel === row.level) this._helpSet({ doneLevel: null });
             }, hold);
           }
+          // F03:去掉干扰字记在服务端本局状态里,重读一次会话视图(与交卷后同一个读口),候选字才少下来
+          if (body.data.type === 'POOL_TRIM') this._helpRefreshSession();
           return this.loadHelpCounter(c);
         }
         if (definitive(body)) {
@@ -210,6 +213,11 @@ function methods(send) {
         }
         patchRow({ pending: true, error: '结果待确认' });
       }).catch(() => { if (this._helpCurrent(c)) patchRow({ pending: true, error: '结果待确认' }); });
+    },
+    /** 重读正开着的高级玩法会话视图(advanced-game 的 refreshState);没有玩法组件时什么都不做。 */
+    _helpRefreshSession() {
+      const game = typeof this._advancedGameComponent === 'function' ? this._advancedGameComponent() : null;
+      if (game && typeof game.refreshState === 'function') game.refreshState();
     },
     /** 用完一层后重读剩余免费次数与各层状态;不本地减次数。 */
     loadHelpCounter(c) {

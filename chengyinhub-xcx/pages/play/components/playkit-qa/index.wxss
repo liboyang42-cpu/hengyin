@@ -1,4 +1,5 @@
 @import "/pages/play/style/play-surface.wxss";
+@import "/pages/play/style/letter-pool.wxss";
 
 /* cy-playkit-qa · 三种问答共用一屏(原型真源:模板编辑页 v2 · playkit qa)
  * 配色只有黑白两版:暗版给夜里的店内(默认),亮版给白天的街区。不给自由配色 ——
