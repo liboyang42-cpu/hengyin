@@ -330,3 +330,22 @@ test('负控:检查器本身不是空的', () => {
   const fakeSettle = 'if (ln.in) return ln'
   assert.doesNotMatch(fakeSettle, /if \(ln\.in && !inView\) return \{ \.\.\.ln, in: false/)
 })
+
+test('FE-STORY:未到访的章打不开,锁卡主按钮是「我已到达 / 扫码解锁」,不进玩法', () => {
+  const story = js.slice(js.indexOf('  openChapStory() {'), js.indexOf('  closeChapStory() {'))
+  assert.match(story, /if \(v\.storyLocked === true\) return;/, '锁定的章在打开前就返回')
+  assert.match(wxml, /<cy-btn wx:if="\{\{hero\.node\.storyLocked\}\}" variant="primary" style="width:100%" bindtap="onVisitTap"/)
+  const enter = between(js, '  heroEnter(e) {', '  onHeroNativeBack() {', 'heroEnter')
+  assert.match(enter, /this\.data\.storyGate && node\.storyLocked === true\) return;/)
+  assert.match(heroView(), /this\.data\.storyGate && node\.storyLocked === true \? feVisit\.tileView\(node/)
+})
+
+test('F08:没有玩法的店点「到店打卡」不进 startGame,直接去本店权益与核销码', () => {
+  const enter = between(js, '  heroEnter(e) {', '  onHeroNativeBack() {', 'heroEnter')
+  const noGame = enter.indexOf('!node.hasGame && !node.hasAdvanced')
+  const start = enter.indexOf('this.startGame(node)')
+  assert.ok(noGame > 0 && start > noGame, '无玩法分支必须先于 startGame')
+  assert.match(enter, /\/pages\/play\/merchant\/index\?nodeId=' \+ id \+ '&verify=1'/)
+  const merchant = fs.readFileSync(path.join(ROOT, 'pages/play/merchant/index.js'), 'utf8')
+  assert.match(merchant, /String\(query && query\.verify\) === '1' && node\.arrived && !node\.done\) this\.openVerifyCode\(\)/)
+})

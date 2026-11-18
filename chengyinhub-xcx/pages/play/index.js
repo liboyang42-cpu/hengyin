@@ -429,6 +429,7 @@ const themePlans = require('./utils/theme-plans.js');
 const playerOps = require('./utils/theme-player-ops.js');
 const { loadStoryFont } = require('./utils/story-font.js'); const { storyFontUrl: STORY_FONT_URL } = require('../../utils/config.js');
 const playOverlays = require('./utils/play-hud-overlays.js'); const playTopbar = require('./utils/play-topbar.js'); const locOnce = require('./utils/play-location-once.js'); const { connectionFailure } = require('./utils/play-net-fail.js'); const playLook = require('./utils/play-look.js'); /* 故事流顶栏:罗盘⇄地图、背包、案件册、各站奖励 */
+const feStoryGate = require('./utils/fe-story-gate.js'); const feVisit = require('./utils/fe-story-visit.js'); // 自由探索:只读已到访地点的章节
 const chapterVideo = require('./chapter-video.js'); const packDetail = require('./utils/pack-detail.js'); const menuOpen = require('./utils/menu-open.js');
 Page({
   ...chapterVideo.methods, ...kitCard.methods(), ...stagePops.methods(),
@@ -476,7 +477,7 @@ Page({
   ...themeTrade.methods(req),
   ...themePlans.methods(req),
   ...playerOps.methods(req),
-  ...playOverlays.methods(req, uuid4), ...playTopbar.methods(req), ...playLook.methods(), ...locOnce.methods(),
+  ...playOverlays.methods(req, uuid4), ...playTopbar.methods(req), ...playLook.methods(), ...locOnce.methods(), ...feStoryGate.methods(),
   _routeState: normalizeRouteState(null),
 
   data: {
@@ -550,7 +551,7 @@ Page({
     themeBgmOn: true,
     topicCover: '',               // 卡包首屏底图:主题长图,虚化后铺底(没有就退回 chapter.cover)
     topicDesc: '',                // 通行证首屏那段简介:同理,chapters[0].description 讲的是第一家店的事
-    seatTiles: [], packOpen: false, packShake: false, packBurst: false,
+    seatTiles: [], storyGate: false, storyUnlocked: 0, storyTotal: 0, visitBusyId: null, packOpen: false, packShake: false, packBurst: false,
     // 点卡 hero 层:show 挂节点,open 驱动过渡(先 show 再下一帧 open,过渡才有起点)
     hero: { show: false, open: false, node: null, style: '', bodyTop: 0, ry: 0, spun: false, turned: false, sx: 0, ss: '1', faded: false, collapsed: false, scrollTop: 0 },
     // 店铺分身对话(自由探索卡片详情 → 点店铺卡)。started 一旦为真,居中的大字问候让位给消息流。
@@ -1730,6 +1731,7 @@ Page({
    *  chapter.description 一个文本域:多了按空行分段、少了就一句,不硬凑。 */
   openChapStory() {
     const v = this.data.hero.node || {};
+    if (v.storyLocked === true) return;   // 未到访的章不打开(服务端也不下发正文)
     const chapter = (this.data.chapterCards || []).find((c) => c.id != null && String(c.id) === String(v.chapterId));
     const thoughtKeys = [];
     for (const b of ((chapter && chapter.blocks) || [])) {
@@ -2543,6 +2545,7 @@ Page({
       // ⚠️ 这里**不再**把整章正文分段下发到详情:章节正文只出现在故事流里。
       // 详情重复念一遍会让「点进故事流」失去理由(用户 9-07 口径:「章节详情里不写章节内容」)。
       // 卡片背面只承载开头那一段(卡面装不下整章,长章节会溢出去)
+      ...(this.data.storyGate && node.storyLocked === true ? feVisit.tileView(node, this._loc ? this._distText(node) : '') : {}),
       chapLead: (chap ? String(chap.description || chap.sub || '') : '')
         .split(/\n\s*\n|\r?\n/).map((x) => x.trim()).filter(Boolean)[0] || '',
       hook: node.hookText || '',
@@ -2553,8 +2556,6 @@ Page({
       gameKind: node.vm === 2 ? '拍照任务' : (node.vm === 3 || node.vm === 1 ? '答题' : (node.vm === 4 ? '现场打卡' : '')),
       gameTitle: node.gameTitle || '', gameMeta: meta,
       howto, materials: node.materials || '',
-      // ④ 到店三步:第一步到店、第二步凭证、第三步商家核销
-      stepArrive: !!node.arrived, stepProof: !!node.gameDone, stepRedeem: !!node.done,
       // ⑤ 本店权益
       perkName: perk ? (perk.name || '') : '',
       perkRule: perk ? (perk.redeemRule || '到店出示核销') : '',
@@ -2615,8 +2616,14 @@ Page({
     if (id == null) return;
     const node = (this.data.nodes || []).find((n) => String(n.nodeId) === String(id));
     if (node && this._heroEntryDisabled(node)) return;
+    if (node && this.data.storyGate && node.storyLocked === true) return;   // 锁卡的主按钮是「我已到达 / 扫码解锁」,不进玩法
     if (this._heroTimer) clearTimeout(this._heroTimer);
     this.setData({ hero: { show: false, open: false, node: null, style: '', bodyTop: 0, ry: 0, spun: false, turned: false, sx: 0, ss: '1', faded: false, collapsed: false, scrollTop: 0 } });
+    // F08 / FE-GAPS G1:没有玩法的店不进 startGame —— 直接到这家的权益与核销码(商家页「我已到店」→「出示核销码」)
+    if (node && Number(this.data.mode) === 2 && Number(node.merchantId) > 0 && !node.hasGame && !node.hasAdvanced) {
+      wx.navigateTo({ url: '/pages/play/merchant/index?nodeId=' + id + '&verify=1' });
+      return;
+    }
     // 「开始互动 获得奖励!」直接进玩法面板,不再经商家页中转 ——
     // 中间那一页除了再点一次「开始」之外没有别的事可做(用户 2026-09-08 定)。
     if (node) { this.startGame(node); return; }
@@ -2633,6 +2640,7 @@ Page({
     if (value == null || value === '' || !this._isPlayAccountCurrent()) return false;
     const idx = Number(value);
     const card = Number.isInteger(idx) && (this.data.chapterCards || [])[idx];
+    if (card && this.data.storyGate && card.chapterLocked) { this._openChapterLockedCard(card); return true; }   // 自由探索:锁定的章打开锁卡
     const history = this._currentCompletedHistory();
     const frozen = card && history && history.chapters.find(chapter => chapter.id === String(card.id));
     const contradicted = frozen && frozen.blocks.some(block => block.type === 'node'
@@ -4539,6 +4547,7 @@ Page({
         loading: false, emptyTip: '', emptyKind: '', topicId: d.topicId || '', topicName, topicDesc: d.topicDesc || '', topicAudioUrl: d.topicAudioUrl || '', topicCover: d.topicCover || '', topicAiGenerated: d.topicAiGenerated === true,
         mode, serverMode: mode, playContact: playOverlays.contact(d.contact), packOpen: skipPack || that.data.packOpen, headIn: skipPack || that.data.headIn,
         modeLabel: mode == 2 ? '自由探索' : '城市定向',
+        storyGate: mode === 2 && d.storyTotal != null, storyUnlocked: Number(d.storyUnlocked) || 0, storyTotal: Number(d.storyTotal) || 0,
         routeNotice: that._routeNoticeForState(routeState),
         journeyAttributes: routeState.attributes,
         timeBanner: d.playable === false ? (d.timeNote || '') : '',
@@ -4592,6 +4601,7 @@ Page({
         // 开局不读 —— 任务型主题首站「请先开始当前任务」且无处开始。已建局就读一次。
         if (routeState.sessionId) that.refreshThemeBackpack();
         that._consumePendingStart();
+        that._consumeVisitOpen();
         // 中途重进一局(开场已看过 / 卡包已拆):主题配乐接着放,原来只在开场与拆包时起播,重进就没了(实走 A7 复核)
         const resumed = storyResume.read(that._runSessionScope());
         if (resumed.intro || resumed.packOpened) that._startThemeBgm();
@@ -4733,6 +4743,9 @@ Page({
       // 探店日卡片详情三段各自的料:章节钩子 / 店铺分身 / 本店权益。
       // 三个都只在 mode=2 下发,经典定向恒空 —— 那边的详情页不长这样。
       hookText: n.hookText || '',
+      // 自由探索到访(服务端只在 mode 2 下发;锁定时正文字段已由服务端置空)
+      ...(shopDay ? { visited: n.visited === true, visitTime: n.visitTime || null, visitCheck: feVisit.normCheck(n.visitCheck),
+        visitRadius: n.visitRadius == null ? null : Number(n.visitRadius), storyLocked: n.storyLocked === true } : {}),
       npc: n.npc || null,
       perk: n.perk || null
     };
@@ -4756,6 +4769,7 @@ Page({
       key: 'c' + i,
       opening: c.opening === true,
       complete: c.complete === true, ready: c.ready === true, locked: c.locked === true,
+      ...(c.chapterLocked === true ? { chapterLocked: true } : {}),   // 自由探索:本章地点都没到访(正文与块已由服务端置空)
       id: c.chapterId != null ? c.chapterId : (c.id != null ? c.id : null),   // 后端键=chapterId(id 是我一开始猜错的)
       category: c.category || '',
       // 占位/空名时标题本身就是「第 N 章」,上面再挂一个同样的序数标签是同一件事说两遍。
@@ -4912,6 +4926,8 @@ Page({
       })(),
       imgUrl: String(x.imgUrl || '').split(',')[0],
       imgHidden: !!x.imgHidden,
+      ...(this.data.storyGate ? Object.assign(feVisit.tileView(x, this._loc ? this._distText(x) : ''),
+        { chapterName: (chapById[String(x.chapterId)] || {}).title || '' }) : {}),
       playName: x.gameTitle || '',
       locked: !!x.locked,
       // ⚠️ normNode() 产的是 businessTime/openStatus,**从来不产 openText** ——
@@ -7354,7 +7370,8 @@ Page({
         const done = nodes.filter((n) => n.done || n.gameDone);
         const frText = node.fragmentText || '';
         // 剩余点位半屏已删(用户裁决):碎片翻卡恢复常弹,剩余点看地点卡层
-        if (frText) this.setData({ frag: { show: true, text: frText, step: '我的第 ' + done.length + ' 步 · ' + (node.name || '') } });
+        const step = this.data.storyGate ? feVisit.fragmentTitle(nodes.filter((n) => n.visited).length) : '我的第 ' + done.length + ' 步';
+        if (frText) this.setData({ frag: { show: true, text: frText, step: step + ' · ' + (node.name || '') } });
       }
       const completed = data && data.completed;
       // 已通关后再做选做站,服务端每次仍回 completed=true:只在「这一次才通关」时弹通关卡(实走 A19)

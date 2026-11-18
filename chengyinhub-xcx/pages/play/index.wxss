@@ -2266,6 +2266,18 @@ page { background: var(--cy-color-bg-page); }
 .st-stats__v { font-variant-numeric: tabular-nums; }
 .gp2__card { box-shadow: var(--cy-depth-rest); }
 /* F08:人在站点 50 米内时点亮「我已到达」(只提示,不自动到达) */
-.sheet-go--near { display: block; border-radius: var(--cy-radius-pill, 999rpx); box-shadow: 0 0 0 6rpx var(--cy-color-play-accent-soft); }
+.sheet-go--near { display: block; border-radius: var(--cy-radius-pill); box-shadow: 0 0 0 6rpx var(--cy-color-play-accent-soft); }
 /* F07:到站前的站点封面换成剪影占位,铺满封面区 */
 .sheet-cover__ss { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }
+/* 自由探索集章格(FE-STORY):进度只写「已解锁 X / N 章」;锁卡灰色描边 + 锁图标 + 主按钮;服务端确认后翻成章卡 */
+.fx-unlock { flex: none; font-size: var(--cy-type-caption); color: var(--cy-color-text-tertiary); }
+.fx-unlock__n { font-size: var(--cy-type-section-title); font-weight: 700; color: var(--cy-color-text-primary); font-variant-numeric: tabular-nums; }
+.fx-tile.is-stamp-locked { box-shadow: inset 0 0 0 2rpx var(--cy-color-border-strong); }
+.fx-tile.is-stamp-locked .fx-tile__im { filter: grayscale(1); opacity: .35; }
+.fx-tile__lockn { display: flex; align-items: center; gap: var(--cy-space-1); }
+.fx-tile__lockn text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fx-tile.is-stamp-locked .fx-tile__p { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.fx-tile__visit { display: inline-flex; align-items: center; margin-top: var(--cy-space-2); padding: 8rpx 22rpx; border-radius: var(--cy-radius-pill);
+  font-size: var(--cy-type-caption); font-weight: 600; color: var(--cy-color-play-ink); background: var(--cy-color-play-accent); }
+.fx-tile__visit.is-busy { opacity: .5; }
+.chpick__row.is-visit .chpick__cover { opacity: .5; }

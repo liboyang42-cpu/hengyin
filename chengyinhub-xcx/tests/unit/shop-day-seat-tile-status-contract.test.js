@@ -34,3 +34,15 @@ test('mutation 负控:把 statusText 从 seatTiles 挪走时契约确实变红',
   const mutated = js.replace(block, block.replace('statusText: proofStatus(x),', ''))
   assert.throws(() => assertSeatTileStatusContract(mutated, read('pages/play/index.wxml')), assert.AssertionError)
 })
+
+test('FE-STORY 集章格:seatTiles 带到访投影,锁卡/章卡都由 WXML 消费', () => {
+  const block = seatTilesBlock(read('pages/play/index.js'))
+  assert.match(block, /this\.data\.storyGate \? Object\.assign\(feVisit\.tileView\(x, this\._loc \? this\._distText\(x\) : ''\)/)
+  const wxml = read('pages/play/index.wxml')
+  assert.match(wxml, /<view class="fx-tile__c" wx:if="\{\{item\.storyLocked\}\}">/)
+  assert.match(wxml, /catchtap="onVisitTap" data-id="\{\{item\.nodeId\}\}"[^>]*>\{\{item\.visitBtn\}\}<\/view>/)
+  assert.match(wxml, /<text class="fx-tile__n">\{\{item\.chapterName \|\| item\.name\}\}<\/text>\s*<text class="fx-tile__p" wx:if="\{\{item\.visitText\}\}">/)
+  assert.match(wxml, /已解锁 <text class="fx-unlock__n">\{\{storyUnlocked\}\} \/ \{\{storyTotal\}\}<\/text> 章/)
+  // 三态/拥挤角标不受影响
+  assertSeatTileStatusContract(read('pages/play/index.js'), wxml)
+})

@@ -543,8 +543,8 @@
 <view class="chpick" wx:if="{{chapterPick.show}}">
   <view class="chpick__grab"></view>
   <view class="chpick__hd">选择章节</view>
-  <view class="chpick__row {{index==chapterPick.cur?'is-on':''}} {{chapterPick.states[index] === 'locked' ? 'is-locked' : ''}}" wx:for="{{chapterCards}}" wx:key="key"
-        data-idx="{{index}}" bindtap="onPickChapter" aria-role="button" aria-label="{{item.title}}{{chapterPick.states[index] === 'completed' ? '，已完成' : (chapterPick.states[index] === 'locked' ? '，未解锁' : '')}}" aria-disabled="{{chapterPick.states[index] === 'locked'}}" hover-class="cy-pressed" hover-stay-time="80">
+  <view class="chpick__row {{index==chapterPick.cur?'is-on':''}} {{chapterPick.states[index] === 'locked' ? 'is-locked' : ''}} {{chapterPick.states[index] === 'visit' ? 'is-visit' : ''}}" wx:for="{{chapterCards}}" wx:key="key"
+        data-idx="{{index}}" bindtap="onPickChapter" aria-role="button" aria-label="{{item.title}}{{chapterPick.states[index] === 'completed' ? '，已完成' : (chapterPick.states[index] === 'locked' ? '，未解锁' : (chapterPick.states[index] === 'visit' ? '，到访后解锁' : ''))}}" aria-disabled="{{chapterPick.states[index] === 'locked'}}" hover-class="cy-pressed" hover-stay-time="80">
     <view class="chpick__cover">
       <image wx:if="{{item.cover}}" src="{{img.first(item.cover)}}" mode="aspectFill" />
       <cy-icon wx:else name="flag" size="40" />
@@ -552,9 +552,11 @@
     <view class="chpick__copy">
       <text class="chpick__meta">{{item.meta}}{{item.category ? ' · ' + item.category : ''}}</text>
       <text class="chpick__title">{{item.title}}</text>
-      <text class="chpick__sub">{{chapterPick.states[index] === 'completed' ? '已完成 · ' : ''}}{{item.nodeCount}} 处地点{{item.mileage ? ' · ' + item.mileage : ''}}</text>
+      <text class="chpick__sub" wx:if="{{chapterPick.states[index] === 'visit'}}">到访后解锁</text>
+      <block wx:else><text class="chpick__sub">{{chapterPick.states[index] === 'completed' ? '已完成 · ' : ''}}{{item.nodeCount}} 处地点{{item.mileage ? ' · ' + item.mileage : ''}}</text></block>
     </view>
-    <cy-icon wx:if="{{index==chapterPick.cur}}" class="chpick__check" name="check" size="40" />
+    <cy-icon wx:if="{{chapterPick.states[index] === 'visit'}}" class="chpick__check" name="lock" size="32" />
+    <cy-icon wx:elif="{{index==chapterPick.cur}}" class="chpick__check" name="check" size="40" />
   </view>
 </view>
 <block wx:if="{{!screen && (!allDone || canContinueGames) && !emptyTip && !loading && !chapterFull}}">
@@ -601,7 +603,8 @@
       <view class="fx-prow">
         <!-- 已核销环:分段圆弧,一家一段,核销一家亮一段(2026-09-05 用户拍板:要圆形不要刻度条)。
              段数 = 商家数,亮暗由 JS 的 ringSegs 给;弧由 ring.wxs 拼成 SVG data URL(conic-gradient 渲染层不认)。 -->
-        <view class="fx-ring">
+        <view class="fx-unlock" wx:if="{{storyGate}}" aria-role="text">已解锁 <text class="fx-unlock__n">{{storyUnlocked}} / {{storyTotal}}</text> 章</view>
+        <view class="fx-ring" wx:else>
           <image class="fx-ring__arc" src="{{ring.svg(ringSegs)}}" mode="aspectFit" aria-hidden="true" />
           <view class="fx-ring__c">
             <text class="fx-ring__n">{{doneCount}}/{{total}}</text>
@@ -630,10 +633,10 @@
          行高由 _measureDeal() 按剩余高度等分回填 —— 写死高度时 4 家底下会空一大块。
          --tx0/--ty0 是从卡包正中起飞的偏移,--tx1/--ty1 是扇形弧顶,量不到时兜底 0px(原地淡入)。 -->
     <view class="fx-grid">
-      <view class="fx-tile {{measuring ? 'is-measuring' : ''}} {{item.fly ? 'is-flying' : ''}} {{item.land || packOpen ? 'is-dealt' : ''}} {{item.done ? 'is-done' : ''}} {{item.locked ? 'is-locked' : ''}}"
+      <view class="fx-tile {{measuring ? 'is-measuring' : ''}} {{item.fly ? 'is-flying' : ''}} {{item.land || packOpen ? 'is-dealt' : ''}} {{item.done ? 'is-done' : ''}} {{item.locked ? 'is-locked' : ''}} {{item.storyLocked ? 'is-stamp-locked' : ''}}"
             wx:for="{{seatTiles}}" wx:key="nodeId" data-id="{{item.nodeId}}" data-idx="{{index}}" bindtap="onSeatTap"
             style="{{tileH ? 'height:' + tileH + 'px;' : ''}}--tx0:{{item.tx0 || '0px'}};--ty0:{{item.ty0 || '0px'}};--tx1:{{item.tx1 || '0px'}};--ty1:{{item.ty1 || '0px'}};--rot:{{item.rot || '0deg'}}"
-            aria-role="button" aria-label="{{item.chapterLabel ? item.chapterLabel + '，' : ''}}{{item.name}}{{item.done ? '，已体验' : ''}}" hover-class="cy-pressed" hover-stay-time="80">
+            aria-role="button" aria-label="{{item.chapterLabel ? item.chapterLabel + '，' : ''}}{{item.name}}{{item.done ? '，已体验' : ''}}{{item.storyLocked ? '，未解锁' : ''}}" hover-class="cy-pressed" hover-stay-time="80">
         <image class="fx-tile__im" wx:if="{{item.imgUrl}}" src="{{img.first(item.imgUrl)}}" mode="aspectFill" />
         <cy-station-silhouette class="fx-tile__ph" wx:elif="{{item.imgHidden}}" num="{{index + 1}}" />
         <!-- 无图兜底:商家没传封面时上半部会整片空,给一个可辨认的占位而不是留白 -->
@@ -652,7 +655,17 @@
         <block wx:if="{{item.crowded || item.statusText}}">
         <view class="fx-tile__st">{{item.crowded && !item.done ? (item.waitText || '排队中，建议先去别家') : item.statusText}}</view>
         </block>
-        <view class="fx-tile__c">
+        <!-- 自由探索集章格(storyGate):锁卡 = 锁图标 + 地点名 + 距离 + 钩子 + 「我已到达 / 扫码解锁」;已解锁 = 章名 + 到访日期 -->
+        <view class="fx-tile__c" wx:if="{{item.storyLocked}}">
+          <view class="fx-tile__n fx-tile__lockn"><cy-icon name="lock" size="24" /><text>{{item.name}}</text></view>
+          <text class="fx-tile__p" wx:if="{{item.distText || item.hookText}}">{{item.distText}}{{item.distText && item.hookText ? ' · ' : ''}}{{item.hookText}}</text>
+          <view class="fx-tile__visit {{visitBusyId == item.nodeId ? 'is-busy' : ''}}" catchtap="onVisitTap" data-id="{{item.nodeId}}" aria-role="button" aria-label="{{item.visitBtn}}，{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">{{item.visitBtn}}</view>
+        </view>
+        <view class="fx-tile__c" wx:elif="{{storyGate}}">
+          <text class="fx-tile__n">{{item.chapterName || item.name}}</text>
+          <text class="fx-tile__p" wx:if="{{item.visitText}}">{{item.visitText}}</text>
+        </view>
+        <view class="fx-tile__c" wx:else>
           <text class="fx-tile__n">{{item.name}}</text>
             <!-- 卡面出「玩什么」不出价格:价格 master 已删;游戏名是用户明确要的,补回来。
                  券名不再渲染 —— master 已把 couponName 从 seatTiles 移除,留着只会是空串。 -->
@@ -783,6 +796,7 @@
       <!-- ① 章节:这一段讲的是「这一章」,不是这个玩法 -->
       <view class="fx-hero__ey fx-hero__in" style="--i:1" wx:if="{{hero.node.chapMeta}}">{{hero.node.chapMeta}}</view>
       <view class="fx-hero__name fx-hero__in" style="--i:1">{{hero.node.chapName || hero.node.name}}</view>
+      <view class="fx-hero__ey fx-hero__in" style="--i:2" wx:if="{{hero.node.storyLocked && hero.node.distText}}">{{hero.node.distText}}</view>
       <view class="fx-hero__hook fx-hero__in" style="--i:2" wx:if="{{hero.node.hook}}"><text class="fx-hero__hook-k">小瘾说</text>{{hero.node.hook}}</view>
 
       <!-- ② 店铺:整卡可点进分身对话;导航行单独可点,不跟卡片抢 -->
@@ -849,20 +863,12 @@
         </view>
       </block>
 
-      <!-- ④ 到店三步 -->
-      <block wx:if="{{hero.node.isMerchant}}">
-      <view class="fx-hero__ey fx-hero__ey--gap fx-hero__in" style="--i:5">到店三步</view>
-      <view class="fx-step3 fx-hero__in" style="--i:5">
-        <view class="fx-step {{hero.node.stepArrive ? 'is-ok' : ''}}"><text class="fx-step__n">1</text><text class="fx-step__t">扫描门店码 · 记录到店时间</text></view>
-        <view class="fx-step {{hero.node.stepProof ? 'is-ok' : ''}}"><text class="fx-step__n">2</text><text class="fx-step__t">拍摄现场凭证 · 到店后显示拍摄要求</text></view>
-        <view class="fx-step {{hero.node.stepRedeem ? 'is-ok' : ''}}"><text class="fx-step__n">3</text><text class="fx-step__t">商家核销 · 核销那一刻才算服务开始</text></view>
-      </view>
-      </block>
-
       <view class="fx-hero__pad"></view>
     </scroll-view>
     <view class="fx-hero__cta fx-hero__in" style="--i:3">
-      <cy-btn variant="{{hero.node.entryDisabled ? 'disabled' : 'primary'}}" style="width:100%" bindtap="heroEnter"
+      <cy-btn wx:if="{{hero.node.storyLocked}}" variant="primary" style="width:100%" bindtap="onVisitTap" data-id="{{hero.node.nodeId}}"
+              accessibility-label="{{hero.node.visitBtn}}">{{hero.node.visitBtn}}</cy-btn>
+      <cy-btn variant="{{hero.node.entryDisabled ? 'disabled' : 'primary'}}" style="width:100%" bindtap="heroEnter" wx:else
               accessibility-label="{{hero.node.entryDisabled ? '这一家已核销' : (hero.node.done ? '继续本店未完成玩法' : '到店打卡，进入本店玩法')}}">{{hero.node.entryDisabled ? '已核销' : (hero.node.done ? '继续互动' : '到店打卡')}}</cy-btn>
     </view>
   </view>
