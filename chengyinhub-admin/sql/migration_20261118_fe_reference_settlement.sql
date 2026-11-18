@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS fe_reference_settlement (
     CONSTRAINT ck_fe_ref_supplier CHECK (supplier_kind IN ('MERCHANT','AUTHOR')),
     CONSTRAINT ck_fe_ref_payer CHECK (payer_kind IN ('CLUB','MEMBER')),
     CONSTRAINT ck_fe_ref_amount CHECK (quantity >= 0 AND unit_amount >= 0 AND amount >= 0)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='自由探索店铺参考结算（不入余额，线下结款）';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='自由探索店铺参考结算（不入余额，线下结款）';
 
 -- runner: assert=scalar-true
 SELECT CAST(IF(
