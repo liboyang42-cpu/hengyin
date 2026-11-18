@@ -3,6 +3,7 @@ const { readReducedMotion } = require('../../../utils/motion-preference.js'); co
 const modal = require('../../../utils/modal.js');
 const cyLoading = require('../../../utils/loading.js');
 const cyToast = require('../../../utils/toast.js');
+const familyTicket = require('../utils/family-ticket.js'); // F12 亲子票
 const { toTimestamp } = require('../../../utils/datetime.js');
 let app = getApp();
 const { memberId, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../utils/session/login-reload.js');
@@ -6254,7 +6255,11 @@ Page({
           saleEndTime: ticket.saleEndTime || '',
           description: ticket.description || '',
           refundSupported: ticket.refundSupported !== false,
-          syncWithTheme: ticket.syncWithTheme || false
+          syncWithTheme: ticket.syncWithTheme || false,
+          // F12 亲子票人数构成
+          childCount: Number(ticket.childCount) === 1 ? 1 : 0,
+          childAgeMin: ticket.childAgeMin == null ? '' : ticket.childAgeMin,
+          childAgeMax: ticket.childAgeMax == null ? '' : ticket.childAgeMax
         }
       }, () => { this.refreshTicketSaveState(); this._revealTicketEditor(); });
     } else {
@@ -6279,10 +6284,25 @@ Page({
           saleEndTime: '',
           description: '',
           refundSupported: true,
-          syncWithTheme: false
+          syncWithTheme: false,
+          childCount: 0,
+          childAgeMin: '',
+          childAgeMax: ''
         }
       }, () => { this.refreshTicketSaveState(); this._revealTicketEditor(); });
     }
+  },
+
+  // F12「亲子票」模板按钮:新建一张 1 大 1 小的票种,构成和常见年龄段(3–12 岁)预填好
+  openFamilyTicketEditor() {
+    this.openTicketEditor({ currentTarget: { dataset: { index: -1 } } });
+    const draft = familyTicket.familyTicketDraft();
+    this.setData({
+      'editingTicket.name': draft.name,
+      'editingTicket.childCount': draft.childCount,
+      'editingTicket.childAgeMin': draft.childAgeMin,
+      'editingTicket.childAgeMax': draft.childAgeMax
+    }, () => this.refreshTicketSaveState());
   },
 
   // x-fix5 A-3:编辑器在票种列表底部展开时,「添加票种 / 收起」这一行会落在底栏(返回/预览)下面够不着。
@@ -6323,7 +6343,7 @@ Page({
     if (Number(et.mode) === 1 && !nonEmpty(et.meetingPoint)) return '请选择集合地点';
     // 只有自由探索能开售前定价;从自由探索切到城市定向时留下的空价必须补上
     if (Number(et.mode) === 1 && (et.price === '' || et.price == null)) return '请填写票价';
-    return '';
+    return familyTicket.familyBlockReason(et);
   },
 
   // 票种保存的第一条拦截原因(与 refreshTicketSaveState 的可用态同一套判据)。
@@ -6371,6 +6391,7 @@ Page({
       refundSupported: et.refundSupported,
       syncWithTheme: et.syncWithTheme
     };
+    Object.assign(ticketData, familyTicket.familyFields(et)); // F12 亲子票人数构成(普通票 1+0、不带年龄段)
     const savedTicketId = Number(et.id);
     if (Number.isSafeInteger(savedTicketId) && savedTicketId > 0) ticketData.id = savedTicketId;
     let tickets = [...this.data.formData.tickets];
