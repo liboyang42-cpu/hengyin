@@ -187,6 +187,11 @@ final class ChapterFlowCompiler
                 {
                     throw invalid(chapterNumber, "只有正文段可以设置段落样式或文字格式");
                 }
+                if (Boolean.TRUE.equals(block.getOptional())
+                        && (!TYPE_TEXT.equals(block.getType()) || ChapterNarrativeBlocks.isNarrativeBlock(block)))
+                {
+                    throw invalid(chapterNumber, "只有正文段可以设为延伸阅读");
+                }
                 if (TYPE_TEXT.equals(block.getType()))
                 {
                     if (block.getWho() != null && block.getWho().trim().length() > 20)
