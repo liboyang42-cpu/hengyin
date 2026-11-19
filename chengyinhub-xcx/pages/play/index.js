@@ -444,9 +444,9 @@ const playerOps = require('./utils/theme-player-ops.js');
 const { loadStoryFont } = require('./utils/story-font.js'); const { storyFontUrl: STORY_FONT_URL } = require('../../utils/config.js');
 const playOverlays = require('./utils/play-hud-overlays.js'); const playTopbar = require('./utils/play-topbar.js'); const locOnce = require('./utils/play-location-once.js'); const { connectionFailure } = require('./utils/play-net-fail.js'); const playLook = require('./utils/play-look.js'); const stageEvents = require('./utils/stage-events.js'); const { perkOnlyOf } = require('./utils/perk-only.js'); const runStartMode = require('./utils/run-start-mode.js'); const evidenceKit = require('./utils/evidence-cards.js'); /* 故事流顶栏:罗盘⇄地图、背包、案件册、各站奖励 */
 const feStoryGate = require('./utils/fe-story-gate.js'); const feVisit = require('./utils/fe-story-visit.js'); // 自由探索:只读已到访地点的章节
-const chapterVideo = require('./chapter-video.js'); const packDetail = require('./utils/pack-detail.js'); const menuOpen = require('./utils/menu-open.js');
+const chapterVideo = require('./chapter-video.js'); const packDetail = require('./utils/pack-detail.js'); const menuOpen = require('./utils/menu-open.js'); const castPlay = require('./utils/cast-play.js'); /* 角色 Cast v1:页边名字 / 起名 / 人物表 / 角色卡 / 行内选项 */
 Page({
-  ...chapterVideo.methods, ...kitCard.methods(), ...stagePops.methods(),
+  ...chapterVideo.methods, ...kitCard.methods(), ...stagePops.methods(), ...castPlay.methods(req),
   ...journeyCheckRecovery.methods(req),
   ...orientLifecycle.methods((url, method, data) => {
     const header = { 'content-type': 'application/x-www-form-urlencoded' };
@@ -496,7 +496,7 @@ Page({
   _routeState: normalizeRouteState(null),
 
   data: {
-    ...orientLifecycle.data, ...evidenceKit.data, ...stageEvents.data, ...runStartMode.data, ...playTopbar.data, ...playHelpPanel.data, ...kitCard.data, ...locOnce.data, ...stagePops.data,
+    ...orientLifecycle.data, ...castPlay.data, ...evidenceKit.data, ...stageEvents.data, ...runStartMode.data, ...playTopbar.data, ...playHelpPanel.data, ...kitCard.data, ...locOnce.data, ...stagePops.data,
     arrivalGuard: null,
     guardAppealView: null,
     communityPostWrite: false,
@@ -1105,7 +1105,7 @@ Page({
   },
 
   onUnload() {
-    audioSession.pauseAll(false);
+    audioSession.pauseAll(false); this._castStopVoice();
     this.finishChapterVideo(null, false);
     if (this._trail) this._trail.persist();
     if (this._teamTrail) this._teamTrail.pause();
@@ -3861,7 +3861,7 @@ Page({
     let curMood = '';
     let curOdd = 0;   // 越往后越不正常:odd 块起的档位,之后每段都带着(同 mood)
     // cond:试玩里条件正文的「只给谁看」标签(真玩家拿到的条件块已由服务端按本局标签筛过,不带这个)
-    const push = (t, cond, literal) => { String(t || '').split(/\n+/).forEach((x, i) => { const v = x.trim(); if (v) items.push({ kind: 'text', text: keepNumerals(applyStoryVars(v, literal ? null : vars)), mood: curMood, odd: curOdd, cond: i === 0 && cond ? cond : '' }); }); };
+    const push = (t, cond, literal, who) => { String(t || '').split(/\n+/).forEach((x, i) => { const v = x.trim(); if (v) { items.push({ kind: 'text', text: keepNumerals(applyStoryVars(v, literal ? null : vars)), mood: curMood, odd: curOdd, cond: i === 0 && cond ? cond : '', who: who || '' }); who = ''; } }); };   // who:说话人画在页边、只标首段(契约 Hard UI rules,不再拼「某某：」)
     const condOf = (b) => (this.data.isPreview && b.when ? String(b.condLabel || '有条件才看到') : '');
     // 真实章节封面是叙事的第一屏，也必须进入 chapterParas，才能和正文共用近焦/渐隐测量。
     if (this.data.chapter && this.data.chapter.cover) {
@@ -3944,7 +3944,7 @@ Page({
         } else if (b.type === 'text') {
           const previousOdd = curOdd;
           if (b.level != null) curOdd = Math.max(0, Math.min(3, Number(b.level) || 0));
-          push(b.who ? String(b.who) + '：' + String(b.content || '') : b.content, condOf(b));
+          push(b.content, condOf(b), false, b.who ? String(b.who) : '');
           curOdd = previousOdd;
         }
         else if ((b.type === 'image' || b.type === 'audio') && b.url) {
@@ -3972,7 +3972,7 @@ Page({
           (b.images || []).filter((im) => im && im.url).forEach((im, i) => {
             items.push({ kind: 'image', text: '', url: String(im.url), altText: i === 0 && typeof b.altText === 'string' ? b.altText.trim() : '', mood: curMood, odd: curOdd });
           });
-        } else if (b.type === 'branch') {
+        } else if (b.type === 'line' || b.type === 'branch') { if (this._castBlock(b, items, { mood: curMood, odd: curOdd, vars, readOnly, cond: condOf(b) }) === 'stop') break;   // 角色 Cast v1:台词 = 普通段落;开了角色的主题,分支块在正文末尾行内选(E3)
           // 分支任务(l-editor):问题 + 2–3 条分支与去向(continue / end / chapter:N)。玩家端的分支选择弹窗归 l-play;
           // 接上之前不产出 item(items 必须与 .chfull__para 一一对应),也不把问题当正文显示 —— 不画点不动的选项。
         } else if (b.type === 'cap') {
@@ -4024,7 +4024,7 @@ Page({
     audioSession.keepAwake('chapterFull', true);
     this.setData({
       chapterFull: true,
-      chapterParas: items.map((item, i) => Object.assign({
+      chapterParas: this._castParas(items).map((item, i) => Object.assign({
         i, text: '', url: '', audioKey: 'ch' + i,
         in: !!this.data.reducedMotion, dir: 'up', d: 0,
       }, item, item.url ? { url: secureOwnMedia(item.url) } : {}, this._textFx(item, i))),   /* 故事流语音 / 配图升 https;文字动效:选过风格的主题才有 */
@@ -4057,7 +4057,7 @@ Page({
   /** 开局第一屏:故事主题先看开场页(原型 game-intro),「开始游戏」之后才进故事流;
    *  这一局看过就不再出现(试玩每次都看)。不是故事主题直接进故事流。 */
   _openStory() {
-    const chapter = this.data.chapter || {};
+    if (this._castGate(() => this._openStory())) return; const chapter = this.data.chapter || {};   // 角色 Cast v1:先起名(C)与人物表(E1),再进正文
     const seen = !this.data.isPreview && !!storyResume.read(this._runSessionScope()).intro;
     if (!Array.isArray(chapter.blocks) || seen || this.data.storyIntro.show) { this.openChapterFull(); return; }
     this.setData({ storyIntro: { show: true, out: false, title: this.data.topicName || chapter.name || '', line: introLine(this.data.topicDesc) } });
@@ -4417,7 +4417,7 @@ Page({
     const cards = (this.data.chapterCards || []).filter(card => !card.opening);
     const index = cards.findIndex(card => String(card.id) === String(chapter.id));
     this._pendingChapterGateKey = key;
-    const flip = chapterFlip.buildGateFlip({ cards, chapterId: chapter.id, nodes: this.data.nodes, topicCover: this.data.topicCover, topicName: this.data.topicName, desc: introLine(chapter.description), elapsed: this._gateElapsed() }); if (chapter.opening) Object.assign(flip, { endInfo: null, info: { kicker: chapter.name === '序章' ? '' : '序章', title: chapter.name || '', desc: introLine(chapter.description), stats: [] } });
+    const flip = chapterFlip.buildGateFlip({ cards, chapterId: chapter.id, nodes: this.data.nodes, topicCover: this.data.topicCover, topicName: this.data.topicName, desc: introLine(chapter.description), elapsed: this._gateElapsed() }); if (chapter.opening) Object.assign(flip, { endInfo: null, info: { kicker: chapter.name === '序章' ? '' : '序章', title: chapter.name || '', desc: introLine(chapter.description), stats: [] } }); if (this._castOn() && !chapter.opening && index >= 0) flip.info = Object.assign({}, flip.info, { book: '第' + (index + 1) + '章' });   // E2 书页式章首
     const held = !chapter.opening && this._leadHolds(chapter.id);   // P-08:先停在「等待放行」屏,放行后才放翻转门
     this.setData({ chapterGate: Object.assign({ show: true, held, number: chapter.opening ? 0 : (index < 0 ? 1 : index + 1), // 眉标已写「序章 / 第 N 章 / 共 M 章」,副标题再放序数标签就是同一句印两遍(2026-09-22 走查)。
       total: Math.max(cards.length, 1), title: chapter.name || '', subtitle: '', look: this._look ? { style: this._look.style, palette: this._look.palette || '', legacy: !!this._look.legacy } : null }, flip) });   // l-icons:圆点章节号 / 章节印的颜色跟外观
@@ -4579,7 +4579,7 @@ Page({
       /* 故事变量的两个来源之一(另一个是 advanced 会话视图):/api/play/nodes 回包 data.vars。
          章节文本与节点 story 大多数时候在这个点的会话之前就被读到 —— 只从会话视图取的话
          {name} 会一直原样留着,所以这条必须在首屏成功分支里落。 */
-      that._applyStoryVars(d); that._applyLook(d.look); that._probeCasebook(d.routeState);
+      that._applyStoryVars(d); that._applyLook(d.look); that._probeCasebook(d.routeState); that._applyCast(d);
       that._puzzlePersonalBest = Number(d.puzzlePersonalBest) || 0;
       // 原局历史只认 /history 的冻结快照；/nodes 的当前作者投影不能冒充旧剧情。
       const catalog = raw.map((n, i) => that.normNode(n, i, mode));
@@ -7897,7 +7897,7 @@ Page({
     if ((kit.type === 'profile' || kit.type === 'note') && !this.data.isPreview && !this.data.isMock) kit.draftKey = storyResume.draftKey(this._runSessionScope(), active.node.nodeId);
     // 故事里的玩法站也有提示阶梯:每站读一次(没有阶梯时 enabled=false,什么都不出)
     const loadKitHelp = !kit.done && !this.data.isPreview && String(this.data.helpPanel.nodeId) !== String(active.node.nodeId);
-    this.setData({ playKit: kitCard.playKitState(this.data.playKit, kit, inline, ready, this._kitStartFull === String(active.node.nodeId)) }, () => { if (loadKitHelp && current()) this.loadHelpLadder(); });   // V3-10/53/11:要整屏的玩法在流里只放入口卡;l-play:玩法开始弹窗选了「全屏」就整屏开
+    this.setData({ playKit: kitCard.playKitState(this.data.playKit, kit, inline, ready, this._kitStartFull === String(active.node.nodeId), this._castOn()) }, () => { if (loadKitHelp && current()) this.loadHelpLadder(); });   // V3-10/53/11:要整屏的玩法在流里只放入口卡;l-play:玩法开始弹窗选了「全屏」就整屏开
     if (advanceStory) {
       const nodeId = String(active.node.nodeId);
       setTimeout(() => {
@@ -8810,7 +8810,7 @@ Page({
     const finish = () => { if (isCurrent()) { this._lifeEndingPendingScope = ''; next(); } };
     req('/api/play/journey/ending', 'GET', params, undefined, true).then((res) => {
       if (!isCurrent()) return;
-      const d = res && (res.code == 200 || res.code == '200') ? res.data : null;
+      const d = res && (res.code == 200 || res.code == '200') ? res.data : null; this._castEnding(d);   // E6:服务端信任 → 「他们怎么看你」
       if (!res || !(res.code == 200 || res.code == '200')) { finish(); return; }
       // 没配结局的路线也给同一张「本局完成」卡(标题取主题名,档案取本局走过的站),不是只有故事路线才有
       const ending = d && d.title ? d : { code: '', title: this.data.topicName || '本局完成', summary: '' };

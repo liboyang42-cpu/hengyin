@@ -1,6 +1,6 @@
 const modal = require('../../../utils/modal.js'); const { safeUserMessage } = require('../../../utils/transport/safe-user-message.js'); const referral = require('../../../utils/commerce/referral.js'); const parallax = require('../utils/parallax.js'); const pageMotion = require('../../../utils/page-motion.js');
 const loading = require('../../../utils/loading.js');
-const imgFade = require('../../../utils/img-fade.js'); // motion-1118 v2:封面 / 头图在占位色上淡入
+const imgFade = require('../../../utils/img-fade.js'); const castPlay = require('../../play/utils/cast-play.js'); // motion-1118 v2:封面 / 头图在占位色上淡入;角色 Cast v1 · E5「人物」(配置顺手缓存给游玩页)
 const toast = require('../../../utils/toast.js');
 const app = getApp();
 const { chinaParts } = require('../../../utils/datetime.js');
@@ -134,7 +134,7 @@ Page({
     // 2026-10-22 业主:三个标签 = 详情 / 故事 / 路线(自由探索没有固定路线,第三个叫「地点」)
     topicTabs: [{ key: '0', label: '详情' }, { key: '1', label: '故事' }, { key: '2', label: '路线' }],
     // ===== 2026-10-22 动效与新增块(docs/design/动效界面落地_20261022) =====
-    imgOn: {}, coverImages: [], kbIdx: 0, coverLeaving: false, detailEnter: false, heroIdx: 0, navSolid: false, storyChars: [], routeNote: '', sketchPoints: [], routeReal: false, tabPre: false, tabRun: false, buyOpts: [], buySel: 0, sessionPreferName: '',
+    imgOn: {}, coverImages: [], kbIdx: 0, coverLeaving: false, detailEnter: false, heroIdx: 0, navSolid: false, storyChars: [], castRow: [], routeNote: '', sketchPoints: [], routeReal: false, tabPre: false, tabRun: false, buyOpts: [], buySel: 0, sessionPreferName: '',
     publisher: { name: '', avatar: '' }, heroCta: { kind: '', text: '' }, faved: false,
     docked: false, dockCtaStyle: '', dockFavStyle: '',
     shareCard: { show: false, card: {} },
@@ -2326,7 +2326,7 @@ Page({
           that._canReport = canReportTopic(res.data, typeof app.getUserID === 'function' ? app.getUserID() : '');
           const routeStyle = routeMapStyleOf(res.data);
           that.setData({
-            info: res.data, mapSubkey: routeStyle.mapSubkey, mapLayerStyle: routeStyle.mapLayerStyle, openChapterKey: '',
+            info: res.data, castRow: castPlay.routeCastRow(castPlay.remember(that.data.id, res.data.castConfig)), mapSubkey: routeStyle.mapSubkey, mapLayerStyle: routeStyle.mapLayerStyle, openChapterKey: '',
             // P0(2026-09-05 审核):已购态不再只信 URL 参数 is_join(全仓只有订单详情会传 1,
             // 从首页/搜索进来的已购用户永远看不到「开始玩」)。/info-to-user 已按 ownerType=1 &
             // registrationStatus=2 回填 isSignUp,与自玩通行证的建单口径同源,直接用它。

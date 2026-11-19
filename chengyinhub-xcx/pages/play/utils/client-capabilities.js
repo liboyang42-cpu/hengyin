@@ -16,7 +16,7 @@ const VERSION = 1;
 const PLATFORM = 'wechat-miniprogram';
 
 /** 故事流块:pages/play/index.js buildChapterParas 逐类渲染(node/text/image/audio/dream/mood/reveal/odd/voice/thought/divider)。 */
-const STORY_BLOCKS = ['node', 'text', 'image', 'audio', 'dream', 'mood', 'reveal', 'odd', 'voice', 'thought', 'divider', 'gallery', 'branch', 'cap']; // gallery / branch / cap:2026-11-10 l-editor 编辑器原型 v2 的三种块
+const STORY_BLOCKS = ['node', 'text', 'image', 'audio', 'dream', 'mood', 'reveal', 'odd', 'voice', 'thought', 'divider', 'gallery', 'branch', 'cap', 'line']; // gallery / branch / cap:2026-11-10 l-editor 编辑器原型 v2 的三种块;line:2026-11-19 角色 Cast v1 台词块(页边名字的普通段落)
 
 /** 完成方式:normNode 认 0–6;8/9/10 由同名玩法段渲染、到达收尾;7(App 传感器)本端没有提交入口,不声明。 */
 const ANSWER_METHODS = ['answer.arrive', 'answer.text', 'answer.photo', 'answer.choice', 'answer.scan', 'answer.gps',

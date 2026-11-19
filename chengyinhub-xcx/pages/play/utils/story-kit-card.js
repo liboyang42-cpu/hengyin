@@ -26,8 +26,9 @@ const KIT_CARD_META = {   // illus = 没有站点配图时入口卡上的插图(
 
 /** 会话视图刷新后 playKit 的新状态:整屏 kit 照旧 show;内嵌里要整屏的那批 → 入口卡(已点开的保持开着)。
  *  l-play:玩法开始弹窗选了「全屏」(full)的内嵌玩法,同一个 kit 盖整屏开(show),退出回到流里(见 _collapseKitCard)。 */
-function playKitState(prev, kit, inline, ready, full) {
-  const pop = !!inline && !!kit && KIT_POP_FROM_CARD.indexOf(kit.type) >= 0;
+function playKitState(prev, kit, inline, ready, full, inlineBranch) {
+  /* 角色 Cast v1(E3):开了角色的主题,分支在阅读栏里就地选(编号发丝行,cy-playkit-branch 本身),不再弹窗 */
+  const pop = !inlineBranch && !!inline && !!kit && KIT_POP_FROM_CARD.indexOf(kit.type) >= 0;
   const card = pop || (!!inline && !!kit && KIT_FULLSCREEN_FROM_CARD.indexOf(kit.type) >= 0);
   const keepOpen = (card && !!(prev && prev.card && prev.show)) || (!!inline && !!full && !!(prev && prev.show && prev.kit && prev.kit.type === kit.type));
   const meta = card ? KIT_CARD_META[kit.type] : null;
