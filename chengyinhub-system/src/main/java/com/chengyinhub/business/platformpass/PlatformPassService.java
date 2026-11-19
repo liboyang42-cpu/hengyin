@@ -83,6 +83,8 @@ public class PlatformPassService {
     @Autowired(required = false) private IWeChatMiniSessionService miniSessions;
     @Autowired(required = false) private UmsMemberMapper memberMapper;
     @Autowired(required = false) private com.chengyinhub.business.mapper.CmsRegistrationMapper registrationMapper;
+    @Autowired(required = false)
+    private org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.IImService> imServiceProvider;
 
     public PlatformPassService(PlatformPassMapper mapper, PlatformPassProperties properties,
                                PlatformTransactionManager transactions) {
@@ -112,18 +114,35 @@ public class PlatformPassService {
         }
         out.put("plans", plans);
         out.put("libraryCount", includedCount(new Date()));
+        out.put("terms", terms(plans));
         out.put("channels", channels());
         if (memberId != null && memberId > 0) out.put("holding", holding(memberId, new Date()));
         return out;
     }
 
-    /** 「通行证含」的主题数：与领取同一口径（配置范围 + 已发布 + 自玩可领），不含已停售/已过期/非自玩。 */
+    /**
+     * 「通行证含」的主题数：与领取同一口径（配置范围 + 公开目录 + 自玩可领），不含已停售/已过期/非自玩。
+     * OR-016：由一条计数 SQL 给出，条件与 {@link #selfPlayAvailable} 逐条对应，不再拉 500 行回 Java 逐个判。
+     */
     private int includedCount(Date now) {
-        int n = 0;
-        for (Map<String, Object> t : mapper.selectLibrary(null, 500)) {
-            if (properties.coversTopic(num(t.get("id"))) && selfPlayAvailable(t, now)) n++;
+        return mapper.countIncludedLibrary(properties.getCoverageTopicIds(), now);
+    }
+
+    /** OR-024：通行证页的简短条款，只描述已有规则（不改变售卖与退款行为）。 */
+    static List<String> terms(List<Map<String, Object>> plans) {
+        List<String> lines = new ArrayList<>();
+        lines.add("有效期内可领取通行证含的主题自玩票");
+        List<String> spans = new ArrayList<>();
+        for (Map<String, Object> plan : plans) {
+            if (plan.get("title") != null && plan.get("validDays") != null) {
+                spans.add(String.valueOf(plan.get("title")) + plan.get("validDays") + "天");
+            }
         }
-        return n;
+        if (!spans.isEmpty()) lines.add("有效期：" + String.join("，", spans) + "，自开通起算");
+        lines.add("仅本人可用，不含同行人");
+        lines.add("不自动续费");
+        lines.add("退款为整单退款，领取过主题需人工审核");
+        return lines;
     }
 
     public Map<String, Object> holding(long memberId, Date now) {
@@ -199,6 +218,22 @@ public class PlatformPassService {
         }
         out.put("rows", rows);
         out.put("covered", !rows.isEmpty() && rows.stream().allMatch(r -> Boolean.TRUE.equals(r.get("passCovered"))));
+        return out;
+    }
+
+    /**
+     * OR-002：游客版主题库。与 {@link #library} 同一公开目录与「通行证含」口径，
+     * 但不带任何个人覆盖字段（passCovered / covered）。
+     */
+    public Map<String, Object> publicLibrary(Integer productType, int limit) {
+        Map<String, Object> out = library(null, productType, limit);
+        out.remove("covered");
+        Object rows = out.get("rows");
+        if (rows instanceof List<?> list) {
+            for (Object row : list) {
+                if (row instanceof Map<?, ?> map) map.remove("passCovered");
+            }
+        }
         return out;
     }
 
@@ -429,8 +464,10 @@ public class PlatformPassService {
 
     public Map<String, Object> cancel(long memberId, String orderNo) {
         Map<String, Object> order = ownedOrder(memberId, orderNo);
-        if (num(order.get("status")) == PENDING) {
-            mapper.markCancelled(num(order.get("id")), memberId, new Date());
+        // OR-008：只有待支付单可取消；非待支付明确拒绝，并发下 0 行同样按冲突返回，不再静默成功。
+        if (num(order.get("status")) != PENDING
+                || mapper.markCancelled(num(order.get("id")), memberId, new Date()) != 1) {
+            throw PlatformPassException.conflict("ORDER_NOT_CANCELLABLE", "订单当前不可取消");
         }
         return orderView(mapper.selectOrderByNo((String) order.get("order_no")));
     }
@@ -741,7 +778,10 @@ public class PlatformPassService {
         String why = reason == null || reason.isBlank() ? "申请退款" : reason.trim();
         if (why.length() > 255) why = why.substring(0, 255);
         String facts = usageFacts(order);
-        mapper.requestReview(num(order.get("id")), why, facts);
+        // OR-006：已有待处理申请（或状态已变）时 0 行，按冲突返回，避免重复申请被当作成功。
+        if (mapper.requestReview(num(order.get("id")), why, facts) != 1) {
+            throw PlatformPassException.conflict("REFUND_REVIEW_PENDING", "退款申请已在处理中");
+        }
         return orderView(mapper.selectOrderByNo((String) order.get("order_no")));
     }
 
@@ -759,9 +799,39 @@ public class PlatformPassService {
             return mapper.selectOrderByNo(orderNo.trim());
         });
         if (approve) {
-            return requestRefund((String) order.get("order_no"), operator, (String) order.get("review_apply_reason"));
+            Map<String, Object> refunded = requestRefund((String) order.get("order_no"), operator,
+                    (String) order.get("review_apply_reason"));
+            notifyReview(order, true, finalDecision);
+            return refunded;
         }
+        notifyReview(order, false, finalDecision);
         return orderView(order);
+    }
+
+    /**
+     * OR-007：复核结果走既有系统会话（城瘾小助手）卡片通知玩家。通知失败只记日志，不影响已落库的复核与退款。
+     */
+    void notifyReview(Map<String, Object> order, boolean approved, String note) {
+        if (imServiceProvider == null || order == null) return;
+        try {
+            Long memberId = order.get("member_id") == null ? null : num(order.get("member_id"));
+            if (memberId == null || memberId <= 0) return;
+            com.chengyinhub.business.service.IImService im = imServiceProvider.getIfAvailable();
+            if (im == null) return;
+            String title = approved ? "通行证退款已受理" : "通行证退款申请未通过";
+            String outcome = approved ? "你的通行证退款申请已通过，退款将原路退回" : "你的通行证退款申请未通过，通行证继续有效";
+            boolean hasNote = !approved && note != null && !note.isBlank();
+            Map<String, Object> result = new LinkedHashMap<>();
+            result.put("bizType", "platform_pass_refund");
+            result.put("orderNo", order.get("order_no"));
+            result.put("outcome", outcome);
+            if (hasNote) result.put("reason", note);
+            im.sendSystem(memberId, com.chengyinhub.business.domain.ImMessage.MSG_CARD, title,
+                    com.chengyinhub.business.service.support.SystemNoticeCard.json(title,
+                            hasNote ? outcome + "。原因：" + note : outcome, result));
+        } catch (RuntimeException e) {
+            log.warn("通行证退款复核通知发送失败 orderNo={}", order.get("order_no"), e);
+        }
     }
 
     /** 后台订单列表（含复核信息）。 */

@@ -118,4 +118,7 @@ public interface PlatformPassMapper {
     List<Map<String, Object>> selectLibrary(@Param("productType") Integer productType, @Param("limit") int limit);
 
     int countLibrary(@Param("topicIds") Set<Long> topicIds);
+
+    /** 公开目录中、在覆盖范围内且此刻自玩可领的主题数（与服务内 selfPlayAvailable 同口径）。 */
+    int countIncludedLibrary(@Param("topicIds") Set<Long> topicIds, @Param("now") Date now);
 }
