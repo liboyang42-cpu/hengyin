@@ -248,9 +248,9 @@ const RAW = [
   // ⚠️ 原来配的是 ?code=DEMO + real-data,声称拍 ok 态。但页面 onLoad 只读 options.poiId,
   // 压根没有 code 这个参数 ⇒ 必然掉进缺参兜底,永远拍不到 ok。ready 态已由 E30 用 setData 正确覆盖,
   // 这里改拍它真正能拍到、且没人覆盖的缺参态(页面自渲的 cy-empty,不是组件内那个带假重试的错误态)。
-  ['B10', 'B10-citynode-code-missing.png', '/subpackageRoam/citynode-code/index', 'player', 'missing-param', { state: 'missing', errMsg: '' }, undefined, { selector: '.cc-missing', min: 1 }, 'setData', 'P0', '', '缺参态:无 poiId ⇒「这个核销码打不开」+ 唯一出口「返回」,零重试'],
+  ['B10', 'B10-citynode-code-missing.png', '/subpackageRoam/citynode-code/index', 'player', 'missing-param', { state: 'missing', poiId: '' }, undefined, { selector: '.cc-missing', min: 1 }, 'setData', 'P0', '', '缺参态:无 poiId ⇒「这个核销码打不开」+ 唯一出口「返回」,零重试'],
   // 同上:?code=BAD 也落缺参态,跟 B10 撞车。真错误态是 issue 接口失败,只能 setData 造。
-  ['B11', 'B11-citynode-code-invalid.png', '/subpackageRoam/citynode-code/index?poiId=701', 'player', 'error', { poiId: '701', name: '河畔咖啡', state: 'error', errMsg: '暂时无法生成核销码，请稍后重试', qrcodeUrl: '', code: '', countdown: 0 }, undefined, { selector: '.qr__error', min: 1, assertTarget: 'cy-qr-voucher' }, 'setData', 'P1', '', '出码失败态:页面注入、组件内断言可恢复 CTA'],
+  ['B11', 'B11-citynode-code-invalid.png', '/subpackageRoam/citynode-code/index?poiId=701', 'player', 'error', { state: 'error', errorText: '暂时无法生成核销码，请稍后重试', qr: '', code: '', countdown: 0 }, undefined, { selector: '.qr__error', min: 1, assertTarget: 'cy-qr-voucher' }, 'setData', 'P1', '', '出码失败态:PG-091 页为薄壳,注入场景组件、组件内断言可恢复 CTA', 'cy-scene-qr-citynode'],
   ['B12', 'B12-play-classic.png', '/pages/play/index?mock=city', 'player', 'normal', { screen: '' }, undefined, TITLE, 'setData', 'P0', '', '★取证 gp-top "‹退出" 老式顶栏（交接文档点名待办）'],
   ['B13', 'B13-play-free.png', '/pages/play/index?mock=free', 'player', 'normal', { screen: '' }, undefined, TITLE, 'setData', 'P0', '', '同上'],
   ['B14', 'B14-play-journal.png', '/pages/play/index?mock=city', 'player', 'normal', { screen: '' }, undefined, TITLE, 'setData', 'P1', '', '调 openJournal() 后等 ≥2.5s；opacity 不衰减到 0'],
@@ -502,7 +502,7 @@ const RAW = [
     '与 D18 是同一路由、同一组件、同一 error 分支；2026-08-24 以组件内部强锚重拍仍逐像素同一屏（md5 相同）。altVerification:D18 保留为唯一动态截图，B11 另覆盖据点码错误；本行不重复扩大证据分母。',
     '玩家优惠券动态码错误态由 D18 覆盖'],
   ['E29', 'E29-couponinfo-form.png', '/subpackageMember/couponInfo/couponInfo', 'merchant', 'normal', { startdate: '2026-08-15 00:00', enddate: '2026-09-30 23:59', array2: ['请选择', '礼品券', '9折券', '8折券', '体验卡'], index2: 1, couponTypeSheetVisible: false, formData: { name: '到店立减 10 元', startTime: '2026-08-15 00:00', endTime: '2026-09-30 23:59', publishCount: 100, couponType: 1, description: '满 69 元可用，每人限用一张。' }, canSubmit: true, isSubmitting: false, displayStartTime: '2026-08-15', displayEndTime: '2026-09-30' }, undefined, { selector: '.fabu', min: 1 }, 'identity+setData', 'P0', '', '商家优惠券创建表单；array2 与 utils/coupon-form.js COUPON_TYPE_LABELS 同源（含体验卡），保持字符串数组'],
-  ['E30', 'E30-citynode-code-ready.png', '/subpackageRoam/citynode-code/index?poiId=701&name=%E6%B2%B3%E7%95%94%E5%92%96%E5%95%A1', 'player', 'normal', { poiId: '701', name: '河畔咖啡', qrcodeUrl: '/subpackageMember/images/d_qrcode.png', code: 'CY-701-8392', countdown: 236, state: 'ready', errMsg: '' }, undefined, { selector: 'cy-qr-voucher', min: 1 }, 'setData', 'P0', '', '玩家据点核销码可用态；ready 分支无页面 class 根节点，以真实根组件 cy-qr-voucher 断言'],
+  ['E30', 'E30-citynode-code-ready.png', '/subpackageRoam/citynode-code/index?poiId=701&name=%E6%B2%B3%E7%95%94%E5%92%96%E5%95%A1', 'player', 'normal', { qr: '/subpackageMember/images/d_qrcode.png', code: 'CY-701-8392', countdown: 236, state: 'ready', errorText: '' }, undefined, { selector: 'cy-qr-voucher', min: 1 }, 'setData', 'P0', '', '玩家据点核销码可用态；PG-091 页为薄壳,注入场景组件,以其内 cy-qr-voucher 断言', 'cy-scene-qr-citynode'],
 
   // ---------- F 2026-08-18 覆盖率门禁扫出的「矩阵一行都没有」的 12 页 ----------
   // ★ 这 12 条不是「重拍」,是**第一次拍**。它们在 20260810 那批之后加进 app.json,

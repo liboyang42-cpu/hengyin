@@ -110,8 +110,9 @@ function assertCodeMissingState(wxml) {
   // ② 零重试:缺参重试永远回到同一状态
   assert.doesNotMatch(missing[0], /重试|重新载入|重新加载/, 'missing 分支不得出现任何重试字样(参数不会因重试而出现)')
 
-  // ③ cy-qr-voucher 必须挂 wx:else,缺参时物理不渲染 ⇒ 组件内那个假重试与坍缩紫角都进不来
-  assert.match(wxml, /<cy-qr-voucher\s*\n?\s*wx:else/, 'cy-qr-voucher 必须挂 wx:else,使缺参态不渲染它')
+  // ③ PG-091 薄壳:出码场景组件挂在 wx:elif 分支里,缺参时物理不渲染 ⇒ 组件内那个假重试进不来
+  assert.match(wxml, /<view wx:elif="\{\{!guest\}\}" class="cc-scene">\s*<cy-scene-qr-citynode /, '出码场景必须挂 wx:elif,使缺参态不渲染它')
+  assert.doesNotMatch(wxml, /<cy-qr-voucher/, '页面不再自带 cy-qr-voucher,出码只在 scene-qr-citynode 一份')
 }
 
 test('R2-1 静态:缺参态自渲染、零重试、不落到 cy-qr-voucher', () => {
@@ -126,9 +127,9 @@ test('R2-1 行为:无 poiId ⇒ state=missing 且零请求;有 poiId ⇒ 照常�
 
   const withParam = loadPage(CODE_JS)
   withParam.page.onLoad({ poiId: '77' })
-  assert.equal(withParam.page.data.state, 'loading')
-  assert.equal(withParam.requests.length, 1, '有参数时必须真的去出码(别把正常流程一起挡掉)')
-  assert.match(withParam.requests[0].url, /\/api\/verify\/citynode\/issue/)
+  assert.equal(withParam.page.data.state, 'ready')
+  assert.equal(withParam.page.data.poiId, '77', '有参数时把 poiId 透传给出码场景组件(组件去出码)')
+  assert.equal(withParam.requests.length, 0, '薄壳页自己不出码')
 })
 
 test('R2-1 行为:missing 出口真的能走(有上一页回退,无上一页回 roam)', () => {
@@ -140,8 +141,8 @@ test('R2-1 行为:missing 出口真的能走(有上一页回退,无上一页回 
 test('negative control R2-1: 缺参退回 error ⇒ 假重试复活,静态与行为同时判红', () => {
   // 行为侧:改回病灶形态后 state 不再是 missing
   const ctx = loadPage(CODE_JS, (src) => src.replace(
-    "      this.setData({ state: 'missing' });",
-    "      this.setData({ state: 'error', errMsg: '参数缺失' });",
+    "      state: poiId ? 'ready' : 'missing',",
+    "      state: poiId ? 'ready' : 'error',",
   ))
   ctx.page.onLoad({})
   assert.equal(ctx.page.data.state, 'error', '变异没生效')
@@ -156,7 +157,7 @@ test('negative control R2-1: 缺参退回 error ⇒ 假重试复活,静态与行
 
   // 静态侧:把 wx:else 摘掉(缺参又会同时渲染组件)⇒ 判红
   const wxml = read(CODE_WXML)
-  const noElse = wxml.replace('<cy-qr-voucher\n  wx:else', '<cy-qr-voucher')
+  const noElse = wxml.replace('<view wx:elif="{{!guest}}" class="cc-scene">', '<view class="cc-scene">')
   assert.notEqual(noElse, wxml, '变异锚点失效(源码已改动?)')
   assert.throws(() => assertCodeMissingState(noElse), assert.AssertionError)
 

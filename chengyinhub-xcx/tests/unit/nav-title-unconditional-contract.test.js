@@ -68,7 +68,7 @@ const ALLOWED = [
   // onClose,深链安全逻辑不变);其余所有态(缺参/结果/正常页身)导航照常无条件渲染。
   // 2026-10-30 收集册 · 勋章:列表模式挂 cy-nav-bar overlay;WebGL 墙模式另有 cover-view 返回层(bw-top),两种模式互斥、各自有返回出口
   `subpackageP3/pages/badge-wall/index/index | cy-nav-bar | 自带 wx:if="{{viewMode === 'list'}}"`,
-  `subpackageRoam/citynode-code/index | cy-nav-bar | 自带 wx:if="{{state === 'missing'}}"`,
+  `subpackageRoam/citynode-code/index | cy-nav-bar | 自带 wx:if="{{state === 'missing' || guest}}"`,
   `subpackageMember/coupon-qr/index | cy-nav-bar | 自带 wx:if="{{!(entryState === 'ready' && useStatus == 0)}}"`,
   `pages/club/detail/index | cy-nav-bar | 自带 wx:if="{{!(groupCodeVisible && groupCodeState !== 'selecting')}}"`,
   `pages/merchant/game-node/index | cy-nav-bar | 自带 wx:if="{{!checkinVisible}}"`,

@@ -2352,25 +2352,24 @@
  "B10": {
   "data": {
    "state": "missing",
-   "errMsg": ""
+   "poiId": ""
   },
   "dropped": [],
   "switchKeys": []
  },
  "B11": {
   "data": {
-   "poiId": "701",
-   "name": "河畔咖啡",
    "state": "error",
-   "errMsg": "暂时无法生成核销码，请稍后重试",
-   "qrcodeUrl": "",
+   "errorText": "暂时无法生成核销码，请稍后重试",
+   "qr": "",
    "code": "",
    "countdown": 0
   },
+  "target": "cy-scene-qr-citynode",
   "dropped": [],
   "switchKeys": [
    "state",
-   "errMsg"
+   "errorText"
   ]
  },
  "B12": {
@@ -14860,18 +14859,17 @@
  },
  "E30": {
   "data": {
-   "poiId": "701",
-   "name": "河畔咖啡",
-   "qrcodeUrl": "/subpackageMember/images/d_qrcode.png",
+   "qr": "/subpackageMember/images/d_qrcode.png",
    "code": "CY-701-8392",
    "countdown": 236,
    "state": "ready",
-   "errMsg": ""
+   "errorText": ""
   },
+  "target": "cy-scene-qr-citynode",
   "dropped": [],
   "switchKeys": [
    "state",
-   "errMsg"
+   "errorText"
   ]
  },
  "F01": {

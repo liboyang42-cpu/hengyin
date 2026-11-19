@@ -40,3 +40,15 @@ test('PG-003:URL 参数解码走 utils/safe-decode,坏 % 序列回退原值', ()
   }
   assert.doesNotMatch(read('pages/publish/fabu/index.js'), /decodeURIComponent\(options\.templateName\)/);
 });
+
+test('PG-005/PG-091:据点核销码页先判登录,并改为 cy-scene-qr-citynode 薄壳', () => {
+  const wxml = noComments(read('subpackageRoam/citynode-code/index.wxml'));
+  const js = read('subpackageRoam/citynode-code/index.js');
+  const json = JSON.parse(read('subpackageRoam/citynode-code/index.json'));
+  assert.match(wxml, /<cy-access-gate kind="login" \/>/);
+  assert.match(wxml, /<cy-scene-qr-citynode poi-id="\{\{poiId\}\}" name="\{\{name\}\}" bind:close="onClose" \/>/);
+  assert.doesNotMatch(wxml, /<cy-qr-voucher/);
+  assert.doesNotMatch(js, /sendRequest|setInterval/);
+  assert.equal(json.usingComponents['cy-scene-qr-citynode'], '/components/cy/scene-qr-citynode/index');
+  assert.equal(json.usingComponents['cy-access-gate'], '/components/cy/access-gate/index');
+});
