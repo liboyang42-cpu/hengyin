@@ -38,6 +38,8 @@ Page({
   onHide() { merchantTheme.merchantPageRestore(); },
   onUnload() { merchantTheme.merchantPageRestore(); },
 
+  // 原地无权限态的唯一动作:非成员申请入驻,在营成员返回
+  onDenyCta() { require('../../../utils/merchant-no-permission.js').followDenyCta(this, this.data.accessMember === true, '/pages/merchant/index/index'); },
   onNavBack() {
     if (getCurrentPages().length > 1) wx.navigateBack();
     else wx.reLaunch({ url: '/pages/merchant/index/index' });
@@ -59,7 +61,7 @@ Page({
         this._merchantAccess = access;
         if (!access.active || !access.canReadVerifyRecords) {
           this._items = [];
-          this.setData({ pageState: 'no-permission', groups: [] });
+          this.setData({ pageState: 'no-permission', accessMember: access.active === true, groups: [] });
           return;
         }
         this.loadList();

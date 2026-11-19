@@ -29,7 +29,7 @@
                style="height:calc(100vh - {{statusBarHeight + navBarHeight}}px);"
                bindscrolltolower="onFeedReachBottom" lower-threshold="120">
     <view class="pc-body" style="{{pmTab === 1 ? '--pm-m:1;' : (pmTab === 2 ? '--pm-m-d:.32s;--pm-m-s:1;' : '')}}">
-      <cy-empty wx:if="{{isSelf && selfReadAccess}}" kind="no-permission" fill size="lg" title="{{selfReadAccess === 'login' ? '登录后查看我的主页' : '当前账号无法查看主页'}}" cta="{{selfReadAccess === 'login' ? '登录' : '重试'}}" bind:cta="loginToReadProfile" />
+      <cy-empty wx:if="{{isSelf && selfReadAccess}}" kind="no-permission" fill size="lg" title="{{selfReadAccess === 'login' ? '登录后查看我的主页' : '当前身份不能查看主页'}}" cta="{{selfReadAccess === 'login' ? '登录' : '重试'}}" bind:cta="loginToReadProfile" />
       <block wx:else>
 
       <!-- 首屏身份卡(ADA §二G):头像 + 玩家名 + 所在城市 + 三项统计合成一张卡,

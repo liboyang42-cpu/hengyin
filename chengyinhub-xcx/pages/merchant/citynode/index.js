@@ -127,6 +127,8 @@ Page({
   },
 
   // D-4 统一返回栏:与 cy-nav-bar 同语义;直接进来(无上一页)时退回工作台,避免箭头点了没反应
+  // 原地无权限态的唯一动作:非成员申请入驻,在营成员返回
+  onDenyCta() { require('../../../utils/merchant-no-permission.js').followDenyCta(this, this.data.merchantAccess && this.data.merchantAccess.active === true, '/pages/merchant/index/index'); },
   onNavBack() {
     if (getCurrentPages().length > 1) wx.navigateBack();
     else wx.reLaunch({ url: '/pages/merchant/index/index' });
@@ -212,7 +214,7 @@ Page({
 
   goCreate() {
     if (!this.data.merchantAccess.canManageProjects) {
-      return toast('当前岗位没有节点管理权限');
+      return toast('当前身份不能管理节点');
     }
     if (this.data.quotaState !== 'ready') {
       toast('节点配额暂未取回，请重试');
@@ -227,7 +229,7 @@ Page({
 
   toggleClaim() {
     if (!this.data.merchantAccess.canManageProjects) {
-      return toast('当前岗位没有节点管理权限');
+      return toast('当前身份不能管理节点');
     }
     const showClaim = !this.data.showClaim;
     this.setData({ showClaim: showClaim });
@@ -278,7 +280,7 @@ Page({
 
   submitClaim(e) {
     if (!this.data.merchantAccess.canManageProjects) {
-      return toast('当前岗位没有节点管理权限');
+      return toast('当前身份不能管理节点');
     }
     const poiId = Number(e.currentTarget.dataset.poiid || 0);
     if (!Number.isInteger(poiId) || poiId <= 0) return;
@@ -319,7 +321,7 @@ Page({
   /** 撤回自己的待审认领:节点会重新回到可认领池,别人才能认领 —— 不做撤回,这个节点会锁在「已有待审申请」。 */
   cancelClaim(e) {
     if (!this.data.merchantAccess.canManageProjects) {
-      return toast('当前岗位没有节点管理权限');
+      return toast('当前身份不能管理节点');
     }
     const poiId = Number(e.currentTarget.dataset.poiid || 0);
     if (!Number.isInteger(poiId) || poiId <= 0) return;
@@ -357,7 +359,7 @@ Page({
 
   loadPosterCode(poiId) {
     if (!this.data.merchantAccess.canVerify) {
-      return toast('当前岗位没有核销权限');
+      return toast('当前身份不能核销');
     }
     const that = this;
     const requestId = (this._posterRequestId || 0) + 1;
@@ -442,7 +444,7 @@ Page({
 
   toggleNode(e) {
     if (!this.data.merchantAccess.canManageProjects) {
-      return toast('当前岗位没有节点管理权限');
+      return toast('当前身份不能管理节点');
     }
     const poiId = e.currentTarget.dataset.poiid;
     const row = this.data.nodes.find(function (item) { return String(item.poiId) === String(poiId); });
@@ -531,7 +533,7 @@ Page({
   // C2 扫码核销:扫玩家「据点核销码」→ 后端校验归属+幂等后发券给玩家(防伪造GPS白领券)
   scanRedeem() {
     if (!this.data.merchantAccess.canVerify) {
-      return toast('当前岗位没有核销权限');
+      return toast('当前身份不能核销');
     }
     const that = this, login = captureLogin(app, wx), epoch = this._verificationEpoch || 0;
     const current = () => loginCurrent(app, wx, login) && epoch === (that._verificationEpoch || 0);

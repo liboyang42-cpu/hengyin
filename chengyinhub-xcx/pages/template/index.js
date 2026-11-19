@@ -167,7 +167,7 @@ Page({
   // ===== 发布弹窗(cy-publish-sheet,唯一发布触发) =====
   openPublishSheet() {
     if (this.data.operationScope && !this.data.canManageMerchantProjects) {
-      cyToast('当前岗位没有项目发布权限');
+      cyToast('当前身份不能发布项目');
       return;
     }
     // 能力卡上次没拉成：弹窗打开时补拉一次，不让弹窗锁在默认玩家态

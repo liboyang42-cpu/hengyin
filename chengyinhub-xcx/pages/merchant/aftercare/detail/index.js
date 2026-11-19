@@ -65,6 +65,8 @@ Page({
   onHide() { merchantTheme.merchantPageRestore(); },
   onUnload() { merchantTheme.merchantPageRestore(); },
 
+  // 原地无权限态的唯一动作:非成员申请入驻,在营成员返回
+  onDenyCta() { require('../../../../utils/merchant-no-permission.js').followDenyCta(this, this.data.accessMember === true, '/pages/merchant/index/index'); },
   onNavBack() {
     if (getCurrentPages().length > 1) wx.navigateBack();
     else wx.reLaunch({ url: '/pages/merchant/index/index' });
@@ -85,7 +87,7 @@ Page({
         const access = normalizeMerchantAccess(res.data);
         this._merchantAccess = access;
         if (!access.active || !access.canReadAftercare) {
-          this.setData({ pageState: 'no-permission' });
+          this.setData({ pageState: 'no-permission', accessMember: access.active === true });
           return;
         }
         this.loadDetail();
@@ -136,7 +138,7 @@ Page({
           allowedDecisionMap,
           respondBlockedText: isManualCase ? '由平台处理，商家可查看进度。' : this._merchantAccess.canRespondAftercare !== true
             || (detail.processing === 'WAITING_PLATFORM_REVIEW' && detail.allowedDecisions.length === 0)
-            ? '当前岗位只有查看权限，请联系店主调整权限。'
+            ? '当前身份不能回应售后'
             : '平台审核已结束，不能再追加商家意见。',
           pageState: 'ready',
         });

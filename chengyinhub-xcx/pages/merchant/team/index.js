@@ -376,8 +376,8 @@ Page({
         }
         const access = normalizeMerchantAccess(res.data);
         if (!access.active && !this._incomingInviteToken) {
-          // 没有经营团队身份的账号本没有这一页(玩家没有入口);深链误入静默回会员中心。
-          wx.switchTab({ url: '/pages/member/index/index' });
+          // 没有经营团队身份的账号深链误入:原地「当前身份不能查看经营团队」+ 申请入驻,不再静默退回我的。
+          this.setData({ access, accessState: 'no-permission', accessError: '' });
           return;
         }
         this.setData({
@@ -413,6 +413,8 @@ Page({
   },
 
   retryAccess() { this.enterTeam(false); },
+  // 无经营身份的原地无权限态唯一动作:申请入驻
+  onDenyCta() { require('../../../utils/merchant-no-permission.js').followDenyCta(this, false); },
   // R9-22:工作台不在原生 tabBar 里,switchTab 必然 switchTab:fail。商家页统一 reLaunch
   // (同 components/tabBar 与 relation/index 的「返回工作台」),并让工作台成为根页。
   goWorkbench() { wx.reLaunch({ url: '/pages/merchant/index/index' }); },

@@ -43,7 +43,7 @@
   <!-- 收到的:别人发给我的协作邀约 + 别人对我主题的俱乐部申请(一条请求 = 一条记录) -->
   <block wx:if="{{tab===0}}">
     <cy-skeleton wx:if="{{listState === 'loading'}}" type="list" count="3" />
-    <cy-error class="retry-lg" wx:elif="{{listState === 'permission'}}" fill title="当前账号不能查看协作邀请" sub="{{listErrorText}}" auto-back bind:retry="load" />
+    <cy-error class="retry-lg" wx:elif="{{listState === 'permission'}}" fill title="当前身份不能查看协作邀请" sub="{{listErrorText}}" auto-back bind:retry="load" />
     <cy-error load-failure class="retry-lg error-kind--{{listErrorKind}}" wx:elif="{{listState === 'error'}}" fill title="协作邀请加载失败" sub="{{listErrorText}}" auto-back bind:retry="load" />
     <block wx:else>
     <view class="inline-state" wx:if="{{receivedApplyState === 'loading'}}" aria-role="status" aria-live="polite">正在加载带队申请…</view>
@@ -182,7 +182,7 @@
   <!-- 我发出的:我发出的协作邀约 + 我提交的俱乐部带队申请 -->
   <block wx:else>
     <cy-skeleton wx:if="{{listState === 'loading'}}" type="list" count="3" />
-    <cy-error class="retry-lg" wx:elif="{{listState === 'permission'}}" fill title="当前账号不能查看协作邀请" sub="{{listErrorText}}" auto-back bind:retry="load" />
+    <cy-error class="retry-lg" wx:elif="{{listState === 'permission'}}" fill title="当前身份不能查看协作邀请" sub="{{listErrorText}}" auto-back bind:retry="load" />
     <cy-error load-failure class="retry-lg error-kind--{{listErrorKind}}" wx:elif="{{listState === 'error'}}" fill title="协作邀请加载失败" sub="{{listErrorText}}" auto-back bind:retry="load" />
     <block wx:else>
     <view class="inline-state" wx:if="{{sentApplyState === 'loading'}}" aria-role="status" aria-live="polite">正在加载带队申请…</view>

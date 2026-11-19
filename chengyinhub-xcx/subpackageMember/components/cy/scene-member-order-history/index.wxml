@@ -12,7 +12,7 @@
       wx:elif="{{errorMsg && list.length==0}}"
       fill="{{true}}"
       size="lg"
-      title="{{orderAuthRequired ? '登录后查看订单' : orderAccessDenied ? '当前账号无法查看订单' : '订单加载失败'}}"
+      title="{{orderAuthRequired ? '登录后查看订单' : orderAccessDenied ? '当前身份不能查看订单' : '订单加载失败'}}"
       sub="{{orderAuthRequired || orderAccessDenied ? errorMsg : '已支付订单不受影响'}}"
       retry="{{orderAuthRequired ? '登录' : '重试'}}"
       bind:retry="retryList"

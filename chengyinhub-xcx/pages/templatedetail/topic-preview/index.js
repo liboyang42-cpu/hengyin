@@ -220,7 +220,7 @@ Page({
     const useFlow = require('../utils/topic-use-flow.js');
     const cyToast = require('../../../utils/toast.js');
     if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.useTemplate(), { owner: this, target: () => [this._id, this._scope] })) return;
-    if (this._readonly) { cyToast('当前岗位仅可浏览模板'); return; }
+    if (this._readonly) { cyToast('当前身份不能编辑模板'); return; }
     if (this._copiedId) { this._openCopied(this._copiedId); return; }
     const loc = this._delivery && this._delivery.locationRequirement;
     const placed = !!(loc && loc.physicalPlaceRequired === true && adoption.sourceCityOf(this._delivery));

@@ -149,7 +149,7 @@
     <view class="pbody">
       <text class="ph1">我的队伍</text>
 
-      <view class="mt-notice mt-notice--plain" wx:if="{{myReadAccess}}" aria-role="text">{{myReadAccess === 'login' ? '登录后查看自己的队伍' : '当前账号无法查看队伍'}}</view>
+      <view class="mt-notice mt-notice--plain" wx:if="{{myReadAccess}}" aria-role="text">{{myReadAccess === 'login' ? '登录后查看自己的队伍' : '当前身份不能查看队伍'}}</view>
       <view class="mt-sbtn mt-sbtn--w" wx:if="{{myReadAccess === 'login'}}" bindtap="loginForMyTeams" aria-role="button" aria-label="去登录" hover-class="cy-pressed" hover-stay-time="80">去登录</view>
       <view class="mt-notice mt-notice--plain" wx:if="{{myReadError}}" aria-role="text">队伍信息未完整读取，请重新打开重试</view>
       <view class="mt-row" wx:for="{{myRows}}" wx:key="key">

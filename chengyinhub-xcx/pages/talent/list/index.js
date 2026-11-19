@@ -430,7 +430,7 @@ Page({
         that._nearbyAll = [];
         that.setData({ myClubs: [], joinedClubs: [], nearbyClubs: [], myClubId: null, myClubCount: 0,
           clubsLoginRequired: loginRequired, clubsPermissionDenied: denied, clubsLoaded: false,
-          clubsError: true, clubsState: 'error', clubsErrorText: loginRequired ? '登录后可查看我的俱乐部' : requestError(res, '当前账号无法查看俱乐部') });
+          clubsError: true, clubsState: 'error', clubsErrorText: loginRequired ? '登录后可查看我的俱乐部' : requestError(res, '当前身份不能查看俱乐部') });
         return;
       }
       that.setData({

@@ -121,6 +121,9 @@ Page({
     this.performNavBack();
   },
 
+  // 原地无权限态的唯一动作:非成员申请入驻,在营成员返回(栈底回节点列表)
+  onDenyCta() { require('../../../../utils/merchant-no-permission.js').followDenyCta(this, this.data.merchantAccess && this.data.merchantAccess.active === true, '/pages/merchant/citynode/index'); },
+
   performNavBack() {
     if (getCurrentPages().length > 1) wx.navigateBack();
     else wx.redirectTo({ url: '/pages/merchant/citynode/index' });
@@ -270,7 +273,7 @@ Page({
   /** 去配玩法:temp 页保存后用 eventChannel 把 templateId 回传过来 */
   goConfigTemplate() {
     if (!this.data.merchantAccess.canManageProjects) {
-      return toast('当前岗位没有节点管理权限');
+      return toast('当前身份不能管理节点');
     }
     const that = this;
     wx.navigateTo({
@@ -301,7 +304,7 @@ Page({
   /** 挪一下:打开地图重选,选完就不再是「档案坐标」了 */
   repick() {
     if (!this.data.merchantAccess.canManageProjects) {
-      return toast('当前岗位没有节点管理权限');
+      return toast('当前身份不能管理节点');
     }
     const that = this;
     const lat = Number((this.data.picked || {}).lat), lng = Number((this.data.picked || {}).lng);
@@ -379,7 +382,7 @@ Page({
   // 提交据点投放申请;审核通过前绝不在客户端伪造成已上线节点。
   submitNode() {
     if (!this.data.merchantAccess.canManageProjects) {
-      return toast('当前岗位没有节点管理权限');
+      return toast('当前身份不能管理节点');
     }
     if (this.data.submitting) return;
     if (this.data.submittedApplicationId) return this.readBackAndReturn(this.data.submittedApplicationId);

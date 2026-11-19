@@ -499,7 +499,7 @@ Page({
     // 公共库模板「应用」= 进编辑器建草稿：先登录，只读岗位直接说明
     if (that.data.scope !== 'my') {
       if (app.ensureLoginFor && !app.ensureLoginFor('publish', function () { that.goPrimary(); }, { owner: that, target: function () { return [that.data.id, that.data.scope]; } })) return;
-      if (that._readonly) { toast('当前岗位仅可浏览模板'); return; }
+      if (that._readonly) { toast('当前身份不能编辑模板'); return; }
     }
     that._navigating = true;
     if (that.data.scope === 'my' && (!that.data.info || that.data.info.canEdit !== true)) {

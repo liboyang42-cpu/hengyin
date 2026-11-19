@@ -18,7 +18,7 @@
 <block wx:elif="{{ projectReadAuth }}">
   <cy-nav-bar custom-back bind:back="goBack" />
   <cy-empty wx:if="{{ projectReadAuth === 'login' }}" fill size="lg" kind="login" title="登录后查看主题" cta="登录" bind:cta="retryProjectLogin" />
-  <cy-empty wx:else fill size="lg" kind="error" title="当前账号无权查看" sub="" cta="返回上一页" bind:cta="goBack" />
+  <cy-empty wx:else fill size="lg" kind="error" title="当前身份不能查看" sub="" cta="返回上一页" bind:cta="goBack" />
 </block>
 <project-host wx:elif="{{ role === 'host' }}"
     navScrolled="{{ navScrolled }}"

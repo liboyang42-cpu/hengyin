@@ -55,7 +55,9 @@ Component({
     _openAutoBack() {
       if (this.data.loadFailure || !this.data.autoBack || this.data._sheet || this._page) return;
       const pages = getCurrentPages();
-      this._page = pages[pages.length - 1];   // 记下所在页:收起时栈顶可能已经换了
+      const page = pages[pages.length - 1];
+      if (page && page.__cyDenyInPlace) return;   // 商家守卫已原地讲清无权限:不再弹半屏自动返回
+      this._page = page;   // 记下所在页:收起时栈顶可能已经换了
       this.setData({ _sheet: true });
     },
     onRetry() { this.triggerEvent('retry'); },
@@ -64,6 +66,7 @@ Component({
     onAutoBack() {
       // 同一页上 access-gate 与页面自己的无权限态可能同时弹,只许一个真的返回,否则连退两页
       const page = this._page || {};
+      if (page.__cyDenyInPlace) { this.setData({ _sheet: false }); return; }
       if (page.__cyAutoBacked) return;
       page.__cyAutoBacked = true;
       this.setData({ _sheet: false });

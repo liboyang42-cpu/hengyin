@@ -198,7 +198,7 @@ Component({
         const code = Number(statusCode || res && (res.code || res.statusCode))
         if (!isCurrent() || (code !== 401 && code !== 403)) return false
         that.setData({ list: [], hasOrders: false, orderAuthRequired: code === 401, orderAccessDenied: code === 403,
-          errorMsg: code === 401 ? '登录后可查看你的路线订单' : '当前账号无法查看订单' })
+          errorMsg: code === 401 ? '登录后可查看你的路线订单' : '当前身份不能查看订单' })
         return true
       }
       app.sendRequest({

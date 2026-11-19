@@ -120,7 +120,7 @@ Component({
       if (!this.workflow().confirmRequest(key, row.requestId)) return '本机原请求仍待确认，请勿重复发送';
       this._confirmed[key] = true;
       this._sent = true;
-      this.setData({ unknown: false, error: '原请求已受理，但当前账号无法查看结果，请到邀约记录核对' });
+      this.setData({ unknown: false, error: '原请求已受理，但当前身份不能查看结果，请到邀约记录核对' });
     },
     queryOriginalInvite() {
       if (this.data.submitting || !this.current(this._epoch) || this.data.inviteType !== 1) return;

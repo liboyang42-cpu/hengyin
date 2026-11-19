@@ -5561,7 +5561,7 @@ Page({
   _shareToSquare() {
     const app = getApp();
     const writeAllowed = () => typeof app.canUseCommunity === 'function' && app.canUseCommunity(true);
-    if (!writeAllowed()) { cyToast('当前账号未开放广场发布'); return Promise.resolve({ ok: false, channel: '广场', posted: false, saved: false, blocked: true }); }
+    if (!writeAllowed()) { cyToast('当前身份不能发布到广场'); return Promise.resolve({ ok: false, channel: '广场', posted: false, saved: false, blocked: true }); }
     const scope = this._shareScope();
     const current = () => scope() && writeAllowed();
     const cancelled = () => ({ ok: false, channel: '广场', saved: false, posted: false, cancelled: true });

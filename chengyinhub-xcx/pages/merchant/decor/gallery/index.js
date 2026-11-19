@@ -19,7 +19,7 @@ function classifyFailure(error, fallback) {
   const message = error && error.msg ? String(error.msg) : '';
   if (String(code) === '401' || String(code) === '403'
       || /仅.*商家|商家资格|无权限|没有权限|权限不足|审核通过.*商家/.test(message)) {
-    return { kind: 'permission', text: '当前账号没有店铺编辑权限，请切换到已审核通过的商家账号。' };
+    return { kind: 'permission', text: '当前身份不能编辑店铺' };
   }
   const transportText = error && typeof error === 'object' ? String(error.errMsg || '') : '';
   if (code === undefined && /request:fail|timeout|network|网络|断网/i.test(transportText)) {

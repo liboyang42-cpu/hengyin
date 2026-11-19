@@ -192,7 +192,7 @@ Page({
           this._readBackDone(false);
           this.setData({
             phase: 'denied', refreshing: false, view: null,
-            deniedReason: app.getRequestErrorMessage(res, '当前账号不是这场活动的主办方'),
+            deniedReason: app.getRequestErrorMessage(res, '当前身份不能管理这场活动'),
           });
           return;
         }

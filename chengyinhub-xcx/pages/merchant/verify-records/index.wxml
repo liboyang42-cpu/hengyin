@@ -16,10 +16,8 @@
   <cy-error wx:elif="{{pageState === 'error'}}" fill size="lg"
             title="核销记录加载失败" sub="{{errorMessage}}"
             retry="重新加载" bind:retry="retry" auto-back />
-  <cy-error wx:elif="{{pageState === 'no-permission'}}" fill size="lg"
-            title="当前岗位没有核销记录查看权限"
-            sub="请联系店主开通"
-            retry="" bind:back="onNavBack" auto-back custom-back />
+  <cy-empty wx:elif="{{pageState === 'no-permission'}}" kind="no-permission" fill size="lg"
+            title="当前身份不能查看核销记录" cta="{{accessMember ? '返回' : '申请入驻'}}" bind:cta="onDenyCta" />
 
   <view wx:elif="{{pageState === 'empty'}}" class="vrl-shell">
     <cy-empty fill size="lg" kind="empty" title="{{bucket === 'VERIFIED' ? '还没有已核销记录' : '没有已撤销记录'}}" />

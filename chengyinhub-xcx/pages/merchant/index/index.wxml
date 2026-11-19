@@ -10,6 +10,7 @@
        内联错误 + 重试。整屏身份闸(未登录即锁屏、确认中占屏、无身份占屏)已删除
        (2026-09-16 裁决:商家自己的账号被登录闸拦住只是添麻烦)。 -->
   <cy-empty wx:if="{{consoleLogin}}" kind="no-permission" fill size="lg" title="登录后查看经营台" cta="登录" bind:cta="onConsoleLogin" />
+  <cy-empty wx:elif="{{consoleDenied}}" kind="no-permission" fill size="lg" title="当前身份不能查看经营台" cta="申请入驻" bind:cta="goApplicationProgress" />
   <scroll-view wx:else class="rv-scroll" scroll-y enhanced show-scrollbar="{{false}}"
                scroll-into-view="{{scrollIntoView}}"
                style="{{pmPage === 1 ? '--pm-w:1;' : (pmPage === 2 ? '--pm-w-d:.32s;--pm-w-s:1;' : '')}}height: 100vh; padding-top: {{statusBarHeight + navBarHeight}}px;"
@@ -24,7 +25,7 @@
 
     <!-- 入驻审核中/未通过/停用:页内说清状态与原因 + 查看申请进度,不再静默跳回会员中心
          (2026-09-17 拍板 #24)。这不是整屏身份闸:只替换没有经营数据可看的空壳,
-         无商家身份的普通玩家仍在 loadConsoleAccess 里静默 switchTab。 -->
+         无商家身份的普通玩家落上方 consoleDenied 原地无权限态。 -->
     <cy-card class="rv-apply-state" wx:if="{{consoleStatus}}">
       <view class="rv-apply-state-head">
         <text class="rv-apply-state-badge rv-apply-state-badge--{{consoleStatus.badgeVariant}}">{{consoleStatus.statusLabel}}</text>

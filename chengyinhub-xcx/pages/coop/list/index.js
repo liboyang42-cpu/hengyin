@@ -236,7 +236,7 @@ Page({
     if (status !== 401 && status !== 403) return false;
     this._requireSessionReset();
     this.setData({ listState: status === 401 ? 'login' : 'permission', listRefreshing: false,
-      listErrorKind: status === 401 ? 'login' : 'permission', listErrorText: failureText(value, '当前账号不能查看协作邀请') });
+      listErrorKind: status === 401 ? 'login' : 'permission', listErrorText: failureText(value, '当前身份不能查看协作邀请') });
     return true;
   },
   _requireSessionReset() {

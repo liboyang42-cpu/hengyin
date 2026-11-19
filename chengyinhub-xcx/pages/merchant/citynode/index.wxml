@@ -37,9 +37,9 @@
     icon="empty-state" wx:elif="{{accessState === 'error' || (accessState === 'ready' && loadErr)}}" fill
     title="{{accessState === 'error' ? '商家权限加载失败' : '节点加载失败'}}"
     sub="{{accessState === 'error' ? accessErrorText : ''}}" retry="重试" bind:retry="retry" auto-back="{{accessState === 'error' || !listEverLoaded}}" />
-  <cy-error size="lg" style="flex:1;min-height:0;" retry=""
+  <cy-empty size="lg" style="flex:1;min-height:0;" kind="no-permission"
     wx:elif="{{accessState === 'no-permission'}}" fill
-    title="当前岗位不能管理节点" sub="请联系店主开通" auto-back />
+    title="当前身份不能管理节点" cta="{{merchantAccess.active ? '返回' : '申请入驻'}}" bind:cta="onDenyCta" />
 
   <block wx:elif="{{accessState === 'ready' && !loading && !loadErr}}">
     <view class="cn-node-wrap" wx:for="{{applications}}" wx:key="id">

@@ -93,7 +93,7 @@ function classifyFailure(error, fallback) {
   const message = error && error.msg ? String(error.msg) : '';
   if (String(code) === '401' || String(code) === '403'
       || /仅.*商家|商家资格|无权限|没有权限|权限不足|审核通过.*商家/.test(message)) {
-    return { kind: 'permission', text: '当前账号没有店铺装修权限，请切换到已审核通过的商家账号。' };
+    return { kind: 'permission', text: '当前身份不能装修店铺' };
   }
   const transportText = error && typeof error === 'object' ? String(error.errMsg || '') : '';
   if (code === undefined && /request:fail|timeout|network|网络|断网/i.test(transportText)) {
@@ -224,7 +224,7 @@ Page({
         // 深链直接进资料视图:停权限态,不先打一发注定 403 的 /merchant/info。
         that.setData({
           loadState: 'permission',
-          loadErrTitle: '当前岗位没有资料编辑权限',
+          loadErrTitle: '当前身份不能编辑店铺资料',
           loadErrSub: '请联系店主开通',
         });
         return;
@@ -1236,5 +1236,7 @@ Page({
     }));
   },
 
-  goBack() { wx.navigateBack({ delta: 1 }); }
+  goBack() { wx.navigateBack({ delta: 1 }); },
+  // 原地无权限态「返回」:栈底时回商家工作台,不卡在页上
+  onDenyBack() { if (getCurrentPages().length > 1) wx.navigateBack(); else wx.reLaunch({ url: '/pages/merchant/index/index' }); }
 });

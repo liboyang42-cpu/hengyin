@@ -182,7 +182,7 @@ Page({
       const code = failureStatus(res, status);
       if (code === 401 || code === 403) {
         that._clearSensitiveState(app.getRequestErrorMessage(res,
-          code === 401 ? '请重新登录后查看店铺数据' : '当前账号没有店铺数据查看权限'));
+          code === 401 ? '请重新登录后查看店铺数据' : '当前身份不能查看店铺数据'));
         that.setData({ loading: false, errorIsDenied: true, errorNeedsLogin: code === 401 });
       } else that.setData({ error: app.getRequestErrorMessage(res, '店铺数据加载失败') });
     };

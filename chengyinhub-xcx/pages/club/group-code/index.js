@@ -116,7 +116,7 @@ Page({
           return;
         }
         if (isPermissionDenial(res)) {
-          that.setData({ state: 'no-permission', errMsg: (res && res.msg) || '当前账号没有出码权限' });
+          that.setData({ state: 'no-permission', errMsg: (res && res.msg) || '当前身份不能出码' });
           return;
         }
         that.setData({ state: 'error', errMsg: (res && res.msg) || '出码失败' });
@@ -128,7 +128,7 @@ Page({
       successStatusAbnormal(res) {
         if (epoch !== that._requestEpoch) return;
         if (isPermissionDenial(res)) {
-          that.setData({ state: 'no-permission', errMsg: (res && res.msg) || '当前账号没有出码权限' });
+          that.setData({ state: 'no-permission', errMsg: (res && res.msg) || '当前身份不能出码' });
           return;
         }
         that.setData({ state: 'error', errMsg: (res && res.msg) || '出码失败' });
