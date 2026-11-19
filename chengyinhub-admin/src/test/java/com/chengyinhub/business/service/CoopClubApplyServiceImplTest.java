@@ -233,6 +233,17 @@ class CoopClubApplyServiceImplTest {
 
     // ---------- apply:落行 ----------
 
+    /** MC-052:多团主理人带 clubId 时用指定的那个(仍须是本人名下生效团)。 */
+    @Test
+    void apply_uses_explicit_club_when_member_owns_several() {
+        when(clubMapper.selectClubsByMemberId(ME))
+                .thenReturn(Arrays.asList(activeClub(MY_CLUB, ME), activeClub(MY_CLUB + 1, ME)));
+        svc.apply(TOPIC, ME, MY_CLUB + 1, null);
+        ArgumentCaptor<CoopClubApply> cap = ArgumentCaptor.forClass(CoopClubApply.class);
+        verify(applyMapper).insertCoopClubApply(cap.capture());
+        assertEquals(Long.valueOf(MY_CLUB + 1), cap.getValue().getClubId());
+    }
+
     @Test
     void apply_inserts_pending_row_for_my_club() {
         CoopClubApply created = svc.apply(TOPIC, ME, null, "带队20人经验");

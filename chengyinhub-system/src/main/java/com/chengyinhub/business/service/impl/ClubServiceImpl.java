@@ -603,12 +603,49 @@ public class ClubServiceImpl implements IClubService
                 throw new IllegalStateException("加入方式保存失败，请重试");
             }
         }
-        club.setUpdateTime(DateUtils.getNowDate());
-        if (holdingName(() -> clubMapper.updateClub(club)) != 1)
+        if (!isOwner && Boolean.TRUE.equals(club.getOperationConfigUpdated()))
+        {
+            throw new IllegalArgumentException("只有主理人可以修改会员经营配置");
+        }
+        // MC-051:调用方的 club 是锁外读出再改的整行,直接整行写回会把锁外读到的 status / memberCount /
+        // level / 审核字段等旧值覆盖回去。这里只按资料白名单拼一份补丁写回,其余列不动。
+        Club patch = profilePatch(club);
+        patch.setUpdateTime(DateUtils.getNowDate());
+        club.setUpdateTime(patch.getUpdateTime());
+        if (holdingName(() -> clubMapper.updateClub(patch)) != 1)
         {
             throw new IllegalStateException("俱乐部资料保存失败，请重试");
         }
         return supported;
+    }
+
+    /** 资料编辑可写的列(MC-051 白名单);status / memberId / memberCount / level / 审核字段一律不带。 */
+    static Club profilePatch(Club club)
+    {
+        Club patch = new Club();
+        patch.setId(club.getId());
+        patch.setName(club.getName());
+        patch.setLogo(club.getLogo());
+        patch.setCover(club.getCover());
+        patch.setDescription(club.getDescription());
+        patch.setClubType(club.getClubType());
+        patch.setClubTypes(club.getClubTypes());
+        patch.setActivityPrefs(club.getActivityPrefs());
+        patch.setCity(club.getCity());
+        patch.setKeywords(club.getKeywords());
+        patch.setStyle(club.getStyle());
+        patch.setCategoryId(club.getCategoryId());
+        patch.setAddress(club.getAddress());
+        patch.setLeaderName(club.getLeaderName());
+        patch.setPhone(club.getPhone());
+        if (Boolean.TRUE.equals(club.getOperationConfigUpdated()))
+        {
+            patch.setOperationConfigUpdated(true);
+            patch.setPrioritySignupEnabled(club.getPrioritySignupEnabled());
+            patch.setMemberDiscountPrice(club.getMemberDiscountPrice());
+            patch.setMemberReservedQuota(club.getMemberReservedQuota());
+        }
+        return patch;
     }
 
     @Override

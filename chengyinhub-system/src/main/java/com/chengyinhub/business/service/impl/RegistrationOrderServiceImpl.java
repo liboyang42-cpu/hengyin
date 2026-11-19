@@ -274,7 +274,37 @@ public class RegistrationOrderServiceImpl implements IRegistrationOrderService {
         if (!Integer.valueOf(1).equals(request.getIsUsePoint()) && persistedPoints != 0L) {
             return false;
         }
-        return StringUtils.isBlank(request.getQuoteSign()) || matchesPersistedQuote(request, order, persistedPoints);
+        if (StringUtils.isBlank(request.getQuoteSign())) {
+            // OR-003：旧客户端不带 quoteSign 的自玩票(ownerType=1)只在价格未变时容忍；
+            // 价格已变返回 409 让客户端重新报价。其它标的维持原兼容口径。
+            return !Integer.valueOf(1).equals(request.getOwnerType())
+                    || legacySelfPlayPriceUnchanged(memberId, request, order.get(0));
+        }
+        return matchesPersistedQuote(request, order, persistedPoints);
+    }
+
+    /**
+     * 用当前报价(与建单闸同一入口)重算应付，与已落库应付比对。重算失败或缺事实一律不认等价(从严)。
+     */
+    private boolean legacySelfPlayPriceUnchanged(Long memberId, RegistrationRequest request, CmsRegistration primary) {
+        BigDecimal persisted = primary.getPayableAmount();
+        if (persisted == null) {
+            return false;
+        }
+        com.chengyinhub.business.domain.dto.RegistrationQuoteResult current;
+        try {
+            current = registrationService.quoteRegistration(memberId, request);
+        } catch (RuntimeException unavailable) {
+            return false;
+        }
+        if (current == null || current.getPayAmount() == null) {
+            return false;
+        }
+        if (current.getPayAmount().setScale(2, RoundingMode.HALF_UP)
+                .compareTo(persisted.setScale(2, RoundingMode.HALF_UP)) != 0) {
+            throw new RegistrationRequestConflictException("价格已更新，请重新确认");
+        }
+        return true;
     }
 
     private List<String> requestTicketParts(RegistrationRequest request) {

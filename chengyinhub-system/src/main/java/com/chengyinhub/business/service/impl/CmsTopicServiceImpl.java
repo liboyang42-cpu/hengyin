@@ -1748,6 +1748,11 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     }
 
     @Override
+    public int countCmsTopicByClubId(Long clubId) {
+        return clubId == null ? 0 : cmsTopicMapper.countCmsTopicByClubId(clubId);
+    }
+
+    @Override
     public Map<Long, Integer> selectUpcomingTopicCounts(List<Long> clubIds) {
         return topicQueryService.selectUpcomingTopicCounts(clubIds);
     }

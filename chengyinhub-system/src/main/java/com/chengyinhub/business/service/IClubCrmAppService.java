@@ -16,6 +16,10 @@ public interface IClubCrmAppService {
 
     ClubCustomerVO.ListPage listCustomers(Long principalMemberId, Long clubId, String filter, String keyword);
 
+    /** MC-057:带分页的客户列表;pageNum/pageSize 为空时等同上面的旧口径(第 1 页、默认上限条数)。 */
+    ClubCustomerVO.ListPage listCustomers(Long principalMemberId, Long clubId, String filter, String keyword,
+                                          Integer pageNum, Integer pageSize);
+
     /** 稿 M 268:223「查看客户」那一行右侧的人数。只要一个数,别为它把整页 200 行端下来。 */
     int customerCount(Long principalMemberId, Long clubId);
 

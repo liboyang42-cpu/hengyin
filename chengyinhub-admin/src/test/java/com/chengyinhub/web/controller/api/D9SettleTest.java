@@ -230,14 +230,15 @@ class D9SettleTest {
     }
 
     @Test
-    void noCheckins_fallbackAllPaid() {
-        // 无人用集合签到 → 回落全部已付(7,8 都结算)
+    void noCheckins_refusedFailClosed() {
+        // MC-002:无人签到 → 拒绝结算,零入账,状态不推进(不再回落全部已付)
         state(2);
         paid.add(reg(701L, 7L, 0));
         paid.add(reg(801L, 8L, 0));
         AjaxResult r = newController(9L).settle("100");
-        assertEquals(2, settledCount(r), "checkins 空回落全部已付");
-        assertTrue(settledRegIds.contains(701L) && settledRegIds.contains(801L));
+        assertEquals("还没有人签到，暂不能结算", r.get("msg"));
+        assertTrue(settledRegIds.isEmpty(), "无签到不得入账");
+        assertEquals(2, stateHolder[0].getStatus().intValue(), "状态不推进到已结算");
     }
 
     @Test

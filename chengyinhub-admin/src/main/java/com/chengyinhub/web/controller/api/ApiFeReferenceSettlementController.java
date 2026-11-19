@@ -89,7 +89,7 @@ public class ApiFeReferenceSettlementController extends BaseController {
     public AjaxResult note(@RequestParam Long chapterId) {
         try {
             getAppUserId();
-            return success(Collections.singletonMap("text", service.offlineSettlementNoteForChapter(chapterId)));
+            return success(service.chapterFormSettlement(chapterId));
         } catch (ServiceException e) {
             return failure(e);
         }

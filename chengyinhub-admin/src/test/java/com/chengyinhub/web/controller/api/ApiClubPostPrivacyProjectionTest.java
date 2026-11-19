@@ -83,6 +83,7 @@ class ApiClubPostPrivacyProjectionTest {
         post.setClubId(CLUB_ID);
         post.setRefType(refType);
         post.setRefId(refId);
+        post.setDelFlag(0); // 库里的行恒有 del_flag;评论列表只对未删帖开放(MC-053)
         return post;
     }
 

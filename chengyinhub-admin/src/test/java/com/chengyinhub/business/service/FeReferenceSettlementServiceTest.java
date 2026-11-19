@@ -431,4 +431,25 @@ class FeReferenceSettlementServiceTest {
         assertEquals("票款由主办方收取；店铺如需结算，请联系主办方线下处理 · 主办方：示例主办方",
                 service.offlineSettlementNoteForRedemption(redemption()));
     }
+
+    // FE-G23:权益卡表单加载载荷带上与商家账本同一句的零现金原因;非自由探索两项都为 null。
+    @Test
+    void chapterFormCarriesThePerkNoCashReasonOnlyForFreeExplore() {
+        CmsTopicChapterMapper chapters = mock(CmsTopicChapterMapper.class);
+        ReflectionTestUtils.setField(service, "chapterMapper", chapters);
+        com.chengyinhub.business.domain.CmsTopicChapter chapter = new com.chengyinhub.business.domain.CmsTopicChapter();
+        chapter.setId(CHAPTER);
+        chapter.setTopicId(TOPIC);
+        when(chapters.selectCmsTopicChapterById(CHAPTER)).thenReturn(chapter);
+
+        java.util.Map<String, Object> form = service.chapterFormSettlement(CHAPTER);
+        assertEquals(service.offlineSettlementNoteForChapter(CHAPTER), form.get("text"));
+        assertEquals(form.get("text"), form.get("perkNoCashReason"));
+        org.junit.jupiter.api.Assertions.assertTrue(String.valueOf(form.get("perkNoCashReason")).startsWith("票款由主办方收取"));
+
+        topic.setProductType(1);
+        java.util.Map<String, Object> guided = service.chapterFormSettlement(CHAPTER);
+        org.junit.jupiter.api.Assertions.assertNull(guided.get("text"));
+        org.junit.jupiter.api.Assertions.assertNull(guided.get("perkNoCashReason"));
+    }
 }

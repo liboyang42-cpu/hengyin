@@ -657,6 +657,9 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                     case "SUBMIT_PHOTO_CHECK":
                         pendingCardMint = submitPhotoCheck(config, state, safePayload, session, photoResult);
                         break;
+                    case "SUBMIT_PHOTO_RECORD":
+                        submitPhotoRecord(config, state, safePayload, memberId);
+                        break;
                     case "SUBMIT_NOTE":
                         submitNote(config, state, safePayload, session, memberId);
                         break;
@@ -978,6 +981,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                 session.getTopicId(), session.getActivityId(), session.getNodeId());
         JsonNode config = readJson(session.getConfigSnapshotJson(), "高级玩法配置不可用");
         if (!enabled(config.get("photoCheck"))) throw new IllegalArgumentException("该玩法未开启拍照审核");
+        // CG-ALL-12:只记录的拍照站不走视觉模型与第三方处理同意，改用 SUBMIT_PHOTO_RECORD。
+        if (recordPhotoMode(config.get("photoCheck"))) throw new IllegalArgumentException("这一站拍照只做记录");
         ObjectNode state = objectState(session.getStateJson());
         if (state.path("photoCheck").path("passed").asBoolean()) throw new IllegalStateException("这一张已经过了");
         String selected = state.has("zeroChallengeInstance") && state.path("challenge").path("nodeId").asLong() == session.getNodeId()
@@ -2560,6 +2565,41 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         state.with("album").set("images",images.deepCopy());state.with("album").put("done",true);
     }
 
+    /** photoCheck.mode=RECORD:拍照只做留念记录(CG-ALL-12 / CG-02-D-4)。 */
+    static boolean recordPhotoMode(JsonNode photoCheck) {
+        return photoCheck != null && "RECORD".equals(photoCheck.path("mode").asText(""));
+    }
+
+    /**
+     * 只记录的拍照站:不调视觉模型、不要求 photo_model_processing 同意、不判对错。
+     * 交一张本人上传的照片，或拒绝相机时文字确认继续(textConfirmed=true)，这一站即记为完成。
+     * verdict=RECORDED 不是核验:photoVerified 仍为 false,奖励口径与今天未核验的拍照相同(不放宽)。
+     */
+    private void submitPhotoRecord(JsonNode config, ObjectNode state, Map<String, Object> payload, Long memberId) {
+        JsonNode cfg = config.get("photoCheck");
+        if (!enabled(cfg)) throw new IllegalArgumentException("该玩法未开启拍照审核");
+        if (!recordPhotoMode(cfg)) throw new IllegalArgumentException("这一站拍照需要审核");
+        ObjectNode node = state.with("photoCheck");
+        if (node.path("passed").asBoolean(false)) throw new IllegalStateException("这一张已经过了");
+        String imageUrl = text(payload, "imageUrl");
+        Object confirm = payload == null ? null : payload.get("textConfirmed");
+        boolean textConfirmed = Boolean.TRUE.equals(confirm) || "true".equalsIgnoreCase(String.valueOf(confirm));
+        if (imageUrl.length() > 512) throw new IllegalArgumentException("照片地址不能超过 512 字");
+        if (imageUrl.isEmpty() && !textConfirmed) throw new IllegalArgumentException("请先拍一张，或确认不拍继续");
+        if (!imageUrl.isEmpty()) {
+            photoEvidenceVerifier.accept(imageUrl, memberId);
+            node.put("lastUrl", imageUrl);
+            node.put("textConfirmed", false);
+        } else {
+            node.remove("lastUrl");
+            node.put("textConfirmed", true);
+        }
+        node.put("tries", node.path("tries").asInt(0) + 1);
+        node.put("passed", true);
+        node.put("verdict", "RECORDED");
+        node.put("degraded", false);
+    }
+
     private CardMintRequest submitPhotoCheck(JsonNode config, ObjectNode state, Map<String, Object> payload,
             GameRuntimeSession session, PhotoCheckVisionResult review) {
         JsonNode cfg = config.get("photoCheck");
@@ -3375,6 +3415,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             value.put("flagged", st.path("flagged").asBoolean(false));
             value.put("degraded", st.path("degraded").asBoolean(false));
             putText(value, "lastUrl", st);
+            if (recordPhotoMode(cfg)) value.put("textConfirmed", st.path("textConfirmed").asBoolean(false));
             putText(value, "lastReason", st);
             value.put("lastConfidence", st.path("lastConfidence").asInt(0));
             // C1:只有视觉模型当场真判 PASS 才算「照片已核验」;降级与次数用尽兜底放行不算。

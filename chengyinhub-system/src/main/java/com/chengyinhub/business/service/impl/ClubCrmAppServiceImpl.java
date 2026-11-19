@@ -67,16 +67,33 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
 
     @Override
     public ClubCustomerVO.ListPage listCustomers(Long principalMemberId, Long clubId, String filter, String keyword) {
+        return listCustomers(principalMemberId, clubId, filter, keyword, null, null);
+    }
+
+    @Override
+    public ClubCustomerVO.ListPage listCustomers(Long principalMemberId, Long clubId, String filter, String keyword,
+                                                 Integer pageNum, Integer pageSize) {
         Club club = requireGovernable(principalMemberId, clubId);
+        // MC-057:不传分页 = 第 1 页、LIST_LIMIT 条,与原行为一致;页大小封顶 LIST_LIMIT。
+        int num = pageNum == null || pageNum <= 0 ? 1 : pageNum;
+        int size = pageSize == null || pageSize <= 0 ? LIST_LIMIT : Math.min(pageSize, LIST_LIMIT);
+        long offsetLong = (long) (num - 1) * size;
+        if (offsetLong > Integer.MAX_VALUE) throw new ServiceException("页码过大");
+        int offset = (int) offsetLong;
         boolean canSeePhone = hasPermission(principalMemberId, clubId, ClubPermission.MEMBER_LIST_READ);
         boolean canSeeFullPhone = hasPermission(principalMemberId, clubId, ClubPermission.CUSTOMER_PHONE_READ);
 
         List<ClubCustomerVO.RawCustomer> raws =
-                clubCrmMapper.selectClubCustomers(club.getId(), normalizedFilter(filter), trimmed(keyword), LIST_LIMIT);
+                clubCrmMapper.selectClubCustomers(club.getId(), normalizedFilter(filter), trimmed(keyword), offset, size);
         Map<Long, ClubCustomerVO.Profile> profiles = profileMap(club.getId());
 
         ClubCustomerVO.ListPage page = new ClubCustomerVO.ListPage();
         page.setTotal(clubCrmMapper.countClubCustomers(club.getId()));
+        int filteredTotal = clubCrmMapper.countClubCustomersFiltered(club.getId(), normalizedFilter(filter), trimmed(keyword));
+        page.setFilteredTotal(filteredTotal);
+        page.setPageNum(num);
+        page.setPageSize(size);
+        page.setHasMore((long) offset + (raws == null ? 0 : raws.size()) < filteredTotal);
         page.setMonthNew(clubCrmMapper.countClubCustomersNewThisMonth(club.getId()));
         page.setCanEdit(Boolean.TRUE);
         List<ClubCustomerVO.Row> items = new ArrayList<>();
@@ -132,6 +149,7 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
         summary.setRefundedCount(nullToZero(raw.getRefundedCount()));
         // K2-B:没有 FINANCE_READ 就不下发金额。给 0 会被读成"这人没花过钱",那是假事实。
         summary.setPaidAmount(canSeeAmount ? raw.getPaidAmount() : null);
+        summary.setPaidAmountText(canSeeAmount ? com.chengyinhub.business.domain.vo.PublicClubVO.moneyText(raw.getPaidAmount()) : null);
 
         ClubCustomerVO.Detail detail = new ClubCustomerVO.Detail();
         detail.setSummary(summary);
@@ -400,7 +418,8 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
         Club club = clubService.selectClubById(clubId);
         if (club == null) throw new ServiceException("俱乐部不存在");
         if (!clubMemberService.canGovernClub(club, principalMemberId)) {
-            throw new ServiceException("当前岗位没有客户查看权限");
+            // MC-056:无权限明确回 403(文案不变),前端据此显示「无权限」而不是通用错误。
+            throw new ServiceException("当前岗位没有客户查看权限", com.chengyinhub.common.constant.HttpStatus.FORBIDDEN);
         }
         return club;
     }

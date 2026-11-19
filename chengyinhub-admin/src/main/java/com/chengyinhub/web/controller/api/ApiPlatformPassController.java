@@ -34,10 +34,18 @@ public class ApiPlatformPassController extends BaseController {
         this.service = service;
     }
 
-    @Operation(summary = "通行证页：套餐、本人有效期、可玩主题数、支付渠道")
+    @Operation(summary = "通行证页：套餐、本人有效期、可玩主题数、支付渠道；library=true 时附公开主题库")
     @GetMapping
-    public AjaxResult overview() {
-        return success(service.overview(optionalMemberId()));
+    public AjaxResult overview(@RequestParam(required = false) Boolean library,
+                               @RequestParam(required = false) Integer productType,
+                               @RequestParam(required = false, defaultValue = "50") Integer limit) {
+        Map<String, Object> out = new java.util.LinkedHashMap<>(service.overview(optionalMemberId()));
+        // OR-002：游客读公开主题库走本来就匿名的精确 GET /api/platform-pass，不另开 /library 匿名；
+        // 这里恒为无个人覆盖字段的公开投影（登录用户的「已覆盖」仍走需登录的 /library）。
+        if (Boolean.TRUE.equals(library)) {
+            out.put("library", service.publicLibrary(productType, limit == null ? 50 : limit));
+        }
+        return success(out);
     }
 
     @Operation(summary = "游戏主题库：公开主题与逐主题通行证覆盖事实")

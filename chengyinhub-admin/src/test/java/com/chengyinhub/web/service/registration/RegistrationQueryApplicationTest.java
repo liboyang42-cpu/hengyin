@@ -197,4 +197,38 @@ class RegistrationQueryApplicationTest {
         for (java.lang.reflect.Method method : RegistrationQueryApplication.class.getDeclaredMethods())
             assertNull(method.getAnnotation(Transactional.class), method.getName());
     }
+    // OR-029：同一活动在一次列表里只查一次；列表不分页(registration-query-application-source 合同)，整表原样返回。
+    @Test void listLoadsEachOwnerOnceWithoutEnablingPagination() {
+        PageHelper.clearPage();
+        ICmsRegistrationService registrations = mock(ICmsRegistrationService.class);
+        ICmsActivityService activities = mock(ICmsActivityService.class);
+        IRefundService refunds = mock(IRefundService.class);
+        when(refunds.selectRefundList(any())).thenReturn(Collections.emptyList());
+        java.util.List<CmsRegistration> rows = new java.util.ArrayList<>();
+        for (long id = 1; id <= 3; id++) {
+            CmsRegistration row = new CmsRegistration(); row.setId(id); row.setMemberId(7L); row.setOwnerType(2L);
+            row.setOwnerId(20L); row.setRegistrationStatus(1); rows.add(row);
+        }
+        boolean[] pagedDuringQuery = {true};
+        when(registrations.selectCmsRegistrationList(any())).thenAnswer(call -> {
+            pagedDuringQuery[0] = PageHelper.getLocalPage() != null;
+            return rows;
+        });
+        CmsActivity activity = new CmsActivity(); activity.setId(20L);
+        when(activities.selectCmsActivityById(20L)).thenReturn(activity);
+        RegistrationQueryApplication app = application(registrations);
+        ReflectionTestUtils.setField(app, "activityService", activities);
+        ReflectionTestUtils.setField(app, "refundService", refunds);
+        try {
+            AjaxResult response = app.myRegistrationList(7L, "3", "0", null);
+            assertEquals(200, response.get("code"));
+            assertFalse(pagedDuringQuery[0], "列表不得开启分页");
+            assertSame(rows, response.get("data"));
+            verify(activities, times(1)).selectCmsActivityById(20L);
+            for (CmsRegistration row : rows) assertSame(activity, row.getCmsActivity());
+            assertNull(PageHelper.getLocalPage());
+        } finally {
+            PageHelper.clearPage();
+        }
+    }
 }

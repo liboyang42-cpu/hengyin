@@ -1252,6 +1252,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         </foreach>
     </delete>
 
+    <!-- MC-060:俱乐部详情的主题数,口径同 selectCmsTopicList(clubId, delFlag=0),只数不取整行。 -->
+    <select id="countCmsTopicByClubId" resultType="Integer">
+        select count(1) from cms_topic where club_id = #{clubId} and del_flag = 0
+    </select>
+
     <select id="selectCmsTopicNumByMemberId" resultType="Integer">
         select count(1) from cms_topic where member_id = #{member_id} and del_flag=0
     </select>

@@ -180,6 +180,9 @@ class ClubEventNotificationTransactionBoundaryTest {
         jdbc.update("insert into delivery(id,campaign_id,recipient_member_id,status,attempt_count,version) "
                 + "values (12,9,52,'PENDING',0,0)");
         jdbc.update("insert into outbox(delivery_id,status,next_attempt_at) values (12,'PENDING',current_timestamp)");
+        // 两行都必须已到期:H2 current_timestamp 精度到微秒,服务端 now=new Date() 只到毫秒,
+        // 同一毫秒内插入的行会被 next_attempt_at<=now 漏掉(偶发无行可认领、不抛)。退 1 秒消除时序抖动。
+        jdbc.update("update outbox set next_attempt_at=dateadd('SECOND',-1,current_timestamp)");
         when(mapper.selectCampaignById(9L)).thenReturn(campaign());
         org.mockito.Mockito.doAnswer(call -> {
             Long deliveryId = call.getArgument(0);

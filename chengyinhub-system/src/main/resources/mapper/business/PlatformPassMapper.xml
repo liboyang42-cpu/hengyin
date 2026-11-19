@@ -295,4 +295,29 @@
             <foreach collection="topicIds" item="id" open="(" separator="," close=")">#{id}</foreach>
         </if>
     </select>
+
+    <!-- OR-016：「通行证含」计数。逐条对应 PlatformPassService.selfPlayAvailable：
+         自玩开启且价格非负；¥0 看 coalesce(sale_end_at, end_date) 未到；付费看 SaleAvailabilityPolicy
+         （lifecycle=3 售票中、开售时刻与硬售止均存在、now 位于 [开售, 售止)）。缺事实一律不计。 -->
+    <select id="countIncludedLibrary" resultType="int">
+        select count(*) from cms_topic
+        where <include refid="com.chengyinhub.business.mapper.PublicContentCatalogMapper.catalogPublicGate"/>
+        <if test="topicIds != null and !topicIds.isEmpty()">
+            and cms_topic.id in
+            <foreach collection="topicIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+        </if>
+        and cms_topic.self_play = 1
+        and cms_topic.self_play_price is not null
+        and (
+            (cms_topic.self_play_price = 0
+                and (coalesce(cms_topic.sale_end_at, cms_topic.end_date) is null
+                     or #{now} &lt; coalesce(cms_topic.sale_end_at, cms_topic.end_date)))
+            or (cms_topic.self_play_price &gt; 0
+                and cms_topic.lifecycle = 3
+                and cms_topic.selling_started_at is not null
+                and cms_topic.sale_end_at is not null
+                and #{now} &gt;= cms_topic.selling_started_at
+                and #{now} &lt; cms_topic.sale_end_at)
+        )
+    </select>
 </mapper>

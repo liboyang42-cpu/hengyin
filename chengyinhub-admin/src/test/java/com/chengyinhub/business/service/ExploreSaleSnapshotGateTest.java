@@ -56,6 +56,57 @@ class ExploreSaleSnapshotGateTest {
         org.mockito.Mockito.verifyNoMoreInteractions(registrations);
     }
 
+    // FE-G11:商家自由探索看「承接完整」,其它主题仍看俱乐部一致。
+    private static com.chengyinhub.business.service.support.FreeExploreSlotProgress slots(int total, int open) {
+        com.chengyinhub.business.service.support.FreeExploreSlotProgress progress =
+                mock(com.chengyinhub.business.service.support.FreeExploreSlotProgress.class);
+        when(progress.slots(9L)).thenReturn(new com.chengyinhub.business.service.support.FreeExploreSlotProgress.Slots(total, open));
+        return progress;
+    }
+
+    @Test
+    void merchantFreeExploreSellsOnlyWhenEverySlotIsUndertakenWhateverTheSessionClub() {
+        CmsTopic merchantTopic = topic(new Date());
+        assertDoesNotThrow(() -> ExploreSaleSnapshotGate.assertSessionClub(merchantTopic, 7002L, slots(3, 0)));
+        assertDoesNotThrow(() -> ExploreSaleSnapshotGate.assertSessionClub(merchantTopic, null, slots(3, 0)));
+        IllegalStateException open = assertThrows(IllegalStateException.class,
+                () -> ExploreSaleSnapshotGate.assertSessionClub(merchantTopic, null, slots(3, 1)));
+        org.junit.jupiter.api.Assertions.assertEquals("还有商家位置未承接，暂不能售票", open.getMessage());
+        assertThrows(IllegalStateException.class,
+                () -> ExploreSaleSnapshotGate.assertSessionClub(merchantTopic, 7002L, slots(3, 1)));
+    }
+
+    @Test
+    void slotReadFailureIsNotSellable() {
+        CmsTopic merchantTopic = topic(new Date());
+        com.chengyinhub.business.service.support.FreeExploreSlotProgress broken =
+                mock(com.chengyinhub.business.service.support.FreeExploreSlotProgress.class);
+        when(broken.slots(9L)).thenThrow(new IllegalStateException("db down"));
+        assertThrows(IllegalStateException.class,
+                () -> ExploreSaleSnapshotGate.assertSessionClub(merchantTopic, 7002L, broken));
+    }
+
+    @Test
+    void clubTopicsPureContentAndMissingProgressKeepTheClubCheck() {
+        CmsTopic clubTopic = topic(new Date());
+        clubTopic.setClubId(5L);
+        // 俱乐部主题:承接完整也不放宽跨俱乐部
+        assertThrows(IllegalStateException.class,
+                () -> ExploreSaleSnapshotGate.assertSessionClub(clubTopic, 7002L, slots(3, 0)));
+        assertDoesNotThrow(() -> ExploreSaleSnapshotGate.assertSessionClub(clubTopic, 5L, slots(3, 0)));
+        CmsTopic merchantTopic = topic(new Date());
+        // 纯内容探索(没有位置)与取不到承接进度:原俱乐部一致校验
+        assertThrows(IllegalStateException.class,
+                () -> ExploreSaleSnapshotGate.assertSessionClub(merchantTopic, 7002L, slots(0, 0)));
+        assertThrows(IllegalStateException.class,
+                () -> ExploreSaleSnapshotGate.assertSessionClub(merchantTopic, 7002L, null));
+        assertDoesNotThrow(() -> ExploreSaleSnapshotGate.assertSessionClub(merchantTopic, null, null));
+        // 非自由探索不受影响
+        CmsTopic guided = topic(new Date());
+        guided.setProductType(ProductType.ORIENTEERING);
+        assertDoesNotThrow(() -> ExploreSaleSnapshotGate.assertSessionClub(guided, 7002L, slots(3, 1)));
+    }
+
     private CmsTopic topic(Date sellingStartedAt) {
         CmsTopic topic = new CmsTopic();
         topic.setId(9L);

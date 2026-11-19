@@ -39,8 +39,26 @@ public final class ExploreSaleSnapshotGate {
 
     /** 只拦新的普通探索场次/售票，不改存量合同的结算权利。 */
     public static void assertSessionClub(CmsTopic topic, Long sessionClubId) {
-        if (topic != null && Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())
-                && !java.util.Objects.equals(positiveClub(sessionClubId), positiveClub(topic.getClubId()))) {
+        assertSessionClub(topic, sessionClubId, null);
+    }
+
+    /**
+     * FE-G11:商家自由探索(主题不属于任何俱乐部、且有商家位置)不再看场次俱乐部,改看「承接完整」——
+     * 每个必选位置都有生效承接才放行,有空位一律拒。纯内容探索(没有位置)、俱乐部主题、
+     * 以及取不到承接进度时,仍按原俱乐部一致性校验(不放宽)。承接统计查询失败直接抛出(不可售)。
+     */
+    public static void assertSessionClub(CmsTopic topic, Long sessionClubId, FreeExploreSlotProgress slotProgress) {
+        if (topic == null || !Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())) return;
+        if (positiveClub(topic.getClubId()) == null && slotProgress != null && topic.getId() != null) {
+            FreeExploreSlotProgress.Slots slots = slotProgress.slots(topic.getId());
+            if (slots != null && slots.getTotal() > 0) {
+                if (!slots.isAllFilled()) {
+                    throw new IllegalStateException("还有商家位置未承接，暂不能售票");
+                }
+                return;
+            }
+        }
+        if (!java.util.Objects.equals(positiveClub(sessionClubId), positiveClub(topic.getClubId()))) {
             throw new IllegalStateException("自由探索只开放内容所属俱乐部的场次，不能跨俱乐部售票");
         }
     }

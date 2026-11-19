@@ -19,6 +19,12 @@ public interface ICashWithdrawService {
      */
     MemberCashWithdraw withdraw(Long memberId, BigDecimal amountYuan);
 
+    /**
+     * 当前可提现余额 = 余额 − 总冻结额,与 {@link #withdraw} 预检同一口径(同一 frozen resolver)。
+     * 冻结来源查询失败直接抛异常(fail closed),调用方不得吞成 0 或回落裸余额。
+     */
+    BigDecimal availableBalance(Long memberId);
+
     /** 某会员提现记录 */
     List<MemberCashWithdraw> myWithdraws(Long memberId);
 

@@ -172,4 +172,12 @@ class AnswerPolicyTest {
         for (int i = 0; i < count; i++) aliases.add("别名" + i);
         return policy;
     }
+
+    @Test
+    void apostropheVariantsFoldInBothPolicyAndLegacyAdvancedType() {
+        assertEquals(AnswerPolicy.normalize("it's"), AnswerPolicy.normalize("it\u2019s"));
+        assertEquals(AnswerPolicy.normalize("it's"), AnswerPolicy.normalize("it\u2018s"));
+        assertTrue(AnswerPolicy.matchesLegacyAdvancedType("Rock'n'roll、摇滚", "rock\u2019n\u2019roll"));
+        assertFalse(AnswerPolicy.matchesLegacyAdvancedType("Rock'n'roll", "rocknroll"));
+    }
 }

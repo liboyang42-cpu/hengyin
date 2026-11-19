@@ -127,6 +127,7 @@ class ApiClubLegacyRoleAccessTest {
     void legacySetRoleAssignsOperatorAndSyncsLegacyAdminRole() {
         Harness h = harness();
         when(h.roles.list(PRINCIPAL, CLUB, null)).thenReturn(Collections.emptyList());
+        activeTarget(h, 902L);
         when(h.members.setMemberRoleWithAdminCap(CLUB, 902L, 1)).thenReturn(true);
         ClubMember request = roleRequest(902L, 1);
 
@@ -142,6 +143,7 @@ class ApiClubLegacyRoleAccessTest {
     void legacySetRoleFailsClosedWhenAdminCapReached() {
         Harness h = harness();
         when(h.roles.list(PRINCIPAL, CLUB, null)).thenReturn(Collections.emptyList());
+        activeTarget(h, 902L);
         when(h.members.setMemberRoleWithAdminCap(CLUB, 902L, 1)).thenReturn(false);
 
         AjaxResult result = h.controller.setMemberRole(roleRequest(902L, 1));
@@ -158,6 +160,7 @@ class ApiClubLegacyRoleAccessTest {
         Harness h = harness();
         when(h.roles.list(PRINCIPAL, CLUB, null))
                 .thenReturn(Collections.singletonList(assignment(71L, 902L, 0)));
+        activeTarget(h, 902L);
         when(h.members.setMemberRoleWithAdminCap(CLUB, 902L, 1)).thenReturn(true);
 
         AjaxResult result = h.controller.setMemberRole(roleRequest(902L, 1));
@@ -353,6 +356,48 @@ class ApiClubLegacyRoleAccessTest {
         post.setAuthorMemberId(902L);
         when(h.posts.selectClubPostById(81L)).thenReturn(post);
         return h;
+    }
+
+    /** MC-033:提管理员前目标必须是本团在册普通成员。 */
+    private void activeTarget(Harness h, Long target) {
+        Club club = new Club();
+        club.setId(CLUB);
+        club.setMemberId(PRINCIPAL);
+        when(h.clubs.selectClubById(CLUB)).thenReturn(club);
+        ClubMember m = new ClubMember();
+        m.setClubId(CLUB);
+        m.setMemberId(target);
+        m.setStatus(1);
+        m.setRole(0);
+        when(h.members.selectByClubAndMember(CLUB, target)).thenReturn(m);
+    }
+
+    @Test
+    void legacySetRoleRejectsNonMemberBeforeAdminCapGate() {
+        Harness h = harness();
+        when(h.roles.list(PRINCIPAL, CLUB, null)).thenReturn(Collections.emptyList());
+        Club club = new Club();
+        club.setId(CLUB);
+        club.setMemberId(PRINCIPAL);
+        when(h.clubs.selectClubById(CLUB)).thenReturn(club);
+
+        AjaxResult result = h.controller.setMemberRole(roleRequest(903L, 1));
+
+        assertEquals("对方不是本俱乐部成员", result.get(AjaxResult.MSG_TAG));
+        verify(h.members, never()).setMemberRoleWithAdminCap(any(), any(), org.mockito.ArgumentMatchers.anyInt());
+        verify(h.roles, never()).assign(any(), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void legacySetRoleRejectsOwnerAsTarget() {
+        Harness h = harness();
+        when(h.roles.list(PRINCIPAL, CLUB, null)).thenReturn(Collections.emptyList());
+        activeTarget(h, PRINCIPAL);
+
+        AjaxResult result = h.controller.setMemberRole(roleRequest(PRINCIPAL, 1));
+
+        assertEquals("对方不是本俱乐部成员", result.get(AjaxResult.MSG_TAG));
+        verify(h.members, never()).setMemberRoleWithAdminCap(any(), any(), org.mockito.ArgumentMatchers.anyInt());
     }
 
     private ClubMember roleRequest(Long targetMemberId, int role) {
