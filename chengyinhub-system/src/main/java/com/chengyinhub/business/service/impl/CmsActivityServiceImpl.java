@@ -404,11 +404,12 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         if (totalSales != null && ledger.isolatedGross.signum() > 0) {
             totalSales = totalSales.subtract(ledger.isolatedGross);
         }
-        // D-29:自由探索的平台费现金与分账行同一冻结费率、同一余数法;部分退款留存部分另按活动费率。
+        // D-29:自由探索的平台费现金与分账行同一冻结费率、同一余数法。
+        // MC-007:部分退款留存部分按**报名下单时冻结的** fee_platform_rate 逐单计,不再乘当前规则费率
+        //(调一次费率不能追溯改写已售订单);只有冻结费率为空的存量单才回落当前规则费率。
         BigDecimal platformOverride = ledger.cashPlatformFee;
         if (platformOverride != null && retainedSales != null && retainedSales.signum() > 0) {
-            platformOverride = platformOverride.add(retainedSales.multiply(rule.getPlatformCommissionRate())
-                    .setScale(2, RoundingMode.HALF_UP));
+            platformOverride = platformOverride.add(retainedPlatformFee(activity.getId(), retainedSales, rule));
         }
         if (totalSales == null || totalSales.compareTo(BigDecimal.ZERO) <= 0) {
             logger.info("活动 {} 没有销售额，跳过分润（已通过领取标记为已结算）", activity.getId());
@@ -727,6 +728,17 @@ public class CmsActivityServiceImpl implements ICmsActivityService
     }
 
     /** 自由探索场次分账结果:cashPlatformFee=null 表示非自由探索(沿用活动费率);isolatedGross=被隔离单金额。 */
+    /** MC-007:留存部分平台费 = Σ 留存额 × 报名冻结费率(空则回落当前规则费率),统一 2 位四舍五入。 */
+    BigDecimal retainedPlatformFee(Long activityId, BigDecimal retainedSales, SettlementRule rule) {
+        BigDecimal fee = cmsRegistrationMapper.selectRetainedPlatformFeeAfterPartialRefundByActivityId(
+                activityId, rule.getPlatformCommissionRate());
+        if (fee == null) {
+            // 查询异常回空时不能当 0(会少抽平台费),退回旧口径整体乘当前费率。
+            fee = retainedSales.multiply(rule.getPlatformCommissionRate());
+        }
+        return fee.setScale(2, RoundingMode.HALF_UP);
+    }
+
     private static final class FreeExploreLedger {
         static final FreeExploreLedger NONE = new FreeExploreLedger(null, BigDecimal.ZERO);
         final BigDecimal cashPlatformFee;
