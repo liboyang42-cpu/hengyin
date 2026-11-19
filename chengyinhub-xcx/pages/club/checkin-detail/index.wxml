@@ -72,7 +72,6 @@
           <text class="ckd-rail-label ckd-rail-label--{{item.tone}} {{item.current ? 'is-current' : ''}}">{{item.label}}</text>
         </view>
       </view>
-      <text wx:if="{{detail.statusCode === 'REFUNDED'}}" class="ckd-note">已退款</text>
     </view>
 
     <!-- 清退退款(2026-09-09 从报名名册行内挪来)。canRefund 由服务端判:
