@@ -177,7 +177,7 @@ public class SecurityConfig
                                 "/api/roam/pois", "/api/roam/nearby-exploreday", "/api/city/nodes",
                                 "/api/city/nodes/merchant/{merchantId:\\d+}",
                                 "/api/marketing/product/list", "/api/marketing/product/{productId:\\d+}",
-                                "/api/platform-pass", "/api/ai/npc/profile",
+                                "/api/platform-pass", "/api/platform-pass/library", "/api/ai/npc/profile",
                         "/api/official/active-for-roam", "/api/growth/leaderboard", "/api/search/unified",
                                 "/api/media/asset/attribution",
                                 "/api/community-trust/safety/merchants/{merchantId:\\d+}")).permitAll()

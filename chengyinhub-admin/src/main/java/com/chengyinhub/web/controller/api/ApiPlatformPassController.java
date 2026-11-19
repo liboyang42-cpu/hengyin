@@ -40,11 +40,15 @@ public class ApiPlatformPassController extends BaseController {
         return success(service.overview(optionalMemberId()));
     }
 
-    @Operation(summary = "游戏主题库：公开主题与逐主题通行证覆盖事实")
+    @Operation(summary = "游戏主题库：公开主题；登录后附逐主题通行证覆盖事实")
     @GetMapping("/library")
     public AjaxResult library(@RequestParam(required = false) Integer productType,
                               @RequestParam(required = false, defaultValue = "50") Integer limit) {
-        return success(service.library(requireMemberId(), productType, limit == null ? 50 : limit));
+        int bounded = limit == null ? 50 : limit;
+        Long memberId = optionalMemberId();
+        // OR-002：游客可读公开主题库，但不带个人覆盖字段；登录后照旧返回「已覆盖」。
+        if (memberId == null || memberId <= 0) return success(service.publicLibrary(productType, bounded));
+        return success(service.library(memberId, productType, bounded));
     }
 
     @Operation(summary = "下单（requestId 幂等；只建待支付单）")

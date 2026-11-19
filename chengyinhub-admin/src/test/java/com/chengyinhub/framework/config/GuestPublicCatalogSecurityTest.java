@@ -151,6 +151,13 @@ class GuestPublicCatalogSecurityTest {
         mvc(new ApiPlatformPassController(passes)).perform(get("/api/platform-pass"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.code").value(200)).andExpect(jsonPath("$.data.holding").doesNotExist());
         verify(passes).overview(null);
+        // OR-002：游客读通行证主题库走无个人覆盖字段的投影
+        when(passes.publicLibrary(null, 50)).thenReturn(Map.of("enabled", true, "rows", List.of(Map.of("topicId", 5L))));
+        mvc(new ApiPlatformPassController(passes)).perform(get("/api/platform-pass/library"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.covered").doesNotExist());
+        verify(passes).publicLibrary(null, 50);
+        verify(passes, never()).library(any(), any(), anyInt());
         IOfficialEventService events = mock(IOfficialEventService.class);
         when(events.activeForRoam(null,0L)).thenReturn(List.of(Map.of("id",7L,"title","官方漫游")));
         ApiOfficialEventController official = new ApiOfficialEventController(); ReflectionTestUtils.setField(official,"officialEventService",events);
@@ -200,7 +207,7 @@ class GuestPublicCatalogSecurityTest {
         MockMvc security = mvc(new ApiGrowthController());
         List<String> publicRoutes = List.of("/api/roam/entry/nearby","/api/roam/hangout/nearby","/api/team/nearby",
                 "/api/roam/pois","/api/roam/nearby-exploreday","/api/city/nodes","/api/city/nodes/merchant/2",
-                "/api/marketing/product/list","/api/marketing/product/3","/api/platform-pass","/api/ai/npc/profile",
+                "/api/marketing/product/list","/api/marketing/product/3","/api/platform-pass","/api/platform-pass/library","/api/ai/npc/profile",
                 "/api/media/asset/attribution","/api/community-trust/safety/merchants/2","/api/official/active-for-roam","/api/growth/leaderboard","/api/search/unified");
         for (String route : publicRoutes) {
             for (org.springframework.http.HttpMethod method : List.of(org.springframework.http.HttpMethod.POST,
