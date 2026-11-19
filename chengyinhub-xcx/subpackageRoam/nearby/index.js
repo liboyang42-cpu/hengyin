@@ -107,7 +107,6 @@ Page({
     current: null, reportShow: false, reportTeamId: '',
     busy: false,
     applicants: [],
-    leaderSub: '',
     myRows: [],
     myLoading: false,
     topic: null,
@@ -196,7 +195,7 @@ Page({
     this._nearbyFailures = { teams: false, topics: false };
     this._teams = []; this._items = []; this._pois = []; this._icons = {}; this._far = {}; this._iconFailed = {}; this._selfIcon = '';
     this.setData({ headerText: '附近', nearbyReadAccess: '', loadError: false,
-      current: null, topic: null, poiCard: null, poiCardIn: false, applicants: [], leaderSub: '', sheet: '', sheetIn: false });
+      current: null, topic: null, poiCard: null, poiCardIn: false, applicants: [], sheet: '', sheetIn: false });
     this._syncMarkers();
   },
 
@@ -301,8 +300,7 @@ Page({
     const BADGE = { buy: ['需购票', 'plain'], apply: ['可申请', 'plain'], pending: ['审核中', 'wait'], joined: ['已通过', 'ok'], rejected: ['未通过', 'bad'], leader: ['我带队', 'lead'] };
     const listRows = teams.map((t) => { const d = T.decorateTeam(t); const b = BADGE[d.card && d.card.mode] || ['可申请', 'plain'];
       return { teamId: d.teamId, name: d.heading || d.name, sub: d.sub, badge: b[0], tone: b[1], count: d.joinedCount + '/' + d.maxMembers }; });
-    this.setData({ current: next,
-      leaderSub: next ? T.leaderSub(next) : '' });
+    this.setData({ current: next }); // PG-063:队长副行已撤,不再算 leaderSub
     // 卡片开着的那支队伍刷新后不在了(满员 / 开场 / 审核中,服务端已过滤):卡上的「申请加入」已经不成立,收掉
     if (cur && !row && this.data.sheet === 'team') this.closeSheet();
     this._syncMarkers();
@@ -575,7 +573,7 @@ Page({
     if (!row) return;
     const cur = T.decorateTeam(row);
     if (cur.viewerStatus === 'LEADER') {
-      this.setData({ current: cur, applicants: [], leaderSub: T.leaderSub(cur) }, () => this._openSheet('leader'));
+      this.setData({ current: cur, applicants: [] }, () => this._openSheet('leader'));
       this.loadApplicants();
     } else {
       this.setData({ current: cur }, () => this._openSheet('team'));
