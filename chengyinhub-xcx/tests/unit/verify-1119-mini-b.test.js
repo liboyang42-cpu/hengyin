@@ -176,3 +176,21 @@ test('MC-055:俱乐部详情/名册/编辑优先用服务端 viewerCanGovern,缺
   assert.match(read('pages/club/enroll/index.js'), /typeof club\.viewerCanGovern === 'boolean' \? club\.viewerCanGovern : \(club\.isOwner \|\| club\.viewerIsAdmin\)/)
   assert.match(read('pages/club/components/cy/scene-club-edit/index.js'), /typeof c\.viewerCanGovern === 'boolean' \? !c\.viewerCanGovern :/)
 })
+
+test('MC-056:「当前岗位没有客户查看权限」也判为无权限', () => {
+  for (const f of ['pages/club/customers/index.js', 'pages/club/customer-detail/index.js']) {
+    const src = read(f)
+    const m = src.match(/return code === 403 \|\| (\/[^\n]+?\/)\.test/)
+    assert.ok(m, f)
+    const re = eval(m[1]) // eslint-disable-line no-eval
+    assert.ok(re.test('当前岗位没有客户查看权限'), f)
+    assert.ok(!re.test('客户名单暂时不可用'), f)
+  }
+})
+
+test('MC-057:客户列表按页请求,触底续读,服务端不分页时去重即停', () => {
+  const js = read('pages/club/customers/index.js')
+  assert.match(js, /pageNum, pageSize: PAGE_SIZE \}\)/)
+  assert.match(js, /onReachBottom\(\) \{/)
+  assert.match(js, /const fresh = shaped\.items\.filter\(\(item\) => !seen\.has\(item\.memberId\)\);/)
+})
