@@ -112,7 +112,7 @@ Page({
 
   load() {
     if (!this._clubId) {
-      this.setData({ state: 'error', errorText: '缺少俱乐部信息，请从俱乐部页重新进入' });
+      this.setData({ state: 'missing-param' });
       return;
     }
     const epoch = (this._epoch || 0) + 1;

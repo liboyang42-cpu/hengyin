@@ -124,7 +124,7 @@ Page({
     this._personal = options && options.personal === '1'
     const clubId = positiveId(options && (options.clubId || options.id))
     if (!clubId && !this._mine) {
-      this.setData({ state: 'error', errorText: '缺少俱乐部信息' })
+      this.setData({ state: 'missing-param' })
       return
     }
     this._clubId = clubId
@@ -178,7 +178,7 @@ Page({
     const epoch = this._loadEpoch = (this._loadEpoch || 0) + 1
     this._clearData()
     if (!this._mine && !positiveId(this._clubId)) {
-      this.setData({ state: 'error', errorText: '缺少俱乐部信息' }); wx.stopPullDownRefresh(); return
+      this.setData({ state: 'missing-param' }); wx.stopPullDownRefresh(); return
     }
     this._loadIdentity = identityKey()
     this._loadClubId = String(this._clubId)
