@@ -31,11 +31,12 @@ test('俱乐部守卫:active 非布尔 → unknown;范围不符 / 缺权限 → 
   assert.equal(decideClubGate({ code: 500 }, 7, 'club:read').state, 'unknown');
 });
 
-test('守卫组件:deny 才整屏盖住,盖层用 modal 档 z 与页面底色,盖层内零按钮 fail 半屏 2s 自动 onExit', () => {
+test('守卫组件:deny 才整屏盖住,盖层用 modal 档 z 与页面底色;商家原地讲清 + 一个动作,俱乐部零按钮 fail 半屏 2s 自动 onExit', () => {
   const wxml = read('components/cy/access-gate/index.wxml');
-  assert.match(wxml, /wx:if="\{\{state === 'deny'\}\}"/);
-  // 2026-09-15 弹窗合同(稿 356-5220):无权限是终态,不给按钮,原因展示 2s 后自己出去
-  assert.match(wxml, /<cy-result-sheet [^>]*kind="fail"[^>]*why="[^"]+"[^>]*bind:close="onExit"/);
+  // UI-sweep 1119 U3:商家 deny 不再 2s 自动退出,原地「当前身份不能…」+ 申请入驻 / 返回
+  assert.match(wxml, /wx:if="\{\{state === 'deny' && kind === 'merchant'\}\}" class="gate"[\s\S]*?<cy-empty kind="no-permission" fill size="lg"[^>]*cta="\{\{denyCta\}\}" bind:cta="onDenyCta"/);
+  // 2026-09-15 弹窗合同(稿 356-5220):俱乐部无权限是终态,不给按钮,原因展示 2s 后自己出去
+  assert.match(wxml, /wx:elif="\{\{state === 'deny'\}\}"[\s\S]*?<cy-result-sheet [^>]*kind="fail"[^>]*why="[^"]+"[^>]*bind:close="onExit"/);
   assert.doesNotMatch(wxml, /primary-text=/, '有按钮就不自愈，会把人卡在盖层上');
   const wxss = read('components/cy/access-gate/index.wxss');
   assert.match(wxss, /position: fixed;[\s\S]*z-index: var\(--cy-z-modal\);[\s\S]*background: var\(--cy-color-bg-page\)/);
@@ -221,10 +222,11 @@ test('共享守卫游客不读私有access并给登录按钮，登录后仍必�
   h.gate.onLogin();h.gate.onLogin();await Promise.resolve();assert.equal(h.requests.length,1);
   h.requests[0].success(merchantOk([PERMISSIONS.BASIC_READ]));assert.equal(h.gate.data.state,'deny','登录不能代替finance权限');
 });
-test('共享守卫真实401/403与普通500分别为login/deny/unknown，401不自动退出',()=>{
+test('共享守卫真实401/403与普通500分别为login/deny/unknown，都不自动退出',()=>{
   for(const code of [401,403,500]){
     const h=mountGate();h.gate.check();h.requests[0].successStatusAbnormal({msg:'HTTP反馈'},code);
-    assert.equal(h.gate.data.state,code===401?'login':code===403?'deny':'unknown');assert.equal(h.gate.data._sheet,code===403);
+    assert.equal(h.gate.data.state,code===401?'login':code===403?'deny':'unknown');assert.equal(h.gate.data._sheet,false,'商家deny原地讲清，不弹自动退出半屏');
+    assert.equal(h.gate.data.denyCta,code===403?'申请入驻':'');
   }
 });
 test('共享守卫账号切换和卸载后旧回包不能放行，新请求足权限仍可allow',()=>{

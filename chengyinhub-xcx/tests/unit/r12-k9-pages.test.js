@@ -127,7 +127,9 @@ test('p2 N-9:玩家开客户页不再被叫去「联系店主开通」', () => {
   for (const base of ['pages/merchant/customer/index', 'pages/merchant/customer/detail/index']) {
     assert.match(read(base + '.js'), /notMerchant: !access\.active/, base);
     const wxml = read(base + '.wxml');
-    assert.match(wxml, /title="\{\{notMerchant \? '当前账号不能查看客户' : '当前岗位没有客户查看权限'\}\}" sub="\{\{notMerchant \? '' : '请联系店主开通'\}\}"/, base);
+    // UI-sweep 1119 U4:无权限文案统一「当前身份不能…」,不再挂「请联系店主开通」副文案
+    assert.match(wxml, /kind="no-permission"[^>]*title="当前身份不能查看客户"/, base);
+    assert.doesNotMatch(wxml, /请联系店主开通/, base);
   }
 });
 

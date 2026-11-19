@@ -135,5 +135,5 @@ test('unload makes list and login late callbacks inert', async () => {
 })
 test('actual page template exposes a clickable login and distinct permission branch', () => {
   const wxml = fs.readFileSync(modulePath.replace('.js', '.wxml'), 'utf8').replace(/<!--[\s\S]*?-->/g, '')
-  assert.match(wxml, /wx:if="\{\{readAccess\}\}"[^>]*title="\{\{readAccess === 'login' \? '登录后查看我的节点玩法' : '当前账号无法查看节点玩法'\}\}"[^>]*cta="\{\{readAccess === 'login' \? '登录' : '重试'\}\}"[^>]*bind:cta="retryRead"/s)
+  assert.match(wxml, /wx:if="\{\{readAccess\}\}"[^>]*title="\{\{readAccess === 'login' \? '登录后查看我的节点玩法' : '当前身份不能查看节点玩法'\}\}"[^>]*cta="\{\{readAccess === 'login' \? '登录' : '重试'\}\}"[^>]*bind:cta="retryRead"/s)
 })

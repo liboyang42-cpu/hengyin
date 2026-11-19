@@ -2,7 +2,7 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
-  <cy-access-gate id="cy-access-gate" kind="merchant" need="canReadMarketing" back-url="/pages/merchant/marketing/index" bind:state="onGateState" />
+  <cy-access-gate id="cy-access-gate" kind="merchant" need="canReadMarketing" bind:state="onGateState" back-url="/pages/merchant/marketing/index" />
   <!-- 2026-08-20 并 master:商家侧标题统一移入 cy-nav-bar 居中,不再用 cy-page-title -->
   <cy-nav-bar custom-back title="店铺参谋" bind:back="onNavBack" />
   <view class="nav-spacer" style="height: {{statusBarHeight + navBarHeight}}px;"></view>

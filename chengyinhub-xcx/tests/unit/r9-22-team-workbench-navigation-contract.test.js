@@ -106,7 +106,8 @@ function assertNoTeamGate(wxml) {
   assert.doesNotMatch(wxml, /登录后处理团队邀请|去登录|goLogin|还没有经营团队身份/, '整屏身份闸必须删除')
 }
 
-test('无经营团队身份的深链账号静默 switchTab 回会员中心,不弹整屏页', () => {
+// UI-sweep 1119 U3:不再静默 switchTab 回「我的」,原地「当前身份不能查看经营团队」+ 申请入驻。
+test('无经营团队身份的深链账号留在页内显示无权限态,不 switchTab', () => {
   const { page, navigations, requests } = loadTeamPage()
   page.onLoad({})
   page.onShow()
@@ -114,7 +115,10 @@ test('无经营团队身份的深链账号静默 switchTab 回会员中心,不�
     code: 200,
     data: { active: false, applicationState: 'NONE', permissions: [], merchant: null },
   })
-  assert.deepEqual(navigations, [{ method: 'switchTab', url: '/pages/member/index/index' }])
+  assert.deepEqual(navigations, [])
+  assert.equal(page.data.accessState, 'no-permission')
+  page.onDenyCta()
+  assert.deepEqual(navigations, [{ method: 'navigateTo', url: '/pages/merchant/apply/index' }])
   assertNoTeamGate(fs.readFileSync(path.join(ROOT, 'pages/merchant/team/index.wxml'), 'utf8'))
 })
 
