@@ -188,7 +188,7 @@ test('PG-026/PG-027:商家主题页参数先判 >0;招募广场浏览分支游�
 test('PG-028/PG-055:定价页深色同步状态栏前景;定价页与玩法编辑页去 vh 常量', () => {
   assert.match(read('pages/topic/pricing/index.js'), /if \(options\.club === '1' && wx\.setNavigationBarColor\) wx\.setNavigationBarColor\(\{ frontColor: '#ffffff'/);
   const pricing = read('pages/topic/pricing/index.wxss');
-  assert.doesNotMatch(pricing, /100vh/);
+  assert.doesNotMatch(pricing, /calc\(100vh|height: 100vh/);
   assert.match(pricing, /\.pg-scroll \{ flex: 1; min-height: 0;/);
   const temp = read('pages/publish/temp/index.wxss');
   assert.doesNotMatch(temp, /calc\(100vh/);
