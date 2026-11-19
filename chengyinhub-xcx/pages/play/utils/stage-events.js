@@ -29,19 +29,21 @@ function methods() {
     },
     /** 提示面板最底下「这一站有问题」:选一类就记一条,不打断游玩。 */
     reportStageIssue() {
-      const nodeId = (this.data.helpPanel && this.data.helpPanel.nodeId) || (this.data.game && this.data.game.nodeId);
-      wx.showActionSheet({
-        itemList: ISSUE_CATEGORIES.map((c) => c.label),
-        success: (res) => {
-          const picked = ISSUE_CATEGORIES[res.tapIndex];
-          if (!picked) return;
-          this._stageEvent('stage_issue', nodeId, { category: picked.code });
-          cyToast('已记录');
-        },
-      });
+      this._issueNodeId = (this.data.helpPanel && this.data.helpPanel.nodeId) || (this.data.game && this.data.game.nodeId);
+      this.setData({ issueSheetShow: true });
+    },
+    onIssueSheetCancel() { this._issueNodeId = null; this.setData({ issueSheetShow: false }); },
+    onIssueSheetSelect(e) {
+      const picked = ISSUE_CATEGORIES[Number(e && e.detail && e.detail.index)];
+      const nodeId = this._issueNodeId;
+      this._issueNodeId = null;
+      this.setData({ issueSheetShow: false });
+      if (!picked) return;
+      this._stageEvent('stage_issue', nodeId, { category: picked.code });
+      cyToast('已记录');
     },
   };
   return api;
 }
 
-module.exports = { methods, stagePayload, ISSUE_CATEGORIES };
+module.exports = { methods, stagePayload, ISSUE_CATEGORIES, data: { issueSheetShow: false, issueSheetItems: ISSUE_CATEGORIES.map((c) => c.label) } };

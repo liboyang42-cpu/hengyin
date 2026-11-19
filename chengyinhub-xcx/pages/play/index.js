@@ -496,7 +496,7 @@ Page({
   _routeState: normalizeRouteState(null),
 
   data: {
-    ...orientLifecycle.data, ...evidenceKit.data, ...playTopbar.data, ...playHelpPanel.data, ...kitCard.data, ...locOnce.data, ...stagePops.data,
+    ...orientLifecycle.data, ...evidenceKit.data, ...stageEvents.data, ...playTopbar.data, ...playHelpPanel.data, ...kitCard.data, ...locOnce.data, ...stagePops.data,
     arrivalGuard: null,
     guardAppealView: null,
     communityPostWrite: false,
@@ -6551,7 +6551,7 @@ Page({
     this.stopAudio();
     const node = this.data.sheet.node;
     if (!node) return;
-    this._stageEvent('stage_enter', node.nodeId);   // CG-01-P2-9
+    if (typeof this._stageEvent === 'function') this._stageEvent('stage_enter', node.nodeId);   // CG-01-P2-9
     if (this._startGate(node, () => this.startGame())) return;   // 开局定位 / 300 米在打开首站玩法之前判,不让玩家答完才被拒
     if (Number(this.data.mode) === 2 && !this.data.isPreview && !this.data.isMock
         && node.merchantId && !node.arrived) {

@@ -65,3 +65,4 @@
   </view>
   </scroll-view>
 </view>
+<cy-option-sheet immediate show="{{issueSheetShow}}" title="这一站有问题" items="{{issueSheetItems}}" bind:select="onIssueSheetSelect" bind:cancel="onIssueSheetCancel" />

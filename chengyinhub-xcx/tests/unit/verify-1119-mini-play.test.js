@@ -119,20 +119,20 @@ test('CG-01-P2-9 / CG-09-P2-6 玩法站过程埋点:只记站 id 与枚举码,�
   const modPath = path.join(ROOT, 'pages/play/utils/stage-events.js')
   delete require.cache[modPath]
   const { methods, ISSUE_CATEGORIES } = require(modPath)
-  let sheet = null
-  global.wx = { showActionSheet: (o) => { sheet = o } }
-  const page = Object.assign({ data: { topicId: 9, isPreview: false, game: { nodeId: 5 }, helpPanel: { nodeId: '6' } } }, methods())
+  const { data: kitData } = require(modPath)
+  const page = Object.assign({ data: Object.assign({ topicId: 9, isPreview: false, game: { nodeId: 5 }, helpPanel: { nodeId: '6' } }, kitData), setData(p) { Object.assign(this.data, p) } }, methods())
   page._stageEvent('stage_enter', 5)
   page.reportStageIssue()
-  assert.deepEqual(sheet.itemList, ISSUE_CATEGORIES.map((c) => c.label))
-  sheet.success({ tapIndex: 2 })
+  assert.equal(page.data.issueSheetShow, true)
+  assert.deepEqual(page.data.issueSheetItems, ISSUE_CATEGORIES.map((c) => c.label))
+  page.onIssueSheetSelect({ detail: { index: 2 } })
+  assert.equal(page.data.issueSheetShow, false)
   assert.deepEqual(tracked, [
     ['stage_enter', { bizType: 'topic', bizId: 9, properties: { nodeId: '5' } }],
     ['stage_issue', { bizType: 'topic', bizId: 9, properties: { nodeId: '6', category: 'UNCLEAR' } }],
   ])
   page.data.isPreview = true
   assert.equal(page._stageEvent('stage_enter', 5), false, '预览不记')
-  delete global.wx
   if (saved[0]) require.cache[analyticsPath] = saved[0]; else delete require.cache[analyticsPath]
   if (saved[1]) require.cache[toastPath] = saved[1]; else delete require.cache[toastPath]
 
@@ -144,6 +144,7 @@ test('CG-01-P2-9 / CG-09-P2-6 玩法站过程埋点:只记站 id 与枚举码,�
   }
   const js = read('pages/play/index.js')
   assert.match(js, /this\._stageEvent\('stage_enter', node\.nodeId\);/)
+  assert.match(read('pages/play/play-help.wxml'), /<cy-option-sheet immediate show="\{\{issueSheetShow\}\}"/)
   assert.match(js, /if \(answerWrong\) that\._stageEvent\('wrong_answer', g\.nodeId\);/)
   assert.match(js, /this\._stageEvent\('assisted_complete', g\.nodeId, \{ via: 'reveal' \}\);/)
   assert.match(js, /this\._stageEvent\('skip', nodeId\); this\._stageEvent\('assisted_complete', nodeId, \{ via: 'skip' \}\);/)

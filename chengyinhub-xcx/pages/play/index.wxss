@@ -729,7 +729,7 @@ page { background: var(--cy-color-bg-page); }
 /* ===================== 章节结算半屏(用户裁决:非全屏,底部=继续) ===================== */
 /* CG-ALL-25:章节门(130)开着时,定位/照片/地点/结算弹窗统一压到章节门之上,遮罩近乎不透,不漏出门后的章节画面 */
 .play--gate .mask, .play--gate .gp2mask, .play--gate .finmask, .play--gate .chpick-mask{ z-index:131; background:rgba(8,8,8,.96); } /* ds-ok 刻意:近乎不透的弹窗幕布,同 .leadgather */
-.play--gate .sheet, .play--gate .gp2, .play--gate .finsheet, .play--gate .chpick{ z-index:132; }
+.play--gate .sheet, .play--gate .gp2, .play--gate .finsheet, .play--gate .chpick { z-index:132; }
 .finmask{ position:absolute; inset:0; z-index:118; background:rgba(0,0,0,.55); } /* ds-ok Figma 实测(用户裁决字面值) */
 .finsheet{ position:absolute; left:0; right:0; bottom:0; z-index:119; box-sizing:border-box; height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); max-height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); overflow-y:auto;
   --cy-color-text-primary:var(--cy-color-play-story-text); --cy-color-text-secondary:var(--cy-color-play-story-muted); --cy-color-text-tertiary:var(--cy-color-play-story-muted);
