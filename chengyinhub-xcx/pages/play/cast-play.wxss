@@ -71,8 +71,8 @@
 /* —— E6 完成页「他们怎么看你」:书页式,名字在页边 —— */
 .castend{ margin:var(--cy-space-5) var(--cy-space-5) 0; padding:var(--cy-space-5) 0 0; }
 .castend__h{ margin-bottom:var(--cy-space-4); font-size:var(--cy-type-section-title); font-weight:600; text-align:center; letter-spacing:.12em; }
-.castend__row{ position:relative; padding:0 52rpx var(--cy-space-5) 140rpx; }
-.castend__who{ position:absolute; left:0; top:0; width:120rpx; font-size:20rpx; line-height:58rpx; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:.46; } /* ds-ok 同正文页边名字 */
-.castend__line{ font-size:var(--cy-type-card-title); line-height:1.95; }
-.castend__row .castend__ticks{ display:flex; gap:var(--cy-space-1); margin-top:var(--cy-space-2); min-height:58rpx; align-items:center; }
+.castend__row{ position:relative; padding:0 52rpx var(--cy-space-5); }
+.castend__who{ position:absolute; left:-12rpx; top:0; width:64rpx; font-size:20rpx; line-height:58rpx; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:.46; } /* ds-ok 同正文页边名字 */
+.castend__line{ font-size:var(--cy-type-card-title); line-height:1.95; text-align:center; }
+.castend__row .castend__ticks{ display:flex; justify-content:center; gap:var(--cy-space-1); margin-top:var(--cy-space-2); min-height:58rpx; align-items:center; }
 .castend__foot{ padding:var(--cy-space-3) 0 var(--cy-space-2); font-size:var(--cy-type-label); line-height:1.6; text-align:center; color:var(--cy-color-text-tertiary); }
