@@ -22,6 +22,11 @@ function endingCondLabel(form, e) {
   if (e.fallback) return '其它结局都不中时';
   if (e.kind === 'thought') return '想通「' + (thoughtName[e.thoughtKey] || e.thoughtKey) + '」';
   if (e.kind === 'node') return '到过「' + (nodeName[String(e.nodeId)] || '某一站') + '」';
+  if (e.kind === 'cast') {
+    // 归属角色(cast-contract-1119 D2):信任最高的那位
+    const who = ((form.castConfig && form.castConfig.cast) || []).find(m => m && m.id === e.endingFor);
+    return '「' + ((who && who.name) || '某个角色') + '」最信任你时';
+  }
   if (e.kind === 'tag') {
     const hit = optionTagsOf(form.chapters).find(t => t.tag === e.tag);
     return '选过「' + (hit ? hit.label : e.tag) + '」';
