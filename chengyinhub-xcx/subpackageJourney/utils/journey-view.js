@@ -83,6 +83,8 @@ function reportView(data) {
     })),
     rewardsText: data.rewardsState === 'AVAILABLE' ? rewardsSummary(data.rewards) : ''
   };
+  // CG-07-P2-2:结算总览把辅助完成(跳过 / 看过答案)的节点单独数出来,与自己解出的区分开
+  view.assistedCount = list(data.nodes).filter(record).filter(node => node.completionMode === 'SKIPPED' || node.completionMode === 'REVEALED').length;
   view.shareTitle = view.win ? '我通关了，一起来玩' : '一起来玩';
   return view;
 }

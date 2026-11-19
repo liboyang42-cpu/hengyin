@@ -58,3 +58,15 @@ test('CG-01-P2-5 逐字猜词题面下常驻「怎么填」入口(含 V＝ü),�
   assert.match(wxml, /\{\{howto \|\| DEFAULT_HOWTO\}\}/)
   assert.match(read('pages/play/components/playkit/index.wxml'), /howto="\{\{kit\.howto\}\}"/)
 })
+
+test('CG-07-P2-2 结算总览单独数出辅助完成(跳过 / 看过答案)的节点,没有就不出格子', () => {
+  const v = require('../../subpackageJourney/utils/journey-view.js')
+  const r = v.reportView({ runState: 'COMPLETED', completionKind: 'ASSISTED_COMPLETION', completedNodes: 3, totalNodes: 3,
+    nodes: [{ nodeId: 1, completionMode: 'SKIPPED' }, { nodeId: 2, completionMode: 'REVEALED' }, { nodeId: 3, completionMode: 'SOLVED' }] })
+  assert.equal(r.result, '辅助完成')
+  assert.equal(r.assistedCount, 2)
+  assert.deepEqual(r.nodes.map((n) => n.mode), ['已跳过', '看过答案', ''])
+  assert.equal(v.reportView({ runState: 'COMPLETED', completionKind: 'LEGITIMATE_COMPLETION' }).assistedCount, 0)
+  const wxml = read('subpackageJourney/pages/settle/index.wxml')
+  assert.match(wxml, /wx:if="\{\{report\.assistedCount > 0\}\}"><text class="st-two__v">\{\{report\.assistedCount\}\}<\/text><text class="st-two__l">辅助完成<\/text>/)
+})
