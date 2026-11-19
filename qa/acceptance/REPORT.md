@@ -1,5 +1,49 @@
 # Chengyin backend acceptance — round r3
 
+## Wave 9 (2026-11-19 17:25 – 17:29 UTC): City Monopoly gaps merged, re-test on TEST
+
+The coordinator's brief asked for a "wave 7" section; waves 7 and 8 already exist below, so this one is numbered 9.
+
+- **Target:** TEST 8120 (be-int, DB `cy_e2e_r2`) over loopback on the `work` VPS. New jar from `integration/backend-app-r3` @ `259ad0932`, which merges `fix/city-gaps-r3` (`b884d44ef`, receipt `qa/CITY-GAPS-R3.md`): the claim-quote 500 fix, district names, deed serials, defender and rent in-app notifications, and the on-site challenge task verifier. Deployed at 17:25 UTC under `flock /data/workspace/.deploy.lock`; started in 23 s. Rollback jar: `app/app.jar.prev-5acc166a0`. Production was not touched.
+- **Migration:** `migration_20261126_city_gaps_r3.sql` applied with the mysql client, as in earlier waves (`cy_migration_history` stays at 0 rows). Tables 691 → 693 (`city_deed_counter`, `city_onsite_task_submission`). `roam_territory` gained `deed_serial` and the virtual `deed_serial_live` with `UNIQUE (board_id, district_id, deed_serial_live)`. The backfill numbered the two live `qa-d1` deeds 1 and 2 (in claim order), and seeded a `city_district` row `qa-d2` (`district.c2`, name = id) for the TEST-only point below. Existing `city_district` rows were not changed.
+- **Run:** one full `run_all.py` (fixtures first, teardown at the end) at 17:26 UTC, using the wave 7 harness `152b8829f` with no code change. `results.json`, `results.md` and `fixtures.json` are in this commit.
+- **Result: 17 of 18 flows pass**, the same as waves 7 and 8, so nothing regressed. F04's paid path is still TEST-SKIP (no pay sandbox). F06 still fails only on A5: the native self check-in sends no `nodeId`. That is an app defect, and the backend is unchanged. In F09, 9004's fresh claim got deed serial 3 in `qa-d1`, and 9009's takeover (roll 13 ≥ DC 12) sent 9001 a `cityTerritory` / `PLACE_LOST` system card (+12 积分 compensation).
+
+| Flow | Result (pass / fail / TEST-SKIP) | Verdict |
+|---|---|---|
+| F01–F03, F05, F07–F18 | all steps pass (F09 11 / 0 / 0) | **Pass** |
+| F04 Register and pay | 10 / 0 / 1 | **Pass** (paid TEST-SKIP) |
+| F06 Check-in | 10 / 1 / 0 | **Fail (app A5)** |
+
+### City gaps live check (`/tmp/r3w9-verify.py` on the VPS, 14/14)
+
+TEST-only fixture: board point `qa-monopoly-1` / `qa-pt-np1` (`QA 无地点格`, 23.1302, 113.2668) with `place_id = NULL`, district `qa-d2`, added before the migration. City fixture player 9009 (claims) and 9004 (challenger), tokens from codes planted in TEST Redis.
+
+| Check | Result |
+|---|---|
+| Baseline on the old jar (`5acc166a0`): `POST /api/city-game/territory/claim/quote` `{boardId, pointId: qa-pt-np1}` | HTTP 200, **code 500** `系统繁忙，请稍后重试` (the NPE) |
+| Same request on `259ad0932` | code 200; `targetKey board:qa-monopoly-1:qa-pt-np1`, no `poiId`, `cost 60`, `currency POINTS` |
+| `GET /api/city-game/territory/map` (QA bbox) | top-level `districts[]`: `qa-d1` `QA 老城街区` `district.c1` `colorIndex 1` `ownableCount 3`; `qa-d2` `district.c2`; every item carries `districtName` |
+| `GET /api/roam/territory/nearby` (board read, `boardId=qa-monopoly-1`) | `districts[]` (2); every board item carries `districtId` + `districtName` (`qa-pt-np1` → `qa-d2`) |
+| `claim/command` by 9009 on `qa-pt-np1` | `CLAIMED`; `property.deedSerial = 1` (first deed in `qa-d2`); `property/{id}` returns `deedSerial 1` + `districtName`; DB `deed_serial 1`, `city_deed_counter` `qa-d2` = 1 |
+| `challenge/quote` by 9004 on 9009's `骑楼口` (protection lifted, TEST-only) | code 200; `task` = `{type PHOTO_PRESENCE, radiusM 80, optional true, submitPath …/challenge/task/submit}` |
+| `challenge/command` | `LOSS` (roll 6 < DC 12) |
+| Defender 9009's system conversation | `im_message` `msg_type 3`: `你守住了「QA 大富翁·骑楼口」：挑战者 6 未达 DC 12，补偿 +9 积分。`, `extra {"cardType":"cityTerritory","kind":"DEFENDED","territoryId":…,"points":9,"currency":"POINTS"}` |
+
+No `站内信未送达` / `城市大富翁站内信异常` line and no NPE in `app.log`. The on-site task submit route was not called live: TEST has no vision provider, so it would only show the `DEGRADED → NONE` path, which `CityOnSiteTaskServiceTest` covers.
+
+### New defects
+
+None. Observation (not a defect): a deed with no serial keeps none after a takeover (only a first claim issues one). On TEST this shows up for the fixture's defended territory, which `fixtures.py` inserts directly without a serial, so 9009's takeover row in F09 has `deed_serial NULL`. Real deeds get one from the claim or from the migration backfill. Carried over: A5 (app), B5b, B9, A6 (see wave 6).
+
+### TEST state changed by this wave
+
+- `8120` jar `5acc166a0` → `259ad0932` (rollback `app/app.jar.prev-5acc166a0`); migration `20261126_city_gaps_r3` applied (additive; can stay on rollback).
+- New board point `qa-monopoly-1` / `qa-pt-np1` (no `place_id`, district `qa-d2`) and its backfilled `city_district` row. `city_deed_counter`: `qa-d1` = 3, `qa-d2` = 1.
+- Two `cityTerritory` system messages (9009 `DEFENDED`, 9001 `PLACE_LOST`); 9009's `骑楼口` protection was lifted for the challenge. The run's fixture refresh then reset the board's territories as usual.
+
+---
+
 ## Wave 8 (2026-11-16 20:25 – 20:30 UTC): merchant identity merged, re-test on TEST
 
 - **Target:** TEST 8120 (be-int, DB `cy_e2e_r2`) over loopback on the `work` VPS. New jar from `integration/backend-app-r3` @ `5acc166a0`, which merges `fix/merchant-identity-r3` (`c18158761`, receipt `qa/MERCHANT-IDENTITY-R3.md`). Merchant onboarding now takes `realName` + `idCardNumber` + `identityConsent` and stores them through the publisher-identity PII store (AES-256-GCM). Reads return masked values only. Deployed at 20:25 UTC under `flock /data/workspace/.deploy.lock` and started in 20 s. Rollback jar: `app/app.jar.prev-3f0cdb762`. No migration (the `ums_member_identity` table already exists). Production was not touched.
