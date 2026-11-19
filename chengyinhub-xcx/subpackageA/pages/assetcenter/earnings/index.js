@@ -59,7 +59,7 @@ Page({
   },
 
   // 2026-09-15 收款模型定稿 §3:平台不打款。「提现」弹平台客服微信;
-  // PG-033:原 txSheet 银行卡表单与 /api/withdrawal/create 提交死代码已删除。
+  // PG-033:原银行卡提现表单与 /api/withdrawal/create 提交死代码已删除。
   openWithdrawSheet() {
     if (this._hidden || this._unloaded) return
     const identity = identityKey()

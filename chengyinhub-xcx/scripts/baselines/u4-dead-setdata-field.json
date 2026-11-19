@@ -240,7 +240,6 @@
     "pages/topic/pricing/partner/index.js::toType::A2",
     "subpackageA/components/scene-how-to-play-detail/index.js::id::A2",
     "subpackageA/pages/assetcenter/earnings/index.js::sceneStack::A1",
-    "subpackageA/pages/assetcenter/earnings/index.js::txUserInfo::A2",
     "subpackageA/pages/infomation/infomation.js::sceneStack::A1",
     "subpackageA/pages/infomationdetail/infomationdetail.js::id::A2",
     "subpackageA/pages/myproject/index.js::operationScope::A2",
