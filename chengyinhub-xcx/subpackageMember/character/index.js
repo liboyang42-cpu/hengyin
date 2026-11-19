@@ -7,7 +7,7 @@ const STATES = {
   login: { kind: 'no-permission', title: '登录后查看本人角色卡', sub: '角色卡仅对本人开放', action: '微信登录' },
   forbidden: { kind: 'no-permission', title: '无权查看角色卡', sub: '只能查看本人在该主题下的角色卡', action: '重新加载' },
   unavailable: { kind: 'not-found', title: '暂时无法查看该主题', sub: '请返回参与详情确认主题', action: '' },
-  'missing-param': { kind: 'missing-param', title: '缺少有效主题', sub: '请从参与详情重新进入', action: '' },
+  'missing-param': { kind: 'missing-param', title: '链接已失效', sub: '', action: '返回' },
   'session-changed': { kind: 'no-permission', title: '登录状态已变更', sub: '请重新加载本人角色卡', action: '重新加载' },
   upgrade: { kind: 'not-started', title: '请更新小程序', sub: '更新后重新进入查看角色卡', action: '' },
   error: { kind: 'data', title: '角色卡暂时无法读取', sub: '请稍后重试', action: '重新加载' },
@@ -82,6 +82,7 @@ Page({
     } catch (error) { failed(null); }
   },
   onStateAction() {
+    if (this.data.state === 'missing-param') { this.backToParticipation(); return; }
     if (this.data.state !== 'login') { this.loadCharacter(); return; }
     const epoch = this._epoch;
     requireLogin({ reason: '登录后查看本人角色卡' }).then(ok => {
