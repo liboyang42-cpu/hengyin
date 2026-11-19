@@ -8,7 +8,8 @@ function mount(name){
  return {page,app,requests,navigations,owner(id){owner=id;}};
 }
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
-for(const name of ['simple','fabu','temp','activity']){
+// PG-021:publish/simple 已删除,入口登录契约只剩 fabu/temp/activity
+for(const name of ['fabu','temp','activity']){
  test(name+' anonymous deep link exposes explicit login and sends no bootstrap private reads',()=>{
   const h=mount(name);h.page.onLoad({id:'77',mode:'2'});assert.equal(h.requests.length,0);
   assert.equal(name==='activity'?h.page.data.accessState:h.page.data.creatorLoginRequired,name==='activity'?'login':true);
@@ -47,7 +48,7 @@ for(const name of ['fabu','temp']) {
   assert.equal(name==='fabu'?h.page.data.editLoadIsAccess:h.page.data.loadErrorIsAccess,false);
  });
 }
-for(const name of ['fabu','simple','temp']) {
+for(const name of ['fabu','temp']) {
  test(name+' account switch hides the previous private editor and returns to existing template entry',()=>{
   const h=mount(name);h.page._creatorOwner='7';h.owner('99');h.page.onShow();
   assert.equal(h.page.data.creatorLoginRequired,true);assert.deepEqual(h.navigations,['/pages/template/index']);
