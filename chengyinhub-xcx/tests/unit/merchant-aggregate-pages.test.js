@@ -189,7 +189,7 @@ test('关系一级页过滤缺少名称的半成品关系卡', () => {
   assert.equal(page.data.relations, undefined);
 });
 
-test('关系聚合 403 清除旧门店数据并静默回会员中心，不冒充岗位权限也不摆整屏闸', () => {
+test('关系聚合 403 清除旧门店数据并原地落无权限终态，不冒充岗位权限也不自己切 tab', () => {
   const requests = [];
   const navigations = [];
   const page = loadPage('pages/merchant/relation/index.js', {
@@ -218,8 +218,9 @@ test('关系聚合 403 清除旧门店数据并静默回会员中心，不冒充
   page.loadRelationHome();
   requests[1].success({ code: 403, msg: '商家身份无效或权限不足' });
 
-  assert.deepEqual(navigations, ['/pages/member/index/index'],
-    '无商家身份的深链误入静默回会员中心,不摆整屏错误页');
+  assert.deepEqual(navigations, [],
+    '无商家身份 403 不许自己切 tab 回「我的」:与 cy-access-gate 原地 deny 抢路由会挂起页面');
+  assert.equal(page.data.pageState, 'denied');
   assert.equal(page.data.clubs.length, 0);
 });
 

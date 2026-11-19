@@ -12,6 +12,7 @@ const clubPostRepost = require('../../../utils/club-post-repost.js');
 const community = require('../../../utils/community-post-api.js').createClient(app, wx);
 const FEED_PAGE_SIZE = 20;
 const { isRecord, isRecordList } = require('../../../utils/response-shape.js');
+const { followDenyCta } = require('../../../utils/merchant-no-permission.js');
 
 function textOrDash(value, fallback) {
   if (value === null || value === undefined || value === '') return fallback || '—';
@@ -460,10 +461,12 @@ Page({
       return;
     }
     if (accessFailure === 'denied') {
+      // 1119:原先这里静默切 tab 回「我的」。本页是商家分包里的非 tabBar 页,同时挂着 cy-access-gate
+      // (#865 起商家 deny 原地停住、__cyDenyInPlace 压住自动离开):页面自己再发一次切 tab,与入场路由
+      // 撞在一起 —— onHide 先把原生底色刷成深色,切换却落不了地,导航队列被占住,整屏黑、后续路由全挂起,
+      // pageState 还永远停在 loading。现在落终态 denied,原地讲清,不自己跳走;权限仍由后端 403 + 守卫兜。
       this._hasLoaded = false;
-      this.setData({ clubs: [], clubError: '' });
-      // 没有商家身份的账号本没有合作入口;深链误入就静默回会员中心,不摆整屏闸。
-      wx.switchTab({ url: '/pages/member/index/index' });
+      this.setData({ pageState: 'denied', refreshing: false, error: '', clubs: [], clubError: '' });
       return;
     }
     // 有旧内容时刷新失败静默降级:退回 ready 让旧列表留在屏上,不挂横幅、不切整页错误。
@@ -493,6 +496,12 @@ Page({
     }
     this._pullRefreshing = true;
     this.loadRelationHome();
+  },
+
+  // 页面自己判到 403(守卫没拦住时的兜底):与守卫同一个唯一动作 —— 非成员去申请入驻
+  onDeniedApply() {
+    if (this.data.pageState !== 'denied') return;
+    followDenyCta(this, false);
   },
 
   goClub(e) {

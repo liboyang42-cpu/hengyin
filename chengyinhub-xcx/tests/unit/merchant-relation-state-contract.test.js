@@ -170,7 +170,7 @@ test('合作页初次异常进入整页错误，请求静默且防重复', () =>
   assert.deepEqual(page.data.clubs, [])
 })
 
-test('合作页 401 静默重登后自动重载，403 静默回会员中心', async () => {
+test('合作页 401 静默重登后自动重载，403 原地落无权限终态、不自己跳走', async () => {
   const { page, requests, navigations, state } = createPage()
   page.onLoad({ tab: 'club' })
   assert.equal(requests.length, 1)
@@ -188,8 +188,9 @@ test('合作页 401 静默重登后自动重载，403 静默回会员中心', as
 
   page.loadRelationHome()
   requests[2].fail({ code: 403, msg: '商家身份无效或权限不足' }, 403)
-  assert.deepEqual(navigations.at(-1), { method: 'switchTab', url: '/pages/member/index/index' },
-    '无商家身份深链误入必须静默回会员中心，不弹整屏页')
+  assert.equal(navigations.some(n => n.method === 'switchTab'), false,
+    '无商家身份 403 不许自己切 tab:与 cy-access-gate 原地 deny 抢路由,开发者工具里整屏黑、路由挂起')
+  assert.equal(page.data.pageState, 'denied', '403 必须落终态,不能停在 loading')
 
   const view = read('pages/merchant/relation/index.wxml')
   assertNoLoginGate(view)

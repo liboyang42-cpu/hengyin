@@ -110,7 +110,7 @@ const MERCHANT_PAGES = [
   'pages/merchant/game-node/index', 'pages/merchant/index/index', 'pages/merchant/ledger/order-detail/index',
   'pages/merchant/ledger/batch-detail/index', 'pages/merchant/marketing/ai-insight/index', 'pages/merchant/payout-account/index',
   'pages/merchant/team/index', 'pages/merchant/verify-records/index', 'pages/merchant/aftercare/index',
-  'pages/merchant/aftercare/detail/index', 'pages/merchant/bundle-reservations/index',
+  'pages/merchant/aftercare/detail/index', 'pages/merchant/bundle-reservations/index', 'pages/merchant/relation/index',
 ];
 
 test('列出的商家页:无权限态不再 auto-back,也不在 JS 里静默退回', () => {
