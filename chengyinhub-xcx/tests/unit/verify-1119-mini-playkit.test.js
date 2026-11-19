@@ -40,3 +40,21 @@ test('CG-ALL-13 服务端给 imageAlt 才带,没给为空串(组件用通用一�
   const bare = pickPlayKit({ sessionId: 's1', version: 1, playKit: { qa: { mode: 'TYPE', title: '题', imageUrl: 'https://x/a.png' } } }, now)
   assert.equal(bare.imageAlt, '')
 })
+
+test('CG-01-P2-5 逐字猜词题面下常驻「怎么填」入口(含 V＝ü),本站说明优先', () => {
+  const { hangmanKit } = require('../../pages/play/utils/playkit-questo.js')
+  assert.equal(hangmanKit({ slots: [], howto: ' 一格一个字母 ' }).howto, '一格一个字母')
+  assert.equal(hangmanKit({ slots: [] }).howto, '')
+  const def = loadComponent('pages/play/components/playkit-hangman/index.js')
+  assert.match(def.data.DEFAULT_HOWTO, /ü 用 V 代替/)
+  const vm = { data: { howtoOpen: false }, setData(p) { Object.assign(this.data, p) } }
+  def.methods.onToggleHowto.call(vm)
+  assert.equal(vm.data.howtoOpen, true)
+  def.methods.onToggleHowto.call(vm)
+  assert.equal(vm.data.howtoOpen, false, '可反复开合')
+  const wxml = read('pages/play/components/playkit-hangman/index.wxml')
+  assert.match(wxml, /<view class="hm__how pk-in" wx:if="\{\{!solved\}\}">/)
+  assert.match(wxml, /bindtap="onToggleHowto"[^>]*>怎么填</)
+  assert.match(wxml, /\{\{howto \|\| DEFAULT_HOWTO\}\}/)
+  assert.match(read('pages/play/components/playkit/index.wxml'), /howto="\{\{kit\.howto\}\}"/)
+})

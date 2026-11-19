@@ -59,6 +59,8 @@ function hangmanKit(seg) {
     pool: s.inputMode === 'pool' && Array.isArray(s.pool) ? s.pool.filter((c) => typeof c === 'string' && c !== '') : [],
     // F02:没解开时服务端回的那句话(错答表命中那条或通用错答);没有就由组件兜底
     wrongFeedback: s.solved !== true && typeof s.lastFeedback === 'string' ? s.lastFeedback : '',
+    // CG-01-P2-5:本站「怎么填」说明,服务端 / 内容配了才有,缺省由组件给通用一句
+    howto: typeof s.howto === 'string' ? s.howto.trim() : '',
   };
 }
 
