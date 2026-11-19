@@ -548,14 +548,14 @@ Page({
     // 第十二轮 k6(j1 N4 / p2 N-3):右列只放商家自己的钱。玩家拿回的钱从来不是从商家扣走的,
     // 服务端给出「这单商家还剩多少 / 少了多少」(merchantNetAmount)才画;拿不到就不画,不再画玩家退款额的负数。
     const net = canReadFinance === false ? null : money(row.merchantNetAmount);
-    const title = row.titleText || row.refundNoText || ('#' + row.refundId);
+    const title = row.titleText || ''; // MC-044:账本行不露退款单号/编号,没有标题就只写「退款」
     const status = row.statusText || '状态待确认';
     return Object.assign(item, {
       recordKey: 'aftercare:' + row.refundId,
       recordType: 'aftercare',
       recordId: row.refundId,
       refundBucket: row.bucket,
-      title: '退款 · ' + title,
+      title: title ? '退款 · ' + title : '退款',
       customerDisplayName: row.activityTitleText || row.sourceText || '',
       timeText: row.timeText,
       dayKey: row.dateKey,

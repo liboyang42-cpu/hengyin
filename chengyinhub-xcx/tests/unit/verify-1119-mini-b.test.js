@@ -377,3 +377,9 @@ test('OR-040:关于页有「隐私保护指引」入口,协议页显示版本号
   assert.match(read('pages/shezhi/about/index.js'), /wx\.openPrivacyContract\(/)
   assert.match(read('pages/agreement/index.wxml'), /版本 \{\{doc\.version\}\} · 生效日期：\{\{doc\.updatedAt\}\}/)
 })
+
+test('MC-044:台账退款行不露退款单号/编号', () => {
+  const js = read('pages/merchant/ledger/index.js')
+  assert.doesNotMatch(js, /'#' \+ row\.refundId/)
+  assert.doesNotMatch(js, /row\.refundNoText \|\|/)
+})
