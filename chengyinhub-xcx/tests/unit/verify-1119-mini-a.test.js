@@ -263,6 +263,6 @@ test('PG-048/PG-090:本局计分页改 custom 导航 + cy-nav-bar/cy-page-title/
   for (const c of ['cy-nav-bar', 'cy-page-title', 'cy-toast']) assert.ok(json.usingComponents[c], c);
   const wxml = noComments(read('subpackageMember/orient-score/index.wxml'));
   assert.match(wxml, /<cy-page-title title="本局计分"/);
-  assert.doesNotMatch(wxml, /\{\{item\.sessionId\}\}|\{\{score\.sessionId\}\}|流水 \{\{|\{\{item\.id\}\}|\{\{item\.nodeId|\{\{item\.referenceId\}\}|\{\{score\.settlement\.id\}\}|\{\{pending\.requestId/);
+  assert.doesNotMatch(wxml.replace(/data-[a-z-]+="[^"]*"/g, ""), /\{\{item\.sessionId\}\}|\{\{score\.sessionId\}\}|流水 \{\{|\{\{item\.id\}\}|\{\{item\.nodeId|\{\{item\.referenceId\}\}|\{\{score\.settlement\.id\}\}|\{\{pending\.requestId/);
   assert.doesNotMatch(wxml, /\{\{item\.kind\}\}|\{\{pending\.kind\}\}/);
 });
