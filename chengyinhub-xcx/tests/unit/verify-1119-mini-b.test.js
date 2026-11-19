@@ -35,3 +35,38 @@ test('MC-019:台账三张列表 pageNum 递增触底加载', () => {
   assert.match(js, /this\._setPageState\('batches', 1, res\.data\)/)
   assert.match(read('pages/merchant/ledger/index.wxml'), /wx:if="\{\{loadingMore\}\}"[^>]*>正在加载更多…/)
 })
+
+test('MC-020:核销记录超出首批 1000 条不静默截断,计数标「+」并触底续读', () => {
+  const vmod = require('vm')
+  const requests = []
+  let def = null
+  const ctx = {
+    getApp: () => ({ globalData: {}, sendRequest: (o) => requests.push(o) }),
+    Page: (d) => { def = d },
+    require: (rel) => {
+      if (rel.endsWith('page-motion.js')) return { enter() {} }
+      if (rel.endsWith('merchant-theme.js')) return { merchantPageShow() {}, merchantPageRestore() {} }
+      if (rel.endsWith('toast.js')) return () => {}
+      if (rel.startsWith('./')) return require(path.join(ROOT, 'pages/merchant/verify-records', rel))
+      return require(path.join(ROOT, 'pages/merchant/verify-records', rel))
+    },
+    wx: { getWindowInfo: () => ({}), stopPullDownRefresh() {} },
+    JSON, Number, Array, Object, String, Math,
+  }
+  vmod.runInNewContext(read('pages/merchant/verify-records/index.js'), ctx)
+  const page = Object.assign({ data: JSON.parse(JSON.stringify(def.data)), setData(p) { Object.assign(this.data, p) } }, def)
+  page._merchantAccess = { canReadVerifyRecords: true }
+  page.loadList()
+  const rows = (n, base) => Array.from({ length: n }, (_, i) => ({ recordId: String(base + i), occurredAt: '2026-11-02 10:00:00' }))
+  for (let p = 1; p <= 20; p += 1) {
+    requests[p - 1].success({ code: 200, data: { total: 1030, rows: rows(50, p * 100) } })
+  }
+  assert.equal(requests.length, 20)
+  assert.match(page.data.tabs[0].label, /1000\+$/)
+  page.onReachBottom()
+  assert.equal(JSON.parse(requests[20].data).pageNum, 21)
+  requests[20].success({ code: 200, data: { total: 1030, rows: rows(30, 9000) } })
+  assert.match(page.data.tabs[0].label, /1030$/)
+  page.onReachBottom()
+  assert.equal(requests.length, 21, '读完不再续读')
+})
