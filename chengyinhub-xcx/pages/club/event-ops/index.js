@@ -431,7 +431,6 @@ Page({
     occurrenceRows: [],
     occurrenceState: 'idle',   // idle | loading | ready | empty | error
     editingSeriesId: null,
-    editingTopicId: null,
     editingTopicName: '',
     seriesDetailLoading: false,
     rosterTabs: ROSTER_TABS,
@@ -717,10 +716,10 @@ Page({
         // MC-044:锁定的主题写名称不写编号;MC-058:默认带队人按 leadOptions 反查下拉位置。
         const lockedTopic = that.data.topics.find(item => item.id === series.topicId)
         const leadIndex = that.data.leadOptions.findIndex(item => item.memberId === series.leadMemberId)
+        that._editingTopicId = series.topicId;   // 只当内部状态,不进 setData(U4)
         that.setData({
           futureMinDate,
           editingSeriesId: series.id,
-          editingTopicId: series.topicId,
           editingTopicName: (lockedTopic && lockedTopic.name) || series.topicName || '未命名',
           leadIndex: Math.max(0, leadIndex),
           seriesWindowWarning: '',
@@ -755,10 +754,10 @@ Page({
     const slot = defaultSlot()
     const today = slot.date < this.data.minDate ? this.data.minDate : slot.date
     const selectedTopic = this.data.topics[this.data.topicIndex]
-    const topicId = positiveId(this.data.editingTopicId) || positiveId(selectedTopic && selectedTopic.id)
+    const topicId = positiveId(this._editingTopicId) || positiveId(selectedTopic && selectedTopic.id)
+    this._editingTopicId = null
     this.setData({
       editingSeriesId: null,
-      editingTopicId: null,
     editingTopicName: '',
       recurrenceType: 'ONCE',
       topicIndex: Math.max(0, this.data.topics.findIndex(item => item.id === topicId)),
@@ -825,7 +824,7 @@ Page({
     if (!this.data.canManage || this.data.submitting) return
     const editingSeriesId = positiveId(this.data.editingSeriesId)
     const topic = this.data.topics[this.data.topicIndex]
-    const topicId = editingSeriesId ? positiveId(this.data.editingTopicId) : positiveId(topic && topic.id)
+    const topicId = editingSeriesId ? positiveId(this._editingTopicId) : positiveId(topic && topic.id)
     if (!topicId) {
       toast('暂无可开场的主题')
       return

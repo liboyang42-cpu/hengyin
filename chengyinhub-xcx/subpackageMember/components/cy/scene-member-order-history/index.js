@@ -111,7 +111,6 @@ Component({
     ],
     list: [],
     page_no: 1,
-    hasMore: false,
     nodata: false,
     hasOrders: false,
     isPaying: false,
@@ -121,7 +120,6 @@ Component({
     orderAccessDenied: false,
     canDiscoverRoutes: true,
     cancellingId: 0,
-    verifyingPayment: false,
   },
   lifetimes: {
     attached() {
@@ -168,12 +166,13 @@ Component({
       Object.values(this._paymentWorkflows || {}).forEach(flow => flow.destroy())
       this._paymentOwner = owner
       this._paymentWorkflows = Object.create(null)
-      this.setData({ isPaying: false, verifyingPayment: false })
+      this._verifyingPayment = false
+      this.setData({ isPaying: false })
     },
     // 页面壳的 onReachBottom 转发进来。注意:后端 list 返回全量,hasMore 恒 false,
     // 这条路径当前不会真的翻页 —— 保留是为了后端改成分页时不用再接一次线。
     loadMore() {
-      if (!this.data.hasMore) return
+      if (!this._hasMore) return
       this.setData({ page_no: this.data.page_no + 1 })
       this.getList()
     },
@@ -271,8 +270,8 @@ Component({
             if (replace) pageMotion.enter(that, 'pmList'); that.setData({
               list,
               hasOrders: that._allRows.length > 0,
-              hasMore: Number.isFinite(total) && pageSize > 0 && rows.length >= pageSize && that._allRows.length < total,
             })
+            that._hasMore = Number.isFinite(total) && pageSize > 0 && rows.length >= pageSize && that._allRows.length < total
             if (rows.length < 1) that.setData({ nodata: true })
           } else {
             that.setData({ errorMsg: app.getRequestErrorMessage(res, '订单加载失败') })
@@ -369,7 +368,7 @@ Component({
       const id = e.currentTarget.dataset.id
       const status = Number(e.currentTarget.dataset.status || 0)
       // OR-030:支付中/确认支付结果中不允许同时取消
-      if (that.data.isPaying || that.data.verifyingPayment) return
+      if (that.data.isPaying || that._verifyingPayment) return
       if (that._cancelPromptOpen || that._cancelRequestInFlight || that.data.cancellingId) return
       if (!id) {
         toast('获取订单信息失败')
@@ -550,12 +549,13 @@ Component({
         },
         onPayVerifying() {
           if (!current()) return
-          that.setData({ verifyingPayment: true })
+          that._verifyingPayment = true
           cyLoading.show('确认支付结果…')
         },
         onPaySuccess() {
           if (!current()) return
-          that.setData({ isPaying: false, verifyingPayment: false })
+          that._verifyingPayment = false
+          that.setData({ isPaying: false })
           cyLoading.hide()
           that._updateOrderPaid(id, index)
         },
@@ -567,13 +567,15 @@ Component({
         onPayFail(res) {
           if (!current()) return
           cyLoading.hide()
-          that.setData({ isPaying: false, verifyingPayment: false })
+          that._verifyingPayment = false
+          that.setData({ isPaying: false })
           toast(payFailText(res), { duration: 2000 })
         },
         onPayUnknown() {
           if (!current()) return
           cyLoading.hide()
-          that.setData({ isPaying: false, verifyingPayment: false })
+          that._verifyingPayment = false
+          that.setData({ isPaying: false })
           modal.show({
             title: '支付结果待确认',
             content: '暂不要重复支付，请稍后刷新订单查看最终状态。',

@@ -679,38 +679,39 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-11-12 club-payout-binding:新增 F315 个人收款页(missing-param 一行),total 366→367、P1 217→218、actionable P1 210→211 / total 342→343、F 112→113、real-data 59→60。
 // 2026-11-13 pass-mini:新增 F316 通行证订单详情页(missing-param 一行),total 367→368、P1 218→219、actionable P1 211→212 / total 343→344、F 113→114、real-data 60→61。
 // 2026-11-18 F14c(PG-025):城市合集两页下线,F301/F302 两行退场:total 369→367、P1 220→218、actionable P1 213→211 / total 345→343、F 114→112、real-data 61→59;catalog/index 重定向壳走 coverage-exemptions。
+// 2026-11-19 verify-1119-mini:删页(topicadd/simple/coop-withdraw/couponInfo/tixian 等)后按实际重算(只改记账,不改矩阵行去凑)。
 const STATS = {
-  "total": 367,
+  "total": 356,
   "byPriority": {
-    "P0": 139,
-    "P1": 218,
-    "P2": 10
+    "P0": 130,
+    "P1": 217,
+    "P2": 9
   },
   "blockedByPriority": {
-    "P0": 9,
+    "P0": 6,
     "P1": 7,
-    "P2": 8
+    "P2": 7
   },
   "actionable": {
-    "P0": 130,
-    "P1": 211,
+    "P0": 124,
+    "P1": 210,
     "P2": 2,
-    "total": 343
+    "total": 336
   },
-  "blocked": 24,
+  "blocked": 20,
   "domains": {
     "A": 48,
-    "B": 72,
+    "B": 70,
     "C": 57,
-    "D": 52,
-    "E": 26,
+    "D": 48,
+    "E": 21,
     "F": 112
   },
   "control": {
-    "setData": 186,
-    "identity+setData": 115,
-    "real-data": 59,
-    "real-device": 7
+    "setData": 184,
+    "identity+setData": 110,
+    "real-data": 56,
+    "real-device": 6
   },
   "fixtureVerified": 16
 };
