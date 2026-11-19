@@ -1,5 +1,6 @@
 <view class="pa-page theme-merchant" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
   <cy-toast id="cy-toast" />
+  <cy-access-gate kind="login" />
   <cy-nav-bar custom-back bind:back="onNavBack" />
   <cy-page-title title="收款账户" safe-top="{{false}}" />
 

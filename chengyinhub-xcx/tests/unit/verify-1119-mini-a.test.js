@@ -95,3 +95,11 @@ test('PG-011:关于页删除「我的二维码」块与 explainQrPending', () =>
   assert.doesNotMatch(read('pages/shezhi/about/index.wxml'), /我的二维码|cy-qr-voucher/);
   assert.doesNotMatch(read('pages/shezhi/about/index.js'), /explainQrPending/);
 });
+
+test('PG-013/PG-030:参与人编辑与四个商家页挂登录守卫', () => {
+  for (const p of ['pages/addressinfo/addressinfo', 'pages/merchant/verify-records/index', 'pages/merchant/bundle-reservations/index',
+    'pages/merchant/crm-campaigns/index', 'pages/merchant/payout-account/index']) {
+    assert.match(read(p + '.wxml'), /<cy-access-gate kind="login" \/>/, p);
+    assert.equal(JSON.parse(read(p + '.json')).usingComponents['cy-access-gate'], '/components/cy/access-gate/index', p);
+  }
+});
