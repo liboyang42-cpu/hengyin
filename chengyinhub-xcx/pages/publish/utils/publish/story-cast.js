@@ -9,7 +9,7 @@
  * 这里只放纯函数(无 wx / getApp),给 fabu 页面与单测共用。
  */
 
-var COLORS = ['#E8604C', '#3D8BFD', '#2FB57A', '#B98AF0', '#F2B33D', '#8E8E93'];
+var COLORS = ['#E8604C', '#3D8BFD', '#2FB57A', '#B98AF0', '#F2B33D', '#8E8E93']; /* ds-ok 契约数据:cast[].color 只能是这六个字面值(后端逐字校验),不是样式 */
 var PRESETS = [
   { value: 'bright_female', label: '明亮女声' },
   { value: 'warm_female', label: '温柔女声' },
