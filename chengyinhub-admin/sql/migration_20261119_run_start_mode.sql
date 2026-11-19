@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS cms_topic_alt_station (
     create_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     PRIMARY KEY (id),
     KEY idx_alt_station_topic (topic_id, status)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '路线替代起点(CG-ALL-11)';
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '路线替代起点(CG-ALL-11)';
 
 CREATE TABLE IF NOT EXISTS play_run_start_mode (
     id             BIGINT      NOT NULL AUTO_INCREMENT COMMENT '主键',
@@ -29,4 +29,4 @@ CREATE TABLE IF NOT EXISTS play_run_start_mode (
     create_time    DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '开局时间',
     PRIMARY KEY (id),
     UNIQUE KEY uk_run_start_mode (member_id, activity_id, topic_id)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '本局开局方式(CG-ALL-11)';
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '本局开局方式(CG-ALL-11)';
