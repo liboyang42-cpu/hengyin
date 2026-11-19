@@ -65,7 +65,7 @@ test('E-B4/B5 photocheck:提交失败改「重新提交」不重拍;判分中忙
   const j = instance(def, { judging: true })
   j.onShoot(); assert.deepStrictEqual(j._ev, [])
   def.observers.judging.call(c, true); assert.strictEqual(c.data.resubmit, false)
-  assert.match(read('pages/play/components/playkit-photocheck/index.wxml'), /judging \? '审核中…'/)
+  assert.match(read('pages/play/components/playkit-photocheck/index.wxml'), /judging \? \(recordOnly \? '保存中…' : '审核中…'\)/)
 })
 
 test('E-B4/B5 页面:提交失败走 submit 并保留地址,判分期间 photoJudging', () => {

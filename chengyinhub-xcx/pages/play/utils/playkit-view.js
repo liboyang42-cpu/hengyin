@@ -331,6 +331,9 @@ function buildPhotoCheck(seg, receipt, placeName) {
     // 失败落在哪一步('submit' = 照片已传上去只差提交,可重新提交;空 = 上传失败)与「审核中」:同属页面本地态,这里给初值
     photoFailKind: '',
     photoJudging: false,
+    // CG-ALL-12:服务端 photoMode=RECORD 才是「只记录」;allowSkip 只认真的 true。缺省两项都 false,这一屏与今天相同
+    recordOnly: String(seg.photoMode || '').toUpperCase() === 'RECORD',
+    allowSkip: seg.allowSkip === true,
   };
 }
 
@@ -1040,6 +1043,8 @@ const ACTION_OF = {
   'shout:skip': 'SKIP_SENSOR_STATION',
   'walk:readfail': 'REPORT_SENSOR_FAILURE',
   'walk:skip': 'SKIP_SENSOR_STATION',
+  /* CG-ALL-12:只记录的拍照站,玩家文字确认「不拍照，继续」后走同一条跳过(服务端按 allowSkip 收) */
+  'photocheck:skip': 'SKIP_SENSOR_STATION',
   'shout:submit': 'SUBMIT_SHOUT',
   'countdown:finish': 'SUBMIT_COUNTDOWN',
   'stopwatch:submit': 'SUBMIT_STOPWATCH',
@@ -1096,6 +1101,7 @@ const SENSOR_GAME_OF = {
   quiethold: 'quietHold',
   shout: 'shout',
   walk: 'steps',
+  photocheck: 'photoCheck',
 };
 
 function serverAction(type, action) {

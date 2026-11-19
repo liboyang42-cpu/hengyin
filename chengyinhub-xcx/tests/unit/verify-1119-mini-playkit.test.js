@@ -70,3 +70,64 @@ test('CG-07-P2-2 结算总览单独数出辅助完成(跳过 / 看过答案)的�
   const wxml = read('subpackageJourney/pages/settle/index.wxml')
   assert.match(wxml, /wx:if="\{\{report\.assistedCount > 0\}\}"><text class="st-two__v">\{\{report\.assistedCount\}\}<\/text><text class="st-two__l">辅助完成<\/text>/)
 })
+
+test('CG-ALL-12 只记录拍照:服务端 photoMode=RECORD 才生效,拍了写「已记录」、不出重拍次数;缺省同今天', () => {
+  const { serverAction, serverPayload } = require('../../pages/play/utils/playkit-view.js')
+  const now = new Date('2026-11-19T10:00:00+08:00')
+  const kit = pickPlayKit({ sessionId: 's1', version: 1, playKit: { photoCheck: { title: '留念', photoMode: 'record', allowSkip: true } } }, now)
+  assert.equal(kit.type, 'photocheck')
+  assert.equal(kit.recordOnly, true)
+  assert.equal(kit.allowSkip, true)
+  const bare = pickPlayKit({ sessionId: 's1', version: 1, playKit: { photoCheck: { title: '拍', allowSkip: 'yes' } } }, now)
+  assert.equal(bare.recordOnly, false)
+  assert.equal(bare.allowSkip, false, '只认真的 true')
+  assert.equal(serverAction('photocheck', 'skip'), 'SKIP_SENSOR_STATION')
+  assert.deepEqual(serverPayload('photocheck', 'skip', {}), { game: 'photoCheck' })
+
+  const def = loadComponent('pages/play/components/playkit-photocheck/index.js')
+  const obs = def.observers['show, tries, maxTries, passed, flagged, degraded, fallback, lastReason']
+  const vm = { data: Object.assign({}, def.data, { recordOnly: true }), setData(p) { Object.assign(this.data, p) }, replayMotion() {} }
+  obs.call(vm, true, 1, 3, true, false, false, 'retake', '')
+  assert.equal(vm.data.verdict, '已记录')
+  assert.equal(vm.data.triesLabel, '')
+  const judge = { data: Object.assign({}, def.data), setData(p) { Object.assign(this.data, p) }, replayMotion() {} }
+  obs.call(judge, true, 1, 3, true, false, false, 'retake', '')
+  assert.equal(judge.data.verdict, '这张过了', '审核模式不变')
+  const wxml = read('pages/play/components/playkit-photocheck/index.wxml')
+  assert.match(wxml, /judging \? \(recordOnly \? '保存中…' : '审核中…'\)/)
+  assert.match(read('pages/play/components/playkit/index.wxml'), /record-only="\{\{kit\.recordOnly\}\}" allow-skip="\{\{kit\.allowSkip\}\}"\n  bind:shoot="onShoot" bind:resubmit="onResubmit" bind:skip="onSkip"/)
+})
+
+test('CG-ALL-12 / CG-ALL-29 相机被拒且允许跳过:亮出「不拍照，继续」,文字确认后才发跳过;拍完先预览,可重拍', () => {
+  const shown = []
+  const modalPath = require.resolve(path.join(ROOT, 'utils/modal.js'))
+  const saved = require.cache[modalPath]
+  require.cache[modalPath] = { id: modalPath, filename: modalPath, loaded: true, exports: { show: (o) => shown.push(o) } }
+  const def = loadComponent('pages/play/components/playkit-photocheck/index.js')
+  const inst = { data: Object.assign({}, def.data, { allowSkip: true, recordOnly: true }), events: [] }
+  inst.setData = (p) => Object.assign(inst.data, p)
+  inst.triggerEvent = (n, d) => inst.events.push([n, d])
+  for (const [k, fn] of Object.entries(def.methods)) inst[k] = fn.bind(inst)
+  const prevWx = global.wx
+  global.wx = { chooseMedia: (o) => o.fail({ errMsg: 'chooseMedia:fail auth deny' }), vibrateShort() {} }
+  try { inst.onShoot() } finally { global.wx = prevWx }
+  assert.equal(inst.data.skipOffer, true)
+  inst.onSkipPhoto()
+  assert.equal(shown.length, 1)
+  assert.deepEqual(inst.events, [], '没确认不发')
+  shown[0].success({ confirm: true })
+  assert.deepEqual(inst.events, [['skip', undefined]])
+
+  inst.events.length = 0
+  global.wx = { chooseMedia: (o) => o.success({ tempFiles: [{ tempFilePath: 'wxfile://a.jpg', size: 1 }] }), vibrateShort() {} }
+  try {
+    inst.onShoot()
+    assert.equal(inst.data.pendingPath, 'wxfile://a.jpg')
+    assert.deepEqual(inst.events, [], '预览阶段不上传')
+    inst.onRetake()   // 重拍:丢掉这张,再取一张
+    assert.equal(inst.data.pendingPath, 'wxfile://a.jpg')
+    inst.onShoot()
+  } finally { global.wx = prevWx }
+  assert.deepEqual(inst.events, [['shoot', { tempFilePath: 'wxfile://a.jpg', size: 1 }]])
+  if (saved) require.cache[modalPath] = saved; else delete require.cache[modalPath]
+})
