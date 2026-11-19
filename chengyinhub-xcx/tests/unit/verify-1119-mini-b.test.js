@@ -166,3 +166,7 @@ test('MC-050 / MC-059:管理员保存不发运营配置,地址不随城市写回
   assert.match(edit, /if \(d\.isOwner\) \{\s*payload\.operationConfigUpdated = true;/)
   assert.match(edit, /if \(d\.joinPolicySupported\) payload\.joinPolicy = d\.joinPolicy;\s*\}/)
 })
+
+test('MC-052:俱乐部申请承接带 clubId,后端按其归属校验', () => {
+  assert.match(read('pages/club/detail/index.js'), /url: '\/api\/coop\/pool\/apply'[\s\S]{0,80}jsonBody\(\{ topicId: topicId, clubId: that\.data\.clubId, message/)
+})

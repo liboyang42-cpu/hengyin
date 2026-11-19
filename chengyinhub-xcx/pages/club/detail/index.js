@@ -3811,7 +3811,7 @@ Page({
         if (!r.confirm) { done(''); return; }
         app.sendRequest({
           url: '/api/coop/pool/apply', method: 'POST',
-          data: jsonBody({ topicId: topicId, message: r.content || '' }), header: jsonHeader(),
+          data: jsonBody({ topicId: topicId, clubId: that.data.clubId, message: r.content || '' }), header: jsonHeader(),
           success(res) {
             if (String(res && res.code) === '200') {
               done('已申请，可在协作邀请「我发出的」查看');
