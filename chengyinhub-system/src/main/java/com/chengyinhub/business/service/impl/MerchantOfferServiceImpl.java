@@ -130,6 +130,14 @@ public class MerchantOfferServiceImpl implements IMerchantOfferService {
     @Autowired(required = false)
     private ITopicSaleCanonicalMutationService canonicalMutationService;
 
+    /** F10:作者自己承接时把本章站点绑到作者名下(开售 canonical 的 storeCluster 按点位归属核对)。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IChapterMerchantNodeService chapterMerchantNodeService;
+
+    /** F10:位置全部有人承接 ⇒ 招募中自动进入待定价;出现空位 ⇒ 待定价回到招募中。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.FreeExploreSlotProgress slotProgress;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long enroll(MerchantChapterOffer offer, Long merchantId) {
@@ -317,6 +325,10 @@ public class MerchantOfferServiceImpl implements IMerchantOfferService {
             invalidateCircleReview(topic.getId());
         }
         invalidateApprovedCanonical(chapter.getTopicId(), "offer-enroll");
+        // F10 §3.3:生效供给补齐最后一个必选位置时自动进入待定价(补位供给 status=0 不触发)。
+        if (Integer.valueOf(1).equals(offer.getStatus())) {
+            tryAdvanceToPricing(chapter.getTopicId());
+        }
         return offer.getId();
     }
 
@@ -486,6 +498,8 @@ public class MerchantOfferServiceImpl implements IMerchantOfferService {
         }
         applicationMapper.retireApprovedForSupplyExit(topic.getId(), chapterId, merchantId);
         invalidateApprovedCanonical(topic.getId(), "ordinary-chapter-supply-withdraw");
+        // F10 §4:开售前商家退出 ⇒ 位置重新变空,待定价的主题回到招募中(票价区重新置灰)。
+        reopenRecruitingIfSlotOpen(topic.getId());
         registerOwnerWithdrawalNotice(offerId, topic.getMemberId(), "章节供给已退出",
                 "主题「" + topic.getName() + "」有章节供给退出。" + (required ? "已暂停新报名，请核对补位方案。" : "请核对已有玩家的履约安排。"));
         businessNotice.executeAfterCommit("chapter-supply-withdraw-players", offerId, () -> {
@@ -963,6 +977,185 @@ public class MerchantOfferServiceImpl implements IMerchantOfferService {
         if (TermsMode.REVSHARE.equals(mode)) return "计酬档";
         if (TermsMode.TRAFFIC.equals(mode)) return "引流档";
         return String.valueOf(mode);
+    }
+
+    // ===================== F10 作者自己承接 ==============
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long authorSelfSupply(Long authorMemberId, Long topicId, Long chapterId, AuthorSelfSupplyPerk perk) {
+        if (authorMemberId == null || authorMemberId <= 0) throw new IllegalStateException("请先登录");
+        if (topicId == null || chapterId == null) throw new IllegalStateException("缺少主题或章节");
+        AuthorSelfSupplyPerkPolicy.assertValid(perk);
+        // 锁序与 enroll 一致:章节 → 主题,不引入 ABBA。
+        supplyReviewService.lockBeforeChapter(chapterId);
+        if (chapterMapper.lockChaptersForCapacity(java.util.Collections.singletonList(chapterId)).isEmpty()) {
+            throw new IllegalStateException("章节不存在");
+        }
+        CmsTopicChapter chapter = chapterMapper.selectCmsTopicChapterById(chapterId);
+        if (chapter == null || !topicId.equals(chapter.getTopicId())) {
+            throw new IllegalStateException("章节不属于该主题");
+        }
+        CmsTopic topic = cmsTopicMapper.selectCmsTopicByIdForUpdate(topicId);
+        assertAuthorFreeExploreTopic(topic, authorMemberId);
+        TopicLifecycleState lifecycle = lifecycleOf(topic);
+        if (lifecycle != TopicLifecycleState.RECRUITING && lifecycle != TopicLifecycleState.PRICING) {
+            throw new IllegalStateException("主题不在招商或待定价阶段，不能自己承接");
+        }
+        if (perk.getValidEnd() != null && topic.getEndDate() != null
+                && localDate(perk.getValidEnd()).isBefore(localDate(topic.getEndDate()))) {
+            throw new IllegalStateException("权益有效期不能早于主题结束日期");
+        }
+        assertMaxMerchant(chapter);
+
+        // 站点归属:本章站点(作者建期留的占位点)绑到作者名下,开售 canonical 的店铺清单按它核对。
+        if (chapterMerchantNodeService == null) throw new IllegalStateException("站点服务不可用，暂不能自己承接");
+        chapterMerchantNodeService.bindAuthorSelfSupplyNode(authorMemberId, topicId, chapterId);
+
+        CoopPerk p = new CoopPerk();
+        p.setMerchantId(authorMemberId);
+        p.setPerkType(perk.getPerkType() == null ? 0 : perk.getPerkType());
+        p.setName(perk.getName().trim());
+        p.setUnitCost(java.math.BigDecimal.ZERO);
+        p.setRetailValue(perk.getRetailValue() == null ? java.math.BigDecimal.ZERO : perk.getRetailValue());
+        p.setQuota(perk.getCapacity());
+        p.setRedeemRule(CoopPerk.redeemRuleOrDefault(perk.getRedeemRule() == null ? null : perk.getRedeemRule().trim()));
+        p.setValidEnd(perk.getValidEnd());
+        p.setDelFlag(0);
+        p.setCreateTime(DateUtils.getNowDate());
+        coopPerkMapper.insertCoopPerk(p);
+        if (p.getId() == null) throw new IllegalStateException("权益卡保存失败");
+
+        MerchantChapterOffer offer = new MerchantChapterOffer();
+        offer.setTopicId(topicId);
+        offer.setChapterId(chapterId);
+        offer.setMerchantId(authorMemberId);
+        offer.setSupplierKind(MerchantChapterOffer.SUPPLIER_AUTHOR);
+        offer.setSupplierMemberId(authorMemberId);
+        offer.setPerkId(p.getId());
+        // 自己承接只有权益档(FE-G16:计酬只在俱乐部直营主题出现,作者不给自己计酬)。
+        offer.setTermsMode(TermsMode.PERK);
+        CoopTermsAxes.Value axes = CoopTermsAxes.fromTermsMode(TermsMode.PERK);
+        offer.setCompensationMode(axes.getCompensationMode());
+        offer.setBenefitMode(axes.getBenefitMode());
+        offer.setQuotaTotal(perk.getCapacity());
+        offer.setQuotaUsed(0);
+        offer.setValidEnd(perk.getValidEnd());
+        offer.setAllowedValidationMethods(chapter.getAllowedValidationMethods());
+        offer.setMaxNodeXp(chapter.getMaxNodeXp());
+        offer.setStatus(1);
+        offer.setCreateTime(DateUtils.getNowDate());
+        try {
+            offerMapper.insertMerchantChapterOffer(offer);
+        } catch (org.springframework.dao.DuplicateKeyException e) {
+            // uk_offer_merchant_chapter(chapter_id, merchant_id):作者已自己承接,或已用商家身份承接本章。
+            throw new IllegalStateException("你已承接本章节，请勿重复承接");
+        }
+        invalidateApprovedCanonical(topicId, "author-self-supply");
+        tryAdvanceToPricing(topicId);
+        return offer.getId();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Integer withdrawAuthorSelfSupply(Long authorMemberId, Long topicId, Long offerId) {
+        if (authorMemberId == null || authorMemberId <= 0) throw new IllegalStateException("请先登录");
+        if (topicId == null || offerId == null) throw new IllegalStateException("缺少主题或承接记录");
+        MerchantChapterOffer location = offerMapper.selectById(offerId);
+        if (location == null || !topicId.equals(location.getTopicId()) || location.getChapterId() == null) {
+            throw new IllegalStateException("承接记录不存在");
+        }
+        Long chapterId = location.getChapterId();
+        supplyReviewService.lockBeforeChapter(chapterId);
+        if (chapterMapper.lockChaptersForCapacity(java.util.Collections.singletonList(chapterId)).isEmpty()) {
+            throw new IllegalStateException("章节不存在");
+        }
+        CmsTopic topic = cmsTopicMapper.selectCmsTopicByIdForUpdate(topicId);
+        assertAuthorFreeExploreTopic(topic, authorMemberId);
+        TopicLifecycleState lifecycle = lifecycleOf(topic);
+        if (lifecycle != TopicLifecycleState.RECRUITING && lifecycle != TopicLifecycleState.PRICING) {
+            throw new IllegalStateException("主题已开售，不能撤回自己承接");
+        }
+        MerchantChapterOffer offer = offerMapper.selectByIdForUpdate(offerId);
+        if (offer == null || !offer.isAuthorSupplied() || !authorMemberId.equals(offer.getMerchantId())
+                || !authorMemberId.equals(offer.getSupplierMemberId()) || !topicId.equals(offer.getTopicId())) {
+            throw new IllegalStateException("只能撤回自己承接的位置");
+        }
+        if (!Integer.valueOf(1).equals(offer.getStatus())) {
+            return topic.getLifecycle();
+        }
+        if (offerMapper.deactivate(offerId) != 1) {
+            throw new IllegalStateException("承接状态刚发生变化，请刷新后重试");
+        }
+        if (chapterMerchantNodeService != null) {
+            chapterMerchantNodeService.releaseAuthorSelfSupplyNode(authorMemberId, topicId, chapterId);
+        }
+        invalidateApprovedCanonical(topicId, "author-self-supply-withdraw");
+        reopenRecruitingIfSlotOpen(topicId);
+        CmsTopic after = cmsTopicMapper.selectCmsTopicById(topicId);
+        return after == null ? null : after.getLifecycle();
+    }
+
+    // 与 canonicalMutationService 同口径:装配缺失(单测/裁剪上下文)时不推进,生产由 Spring 注入。
+    private void tryAdvanceToPricing(Long topicId) {
+        if (slotProgress != null) slotProgress.tryAdvanceToPricing(topicId);
+    }
+
+    private void reopenRecruitingIfSlotOpen(Long topicId) {
+        if (slotProgress != null) slotProgress.reopenRecruitingIfSlotOpen(topicId);
+    }
+
+    /** 归属闸:按 topic.member_id 校验(AGENTS.md:写接口必须带 owner)。 */
+    private static void assertAuthorFreeExploreTopic(CmsTopic topic, Long authorMemberId) {
+        if (topic == null || Integer.valueOf(2).equals(topic.getDelFlag())) {
+            throw new IllegalStateException("主题不存在");
+        }
+        if (!authorMemberId.equals(topic.getMemberId())) {
+            throw new IllegalStateException("只有主题作者可以自己承接");
+        }
+        if (!Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())) {
+            throw new IllegalStateException("只有自由探索主题支持自己承接");
+        }
+        if (topic.getCircleThemeCode() != null && !topic.getCircleThemeCode().trim().isEmpty()) {
+            throw new IllegalStateException("圈层实例主题不支持自己承接");
+        }
+    }
+
+    private static java.time.LocalDate localDate(Date date) {
+        return date.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+    }
+
+    private static TopicLifecycleState lifecycleOf(CmsTopic topic) {
+        try {
+            return TopicLifecycleState.fromCode(topic.getLifecycle());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException("主题生命周期未知，请刷新后重试");
+        }
+    }
+
+    /** 自己承接权益卡的形状校验(纯函数,单测直接覆盖)。 */
+    static final class AuthorSelfSupplyPerkPolicy {
+        private AuthorSelfSupplyPerkPolicy() {}
+
+        static void assertValid(AuthorSelfSupplyPerk perk) {
+            if (perk == null) throw new IllegalStateException("请填写权益卡");
+            if (perk.getName() == null || perk.getName().trim().isEmpty()) {
+                throw new IllegalStateException("请填写权益名称");
+            }
+            if (perk.getName().trim().length() > 64) throw new IllegalStateException("权益名称不能超过 64 字");
+            if (perk.getRedeemRule() != null && perk.getRedeemRule().trim().length() > 200) {
+                throw new IllegalStateException("核销规则不能超过 200 字");
+            }
+            if (perk.getCapacity() == null || perk.getCapacity() <= 0) {
+                throw new IllegalStateException("请填写可接待人次");
+            }
+            if (perk.getValidEnd() == null) throw new IllegalStateException("请填写权益有效期");
+            if (perk.getPerkType() != null && (perk.getPerkType() < 0 || perk.getPerkType() > 2)) {
+                throw new IllegalStateException("权益类型不合法");
+            }
+            if (perk.getRetailValue() != null && perk.getRetailValue().signum() < 0) {
+                throw new IllegalStateException("权益价值不能为负");
+            }
+        }
     }
 
     /**

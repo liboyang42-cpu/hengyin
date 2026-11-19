@@ -353,13 +353,21 @@ public class RegistrationRedemptionApplication {
         if (code == null || chapterId == null) return AjaxResult.error("参数缺失");
 
         MerchantAccessContext access;
+        ScanContext ctx;
         try {
             access = merchantAccessService.require(principalMemberId, MerchantPermission.VERIFY);
+            ctx = resolveExploreScanContext(code);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode() == null ? com.chengyinhub.common.constant.HttpStatus.ERROR : e.getCode(), e.getMessage());
+            // F10:没有商家身份时,只有「自己承接」位置的作者本人可以继续;其余人原样拿到鉴权拒绝,
+            // 不暴露核销码对应订单的任何状态。
+            ctx = resolveExploreScanContext(code);
+            Long topicId = ctx.error == null && ctx.activity != null ? ctx.activity.getTopicId() : null;
+            if (topicId == null || perkLedgerService == null
+                    || !perkLedgerService.hasLiveAuthorSupply(topicId, principalMemberId)) {
+                return new AjaxResult(e.getCode() == null ? com.chengyinhub.common.constant.HttpStatus.ERROR : e.getCode(), e.getMessage());
+            }
+            access = new MerchantAccessContext(principalMemberId, null, principalMemberId, null);
         }
-
-        ScanContext ctx = resolveExploreScanContext(code);
         if (ctx.error != null) return ctx.error;
         return doRedeemExploreChapter(ctx.registration, ctx.activity, chapterId, ctx.activity.getTopicId(),
                 access.getOwnerMemberId(), principalMemberId, access.getRoleCode());
@@ -526,6 +534,24 @@ public class RegistrationRedemptionApplication {
             return ScanContext.fail(notRedeemed("该订单不是探索票，请走普通核销"));
         }
         return ctx;
+    }
+
+    /**
+     * F10(FE-G13/14)③ 探索票核销授权:先按商家身份(VERIFY);没有商家身份时,若扫码人是该主题
+     * 「自己承接」位置的作者本人(supplier_kind=AUTHOR 的生效供给),按作者授权 —— 归属主体就是作者自己,
+     * 后续 resolveRedeemableChapters 只会认作者自己的 AUTHOR 供给,别人的章节核销不了。
+     * 既不是商家也没有 AUTHOR 供给 ⇒ 原样抛出商家鉴权的拒绝。
+     */
+    private MerchantAccessContext exploreRedeemAccess(Long memberId, Long topicId) {
+        try {
+            return merchantAccessService.require(memberId, MerchantPermission.VERIFY);
+        } catch (ServiceException refusal) {
+            if (topicId != null && perkLedgerService != null
+                    && perkLedgerService.hasLiveAuthorSupply(topicId, memberId)) {
+                return new MerchantAccessContext(memberId, null, memberId, null);
+            }
+            throw refusal;
+        }
     }
 
     /** ③ 核销的公共收尾:走 service 的事务收口 + 事务外发积分/勋章。 */
@@ -739,8 +765,7 @@ public class RegistrationRedemptionApplication {
                 //   ③ 的 ownerId 是 activityId,拿它当 topicId 去 selectByTopic 必然查空,
                 //   商家会永远收到「您在本路线没有生效的权益供给」。
                 if (isExplorePass(cmsRegistration, cmsActivity)) {
-                    MerchantAccessContext access = merchantAccessService.require(
-                            memberId, MerchantPermission.VERIFY);
+                    MerchantAccessContext access = exploreRedeemAccess(memberId, cmsActivity.getTopicId());
                     return redeemExploreChapter(cmsRegistration, cmsActivity, cmsActivity.getTopicId(),
                             access.getOwnerMemberId(), memberId, access.getRoleCode());
                 }

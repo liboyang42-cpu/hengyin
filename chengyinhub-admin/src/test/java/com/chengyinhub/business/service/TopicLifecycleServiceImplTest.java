@@ -129,6 +129,16 @@ class TopicLifecycleServiceImplTest {
     }
 
     @Test
+    void freeExploreSlotReopenedBeforeSaleCanReturnToRecruiting() {
+        // F10 §4:开售前位置重新变空 ⇒ PRICING → RECRUITING(由 FreeExploreSlotProgress 判定有空位且未锁价)。
+        when(topicMapper.transitionLifecycle(anyLong(), anyInt(), anyInt(), any())).thenReturn(1);
+
+        assertTrue(service.transition(7L, TopicLifecycleState.PRICING, TopicLifecycleState.RECRUITING));
+        verify(topicMapper).transitionLifecycle(eq(7L), eq(TopicLifecycleState.PRICING.getCode()),
+                eq(TopicLifecycleState.RECRUITING.getCode()), any());
+    }
+
+    @Test
     void commercialPricingCannotBypassAtomicFinalizerEvenWithReviewSeam() {
         when(commercialTopicPolicy.evaluate(7L))
                 .thenReturn(CommercialTopicPolicy.Evaluation.commercial("merchantSupply", 31L));

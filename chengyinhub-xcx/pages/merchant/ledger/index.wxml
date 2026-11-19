@@ -123,6 +123,9 @@
         accessibility-label="结算到账提醒{{settleAlertsHint ? '，' + settleAlertsHint : ''}}" bind:change="enableCoopSettleAlerts" />
     </view>
 
+    <!-- F11:自由探索结算（参考）—— 本店作为合作店铺的参考账;本人若是场次收款人另起一块(没有就不摆)。 -->
+    <cy-fe-reference-settlement wx:if="{{merchantAccess.canReadFinance}}" kind="merchant" />
+    <cy-fe-reference-settlement kind="payer" />
     <view class="fin-group">
       <view class="fin-group__title">收入明细</view>
       <text class="ledger-sync" wx:if="{{settlementLoading.entries && entries.length}}" aria-role="status">正在更新收入明细…</text>

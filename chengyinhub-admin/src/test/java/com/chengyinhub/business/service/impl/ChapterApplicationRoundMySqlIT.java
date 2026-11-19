@@ -188,6 +188,7 @@ class ChapterApplicationRoundMySqlIT {
                     storage.db.execute(create(snapshot,table));
                 if (legacy) storage.db.update("insert into merchant_chapter_application(id,topic_id,chapter_id,merchant_id,status,source,del_flag) values(91,41,73,2001,0,1,0)");
                 new ResourceDatabasePopulator(new FileSystemResource(storage.sqlRoot.resolve("migration_20261003_merchant_offer_withdrawal_columns.sql")),
+                        new FileSystemResource(storage.sqlRoot.resolve("migration_20261118_chapter_offer_author_self_supply.sql")),
                         new FileSystemResource(storage.sqlRoot.resolve("migration_20261024_d_chapter_application_round.sql")))
                         .execute(storage.manager.getDataSource());
                 storage.db.update("insert into cms_topic(id,member_id,name) values(41,1001,'topic')");

@@ -86,7 +86,7 @@ test('V1-P53 设置里有「投诉建议」,打开现成的投诉页(r2 a3-v1-p5
 test('V3-38/39 我的项目:卡片照「我的订单」—— 顶行状态靠右,状态只写短词(通过)', () => {
   const wxml = strip(read('subpackageA/pages/myproject/index.wxml'))
   // r2-create(a3-v3-38/39 业主「和我的订单一样」):状态字在顶行右侧,标题单独一行,分隔线下底行
-  const heads = wxml.match(/<view class="mp-head">[\s\S]*?<text class="mp-st mp-st--\{\{item\._stateVariant\}\}">[^<]*<\/text>\s*<\/view>/g) || []
+  const heads = wxml.match(/<view class="mp-head">[\s\S]*?<text class="mp-st mp-st--\{\{item\._stateVariant\}\}">[^<]*<\/text>\s*(?:<view class="mp-card-more"[^>]*>···<\/view>\s*)?<\/view>/g) || []
   assert.equal(heads.length, 2, '主题卡与模板卡的状态都在顶行')
   assert.match(wxml, /\{\{item\._statusShort\}\}/)
   assert.match(wxml, /<view class="mp-bot">/)

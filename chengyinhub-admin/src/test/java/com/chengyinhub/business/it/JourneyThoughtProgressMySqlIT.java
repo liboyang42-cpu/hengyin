@@ -167,6 +167,7 @@ class JourneyThoughtProgressMySqlIT {
                     "sql/migration_20260930_registration_first_successful_scan.sql",
                     "sql/migration_ordinary_chapter_offer_withdraw_20261003.sql",
                     "sql/migration_20261003_merchant_offer_withdrawal_columns.sql",
+                    "sql/migration_20261118_chapter_offer_author_self_supply.sql",
                     "sql/migration_preset_draft_source_20261108.sql",
                     "sql/migration_20261108_topic_content_revision.sql");
         }

@@ -131,6 +131,10 @@ public class CmsActivityServiceImpl implements ICmsActivityService
     @Autowired
     private com.chengyinhub.business.service.support.ClubSessionMerchantFee clubSessionMerchantFee;
 
+    /** F11(FE-G16=B / FE-G22):自由探索的计酬只记参考账,店铺与场次收款人线下结款。 */
+    @Autowired
+    private com.chengyinhub.business.service.IFeReferenceSettlementService feReferenceSettlementService;
+
     /**
      * 获取需要结算的活动列表；沿用各选单的退款截止、14 天及未结算闸。
      */
@@ -371,6 +375,7 @@ public class CmsActivityServiceImpl implements ICmsActivityService
                         calculateActivityCommissions(activity, cash, rule, ledger.cashPlatformFee).getMerchantCommissionAmount());
                 clubSessionMerchantFee().writeLedger(activity, fees);
             }
+            recordFreeExploreReferenceFees(activity, topic, frozenPayee, null);
             clubPrincipalPayee.markActivityReady(activity.getId());
             // External payout worker consumes the frozen obligations; no wallet fallback, including unsupported payments.
             return false;
@@ -432,6 +437,7 @@ public class CmsActivityServiceImpl implements ICmsActivityService
                 "活动分润 - " + activity.getName(), 3L, activity.getId());
         settlementDebtLedger.offsetFromSettlement(payee, payeeAmount, activity.getId());
         payMerchantFees(activity, feePlan, "");
+        recordFreeExploreReferenceFees(activity, topic, payee, null);
 
         // 4. 分配平台分润（打入平台账户）。前置校验失败会抛异常并回滚本活动的原子领取。
         payActivityCommission(setting.getPlatformMemberId(), settlement.getPlatformCommissionAmount(),
@@ -517,6 +523,7 @@ public class CmsActivityServiceImpl implements ICmsActivityService
                 clubSessionMerchantFee().requireWithinPayeeShare(activity, fees, calculateActivityCommissions(activity, sales, rule).getMerchantCommissionAmount());
                 clubSessionMerchantFee().writeLedger(activity, fees);
             }
+            recordFreeExploreReferenceFees(activity, heldTopic, payee, registration.getId());
             return true;
         }
         requireUsablePlatformSettlementAccount(setting, rule, activity.getId());
@@ -539,6 +546,7 @@ public class CmsActivityServiceImpl implements ICmsActivityService
                 "活动分润(客诉结案补结) - " + activity.getName(), 3L, activity.getId());
         settlementDebtLedger.offsetFromSettlement(payee, payeeAmount, activity.getId());
         payMerchantFees(activity, feePlan, "(客诉结案补结)");
+        recordFreeExploreReferenceFees(activity, heldTopic, payee, registration.getId());
         payActivityCommission(setting.getPlatformMemberId(), settlement.getPlatformCommissionAmount(),
                 "活动平台分润(客诉结案补结) - " + activity.getName(), 7L, activity.getId());
         settlementDebtLedger.offsetFromSettlement(setting.getPlatformMemberId(),
@@ -554,10 +562,44 @@ public class CmsActivityServiceImpl implements ICmsActivityService
             return com.chengyinhub.business.service.support.ClubSessionMerchantFee.emptyPlan();
         }
         CmsTopic topic = cmsTopicMapper.selectCmsTopicById(activity.getTopicId());
-        if (isOrganizerSettledFreeExploreSession(activity, topic)) {
+        if (topic != null && Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())) {
+            // F11(FE-G22):所有自由探索场次都不再线上划款给店铺 —— 不扣主理人份额、不入店铺余额。
+            // 原来要付的那笔改写成参考账,见 recordFreeExploreReferenceFees。
             return com.chengyinhub.business.service.support.ClubSessionMerchantFee.emptyPlan();
         }
         return clubSessionMerchantFee().plan(activity, payee, registrationId);
+    }
+
+    /**
+     * F11:自由探索俱乐部场次「按核销付费」的那笔,按原口径(冻结人头费 × 到店人头)算完整,
+     * 只写参考账(fe_reference_settlement,REVSHARE_HEAD),由场次收款人与店铺线下结款。
+     * 跨俱乐部 / 四店场次本来就没有可算的冻结计酬条款(决定 A),不写。
+     * 与本场结算同一事务;计费口径的拒结(冻结条款不明、已有线下应收等)照旧抛出、回滚本场。
+     */
+    private void recordFreeExploreReferenceFees(CmsActivity activity, CmsTopic topic, Long payee, Long registrationId) {
+        if (activity.getClubId() == null || activity.getClubId() <= 0 || activity.getTopicId() == null
+                || topic == null || !Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())
+                || isOrganizerSettledFreeExploreSession(activity, topic)) {
+            return;
+        }
+        com.chengyinhub.business.service.support.ClubSessionMerchantFee.Plan plan =
+                clubSessionMerchantFee().plan(activity, payee, registrationId);
+        if (plan.getCharges().isEmpty()) {
+            return;
+        }
+        if (feReferenceSettlementService == null) {
+            throw new ServiceException("FE_REFERENCE_SETTLEMENT_UNWIRED: 自由探索参考结算组件未装配，拒绝结算 activityId="
+                    + activity.getId());
+        }
+        List<com.chengyinhub.business.service.IFeReferenceSettlementService.RevshareLine> lines = new java.util.ArrayList<>();
+        for (com.chengyinhub.business.service.support.ClubSessionMerchantFee.Charge charge : plan.getCharges()) {
+            lines.add(new com.chengyinhub.business.service.IFeReferenceSettlementService.RevshareLine(
+                    charge.getMerchantMemberId(), charge.getContractType(), charge.getOrderId(), charge.getChapterId(),
+                    charge.heads(), charge.getFee(), charge.total()));
+        }
+        feReferenceSettlementService.recordRevshareHeads(activity, topic,
+                com.chengyinhub.business.service.support.SessionPayeeResolver.payer(activity, topic, payee, topicSaleSnapshotMapper),
+                lines, registrationId);
     }
 
     private com.chengyinhub.business.service.support.ClubSessionMerchantFee clubSessionMerchantFee() {
@@ -592,11 +634,8 @@ public class CmsActivityServiceImpl implements ICmsActivityService
      * 转让后新主理人收;非俱乐部场次仍是 cms_activity.member_id。退款冲回按实际入账人扣,见 RefundServiceImpl。
      */
     private Long activityPayee(CmsActivity activity, CmsTopic topic) {
-        if (isOrganizerSettledFreeExploreSession(activity, topic)) return activityPayee(activity);
-        if (isMerchantPublishedSession(activity, topic)) {
-            return topic.getMemberId();
-        }
-        return activityPayee(activity);
+        return com.chengyinhub.business.service.support.SessionPayeeResolver.payee(
+                activity, topic, clubPrincipalPayee, topicSaleSnapshotMapper);
     }
 
     /**
@@ -604,27 +643,13 @@ public class CmsActivityServiceImpl implements ICmsActivityService
      * 2026-11-13 业主:票款归发布商家;承办俱乐部、合作店铺与商家线下结算。平台费与核销费口径不变。
      */
     private static boolean isMerchantPublishedSession(CmsActivity activity, CmsTopic topic) {
-        return activity != null && topic != null
-                && Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())
-                && (topic.getClubId() == null || topic.getClubId() <= 0)
-                && topic.getMemberId() != null && topic.getMemberId() > 0
-                && activity.getClubId() != null && activity.getClubId() > 0;
+        return com.chengyinhub.business.service.support.SessionPayeeResolver.isMerchantPublishedSession(activity, topic);
     }
 
     /** 2026-11-14 决定 A：原无路径的跨俱乐部/四店场次归场次主办方，店铺在线下结算。 */
     private boolean isOrganizerSettledFreeExploreSession(CmsActivity activity, CmsTopic topic) {
-        if (activity == null || topic == null || !Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())) {
-            return false;
-        }
-        boolean organizer = activity.getClubId() != null && activity.getClubId() > 0
-                || activity.getMemberId() != null && activity.getMemberId() > 0;
-        if (!organizer) return false;
-        if (topic.getClubId() != null && topic.getClubId() > 0 && !topic.getClubId().equals(activity.getClubId())) {
-            return true;
-        }
-        TopicSaleSnapshot snapshot = topicSaleSnapshotMapper.selectSnapshotByTopicId(topic.getId());
-        return snapshot != null && com.chengyinhub.business.service.support.TopicSaleCanonicalCodec.read(
-                snapshot.getSchemaVersion(), snapshot.getCanonicalJson(), topic.getProductType()).requiresFourStoreContract();
+        return com.chengyinhub.business.service.support.SessionPayeeResolver.isOrganizerSettledFreeExploreSession(
+                activity, topic, topicSaleSnapshotMapper);
     }
 
     private Long activityPayee(CmsActivity activity) {

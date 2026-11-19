@@ -31,6 +31,9 @@ public interface MerchantChapterOfferMapper {
     /** ③ 锁价前检查:没有任何生效供给的必选章数量;大于 0 即禁止开卖。 */
     int countRequiredChaptersWithoutLiveOffer(@Param("topicId") Long topicId);
 
+    /** F10:主题必选章(商家位置)总数,与 countRequiredChaptersWithoutLiveOffer 同口径。 */
+    int countRequiredChapters(@Param("topicId") Long topicId);
+
     public int insertMerchantChapterOffer(MerchantChapterOffer o);
 
     public MerchantChapterOffer selectById(@Param("id") Long id);

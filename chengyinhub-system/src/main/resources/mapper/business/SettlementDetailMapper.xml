@@ -407,15 +407,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             join cms_activity ga on ga.id = gv.activity_id
             left join cms_topic gt on gt.id = ga.topic_id
             where gt.product_type is null or gt.product_type != 2
-            union all
-            select a.id, o.to_id, o.id from cms_activity a
-            join cms_topic t on t.id = a.topic_id and t.product_type = 2 and a.club_id = t.club_id and a.club_id &gt; 0
-            join topic_sale_snapshot ss on ss.topic_id = t.id and ss.schema_version = 'CANONICAL_15_V1'
-              and json_unquote(json_extract(ss.canonical_json, '$.completionPolicy.evidenceRule')) != 'FOUR_STORE_REDEEM'
-            join coop_order o on o.topic_id = t.id and o.to_type = 'merchant' and o.status = 0 and o.del_flag = 0
-            where exists (select 1 from redemption rd join cms_registration r on r.id = rd.registration_id
-                          where r.owner_type = 2 and r.owner_id = a.id and rd.topic_id = t.id
-                            and rd.merchant_id = o.to_id and rd.status = 'ACTIVE')
+            <!-- F11(FE-G22):自由探索场次的店铺计酬只记参考账、线下结款,不再进钱包,故不估入「待入账」。 -->
         ) gv
         join cms_activity a on a.id = gv.activity_id
         join cms_topic t on t.id = a.topic_id
