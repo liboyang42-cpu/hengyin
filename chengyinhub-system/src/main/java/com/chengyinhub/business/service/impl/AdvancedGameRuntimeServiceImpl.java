@@ -776,8 +776,18 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             }
         }
         }
+        // 角色信任(cast-game-trust-1119):选择类玩法选中的选项带 trust 时,从本局冻结配置结算进本局信任,
+        // 每站只算一次;回包带 trustChanged 供客户端显示「某某会记住这件事」。队伍共享局与恢复挑战不结算。
+        List<String> trustChanged = Collections.emptyList();
+        if (topicRouteRuntimeService != null && !zeroChallengeSession && sharedRun == null && !choices.isEmpty()) {
+            List<String[]> trustRefs = new ArrayList<>();
+            for (ChoiceRef choice : choices) if (choice != null) trustRefs.add(new String[]{choice.stepOrKit, choice.optionId});
+            trustChanged = topicRouteRuntimeService.applyStationTrust(memberId, session.getTopicId(), session.getActivityId(),
+                    session.getNodeId(), trustRefs);
+        }
         Map<String, Object> view = toView(session, memberId);
         appendJourneyWorld(view, memberId, session);
+        if (trustChanged != null && !trustChanged.isEmpty()) view.put("trustChanged", new ArrayList<>(trustChanged));
         logAction(session, memberId, idempotencyKey, requestFingerprint, view);
         // 待铸卡挂在 logAction 之后:幂等回放存的是上面那一刻的回包,不带这个内部标记,
         // 同一个 idempotencyKey 重放不会再铸一次。
