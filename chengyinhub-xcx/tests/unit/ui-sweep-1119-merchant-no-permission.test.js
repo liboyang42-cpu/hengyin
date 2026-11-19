@@ -135,7 +135,7 @@ test('列出的商家页:无权限态不再 auto-back,也不在 JS 里静默退�
 });
 
 test('商家首页 / 经营团队:非成员落原地无权限态 + 申请入驻,不 switchTab', () => {
-  assert.match(read('pages/merchant/index/index.wxml'), /<cy-empty wx:elif="\{\{consoleDenied\}\}" kind="no-permission"[^>]*cta="申请入驻" bind:cta="goApplicationProgress"/);
+  assert.match(read('pages/merchant/index/index.wxml'), /<view wx:elif="\{\{consoleDenied\}\}" class="rv-denied" style="padding-top: \{\{statusBarHeight \+ navBarHeight\}\}px;">\s*<cy-empty kind="no-permission"[^>]*cta="申请入驻" bind:cta="goApplicationProgress"/);
   assert.match(read('pages/merchant/team/index.wxml'), /<cy-empty wx:elif="\{\{accessState === 'no-permission'\}\}" kind="no-permission"[^>]*cta="申请入驻"/);
 });
 

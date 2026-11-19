@@ -173,6 +173,11 @@ Page({
       },
       success: function (res) {
         if (seq !== that._listSeq || !that._isCouponContextCurrent(owner, scope, epoch)) return;
+        // 非商家身份读「我发布的优惠券」后端回 403:原地无权限态,不当加载失败(加载失败态无内容,整页只剩标题)
+        if (res.code == 403) {
+          that.setData({ list: [], loadState: 'denied' });
+          return;
+        }
         if ((res.code == "200" || res.code === 200) && Array.isArray(res.data)) {
           const list = res.data.map(normalizeCoupon).filter(Boolean);
           that.setData({
@@ -194,6 +199,7 @@ Page({
   },
 
   retryLoad() { this.getList(); this.loadSummary(); },
+  onDenyCta() { require('../../utils/merchant-no-permission.js').followDenyCta(this, this.data.isMerchant === true, '/pages/merchant/index/index') },
 
   // BL-77:只在商家口径下读统计;失败或没有券就不展示,不阻塞列表。
   loadSummary() {

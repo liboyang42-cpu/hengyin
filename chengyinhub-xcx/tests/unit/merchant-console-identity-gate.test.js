@@ -581,7 +581,7 @@ function assertNoConsoleGate(wxml) {
     '登录/身份失败必须落页内内联错误并可重试')
   assert.doesNotMatch(wxml, /wx:if="\{\{consoleError\}\}"[\s\S]{0,120}<cy-empty/, '错误态不得退回整屏空态')
   // 游客(只有游客)看到的是全站同款「登录后查看 · 登录」,点了才登录。
-  assert.match(wxml, /<cy-empty wx:if="\{\{consoleLogin\}\}"[^>]*title="登录后查看经营台" cta="登录" bind:cta="onConsoleLogin"/)
+  assert.match(wxml, /<view wx:if="\{\{consoleLogin\}\}" class="rv-denied" style="padding-top: \{\{statusBarHeight \+ navBarHeight\}\}px;">\s*<cy-empty kind="no-permission"[^>]*title="登录后查看经营台" cta="登录" bind:cta="onConsoleLogin"/)
 }
 
 test('wxml 不再有整屏身份闸,未登录的出路是页内错误 + 重试', () => {

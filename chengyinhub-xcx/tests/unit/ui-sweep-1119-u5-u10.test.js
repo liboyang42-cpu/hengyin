@@ -128,11 +128,11 @@ test('U9 页面:我在第 4 名之后 → 原位高亮,底部不重复;不在榜
 })
 
 // ---------- U10 ----------
-function mountPage(file, { role = 'player', getCurrentPages = () => [{}] } = {}) {
+function mountPage(file, { role = 'player', getCurrentPages = () => [{}], sendRequest = () => {} } = {}) {
   const navigations = []
   const themes = []
   const app = {
-    sendRequest() {}, getUserID: () => 7,
+    sendRequest, getUserID: () => 7,
     getUserRole: () => role, getUserType: () => (role === 'merchant' ? 2 : 1),
   }
   const wx = {
@@ -175,6 +175,24 @@ test('U10 优惠券列表:玩家深色(theme-dark),商家口径才浅色;空态�
   merchant.page.syncViewTheme()
   assert.equal(merchant.page.data.isMerchant, true)
   assert.deepEqual(merchant.themes, ['light'])
+})
+
+test('U10 优惠券列表:非商家身份后端 403 → 原地无权限态「当前身份不能查看优惠券」,不再落空白加载失败态', () => {
+  const wxml = read('subpackageMember/coupon/coupon.wxml')
+  assert.match(wxml, /<cy-empty wx:elif="\{\{loadState === 'denied'\}\}" kind="no-permission" fill size="lg" title="当前身份不能查看优惠券" cta="\{\{isMerchant \? '返回' : '申请入驻'\}\}" bind:cta="onDenyCta" \/>/)
+  const requests = []
+  const { page, navigations } = mountPage('subpackageMember/coupon/coupon.js', { sendRequest: (o) => requests.push(o) })
+  page.onLoad({})
+  page.getList()
+  const list = requests.find((o) => o.url === '/api/coupon/mypublishlist')
+  assert.ok(list, 'coupon list request sent')
+  list.success({ code: 403, msg: '商家身份无效或权限不足' })
+  assert.equal(page.data.loadState, 'denied')
+  // followDenyCta 是宿主上下文里的共享模块,读全局 wx
+  const prevWx = global.wx
+  global.wx = { navigateTo: (o) => { navigations.push(o.url); if (o.complete) o.complete() } }
+  try { page.onDenyCta() } finally { global.wx = prevWx }
+  assert.deepEqual(navigations, ['/pages/merchant/apply/index'])
 })
 
 test('U10 新建优惠券(已关闭):cy-empty 已注册、玩家深色、关闭态整屏居中带「返回」', () => {
