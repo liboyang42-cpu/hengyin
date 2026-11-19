@@ -191,6 +191,7 @@ function buildMerchantCards(chapters) {
           key: 'm-' + key,
           targetId: row.memberId || 0,
           name,
+          merchantId: shop.id || 0,
           img: text(shop.coverImage) || csv(row.picUrl)[0] || text(shop.logo),
           desc: text(shop.slogan) || text(shop.description),
           gift: text(shop.derivativeBenefits),
@@ -200,6 +201,42 @@ function buildMerchantCards(chapters) {
     }
   }
   return out;
+}
+
+/* FE-G4/G5:自由探索的参与商家卡改读套票目录(/api/free-explore/bundle/catalog)的逐店数据:
+   店名 · 权益 · 已含 / 需消费 · 需预约 · 有效期。目录读不到或没有逐店字段时,卡片保持原样(仍按报名商家)。
+   included / extraSpendText / reserveRequired / perkName 由后端补;没下发就不写那一段。 */
+function explorePerkLine(store) {
+  const s = store || {};
+  const parts = [];
+  if (text(s.perkName)) parts.push(text(s.perkName));
+  if (s.included === true) parts.push('已含');
+  else if (text(s.extraSpendText)) parts.push('需消费 ' + text(s.extraSpendText));
+  if (s.reserveRequired === true) parts.push('需预约');
+  const end = chinaDay(s.validEnd);
+  if (end) parts.push('有效期至 ' + end);
+  return parts.join(' · ');
+}
+function chinaDay(value) {
+  if (!value) return '';
+  const t = require('../../../utils/datetime.js').chinaParts(value);
+  return t ? t.month + '/' + t.day : '';
+}
+function mergeExploreCatalog(cards, catalog) {
+  const items = catalog && Array.isArray(catalog.items) ? catalog.items : null;
+  if (!items) return cards;
+  const byKey = {};
+  items.forEach((it) => ((it && it.stores) || []).forEach((st) => {
+    if (!st) return;
+    const line = explorePerkLine(st);
+    if (!line) return;
+    if (Number(st.merchantId) > 0) byKey['id:' + st.merchantId] = line;
+    if (text(st.merchantName)) byKey['name:' + text(st.merchantName)] = byKey['name:' + text(st.merchantName)] || line;
+  }));
+  return (cards || []).map((c) => {
+    const line = byKey['id:' + c.merchantId] || byKey['name:' + c.name];
+    return line ? Object.assign({}, c, { perk: line }) : c;
+  });
 }
 
 /* 路线说明(v13 rnote):城市定向写全程几站、步行多远、几站有到店礼;自由探索写任意顺序去完几家。只用已下发的数。 */
@@ -259,7 +296,7 @@ function buyOptions(info) {
   }
   return out.map((o) => Object.assign(o, {
     icon: o.people >= 3 ? 'team' : o.people === 2 ? 'two' : 'one',
-    priceText: o.price === null ? '' : money.yuan(o.price) + (o.from ? ' 起' : ''),
+    priceText: o.price === null ? '' : money.yuanTrim(o.price) + (o.from ? ' 起' : ''),
   }));
 }
 
@@ -332,4 +369,4 @@ function buildTeams(rows, topicId) {
   return { rows: out, need };
 }
 
-module.exports = { buyOptions, buyChips, routeNote, buildChars, chapterLabel, chapterHeading, isEndingChapter, chapterCountText, buildCoverImages, buildPublisher, buildHeroCta, topicSaleClosed, buildStoryCards, chapterGuide, pickChapterImages, progressFallback, storyMeta, buildMerchantCards, passWindow, buildTeams };
+module.exports = { buyOptions, buyChips, routeNote, buildChars, chapterLabel, chapterHeading, isEndingChapter, chapterCountText, buildCoverImages, buildPublisher, buildHeroCta, topicSaleClosed, buildStoryCards, chapterGuide, pickChapterImages, progressFallback, storyMeta, buildMerchantCards, passWindow, buildTeams, explorePerkLine, mergeExploreCatalog };

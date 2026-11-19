@@ -52,7 +52,6 @@
    改 flex + align-items:center 让两侧共用同一条居中基线。 */
 .orderbox_li_bot{ margin: 0; overflow: hidden; border-top: 2rpx solid var(--cy-border-card); padding: var(--cy-space-1) 0; display: flex; align-items: center; justify-content: space-between;}
 .orderbox_li_bot_left{ color: var(--cy-text-body); font-size: var(--cy-font-label); display: flex; align-items: baseline; }
-.orderbox_li_bot_left .moh-amount{color: var(--cy-price); font-weight: bold;font-size: var(--cy-font-body); margin-right: var(--cy-legacy-4);}
 .orderbox_li_bot_left .moh-amount{color: var(--cy-price); font-weight: bold;font-size: var(--cy-font-display);}
 .orderbox_li_bot_right{ font-size: var(--cy-font-body); display: flex; align-items: center;}
 /* R1-C04:命中区 56/60rpx → 88rpx(全局规范 §3.8 / WCAG 2.2 SC 2.5.8)。

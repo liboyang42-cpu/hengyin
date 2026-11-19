@@ -12,7 +12,7 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
-  <cy-nav-bar back />
+  <cy-nav-bar custom-back bind:back="goBack" />
   <cy-page-title title="加入队伍" safe-top="{{false}}" flush="{{true}}" />
   <cy-skeleton wx:if="{{loading && !team}}" type="detail" count="{{1}}" loading-label="正在读取队伍邀请" />
   <cy-state-shell wx:elif="{{error && !team}}" kind="{{errorKind}}"

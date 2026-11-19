@@ -92,12 +92,7 @@ function mountPage(rel) {
   return { page, navs }
 }
 
-test('上线关闭新建券时连点旧 handler 也不跳转', () => {
-  const { page, navs } = mountPage('subpackageMember/coupon/coupon.js')
-  page.getList = () => {}; page.loadSummary = () => {}
-  page.GoAdd(); page.GoAdd(); page.onShow(); page.GoAdd()
-  assert.equal(navs.length, 0)
-})
+// PG-040:优惠券列表 GoAdd 已删除,建券页 couponInfo 下线。
 
 test('我的模板 封面连点只跳一次;onShow 兜底清锁', () => {
   const { page, navs } = mountPage('subpackageMember/mytemplate/mytemplate.js')

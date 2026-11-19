@@ -43,14 +43,15 @@ test('c1 选项文案自带字母时去重,只去与本行字母相同的前缀'
   assert.equal(stripOptionKey('A', 'A'), 'A', '去完没有字就原样')
 })
 
-test('b7 用时满 1 小时写 h:mm:ss', () => {
+test('b7 / CG-ALL-28 用时满 1 小时写「N 小时 M 分」', () => {
   const { formatElapsed, formatRunElapsed } = req('utils/play-ui-contract.js')
   assert.equal(formatElapsed(118 * 60 + 41), '118:41', '玩法短计时口径不变')
   const fmt = formatRunElapsed
   assert.equal(fmt(59), '00:59')
   assert.equal(fmt(3599), '59:59')
-  assert.equal(fmt(118 * 60 + 41), '1:58:41')
-  assert.equal(fmt(10 * 3600 + 5), '10:00:05')
+  assert.equal(fmt(118 * 60 + 41), '1 小时 58 分')
+  assert.equal(fmt(3600), '1 小时 0 分')
+  assert.equal(fmt(10 * 3600 + 5), '10 小时 0 分')
 })
 
 test('b6/b7 章节完成屏:数据没滚完被点掉时落到真值;h:mm:ss 也会滚', () => {
@@ -61,14 +62,14 @@ test('b6/b7 章节完成屏:数据没滚完被点掉时落到真值;h:mm:ss 也�
   require(path.join(ROOT, 'pages/play/components/chapter-flip/index.js'))
   global.Component = prev
   const inst = {
-    data: { mode: 'gate', reducedMotion: false, endStats: [{ k: '用时', v: '1:58:41', shown: '0:00:00' }, { k: '坐标', v: '2/2', shown: '0/2' }] },
+    data: { mode: 'gate', reducedMotion: false, endStats: [{ k: '用时', v: '1 小时 58 分', shown: '0 小时 0 分' }, { k: '坐标', v: '2/2', shown: '0/2' }] },
     _stage: 'end', _statTimer: 0, _gone: false,
     setData(patch) { Object.assign(this.data, patch) },
     _at() {}, _spawnFineDust() {}, _scatter() {},
   }
   inst._dissolve = def.methods._dissolve.bind(inst)
   inst._dissolve()
-  assert.deepEqual(inst.data.endStats.map((s) => s.shown), ['1:58:41', '2/2'])
+  assert.deepEqual(inst.data.endStats.map((s) => s.shown), ['1 小时 58 分', '2/2'])
 })
 
 test('E-C2 续玩状态盖局号:换了新一局读不到上一局的开场 / 章节门 / finished / 草稿', () => {

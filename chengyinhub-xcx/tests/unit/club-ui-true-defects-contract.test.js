@@ -195,7 +195,7 @@ test('club edit valid boundary spaces remain in the normal save payload and reco
   const payload = JSON.parse(requests[0].data)
   assert.equal(payload.name, name)
   assert.equal(payload.city, city)
-  assert.equal(payload.address, city)
+  assert.equal('address' in payload, false, 'MC-059:地址不随城市写回')
   assert.equal(payload.description, '原简介')
   requests[0].success({ code: 500, msg: '保存失败' })
   assert.equal(component.data.name, name)

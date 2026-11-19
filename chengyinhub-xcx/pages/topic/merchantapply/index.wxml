@@ -46,6 +46,10 @@
         retry="" bind:back="goMore" auto-back custom-back />
     </view>
 
+    <view class="ma-load" wx:elif="{{loadState === 'missing'}}">
+      <cy-empty kind="missing-param" fill size="lg" cta="返回" bind:cta="onSheetClose" />
+    </view>
+
     <!-- ===== 阶段一:填写 ===== -->
     <view class="ma-form" wx:elif="{{loadState === 'ready' && phase === 'form'}}">
 
@@ -62,11 +66,11 @@
 
       <!-- 你的门店:主办方就是靠这三行判断要不要选这一站。数据来自 /api/merchant/info
            (name / address / businessTime),拿不到就整块不出 —— 不编一个店名。 -->
+      <block wx:if="{{shop.name || shop.address || shop.businessTime}}">
       <view class="ma-shop-note">
         <text class="ma-shop-note-t">你的门店</text>
-        
       </view>
-      <view class="ma-card ma-shop wizard-card cy-rise-in" wx:if="{{shop.name || shop.address || shop.businessTime}}">
+      <view class="ma-card ma-shop wizard-card cy-rise-in">
         <!-- 稿 133:310:左封面右三行。没有图就不出图位,右侧自己铺满 —— 不摆灰方块 -->
         <view class="ma-shop-row">
           <image class="ma-shop-cover" wx:if="{{shop.cover}}" src="{{shop.cover}}" mode="aspectFill" />
@@ -80,6 +84,7 @@
              这里留三行注释占位,行号不动, -->
         <!-- 台账按行号的条目不漂。 -->
       </view>
+      </block>
 
       <view class="ma-card wizard-card cy-rise-in">
         <view class="ma-row" id="field-address" hover-class="cy-pressed" hover-stay-time="80" bindtap="choosePoiForNode">

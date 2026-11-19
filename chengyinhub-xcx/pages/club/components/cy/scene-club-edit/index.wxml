@@ -20,8 +20,6 @@
       </view>
     </view>
 
-    <!-- 管理员副标题(Figma 29:145):管理员进来先知道自己能改什么,不用点到锁那一步才发现。 -->
-    <view class="admin-note" wx:if="{{!isOwner}}">你是管理员 · 只能改展示信息</view>
 
     <!-- 形象 -->
     <view class="sec-label">俱乐部形象</view>

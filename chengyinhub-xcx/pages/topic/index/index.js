@@ -488,6 +488,7 @@ Page({
     this._startKenBurns();
     this._loadTeams(data);
     this._loadPrep(data.id);
+    if (Number(data.productType) === 2) this._loadExplorePerks(data.id);
     this._loadFav(data.id);
     this._loadChars(data);
   },
@@ -701,6 +702,19 @@ Page({
 
   // 开局前准备(原型 B T-36,契约 §1.3):GET /api/play/setup 给可玩时段(非俱乐部且不是「不限」才有)、openNow 与作者准备项;
   // 两样都没配就整行不出(B1)。未成年夜间等平台规则只在服务端执行(/api/orient/safety/check),被拒时只写一句中性说明。
+  /** FE-G4:自由探索的参与商家卡补上逐店权益(读套票目录);读不到就保持原卡,不报错。 */
+  _loadExplorePerks(topicId) {
+    if (!topicId || !this._loggedIn()) return;   // 目录要登录;游客照旧看报名商家卡
+    const seq = this._perkSeq = (this._perkSeq || 0) + 1;
+    app.sendRequest({ url: '/api/free-explore/bundle/catalog', method: 'GET', hideLoading: true, autoErrorToast: false, data: { topicId },
+      success: (res) => {
+        if (this._unloaded || seq !== this._perkSeq || !res || String(res.code) !== '200' || !res.data) return;
+        const merchantCards = motion.mergeExploreCatalog(this.data.merchantCards, res.data);
+        this.setData({ merchantCards });
+      },
+      fail: () => {},
+    });
+  },
   _loadPrep(topicId) {
     if (!topicId || !this._loggedIn()) { this._prepSetup = null; this.setData({ prep: { show: false } }); return; }
     const seq = this._prepSeq = (this._prepSeq || 0) + 1;
@@ -868,6 +882,25 @@ Page({
     wx.navigateTo({ url: '/subpackageMember/market/pass/index?id=' + id, complete: () => { this._navigating = false; } });
   },
 
+  /* OR-003:建单撞价变后重新报价(结算层还开着才重取)。 */
+  _refreshCheckoutQuote() {
+    const facts = this._checkoutFacts;
+    if (!facts || !this.data.selfPlayCheckoutShow) return;
+    facts.quoteState = 'loading';
+    facts.quote = null;
+    this.setData({ 'checkout.view': checkoutView(facts) });
+    const info = facts.info || this.data.info || {};
+    this._loadCheckoutFacts(info.id || this.data.id);
+  },
+
+  /* OR-028/OR-046:「购买须知与退款规则」—— 有服务端须知就按原文列,没有就列平台退款三档 */
+  onCheckoutNotice() {
+    const view = (this.data.checkout && this.data.checkout.view) || {};
+    const lines = (view.notice && view.notice.lines) || [];
+    if (!lines.length) return;
+    modal.show({ title: '购买须知与退款规则', content: lines.join('\n'), showCancel: false, confirmText: '知道了' });
+  },
+
   /* E-B9:报价请求失败后的「重新获取价格」。只重取事实,不建单。 */
   onCheckoutRequote() {
     const facts = this._checkoutFacts;
@@ -876,6 +909,12 @@ Page({
     this.setData({ 'checkout.view': checkoutView(facts) });
     const info = facts.info || this.data.info || {};
     this._loadCheckoutFacts(info.id || this.data.id);
+  },
+
+  /* OR-046:已购买本主题时结算层主按钮是「继续游玩」—— 收起结算层,走已购的开玩入口 */
+  onCheckoutPlay() {
+    this.setData({ selfPlayCheckoutShow: false });
+    this.openPrep();
   },
 
   onCheckoutBack() {
@@ -1447,6 +1486,9 @@ Page({
           isUsePoint: 0,
           requestId: requestId
         };
+        // OR-003:带上结算层报价的签名,服务端按它判价是否变过(老报价没有 quoteSign 就不带,沿用原链路)
+        const quoted = that._checkoutFacts && that._checkoutFacts.quote;
+        if (quoted && quoted.quoteSign) body.quoteSign = quoted.quoteSign;
         // 3-5 票源归因:主题页这一单 ownerType=1,ownerId 就是「期」本身,
         // 所以直接拿建单参数喂 attributionPayload(它内部已判「捕获期 ≠ 下单期 ⇒ 不带」)。
         Object.assign(body, ticketSource.attributionPayload(topicId));
@@ -1465,6 +1507,13 @@ Page({
               return;
             }
             loading.hide(); if (openPendingOrderConflict(res, cb)) return; // j6 N1:已有待支付单就带去那一笔
+            // OR-003:价变 409 —— 作废本次意图键,结算层重新报价,原话提示后由玩家确认新价再付
+            if (res && res.code == 409 && body.quoteSign) {
+              that._selfPlayReqId = null;
+              that._refreshCheckoutQuote();
+              cb({ ok: false, msg: res.msg || '价格已更新，请确认后再支付' });
+              return;
+            }
             if (res.code == '200' && res.data) {
               var d = res.data;
               const amount = d.payableAmount;

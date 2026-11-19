@@ -686,7 +686,7 @@ page {
   height: 333rpx;
   background: var(--cy-bg-card);
   border-radius: 0rpx;
-  border: 2rpx solid #D4CFC4;
+  border: 2rpx solid var(--cy-color-border-strong);
   padding: var(--cy-space-3-5) var(--cy-space-2-5);
   box-sizing: border-box;
   white-space: nowrap;

@@ -238,8 +238,7 @@ function assertSoftBackgroundUsesStrong(sources) {
 
 const CONSUMER_FILES = [
   'pages/publish/temp/index.wxss',
-  'pages/publish/simple/index.wxss',
-  'pages/publish/topicadd/topicadd.wxss',
+  // 2026-11-19 PG-020/PG-021:topicadd 与 simple 页删除,不再是消费方
   // 2026-10-23 templateadd 退役删除,不再是消费方
 ];
 const readConsumers = () => Object.fromEntries(

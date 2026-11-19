@@ -34,17 +34,4 @@ test('图标文件放在使用它的分包里,且每个库标签都有图', () =
   assert.ok(lib.PUBLISH_ICON_DIR.startsWith('/pages/publish/'));
 });
 
-test('快速配置:兴趣即库里的主题标签,选中仍拼进发给 AI 的描述', () => {
-  const js = read('pages/publish/simple/index.js');
-  assert.match(js, /tagLibrary\.tagSet\('theme'\)/);
-  const wxml = read('pages/publish/simple/index.wxml');
-  assert.match(wxml, /class="simple-ai__tag \{\{item\.on \? 'is-on' : ''\}\}"[\s\S]*?bindtap="toggleInterest"/);
-  assert.doesNotMatch(wxml, /simple-ai__bubble|simple-ai__glow|simple-ai__kicker|选了 \{\{/, '漂浮气泡、柔光、引导句和「选了 N 个」已撤');
-  assert.match(wxml, /<cy-cell title="历史起草记录"[^>]*bind:tap="openAiHistory"/);
-  assert.match(wxml, /<cy-cell title="本机保留记录"[^>]*bind:tap="openLocalAiHistory"/);
-  const labels = lib.tagSet('theme').reduce((all, g) => all.concat(g.tags.map((t) => t.label)), []);
-  const page = { data: { aiIdea: '老城', interests: labels.map((label, i) => ({ key: 't' + i, label, on: label === '夜游' || label === '解谜' })) } };
-  const src = js.match(/_composeIdea\(\) \{[\s\S]*?\n  \},/)[0];
-  const compose = new Function('return {' + src + '}')()._composeIdea;
-  assert.equal(compose.call(page), '老城，喜欢夜游、解谜');
-});
+// PG-021:快速配置(publish/simple)整页已删除,原「兴趣即主题标签」用例随页删除。

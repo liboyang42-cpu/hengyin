@@ -95,7 +95,8 @@ test('R04 付A留本页再付B；A完成不能锁B，同笔done仍不可再次�
   const requests = [], modals = [], app = { getUserID: () => 9, sendRequest: request => requests.push(request) };
   const checkout = require('../../utils/checkout/checkout-workflow.js');
   const locals = { app, ...checkout, xpayPay: require('../../utils/checkout/selfplay-xpay-pay.js'), createRegistrationPaymentVerifier: () => () => {}, cyLoading: { hide() {} }, toast() {}, modal: { show: value => modals.push(value) }, wx: {} };
-  const p = host({ list: [{ id: 11 }, { id: 22 }] });
+  // OR-032:付款成功后按服务端重读列表(getList),这里只看支付编排本身。
+  const p = host({ list: [{ id: 11 }, { id: 22 }] }, { getList() {} });
   const file = 'subpackageMember/components/cy/scene-member-order-history/index.js';
   for (const name of ['_syncPaymentAccount', '_initWorkflow', '_updateOrderPaid', 'payOrderRequest']) p[name] = method(file, name, locals);
   for (const [id, index] of [[11, 0], [22, 1]]) {
@@ -187,7 +188,7 @@ test('R16 旁白关闭暂停实际_audio，R17归一化坐标可以导航', () =
 test('R18 收齐实际分页才显示统计；加载中、失败后切换不伪造零', () => {
   const requests = [], app = { getUserID: () => 9, sendRequest: value => requests.push(value) }, earningsView = require('../../subpackageA/utils/earnings-view.js');
   const p = host({ state: 'loading', mode: 'income' }); const file = 'subpackageA/pages/assetcenter/analysis/index.js';
-  const locals = { app, earningsView, asWithdraw: rows => (rows || []).filter(row => row.eventType === 3) };
+  const locals = { app, earningsView, isLoginRequired: require('../../utils/session/login-reload.js').isLoginRequired, asWithdraw: rows => (rows || []).filter(row => row.eventType === 3) };
   for (const name of ['load', '_render', 'switchMode']) p[name] = method(file, name, locals);
   p.load(); p.switchMode({ currentTarget: { dataset: { mode: 'withdraw' } } }); assert.equal(p.data.state, 'loading');
   const now = new Date(), row = id => ({ id, changeType: 1, eventType: 3, changeBalance: 2, createTime: `${now.getFullYear()}/${now.getMonth() + 1}/1` });

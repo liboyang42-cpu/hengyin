@@ -79,6 +79,10 @@ test('★shoot 事件只给临时路径与大小,不带任何分数', () => {
   }
   try {
     component.methods.onShoot.call(inst)
+    // CG-ALL-29:拍完先预览不上传;点「提交这张」(同一颗主按钮)才抛 shoot
+    assert.equal(inst.emitted, undefined, '没点提交不许交出去上传')
+    assert.equal(inst.data.pendingPath, 'wxfile://t.jpg')
+    component.methods.onShoot.call(inst)
   } finally {
     global.wx = prevWx
   }

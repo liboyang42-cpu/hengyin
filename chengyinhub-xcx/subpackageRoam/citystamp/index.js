@@ -10,6 +10,7 @@ const app = getApp();
 const cyToast = require('../../utils/toast.js');
 const { resolveMenuChrome } = require('../../utils/nav-safe-area.js');
 const { readReducedMotion } = require('../../utils/motion-preference.js');
+const { safeDecode } = require('../../utils/safe-decode.js');
 
 // 配文上限。§6.4 定的是 30 字带计数 —— 比试玩台那版(40)紧,按裁决走。
 const CAPTION_MAX = 30;
@@ -93,7 +94,7 @@ Page({
 
   onLoad(q) {
     const kind = (q && q.kind) || 'sign';
-    const place = decodeURIComponent((q && q.place) || '') || '这一站';
+    const place = safeDecode((q && q.place) || '') || '这一站';
     const now = new Date();
     let topSafe = 96;
     try {
@@ -106,7 +107,7 @@ Page({
       title: kind === 'sticker' ? '城市贴纸' : '今日城市签',
       place,
       topSafe,
-      mapShot: decodeURIComponent((q && q.shot) || ''),
+      mapShot: safeDecode((q && q.shot) || ''),
       reducedMotion: readReducedMotion(),
       dateLabel: (now.getMonth() + 1) + '.' + pad2(now.getDate()),
       timeLabel: pad2(now.getHours()) + ':' + pad2(now.getMinutes()),

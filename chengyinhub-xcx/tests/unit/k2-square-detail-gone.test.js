@@ -20,7 +20,7 @@ test('k2 p1 N-4:帖文已不在 → gone 态,标题「链接已失效」+ 返回
 
 test('k2 p1 N-4:站点商家页链接直达(没有上一页的节点)给「链接已失效 · 返回」', () => {
   const wxml = read('pages/play/merchant/index.wxml');
-  assert.match(wxml, /<cy-empty class="mp-empty" wx:if="\{\{notFound\}\}" kind="missing-param" title="链接已失效" cta="返回" bind:cta="goBackOrHome"/);
+  assert.match(wxml, /<cy-empty class="mp-empty" wx:if="\{\{notFound\}\}" kind="missing-param" title="链接已失效" cta="\{\{canReloadNode \? '重新加载' : '返回'\}\}" bind:cta="onReloadNode"/);
   assert.equal(JSON.parse(read('pages/play/merchant/index.json')).usingComponents['cy-empty'], '/components/cy/empty/index');
   assert.match(read('pages/play/merchant/index.js'), /goBackOrHome\(\) \{ wx\.navigateBack\(\{ fail: \(\) => wx\.switchTab\(\{ url: '\/pages\/index\/index' \}\) \}\) \}/);
 });

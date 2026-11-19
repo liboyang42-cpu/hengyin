@@ -5,7 +5,7 @@ const policy = require('../../utils/identity/identity-policy.js');
 const datetime = require('../../utils/datetime.js');
 const modal = require('../../utils/modal.js');
 const cyToast = require('../../utils/toast.js');
-const { COUPON_TYPE_LABELS, CREATION_ENABLED } = require('../../utils/coupon-form.js');
+const { COUPON_TYPE_LABELS } = require('../../utils/coupon-form.js');
 const { shapeCouponSummary } = require('./coupon-summary.js');
 
 function scalarText(value) {
@@ -279,11 +279,4 @@ Page({
       },
     });
   },
-  GoAdd: function () {
-    if (!CREATION_ENABLED) return;
-    if (this._navigating) return; this._navigating = true; wx.navigateTo({ complete: () => { this._navigating = false; },
-      url: '/subpackageMember/couponInfo/couponInfo'
-        + (this.data.operationScope === 'MERCHANT' ? '?scope=MERCHANT' : '')
-    });
-  }
 })

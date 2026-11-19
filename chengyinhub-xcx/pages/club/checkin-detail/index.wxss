@@ -60,7 +60,6 @@
 .ckd-rail-label--muted { color: var(--cy-color-text-tertiary); }
 .ckd-rail-label.is-current { font-weight: 700; }
 
-.ckd-note { display: block; margin-top: var(--cy-space-3); color: var(--cy-color-text-tertiary); font-size: var(--cy-font-caption); }
 
 /* 底部清退退款(2026-09-09 从名册挪来) */
 .ckd-foot { margin: var(--cy-space-5) var(--cy-page-x) calc(var(--cy-space-5) + env(safe-area-inset-bottom)); }

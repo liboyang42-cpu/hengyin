@@ -28,7 +28,7 @@
 /* R1:去紫色化——空态 CTA 与悬浮「+」原用 --cy-color-brand(亮紫),
    全站按钮统一黑白基调,不借品牌紫做强调,改用与 .al-root 顶部同一套主操作色 token */
 .al-more { text-align: center; padding: 32rpx; color: var(--cy-color-text-tertiary); font-size: var(--cy-font-label); }
-.al-fab { position: fixed; right: 40rpx; bottom: var(--cy-space-7); width: 104rpx; height: 104rpx;
+.al-fab { position: fixed; right: 40rpx; bottom: calc(var(--cy-space-7) + env(safe-area-inset-bottom)); /* PG-050 */ width: 104rpx; height: 104rpx;
   border-radius: 50%; background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg);
   font-size: 48rpx; /* ds-ok: FAB "+"字形尺寸,非文本层级,无对应 token */
   display: flex; align-items: center; justify-content: center;

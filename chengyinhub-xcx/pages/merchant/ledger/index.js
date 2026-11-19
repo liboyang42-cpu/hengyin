@@ -28,6 +28,7 @@ Page({
     statusBarHeight: 20,
     navBarHeight: 44,
     view: 'redemptions',
+    loadingMore: false,
     source: '',
     isProjectMessages: false,
     projectEvents: [],
@@ -101,6 +102,15 @@ Page({
     if (!this.data.routeError) this.revalidateCurrentView();
   },
   onHide() { merchantTheme.merchantPageRestore(); },
+  // MC-019:核销记录 / 收入明细 / 对公结算按 pageNum 递增触底加载,不再只看第 1 页。
+  onReachBottom() {
+    if (this.data.loading || this._loadingMore) return;
+    if (this.data.view === 'redemptions' && !this.data.isProjectMessages) { this._loadMore('redemptions'); return; }
+    if (this.data.view === 'settlement') {
+      if (this._hasMorePage('entries')) this._loadMore('entries');
+      else this._loadMore('batches');
+    }
+  },
   onUnload() {
     this._unloaded = true;
     merchantTheme.merchantPageRestore();
@@ -128,6 +138,8 @@ Page({
   _clearScopedData(loading, error) {
     this._redemptionRows = [];
     this._refundRows = [];
+    this._pageState = {};
+    this._loadingMore = false;
     this.setData({
       loading,
       error,
@@ -290,6 +302,7 @@ Page({
       if (isAccessDenied(res)) { this._denyMerchantAccess(); return; }
       if (!isFinancePagePayload(res)) { this.setData({ loading: false, error: true }); return; }
       this._redemptionRows = res.data.rows.map((row) => this.redemptionRow(row, canReadFinance));
+      this._setPageState('redemptions', 1, res.data);
       // 汇总条只认服务端聚合:前端拿到的 rows 只是当前页,自己求和分页后必错且错得静默。
       this._applyRedemptionView({
         summary: summaryView(res.data.summary, canReadFinance),
@@ -319,8 +332,10 @@ Page({
         const shaped = res && (res.code === 200 || res.code === '200')
           ? shapeAftercareListPage(res.data, bucket) : null;
         if (!shaped) { failed = true; finish(); return; }
-        items.push.apply(items, shaped.items.filter(item => item.recordType === 'REFUND'
-          && Number.isSafeInteger(item.refundId) && item.refundId > 0));
+        // PG-031:人工退款工单(MANUAL_CASE)同样并入台账,点进售后详情的工单视图
+        items.push.apply(items, shaped.items.filter(item => (item.recordType === 'REFUND'
+          && Number.isSafeInteger(item.refundId) && item.refundId > 0)
+          || (item.recordType === 'MANUAL_CASE' && Number.isSafeInteger(item.manualCaseId) && item.manualCaseId > 0)));
         finish();
       });
     });
@@ -430,8 +445,10 @@ Page({
             patch.overview = this.overviewRow(res.data); if (!this._lgCounted) { this._lgCounted = true; pageMotion.countMoney(this, 'lgK'); } // 2026-11-02 X-1:本月主数字第一次到达时慢-快-慢落地
           } else if (section === 'entries') {
             patch.entries = res.data.rows.map(this.entryRow);
+            this._setPageState('entries', 1, res.data);
           } else {
             patch.batches = res.data.rows.map(this.batchRow);
+            this._setPageState('batches', 1, res.data);
           }
         }
 
@@ -449,6 +466,58 @@ Page({
         }, acceptResponse);
       }
     });
+  },
+
+  _setPageState(key, pageNum, data) {
+    const state = this._pageState || (this._pageState = {});
+    const prev = pageNum > 1 && state[key] ? state[key].count : 0;
+    state[key] = { pageNum, total: Number(data.total) || 0, count: prev + data.rows.length, lastSize: data.rows.length };
+  },
+
+  _hasMorePage(key) {
+    const state = (this._pageState || {})[key];
+    return !!state && state.lastSize >= PAGE_SIZE && state.count < state.total;
+  },
+
+  _loadMore(key) {
+    if (!this._hasMorePage(key)) return;
+    const scopeMemberId = this._scopeMemberId;
+    const pageNum = this._pageState[key].pageNum + 1;
+    const canReadFinance = Boolean(this.data.merchantAccess.canReadFinance);
+    const query = { pageNum, pageSize: PAGE_SIZE };
+    const epoch = key === 'redemptions' ? this._redemptionEpoch : (this._settlementSectionEpoch || {})[key];
+    const done = (res) => {
+      this._loadingMore = false;
+      if (!this._isCurrentMemberScope(scopeMemberId)) return;
+      const current = key === 'redemptions' ? this._redemptionEpoch : (this._settlementSectionEpoch || {})[key];
+      if (epoch !== current) { this.setData({ loadingMore: false }); return; }
+      if (isAccessDenied(res)) { this._denyMerchantAccess(); return; }
+      if (!isFinancePagePayload(res)) {
+        this.setData({ loadingMore: false });
+        toast.error('加载失败，请重试');
+        return;
+      }
+      this._setPageState(key, pageNum, res.data);
+      if (key === 'redemptions') {
+        this._redemptionRows = (this._redemptionRows || []).concat(res.data.rows.map((row) => this.redemptionRow(row, canReadFinance)));
+        this._applyRedemptionView({});
+        this.setData({ loadingMore: false });
+      } else if (key === 'entries') {
+        this.setData({ loadingMore: false, entries: this.data.entries.concat(res.data.rows.map(this.entryRow)) });
+      } else {
+        this.setData({ loadingMore: false, batches: this.data.batches.concat(res.data.rows.map(this.batchRow)) });
+      }
+    };
+    this._loadingMore = true;
+    this.setData({ loadingMore: true });
+    if (key === 'redemptions') {
+      const filter = canReadFinance ? this.data.redemptionFilter : 'all';
+      this.request('/api/merchant/finance/redemptions', Object.assign(query, { filter }, this._topicId ? { topicId: this._topicId } : {}), done);
+    } else if (key === 'entries') {
+      this.request('/api/merchant/finance/settlement-entries', Object.assign(query, { source: this.data.source || 'all' }), done);
+    } else {
+      this.request('/api/merchant/finance/public-transfer-batches', query, done);
+    }
   },
 
   overviewRow(row) {
@@ -475,14 +544,15 @@ Page({
     // 第十二轮 k6(j1 N4 / p2 N-3):右列只放商家自己的钱。玩家拿回的钱从来不是从商家扣走的,
     // 服务端给出「这单商家还剩多少 / 少了多少」(merchantNetAmount)才画;拿不到就不画,不再画玩家退款额的负数。
     const net = canReadFinance === false ? null : money(row.merchantNetAmount);
-    const title = row.titleText || row.refundNoText || ('#' + row.refundId);
+    const manual = row.recordType === 'MANUAL_CASE';   // PG-031:人工退款工单行
+    const title = manual ? '人工退款工单' : (row.titleText || ''); // MC-044:账本行不露退款单号/编号,没有标题就只写「退款」
     const status = row.statusText || '状态待确认';
     return Object.assign(item, {
-      recordKey: 'aftercare:' + row.refundId,
+      recordKey: manual ? 'aftercare-manual:' + row.manualCaseId : 'aftercare:' + row.refundId,
       recordType: 'aftercare',
-      recordId: row.refundId,
+      recordId: manual ? row.manualCaseId : row.refundId,
       refundBucket: row.bucket,
-      title: '退款 · ' + title,
+      title: title ? '退款 · ' + title : '退款',
       customerDisplayName: row.activityTitleText || row.sourceText || '',
       timeText: row.timeText,
       dayKey: row.dateKey,
@@ -501,10 +571,10 @@ Page({
     const item = Object.assign({}, row);
     item.amountText = row.settlementAmount == null || Number(row.settlementAmount) === 0 ? null : money(row.settlementAmount);
     item.amountPrefix = item.amountText != null && Number(item.amountText) >= 0 ? '+' : '';
-    // 右列只放金额,一列一语义。两种未成立要分开:金额尚未成立(①②待主题结算)→「待定」;
+    // 右列只放金额,一列一语义。两种未成立要分开:金额尚未成立(①②待主题结算)→ ¥0.00(MC-011=B);
     // 明确不产生现金 → 右列留空(M-27 第3轮:不再画破折号,状态 chip 已说「无现金结算」)。
     item.amountDisplay = item.amountText != null ? yuan(item.amountText, { signed: true })
-      : (row.displayState === 'NO_CASH_SETTLEMENT' ? null : '待定');
+      : (row.displayState === 'NO_CASH_SETTLEMENT' ? null : '¥0.00');
     item.amountTone = item.amountText == null ? 'mute' : (Number(item.amountText) < 0 ? 'neg' : 'pos');
     item.dayKey = row.occurredAt ? String(row.occurredAt).slice(0, 10) : '';
     item.timeText = row.occurredAt ? String(row.occurredAt).slice(11, 16) : '';
@@ -593,6 +663,7 @@ Page({
     if (!item) return;
     // 退款条目仍回原来的售后详情页(UI-06),不能拿退款单号去查核销详情。
     if (item.recordType === 'aftercare') {
+      if (item.manualCaseId) { wx.navigateTo({ url: `/pages/merchant/aftercare/detail/index?recordType=MANUAL_CASE&manualCaseId=${item.manualCaseId}` }); return; }
       if (!item.refundId) return;
       wx.navigateTo({ url: `/pages/merchant/aftercare/detail/index?refundId=${item.refundId}` });
       return;

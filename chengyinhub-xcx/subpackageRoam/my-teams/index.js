@@ -43,7 +43,7 @@ Page({
     teamRecovery.manager(this, app, wx).act(ds.teamId, ds.action);
   },
 
-  data: { lobby: null, commandReject: null, pending: {}, teamCommandRows: [], teamCommandError: '', reducedMotion: false, privacyGateShow: false, tab: 'mine', loading: true, mineError: false, groups: [], stats: [{ k: '已通过', v: null }, { k: '审核中', v: null }, { k: '带队', v: null }, { k: '未通过', v: null }], openRows: [], openLoading: false, openLoaded: false, openError: '' }, // MT-01:四格读数先占位(「—」),到数不再把下面整页往下推
+  data: { guest: false, lobby: null, commandReject: null, pending: {}, teamCommandRows: [], teamCommandError: '', reducedMotion: false, privacyGateShow: false, tab: 'mine', loading: true, mineError: false, groups: [], stats: [{ k: '已通过', v: null }, { k: '审核中', v: null }, { k: '带队', v: null }, { k: '未通过', v: null }], openRows: [], openLoading: false, openLoaded: false, openError: '' }, // MT-01:四格读数先占位(「—」),到数不再把下面整页往下推
 
   onLoad(options) {
     this._seq = 0; this.setData({ reducedMotion: readReducedMotion() });
@@ -54,7 +54,7 @@ Page({
       try { scope = decodeURIComponent(o.scope || ''); } catch (e) { scope = String(o.scope || ''); }
       this.setData({ lobby: { ownerType: Number(o.ownerType), ownerId, scope } });
     }
-    if (o.tab === 'open') this.setData({ tab: 'open' });
+    if (o.tab === 'open' || !app.getUserID()) this.setData({ tab: 'open' });
   },
   onShow() {
     this._hidden = false; this.reloadTeamCommands();
@@ -64,8 +64,16 @@ Page({
       this._busy = false; this._rows = {};
       this.setData({ groups: [], stats: [{ k: '已通过', v: null }, { k: '审核中', v: null }, { k: '带队', v: null }, { k: '未通过', v: null }], openRows: [], openLoading: false, openLoaded: false });
     }
-    this._owner = owner; this.reload();
+    this._owner = owner;
+    const guest = !app.getUserID();
+    if (guest !== this.data.guest) this.setData({ guest });
+    if (guest) { this.setData({ loading: false, mineError: false, groups: [] }); if (this.data.tab === 'open' && !this.data.openLoaded) this.loadOpen(); return; }
+    this.reload();
   },
+  onLoginMine() {
+    app.ensureLoginFor('team', () => { if (!this._unloaded) this.onShow(); });
+  },
+  retryReload() { this.reload(); },
   onHide() {
     this._hidden = true;
     this._teamScopeEpoch = (this._teamScopeEpoch || 0) + 1;
@@ -76,7 +84,10 @@ Page({
   // 隐私授权闸:app.js 优先调页内弹窗(定位会触发系统隐私授权),没有这个方法才回退到整页隐私页
   showPrivacyGate() { this.setData({ privacyGateShow: true }); },
   onPrivacyGateSettled() { this.setData({ privacyGateShow: false }); },
-  onPullDownRefresh() { this.reload(() => wx.stopPullDownRefresh()); },
+  onPullDownRefresh() {
+    if (this.data.guest) { if (this.data.tab === 'open') this.loadOpen(); wx.stopPullDownRefresh(); return; }
+    this.reload(() => wx.stopPullDownRefresh());
+  },
 
   reload(done) {
     const seq = this._seq = (this._seq || 0) + 1; const that = this;
@@ -85,10 +96,10 @@ Page({
     this.setData({ loading: true, mineError: false });
     const settle = () => {
       if (--left || seq !== that._seq || !current()) return;
-      if (joined == null && apps == null) { that.setData({ loading: false, mineError: true, groups: [] }); if (done) done(); return; }
+      if (joined == null && apps == null) { that.setData({ loading: false, mineError: true, groups: [] }); if (typeof done === 'function') done(); return; }
       that._render(joined || [], apps || [], { joined: joined != null, apps: apps != null }); // MT-02:读失败的那一路显示「—」,不显示假的 0
       if (joined == null || apps == null) that.setData({ mineError: true });
-      if (done) done();
+      if (typeof done === 'function') done();
     };
     app.sendRequest({ url: '/api/team/my', method: 'POST', hideLoading: true, silentError: true, data: JSON.stringify({}), header: JSON_HEADER,
       success(res) { if (res && res.code == 200 && Array.isArray(res.data)) joined = res.data; settle(); }, fail() { settle(); }, successStatusAbnormal() { settle(); } });
@@ -196,6 +207,7 @@ Page({
     const row = this.data.openRows[Number(e.currentTarget.dataset.index)];
     if (!row || this._busy) return;
     if (row.joined) { wx.navigateTo({ url: TEAM_PAGE + '?teamId=' + encodeURIComponent(row.teamId) }); return; }
+    if (!app.ensureLoginFor('team', () => { if (!this._unloaded) this.onShow(); })) return;
     const that = this;
     const teamId = teamOperation.teamId(row.teamId);
     if (!teamId) { cyToast('队伍标识无效，请刷新'); return; }

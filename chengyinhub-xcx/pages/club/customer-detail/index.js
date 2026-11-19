@@ -28,13 +28,13 @@ function isAuthFailure(value, statusCode) {
   const code = Number(bodyCode != null && [2, 401, 403].includes(Number(bodyCode)) ? bodyCode : statusCode);
   const message = String((value && (value.msg || value.message)) || '');
   return code === 2 || code === 401 || code === 403
-    || /请先登录|登录已|身份已|没有权限|无权|仅(?:俱乐部)?主理人/.test(message);
+    || /请先登录|登录已|身份已|没有[^，。,.]{0,12}权限|无权|仅(?:俱乐部)?主理人/.test(message);
 }
 
 function isForbidden(value, statusCode) {
   const bodyCode = value && (value.code != null ? value.code : value.statusCode);
   const code = Number(bodyCode != null && Number(bodyCode) === 403 ? bodyCode : statusCode);
-  return code === 403 || /没有权限|无权|仅(?:俱乐部)?主理人/.test(String((value && (value.msg || value.message)) || ''));
+  return code === 403 || /没有[^，。,.]{0,12}权限|无权|仅(?:俱乐部)?主理人/.test(String((value && (value.msg || value.message)) || ''));
 }
 
 Page({

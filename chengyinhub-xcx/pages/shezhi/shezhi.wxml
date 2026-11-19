@@ -39,7 +39,7 @@
        红(danger)只留给不可逆破坏:注销走 pages/deregister,那里仍是 variant="danger"。
        ⚠️ 类名不要改回 .sz-bottom-btn:style/components.wxss 有一条 !important 会把它钉成
           红实底(那条共享规则把「退出登录」误当不可逆动作),共享文件禁改,故页面侧换类名规避。 -->
-  <view class="sz-logout">
+  <view class="sz-logout" wx:if="{{hasAccount}}">
     <cy-btn variant="secondary" bindtap="logout">
       <image lazy-load="true" class="sz-logout-icon" src="/pages/shezhi/images/icon_logout.svg" mode="widthFix" />
       <text>退出账号</text>
@@ -63,7 +63,6 @@
       <view class="reg-ic club"><image src="/pages/shezhi/images/icon_flag_blue.svg" mode="aspectFit" /></view>
       <view class="reg-opt-body">
         <view class="reg-opt-t">成为俱乐部主理人</view>
-        <view class="reg-opt-s">主理人身份 · 之后可创建俱乐部带团</view>
       </view>
       <cy-icon class="reg-arrow" name="arrow-right" size="28" />
     </view>
@@ -71,7 +70,6 @@
       <view class="reg-ic shop"><image src="/images/icon_shop.svg" mode="aspectFit" /></view>
       <view class="reg-opt-body">
         <view class="reg-opt-t">商家</view>
-        <view class="reg-opt-s">提供场地 · 参与招募 · 发布优惠</view>
       </view>
       <cy-icon class="reg-arrow" name="arrow-right" size="28" />
     </view>

@@ -1,8 +1,8 @@
 // 提现表单的校验与单独同意 —— 三个写入口的单一真源(2026-08-25)
 //
-// 为什么必须收口:/api/withdrawal/create 全仓有【三个】前端写入口
-//   ① subpackageMember/tixian/tixian.js          独立提现页
-//   ② subpackageA/pages/assetcenter/earnings     我的资产内的提现 sheet
+// 为什么必须收口:/api/withdrawal/create 曾有【三个】前端写入口
+//   ① subpackageMember/tixian/tixian.js          独立提现页(2026-11-19 PG-042 已下线)
+//   ② subpackageA/pages/assetcenter/earnings     我的资产内的提现 sheet(2026-11-19 PG-033 已删)
 //   ③ components/cy/scene-route-content          member-withdraw 场景表单
 //      (由 cy-profile「我的」页、cy-scene-deep-link、pages/shezhi/shezhi 三处的
 //       submitSceneForm 触发)

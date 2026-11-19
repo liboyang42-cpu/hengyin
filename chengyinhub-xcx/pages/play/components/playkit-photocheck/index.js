@@ -18,6 +18,7 @@ const mediaDenied = require('../../utils/media-denied.js');
 const { tidyText } = require('../../utils/keep-numerals.js');
 // C1:核验说明只认服务端 photoVerified=true;兜底放行另有一句,不说「这张过了」
 const { PHOTO_VERIFIED_NOTE, PHOTO_FALLBACK_VERDICT, rewardNote } = require('../../utils/sensor-contract.js');
+const cyModal = require('../../../../utils/modal.js');
 
 Component({
   behaviors: [reducedMotionBehavior, replayMotionBehavior],
@@ -50,6 +51,11 @@ Component({
     photoFailKind: { type: String, value: '' },
     // 页面正等服务端视觉判分
     judging: { type: Boolean, value: false },
+    // CG-ALL-12 只记录(photoCheck.mode=RECORD):不审、不判对错,拍了就记(页面发 SUBMIT_PHOTO_RECORD);
+    // 服务端没下发 mode 时为 false,行为与今天相同。相机被拒时可文字确认「不拍照，继续」
+    recordOnly: { type: Boolean, value: false },
+    // 只记录站上本局是文字确认继续的(服务端 state.photoCheck.textConfirmed),不是拍了照
+    textConfirmed: { type: Boolean, value: false },
   },
   data: {
     busy: false,
@@ -66,6 +72,10 @@ Component({
     framing: false,
     // 轮廓图没加载出来:只把那条线藏掉，取景与提交照常
     outlineFailed: false,
+    // CG-ALL-29:拍完先在框里预览,玩家点「提交这张」才交给页面上传;没提交就不上传
+    pendingPath: '',
+    // 只记录站上相机被拒后才亮出「不拍照，继续」
+    skipOffer: false,
   },
   observers: {
     'photoFailSeq, photoFailKind': function (seq, kind) {
@@ -97,6 +107,10 @@ Component({
         verdict = passed ? '这次没能审，先往下走' : '这次没能审，再拍一张';
         verdictKind = '';
         if (!passed) reason = tidyText(String(lastReason || '').trim());
+      } else if (passed && this.data.recordOnly) {
+        // 只记录:没有对错,拍了就是记下了;没拍、文字确认继续的另说一句
+        verdict = this.data.textConfirmed ? '没拍照，已继续' : '已记录';
+        verdictKind = 'ok';
       } else if (passed && flagged) {
         // 次数用尽兜底放行:服务端 passed 与 flagged 同时为真。这张是「先算过」,不是「过了」
         verdict = PHOTO_FALLBACK_VERDICT;
@@ -118,7 +132,7 @@ Component({
       const prevUsed = this._seenUsed;
       this._seenUsed = used;
       this.setData({
-        triesLabel: total > 0 ? ('还能重拍 ' + left + ' 次') : '',
+        triesLabel: total > 0 && !this.data.recordOnly ? ('还能重拍 ' + left + ' 次') : '',
         verdict,
         verdictKind,
         reason,
@@ -137,6 +151,7 @@ Component({
     onShoot() {
       // R11 g1 F3:只认服务端 passed。flagged 是留给商家的痕迹,不是「这一站定了」
       if (this.data.busy || this.data.judging || this.data.passed) return;
+      if (this.data.pendingPath) { this._submitPending(); return; }
       if (this.data.resubmit) { this.setData({ uploadFail: '', resubmit: false }); this.triggerEvent('resubmit'); return; }
       if (this.data.uploadFail) this.setData({ uploadFail: '' });
       /* ⚠️ 内嵌呈现(故事流里就地玩)不进页内取景:.chfull__para 恒带 transform:scale() 与
@@ -162,7 +177,39 @@ Component({
           const file = (res && res.tempFiles && res.tempFiles[0]) || {};
           this._emitShot(file.tempFilePath || '', file.size, !res);
         },
-        fail: (err) => { this.setData({ busy: false }); mediaDenied.guideIfDenied(err); },
+        fail: (err) => {
+          this.setData({ busy: false });
+          const msg = String((err && err.errMsg) || '');
+          // 只记录站:相机 / 相册被拒(不是主动取消)时亮出「不拍照，继续」,不再弹去设置的引导
+          if (this.data.recordOnly && !/cancel/i.test(msg)) { this.setData({ skipOffer: true }); return; }
+          mediaDenied.guideIfDenied(err);
+        },
+      });
+    },
+
+    /** CG-ALL-29:预览里点「提交这张」才把临时路径交给页面去上传 + 提交。 */
+    _submitPending() {
+      const path = this.data.pendingPath;
+      this.setData({ pendingPath: '' });
+      if (!path) return;
+      motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
+      this.triggerEvent('shoot', { tempFilePath: path, size: this._pendingSize });
+    },
+    /** 预览里「重拍」:丢掉这张(本来就没传),回到拍照。 */
+    onRetake() {
+      if (this.data.busy || this.data.judging) return;
+      this.setData({ pendingPath: '' });
+      this.onShoot();
+    },
+    /** 「不拍照，继续」:文字确认后页面发 SUBMIT_PHOTO_RECORD {textConfirmed:true},服务端记这一站没拍、照常完成。 */
+    onTextConfirm() {
+      if (!this.data.recordOnly || this.data.busy || this.data.judging || this.data.passed) return;
+      cyModal.show({
+        title: '不拍照，继续？',
+        content: '这一站不留照片，直接往下走。',
+        confirmText: '继续',
+        cancelText: '再试试拍照',
+        success: (res) => { if (res && res.confirm) this.triggerEvent('textconfirm'); },
       });
     },
 
@@ -199,8 +246,9 @@ Component({
         if (!aborted) cyToast('没拿到照片');
         return;
       }
-      motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
-      this.triggerEvent('shoot', { tempFilePath: tempFilePath, size: size });
+      // CG-ALL-29:先预览,不上传;玩家点「提交这张」才交出去
+      this._pendingSize = size;
+      this.setData({ pendingPath: tempFilePath, skipOffer: false });
     },
 
     /** 轮廓图自身加载失败:只藏掉那条线，取景器与快门照常。 */

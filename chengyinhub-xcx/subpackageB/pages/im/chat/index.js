@@ -9,6 +9,7 @@ const systemCard = require('./system-card-target.js');
 const roleGuard = require('../../../../utils/roleGuard.js');
 function openAddress() { return require('../../../../utils/open-address.js') }
 const merchantTheme = require('../../../../utils/merchant-theme.js');
+const { safeDecode } = require('../../../../utils/safe-decode.js');
 const app = getApp();
 // 距底部不超过这个距离(px)视为「在看最新消息」,轮询到新消息时跟随滚动(U-142)
 const NEAR_BOTTOM_PX = 120;
@@ -50,7 +51,7 @@ Page({
     reportPeerId: '',
     // 只读会话:能读不能写。判据只有「对方是不是一个可交流的人」,不是 loadState。
     readOnly: false,
-    readOnlyTip: '系统通知不支持回复',
+    readOnlyTip: '城瘾小助手不接收回复', // OR-023:type=2 统一称「城瘾小助手」
     // M-01 / G-10:商家视角整页浅色;商家的系统通知会话标题进导航栏、去掉「更多」、通知改整宽卡片。
     isMerchantView: false,
     sysNotice: false,
@@ -146,7 +147,7 @@ Page({
     } catch (e) {}
     const type = parseInt(options.type) || 1;
     const conversationId = parseInt(options.conversationId) || 0;
-    const name = decodeURIComponent(options.name || '');
+    const name = safeDecode(options.name || '');
     // hero 区(顶栏下方居中会话名,不再放头像)高度:先按内容粗估作首屏占位,
     // onReady 里再用 boundingClientRect 实测覆正——避免手工凑 rpx 数字跟 wxss 实际布局对不齐。
     const heroGuessRpx = 96;
@@ -169,7 +170,7 @@ Page({
       conversationId: conversationId,
       name: name,
       heroName: this._heroName(name, type),
-      avatar: decodeURIComponent(options.avatar || ''),
+      avatar: safeDecode(options.avatar || ''),
       type: type,
       readOnly: readOnly,
       moreSheetItems: readOnly ? ['隐藏会话'] : ['举报这条消息', '举报对方', '拉黑', '隐藏会话'],
@@ -184,7 +185,7 @@ Page({
        注:后端 ImServiceImpl.send 只有成员闸与群闸,没有按会话类型的只读闸;
        服务端要不要一并挡写入是后端的事,这里修的是用户看得见的那一半。
        type=3 官方客服按现状仍可写,不在这个闸里。 */
-    if (type == 2) this.setData({ disabled: true, disabledText: '系统通知，不能回复' });
+    if (type == 2) this.setData({ disabled: true, disabledText: '城瘾小助手不接收回复' });
     this.loadMessages(true);
     if (type == 2) this.loadReportEntry();
   },
@@ -257,7 +258,7 @@ Page({
   // 会话身份兜底:只按会话类型给通用称呼,绝不臆造对方昵称。
   _heroName(name, type) {
     if (name) return name;
-    if (type == 2) return '系统通知';
+    if (type == 2) return '城瘾小助手';
     if (type == 3) return '官方消息';
     return '对话';
   },
@@ -343,7 +344,7 @@ Page({
           // 拉黑只存服务端:重进会话按回包禁用输入框,不然能打字、一发就失败(3-22)
           const blockedByMe = res.data.blockedByMe === true;
           that._blockedByMe = blockedByMe;
-          that.setData({ disabled: that.data.readOnly || res.data.blocked === true, disabledText: that.data.readOnly ? '系统通知不支持回复' : res.data.blocked === true ? (blockedByMe ? '你已拉黑对方，无法发送消息' : '对方暂不可联系，无法发送消息') : '',
+          that.setData({ disabled: that.data.readOnly || res.data.blocked === true, disabledText: that.data.readOnly ? '城瘾小助手不接收回复' : res.data.blocked === true ? (blockedByMe ? '你已拉黑对方，无法发送消息' : '对方暂不可联系，无法发送消息') : '',
             moreSheetItems: that.data.readOnly ? ['隐藏会话'] : ['举报这条消息', '举报对方', blockedByMe ? '解除拉黑' : '拉黑', '隐藏会话'] });
           if (toBottom) that.scrollBottom();
           that._markReadWhenVisible(conversationId, memberId);

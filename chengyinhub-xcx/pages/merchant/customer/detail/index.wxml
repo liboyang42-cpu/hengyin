@@ -119,7 +119,7 @@
         title="标签未添加" sub="{{tagError}}" />
 
       <text class="cd-editor-label">客户备注</text>
-      <text wx:if="{{correctsNoteId}}" class="cd-editor-hint">正在更正备注 #{{correctsNoteId}}；系统追加新记录，不改原文。<text class="cd-editor-cancel" catchtap="cancelCorrection" aria-role="button" aria-label="取消更正" hover-class="cy-pressed" hover-stay-time="80">取消更正</text></text>
+      <text wx:if="{{correctsNoteId}}" class="cd-editor-hint">正在更正备注<text class="cd-editor-cancel" catchtap="cancelCorrection" aria-role="button" aria-label="取消更正" hover-class="cy-pressed" hover-stay-time="80">取消更正</text></text>
       <view class="cd-textarea-wrap">
         <textarea class="cd-textarea" value="{{noteContent}}" maxlength="500"
                   placeholder="记录偏好、承诺事项或下次联系计划" placeholder-class="cd-placeholder"

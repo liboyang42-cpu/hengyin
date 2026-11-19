@@ -193,7 +193,7 @@ Page({
           const topics = rows
             .filter(function (item) { return item && item.topicId != null; })
             .map(function (item) {
-              return { id: item.topicId, name: item.topicName || ('活动#' + item.topicId) };
+              return { id: item.topicId, name: item.topicName || '未命名活动' }; // PG-090:不露活动编号
             });
           that.setData({ topics: topics, loading: false, errorMsg: '' });
         } else {

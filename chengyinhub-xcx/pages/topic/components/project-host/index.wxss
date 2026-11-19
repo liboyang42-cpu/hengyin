@@ -708,9 +708,6 @@
 .pg-go { flex: none; font-weight: 600; color: #2F7FEA; } /* ds-ok: 同上 */
 
 /* 走查 v2 R14:自由探索待俱乐部承办提示 */
-.gate { display: flex; align-items: center; gap: var(--cy-space-3); margin: var(--cy-space-3) var(--cy-page-x) 0; padding: var(--cy-space-4); border-radius: var(--cy-radius-xl); background: var(--cy-bg-card); }
-.gate-t { flex: 1; min-width: 0; font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-text-title); line-height: 1.4; }
-.gate-btn { flex: none; height: 64rpx; line-height: 64rpx; padding: 0 var(--cy-space-4); border-radius: var(--cy-radius-pill); background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); font-size: var(--cy-font-label); font-weight: 600; }
 
 /* 进度对齐定稿原型:做完是实心洋红圆 + 白勾(CSS 画),表头右侧写类型 · 身份,子项从当前步分出去 */
 .pg-h { display: flex; align-items: baseline; justify-content: space-between; }
@@ -925,7 +922,6 @@
 .bx-quote { margin-top: 24rpx; padding: 28rpx; border-radius: var(--cy-radius-lg); background: var(--cy-bg-card); font-size: var(--cy-font-body); line-height: 1.5; color: var(--cy-text-title); }
 
 /* 细节打磨二期 L1/L5/L7 */
-.gate-btn { transition: var(--cy-tr-press); }
 .sec-action { transition: var(--cy-tr-press); }
 .tcard { transition: var(--cy-tr-press); }
 .pg-go { transition: var(--cy-tr-press); }

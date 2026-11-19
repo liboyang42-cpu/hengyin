@@ -131,7 +131,7 @@ Page({
             const cp = c.counterparty || {};
             return Object.assign({}, c, {
               counterparty: Object.assign({}, cp, {
-                nickname: cp.nickname || (c.type == 2 ? '系统通知' : '城瘾消息'),
+                nickname: c.type == 2 ? '城瘾小助手' : (cp.nickname || '城瘾消息'),
                 avatar: cp.avatar || '',
               }),
               offset: 0,

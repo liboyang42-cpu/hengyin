@@ -42,6 +42,29 @@
         <text class="ptb__r">{{helpPanel.skipPending ? '继续核对' : ''}}</text>
       </view>
     </view>
+    <!-- CG-09-P2-6:这一站有问题(换了材料 / 找不到 / 看不清 / 逻辑有误),选一类记一条 -->
+    <view class="tb-group">
+      <view class="tb-row phl__row" bindtap="reportStageIssue" aria-role="button" aria-label="这一站有问题" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="tb-copy"><text class="tb-name">这一站有问题</text></view>
+      </view>
+    </view>
   </view>
   </scroll-view>
 </view>
+
+<!-- CG-01-P2-7 证据卡回看:与提示同一套居中弹窗;每张 = 站名 + 解开后的那段话 -->
+<view class="phl-pop" wx:if="{{evidence.show}}">
+  <view class="phl-pop-mask" bindtap="closeEvidenceCards" catchtouchmove="noop" hover-class="none" aria-role="button" aria-label="关闭证据卡"></view>
+  <scroll-view class="phl-pop__card" scroll-y enhanced show-scrollbar="{{false}}">
+  <view class="tb-sheet ptb phl">
+    <view class="tb-close" bindtap="closeEvidenceCards" aria-role="button" aria-label="关闭证据卡" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="32" /></view>
+    <text class="tb-title">证据卡</text>
+    <view class="tb-group" wx:for="{{evidence.items}}" wx:key="key">
+      <view class="tb-row"><view class="tb-copy"><text class="tb-name">{{item.name}}</text><text class="tb-clue-copy" user-select>{{item.text}}</text></view></view>
+    </view>
+  </view>
+  </scroll-view>
+</view>
+<cy-option-sheet immediate show="{{issueSheetShow}}" title="这一站有问题" items="{{issueSheetItems}}" bind:select="onIssueSheetSelect" bind:cancel="onIssueSheetCancel" />
+<!-- CG-ALL-11 开局方式:还没到起点时换替代站 / 桌面完成(run-start-mode.js) -->
+<cy-option-sheet immediate show="{{startModeSheetShow}}" title="换个方式开局" items="{{startModeSheetItems}}" bind:select="onStartModeSelect" bind:cancel="onStartModeCancel" />

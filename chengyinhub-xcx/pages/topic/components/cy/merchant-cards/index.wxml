@@ -7,6 +7,7 @@
       <view class="mc__shade"></view>
       <view class="mc__in">
         <view class="mc__name"><text class="mc__n">{{item.name}}</text><view class="mc__ok"></view></view>
+        <text class="mc__perk" wx:if="{{item.perk}}">{{item.perk}}</text>
         <text class="mc__desc" wx:if="{{item.desc}}">{{item.desc}}</text>
         <view class="mc__row">
           <text class="mc__place" wx:if="{{item.place}}">{{item.place}}</text>

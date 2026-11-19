@@ -154,9 +154,7 @@
           <cy-inline-error class="dp-field-err" wx:if="{{fieldErrors.retailValue}}" kind="field" title="{{fieldErrors.retailValue}}" />
         </view>
         <view class="dp-field">
-          <view class="dp-field-label" aria-label="成本价（可选，仅自己可见）">
-            成本价
-            <text class="dp-field-optional">· 仅自己可见</text></view>
+          <view class="dp-field-label" aria-label="成本价（可选）">成本价</view>
           <input
             class="dp-input"
             type="digit"

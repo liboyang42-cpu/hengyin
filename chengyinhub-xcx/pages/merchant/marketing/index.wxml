@@ -21,7 +21,7 @@
          不用退出重进。 -->
     <cy-inline-error class="m-inline-error" wx:elif="{{accessState === 'denied'}}" kind="data"
                      title="你的岗位还没有营销数据权限"
-                     sub="{{accessError || '请联系店主开通'}}"
+                     sub="{{accessError}}"
                      action="重新确认" bind:action="retryAll" />
 
     <block wx:if="{{accessState !== 'denied'}}">

@@ -225,7 +225,7 @@ Page({
         that.setData({
           loadState: 'permission',
           loadErrTitle: '当前身份不能编辑店铺资料',
-          loadErrSub: '请联系店主开通',
+          loadErrSub: '',
         });
         return;
       }

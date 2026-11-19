@@ -553,16 +553,6 @@
     "selector": "#ticketSection, .slopes-tabbar",
     "min": 2
   },
-  "B51": {
-    "selector": ".simple-ai__chip text",
-    "min": 3,
-    "textIncludes": [
-      "老城建筑与咖啡",
-      "周末亲子探险",
-      "雨天室内漫游"
-    ],
-    "visibleMin": 3
-  },
   "B52": {
     "selector": ".cg-hero-body, .cg-count, .cg-label, .cg-sec",
     "min": 1
@@ -1074,11 +1064,6 @@
     "selector": "cy-empty",
     "min": 1
   },
-  "D15": {
-    "selector": ".fabu, .theme-topic-editor",
-    "min": 1,
-    "weak": true
-  },
   "D16": {
     "selector": ".cq-page",
     "min": 1,
@@ -1096,14 +1081,6 @@
       ".qr__card",
       ".qr__secondary"
     ]
-  },
-  "D19": {
-    "selector": ".txcon_top_je_qian, .txcon_ly_inp",
-    "min": 1
-  },
-  "D20": {
-    "selector": ".txcon_ly--filled",
-    "min": 1
   },
   "D21": {
     "selector": ".txjl_li",

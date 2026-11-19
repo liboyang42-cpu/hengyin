@@ -579,7 +579,8 @@ test('自由漫游会话内可重看规则，演示点只由开发环境闸门�
   // 同上:关闭走的是本页的 onProtoSheetClose(能返回就返回上一层,否则 requestSceneClose,
   //   脏态确认仍归 requestSceneClose 管)。断的是「关闭真的接到场景栈上」。
   assert.match(roamWxml, /class="psheet__x"[^>]*catchtap="onProtoSheetClose"/)
-  assert.match(initWorld, /selectDemoRoamPois\(getApp\(\), \[/)
+  // PG-061:演示种子点挪到 subpackageRoam/data/roam-demo-pois.js,开发开关打开时异步载入
+  assert.match(initWorld, /selectDemoRoamPois\(getApp\(\), this\._demoPoisFactory \? this\._demoPoisFactory\(P, MOCK_IMG\) : \[\]\)/)
   assert.match(initWorld, /\.map\(\(p\) => \(\{ \.\.\.p, demo: true/)
   assert.match(syncMarkers, /content: p\.demo \? '演示点 · 非真实\\n' \+ p\.name : p\.name/)
   assert.match(startVisit, /poi\.demo[\s\S]*?演示点仅供浏览/)
@@ -622,7 +623,7 @@ test('「点亮坐标」必须取已完成数(doneCount),部分完成时不得�
 
   // ④ 互斥路线可在只完成一侧时 allDone，未选锁定站不计入点亮数。
   // 横幅沿用 HUD 的 allDone 门控，但和通关卡、分享卡一样只显示 doneCount。
-  assert.match(wxml, /=== 'banner'\}\}"[\s\S]{0,260}: doneCount \+ '处旧址已点亮/)
+  assert.match(wxml, /=== 'banner'(?: && !perkOnlyTopic)?\}\}"[\s\S]{0,260}: doneCount \+ '处旧址已点亮/)
   assert.match(readXcx('utils/wxs/hud-slots.wxs'), /banner:\s*!screen && !!allDone/)
 })
 

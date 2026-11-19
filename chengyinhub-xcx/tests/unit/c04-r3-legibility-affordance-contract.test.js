@@ -320,22 +320,12 @@ const complaintSubtitle = () => {
   return m[1]
 }
 
-test('R3-3b 页头副标题留有余量,不贴右边缘', () => {
-  const sub = complaintSubtitle()
-  assert.ok(
-    countChars(sub) < SUB_LINE_BUDGET,
-    `副标题 ${countChars(sub)} 字，一行预算 ${SUB_LINE_BUDGET} 字 —— 吃满或超出就是视觉上的「顶到右边缘」:「${sub}」`,
-  )
-  assert.match(sub, /已报名并支付/, '「仅限已报名并支付的活动」这条限制不许丢')
-  assert.match(sub, /介入处理/, '「平台会介入处理」这条承诺不许丢')
-})
-
-test('R3-3b 页头副标题与空态副文案不再逐字重复', () => {
+// PG-071(2026-11-17 业主批准「删说明小字」):投诉页页头副标题整条撤掉,不再有贴边/重复问题。
+test('R3-3b 投诉页页头不再挂副标题', () => {
   const wxml = stripComments(read(`${COMPLAINT}.wxml`))
-  const sub = complaintSubtitle()
-  const emptyTag = wxml.match(/<cy-empty[^>]*kind="empty"[\s\S]*?\/>/)
-  assert.ok(emptyTag, '缺少空态')
-  assert.doesNotMatch(emptyTag[0], new RegExp(sub.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+  const tag = wxml.match(/<cy-page-title\b[^>]*>/)
+  assert.ok(tag, '投诉页必须有 cy-page-title')
+  assert.doesNotMatch(tag[0], /subtitle="[^"]+"/)
 })
 
 test('负控 R3-3b:把副标题改回 25 字旧文案,余量断言必须判红', () => {

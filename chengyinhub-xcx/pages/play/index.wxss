@@ -727,6 +727,9 @@ page { background: var(--cy-color-bg-page); }
   font-size:32rpx; font-weight:700; display:flex; align-items:center; justify-content:center; } /* ds-ok Figma 实测(用户裁决字面值) */
 
 /* ===================== 章节结算半屏(用户裁决:非全屏,底部=继续) ===================== */
+/* CG-ALL-25:章节门(130)开着时,定位/照片/地点/结算弹窗统一压到章节门之上,遮罩近乎不透,不漏出门后的章节画面 */
+.play--gate .mask, .play--gate .gp2mask, .play--gate .finmask, .play--gate .chpick-mask{ z-index:131; background:rgba(8,8,8,.96); } /* ds-ok 刻意:近乎不透的弹窗幕布,同 .leadgather */
+.play--gate .sheet, .play--gate .gp2, .play--gate .finsheet, .play--gate .chpick { z-index:132; }
 .finmask{ position:absolute; inset:0; z-index:118; background:rgba(0,0,0,.55); } /* ds-ok Figma 实测(用户裁决字面值) */
 .finsheet{ position:absolute; left:0; right:0; bottom:0; z-index:119; box-sizing:border-box; height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); max-height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); overflow-y:auto;
   --cy-color-text-primary:var(--cy-color-play-story-text); --cy-color-text-secondary:var(--cy-color-play-story-muted); --cy-color-text-tertiary:var(--cy-color-play-story-muted);
@@ -1774,7 +1777,7 @@ page { background: var(--cy-color-bg-page); }
 .fx-story__hd.is-kitq{ gap:var(--cy-space-2); }
 .fx-story__hd.is-kitq .fx-story__acts{ display:none; }
 .fx-story__kitq{ flex:1; min-width:0; font-size:var(--cy-type-section-title); font-weight:700; line-height:1.3; color:var(--cy-color-text-primary);
-  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; word-break:keep-all; overflow-wrap:anywhere; }
+  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; word-break:keep-all; overflow-wrap:break-word; } /* CG-ALL-24 标题统一 keep-all + break-word */
 .fx-story__act{ width:88rpx; height:88rpx; border-radius:50%;
   background:var(--cy-color-bg-elevated); display:flex; align-items:center; justify-content:center; }
 
@@ -1889,7 +1892,7 @@ page { background: var(--cy-color-bg-page); }
 .st-intro__body, .st-intro__go{ position:relative; }
 .st-intro__body{ flex:1; display:flex; flex-direction:column; justify-content:center; }
 .st-intro__k{ font-size:21rpx; letter-spacing:4rpx; color:var(--atmo-muted, rgba(255,255,255,.6)); } /* ds-ok 同 .pv-ending__k */
-.st-intro__t{ margin-top:23rpx; font-size:56rpx; font-weight:800; line-height:1.2; color:var(--atmo-text, #FFFFFF); display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; text-overflow:ellipsis; word-break:break-all; } /* ds-ok D9:开场标题与其它开场页同量级(56rpx),最多两行加省略号,不再 80rpx 排成四行 */
+.st-intro__t{ margin-top:23rpx; font-size:56rpx; font-weight:800; line-height:1.2; color:var(--atmo-text, #FFFFFF); display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; text-overflow:ellipsis; word-break:keep-all; overflow-wrap:break-word; } /* ds-ok CG-ALL-24 标题统一不拆词;D9:开场标题与其它开场页同量级(56rpx),最多两行加省略号,不再 80rpx 排成四行 */
 .st-intro__line{ margin-top:23rpx; font-size:29rpx; line-height:1.7; color:var(--atmo-muted, rgba(255,255,255,.72)); } /* ds-ok 同 .pv-ending__copy */
 .st-intro__go{ height:104rpx; border-radius:var(--cy-radius-pill); display:flex; align-items:center; justify-content:center; /* ds-ok 胶囊按钮,同 .pv-ending__go */
   background:var(--atmo-text, #FFFFFF); color:var(--atmo-bg, #000000); font-size:31rpx; font-weight:700; } /* ds-ok 玩家主按钮=反色中性,跟画面风格 */

@@ -8,7 +8,6 @@ const read = rel => fs.readFileSync(path.join(ROOT, rel), 'utf8')
 const { SHOTS } = require(path.join(ROOT, 'scripts/shot-matrix.js'))
 const FIXTURES = require(path.join(ROOT, 'scripts/fixtures.json'))
 const SELECTORS = require(path.join(ROOT, 'scripts/selectors.json'))
-const B51_PROMPTS = ['老城建筑与咖啡', '周末亲子探险', '雨天室内漫游']
 
 const TARGETS = {
   D07: '#orderDetail',
@@ -19,15 +18,6 @@ const TARGETS = {
   D32: '#incomeDetail',
   D33: '#assetEarnings',
   D38: '#deregisterFlow',
-}
-
-function assertB51Contract(fixtures, selectors = SELECTORS) {
-  assert.deepEqual(fixtures.B51.data.aiPrompts, B51_PROMPTS,
-    'B51 必须注入三条真实可读的灵感文案，不能由生成器补示例占位')
-  assert.deepEqual(selectors.B51.textIncludes, B51_PROMPTS,
-    'B51 截图必须逐条回读灵感文案，不能只统计空 text 节点')
-  assert.equal(selectors.B51.visibleMin, 3,
-    'B51 三条灵感必须都在截图视口内可见')
 }
 
 function assertShotFixtureContract(fixtures, selectors = SELECTORS) {
@@ -218,26 +208,8 @@ test('negative control：C20/C44 退回弱选择器时必须判红', () => {
   )
 })
 
-test('B51 灵感截图锁住真实文字与视口可见性', () => {
-  assertB51Contract(FIXTURES)
-})
+// PG-021:publish/simple 下线,B51 截图行与 fixture 随页删除。
 
-test('negative control：B51 灵感为空或退回只数节点时必须判红', () => {
-  const fixtureBroken = JSON.parse(JSON.stringify(FIXTURES))
-  fixtureBroken.B51.data.aiPrompts = ['', '', '']
-  assert.throws(
-    () => assertB51Contract(fixtureBroken),
-    /B51 必须注入三条真实可读的灵感文案/,
-  )
-
-  const selectorBroken = JSON.parse(JSON.stringify(SELECTORS))
-  delete selectorBroken.B51.textIncludes
-  delete selectorBroken.B51.visibleMin
-  assert.throws(
-    () => assertB51Contract(FIXTURES, selectorBroken),
-    /B51 截图必须逐条回读灵感文案/,
-  )
-})
 
 test('negative control：D28/D29 退回旧金额形状或假状态,各自判红', () => {
   // ① 退回 wxml 硬拼 '+¥' 那版:amountText 是裸数字

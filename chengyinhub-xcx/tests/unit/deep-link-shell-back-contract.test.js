@@ -21,9 +21,10 @@ test('据点核销码所有可见状态共用真实深链返回', () => {
   assert.match(nav[0], /custom-back[^>]*bind:back="onClose"/)
   // 2026-09-18 ✕统一裁决:出码态出口是弹层右上角✕(同一 onClose),返回钮只留缺参态,
   // 不与✕同屏、不压在弹层遮罩上。
-  assert.match(nav[0], /wx:if="\{\{state === 'missing'\}\}"/)
-  const voucher = view.match(/<cy-qr-voucher[\s\S]*?\/>/)
-  assert.ok(voucher, '出码态必须由 cy-qr-voucher 承载,✕即出口')
+  // PG-005:游客态(登录门盖住内容)同样给返回钮。
+  assert.match(nav[0], /wx:if="\{\{state === 'missing' \|\| guest\}\}"/)
+  const voucher = view.match(/<cy-scene-qr-citynode[\s\S]*?\/>/)
+  assert.ok(voucher, '出码态必须由 cy-scene-qr-citynode(内含 cy-qr-voucher)承载,✕即出口')
   assert.match(voucher[0], /bind:close="onClose"/)
   assert.match(source, /onClose\(\)[\s\S]*getCurrentPages\(\)\.length > 1[\s\S]*wx\.navigateBack\(\)[\s\S]*wx\.reLaunch\(\{ url: '\/pages\/roam\/index' \}\)/)
 })

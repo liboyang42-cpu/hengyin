@@ -1,4 +1,4 @@
-<view class="play {{lookClass}} {{reducedMotion ? 'play--reduced-motion' : ''}} {{story.show ? 'play--scaled' : ''}}" style="--cy-psheet-max-h: calc(100vh - {{chrome.sheetTop}}px)">
+<view class="play {{lookClass}} {{reducedMotion ? 'play--reduced-motion' : ''}} {{story.show ? 'play--scaled' : ''}} {{chapterFull && chapterGate.show ? 'play--gate' : ''}}" style="--cy-psheet-max-h: calc(100vh - {{chrome.sheetTop}}px)">
   <cy-toast id="cy-toast" lift />
   <cy-look-transition id="lookTx" kind="{{lookTransition}}" reduced-motion="{{reducedMotion}}" />
   <include src="theme-backpack.wxml" />
@@ -316,6 +316,8 @@
         <include src="theme-player-ops-entry.wxml" />
         <view class="drow" wx:if="{{helpPanel.enabled && advancedPlay.show && playKit.kit && !playKit.kit.done && helpPanel.nodeId == advancedPlay.node.nodeId}}" bindtap="openHelpFromTools" aria-role="button" aria-label="提示" hover-class="cy-pressed" hover-stay-time="80"><view class="dcopy"><text class="dt">提示</text></view><view class="darr"></view></view>
         <view class="drow" wx:if="{{gameModule.enabled}}" bindtap="openGameModuleFromTools" aria-role="button" aria-label="本局线索" hover-class="cy-pressed" hover-stay-time="80"><view class="dcopy"><text class="dt">本局线索</text></view><view class="darr"></view></view>
+        <!-- CG-01-P2-7:本局已获证据卡(各站解开后的文字反馈)回看 -->
+        <view class="drow" wx:if="{{evidenceCount > 0}}" bindtap="openEvidenceCards" aria-role="button" aria-label="证据卡 {{evidenceCount}} 张" hover-class="cy-pressed" hover-stay-time="80"><view class="dic pic pic--journal"></view><view class="dcopy"><text class="dt">证据卡</text><text class="ds">{{evidenceCount}} 张</text></view><view class="darr"></view></view>
         <view class="drow" wx:if="{{topicId && !isPreview}}" bindtap="openJourneyRewards" aria-role="button" aria-label="各站奖励" hover-class="cy-pressed" hover-stay-time="80"><view class="dic pic pic--gift"></view><view class="dcopy"><text class="dt">各站奖励</text></view><view class="darr"></view></view>
         <view class="drow" wx:if="{{themeBag.sessionId && (themeBag.actionRows.length || themeBag.awaitingChallenge || zeroHpView || themeBag.pendingRows.length)}}" bindtap="openThemeGameplay" aria-role="button" aria-label="打开背包与任务" hover-class="cy-pressed" hover-stay-time="80"><view class="dcopy"><text class="dt">背包与任务</text><text class="ds" wx:if="{{zeroHpView}}">{{zeroHpView.message || zeroHpView.title}}</text><text class="ds" wx:elif="{{themeBag.awaitingChallenge}}">{{themeBag.names.hp}}已归零 · 完成挑战可{{themeBag.challengeRestoreText}}{{themeBag.challengeProgressText ? ' · ' + themeBag.challengeProgressLabel + ' ' + themeBag.challengeProgressText : ''}}</text><text class="ds" wx:elif="{{themeBag.pendingRows.length}}">有待领取物品</text><text class="ds" wx:else>{{themeBag.names.hp}} {{themeBag.hp}} · {{themeBag.names.luck}} {{themeBag.luck}} · {{themeBag.names.action}} {{themeBag.actions}}</text></view><view class="darr"></view></view>
         <!-- 伏笔(2026-09-22 用户裁决「玩家侧收进右上角菜单」):只列已经埋下的那些。
@@ -401,7 +403,7 @@
         </view>
         <view class="drow {{gpsOk ? '' : 'is-off'}}" bindtap="onLocationRowTap" aria-role="button" aria-label="自动记录足迹{{gpsOk ? '，已开启' : '，定位未开启'}}" hover-class="cy-pressed" hover-stay-time="80">
           <view class="dic pic pic--track"></view>
-          <view class="dcopy"><text class="dt">自动记录足迹</text><text class="ds">{{gpsOk ? '走过的路会画进通关卡' : '定位没开，路画不出来'}}</text></view>
+          <view class="dcopy"><text class="dt">自动记录足迹</text><text class="ds">{{gpsOk ? (perkOnlyTopic ? '走过的路会记下来' : '走过的路会画进通关卡') : '定位没开，路画不出来'}}</text></view>
           <view class="dsw {{gpsOk ? 'is-on' : ''}}" aria-role="switch" aria-checked="{{gpsOk}}" aria-label="自动记录足迹"><view class="dsw-i"></view></view>
         </view>
         </block>
@@ -621,7 +623,7 @@
         <!-- 已核销环:分段圆弧,一家一段,核销一家亮一段(2026-09-05 用户拍板:要圆形不要刻度条)。
              段数 = 商家数,亮暗由 JS 的 ringSegs 给;弧由 ring.wxs 拼成 SVG data URL(conic-gradient 渲染层不认)。 -->
         <view class="fx-unlock" wx:if="{{storyGate}}" aria-role="text">已解锁 <text class="fx-unlock__n">{{storyUnlocked}} / {{storyTotal}}</text> 章</view>
-        <view class="fx-ring" wx:else>
+        <view class="fx-ring" wx:elif="{{!perkOnlyTopic}}">
           <image class="fx-ring__arc" src="{{ring.svg(ringSegs)}}" mode="aspectFit" aria-hidden="true" />
           <view class="fx-ring__c">
             <text class="fx-ring__n">{{doneCount}}/{{total}}</text>
@@ -634,14 +636,14 @@
           <!-- 2026-09-22 地图模式整个删掉,这里只剩卡包一种看法 —— 原来那枚「在地图上看这些商户」
                会把卡包换成一块已经不存在的地图(空白屏且没有返回),随地图层一并摘除。 -->
           <view class="fx-meta__row">
-            <text class="fx-meta__l">{{chapterCards.length}} 章 · {{merchantCount}} 家商家</text>
+            <text class="fx-meta__l">{{perkOnlyTopic ? '' : chapterCards.length + ' 章 · '}}{{merchantCount}} 家商家</text>
           </view>
         </view>
       </view>
     </view>
 
     <view class="fx-lhd fx-veil {{headIn || packOpen ? 'is-in' : ''}}">
-      <text class="fx-lhd__t">探索节点</text>
+      <text class="fx-lhd__t" wx:if="{{!perkOnlyTopic}}">探索节点</text>
       <!-- P-28:自由探索也有游玩工具(我的权益 / 入场码 / 旅程手记),与城市定向同一份菜单 -->
       <view class="fx-lhd__more" wx:if="{{!isPreview}}" bindtap="toggleSessionTools" aria-role="button" aria-label="{{sessionToolsOpen ? '收起游玩工具' : '游玩工具'}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="more" size="30" /></view>
     </view>
@@ -813,10 +815,10 @@
         <view class="fx-hero__stt">{{hero.node.crowded && !hero.node.done ? (hero.node.waitText || '排队中，建议先去别家') : hero.node.statusText}}</view>
       </view>
       <!-- ① 章节:这一段讲的是「这一章」,不是这个玩法 -->
-      <view class="fx-hero__ey fx-hero__in" style="--i:1" wx:if="{{hero.node.chapMeta}}">{{hero.node.chapMeta}}</view>
+      <view class="fx-hero__ey fx-hero__in" style="--i:1" wx:if="{{hero.node.chapMeta && !perkOnlyTopic}}">{{hero.node.chapMeta}}</view>
       <view class="fx-hero__name fx-hero__in" style="--i:1">{{hero.node.chapName || hero.node.name}}</view>
       <view class="fx-hero__ey fx-hero__in" style="--i:2" wx:if="{{hero.node.storyLocked && hero.node.distText}}">{{hero.node.distText}}</view>
-      <view class="fx-hero__hook fx-hero__in" style="--i:2" wx:if="{{hero.node.hook}}"><text class="fx-hero__hook-k">小瘾说</text>{{hero.node.hook}}</view>
+      <view class="fx-hero__hook fx-hero__in" style="--i:2" wx:if="{{hero.node.hook && !perkOnlyTopic}}"><text class="fx-hero__hook-k">小瘾说</text>{{hero.node.hook}}</view>
 
       <!-- ② 店铺:整卡可点进分身对话;导航行单独可点,不跟卡片抢 -->
       <view class="fx-hero__ey fx-hero__ey--gap fx-hero__in" style="--i:3" wx:if="{{hero.node.isMerchant}}">店铺</view>
@@ -891,7 +893,7 @@
       <cy-btn wx:if="{{hero.node.storyLocked}}" variant="primary" style="width:100%" bindtap="onVisitTap" data-id="{{hero.node.nodeId}}"
               accessibility-label="{{storyOffline ? '联网后才能解锁' : hero.node.visitBtn}}">{{storyOffline ? '联网后才能解锁' : hero.node.visitBtn}}</cy-btn>
       <cy-btn variant="{{hero.node.entryDisabled ? 'disabled' : 'primary'}}" style="width:100%" bindtap="heroEnter" wx:else
-              accessibility-label="{{hero.node.entryDisabled ? '这一家已核销' : (hero.node.done ? '继续本店未完成玩法' : '到店打卡，进入本店玩法')}}">{{hero.node.entryDisabled ? '已核销' : (hero.node.done ? '继续互动' : '到店打卡')}}</cy-btn>
+              accessibility-label="{{hero.node.entryDisabled ? '这一家已核销' : (hero.node.perkOnly ? (hero.node.done ? '查看权益' : '我已到店') : (hero.node.done ? '继续本店未完成玩法' : '到店打卡，进入本店玩法'))}}">{{hero.node.entryDisabled ? '已核销' : (hero.node.perkOnly ? (hero.node.done ? '查看权益' : '我已到店') : (hero.node.done ? '继续互动' : '到店打卡'))}}</cy-btn>
     </view>
   </view>
 
@@ -928,7 +930,7 @@
     </view>
     <view class="fx-story__cta {{chapStory.barAway ? 'is-away' : ''}}">
       <cy-btn variant="secondary" style="flex:1" bindtap="closeChapStory">回到卡片</cy-btn>
-      <cy-btn variant="primary" style="flex:1" bindtap="heroEnter">{{hero.node.playName ? '开始 · ' + hero.node.playName : '到店打卡'}}</cy-btn>
+      <cy-btn variant="primary" style="flex:1" bindtap="heroEnter">{{hero.node.perkOnly ? (hero.node.done ? '查看权益' : '我已到店') : (hero.node.playName ? '开始 · ' + hero.node.playName : '到店打卡')}}</cy-btn>
     </view>
     <page-container show="{{chapStory.show}}" duration="{{0}}" overlay="{{false}}" bind:afterleave="onStoryNativeBack" />
   </view>
@@ -1049,7 +1051,7 @@
     <view class="rdrop__next" bindtap="closeRewardDrop" aria-role="button" aria-label="继续下一步" hover-class="cy-pressed" hover-stay-time="80">继续</view>
   </view>
 </view>
-<view class="banner" wx:if="{{hud.bottomCard(screen, allDone && !canContinueGames, nav, nextNode, null) === 'banner'}}" bindtap="openFinish" hover-class="cy-pressed" hover-stay-time="80">
+<view class="banner" wx:if="{{hud.bottomCard(screen, allDone && !canContinueGames, nav, nextNode, null) === 'banner' && !perkOnlyTopic}}" bindtap="openFinish" hover-class="cy-pressed" hover-stay-time="80">
   <view class="b1">{{mode==2 ? '本轮探索已完成' : doneCount + '处旧址已点亮'}}</view>
   <view class="b2 serif">{{mode==2 ? '看看这一天的收获' : '领取你的城市足迹卡'}}</view>
 </view>

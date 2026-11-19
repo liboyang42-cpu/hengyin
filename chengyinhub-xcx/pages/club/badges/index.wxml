@@ -1,4 +1,4 @@
-<view class="theme-dark">
+<view class="theme-merchant">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
@@ -43,7 +43,7 @@
 </view>
 </view>
 
-<cy-sheet show="{{createVisible}}" title="创建勋章" closable maskClosable footer bind:close="closeCreate">
+<cy-sheet show="{{createVisible}}" title="创建勋章" closable maskClosable footer bind:close="closeCreate" class="theme-merchant">
   <view class="form">
     <cy-field label="勋章名" required value="{{form.name}}" placeholder="例如：开荒元老" maxlength="{{nameMax}}" showCount
               disabled="{{creating}}" data-field="name" bind:input="onFormInput"
@@ -58,7 +58,7 @@
   <cy-btn slot="footer" variant="primary" loading="{{creating}}" disabled="{{createUnknown}}" bindtap="submitCreate">创建</cy-btn>
 </cy-sheet>
 
-<cy-sheet show="{{memberPickerVisible}}" title="颁给谁？" closable maskClosable bind:close="closeMemberPicker">
+<cy-sheet show="{{memberPickerVisible}}" title="颁给谁？" closable maskClosable bind:close="closeMemberPicker" class="theme-merchant">
   <view class="picker">
     <text wx:if="{{grantBadge}}" class="picker-caption">勋章：{{grantBadge.badgeName}}</text>
     <cy-skeleton wx:if="{{membersState === 'loading'}}" type="list" count="3" loading-label="正在读取成员名单" />
@@ -78,4 +78,4 @@
   </view>
 </cy-sheet>
 
-<cy-danger-confirm id="dc" bind:confirm="onConfirmGrant" bind:done="onGrantDone" />
+<cy-danger-confirm id="dc" bind:confirm="onConfirmGrant" bind:done="onGrantDone" class="theme-merchant" />

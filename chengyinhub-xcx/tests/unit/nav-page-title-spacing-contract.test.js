@@ -28,8 +28,7 @@ const NAV_WITHOUT_L1_TITLE = new Set([
   'subpackageP3/pages/stamp-album/index/index.wxml',
   'subpackageP3/pages/object-cards/index/index.wxml',
   'pages/merchant/decor/ai-npc/index.wxml',
-  // 2026-10-28 p86:快速配置 —— 「快速配置」在 cy-nav-bar 居中,正文首屏是问句 + 兴趣气泡
-  'pages/publish/simple/index.wxml',
+  // 2026-11-19 PG-021:快速配置 publish/simple 整页删除,条目随页移除。
   // 2026-11-10 qx-b5(qx-c3 归类):领取礼品 —— 「领取礼品」在 cy-nav-bar 居中,正文是整屏 cy-empty 结果态 + 底部按钮,没有 L1 大标题行。
   'subpackageMember/market/gift/index.wxml',
   // 2026-11-10 l-pass:通行证页(原型 ps-pass)—— 「通行证」在 overlay cy-nav-bar 居中,正文首屏是暖橙渐变上的通行证插图 + 大字可玩主题数,没有 L1 大标题行。
@@ -130,7 +129,6 @@ const FIRST_CONTENT_TOP_SPACING_GUARDS = [
   ['subpackageMember/order/order.wxss', '.order-shell'],
   // 2026-08-07 第二批补漏(worker 复审扫出后随会话丢失,总控补录)
   // 路径已跟着「非 tabBar 子页搬进分包」对齐,couponInfo 与 roam/history 都在搬迁清单里
-  ['subpackageMember/couponInfo/couponInfo.wxss', '.wp'],
   ['subpackageA/pages/myproject/index.wxss', '.mp-tabs'],
   ['subpackageRoam/history/index.wxss', '.hs-shell__body'],
   ['pages/team/team.wxss', '.team-head'],
@@ -526,7 +524,9 @@ test('全仓 85 个 cy-page-title 页面：共享标题统一提供上 space-5 /
   // 2026-11-12 club-payout-binding +1:个人收款页,cy-nav-bar + 共享 cy-page-title 二级页 ⇒ 94。
   // 2026-11-13 pass-mini +1:通行证订单详情页(cy-nav-bar + cy-page-title)⇒ 95。
   // 2026-11-14 free-explore-1114 +1:商家套票预约页(同 verify-records 结构)⇒ 96。
-  assert.equal(files.length, 96, 'cy-page-title 页面清单漂移时必须重新做间距归类')
+  // 2026-11-19 PG-034/PG-040/PG-042 −4:coop/withdraw 两页、couponInfo、tixian 下线 ⇒ 92。
+  // 2026-11-19 PG-048 +1:本局计分 orient-score 改 cy-nav-bar + 共享 cy-page-title ⇒ 93。
+  assert.equal(files.length, 93, 'cy-page-title 页面清单漂移时必须重新做间距归类')
 // 2026-09-02:+2 俱乐部客户列表与客户详情，复用 shared page-title 间距，64→66。
 //   客户详情的头像绝对定位在标题行上，不进入标题流，不影响上 space-5 / 下 space-2。
   files.forEach((rel) => {

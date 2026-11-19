@@ -10,6 +10,8 @@ Component({
     checked: { type: Boolean, value: false },
     // 勾选行文案。必须写清「把哪些信息、提供给谁、用来干什么」,不能只写"我已阅读并同意"。
     text: { type: String, value: '' },
+    // OR-020:没勾就点支付时整行高亮提醒,不再在下面另起一行文字。
+    alert: { type: Boolean, value: false },
   },
   methods: {
     onTap() { this.triggerEvent('change', { checked: !this.data.checked }); },

@@ -908,7 +908,8 @@ Page({
   },
 
   goSettlement() {
-    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/settlement/index?clubId=' + (this._clubId || ''), complete: () => { this._navigating = false; } });
+    if (!this._clubId) return; // PG-022:缺 clubId 不拼空参跳结算页
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/settlement/index?clubId=' + this._clubId, complete: () => { this._navigating = false; } });
   },
 
   // roles 每次刷新都要重算候选 —— 服务端把某人的确认状态改回 PENDING 时,

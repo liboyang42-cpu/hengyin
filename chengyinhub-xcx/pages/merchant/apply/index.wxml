@@ -254,7 +254,6 @@
             aria-label="商家入驻申请已提交，{{submissionReceipt.name}}，正在等待审核">
         <view class="succ-icon" aria-hidden="true"><cy-icon name="check" size="64" /></view>
         <view class="succ-tit">你的申请已提交</view>
-      <view class="succ-desc">预计 1–3 个工作日完成审核</view>
       </view>
       <cy-card class="apply-card receipt-card">
         <view class="preview-kv"><text class="pk">店铺名称</text><text class="pv">{{submissionReceipt.name || '—'}}</text></view>

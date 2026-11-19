@@ -85,7 +85,8 @@ test('3 开局太远:数字单位不断行;定位已知且超 300 米时在出�
   const src = read('pages/play/index.js');
   assert.match(src, /_startRefusal\(message, retry\)/);
   assert.match(src, /confirmText: this\._playLocationDeclined \? '开启定位' : '重新定位'/);
-  assert.match(src, /const tooFar = this\._startTooFar\(node\);\n\s+if \(tooFar\) \{ this\._startRefusal\(tooFar, \(\) => this\.onArriveTap\(\)\); return; \}/);
+  // CG-ALL-11(#866):选了替代站 / 桌面完成开局时本地不判首站距离,交服务端按 startMode 判
+  assert.match(src, /const tooFar = this\._chosenStartMode\(\) \? '' : this\._startTooFar\(node\);[^\n]*\n\s+if \(tooFar\) \{ this\._startRefusal\(tooFar, \(\) => this\.onArriveTap\(\)\); return; \}/);
   assert.match(src, /const tooFar = this\._startTooFar\(node\);\n\s+if \(tooFar\) \{ this\._startRefusal\(tooFar, \(\) => this\.startStoryGame\(e\)\); return; \}/);
   assert.match(src, /locOnce\.isStartRefusal\(r\)\) that\._startRefusal/);
   assert.match(read('pages/play/utils/play-location-once.js'), /ARRIVE_TOO_FAR/);

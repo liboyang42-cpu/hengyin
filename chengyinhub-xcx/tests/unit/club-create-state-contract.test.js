@@ -212,7 +212,7 @@ test('创建 API 与字段合同不变，业务 body 不误报为设备断网', 
   assert.equal(request.url, '/api/club/create')
   assert.equal(request.method, 'POST')
   assert.deepEqual(Object.keys(JSON.parse(request.data)).sort(), [
-    'activityPrefs', 'address', 'city', 'clubType', 'cover', 'description',
+    'activityPrefs', 'city', 'clubType', 'cover', 'description',
     'keywords', 'logo', 'name', 'style',
   ].sort())
   request.fail({ msg: '网络服务暂不可用' })

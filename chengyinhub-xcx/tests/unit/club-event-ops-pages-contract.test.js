@@ -134,7 +134,6 @@ test('系列更新遇到 409 会重新读取列表与详情，绝不沿用旧 ve
       topics: [{ id: 31, name: '周末路线' }],
       topicIndex: 0,
       editingSeriesId: 61,
-      editingTopicId: 31,
       recurrenceType: 'CUSTOM_DATES',
       customDates: [futureDate],
       defaultLeadMemberId: 51,
@@ -143,6 +142,7 @@ test('系列更新遇到 409 会重新读取列表与详情，绝不沿用旧 ve
       offerMinutes: 30,
     }),
     setData(patch) { Object.assign(this.data, patch) },
+    _editingTopicId: 31,   // 编辑中的主题是实例状态(不走 setData,U4)
   })
 
   vm._expectedVersion = 3
@@ -173,11 +173,12 @@ test('编辑态缺少后端 expectedVersion 时 fail-closed，不得把 null 猜
   const vm = Object.assign({}, config, {
     data: Object.assign({}, config.data, {
       clubId: 21, canManage: true, topics: [{ id: 31 }], topicIndex: 0,
-      editingSeriesId: 61, editingTopicId: 31,
+      editingSeriesId: 61,
       recurrenceType: 'CUSTOM_DATES', customDates: ['2026-09-01'],
       defaultLeadMemberId: 51, waitlistEnabled: true, offerMinutes: 30,
     }),
     setData(patch) { Object.assign(this.data, patch) },
+    _editingTopicId: 31,   // 编辑中的主题是实例状态(不走 setData,U4)
   })
 
   vm.submitSeries()

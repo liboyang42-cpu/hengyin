@@ -21,21 +21,18 @@ test('aigc-label 判据与后端 AigcLabel 一致;备案号只取 features 字�
   assert.equal(label.filingNo(null), '');
 });
 
-test('AI 生成标识:剧情页、游玩开场、快速配置草稿都按服务端事实显示', () => {
+test('AI 生成标识:剧情页、游玩开场都按服务端事实显示', () => {
   assert.match(read('pages/club/topic-story/index.js'), /aiGenerated: aigcLabel\.isAiGenerated\(res\.data\.publishMode\)/);
   assert.match(read('pages/club/topic-story/index.wxml'), /wx:if="\{\{aiGenerated && loaded && !loadError\}\}"[^>]*><cy-tag[^>]*>AI 生成<\/cy-tag>/);
   assert.equal(json('pages/club/topic-story/index.json').usingComponents['cy-tag'], '/components/cy/tag/index');
   assert.match(read('pages/play/index.js'), /topicAiGenerated: d\.topicAiGenerated === true/);
   assert.match(read('pages/play/index.wxml'), /\{\{topicAiGenerated \? ' · AI 生成' : ''\}\}/);
-  const simple = read('pages/publish/simple/index.wxml');
-  assert.match(simple, /AI 生成 · \{\{aiPlanNodes\.length\}\} 站/);
-  assert.match(simple, /<view wx:if="\{\{aigcFilingNo\}\}" class="simple-ai__filing">\{\{aigcFilingNo\}\}<\/view>/);
+  // PG-021:快速配置(publish/simple)整页已删除,其 AI 草稿标识随页退场。
 });
 
-test('备案号:关于页与 AI 生成入口为空不渲染', () => {
+test('备案号:关于页为空不渲染', () => {
   assert.match(read('pages/shezhi/about/index.wxml'), /<view wx:if="\{\{aigcFilingNo\}\}" class="about-app__version about-app__filing">\{\{aigcFilingNo\}\}<\/view>/);
   assert.match(read('pages/shezhi/about/index.js'), /aigcFilingNo: aigcLabel\.filingNo\(app\)/);
-  assert.match(read('pages/publish/simple/index.js'), /aigcLabel\.filingNo\(app\)/);
 });
 
 test('设置页「AI 对话记录」:分包组件 + componentPlaceholder,复用 export / delete 接口', () => {

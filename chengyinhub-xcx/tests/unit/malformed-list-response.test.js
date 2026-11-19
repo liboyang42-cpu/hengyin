@@ -266,16 +266,13 @@ test('选章、玩家名单和本地草稿都不对非数组直接调用列表�
     'subpackageMember/components/cy/profile/index.js',
     'pages/topic/merchantinfo/merchantinfo.js',
     'pages/play/index.js',
-    'pages/publish/simple/index.js',
     'pages/publish/fabu/index.js',
   ].map(rel => fs.readFileSync(path.join(ROOT, rel), 'utf8'));
   assert.doesNotMatch(sources[0], /\(d\.chapterIds \|\| \[\]\)\.map/);
   assert.doesNotMatch(sources[1], /\(d\.chapterIds \|\| \[\]\)\.map/);
   assert.match(sources[2], /isRecordList\(d\.rows\)/);
-  // 2026-09-19 审查 #14:简易页的本地草稿恢复(draft.stations)随整条零绑定的发布链路删掉了,
-  // 那里现在只剩服务端 AI 响应这一个列表入口 —— 锚点跟着换成真还在的那道闸。
-  assert.match(sources[4], /Array\.isArray\(draft\.nodes\)/);
-  assert.match(sources[5], /Array\.isArray\(prepared\.nodes\)/);
+  // PG-021:简易发布页整页删除,其 AI 草稿列表闸随页退场。
+  assert.match(sources[4], /Array\.isArray\(prepared\.nodes\)/);
 });
 
 test('活动详情 200 数组载荷不得被展开成伪正常对象', () => {

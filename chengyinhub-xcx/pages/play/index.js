@@ -74,7 +74,7 @@ const {
 const { readReducedMotion, writeReducedMotion } = require('../../utils/motion-preference.js');
 const { chinaParts, formatDayDots, toTimestamp } = require('../../utils/datetime.js');
 const npcFigure = require('./utils/npc-figure.js');   // 低模人形:几何代码里生成,不依赖模型资产
-const { pickPlayKit, pickJourneyCheck, checkReceiptView, serverAction, serverPayload, dailySignRevealState, applyStoryVars } = require('./utils/playkit-view.js'); // v5.1 新玩法:会话视图→可渲染 kit
+const { pickPlayKit, pickJourneyCheck, checkReceiptView, serverAction, serverPayload, dailySignRevealState, applyStoryVars, photoSubmitAction } = require('./utils/playkit-view.js'); // v5.1 新玩法:会话视图→可渲染 kit
 const { canContinue, feedbackWritable, submitAlbum } = require('./utils/playkit-r5-segments.js');
 
 const THOUGHT_SYNC_WAIT_MS = 8000;   // 伏笔/步数同步最长等待,超时不拦玩家动作
@@ -442,7 +442,7 @@ const themeTrade = require('./utils/theme-trade.js');
 const themePlans = require('./utils/theme-plans.js');
 const playerOps = require('./utils/theme-player-ops.js');
 const { loadStoryFont } = require('./utils/story-font.js'); const { storyFontUrl: STORY_FONT_URL } = require('../../utils/config.js');
-const playOverlays = require('./utils/play-hud-overlays.js'); const playTopbar = require('./utils/play-topbar.js'); const locOnce = require('./utils/play-location-once.js'); const { connectionFailure } = require('./utils/play-net-fail.js'); const playLook = require('./utils/play-look.js'); /* 故事流顶栏:罗盘⇄地图、背包、案件册、各站奖励 */
+const playOverlays = require('./utils/play-hud-overlays.js'); const playTopbar = require('./utils/play-topbar.js'); const locOnce = require('./utils/play-location-once.js'); const { connectionFailure } = require('./utils/play-net-fail.js'); const playLook = require('./utils/play-look.js'); const stageEvents = require('./utils/stage-events.js'); const { perkOnlyOf } = require('./utils/perk-only.js'); const runStartMode = require('./utils/run-start-mode.js'); const evidenceKit = require('./utils/evidence-cards.js'); /* 故事流顶栏:罗盘⇄地图、背包、案件册、各站奖励 */
 const feStoryGate = require('./utils/fe-story-gate.js'); const feVisit = require('./utils/fe-story-visit.js'); // 自由探索:只读已到访地点的章节
 const chapterVideo = require('./chapter-video.js'); const packDetail = require('./utils/pack-detail.js'); const menuOpen = require('./utils/menu-open.js');
 Page({
@@ -482,6 +482,7 @@ Page({
   }),
   /** UG-08:跳过已由服务端结算(0 分 + 辅助完成)。不放庆祝、不走 onComplete,收起任务页后重读服务端进度。 */
   onHelpSkipped(nodeId) {
+    this._stageEvent('stage_skip', nodeId); this._stageEvent('assisted_complete', nodeId, { via: 'skip' });   // CG-01-P2-9
     if (String((this.data.game || {}).nodeId) !== String(nodeId)) return;
     this.setData({ screen: '', 'helpPanel.show': false });
     this.loadData();
@@ -491,11 +492,11 @@ Page({
   ...themeTrade.methods(req),
   ...themePlans.methods(req),
   ...playerOps.methods(req),
-  ...playOverlays.methods(req, uuid4), ...playTopbar.methods(req), ...playLook.methods(), ...locOnce.methods(), ...feStoryGate.methods(req),
+  ...playOverlays.methods(req, uuid4), ...playTopbar.methods(req), ...playLook.methods(), ...stageEvents.methods(), ...runStartMode.methods(), ...evidenceKit.methods(), ...locOnce.methods(), ...feStoryGate.methods(req),
   _routeState: normalizeRouteState(null),
 
   data: {
-    ...orientLifecycle.data, ...playTopbar.data, ...playHelpPanel.data, ...kitCard.data, ...locOnce.data, ...stagePops.data,
+    ...orientLifecycle.data, ...evidenceKit.data, ...stageEvents.data, ...runStartMode.data, ...playTopbar.data, ...playHelpPanel.data, ...kitCard.data, ...locOnce.data, ...stagePops.data,
     arrivalGuard: null,
     guardAppealView: null,
     communityPostWrite: false,
@@ -596,7 +597,7 @@ Page({
     // 爆炸的粒子/光条是数据驱动的(WXML 不能生成元素),开包那一刻才建,收场即清空。
     blastRays: [], blastShards: [], measuring: false,
     tileH: 0,                     // 瓦片行高:按剩余高度等分,4 家竖版大卡 / 6 家近方卡
-    nodes: [], total: 0, merchantCount: 0, merchantDoneCount: 0, doneCount: 0, allDone: false, topicCompleted: false,
+    nodes: [], total: 0, merchantCount: 0, merchantDoneCount: 0, perkOnlyTopic: false, doneCount: 0, allDone: false, topicCompleted: false,
     remainingGameCount: 0, canContinueGames: false,
     fmNodes: [], fmPolyline: [], fmTrail: [], fmTeamPins: [], teamRail: [], teamFollowKey: '', teamConsent: { show: false, share: true }, routeCard: { on: false, ready: false }, routeMap: { points: [], lines: [], subkey: '', layerStyle: 1, tone: '' }, fmPlayer: null, fmCenter: { lat: 31.2304, lng: 121.4737 },
     fmSubkey: MAP_DARK.subkey, fmLayerStyle: MAP_DARK.layerStyle, /* 2026-11-14 owner:左上雷达与另两张图一样跟主题外观 */ fmTone: '', fmStyleReady: !mapStyleConfigured(), // S9 暗色底图预留,见上方 MAP_DARK 注释
@@ -1753,6 +1754,7 @@ Page({
   openChapStory() {
     const v = this.data.hero.node || {};
     if (v.storyLocked === true) return;   // 未到访的章不打开(服务端也不下发正文)
+    if (this.data.perkOnlyTopic) return;  // FE-G9:整个主题都没有玩法(纯权益探店)时不开故事流
     const chapter = (this.data.chapterCards || []).find((c) => c.id != null && String(c.id) === String(v.chapterId));
     const thoughtKeys = [];
     for (const b of ((chapter && chapter.blocks) || [])) {
@@ -1915,7 +1917,7 @@ Page({
           const cy = it.top + it.height / 2 - box.top;
           const inView = that.data.reducedMotion || (it.bottom > box.top + 80 && it.top < box.bottom - 40);
           if (ln.in && !inView) return { ...ln, in: false, dir: cy < 0 ? 'down' : 'up', d: 0 };
-          if (!ln.in && inView) { const d = (order++) * 0.35; if (chapterFull && ln.fx === 'decode') that._decodeLine(i); return { ...ln, in: true, dir, d }; } /* 解码:滑进来时才开始还原 */
+          if (!ln.in && inView) { const d = (order++) * 0.35; if (chapterFull && ln.fx === 'decode') that._decodeLine(i); if (chapterFull && ln.typedKey) that._markTyped(ln.typedKey); return { ...ln, in: true, dir, d }; } /* 解码:滑进来时才开始还原 */
           return ln;
         });
         // 只发显形状态中真正改变的路径,不把文字、图片与玩法配置整表重传。
@@ -2566,6 +2568,8 @@ Page({
     return {
       nodeId: node.nodeId,
       chapterId: node.chapterId, isMerchant: Number(node.merchantId) > 0,
+      // FE-G1:没有玩法的店(heroEnter 直进权益页)主按钮写「我已到店 / 查看权益」,不写「到店打卡 / 继续互动」
+      perkOnly: Number(this.data.mode) === 2 && Number(node.merchantId) > 0 && !node.hasGame && !node.hasAdvanced,
       name: node.name, imgUrl: String(node.imgUrl || '').split(',')[0], imgHidden: !!node.imgHidden, done: !!node.done,
       entryDisabled: this._heroEntryDisabled(node),
       // ① 章节
@@ -4701,6 +4705,7 @@ Page({
     that._versionedRouteState = that._routeStateVersionKnown(d.routeState) ? routeState : null;
     that._routeNodeCatalog = catalog;
     that._applyLook(d.look); const chapter = that.buildChapter(d, nodes); /* 画面风格先落,章节配色 / 时间段才取得到 */
+    that._serverPerkOnly = d.perkOnly === true; that._noteRunStart(d);   // FE-G7(#866):perkOnly 只在为真时下发,没下发 = 不是;CG-ALL-11 altStations / runStartMode
     this._historyNodes = [];
     that._passExpiresAt = d.expiresAt || '';
     this.setData({
@@ -4743,7 +4748,7 @@ Page({
       num: n.sortId != null ? n.sortId : (i + 1),
       sortId: n.sortId != null ? n.sortId : (i + 1),
       name: n.name || ('第 ' + (i + 1) + ' 站'),
-      address: n.address || '',
+      address: n.addressHidden === true ? '' : (n.address || ''), addressHidden: n.addressHidden === true,   // CG-SH04-P1-3(#866):前置关解出前服务端不给地址
       // 第十一轮 i1(j3 F14):作者没写简介就不写,不替作者编一句「走到这里，留意四周」
       description: n.description || n.question || '',
       imgUrl: n.imgUrl || '',
@@ -5062,7 +5067,7 @@ Page({
       this._chapterTrailShownId = String(activeChapter.id);
     }
     const merchantCount = new Set(visibleNodes.filter((node) => Number(node.merchantId) > 0)
-      .map((node) => String(node.merchantId))).size; const merchantDoneCount = new Set(visibleNodes.filter((node) => Number(node.merchantId) > 0 && node.done).map((node) => String(node.merchantId))).size; // x-fix2 P-3:「我的权益」按商家数,与卡包头同口径
+      .map((node) => String(node.merchantId))).size; const perkOnlyTopic = perkOnlyOf(mode, visibleNodes, this._serverPerkOnly); const merchantDoneCount = new Set(visibleNodes.filter((node) => Number(node.merchantId) > 0 && node.done).map((node) => String(node.merchantId))).size; // x-fix2 P-3:「我的权益」按商家数,与卡包头同口径
     // 卡包只拆一次:本局拆过的,重进直接落定发好的牌,不再每次重放撕包(实走 B11)
     if (mode === 2 && !this.data.packOpen && !this.data.isPreview && storyResume.read(this._runSessionScope()).packOpened) {
       this.setData({ packOpen: true, headIn: true });
@@ -5073,7 +5078,7 @@ Page({
       'hero.node': heroNode ? Object.assign({}, seatTiles.find((tile) => String(tile.nodeId) === String(heroNode.nodeId)), this._heroView(heroNode)) : this.data.hero.node,
       remainingGameCount: nodes.filter((node) => node.hasTemplate && (mode === 2 && Number(node.merchantId) > 0
         ? node.hasGame && !node.gameDone : !node.done)).length, canContinueGames,
-      total: visibleNodes.length, merchantCount, merchantDoneCount, seatTiles, ringSegs, searchPlaces }, () => { wx.nextTick(() => packDetail.ensure(this)); /* 细节打磨 S4:卡包流光 / 悬浮 */
+      total: visibleNodes.length, merchantCount, merchantDoneCount, perkOnlyTopic, evidenceCount: evidenceKit.evidenceCards(nodes).length, seatTiles, ringSegs, searchPlaces }, () => { wx.nextTick(() => packDetail.ensure(this)); /* 细节打磨 S4:卡包流光 / 悬浮 */
       if (chapterChanged) this.openChapterFull(); this._refreshNavRim();
       wx.nextTick(() => this._measureDeal());   // 布局落定后才量得到瓦片/卡包的真实矩形
       // 探店日:核销完最后一家回到本页(onShow 重拉)时自动弹结算 —— 只认 allDone 上升沿,
@@ -5197,7 +5202,7 @@ Page({
     return {
       nodeId: x.nodeId, num: x.num, name: x.name, imgUrl: x.imgUrl,
       metaText: mode === 2 && reason ? reason
-        : (x.address ? (x.address + (this.data.gpsOk ? '' : ' · 到现场打卡')) : '点开看看这一站'),
+        : (x.address ? (x.address + (this.data.gpsOk ? '' : ' · 到现场打卡')) : (x.addressHidden ? '解开上一站后显示地址' : '点开看看这一站')),
       _pt: pt
     };
   },
@@ -5227,7 +5232,7 @@ Page({
       if (last && last.lat && last.lng) dm = this.haversine(last.lat, last.lng, node.lat, node.lng);
     }
     if (dm == null) return '';
-    return dm >= 1000 ? (dm / 1000).toFixed(1) + 'km' : Math.round(dm) + 'm';
+    return geo.distanceText(dm);
   },
   // 章节色:现有 buildJournal 里没有独立的按 chapterId 取色表(labelCol/bodyCol 走的是完成度沉降色阶),
   // 故卡堆左条统一按 chapterId 哈希一个稳定色;chapterId 缺失时同一套哈希兜底,保证同章节颜色一致。
@@ -6186,10 +6191,10 @@ Page({
     if (!node) return;
     if (this._arrivalWriteUnknown) { this._arrivalUnknownPrompt(); return; }
     // 开局闸(业主 2026-11-13):只看本局是否已开局,与首站是否用高级玩法无关——解开玩法不等于人在起点。
-    const needsLocation = this._startLocationNeeded();
+    const needsLocation = this._startLocationNeeded() && !this._deskStart();   // CG-ALL-11:选了桌面完成就不要定位
     if (!this.data.gpsOk && !this._isStoryGame(node) && needsLocation) { this._locateThen(() => this.onArriveTap()); return; }   // a1-v3-21 问过不再弹说明;授权后接着到达
     if (needsLocation && this.data.gpsOk && !this._isStoryGame(node) && locOnce.isStaleFix(this._loc, Date.now(), this._staleFixFailedAt)) { this._freshStartFix(() => this.onArriveTap()); return; }
-    const tooFar = this._startTooFar(node);
+    const tooFar = this._chosenStartMode() ? '' : this._startTooFar(node);   // 选了替代站 / 桌面完成:距离由服务端按替代站判
     if (tooFar) { this._startRefusal(tooFar, () => this.onArriveTap()); return; }
     this.arrive(node.nodeId, 'arrive');
   },
@@ -6309,7 +6314,7 @@ Page({
       if (!isCurrent()) return Promise.resolve({ obsolete: true });
       const located = arrivalReading.timestampOf(loc);   // §23.2:只带真实采样时刻,缺了就不带(旧指纹不变)
       const payload = this._routeWritePayload('arrive', nodeId, Object.assign({ nodeId, longitude: loc.longitude, latitude: loc.latitude,
-        accuracy: playAccuracy.accuracyOf(loc) }, located ? { locationTimestamp: located } : {}));
+        accuracy: playAccuracy.accuracyOf(loc) }, located ? { locationTimestamp: located } : {}, this._startModeParams()));   // CG-ALL-11 startMode / altStationId
       arrivalRequestId = payload.routeActionId;
       return req('/api/play/arrive', 'POST', payload);
     }, isCurrent)
@@ -6546,6 +6551,7 @@ Page({
     this.stopAudio();
     const node = this.data.sheet.node;
     if (!node) return;
+    if (typeof this._stageEvent === 'function') this._stageEvent('stage_enter', node.nodeId);   // CG-01-P2-9
     if (this._startGate(node, () => this.startGame())) return;   // 开局定位 / 300 米在打开首站玩法之前判,不让玩家答完才被拒
     if (Number(this.data.mode) === 2 && !this.data.isPreview && !this.data.isMock
         && node.merchantId && !node.arrived) {
@@ -7077,6 +7083,7 @@ Page({
           //   等于系统替玩家答错两次。业务拒绝只提示,不计数、不解锁。
           const answerWrong = !!(r.data && r.data.answerWrong);
           const wc = answerWrong ? that.data.wrongCount + 1 : that.data.wrongCount;
+          if (answerWrong) that._stageEvent('wrong_answer', g.nodeId);   // CG-01-P2-9
           that.setData({ gWrong: true, gNetErr: '', gNetRetryable: false, wrongCount: wc, 'game.feedback': r.msg || g.feedback, canReveal: wc >= 2 && (!!g.reveal || !!g.puzzleScoring) });
           if (that._hasGenericProofFlow()) return that._readGenericProof(g.nodeId);
         }
@@ -7173,6 +7180,7 @@ Page({
     if (this.data.hintUnlocking) return;
     const intent = this._beginLegacyHint();
     if (!intent) return;
+    this._stageEvent('hint_open', g.nodeId);   // CG-01-P2-9
     const payload = Object.assign({ nodeId: g.nodeId }, this._sessionParams());
     let confirmed = false;
     this.setData({ hintUnlocking: true }); // 弹窗期间即占位:连点不再叠出第二个弹窗
@@ -7240,6 +7248,7 @@ Page({
           this._resolveRouteAction('puzzleReveal', g.nodeId);
           this.clearGameNetworkError();
           const answer = (r.data && r.data.answerReveal) || '答案已揭示';
+          this._stageEvent('assisted_complete', g.nodeId, { via: 'reveal' });   // CG-01-P2-9
           this.setData({ revealed: true, canReveal: false, puzzleScoreCap: 0, 'game.reveal': answer });
           cyModal.show({
             title: '答案', content: answer, showCancel: false, confirmText: '继续',
@@ -7530,10 +7539,10 @@ Page({
   _startRefusal(message, retry) {
     const lowAccuracy = message === START_ACCURACY_LOW_TEXT;
     const text = lowAccuracy ? '' : keepMeasure(message || ('离起点太远，请到起点 ' + ARRIVAL_START_RADIUS_TEXT + '内再开始'));
-    const session = this._sessionKey();
-    cyModal.show({ title: lowAccuracy ? START_ACCURACY_LOW_TEXT : '还没到起点', content: text, confirmText: this._playLocationDeclined ? '开启定位' : '重新定位', cancelText: '知道了',
+    const session = this._sessionKey(), offer = this._startModesAvailable();   // CG-ALL-11:还没开局时可换替代站 / 桌面完成
+    cyModal.show({ title: lowAccuracy ? START_ACCURACY_LOW_TEXT : '还没到起点', content: text, confirmText: this._playLocationDeclined ? '开启定位' : '重新定位', cancelText: offer ? '换个方式' : '知道了',
       success: (result) => {
-        if (!result.confirm || !this._isPlayAccountCurrent() || session !== this._sessionKey()) return;
+        if (!this._isPlayAccountCurrent() || session !== this._sessionKey()) return; if (!result.confirm) { if (offer) this._offerStartModes(); return; }
         if (this._playLocationDeclined) { this._setPendingStart(retry); this.onEnableLocation(); return; }
         wx.getLocation({ type: 'gcj02', isHighAccuracy: true,
           success: (loc) => {
@@ -7747,7 +7756,14 @@ Page({
   openJournalFromTools() { this.setData({ sessionToolsOpen: false }, () => this.openJournal()); },
   /* 自由探索抽屉两行(原型 x-tools):我的权益 = 这趟已领到的券;
      这个主题是什么 = 主题正文那一屏(mode2 没有章节,openChapterFull 铺的就是主题介绍)。 */
-  openRightsFromTools() { this.setData({ sessionToolsOpen: false }, () => this.goCouponWallet()); },
+  openRightsFromTools() {
+    // FE-G3:自由探索的权益就在卡包格子里 —— 关抽屉回到格子层,不跳卡包页
+    if (Number(this.data.mode) === 2) {
+      this.setData({ sessionToolsOpen: false }, () => { this.closeChapStory(); if (this.data.hero && this.data.hero.show) this.closeHero(); });
+      return;
+    }
+    this.setData({ sessionToolsOpen: false }, () => this.goCouponWallet());
+  },
   openThemeFromTools() { this.setData({ sessionToolsOpen: false }, () => this.openChapterFull()); },
 
   /* 自由探索的地图模式(原型 x-run):把卡包让开,露出本页本来就有的地图台、读数卡与底栏 ——
@@ -8036,6 +8052,7 @@ Page({
       return;
     }
     switch (evt.action) {
+      case 'reference': this._stageEvent('material_view', (this._kit() || {}).nodeId); return;   // CG-10-D-3:看资料图(#866 material_view)
       case 'retry': {
         const game = this.selectComponent('#advancedGame');
         const state = game && game.data && game.data.state;
@@ -8133,9 +8150,9 @@ Page({
     if (action === 'shoot') {
       if (kit.type === 'qa') this._submitKitPhoto(detail, {});
       else if (kit.type === 'photocheck') {
-        // 判定全在服务端(契约 §2.2):只报图片地址。客户端本地算分那套已删,别把 score 塞回来
+        // 判定全在服务端(契约 §2.2):只报图片地址;只记录站(#866 photoCheck.mode=RECORD)走 SUBMIT_PHOTO_RECORD
         this._submitKitPhoto(detail, {
-          name: 'SUBMIT_PHOTO_CHECK',
+          name: photoSubmitAction(kit),
           payload: (url) => ({ imageUrl: url }),
           onUploaded: (url) => { this._kitPhotoUrl = url; },
         });
@@ -8254,8 +8271,8 @@ Page({
     const current = () => this._isPlayAccountCurrent() && this._advancedGameComponent() === game
       && this._sessionKey() === sessionKey && this._runSessionScope().routeSessionId === scope.routeSessionId
       && this._kit() === kit && game.data.state === state && !game.data.acting && !game.data.unknown;
-    this._ensurePhotoConsent(current).then(() => {
-      if (current()) this._trackPhotoJudging(game.action('SUBMIT_PHOTO_CHECK', { imageUrl: url }));
+    (kit.recordOnly ? Promise.resolve() : this._ensurePhotoConsent(current)).then(() => {   // 只记录站不调模型,不要单独同意(#866)
+      if (current()) this._trackPhotoJudging(game.action(photoSubmitAction(kit), { imageUrl: url }));
     }).catch(error => { if (current()) { cyToast(error.message); this._notifyPhotoFail('submit'); } });
   },
 
@@ -8292,7 +8309,7 @@ Page({
       if (game && !game.data.unknown) this.setData({ 'playKit.kit.failureSeq': (kit.failureSeq || 0) + 1 });
     }
     if (!this._isPlayAccountCurrent() || !this.data.advancedPlay || !this.data.advancedPlay.show) return;
-    if (action !== 'START_CHALLENGE' && action !== 'SUBMIT_PHOTO_CHECK') return;
+    if (action !== 'START_CHALLENGE' && action !== 'SUBMIT_PHOTO_CHECK' && action !== 'SUBMIT_PHOTO_RECORD') return;
     const currentGame = this._advancedGameComponent();
     const state = currentGame && currentGame.data && currentGame.data.state;
     // Existing producer emits sessionId for both action failure and unknown-result readback failure.
@@ -8308,7 +8325,7 @@ Page({
       this._typeInFailSeq = (this._typeInFailSeq || 0) + 1;
       this.setData({ 'playKit.kit.startFailureSeq': this._typeInFailSeq });
     }
-    if (action === 'SUBMIT_PHOTO_CHECK') {
+    if (action === 'SUBMIT_PHOTO_RECORD') this._notifyPhotoFail(this._kitPhotoUrl ? 'submit' : 'upload'); else if (action === 'SUBMIT_PHOTO_CHECK') {
       this._notifyPhotoFail(this._kitPhotoUrl ? 'submit' : 'upload');
       if (detail.reason === 'PHOTO_MODEL_CONSENT_REQUIRED') {
         this._photoConsentScope = '';
@@ -8421,7 +8438,7 @@ Page({
         const payload = option.payload ? option.payload(url) : { imageUrl: url };
         if (option.onUploaded) option.onUploaded(url);
         const pending = currentGame.action(actionName, payload);
-        if (actionName === 'SUBMIT_PHOTO_CHECK') this._trackPhotoJudging(pending);
+        if (actionName === 'SUBMIT_PHOTO_CHECK' || actionName === 'SUBMIT_PHOTO_RECORD') this._trackPhotoJudging(pending);
       },
     }));
     if (option.name === 'SUBMIT_PHOTO_CHECK') {

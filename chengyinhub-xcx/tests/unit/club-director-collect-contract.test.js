@@ -82,10 +82,10 @@ test('game-director 整页已删,且全仓不再有残留引用', () => {
   assert.equal(routes.some((r) => r.includes('game-director')), false, '路由还注册着')
 })
 
-test('宿主页(活动详情)恒暗,并且真的挂着导演台八件套', () => {
+test('宿主页(活动详情)主办方视角浅色(MC-038),并且真的挂着导演台八件套', () => {
   const wxml = read('pages/club/topic-detail/index.wxml')
-  assert.match(wxml, /class="[^"]*\btheme-dark\b[^"]*"/, '根节点必须挂 theme-dark')
-  assert.doesNotMatch(wxml, /theme-merchant/, '俱乐部端恒暗，不许挂商家浅色')
+  assert.match(wxml, /class="[^"]*\btheme-merchant\b[^"]*"/, '根节点必须挂 theme-merchant')
+  assert.doesNotMatch(wxml, /theme-dark/, '主办方视角页不再挂深色')
   for (const n of ['ready', 'end-confirm', 'chapter-sheet', 'team-sheet',
                    'role-sheet', 'broadcast-sheet', 'incident-sheet', 'recap']) {
     assert.ok(wxml.includes(`<cy-club-director-${n}`),
@@ -93,10 +93,10 @@ test('宿主页(活动详情)恒暗,并且真的挂着导演台八件套', () =>
   }
 })
 
-test('负控:宿主页混入 theme-merchant 时断言必须真的红', () => {
+test('负控:宿主页混入 theme-dark 时断言必须真的红', () => {
   const original = read('pages/club/topic-detail/index.wxml')
-  const mutated = original.replace('theme-dark', 'theme-dark theme-merchant')
+  const mutated = original.replace('theme-merchant', 'theme-merchant theme-dark')
   assert.notEqual(mutated, original, '变异没生效:根节点写法已漂移，这个负控在空转')
-  assert.match(mutated, /theme-merchant/)
-  assert.doesNotMatch(original, /theme-merchant/)
+  assert.match(mutated, /theme-dark/)
+  assert.doesNotMatch(original, /theme-dark/)
 })

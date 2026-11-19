@@ -144,6 +144,11 @@ Page({
         this.load();
       } });
   },
+  // PG-086:请求号不直接上屏,只给复制(客服核对用)
+  copyCommandRequestId() {
+    const id = this.data.commandRecovery && this.data.commandRecovery.requestId;
+    if (id) wx.setClipboardData({ data: String(id) });
+  },
   queryCommand() { if (this._recovery) this._recovery.query(); },
   retryCommand() { if (this._recovery) this._recovery.retry(); },
   cancelCommand() { if (this._recovery) this._recovery.cancel(); },

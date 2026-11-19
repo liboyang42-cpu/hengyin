@@ -11,7 +11,7 @@ function decodeQueryValue(value, fallback) {
 function resolveBadgeAsset(value) {
   const decoded = decodeQueryValue(value, '');
   if (/^https?:\/\//.test(decoded) || /^\/(images|subpackageP3)\//.test(decoded)) return decoded;
-  return DEFAULT_BADGE_ASSET;
+  return ''; // PG-035:缺/非法 img 不再回落示例图,由页面落缺参态
 }
 
 Page({
@@ -19,8 +19,9 @@ Page({
     actionTop: 54,
     name: '徽章',
     sub: '',
-    src: DEFAULT_BADGE_ASSET,
-    fallbackSrc: DEFAULT_BADGE_ASSET,
+    src: '',
+    fallbackSrc: '',
+    missing: false,
     unsupported: false,
     renderState: 'loading',
     reducedMotion: readReducedMotion(),
@@ -62,6 +63,10 @@ Page({
       if (r && r.top) actionTop = r.top;
     } catch (e) {}
     const src = resolveBadgeAsset(q && q.img);
+    if ((q && q.style) !== 'pin' && !src) {
+      this.setData({ actionTop, missing: true, renderState: 'fallback', rendererMounted: false });
+      return;
+    }
     this._xrOk = false;
     this._xrLoaded = false;
     this.setData({

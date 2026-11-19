@@ -185,6 +185,16 @@ function bindPlayerRoamMemory(holder, app, storage) {
   return holder._roamMemory
 }
 
+// OR-038:退出账号只删账号私有键;设备级偏好(隐私同意、动效、地图样式、迷雾、定位提示的选择)属于这台手机,保留。
+const DEVICE_LEVEL_KEYS = new Set([
+  'cy_usage_choice_v1',          // 隐私政策/用户协议的本机同意(服务端回读仍是真源)
+  'play_reduced_motion',
+  'roam_reduced_motion',
+  'roam_fog_off',
+  'cy_map_kind',
+  'home_city_location_declined', // 首页城市定位用途说明已拒绝:设备级选择,不随账号重弹
+])
+
 function clearStorageForLogout(storage) {
   const target = storage || {}
   if (typeof target.getStorageInfoSync !== 'function'
@@ -238,7 +248,8 @@ function clearStorageForLogout(storage) {
       && storageKey.match(/^cy_roam_poi_checkin_pending:v1:([1-9]\d{0,18}):([1-9]\d{0,18})$/)
     const shareRevokePending = typeof storageKey === 'string'
       && storageKey.match(/^roam_share_revoke_pending:([1-9]\d{0,18})$/)
-    if (/^verification_unknown_v1:[a-f0-9]{64}$/.test(storageKey) ||
+    if (DEVICE_LEVEL_KEYS.has(storageKey) ||
+      /^verification_unknown_v1:[a-f0-9]{64}$/.test(storageKey) ||
       commandKeys.has(storageKey) ||
       (shareRevokePending && exactSessionId(shareRevokePending[1])) ||
       (poiPending && exactSessionId(poiPending[1]) && exactSessionId(poiPending[2])) ||
@@ -256,6 +267,7 @@ function clearStorageForLogout(storage) {
 module.exports = {
   bindPlayerRoamMemory,
   clearStorageForLogout,
+  DEVICE_LEVEL_KEYS,
   createPlayerRoamMemory,
   currentPlayerRoamMemory,
 }

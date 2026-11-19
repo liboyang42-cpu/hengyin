@@ -74,7 +74,7 @@ test('P-3/P-4 游玩工具菜单:我的权益按商家计数;各站奖励有图�
   assert.match(wxml, /aria-label="各站奖励"[^>]*><view class="dic pic pic--gift"><\/view><view class="dcopy"><text class="dt">各站奖励<\/text><\/view><view class="darr"><\/view><\/view>/)
   const js = read('pages/play/index.js')
   assert.match(js, /const merchantDoneCount = new Set\(visibleNodes\.filter\(\(node\) => Number\(node\.merchantId\) > 0 && node\.done\)/)
-  assert.match(js, /merchantCount, merchantDoneCount, seatTiles/)
+  assert.match(js, /merchantCount, merchantDoneCount, perkOnlyTopic, evidenceCount: [^,]+, seatTiles/)
 })
 
 test('P-5/P-7 站点卡:营业态缺失时不留孤零零的圆点;有角标时章节名下移', () => {
@@ -175,7 +175,7 @@ test('P-12 主题详情数据条:开放时间只在连字符后折行,不再 bre
   const open = buildTopicStatBar({ showStartDate: '10.11', showEndDate: '10.13' }).find((c) => c.key === 'open')
   assert.equal(open.value, '10.11-​10.13')
   const css = read('pages/topic/index/index.wxss')
-  assert.match(css, /\.topic \.statbar__value \{ max-width: 100%; white-space: normal; word-break: keep-all; overflow-wrap: anywhere;/)
+  assert.match(css, /\.topic \.statbar__value \{ max-width: 100%; white-space: normal; word-break: keep-all; overflow-wrap: break-word;/)
   assert.doesNotMatch(css, /\.topic \.statbar__value \{[^}]*break-all/)
 })
 

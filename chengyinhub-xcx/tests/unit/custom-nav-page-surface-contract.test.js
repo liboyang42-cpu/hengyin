@@ -139,7 +139,6 @@ const TITLELESS_SOLID_NAV = new Set([
   'pages/merchant/coop-center/index',       // Figma 234:276 返回箭头右侧左对齐 .cc-nav-title「合作中心」,顶栏只留返回(2026-09-15 总控裁决听稿)
   'pages/merchant/customer/detail/index',   // Figma 71:279 标题就是客户名(.cd-name 28px),与头像同排;顶栏只留返回
   'pages/club/detail/index',                // 页内 .profile-name 大标题承接俱乐部名
-  'pages/publish/simple/index',             // 页内自带「简单 AI · 路线共创」品牌头,不叠 page-title
   'pages/topic/index/index',                // hero 封面区自带主题名,无独立标题位
   'subpackageMember/coupon-qr/index',           // 标题语义在 cy-qr-voucher 卡内,叠 page-title 会与码卡打架
   'subpackageRoam/citynode-code/index',         // 同上,标题语义在 cy-qr-voucher 卡内

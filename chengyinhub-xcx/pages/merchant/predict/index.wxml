@@ -14,7 +14,7 @@
             retry="重新加载" bind:retry="retry" />
   <cy-empty wx:elif="{{pageState === 'no-permission'}}" fill size="lg" kind="no-permission"
             title="当前身份不能公布预测答案"
-            sub="{{errorMessage || '请联系店主开通'}}"
+            sub="{{errorMessage}}"
             cta="返回工作台" bind:cta="onNavBack" />
   <cy-empty wx:elif="{{pageState === 'empty'}}" fill size="lg" kind="empty"
             title="没有等你给答案的预测"

@@ -20,7 +20,6 @@ const MIGRATED = {
   'pages/addressinfo/addressinfo': '参与人信息',
   'pages/address/address': '参与人信息',
   'subpackageMember/order/order': '我的订单',
-  'subpackageMember/tixian/tixian': '提现申请',
   'subpackageMember/mycanyuinfo/mycanyuinfo': '参与详情',
   'pages/coop/list/index': '协作邀请',
 }

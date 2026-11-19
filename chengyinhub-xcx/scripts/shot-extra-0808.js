@@ -297,8 +297,6 @@ const RAW = [
   ['P39', 'P39-imchat-routepicker.png', '/subpackageB/pages/im/chat/index?id=1', 'player', 'sheet', { routePickerOpen: true, routeList: TOPICS }, [0], { selector: 'view', min: 3 }, '私信「选路线」半屏'],
   ['P40', 'P40-complaint-topic-picker.png', '/subpackageMember/complaint/index', 'player', 'sheet', { pickerSheet: 'topic' }, [0], { selector: 'view', min: 3 }, '投诉「选主题」半屏'],
   ['P41', 'P41-complaint-type-picker.png', '/subpackageMember/complaint/index', 'player', 'sheet', { pickerSheet: 'type' }, [0], { selector: 'view', min: 3 }, '投诉「选类型」半屏'],
-  ['P42', 'P42-couponinfo-type-sheet.png', '/subpackageMember/couponInfo/couponInfo?id=1', 'merchant', 'sheet', { couponTypeSheetVisible: true }, [0], { selector: 'view', min: 3 }, '优惠券「类型」半屏'],
-  ['P43', 'P43-tixian-history-sheet.png', '/subpackageMember/tixian/tixian', 'player', 'sheet', { withdrawHistorySheet: true }, [0], { selector: 'view', min: 3 }, '提现「记录」半屏'],
   ['P44', 'P44-roam-session-share.png', '/subpackageRoam/session/index', 'player', 'sheet', { share: { show: true, title: '分享本次漫游' } }, [0], { selector: 'view', min: 3 }, '漫游会话「分享」半屏'],
 
   // ---------- S 壳页+场景组件：矩阵把 fixture 注到壳页上（页面 data 里根本没有这些字段），

@@ -28,4 +28,10 @@ function yuan(value, options) {
   return (options && options.signed ? '+' : '') + '¥' + text
 }
 
-module.exports = { MINUS, amount, fixed2, yuan }
+// OR-046 定稿(2026-11-17):主题购买(票种半屏 + 自玩结算)价格不补零 —— ¥29.9 / ¥30。只此一处例外。
+function yuanTrim(value) {
+  const text = yuan(value)
+  return text ? text.replace(/\.(\d*?)0+$/, (m, d) => (d ? '.' + d : '')) : text
+}
+
+module.exports = { MINUS, amount, fixed2, yuan, yuanTrim }

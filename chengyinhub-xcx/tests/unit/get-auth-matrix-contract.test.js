@@ -47,6 +47,8 @@ const MATRIX = [
   // 2026-11-13 pass-mini:回到订单继续支付先读本人订单;订单详情页读本人订单(同 ApiPlatformPassController.order,按订单号 + 本人归属);我的订单读 /api/platform-pass/orders 走 passes 页既有 get 封装。
   ['subpackageMember/utils/platform-pass-pay.js', "url: '/api/platform-pass/orders/' + encodeURIComponent(orderNo), method: 'GET'", 'required', 'member', 'self-account'],
   ['subpackageMember/market/pass-order/index.js', "url: '/api/platform-pass/orders/' + encodeURIComponent(this._orderNo), method: 'GET'", 'required', 'member', 'self-account'],
+  // 2026-11-19 OR-024:退款页须知读通行证概览 terms(公开概览,同 passes 页入口卡)。
+  ['subpackageMember/market/pass-order/index.js', "url: '/api/platform-pass', method: 'GET'", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
   // 2026-11-10 qx-b5(qx-c3 补登,按服务端实际守卫;以下路径均不在 SecurityConfig 放行清单,落 anyRequest().authenticated()):
   //   报名页促销目录 ApiMarketingPromotionController /catalog:requireAppMemberId,按场次回目录并带本人可用性。
   ['pages/activity/baoming/baoming.js', "url: '/api/marketing/promotions/catalog'", 'required', 'member', 'public-detail+viewer-personalization'],
@@ -72,6 +74,7 @@ const MATRIX = [
   ['subpackageRoam/my-teams/index.js', "url: '/api/orient/team/lobby'", 'required', 'member', 'global-authenticated-read'],
   // 契约 §1.3 / §4:主题详情开局前准备读 /api/play/setup(requireLogin,只读已发布主题);活动详情联系主办读 /api/play/contact(requireLogin,只回俱乐部名称与电话)。
   ['pages/topic/index/index.js', "url: '/api/play/setup'", 'required', 'member', 'public-detail+viewer-personalization'],
+  ['pages/topic/index/index.js', "url: '/api/free-explore/bundle/catalog'", 'required', 'member', 'public-detail+viewer-personalization'],
   ['pages/activity/components/event-attendance/index.js', "url:'/api/play/contact'", 'required', 'member', 'public-detail+viewer-personalization'],
   ['subpackageMember/orient-score/index.js', "url: '/api/play/orient/session/current'", 'required', 'member', 'self-account'],
   ['subpackageMember/orient-score/index.js', "url: BASE + '/session/'", 'required', 'member', 'self-account'],
@@ -289,8 +292,6 @@ const MATRIX = [
   // 2026-10-22 W10b #27:NPC 对话原请求只读回读,ApiAiNpcController.chatRequest 只按登录态 + 原会话 + requestId 读本人记录。
   ['subpackageMember/components/cy/npc-chat/index.js', "url: '/api/ai/npc/chat/request'", 'required', 'member', 'self-account'],
   // W10b #22:简易 AI 起草按 requestId 只读回读,ApiAiController.themeDraftRequest 键按登录会员隔离。
-  ['pages/publish/simple/index.js', "url: '/api/ai/theme/draft/request'", 'required', 'author', 'self-account'],
-  ['pages/publish/simple/index.js', "url: '/api/ai/theme/draft/recovery'", 'required', 'author', 'self-account'],
   // W10b #25:本人资料审核回执(只取登录态)与门店 AI 形象审核回执(商家 PROFILE_WRITE,按登录商家派生)。
   ['pages/gerenziliao/gerenziliao.js', "url: '/api/user/profile/review'", 'required', 'member', 'self-account'],
   ['pages/merchant/decor/ai-npc/index.js', "url: '/api/merchant/npc/review'", 'required', 'merchant', 'self-merchant'],
@@ -525,6 +526,11 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-11-18 FE-STORY 7.10:fabu 节点抽屉读本主题地点到访方式一处(作者本人,已入 MATRIX),136 → 137。
   // 2026-11-18 F11:自由探索参考结算组件一处、权益卡表单线下结算说明一处(均已入 MATRIX),137 → 139。
   // 2026-11-18 F10:作者编辑器读位置承接进度 /api/topic/fe/sale-readiness,139 → 140。
+  // 2026-11-19 FE-G4:主题详情自由探索参与商家卡读套票目录逐店权益一处(同 free-explore 页 catalog,已入 MATRIX),140 → 141。
+  // 2026-11-19 OR-024:通行证退款页读概览 terms 一处(已入 MATRIX),140 → 141。
+  // 2026-11-19 合流:FE-G4 +1 与 OR-024 +1 叠加,140 → 142。
+  // 2026-11-19 PG-021:简易发布页删除,其 AI 草稿 request / recovery 两处直接 GET 随页删除,140 → 138。
+  // 2026-11-19 三线合流:142 − 2 = 140。
   assert.equal(directCount, 140, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。

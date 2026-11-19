@@ -1,5 +1,5 @@
 <wxs src="../../../utils/wxs/display-label.wxs" module="dl" />
-<view class="theme-dark">
+<view class="theme-merchant">
   <cy-toast id="cy-toast" />
   <cy-access-gate kind="login" />
   <cy-loading-mask id="cy-loading" />
@@ -185,7 +185,7 @@
 
       <block wx:else>
         <text class="field-label">主题<text class="field-required" aria-hidden="true">*</text></text>
-        <view wx:if="{{editingSeriesId}}" class="field-picker field-picker--locked">主题 #{{editingTopicId}}<text>已锁定</text></view>
+        <view wx:if="{{editingSeriesId}}" class="field-picker field-picker--locked">{{editingTopicName}}<text>已锁定</text></view>
         <!-- CU-C-34(用户裁决 B):同名主题(实测两条「E2E 探店日一期」)光看名字分不出选的是哪一条 ——
              候选项与收起态都显示「名称 · 起止日期 · 自有/合作」。 -->
         <cy-dropdown wx:else range="{{topics}}" range-key="dropdownLabel" value="{{topicIndex}}" bind:change="onTopicChange">

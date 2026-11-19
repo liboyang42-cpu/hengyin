@@ -1160,7 +1160,7 @@ page { background: var(--cy-btn-solid-bg); }
   width: var(--cy-legacy-72);
   height: var(--cy-space-1);
   border-radius: var(--cy-radius-pill);
-  background: #3a3a3c;
+  background: var(--cy-color-bg-surface-strong);
   margin: 16rpx auto 8rpx;
 }
 

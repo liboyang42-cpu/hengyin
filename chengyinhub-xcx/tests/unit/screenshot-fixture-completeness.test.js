@@ -163,8 +163,8 @@ const CONTRACTS = {
   },
   B10: {
     sources: ['subpackageRoam/citynode-code/index.js', 'subpackageRoam/citynode-code/index.wxml'],
-    paths: ['state', 'errMsg'],
-    equals: { state: 'missing', errMsg: '' },
+    paths: ['state', 'poiId'],
+    equals: { state: 'missing', poiId: '' },
   },
   B18: {
     sources: ['subpackageMember/components/cy/scene-play-activity-detail/index.js', 'subpackageMember/components/cy/scene-play-activity-detail/index.wxml'],

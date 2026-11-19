@@ -63,7 +63,7 @@ Page({
     referenceDeltaText: '',
     saving: false,
     submitError: '',
-    isFreeExplore: false, isFree: false, confirmBlockReason: '', feeText: '', takeHomeText: '', sliderMin: 0, saleStatusText: '', pendingRows: [],
+    isFreeExplore: false, floorPositive: false, isFree: false, confirmBlockReason: '', feeText: '', takeHomeText: '', sliderMin: 0, saleStatusText: '', pendingRows: [],
     canConfirmPrice: false,
     themeClass: 'theme-merchant', phaseBlocked: false, priced: false, // P-34:priced = 已过定价阶段(终价已确认/开售后),与「还没到定价阶段」分开说
     // CU-C-70:成团人数为空/0 时的输入提示(与按钮禁用态同一把尺子)。
@@ -81,6 +81,8 @@ Page({
     }
     this._scope = options.scope === 'MERCHANT' ? 'MERCHANT' : '';
     this.setData({ topicId: topicId, themeClass: options.club === '1' ? 'theme-dark' : 'theme-merchant' }); // 第十二轮 k4(j2 N-15):俱乐部主理人进来用深色
+    // PG-028:深色进来时状态栏前景同步切白(index.json 默认 black 只配浅色商家态)
+    if (options.club === '1' && wx.setNavigationBarColor) wx.setNavigationBarColor({ frontColor: '#ffffff', backgroundColor: '#000000', fail() {} }); /* ds-ok 微信 API 只收这两个字面色(PG-028 深色定价页状态栏前景同步) */
     this.preview();
   },
 
@@ -176,6 +178,8 @@ Page({
           subType: subType,
           confirmBlockReason: res.data.confirmBlockReason || '主题还没进入定价阶段',
           sliderMin: min,
+          // MC-037:自由探索有下限(floor>0)时滑杆下照样摆地板行,让人知道为什么拖不到更低。
+          floorPositive: floor > 0,
           lineup: lineup,
           floorText: money(res.data.priceMin),
           finalPrice: start,
@@ -268,7 +272,7 @@ Page({
     const row = this.data.tickets[idx];
     if (!row) return;
     const tickets = this.data.tickets.slice();
-    tickets[idx] = Object.assign({}, row, { price: e.detail.value, error: ticketPriceError(e.detail.value, this._floor) });
+    tickets[idx] = Object.assign({}, row, { price: e.detail.value, error: ticketPriceError(e.detail.value, this._floor) }, ticketFee(e.detail.value, this._platformRate));
     this.setData({ tickets, submitError: '', canConfirmPrice: this._canConfirmPrice({ tickets }) });
   },
 
@@ -363,16 +367,16 @@ Page({
   },
 
   // 平台服务费与预计到手（按平台费率，平台费四舍五入到分，到手 = 价 - 费）
+  // FE-G24:多票种时逐张算服务费与到手(写在每张票下面),底部单价那行不出
   updateFee(value) {
     const rate = this._platformRate;
-    const price = Number(value);
-    if (rate == null || !Number.isFinite(price) || price <= 0 || (this.data.tickets && this.data.tickets.length > 1)) {
-      this.setData({ feeText: '', takeHomeText: '' });
+    const tickets = this.data.tickets || [];
+    if (tickets.length > 1) {
+      this.setData({ feeText: '', takeHomeText: '', tickets: tickets.map(function (r) { return Object.assign({}, r, ticketFee(r.price, rate)); }) });
       return;
     }
-    const fee = Math.round(price * rate * 100) / 100;
-    const pct = Math.round(rate * 10000) / 100;
-    this.setData({ feeText: '¥' + money(fee) + '（' + pct + '%）', takeHomeText: '¥' + money(price - fee) });
+    const fee = ticketFee(value, rate);
+    this.setData({ feeText: fee.feeText, takeHomeText: fee.takeHomeText });
   },
 
   // 灰按钮被点时给一句为什么(cy-btn 在禁用态吞 tap、补发 disabledtap)。
@@ -475,6 +479,15 @@ function ticketPriceError(value, floor) {
 }
 
 // 可提交的价格判据:逐张时每张都不低于地板;单价时终价不低于地板(原判据)。
+// 平台服务费与预计到手:平台费四舍五入到分,到手 = 价 - 费;没有费率或价不合法时两项都空
+function ticketFee(value, rate) {
+  const price = Number(value);
+  if (rate == null || !Number.isFinite(price) || price <= 0) return { feeText: '', takeHomeText: '' };
+  const fee = Math.round(price * rate * 100) / 100;
+  const pct = Math.round(rate * 10000) / 100;
+  return { feeText: '¥' + money(fee) + '（' + pct + '%）', takeHomeText: '¥' + money(price - fee) };
+}
+
 function pricesOk(tickets, finalPrice, floor) {
   if (Array.isArray(tickets) && tickets.length > 1) {
     return tickets.every(function (r) { return !ticketPriceError(r.price, floor); });

@@ -13,6 +13,6 @@
     "cy-page-title": "/components/cy/page-title/index",
     "cy-toast": "/components/cy/toast/index",
     "cy-privacy-gate": "/components/cy/privacy-gate/index",
-    "cy-access-gate": "/components/cy/access-gate/index"
+    "cy-empty": "/components/cy/empty/index"
   }
 }

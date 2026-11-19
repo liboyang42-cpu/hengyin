@@ -13,7 +13,7 @@
   <!-- R3-C04:副标题原文 25 字,而这一行只放得下 24 字(内宽 750−2×32 = 686rpx ÷ 28rpx),
        刚好吃满/溢出 ⇒ 视觉上顶到右边缘。收敛到 19 字;更完整的那句本来就在下面空态副文案里,
        两处原先是重复的,所以缩短不丢信息。 -->
-  <cy-page-title title="投诉与建议" subtitle="仅限已报名并支付的活动，平台会介入处理" />
+  <cy-page-title title="投诉与建议" />
 
   <view class="cp-content">
     <cy-empty wx:if="{{readAccess === 'login'}}" fill class="cy-fill-state" size="lg" kind="no-permission"

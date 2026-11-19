@@ -21,7 +21,6 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '../..');
-const PAGE_SRC = fs.readFileSync(path.resolve(ROOT, 'pages/publish/simple/index.js'), 'utf8');
 const FABU_SRC = fs.readFileSync(path.resolve(ROOT, 'pages/publish/fabu/index.js'), 'utf8');
 const JAVA = path.resolve(ROOT, '../chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java');
 
@@ -33,11 +32,8 @@ test('口径:fabu 预检规则形状没漂(手上有俱乐部且未选归属才�
   assert.doesNotMatch(FABU_SRC, /城市定向团仅主理人可发起,要先成为主理人吗/, '旧弹窗文案回来了，非主理人仍会被拦');
 });
 
-test('口径:简易页不再自带发布链路(孤儿闸不许半截复活)', () => {
-  assert.doesNotMatch(PAGE_SRC, /onPublish\(\)\s*\{/,
-    '简易页发布链路的孤儿方法又回来了 —— 页面无绑定，回来就是第二道没人看得见的闸');
-  assert.doesNotMatch(PAGE_SRC, /this\.data\.mode === 1 && this\.data\.myClubs\.length > 0 && !this\.data\.clubId/,
-    '简易页里重新长出发布预检 —— 先回答「它到底能不能发布」再谈钉这条');
+test('口径:简易页已整页删除(PG-021),发布口只剩 fabu', () => {
+  assert.equal(fs.existsSync(path.resolve(ROOT, 'pages/publish/simple/index.js')), false, '简易页不许复活成第二道发布闸');
 });
 
 test('后端合同:D3 现码仍是「non-leader 无 clubId 放行 / leader 无 clubId 拒绝」', () => {

@@ -23,17 +23,8 @@ function assertTixianFormRetired(js, wxml) {
   assert.match(wxml, /bindtap="saveData"/, '页面唯一的提现动作是联系客服(弹客服微信)')
 }
 
-test('独立提现页:银行卡表单已退役,只剩客服入口', () => {
-  assertTixianFormRetired(read('subpackageMember/tixian/tixian.js'), read('subpackageMember/tixian/tixian.wxml'))
-})
+// PG-042:独立提现页 subpackageMember/tixian 下线,表单退役用例随页移除。
 
-test('负控:银行卡表单加回独立提现页时必须判红', () => {
-  const wxml = read('subpackageMember/tixian/tixian.wxml')
-  const js = read('subpackageMember/tixian/tixian.js')
-  const brokenWxml = wxml.replace('bindtap="saveData"', 'bindtap="saveData" disabled="{{!canSubmit}}"')
-  assert.notEqual(brokenWxml, wxml, '负控锚点失效:独立提现页没有 saveData 接线')
-  assert.throws(() => assertTixianFormRetired(js, brokenWxml), assert.AssertionError)
-})
 
 test('经典商家报名：提交报名只读 JS canSubmit', () => {
   const js = read('pages/topic/merchantapply/index.js')
@@ -155,7 +146,6 @@ const PUBLISH_FORM_ROUTES = [
   ['pages/publish/fabu/step3.wxml', 'canSaveTicket'],
   ['pages/publish/temp/index.wxml', 'canOpenPreview'],
   ['pages/publish/temp/index.wxml', 'canPublishGame'],
-  ['pages/publish/simple/index.wxml', 'canEnterAiEditor'],
 ]
 
 test('发布链路路由清单：每个必填主操作都读取 JS 派生态', () => {
@@ -166,17 +156,13 @@ test('发布链路路由清单：每个必填主操作都读取 JS 派生态', (
   assert.match(read('pages/publish/temp/index.js'), /canOpenPreview:\s*false/)
   assert.match(read('pages/publish/temp/index.js'), /refreshPreviewState\s*:\s*function\s*\(\)/)
   assert.match(read('pages/publish/temp/index.js'), /_collectValidationErrors\s*:\s*function\s*\(draft\)/)
-  assert.match(read('pages/publish/simple/index.js'), /canEnterAiEditor:\s*false/)
-  assert.match(read('pages/publish/simple/index.js'), /refreshEnterEditorState\s*\(\)/)
 })
 
-test('topicadd 已退役为重定向壳，不得残留表单或主操作状态', () => {
-  const js = read('pages/publish/topicadd/topicadd.js')
-  const wxml = read('pages/publish/topicadd/topicadd.wxml')
-  assert.doesNotMatch(js, /canEnterPro|onInputChange|gotoPro|_validTitle/)
-  assert.doesNotMatch(wxml, /<input\b|<cy-btn\b|bindtap=/)
-  assert.match(js, /2026-10 之后删除本页并从 app\.json 摘除/)
-  assert.match(js, /兼容用户手机上的历史页面栈/)
+test('PG-020/PG-021:topicadd 兼容壳与 simple 快速配置页已删除并摘出 app.json', () => {
+  const app = read('app.json')
+  assert.doesNotMatch(app, /topicadd\/topicadd|"simple\/index"/)
+  assert.equal(fs.existsSync(path.join(ROOT, 'pages/publish/topicadd')), false)
+  assert.equal(fs.existsSync(path.join(ROOT, 'pages/publish/simple')), false)
 })
 
 function assertTempOptionalFieldsRefresh(source) {
@@ -237,7 +223,6 @@ test('玩法模板起名页已退役删除:不得注册、不得残留页面文�
 const SIMPLE_FORM_ROUTES = [
   ['参与人信息', 'pages/addressinfo/addressinfo', '保存参与人信息'],
   ['投诉', 'subpackageMember/complaint/index', '提交投诉'],
-  ['优惠券', 'subpackageMember/couponInfo/couponInfo', '发布优惠券'],
 ]
 
 test('其余必填表单主按钮统一只读 canSubmit', () => {

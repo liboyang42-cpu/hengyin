@@ -4,7 +4,7 @@
  *   ① 俱乐部管理身份点主题**不再**跳商家承接视角 pages/topic/merchantinfo ——
  *      那个页面的「这一站玩什么」是讲给商家听的,不是俱乐部要看的;纯玩家仍走 topic/index。
  *   ② 六个状态各自的主键文案与「出不出核销/未通过原因」按稿一一对应,不许少一态;
- *   ③ 页面恒暗(theme-dark),不许挂 theme-merchant —— 俱乐部端全暗;
+ *   ③ 主办方视角浅色(theme-merchant,2026-11-17 MC-038),不再挂 theme-dark;
  *   ④ 四圆钮按稿绑定「商家 / 成员 / 团码 / 更多」,顺序、文案、图标换了都要显式改这条。
  *
  * 断言锚点一律钉**结构**(行首选择器 / 属性 / 表项),不钉散落字面量 ——
@@ -68,10 +68,10 @@ test('② 六个状态齐全,主键文案与核销/未通过原因的出没按�
   assert.deepEqual(disabledStates, ['reviewing'], '只有审核中该禁用主键')
 })
 
-test('③ 页面恒暗:根节点 theme-dark,且全页不出现 theme-merchant', () => {
+test('③ 主办方视角浅色(MC-038):根节点 theme-merchant,且全页不出现 theme-dark', () => {
   const wxml = read(PAGE_WXML)
-  assert.match(wxml, /^<view class="theme-dark">/m, '根节点必须挂 theme-dark —— 俱乐部端恒暗')
-  assert.doesNotMatch(wxml, /theme-merchant/, '俱乐部端不许挂商家浅色域')
+  assert.match(wxml, /^<view class="theme-merchant">/m, '根节点必须挂 theme-merchant —— 主办方视角浅色')
+  assert.doesNotMatch(wxml, /theme-dark/, '主办方视角页不再挂深色')
 })
 
 test('④ 四圆钮按稿绑定图标与顺序', () => {

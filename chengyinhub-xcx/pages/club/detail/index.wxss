@@ -10,7 +10,7 @@ page { background: var(--cy-bg-page); }
   --club-surface: var(--cy-bg-card);
   --club-surface-2: var(--cy-bg-card);
   --club-text: var(--cy-text-title);
-  --club-text-muted: #8a8a8e;
+  --club-text-muted: var(--cy-color-text-tertiary);
   --club-glass: rgba(255, 255, 255, 0.12);
   --club-glass-border: var(--cy-border-card);
 }
@@ -32,7 +32,7 @@ page { background: var(--cy-bg-page); }
      2026-09-02 对稿(Figma 93:9 Hero cover 160px):240 → 320rpx。 */
   height: 320rpx;
   overflow: visible;
-  background: #0a0a0a;
+  background: var(--cy-color-bg-surface);
   /* 必须高于 .profile 的 z-index:2。本元素带 z-index 就会开一个层叠上下文,
      里面 .profile-logo-wrap 的 z-index:10 只在这个上下文内部有效、逃不出去;
      只要本值 <= .profile 的值,挂在封面下沿那半个 logo 就会被 .profile 的
@@ -87,7 +87,7 @@ page { background: var(--cy-bg-page); }
   border: 0;
   line-height: normal;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.42);
+  background: var(--cy-color-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -436,7 +436,7 @@ page { background: var(--cy-bg-page); }
 }
 .overview-section {
   padding: var(--cy-space-3-5) var(--cy-space-4); /* ds-ok: 28rpx 无匹配 token */
-  border-bottom: 2rpx solid rgba(255, 255, 255, 0.06);
+  border-bottom: 2rpx solid var(--cy-color-border-subtle);
 }
 .overview-section-tit {
   font-size: var(--cy-font-body);
@@ -655,7 +655,7 @@ page { background: var(--cy-bg-page); }
   display: flex;
   align-items: center;
   padding: var(--cy-space-2) 0;
-  border-bottom: 1rpx solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1rpx solid var(--cy-color-border-subtle);
 }
 .member--managed { flex-wrap: wrap; }
 .member:last-child { border-bottom: 0; }
@@ -787,7 +787,7 @@ page { background: var(--cy-bg-page); }
   padding: var(--cy-space-2);
   background: transparent;
   border-radius: var(--cy-radius-sm);
-  border: 1rpx solid rgba(255, 255, 255, 0.06);
+  border: 1rpx solid var(--cy-color-border-subtle);
 }
 .comment { font-size: var(--cy-font-label); line-height: 1.6; color: var(--club-text); }
 .comment-name { color: var(--cy-info); }
@@ -826,7 +826,7 @@ page { background: var(--cy-bg-page); }
 .error-primary { background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); }
 .error-secondary {
   background: var(--club-surface); color: var(--club-text);
-  border: 2rpx solid rgba(255,255,255,0.12);
+  border: 2rpx solid var(--cy-color-border-strong);
 }
 
 .safe-bottom { height: calc(40rpx + env(safe-area-inset-bottom)); }

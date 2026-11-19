@@ -134,7 +134,7 @@ test('C-13 名册展开后按场次列出实收/已退/净额(¥,服务端分值
   ]);
   const wxml = read('pages/club/enroll/index.wxml');
   assert.match(wxml, /wx:for="\{\{team\.sessionMoney\}\}"/);
-  assert.match(wxml, /净额 \{\{m\.netText\}\}/);
+  assert.match(wxml, /实收减退款 \{\{m\.netText\}\}/);
 });
 
 // ───────── C-17 / C-02(2026-11-02 walk-fix)开一场只读票价、集合点与收款提示 ─────────
@@ -216,7 +216,8 @@ test('C-21 切换主题后旧创建回执不把警告贴到新主题', () => {
 test('C-21 退出系列编辑后保留实际编辑主题，清旧回执并重置版本', () => {
   const { page } = loadPage('pages/club/event-ops/index.js');
   page.setData({ topics: [{ id: 30 }, { id: 31 }], topicIndex: 0, editingSeriesId: 3,
-    editingTopicId: 31, seriesWindowWarning: '旧警告' });
+    seriesWindowWarning: '旧警告' });
+  page._editingTopicId = 31;   // 编辑中的主题是实例状态(不走 setData,U4)
   page._expectedVersion = 2;
   page.cancelSeriesEdit();
   assert.equal(page.data.topics[page.data.topicIndex].id, 31);
@@ -233,6 +234,6 @@ test('C-21 打开另一系列编辑时清除先前创建回执的警告', () => 
   requests.at(-1).success({ code: 200, data: { id: 3, clubId: 9, topicId: 31,
     recurrenceType: 'ONCE', defaultLeadMemberId: 9008, defaultCapacity: null,
     waitlistEnabled: true, offerMinutes: 1440, version: 0, futureDates: [] } });
-  assert.equal(page.data.editingTopicId, 31);
+  assert.equal(page._editingTopicId, 31);
   assert.equal(page.data.seriesWindowWarning, '');
 });

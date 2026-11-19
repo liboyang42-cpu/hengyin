@@ -134,7 +134,6 @@
     <view class="topic-beta" wx:if="{{info.betaFlag==1}}">
       <view class="topic-beta__head flex-ac">
         <text class="topic-beta__badge">Beta 试玩</text>
-        <text class="topic-beta__note">Beta 主题，欢迎评论反馈</text>
       </view>
       <view class="topic-beta__action" wx:if="{{info.isOwner==1}}">
         <cy-btn variant="secondary" size="sm" bindtap="onGraduateBeta">转为正式主题</cy-btn>
@@ -540,7 +539,7 @@
     view="{{checkout.view}}" profile-name="{{checkout.profileName}}" profile-phone="{{checkout.profilePhone}}"
     consent-checked="{{selfPlayConsentChecked}}" consent-hint="{{selfPlayConsentHint}}" consent-error="{{selfPlayConsentError}}"
     loading="{{selfPlayConfirmLoading}}"
-    bind:back="onCheckoutBack" bind:profile="onCheckoutProfile" bind:consentchange="onSelfPlayConsentChange" bind:pass="onCheckoutPass" bind:pay="onSelfPlayConfirm" bind:requote="onCheckoutRequote" />
+    bind:back="onCheckoutBack" bind:profile="onCheckoutProfile" bind:consentchange="onSelfPlayConsentChange" bind:pass="onCheckoutPass" bind:pay="onSelfPlayConfirm" bind:requote="onCheckoutRequote" bind:notice="onCheckoutNotice" bind:play="onCheckoutPlay" />
 
   <cy-pass-reveal show="{{reveal.show}}" cover="{{reveal.cover}}" name="{{reveal.name}}" kind-text="{{reveal.kindText}}"
     until-text="{{reveal.untilText}}" days-text="{{reveal.daysText}}" duration-line="{{reveal.line}}" reduced-motion="{{reducedMotion}}"

@@ -94,7 +94,7 @@ function auditPrimaryButtonHeights(overrides = {}) {
 test('D25：全站 cy-btn、底部动作条与登记的原生主 CTA 统一按钮高度', () => {
   const overrides = {}
   if (process.env.B3_NEGATIVE_CONTROL === 'button-height') {
-    const file = 'subpackageMember/tixian/tixian.wxml'
+    const file = 'subpackageMember/complaint/index.wxml'
     overrides[file] = fs.readFileSync(path.join(ROOT, file), 'utf8')
       .replace('<cy-btn variant="primary"', '<cy-btn variant="primary" style="--cy-btn-h:96rpx"')
   }
@@ -102,10 +102,11 @@ test('D25：全站 cy-btn、底部动作条与登记的原生主 CTA 统一按�
 })
 
 test('负控：任一页面把 cy-btn 改回自定义高度时审计必须判红', () => {
-  const file = 'subpackageMember/tixian/tixian.wxml'
+  // PG-042:原锚点独立提现页下线,换投诉页主按钮
+  const file = 'subpackageMember/complaint/index.wxml'
   const source = fs.readFileSync(path.join(ROOT, file), 'utf8')
   const broken = source.replace('<cy-btn variant="primary"', '<cy-btn variant="primary" style="--cy-btn-h:96rpx"')
-  assert.notEqual(broken, source, '负控锚点失效：提现主按钮不存在')
+  assert.notEqual(broken, source, '负控锚点失效：投诉主按钮不存在')
   assert.throws(() => auditPrimaryButtonHeights({ [file]: broken }), assert.AssertionError)
 })
 
