@@ -209,7 +209,7 @@ Page({
         });
       });
     } }];
-    if (communityOn) {
+    if (typeof app.canUseCommunity === 'function' && app.canUseCommunity(false)) {
       sources.push({ fetch: function (pageNum) {
         const page = pageNum || 1;
         return new Promise(function (resolve, reject) {

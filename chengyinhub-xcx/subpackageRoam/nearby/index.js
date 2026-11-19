@@ -1098,10 +1098,15 @@ Page({
       if (this._unloaded || !this.data.poiCard || String(this.data.poiCard.id) !== String(c.id)) return;
       this.setData({ 'poiCard.reviewBusy': false });
       if (!ok) { cyToast(msg || '评价没有发出去，请重试'); return; }
+      this._reviewReq = null;
       this.setData({ 'poiCard.myText': '', 'poiCard.myStars': 0 }); cyToast('评价已发布'); this._loadSpot(c.id);
     };
+    // PG-006:同一据点的同一次评价意图复用同一个 request_id,响应丢失后重试服务端只落一条;成功后清掉。
+    if (!this._reviewReq || this._reviewReq.poiId !== String(c.id)) {
+      this._reviewReq = { poiId: String(c.id), id: 'req_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10) };
+    }
     app.sendRequest({ url: '/api/comment/add', method: 'POST', hideLoading: true, silentError: true, autoErrorToast: false,
-      data: { owner_type: 4, owner_id: c.id, rating: c.myStars, contents: text, reply_id: 0 },
+      data: { owner_type: 4, owner_id: c.id, rating: c.myStars, contents: text, reply_id: 0, request_id: this._reviewReq.id },
       success: (res) => done(res && res.code == 200, res && res.msg),
       fail: () => done(false), successStatusAbnormal: (res) => done(false, res && res.msg) });
   },

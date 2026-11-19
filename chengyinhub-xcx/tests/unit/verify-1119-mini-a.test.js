@@ -52,3 +52,10 @@ test('PG-005/PG-091:据点核销码页先判登录,并改为 cy-scene-qr-citynod
   assert.equal(json.usingComponents['cy-scene-qr-citynode'], '/components/cy/scene-qr-citynode/index');
   assert.equal(json.usingComponents['cy-access-gate'], '/components/cy/access-gate/index');
 });
+
+test('PG-006:漫游地图据点评价带并复用 request_id,成功后清掉', () => {
+  const js = read('subpackageRoam/nearby/index.js');
+  assert.match(js, /reply_id: 0, request_id: this\._reviewReq\.id \}/);
+  assert.match(js, /if \(!this\._reviewReq \|\| this\._reviewReq\.poiId !== String\(c\.id\)\)/);
+  assert.match(js, /this\._reviewReq = null;\n\s*this\.setData\(\{ 'poiCard\.myText': ''/);
+});
