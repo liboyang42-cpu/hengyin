@@ -97,3 +97,8 @@ test('MC-036:模板页发布能力卡失败不再吞掉,置 capabilityError,点�
   assert.match(js, /that\.setData\(\{ capabilityError: true \}\);/)
   assert.match(js, /if \(!this\._pubLoaded\) this\.getPublishHome\(true\);/)
 })
+
+test('MC-037:自由探索有下限时滑杆下显示地板行', () => {
+  assert.match(read('pages/topic/pricing/index.wxml'), /<view class="pg-range" wx:if="\{\{!isFreeExplore \|\| floorPositive\}\}">/)
+  assert.match(read('pages/topic/pricing/index.js'), /floorPositive: floor > 0,/)
+})
