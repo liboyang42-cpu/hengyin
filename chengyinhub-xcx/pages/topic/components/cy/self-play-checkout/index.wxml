@@ -67,8 +67,7 @@
   <view class="ck__bar">
     <!-- 10 单独同意(个保法第 23 条,建单必需) -->
     <view class="ck__consent">
-      <cy-consent-check checked="{{consentChecked}}" text="同意将姓名、手机号提供给主办方，用于报名核验" bind:change="onConsent" />
-      <text class="ck__hint" wx:if="{{consentHint}}">{{consentHint}}</text>
+      <cy-consent-check checked="{{consentChecked}}" alert="{{!!consentHint && !consentChecked}}" text="同意将姓名、手机号提供给主办方，用于报名核验" bind:change="onConsent" />
       <view class="ck__err" wx:if="{{consentError}}" aria-role="alert">
         <text>{{consentError}}</text>
         <text class="ck__err-act" bindtap="onPay" aria-role="button" aria-label="重试" hover-class="ck-pressed" hover-stay-time="80">重试</text>

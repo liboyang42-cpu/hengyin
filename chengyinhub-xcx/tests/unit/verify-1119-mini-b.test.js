@@ -199,3 +199,11 @@ test('MC-063:客户累计金额与成员价优先展示服务端格式化文本'
   assert.match(read('pages/club/customers/view-model.js'), /text\(raw\.summary\.paidAmountText\) \|\| `¥\$\{trimMoney\(amount\)\}`/)
   assert.match(read('pages/club/detail/index.js'), /'成员价 ' \+ c\.memberDiscountPriceText\.trim\(\)/)
 })
+
+test('OR-020:自玩结算未勾选同意时同意行高亮,不再单独出提示文字行', () => {
+  const wxml = read('pages/topic/components/cy/self-play-checkout/index.wxml')
+  assert.doesNotMatch(wxml, /ck__hint/)
+  assert.match(wxml, /<cy-consent-check checked="\{\{consentChecked\}\}" alert="\{\{!!consentHint && !consentChecked\}\}"/)
+  assert.match(read('components/cy/consent-check/index.wxml'), /cck--alert/)
+  assert.match(read('components/cy/consent-check/index.js'), /alert: \{ type: Boolean, value: false \}/)
+})
