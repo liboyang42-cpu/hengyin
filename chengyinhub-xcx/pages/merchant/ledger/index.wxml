@@ -12,7 +12,7 @@
   <block wx:if="{{!accessDenied}}">
   <cy-state-shell class="fill-slot" wx:if="{{routeError}}" kind="missing-param" fill size="lg"
                   title="链接已失效"
-                  primary="返回工作台" bind:primary="onNavBack" />
+                  primary="返回" bind:primary="onNavBack" />
   <block wx:elif="{{view === 'redemptions'}}">
     <view wx:if="{{merchantAccess.canReadFinance}}" class="ledger-action" bindtap="goCoopSettlements" aria-role="button" aria-label="查看合作分润" hover-class="cy-pressed">
       <text class="ledger-action-title">合作分润</text><cy-icon name="arrow-right" size="24" />

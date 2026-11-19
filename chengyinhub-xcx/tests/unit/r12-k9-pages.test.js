@@ -33,7 +33,7 @@ test('p1 N-6:产品代码里不再有「请返回重新进入」(标题 + 返回
 
 test('p1 N-6:会话缺参态有「返回消息列表」;底栏解释为空时整行不出', () => {
   const wxml = read('subpackageB/pages/im/chat/index.wxml');
-  assert.match(wxml, /title="这个会话无法打开" cta="返回消息列表" bind:cta="returnToMessageList"/);
+  assert.match(wxml, /kind="missing-param" cta="返回" bind:cta="returnToMessageList"/);
   assert.match(wxml, /wx:if="\{\{disabled \|\| \(loadState !== 'ready' && sendBlockedMap\[loadState\]\)\}\}" class="disabled-tip"/);
   assert.match(read('subpackageB/pages/im/chat/index.js'), /      missing: '',/);
 });

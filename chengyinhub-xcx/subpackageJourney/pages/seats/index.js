@@ -25,13 +25,18 @@ Page({
 
   onLoad(options) {
     this._registrationId = view.isId(options && options.registrationId) ? String(options.registrationId) : '';
-    if (!this._registrationId) { this.setData({ state: 'missing', stateKind: 'missing-param', stateTitle: '链接已失效' }); return; }
+    if (!this._registrationId) { this.setData({ state: 'missing', stateKind: 'missing-param', stateTitle: '链接已失效', stateCta: '返回' }); return; }
     this._pendingInvite = !!this._pending(); // l-after:邀请页不再有「查询邀请结果」钮,待确认状态只在本页逻辑里用
     this.load();
   },
 
   _pending() { try { return wx.getStorageSync(INVITE_KEY + this._registrationId) || ''; } catch (e) { return ''; } },
   _setPending(id) { try { if (id) wx.setStorageSync(INVITE_KEY + this._registrationId, id); else wx.removeStorageSync(INVITE_KEY + this._registrationId); } catch (e) { /* 本页仍保留 */ } this._pendingId = id; },
+
+  onStateCta() {
+    if (this.data.state !== 'missing') { this.load(); return; }
+    if (getCurrentPages().length > 1) wx.navigateBack({ delta: 1 }); else wx.switchTab({ url: '/pages/index/index' });
+  },
 
   load() {
     const epoch = this._epoch = (this._epoch || 0) + 1;

@@ -17,8 +17,7 @@
 <cy-nav-spacer />
 
 <cy-empty class="page-terminal" wx:if="{{pageState === 'missing-param'}}" fill size="lg" kind="missing-param"
-  title="无法打开报名页"
-  cta="去发现活动" bind:cta="goDiscoverActivities" />
+  cta="返回" bind:cta="onNavBack" />
 
 <!-- 你已经报过名了。
      这条以前只在「再点一次报名被拒」时才以 toast 出现 —— 系统一直知道,只是不肯说。

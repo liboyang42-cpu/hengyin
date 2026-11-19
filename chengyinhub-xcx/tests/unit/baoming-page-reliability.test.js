@@ -112,7 +112,8 @@ test('缺少 activityId 时进入 missing-param、零请求，并能返回或去
   assert.ok(json.usingComponents['cy-empty'])
   assert.match(wxml, /<cy-nav-bar[^>]*custom-back[^>]*bind:back="onNavBack"/)
   assert.match(wxml, /<cy-empty[^>]*class="page-terminal"[^>]*wx:if="\{\{pageState === 'missing-param'\}\}"[^>]*kind="missing-param"/)
-  assert.match(wxml, /cta="去发现活动"[^>]*bind:cta="goDiscoverActivities"/)
+  assert.match(wxml, /kind="missing-param"\s+cta="返回" bind:cta="onNavBack"/)
+  assert.doesNotMatch(wxml, /无法打开报名页/)
   assert.match(wxss, /cy-empty\.page-terminal\s*\{/)
   assert.doesNotMatch(wxss, /cy-error\s*,\s*cy-empty\s*\{/,
     '整页终态的 flex 规则不能污染费用区和弹窗里的局部 cy-empty')

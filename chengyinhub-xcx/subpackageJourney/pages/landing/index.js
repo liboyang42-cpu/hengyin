@@ -27,7 +27,7 @@ Page({
 
   onLoad(options) {
     const parsed = view.landingKind(options);
-    if (!parsed) { this.setData({ state: 'missing', stateKind: 'missing-param', stateTitle: '链接已失效' }); return; }
+    if (!parsed) { this.setData({ state: 'missing', stateKind: 'missing-param', stateTitle: '链接已失效', stateCta: '返回' }); return; }
     this._kind = parsed.kind;
     this._token = parsed.token;
     this._activityId = view.isId(options.aid) ? String(options.aid) : '';
@@ -75,7 +75,10 @@ Page({
   },
   _stopLoops() { (this._loopStops || []).forEach(stop => stop()); this._loopStops = []; },
 
-  onStateCta() { if (this.data.state === 'error') this.load(); },
+  onStateCta() {
+    if (this.data.state === 'missing') { if (getCurrentPages().length > 1) wx.navigateBack({ delta: 1 }); else wx.switchTab({ url: '/pages/index/index' }); return; }
+    if (this.data.state === 'error') this.load();
+  },
 
   // 次要文字动作：不领取、不建单，回首页逛逛。
   onBrowse() { wx.switchTab({ url: '/pages/index/index' }); },

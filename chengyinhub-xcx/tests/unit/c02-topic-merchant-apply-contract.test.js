@@ -221,7 +221,7 @@ function assertTopicMissingIdGuard(js, wxml) {
   assert.ok(onLoad.indexOf('if (!validTopicId)') < onLoad.indexOf('that.getData()'), '缺参守卫必须在详情请求之前执行')
   assert.match(
     wxml,
-    /<cy-empty wx:if="\{\{\s*missingTopicId\s*\}\}"[^>]*kind="missing-param"[^>]*cta="返回发布广场"[^>]*bind:cta="goTopicList"/,
+    /<cy-empty wx:if="\{\{\s*missingTopicId\s*\}\}"[^>]*kind="missing-param"[^>]*cta="返回"[^>]*bind:cta="goBack"/,
     '缺参态必须有可读说明和有效的返回发布广场 CTA'
   )
   assert.match(wxml, /<view class="topic-state" wx:if="\{\{\s*loadError\s*\}\}"[^>]*>/, '加载失败必须直接显示错误态，不能被旧 info 遮住')

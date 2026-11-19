@@ -78,7 +78,7 @@ test('公开主页缺少用户 ID 时显示真实参数空态，并提供可执�
   assert.equal(json.usingComponents['cy-empty'], '/components/cy/empty/index')
   assert.equal(json.usingComponents['cy-nav-bar'], '/components/cy/nav-bar/index')
   assert.match(wxml, /<cy-profile\b[^>]*wx:if="\{\{!missingUser\}\}"/)
-  assert.match(wxml, /<cy-empty\b[^>]*kind="missing-param"[^>]*bind:cta="goMemberHome"/)
+  assert.match(wxml, /<cy-empty\b[^>]*kind="missing-param"[^>]*cta="返回"[^>]*bind:cta="onBack"/)
   assert.match(wxml, /<cy-nav-bar\b[^>]*custom-back[^>]*bind:back="onBack"/)
 
   page.goMemberHome.call(context)
