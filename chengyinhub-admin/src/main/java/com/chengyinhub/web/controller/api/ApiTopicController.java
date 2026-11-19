@@ -3296,11 +3296,12 @@ public class ApiTopicController extends BaseController {
         vo.setBlocks(Collections.emptyList());
         vo.setBlocksJson(null);
         List<TopicNodeVO> teaserNodes = new ArrayList<>();
+        List<CmsTopicNode> nodes = null;
         if (!branchGraphTeaser) {
             CmsTopicNode query = new CmsTopicNode();
             query.setChapterId(chapter.getId());
             query.setStatus(1L);
-            List<CmsTopicNode> nodes = cmsTopicNodeService.selectCmsTopicNodeList(query);
+            nodes = cmsTopicNodeService.selectCmsTopicNodeList(query);
             if (nodes != null) {
                 for (CmsTopicNode node : nodes) {
                     TopicNodeVO nodeVO = new TopicNodeVO();
@@ -3317,6 +3318,8 @@ public class ApiTopicController extends BaseController {
             }
         }
         vo.setNodes(teaserNodes);
+        // 预告节点不带 templateId,setNodes 现算的玩法数恒为 0;章节卡要写「含 N 个玩法」,这里按已上架节点补回个数
+        vo.setTemplateCount(TopicChapterVO.countTemplates(nodes, chapter.getTemplateCount()));
         return vo;
     }
 }

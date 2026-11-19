@@ -1,5 +1,5 @@
 // 通行证 · 钥匙开场(l-icons 2026-11-11,业主批准 proto/icons ps-key,逐镜对照 satya2 时间轴)。
-// 画面 = 预渲染序列帧(frames.js,本分包内)+ 活的 DOM 层(底部暖橙渐变、眉题 / 标题 / 一行正文 / 按钮、右上「跳过」)。
+// 画面 = 预渲染序列帧(frames.js,本分包内)+ 活的 DOM 层(底部金色渐变、眉题 / 标题 / 一行正文 / 按钮、右上「跳过」)。
 // 完整版只在第一次进入(本机本账号记一次)和开通成功(mode=paid)时播;之后进来直接是待机循环 + 文字 + 按钮。
 // 减少动态效果:直接停在 4.6s 的终态(待机第 0 帧 + 渐变 + 文字 + 按钮)。商家账号没有通行证:整页只给一句原因。
 // 文案里的数字只来自上一页带来的服务端事实(count / until),没有就不写那一行。
@@ -7,6 +7,7 @@ const app = getApp()
 const { readReducedMotion } = require('../../utils/motion-preference.js')
 const roleGuard = require('../../utils/roleGuard.js')
 const FR = require('./frames.js')
+const { stageBox } = require('./layout.js')
 
 const SEEN_KEY = 'pass_reveal_seen_v1'
 // DOM 层时间轴(ms,与 proto key3d.js TL 一致):渐变 3000、眉题 3400、标题 3550、正文 3750、按钮 4050;「跳过」提前到 600 让人真能跳过等待
@@ -44,6 +45,7 @@ Page({
     statusBarHeight: app.globalData.statusBarHeight,
     navBarHeight: app.globalData.navBarHeight,
     fr: FR,
+    box: stageBox(null), // 钥匙画框(rpx):onLoad 按真实窗口重算
     merchant: false,
     reduced: false,
     full: false,        // 这次播不播完整版
@@ -61,7 +63,9 @@ Page({
     const paid = o.mode === 'paid'
     const copy = paid ? this._paidCopy(o) : this.data.copy
     this._paid = paid // 只决定「开始」跳哪页,不渲染,不走 setData(U4)
-    this.setData({ reduced, merchant, copy })
+    let win = null
+    try { win = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync() } catch (e) { win = null }
+    this.setData({ reduced, merchant, copy, box: stageBox(win) })
     if (merchant) return
     const full = !reduced && (paid || !seenBefore())
     this._warm(full)

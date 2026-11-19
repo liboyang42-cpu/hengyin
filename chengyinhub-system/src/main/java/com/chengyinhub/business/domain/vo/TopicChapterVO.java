@@ -41,6 +41,20 @@ public class TopicChapterVO extends CmsTopicChapter {
         setTemplateCount(templates);
     }
 
+    /**
+     * 未解锁章节预告的玩法数:预告节点不带 templateId,setNodes 现算会恒为 0,
+     * 详情页「节点介绍」章节卡就会把未解锁章节说成「0 个玩法」并误当结局隐藏。
+     * 按库里该章已上架节点(status=1)现算;节点查不到时退回落库列。只给个数,不给模板。
+     */
+    public static Long countTemplates(List<CmsTopicNode> nodes, Long storedCount) {
+        if (nodes == null) return storedCount;
+        long templates = 0L;
+        for (CmsTopicNode node : nodes) {
+            if (node != null && node.getTemplateId() != null && node.getTemplateId() > 0) templates++;
+        }
+        return templates;
+    }
+
     public String getRouteGeometry() {
         return routeGeometry;
     }
