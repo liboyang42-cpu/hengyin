@@ -108,7 +108,8 @@ Component({
             var c = res.data; if (c.id != null && String(c.id) !== scope.clubId) { that.setData({ loadState: 'business-error', loadErrorText: '资料加载失败，请重试' }); return; }
             // 2026-08-26:管理员(viewerIsAdmin)也能改**展示信息**;经营配置与解散仍只给主理人。
             // 后端 canGovernClub 是真闸,这里只是别把表单藏起来。
-            if (c.isOwner !== true && c.viewerIsAdmin !== true) {
+            // MC-055:服务端统一权限位 viewerCanGovern 优先;缺省沿用 isOwner/viewerIsAdmin。
+            if (typeof c.viewerCanGovern === 'boolean' ? !c.viewerCanGovern : (c.isOwner !== true && c.viewerIsAdmin !== true)) {
               that.setData({
                 isOwner: false,
                 loadState: 'permission',

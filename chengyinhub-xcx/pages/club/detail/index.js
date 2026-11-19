@@ -3472,8 +3472,10 @@ Page({
 
   // 2026-08-26:管理员(role=1)也拿到管理 tab。判据用 detail 已下发的 viewerIsAdmin,
   // 不额外请求;真闸在后端 canGovernClub,前端只是别把入口藏起来。
+  // MC-055:服务端下发 viewerCanGovern(clubAccessService 权限位)时以它为准;老后端不带就沿用 isOwner/viewerIsAdmin。
   canGovern(club) {
     const c = club || this.data.club;
+    if (c && typeof c.viewerCanGovern === 'boolean') return c.viewerCanGovern;
     return !!(c && (c.isOwner || c.viewerIsAdmin));
   },
 

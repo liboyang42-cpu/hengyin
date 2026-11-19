@@ -170,3 +170,9 @@ test('MC-050 / MC-059:管理员保存不发运营配置,地址不随城市写回
 test('MC-052:俱乐部申请承接带 clubId,后端按其归属校验', () => {
   assert.match(read('pages/club/detail/index.js'), /url: '\/api\/coop\/pool\/apply'[\s\S]{0,80}jsonBody\(\{ topicId: topicId, clubId: that\.data\.clubId, message/)
 })
+
+test('MC-055:俱乐部详情/名册/编辑优先用服务端 viewerCanGovern,缺省沿用旧判据', () => {
+  assert.match(read('pages/club/detail/index.js'), /if \(c && typeof c\.viewerCanGovern === 'boolean'\) return c\.viewerCanGovern;\s*return !!\(c && \(c\.isOwner \|\| c\.viewerIsAdmin\)\);/)
+  assert.match(read('pages/club/enroll/index.js'), /typeof club\.viewerCanGovern === 'boolean' \? club\.viewerCanGovern : \(club\.isOwner \|\| club\.viewerIsAdmin\)/)
+  assert.match(read('pages/club/components/cy/scene-club-edit/index.js'), /typeof c\.viewerCanGovern === 'boolean' \? !c\.viewerCanGovern :/)
+})

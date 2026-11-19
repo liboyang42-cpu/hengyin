@@ -245,7 +245,8 @@ Page({
           that.failPermission(epoch, 'business-error', '俱乐部权限数据暂时不可用');
           return;
         }
-        if (club.isOwner || club.viewerIsAdmin) {
+        // MC-055:服务端统一权限位 viewerCanGovern 优先;缺省沿用 isOwner/viewerIsAdmin。
+        if (typeof club.viewerCanGovern === 'boolean' ? club.viewerCanGovern : (club.isOwner || club.viewerIsAdmin)) {
           that.allowPermission(epoch);
           return;
         }
