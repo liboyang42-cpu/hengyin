@@ -1,3 +1,4 @@
+@import '../../../../style/fade-in.wxss';
 /* 2026-09-02:原 1000/1100 越过整条 token 档。这是底部选择弹层 = sheet 档。 */
 .ap-mask {
   position: fixed;

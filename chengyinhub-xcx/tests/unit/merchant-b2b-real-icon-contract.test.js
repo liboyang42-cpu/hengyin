@@ -62,7 +62,7 @@ test('图标所在交互仍有可读名称、状态语义和至少 88rpx 命中�
   const inviteView = read('pages/coop/invite/index.wxml')
   const inviteStyle = read('pages/coop/invite/index.wxss')
   assert.match(inviteView, /class="terms-option[^>]*aria-role="radio"[^>]*aria-checked=/)
-  assert.match(inviteView, /class="target"[^>]*aria-role="checkbox"[^>]*aria-checked=/)
+  assert.match(inviteView, /class="target(?: cy-fade-in)?"[^>]*aria-role="checkbox"[^>]*aria-checked=/)
   assert.match(cssRule(inviteStyle, '.terms-option'), /min-height:\s*88rpx/)
   const targetHeight = /min-height:\s*(\d+)rpx/.exec(cssRule(inviteStyle, '.target'))
   assert.ok(targetHeight && Number(targetHeight[1]) >= 88, '邀请对象行点击区不得小于 88rpx')

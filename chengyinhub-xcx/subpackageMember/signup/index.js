@@ -1,4 +1,5 @@
 const toast = require('../../utils/toast.js');
+const imgFade = require('../../utils/img-fade.js'); // motion-1118 v2:票卡封面在占位色上淡入
 const QR_REFRESH_LEAD_MS = 30000; // 到期前 30 秒续签
 const QR_MIN_REFRESH_MS = 5000;
 const QR_RETRY_MS = 5000;
@@ -52,7 +53,7 @@ Page({
        ⚠️ 不要为了「合并」去动后端:两类票的字段和落点本来就不同,合到一个接口只会把
           差异塞进 if,还丢掉各自的分页。 */
     ticketList: [],
-    currentSwiperTicket: 0, deckPoses: [], deckStill: false, wbg: ['', ''], wbgOn: 0, navH: appGlobal.navBarHeight || 44, // v13 卡堆 / 两层模糊背景;F13 删掉「票夹 ▾」筛选,一个列表
+    imgOn: {}, currentSwiperTicket: 0, deckPoses: [], deckStill: false, wbg: ['', ''], wbgOn: 0, navH: appGlobal.navBarHeight || 44, // v13 卡堆 / 两层模糊背景;F13 删掉「票夹 ▾」筛选,一个列表
     flipped: false, qrState: 'idle', qrUrl: '', entering: false, startLit: false, reduced: false, meAvatar: '', // 2026-10-28 翻面入场码 + 开始游戏;r3-visual 顶栏本人头像(app.getAvatar,没有就不出)
     walletState: 'loading', // loading | ready | error | login | empty —— 由两条支线的状态合成
     walletErrorMsg: '',
@@ -349,6 +350,8 @@ Page({
     this.setData({ flipped: true });
     if (String(item.id) !== this._qrFor || !(this._qrExpiresAt > Date.now() + QR_REFRESH_LEAD_MS)) this._loadQr(item);
   },
+  onImgFadeLoad(e) { imgFade.onImgFadeLoad.call(this, e) },
+
   onCardTap(e) {
     if (this._moved || this._throwing || this.data.entering) return;
     const index = Number(e.currentTarget.dataset.index);

@@ -28,16 +28,16 @@
 
     <!-- errorMsg 原样透传,不吞后端文案 -->
     <block wx:elif="{{errorMsg}}">
-      <cy-error load-failure fill class="cy-fill-state" size="lg" title="可投诉活动加载失败" sub="{{errorMsg}}" bind:retry="onRetry" auto-back />
+      <cy-error load-failure fill class="cy-fill-state cy-fade-in" size="lg" title="可投诉活动加载失败" sub="{{errorMsg}}" bind:retry="onRetry" auto-back />
     </block>
 
     <block wx:elif="{{topics.length === 0}}">
-      <cy-empty fill class="cy-fill-state" size="lg" kind="empty" title="暂无可投诉的活动"
+      <cy-empty fill class="cy-fill-state cy-fade-in" size="lg" kind="empty" title="暂无可投诉的活动"
                 />
     </block>
 
     <block wx:else>
-      <view class="cp-form">
+      <view class="cp-form cy-fade-in">
       <view class="cp-field {{topicIndex >= 0 ? 'cp-field--filled' : ''}}">
         <text class="cp-label">投诉活动<text class="cp-req">*</text></text>
         <view class="cp-picker {{topicIndex < 0 ? 'cp-picker--ph' : ''}}" data-picker="topic"

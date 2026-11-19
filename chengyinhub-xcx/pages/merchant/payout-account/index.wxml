@@ -7,17 +7,17 @@
   <cy-skeleton wx:if="{{pageState === 'loading'}}" type="list" count="2" />
   <cy-error wx:elif="{{pageState === 'error'}}" fill size="lg"
             title="收款账户加载失败" sub="{{errorMessage}}"
-            retry="重新加载" bind:retry="retry" auto-back />
+            retry="重新加载" bind:retry="retry" auto-back class="cy-fade-in" />
   <cy-empty wx:elif="{{pageState === 'no-permission'}}" kind="no-permission" fill size="lg"
-            title="当前身份不能查看收款账户" cta="{{accessMember ? '返回' : '申请入驻'}}" bind:cta="onDenyCta" />
-  <view wx:elif="{{pageState === 'unavailable'}}" class="pa-shell">
+            title="当前身份不能查看收款账户" cta="{{accessMember ? '返回' : '申请入驻'}}" bind:cta="onDenyCta" class="cy-fade-in" />
+  <view wx:elif="{{pageState === 'unavailable'}}" class="pa-shell cy-fade-in">
     <cy-empty fill size="lg" kind="empty" title="收款账户暂未开放" />
   </view>
-  <view wx:elif="{{pageState === 'none'}}" class="pa-shell">
+  <view wx:elif="{{pageState === 'none'}}" class="pa-shell cy-fade-in">
     <cy-empty fill size="lg" kind="empty" title="还没有开通收款账户" />
   </view>
 
-  <view wx:elif="{{pageState === 'ready'}}" class="pa-shell">
+  <view wx:elif="{{pageState === 'ready'}}" class="pa-shell cy-fade-in">
     <view class="fin-card pa-card">
       <view class="fin-row pa-row" aria-label="开通状态，{{account.stateText}}">
         <view class="fin-row__dot fin-row__dot--{{account.stateTone}}" aria-hidden="true" />

@@ -1,3 +1,4 @@
+@import '../../../style/fade-in.wxss';
 .ir-scene {
   min-height: 100%;
   padding: 0 var(--cy-page-x) calc(var(--cy-space-5) + var(--cy-safe-bottom));

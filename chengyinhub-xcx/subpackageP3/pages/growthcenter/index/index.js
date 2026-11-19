@@ -5,6 +5,7 @@ const app = getApp()
 const { recoverReadSession } = require('../../../../utils/session/login-reload.js')
 const { buildGrowthOverview } = require('../../../utils/growth-overview.js')
 const { chinaParts } = require('../../../../utils/datetime.js'); const pageMotion = require('../../../../utils/page-motion.js')
+const imgFade = require('../../../../utils/img-fade.js') // motion-1118 v2:头像加载淡入
 
 function fmt(n) {
   // UI-04(2026-09-18):数字统计没取到显示 0,不再显示横杠
@@ -148,6 +149,7 @@ Page({
   rankErrorKind: 'data',
   errorMsg: '',
   data: {
+    imgOn: {}, // motion-1118 v2:头像在占位色上淡入
     growthAuthRequired: false,
     growthAccessDenied: false,
     rankState: 'loading', // loading | refreshing | ready | stale-error | error
@@ -398,9 +400,16 @@ Page({
         avatarUrl: profile.avatarUrl
       }
     }
+    const scoreText = fmt(data.me.score)
     if (!this._scoreCounted) { this._scoreCounted = true; pageMotion.countIn(this, 'gsK') } // 2026-10-23:积分第一次到达时从 0 数上去
-    this.setData({ unit, me, scoreText: fmt(data.me.score), profile })
+    else if (scoreText !== this.data.scoreText) { // motion-1118 v2:新回包改写已显示的积分时从旧值数过去,不跳;起点比例与新值同一次 setData
+      this.setData({ unit, me, scoreText, profile, gsK: pageMotion.countFrom(this, 'gsK', this.data.scoreText, scoreText) })
+      return
+    }
+    this.setData({ unit, me, scoreText, profile })
   },
+
+  onImgFadeLoad(e) { imgFade.onImgFadeLoad.call(this, e) },
 
   goLeaderboard() {
     wx.navigateTo({ url: '/subpackageP3/pages/growthcenter/leaderboard/index?metric=' + this.data.metric + '&period=' + this.data.period })

@@ -1,3 +1,4 @@
+@import '../../../../../style/fade-in.wxss';
 /* isolated 组件内全局 .cy-pressed 进不来,必须本地定义一份。
    只减淡不位移:位移要配 .cy-motion-reduced 兜底,而那个类挂在组件外的祖先上。 */
 .cy-pressed { opacity: .88; }

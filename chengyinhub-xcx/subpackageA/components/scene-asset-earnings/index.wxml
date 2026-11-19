@@ -7,7 +7,7 @@
     <cy-error load-failure="{{state === 'error'}}" fill="{{true}}" size="lg" title="{{state === 'login' ? '登录后查看账户收益' : state === 'permission' ? '当前身份不能查看收益' : '收益加载失败'}}" retry="{{state === 'login' ? '登录' : '重试'}}" bind:retry="refresh" />
   </view>
   <block wx:else>
-    <view class="ae-hero">
+    <view class="ae-hero cy-fade-in">
       <view class="ae-card">
         <text class="ae-card__label">账户收益（元）</text>
         <text class="ae-card__amount">{{cnt.money(money.amount(balance), balanceK)}}</text>
@@ -19,8 +19,8 @@
         <view class="ae-action" bindtap="openMore" aria-role="button" aria-label="更多：提现记录、邀请记录" hover-class="cy-pressed" hover-stay-time="80"><view class="ae-action__ic"><cy-icon name="more" size="40" /></view><text>更多</text></view>
       </view>
     </view>
-    <cy-empty class="ae-fill" wx:if="{{balance === '0.00' && theme !== 'merchant'}}" fill="{{true}}" kind="empty" title="还没有收益" cta="去发布路线" bind:cta="goPublish" />
-    <view class="ae-section" wx:else>
+    <cy-empty class="ae-fill cy-fade-in" wx:if="{{balance === '0.00' && theme !== 'merchant'}}" fill="{{true}}" kind="empty" title="还没有收益" cta="去发布路线" bind:cta="goPublish" />
+    <view class="ae-section cy-fade-in" wx:else>
       <cy-earnings-overview merchant="{{theme === 'merchant'}}" bind:detail="openIncomeDetail" />
     </view>
   </block>

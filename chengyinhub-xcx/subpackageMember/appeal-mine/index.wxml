@@ -21,12 +21,12 @@
           <cy-icon class="rp-row__arrow" name="arrow-right" size="28" />
         </view>
         <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="3" />
-        <cy-state-shell wx:elif="{{state === 'error'}}" kind="data" title="申诉记录加载失败" primary="重试" bind:primary="retry" />
-        <cy-state-shell wx:elif="{{state === 'empty'}}" kind="empty" title="还没有申诉记录" />
+        <cy-state-shell wx:elif="{{state === 'error'}}" kind="data" title="申诉记录加载失败" primary="重试" bind:primary="retry" class="cy-fade-in" />
+        <cy-state-shell wx:elif="{{state === 'empty'}}" kind="empty" title="还没有申诉记录" class="cy-fade-in" />
         <block wx:else>
-          <cy-tabs variant="chip" tabs="{{tabs}}" active="{{tab}}" bind:change="onTab" />
-          <cy-state-shell wx:if="{{!rows.length}}" kind="empty" title="{{tab === 'decided' ? '还没有已有结论的申诉' : '没有处理中的申诉'}}" />
-          <view class="rp-row" wx:for="{{rows}}" wx:key="key" data-topic="{{item.topicId}}" data-session="{{item.sessionId}}" bindtap="openAppeal"
+          <cy-tabs variant="chip" tabs="{{tabs}}" active="{{tab}}" bind:change="onTab" class="cy-fade-in" />
+          <cy-state-shell wx:if="{{!rows.length}}" kind="empty" title="{{tab === 'decided' ? '还没有已有结论的申诉' : '没有处理中的申诉'}}" class="cy-fade-in" />
+          <view class="rp-row cy-fade-in" wx:for="{{rows}}" wx:key="key" data-topic="{{item.topicId}}" data-session="{{item.sessionId}}" bindtap="openAppeal"
                 aria-role="button" aria-label="{{item.title}}，{{item.tagText}}" hover-class="cy-pressed" hover-stay-time="80">
             <view class="rp-row__main">
               <view class="rp-row__head">
@@ -37,7 +37,7 @@
             </view>
             <cy-icon class="rp-row__arrow" name="arrow-right" size="28" />
           </view>
-          <view class="rp__more rp__more--end" wx:if="{{rows.length}}">已经到底了</view>
+          <view class="rp__more rp__more--end cy-fade-in" wx:if="{{rows.length}}">已经到底了</view>
         </block>
       </block>
     </view>

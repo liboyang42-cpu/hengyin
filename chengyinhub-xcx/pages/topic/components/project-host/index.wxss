@@ -1,3 +1,4 @@
+@import '../../../../style/fade-in.wxss';
 @import '/style/merchant-light.wxss';
 
 /* ============================================================

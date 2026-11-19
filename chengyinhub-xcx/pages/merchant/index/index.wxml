@@ -155,7 +155,7 @@
       <!-- 首载没有任何项目时才整块骨架:半份数据渲成卡片,商家会读到「今日无待办」这种
            **加载中冒充空态**的假结论;已有项目时刷新保留旧卡,避免整块闪退。 -->
       <cy-skeleton wx:if="{{!projectCards.length && (joinLoading || hostLoading || todoLoading || gameEntryLoading)}}" type="list" count="{{2}}" />
-      <view wx:else>
+      <view wx:else class="cy-fade-in">
         <!-- 2026-11-01 业主(项目卡方案 B v3):横滑大卡,4:3 封面铺满整张卡(与主题封面同比例,不裁);
              左上状态(小色点 + 字)、右上主题类型,都是白色毛玻璃签;底部白色半透明渐变只包住文字区,
              「N 张待核销」深色签在名称上方。卡片不放扫码按钮(工作台第一个快捷入口就是扫码),点卡进项目工作台。

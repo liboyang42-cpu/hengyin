@@ -46,33 +46,33 @@ module.exports = { valid: valid };
       <block wx:elif="{{feed.length}}">
         <!-- r2 a6-w2-17:与玩家发现页同一张卡同一套动作(点赞红心、评论、头像「+」关注、分享、点图全屏);
              l-misc:商家也可以是俱乐部成员 —— 本人所在俱乐部的帖文出「转发」(canRepost 只来自 /api/club/my) -->
-        <cy-post-card class="cy-fade-in" wx:for="{{feed}}" wx:key="feedKey" post="{{item}}" index="{{index}}" light="{{true}}" user-id="{{viewerId}}" interactive-actions interactive-user interactive-club show-follow show-share show-repost="{{item.canRepost}}"
+        <cy-post-card wx:for="{{feed}}" wx:key="feedKey" post="{{item}}" index="{{index}}" light="{{true}}" user-id="{{viewerId}}" interactive-actions interactive-user interactive-club show-follow show-share show-repost="{{item.canRepost}}"
           accessibility-label="查看{{item.memberNickname || '城瘾玩家'}}的动态"
           bind:detail="onPostTap" bind:comment="onPostTap" bind:like="onLikePost" bind:follow="onFollowPost" bind:user="onPostUser" bind:club="onPostClub" bind:repost="onRepostPost"
-          bind:playdetail="onPostReference" bind:play="onPostReference" />
+          bind:playdetail="onPostReference" bind:play="onPostReference" class="cy-fade-in" />
       </block>
-      <cy-empty wx:elif="{{feedState === 'empty'}}" kind="empty" title="{{feedEmptyTitle}}" />
+      <cy-empty wx:elif="{{feedState === 'empty'}}" kind="empty" title="{{feedEmptyTitle}}" class="cy-fade-in" />
     </block>
 
     <block wx:else>
       <cy-skeleton wx:if="{{pageState === 'loading'}}" type="card" count="{{3}}" loading-label="合作对象加载中" />
       <!-- 未登录不再整屏拦:静默登录后自动加载;登录失败只留这条内联错误 + 重试。 -->
-      <cy-inline-error load-failure class="rel-inline-error" wx:elif="{{pageState === 'error'}}" kind="data"
+      <cy-inline-error load-failure class="rel-inline-error cy-fade-in" wx:elif="{{pageState === 'error'}}" kind="data"
         title="合作数据加载失败" sub="{{error}}" action="重新加载" bind:action="retryRelation" />
       <block wx:else>
-        <view wx:if="{{refreshing}}" class="refresh-note" aria-role="status" aria-live="polite">
+        <view wx:if="{{refreshing}}" class="refresh-note cy-fade-in" aria-role="status" aria-live="polite">
           <text>正在更新合作对象</text>
         </view>
-        <cy-inline-error load-failure class="rel-inline-error" wx:if="{{clubError}}" kind="data"
+        <cy-inline-error load-failure class="rel-inline-error cy-fade-in" wx:if="{{clubError}}" kind="data"
           title="部分俱乐部资料暂不可用" sub="{{clubError}}" action="重新加载" bind:action="loadRelationHome" />
         <!-- 俱乐部换新版俱乐部卡；整卡进主页看资料，按钮「发起合作」直达 type=1 邀约表单 -->
-        <view class="rel-list" wx:if="{{relation.valid(clubs).length}}">
+        <view class="rel-list cy-fade-in" wx:if="{{relation.valid(clubs).length}}">
           <view class="rel-item" wx:for="{{relation.valid(clubs)}}" wx:key="id" wx:if="{{item.displayName}}" style="--pmi:{{index}};">
             <cy-club-card club="{{item}}" audience="merchant" interactive="{{true}}"
               data-id="{{item.id}}" aria-label="查看{{item.displayName}}俱乐部档案" bind:tap="goClub" bind:action="goClub"  hover-class="cy-pressed" hover-stay-time="80"/>
           </view>
         </view>
-        <cy-empty wx:elif="{{!clubError}}" kind="empty" title="暂无可合作俱乐部" />
+        <cy-empty wx:elif="{{!clubError}}" kind="empty" title="暂无可合作俱乐部" class="cy-fade-in" />
       </block>
     </block>
   </view>

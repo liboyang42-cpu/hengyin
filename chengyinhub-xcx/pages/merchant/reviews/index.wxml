@@ -19,19 +19,19 @@
 
   <cy-skeleton wx:if="{{pageState === 'loading'}}" type="card" count="4" />
   <!-- 未登录不再整屏拦:管理态静默登录后自动加载;拒权/失败只留这条内联错误 + 重试。 -->
-  <cy-inline-error class="review-inline-error" wx:elif="{{pageState === 'no-permission'}}" kind="data"
+  <cy-inline-error class="review-inline-error cy-fade-in" wx:elif="{{pageState === 'no-permission'}}" kind="data"
                    title="没有口碑管理权限" sub=""
                    action="重新加载" bind:action="retry" />
-  <cy-inline-error class="review-inline-error" wx:elif="{{pageState === 'login-required'}}" kind="data"
+  <cy-inline-error class="review-inline-error cy-fade-in" wx:elif="{{pageState === 'login-required'}}" kind="data"
                    title="登录后查看口碑管理" sub="{{errorMessage}}" action="重新登录" bind:action="retryLogin" />
-  <cy-inline-error load-failure class="review-inline-error" wx:elif="{{pageState === 'error'}}" kind="error"
+  <cy-inline-error load-failure class="review-inline-error cy-fade-in" wx:elif="{{pageState === 'error'}}" kind="error"
                    title="评价加载失败" sub="{{errorMessage}}" action="重新加载" bind:action="retry" />
   <cy-empty wx:elif="{{pageState === 'missing'}}" kind="missing-param" fill size="lg"
-            title="商家信息不完整" cta="返回" bind:cta="onNavBack" />
+            title="商家信息不完整" cta="返回" bind:cta="onNavBack" class="cy-fade-in" />
   <cy-empty wx:elif="{{pageState === 'empty'}}" fill size="lg" kind="empty"
-            title="还没有真实到店评价" />
+            title="还没有真实到店评价" class="cy-fade-in" />
 
-  <scroll-view wx:elif="{{pageState === 'ready'}}" class="review-scroll" scroll-y enhanced
+  <scroll-view wx:elif="{{pageState === 'ready'}}" class="review-scroll cy-fade-in" scroll-y enhanced
                show-scrollbar="{{false}}" lower-threshold="160" bindscrolltolower="loadMore">
     <view class="review-content">
       <view class="review-summary">
@@ -143,7 +143,7 @@
       </view>
 
       <cy-skeleton wx:if="{{mode === 'manage' && filterLoading}}" type="card" count="2" />
-      <view wx:elif="{{!filteredItems.length && (mode === 'manage' ? activeFilter !== 'all' : items.length)}}" class="review-filter-empty">
+      <view wx:elif="{{!filteredItems.length && (mode === 'manage' ? activeFilter !== 'all' : items.length)}}" class="review-filter-empty cy-fade-in">
         还没有符合条件的评价
       </view>
 

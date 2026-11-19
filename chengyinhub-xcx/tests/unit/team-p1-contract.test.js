@@ -173,7 +173,7 @@ function assertTeamStateUx(detailWxml, joinWxml, detailJson, joinJson, teamWxss)
 function actionsConditionForText(source, text) {
   const textIndex = source.indexOf(text)
   assert.notEqual(textIndex, -1, `缺少操作文案: ${text}`)
-  const actionsStart = source.lastIndexOf('<view class="team-actions"', textIndex)
+  const actionsStart = source.lastIndexOf('<view class="team-actions', textIndex)
   assert.notEqual(actionsStart, -1, `${text} 不在 team-actions 中`)
   const openTagEnd = source.indexOf('>', actionsStart)
   const openTag = source.slice(actionsStart, openTagEnd + 1)

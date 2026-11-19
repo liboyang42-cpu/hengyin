@@ -7,21 +7,21 @@
   <cy-page-title title="俱乐部勋章" subtitle="{{clubName}}" safe-top="{{false}}" />
 
   <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="4" loading-label="正在读取俱乐部勋章" />
-  <cy-state-shell wx:elif="{{state === 'missing-param'}}" kind="missing-param" fill size="lg" primary="返回" bind:primary="goBack" />
+  <cy-state-shell wx:elif="{{state === 'missing-param'}}" kind="missing-param" fill size="lg" primary="返回" bind:primary="goBack" class="cy-fade-in" />
   <cy-state-shell wx:elif="{{state === 'error'}}" kind="{{errorKind}}" title="勋章列表没加载成功" sub="{{errorText}}"
-                  primary="重新加载" bind:primary="retryLoad" fill size="lg" />
+                  primary="重新加载" bind:primary="retryLoad" fill size="lg" class="cy-fade-in" />
   <block wx:else>
     <text wx:if="{{refreshing}}" class="badge-refreshing cy-refresh-float" style="top: {{statusBarHeight + navBarHeight}}px;" aria-role="status">正在确认勋章列表…</text>
-    <cy-inline-error wx:if="{{refreshError}}" title="列表没刷新成功" sub="{{refreshError}}" action="重新加载" bind:action="retryLoad" />
+    <cy-inline-error wx:if="{{refreshError}}" title="列表没刷新成功" sub="{{refreshError}}" action="重新加载" bind:action="retryLoad" class="cy-fade-in" />
 
-    <view wx:if="{{isOwner}}" class="section">
+    <view wx:if="{{isOwner}}" class="section cy-fade-in">
       <cy-btn variant="primary" bindtap="openCreate">创建勋章</cy-btn>
     </view>
 
-    <cy-state-shell wx:if="{{state === 'empty'}}" kind="empty" title="还没有俱乐部勋章"
+    <cy-state-shell wx:if="{{state === 'empty'}}" kind="empty" title="还没有俱乐部勋章" class="cy-fade-in"
                     />
 
-    <view wx:if="{{state === 'ready'}}" class="section">
+    <view wx:if="{{state === 'ready'}}" class="section cy-fade-in">
       <text class="section-title">全部勋章 · {{badges.length || 0}} 枚</text>
       <view class="ds-card">
         <view class="badge-row" wx:for="{{badges}}" wx:key="badgeCode">
@@ -63,10 +63,10 @@
     <text wx:if="{{grantBadge}}" class="picker-caption">勋章：{{grantBadge.badgeName}}</text>
     <cy-skeleton wx:if="{{membersState === 'loading'}}" type="list" count="3" loading-label="正在读取成员名单" />
     <cy-inline-error wx:elif="{{membersState === 'error'}}" title="成员名单没加载成功" sub="{{membersError}}"
-                     action="重新加载" bind:action="loadMembers" />
-    <cy-state-shell wx:elif="{{membersState === 'empty'}}" kind="empty" title="暂无成员" />
+                     action="重新加载" bind:action="loadMembers" class="cy-fade-in" />
+    <cy-state-shell wx:elif="{{membersState === 'empty'}}" kind="empty" title="暂无成员" class="cy-fade-in" />
     <block wx:elif="{{membersState === 'ready'}}">
-      <view class="picker-row {{granting ? 'is-disabled' : ''}}" wx:for="{{members}}" wx:key="memberId"
+      <view class="picker-row {{granting ? 'is-disabled' : ''}} cy-fade-in" wx:for="{{members}}" wx:key="memberId"
             data-member-id="{{item.memberId}}" bindtap="pickMember"
             aria-role="button" aria-label="颁给 {{item.nickname}}" aria-disabled="{{granting}}"
             hover-class="{{granting ? 'none' : 'cy-pressed'}}" hover-stay-time="80">

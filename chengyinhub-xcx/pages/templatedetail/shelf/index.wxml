@@ -15,10 +15,10 @@
   <!-- ===================== 主题 ===================== -->
   <block wx:if="{{ tab === 'topic' }}">
     <cy-skeleton wx:if="{{ !topicLoaded && !topicError }}" class="sh-state" type="list" count="3" />
-    <cy-error wx:elif="{{ topicError && !topicLoaded }}" class="sh-state" load-failure size="lg" title="{{ topicError }}" sub="" bindretry="retry" />
-    <cy-empty wx:elif="{{ !featTopics.length }}" class="sh-state" size="lg" kind="empty" title="还没有可复用的主题模板" sub="" />
+    <cy-error wx:elif="{{ topicError && !topicLoaded }}" class="sh-state cy-fade-in" load-failure size="lg" title="{{ topicError }}" sub="" bindretry="retry" />
+    <cy-empty wx:elif="{{ !featTopics.length }}" class="sh-state cy-fade-in" size="lg" kind="empty" title="还没有可复用的主题模板" sub="" />
     <block wx:else>
-      <scroll-view class="sh-rail" scroll-x enhanced show-scrollbar="{{ false }}" paging-enabled bindscroll="onRailScroll">
+      <scroll-view class="sh-rail cy-fade-in" scroll-x enhanced show-scrollbar="{{ false }}" paging-enabled bindscroll="onRailScroll">
         <view class="sh-rail__in">
           <view class="lc" wx:for="{{ featTopics }}" wx:key="id" data-item="{{ item }}" bindtap="openTopic" aria-role="button" aria-label="{{ item.name }}" hover-class="cy-pressed" hover-stay-time="80">
             <image wx:if="{{ item.cover }}" class="lc__img" src="{{ item.cover }}" data-id="{{ item.id }}" binderror="onCoverError" mode="aspectFill" />
@@ -31,11 +31,11 @@
           </view>
         </view>
       </scroll-view>
-      <view class="sh-dots" aria-hidden="true">
+      <view class="sh-dots cy-fade-in" aria-hidden="true">
         <view class="sh-dot {{ index === featIndex ? 'sh-dot--on' : '' }}" wx:for="{{ featTopics }}" wx:key="id"></view>
       </view>
 
-      <scroll-view class="sh-tags" scroll-x enhanced show-scrollbar="{{ false }}">
+      <scroll-view class="sh-tags cy-fade-in" scroll-x enhanced show-scrollbar="{{ false }}">
         <view class="sh-tags__in">
           <view class="tg {{ tf === 'all' ? 'tg--on' : '' }}" data-key="all" bindtap="pickTag" aria-role="button" aria-label="全部" hover-class="cy-pressed" hover-stay-time="80">全部</view>
           <view class="tg {{ tf === item.key ? 'tg--on' : '' }}" wx:for="{{ topicTags }}" wx:key="key" data-key="{{ item.key }}" bindtap="pickTag"
@@ -96,10 +96,10 @@
   <!-- ===================== 玩法 ===================== -->
   <block wx:else>
     <cy-skeleton wx:if="{{ !gameLoaded && !gameError }}" class="sh-state" type="list" count="3" />
-    <cy-error wx:elif="{{ gameError && !gameLoaded }}" class="sh-state" load-failure size="lg" title="{{ gameError }}" sub="" bindretry="retry" />
-    <cy-empty wx:elif="{{ !featGames.length && !gameShelves.length }}" class="sh-state" size="lg" kind="empty" title="还没有玩法模板" sub="" />
+    <cy-error wx:elif="{{ gameError && !gameLoaded }}" class="sh-state cy-fade-in" load-failure size="lg" title="{{ gameError }}" sub="" bindretry="retry" />
+    <cy-empty wx:elif="{{ !featGames.length && !gameShelves.length }}" class="sh-state cy-fade-in" size="lg" kind="empty" title="还没有玩法模板" sub="" />
     <block wx:else>
-      <scroll-view class="sh-rail" scroll-x enhanced show-scrollbar="{{ false }}" paging-enabled>
+      <scroll-view class="sh-rail cy-fade-in" scroll-x enhanced show-scrollbar="{{ false }}" paging-enabled>
         <view class="sh-rail__in sh-rail__in--g">
           <view class="ap" wx:for="{{ featGames }}" wx:key="id" data-item="{{ item }}" bindtap="openGame" aria-role="button" aria-label="{{ item.title }}" hover-class="cy-pressed" hover-stay-time="80">
             <text class="ap__eyebrow" style="color: {{ item.groupColor }};">{{ item.groupName }}</text>
@@ -120,7 +120,7 @@
         </view>
       </scroll-view>
 
-      <scroll-view class="sh-tags" scroll-x enhanced show-scrollbar="{{ false }}">
+      <scroll-view class="sh-tags cy-fade-in" scroll-x enhanced show-scrollbar="{{ false }}">
         <view class="sh-tags__in">
           <view class="tg {{ gf === 'all' ? 'tg--on' : '' }}" data-key="all" bindtap="pickTag" aria-role="button" aria-label="全部" hover-class="cy-pressed" hover-stay-time="80">全部</view>
           <view class="tg {{ gf === item.key ? 'tg--on' : '' }}" wx:for="{{ gameTags }}" wx:key="key" data-key="{{ item.key }}" bindtap="pickTag"

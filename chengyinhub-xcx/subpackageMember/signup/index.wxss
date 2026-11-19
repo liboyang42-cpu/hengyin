@@ -258,3 +258,4 @@
 .wl-nav__me { transition: var(--cy-tr-press); }
 .wc__qr-tip { transition: var(--cy-tr-press); }
 .team-entry { transition: var(--cy-tr-press); }
+.signup--reduced .cy-img-fade { transition: none; } /* motion-1118 v2:App 内减少动效时票卡封面直接落地 */

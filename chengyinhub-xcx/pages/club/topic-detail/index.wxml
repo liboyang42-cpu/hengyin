@@ -473,14 +473,14 @@
       </view>
 
     <cy-skeleton wx:if="{{settingState === 'loading'}}" type="list" count="2" />
-    <cy-empty wx:elif="{{settingState === 'denied'}}" title="暂时不能查看主题设置" sub="{{settingErrorText}}" />
-    <cy-error load-failure wx:elif="{{settingState !== 'ready'}}" title="主题设置获取失败" sub="{{settingErrorText}}" retry="重试" bind:retry="loadTopicSetting" />
+    <cy-empty wx:elif="{{settingState === 'denied'}}" title="暂时不能查看主题设置" sub="{{settingErrorText}}" class="cy-fade-in" />
+    <cy-error load-failure wx:elif="{{settingState !== 'ready'}}" title="主题设置获取失败" sub="{{settingErrorText}}" retry="重试" bind:retry="loadTopicSetting" class="cy-fade-in" />
     <block wx:else>
-      <view class="tset-head">
+      <view class="tset-head cy-fade-in">
         <text class="tset-name">{{setting.topicName}}</text>
         <text wx:if="{{setting.lifecycleText}}" class="tset-stage">{{setting.lifecycleText}}</text>
       </view>
-      <view class="tset-row" bindtap="goEditTopic" aria-role="button" aria-label="编辑主题内容"
+      <view class="tset-row cy-fade-in" bindtap="goEditTopic" aria-role="button" aria-label="编辑主题内容"
         hover-class="cy-pressed" hover-stay-time="80">
         <view class="tset-row-main">
           <text class="tset-row-title">编辑主题内容</text>
@@ -489,7 +489,7 @@
         <cy-icon name="arrow-right" size="28" />
       </view>
 
-      <view wx:if="{{setting.canManage && lifecycle === 2}}" class="tset-row" bindtap="goPricing"
+      <view wx:if="{{setting.canManage && lifecycle === 2}}" class="tset-row cy-fade-in" bindtap="goPricing"
         aria-role="button" aria-label="确认终价" hover-class="cy-pressed" hover-stay-time="80">
         <view class="tset-row-main">
           <text class="tset-row-title">确认终价</text>
@@ -497,7 +497,7 @@
         <cy-icon name="arrow-right" size="28" />
       </view>
 
-      <view wx:if="{{canReviewChapterApplications}}" class="tset-row" bindtap="goChapterApplications"
+      <view wx:if="{{canReviewChapterApplications}}" class="tset-row cy-fade-in" bindtap="goChapterApplications"
         aria-role="button" aria-label="承接审核与项目协作" hover-class="cy-pressed" hover-stay-time="80">
         <view class="tset-row-main">
           <text class="tset-row-title">承接审核</text>
@@ -507,24 +507,24 @@
       </view>
 
       <text class="tset-label">开放商家对接</text>
-      <view class="tset-row">
+      <view class="tset-row cy-fade-in">
         <view class="tset-row-main">
           <text class="tset-row-title">开放商家承接</text>
         </view>
         <cy-switch checked="{{setting.coopOpen}}" disabled="{{!setting.canManage || settingSaving}}"
           accessibility-label="开放商家承接" bind:change="onSettingToggle" data-key="coopOpen" />
       </view>
-      <cy-club-director-row-list rows="{{setting.chapterRows}}" surface="raised" />
+      <cy-club-director-row-list rows="{{setting.chapterRows}}" surface="raised" class="cy-fade-in" />
 
       <text class="tset-label">在俱乐部页的展示</text>
-      <view class="tset-row">
+      <view class="tset-row cy-fade-in">
         <view class="tset-row-main">
           <text class="tset-row-title">置顶在俱乐部主页</text>
         </view>
         <cy-switch checked="{{setting.pinned}}" disabled="{{!setting.canManage || settingSaving}}"
           accessibility-label="置顶在俱乐部主页" bind:change="onSettingToggle" data-key="pinned" />
       </view>
-      <view class="tset-row">
+      <view class="tset-row cy-fade-in">
         <view class="tset-row-main">
           <text class="tset-row-title">只对成员可见</text>
         </view>
@@ -532,7 +532,7 @@
           accessibility-label="只对成员可见" bind:change="onSettingToggle" data-key="memberOnly" />
       </view>
       <!-- 不再拿「还在售卖」当出现条件:已经下架的主题照样可能有已付款未核销的票要退 -->
-      <view wx:if="{{setting.canManage}}" class="tset-row" bindtap="openEndTopic"
+      <view wx:if="{{setting.canManage}}" class="tset-row cy-fade-in" bindtap="openEndTopic"
         aria-role="button" aria-label="结束主题" hover-class="cy-pressed" hover-stay-time="80">
         <view class="tset-row-main">
           <text class="tset-row-title tset-row-title--danger">结束主题</text>
@@ -550,11 +550,11 @@
 <cy-scene-sheet show="{{merchantSheetVisible}}" variant="half" title="商家" closable maskClosable bind:close="closeMerchants" class="theme-merchant">
   <view class="tset">
     <cy-skeleton wx:if="{{merchantState === 'loading'}}" type="list" count="2" />
-    <cy-empty wx:elif="{{merchantState === 'denied'}}" title="{{merchantDeniedReason || '商家信息获取失败'}}" />
-    <cy-error load-failure wx:elif="{{merchantState !== 'ready'}}" title="商家信息获取失败" retry="重试" bind:retry="loadMerchants" />
+    <cy-empty wx:elif="{{merchantState === 'denied'}}" title="{{merchantDeniedReason || '商家信息获取失败'}}" class="cy-fade-in" />
+    <cy-error load-failure wx:elif="{{merchantState !== 'ready'}}" title="商家信息获取失败" retry="重试" bind:retry="loadMerchants" class="cy-fade-in" />
     <block wx:else>
-      <cy-empty wx:if="{{!merchantRows.length}}" title="这个主题还没有承接商家" />
-      <view wx:for="{{merchantRows}}" wx:key="nodeId" class="cli-row {{index === 0 ? 'cli-row--first' : ''}}">
+      <cy-empty wx:if="{{!merchantRows.length}}" title="这个主题还没有承接商家" class="cy-fade-in" />
+      <view wx:for="{{merchantRows}}" wx:key="nodeId" class="cli-row {{index === 0 ? 'cli-row--first' : ''}} cy-fade-in">
         <view class="cli-ava">{{item.initial}}</view>
         <view class="cli-main">
           <text class="cli-name">{{item.merchantName}}</text>
@@ -580,20 +580,20 @@
 <cy-scene-sheet show="{{customerSheetVisible}}" variant="half" title="报名参与者" closable maskClosable bind:close="closeCustomers" class="theme-merchant">
   <view class="tset">
     <cy-skeleton wx:if="{{customerState === 'loading'}}" type="list" count="2" />
-    <cy-error load-failure wx:elif="{{customerState !== 'ready'}}" title="报名名单获取失败" sub="{{customerErrorReason}}" retry="重试" bind:retry="loadCustomers" />
+    <cy-error load-failure wx:elif="{{customerState !== 'ready'}}" title="报名名单获取失败" sub="{{customerErrorReason}}" retry="重试" bind:retry="loadCustomers" class="cy-fade-in" />
     <block wx:else>
-      <view class="cli-stats">
+      <view class="cli-stats cy-fade-in">
         <text wx:for="{{customerStats}}" wx:key="key"
           class="cli-stat cli-stat--{{item.tone}}">{{item.text}}</text>
       </view>
-      <view class="cli-chips">
+      <view class="cli-chips cy-fade-in">
         <view wx:for="{{customerChips}}" wx:key="value"
           class="cli-chip {{item.value === customerFilter ? 'cli-chip--on' : ''}}"
           data-value="{{item.value}}" bindtap="onCustomerFilter"
           aria-role="button" aria-label="只看{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
       </view>
-      <cy-empty wx:if="{{!customerRows.length}}" title="{{customerFilter ? '这一档还没有人' : '还没有人报名'}}" sub="{{customerFilter ? '换个筛选试试' : ''}}" />
-      <view wx:for="{{customerRows}}" wx:key="key" class="cli-row {{index === 0 ? 'cli-row--first' : ''}}">
+      <cy-empty wx:if="{{!customerRows.length}}" title="{{customerFilter ? '这一档还没有人' : '还没有人报名'}}" sub="{{customerFilter ? '换个筛选试试' : ''}}" class="cy-fade-in" />
+      <view wx:for="{{customerRows}}" wx:key="key" class="cli-row {{index === 0 ? 'cli-row--first' : ''}} cy-fade-in">
         <view class="cli-ava">{{item.initial}}</view>
         <view class="cli-main">
           <text class="cli-name">{{item.displayName}}</text>
@@ -612,7 +612,7 @@
       
       <!-- CU-C-76:不可发送时不再让人点进去只吃一句笼统 toast —— 入口置灰并就地写清资格条件;
            可发送(canBroadcast,来自导演台投影)时才进选范围流程。 -->
-      <view wx:if="{{canBroadcast}}" class="cli-entry" bindtap="goBroadcast"
+      <view wx:if="{{canBroadcast}}" class="cli-entry cy-fade-in" bindtap="goBroadcast"
         aria-role="button" aria-label="定向广播" hover-class="cy-pressed" hover-stay-time="80">
         <view class="cli-main">
           <text class="cli-name">定向广播</text>
@@ -620,7 +620,7 @@
         </view>
         <cy-icon name="slide-arrow" size="24" />
       </view>
-      <view wx:else class="cli-entry cli-entry--disabled">
+      <view wx:else class="cli-entry cli-entry--disabled cy-fade-in">
         <view class="cli-main">
           <text class="cli-name">定向广播</text>
           <!-- CU-C-76:两种「不能发」要说清是哪一种 —— 文案由投影的原因码算好(broadcastDisabledText) -->
@@ -632,8 +632,8 @@
     <block wx:if="{{trendState !== 'idle'}}">
       <text class="tset-label">按参与日期 · 报名人数</text>
       <cy-skeleton wx:if="{{trendState === 'loading'}}" type="list" count="1" />
-      <cy-error wx:elif="{{trendState === 'error'}}" title="报名趋势获取失败" sub="{{trendError}}" retry="重试" bind:retry="loadRegistrationTrend" />
-      <cy-empty wx:elif="{{!trendRows.length}}" title="还没有带参与日期的报名" />
+      <cy-error wx:elif="{{trendState === 'error'}}" title="报名趋势获取失败" sub="{{trendError}}" retry="重试" bind:retry="loadRegistrationTrend" class="cy-fade-in" />
+      <cy-empty wx:elif="{{!trendRows.length}}" title="还没有带参与日期的报名" class="cy-fade-in" />
       <view wx:for="{{trendRows}}" wx:key="key" class="cli-row {{index === 0 ? 'cli-row--first' : ''}}">
         <view class="cli-main"><text class="cli-name">{{item.dateText}}</text></view>
         <view class="cli-right"><text class="cli-state">{{item.countText}}</text></view>

@@ -6,10 +6,10 @@
   <view class="pp__frame" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
     <cy-nav-bar overlay scrolled="{{scrolled}}" tint="light" custom-back title="城瘾30天通行证" bind:back="goBack" />
     <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="3" />
-    <cy-error wx:elif="{{state === 'error'}}" title="加载失败" retry="重试" bind:retry="load" />
-    <cy-empty wx:elif="{{state === 'merchant'}}" fill class="cy-fill-state" size="lg" kind="empty" title="商家账号没有通行证" />
-    <cy-empty wx:elif="{{!view.enabled}}" fill class="cy-fill-state" size="lg" kind="empty" title="通行证暂未开放" />
-    <view wx:else class="pp__body">
+    <cy-error wx:elif="{{state === 'error'}}" title="加载失败" retry="重试" bind:retry="load" class="cy-fade-in" />
+    <cy-empty wx:elif="{{state === 'merchant'}}" fill class="cy-fill-state cy-fade-in" size="lg" kind="empty" title="商家账号没有通行证" />
+    <cy-empty wx:elif="{{!view.enabled}}" fill class="cy-fill-state cy-fade-in" size="lg" kind="empty" title="通行证暂未开放" />
+    <view wx:else class="pp__body cy-fade-in">
       <!-- l-iconsB:proto/icons ps-pass 标准玩家样式(实色卡 + 标准列表行 + 底部固定药丸,不做玻璃)。卡里只写服务端给的事实 -->
       <view class="pp__card">
         <view class="pp__card-top">

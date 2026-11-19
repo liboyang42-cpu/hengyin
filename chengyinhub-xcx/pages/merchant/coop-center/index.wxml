@@ -19,7 +19,7 @@
     <block wx:if="{{activeTab === 'plaza'}}">
       <cy-skeleton wx:if="{{routesLoading && !routes.length}}" type="card" count="{{2}}" />
       <cy-error load-failure class="cy-fade-in" size="lg" wx:elif="{{routesError && !routes.length}}" title="路线加载失败" sub="{{routesError}}" retry="重新加载" bind:retry="loadRoutes" />
-      <view wx:else class="cc-list">
+      <view wx:else class="cc-list cy-fade-in">
         <view class="cc-refreshing" wx:if="{{routesLoading && routes.length}}" aria-role="status" aria-live="polite">正在刷新开放承接路线…</view>
         <!-- CU-M-85:id 供参谋页带 ?topicId= 进来时定位;focus 只标命中那一条。 -->
         <!-- 2026-10-22 owner:广场卡重做 —— 大封面 + 下沿黑色渐变,类型/余席浮在图上、标题档期压在渐变上;
@@ -58,7 +58,7 @@
     <block wx:else>
       <cy-skeleton wx:if="{{eventsLoading && !events.length}}" type="card" count="{{2}}" />
       <cy-error load-failure class="cy-fade-in" size="lg" wx:elif="{{eventsError && !events.length}}" title="官方活动加载失败" sub="{{eventsError}}" retry="重新加载" bind:retry="loadEvents" />
-      <view wx:else class="cc-list">
+      <view wx:else class="cc-list cy-fade-in">
         <view class="cc-refreshing" wx:if="{{eventsLoading && events.length}}" aria-role="status" aria-live="polite">正在刷新官方活动…</view>
         <view class="cc-card cc-card--tap" wx:for="{{events}}" wx:key="id" data-id="{{item.id}}" bindtap="openEvent"
           aria-role="button" aria-label="查看官方活动：{{item.title}}" hover-class="cy-pressed" hover-stay-time="80">

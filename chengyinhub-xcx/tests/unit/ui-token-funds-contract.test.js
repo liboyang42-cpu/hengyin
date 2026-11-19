@@ -599,7 +599,7 @@ function assertActionTokenContract(dateSheet, dateSheetWxml, fabu, tokens) {
 }
 
 function assertProfitPresentation(wxml, wxss, js) {
-  const statTag = wxml.match(/<cy-stat-card\b[^>]*class="stat-grid"[^>]*>/)
+  const statTag = wxml.match(/<cy-stat-card\b[^>]*class="stat-grid(?: cy-fade-in)?"[^>]*>/)
   assert.ok(statTag, '分润指标网格必须存在')
   assert.match(statTag[0], /columns="\{\{1\}\}"/)
   assert.match(rule(wxss, '.stat-grid'), /width:\s*100%/)

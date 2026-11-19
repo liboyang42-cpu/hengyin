@@ -63,7 +63,7 @@
           <view class="wc__face wc__front {{item.wLocked ? 'wc__front--locked' : ''}}">
             <view class="wc__go" style="background: {{item.wColor}};"><image src="./icon_go.svg" mode="aspectFit" /></view>
             <view class="wc__t"><text class="wc__b">{{item.wTitle}}</text><text class="wc__s">{{item.wSub}}</text><text wx:if="{{item.wTag}}" class="wc__tag {{item.wLocked ? 'wc__tag--locked' : ''}}">{{item.wTag}}</text></view>
-            <view class="wc__im" wx:if="{{item.wImg}}"><image lazy-load="true" src="{{item.wImg}}" mode="aspectFill" /></view>
+            <view class="wc__im cy-img-ph" wx:if="{{item.wImg}}"><image lazy-load="true" class="cy-img-fade {{imgOn[item.wKey] ? 'cy-img-fade--on' : ''}}" src="{{item.wImg}}" mode="aspectFill" data-fade-key="{{item.wKey}}" bindload="onImgFadeLoad" /></view>
             <!-- x-fix2 P-18:没封面不拿假路线图充数(k8 F13),但卡身也不留一大块空:放一枚票夹插画 -->
             <view class="wc__im wc__im--illus cy-cover-fb" wx:else aria-hidden="true"><image class="cy-cover-fb__art" src="/images/cover-route.svg" mode="aspectFit" /></view>
             <view class="wc__curl" aria-hidden="true"></view>

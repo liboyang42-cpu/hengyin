@@ -413,14 +413,14 @@
                   bind:close="emitCloseChapter">
     <cy-skeleton wx:if="{{ chapterSheet.state === 'loading' }}" type="card" count="{{ 2 }}" />
     <cy-error load-failure wx:elif="{{ chapterSheet.state === 'error' }}" title="本章内容加载失败"
-              sub="{{ chapterSheet.error }}" bind:retry="emitOpenChapter" />
+              sub="{{ chapterSheet.error }}" bind:retry="emitOpenChapter" class="cy-fade-in" />
     <cy-empty wx:elif="{{ chapterSheet.state === 'empty' }}" kind="empty" size="lg"
-              title="这条路线还没有章节" />
+              title="这条路线还没有章节" class="cy-fade-in" />
     <block wx:else>
-      <view class="dgroup-head-row" wx:if="{{ chapterSheet.story }}">
+      <view class="dgroup-head-row cy-fade-in" wx:if="{{ chapterSheet.story }}">
         <text class="dgroup-head">本章剧情</text>
       </view>
-      <view class="dcard cs-story" wx:if="{{ chapterSheet.story }}">
+      <view class="dcard cs-story cy-fade-in" wx:if="{{ chapterSheet.story }}">
         <!-- 稿 439:6336:正文上面先写是哪一章 —— 一条路线好几章,只给正文认不出来 -->
         <text class="cs-story-name" wx:if="{{ chapterSheet.chapterName }}">{{ chapterSheet.chapterName }}</text>
         <text class="cs-story-text {{ chapterSheet.storyOpen ? '' : 'cs-story-text--fold' }}">{{ chapterSheet.story }}</text>
@@ -436,12 +436,12 @@
         </view>
       </view>
 
-      <view class="dgroup-head-row">
+      <view class="dgroup-head-row cy-fade-in">
         <text class="dgroup-head">本章玩法</text>
         <text class="cs-count">{{ chapterSheet.nodes.length || 0 }} 个</text>
       </view>
       <!-- 分支图主题下后端只放行自己承接的那一站,所以这里可能就一张卡 —— 条数照实显示 -->
-      <view class="dcard">
+      <view class="dcard cy-fade-in">
         <view class="cs-node" wx:for="{{ chapterSheet.nodes }}" wx:key="id"
               data-id="{{ item.id }}" catchtap="emit" data-act="openNodeSheet"
               aria-role="button" aria-label="打开 {{ item.name }}"
@@ -460,10 +460,10 @@
       <!-- 稿 439:6336 底部这一块:我在这一章里承接的是哪一站、分润多少。
            数据全是承接页现成的(assignedValue / assignedNodeText / factTailText),
            不另拉一次接口 —— 抽屉是从那一页点开的,同一份数据。 -->
-      <view class="dgroup-head-row" wx:if="{{ assignedValue }}">
+      <view class="dgroup-head-row cy-fade-in" wx:if="{{ assignedValue }}">
         <text class="dgroup-head">当前承接章节</text>
       </view>
-      <view class="dcard cs-mine" wx:if="{{ assignedValue }}">
+      <view class="dcard cs-mine cy-fade-in" wx:if="{{ assignedValue }}">
         <text class="cs-mine-t">{{ assignedValue }}</text>
         <text class="cs-mine-s" wx:if="{{ assignedNodeText }}">{{ assignedNodeText }}</text>
         <!-- 与承接页那张卡的底行同一份数据、同一种写法(fact-tail),不另起一套口径 -->

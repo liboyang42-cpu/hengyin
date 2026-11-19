@@ -16,8 +16,9 @@ const ROOT = path.resolve(__dirname, '../..');
 // PR10 F-W1-12:session/login-reload 是纯函数(只读 app 入参,不碰 wx),页面靠它区分「未登录」与加载失败。
 // PR10 末轮:display-text 是纯函数(只解码用户文字里的 &lt; 等实体,不碰 wx),页面在映射时用它。
 // 2026-10-23:page-motion 只调 setData / setTimeout(页面自己的),依赖的 motion-preference 在 Node 里读不到 wx 时按「不减少动效」处理。
+// 2026-11-19 motion-1118 v2:img-fade 只调页面自己的 setData(bindload 标记 imgOn),不碰 wx。
 // 2026-10-29:ticket-expiry 是纯函数(只按日期算「N 天内过期」,不碰 wx),票夹映射票卡时用它。
-const UI_MODULE = /utils\/(toast|loading|modal|datetime|coop-publisher-access|coop-invite-return|roleGuard|session\/login-reload|display-text|page-motion|ticket-expiry)\.js$/;
+const UI_MODULE = /utils\/(toast|loading|modal|datetime|coop-publisher-access|coop-invite-return|roleGuard|session\/login-reload|display-text|page-motion|ticket-expiry|img-fade)\.js$/;
 const INSTALLED = Symbol('ui-sandbox-vm');
 
 function isUiModule(request) {

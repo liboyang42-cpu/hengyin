@@ -1,3 +1,4 @@
+@import '../../../style/fade-in.wxss';
 :host { display: block; }
 .ctm { width: 100%; padding-top: 12rpx; padding-bottom: 8rpx; box-sizing: border-box; }
 

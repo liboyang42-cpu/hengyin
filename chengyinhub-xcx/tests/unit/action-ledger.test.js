@@ -1319,9 +1319,9 @@ test('批准稿控件差分保留草稿双分支与成长中心真实绑定及�
     assert.deepEqual(refusal.targets.primaryApis, [])
   }
   const growth = ledger.controls.filter(item => item.route === 'subpackageP3/pages/growthcenter/index/index')
-  assert.equal(growth.length, 4)
+  assert.equal(growth.length, 6) // motion-1118 v2:头像、徽章图标各一处 bindload 加载淡入
   assert.deepEqual(growth.map(item => `${item.control.event}:${item.control.handler}`).sort(),
-    ['bind:cta:onLoginGrowth', 'bindtap:goExplore', 'bindtap:goLeaderboard', 'bindtap:onBadgeTap'])
+    ['bind:cta:onLoginGrowth', 'bindload:onImgFadeLoad', 'bindload:onImgFadeLoad', 'bindtap:goExplore', 'bindtap:goLeaderboard', 'bindtap:onBadgeTap'])
   assert.equal(growth.some(item => ['loadOverview', 'retryRank'].includes(item.control.handler)), false)
 })
 

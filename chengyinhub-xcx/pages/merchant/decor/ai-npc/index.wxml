@@ -14,9 +14,8 @@
     title="角色资料没能打开"
     sub="{{loadError}}"
     retry="重试"
-    bind:retry="_loadProfile"
-  />
-  <scroll-view wx:else scroll-y class="dc-scroll">
+    bind:retry="_loadProfile" class="cy-fade-in" />
+  <scroll-view wx:else scroll-y class="dc-scroll cy-fade-in">
     <view class="dc-content">
       <block wx:if="{{view === 'home'}}">
         <text class="dc-brand-title">AI 店铺角色</text>

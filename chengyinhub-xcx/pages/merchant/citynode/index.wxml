@@ -39,10 +39,10 @@
     sub="{{accessState === 'error' ? accessErrorText : ''}}" retry="重试" bind:retry="retry" auto-back="{{accessState === 'error' || !listEverLoaded}}" />
   <cy-empty size="lg" style="flex:1;min-height:0;" kind="no-permission"
     wx:elif="{{accessState === 'no-permission'}}" fill
-    title="当前身份不能管理节点" cta="{{merchantAccess.active ? '返回' : '申请入驻'}}" bind:cta="onDenyCta" />
+    title="当前身份不能管理节点" cta="{{merchantAccess.active ? '返回' : '申请入驻'}}" bind:cta="onDenyCta" class="cy-fade-in" />
 
   <block wx:elif="{{accessState === 'ready' && !loading && !loadErr}}">
-    <view class="cn-node-wrap" wx:for="{{applications}}" wx:key="id">
+    <view class="cn-node-wrap cy-fade-in" wx:for="{{applications}}" wx:key="id">
       <view class="cn-node cn-node--application">
         <view class="cn-node-main">
           <view class="cn-node-top">
@@ -64,12 +64,12 @@
         data-poiid="{{item.id}}" bind:action="retryCancel" />
     </view>
 
-    <cy-empty size="lg" style="flex:1;min-height:0;" kind="empty"
+    <cy-empty size="lg" style="flex:1;min-height:0;" kind="empty" class="cy-fade-in"
       wx:if="{{nodes.length === 0 && applications.length === 0}}" fill
       title="还没有节点" sub="申请上漫游地图"
       cta="{{merchantAccess.canManageProjects && quotaState === 'ready' && used < max ? '投放节点' : ''}}" bind:cta="goCreate" />
 
-    <view class="cn-node-wrap" wx:for="{{nodes}}" wx:key="poiId">
+    <view class="cn-node-wrap cy-fade-in" wx:for="{{nodes}}" wx:key="poiId">
       <view class="cn-node">
         <view class="cn-node-main">
           <view class="cn-node-top">
@@ -97,11 +97,11 @@
   <cy-sheet show="{{showClaim}}" title="认领平台节点" bind:close="toggleClaim">
     <view class="cn-claim">
       <cy-skeleton type="list" count="2" wx:if="{{claimState === 'loading'}}" />
-      <cy-error load-failure class="cn-claim-state" wx:elif="{{claimState === 'error' && !claimable.length}}"
+      <cy-error load-failure class="cn-claim-state cy-fade-in" wx:elif="{{claimState === 'error' && !claimable.length}}"
         title="可认领节点加载失败" sub="{{claimError}}" retry="重试" bind:retry="retryClaimable" />
-      <cy-inline-error load-failure class="cn-claim-state" wx:elif="{{claimState === 'error'}}" kind="network"
+      <cy-inline-error load-failure class="cn-claim-state cy-fade-in" wx:elif="{{claimState === 'error'}}" kind="network"
         title="可认领节点没有更新" sub="{{claimError}}" action="重试" bind:action="retryClaimable" />
-      <cy-empty class="cy-fade-in" wx:elif="{{claimState === 'ready' && !claimable.length}}" title="还没有可认领的节点" />
+      <cy-empty wx:elif="{{claimState === 'ready' && !claimable.length}}" title="还没有可认领的节点" class="cy-fade-in" />
       <view class="cn-claim-row" wx:for="{{claimable}}" wx:key="id">
         <view class="cn-node cn-node--sheet">
           <view class="cn-node-main">
@@ -126,7 +126,7 @@
       <image class="cn-poster-img cy-fade-in" wx:elif="{{posterSheet.state === 'ready' && posterSheet.qrcodeUrl}}" src="{{posterSheet.qrcodeUrl}}"
         mode="aspectFit" show-menu-by-longpress />
       <cy-code-text wx:elif="{{posterSheet.state === 'ready' && posterSheet.codeText}}" code="{{posterSheet.codeText}}" />
-      <cy-error load-failure class="cn-poster-state" wx:elif="{{posterSheet.state === 'error'}}" size="lg" title="打卡码加载失败"
+      <cy-error load-failure class="cn-poster-state cy-fade-in" wx:elif="{{posterSheet.state === 'error'}}" size="lg" title="打卡码加载失败"
         sub="{{posterSheet.errorText}}" retry="重新取码" bind:retry="retryPosterCode" />
       <block wx:if="{{posterSheet.state === 'ready'}}">
         <text class="cn-poster-name">{{posterSheet.nodeName}}</text>

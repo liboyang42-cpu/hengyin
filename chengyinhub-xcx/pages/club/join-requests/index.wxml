@@ -9,19 +9,19 @@
   <view class="intro" wx:if="{{introText}}">{{introText}}</view>
 
   <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="3" loading-label="正在加载入会申请" />
-  <cy-empty wx:elif="{{state === 'missing-param'}}" fill size="lg" kind="missing-param" cta="返回" bind:cta="goBack" />
+  <cy-empty wx:elif="{{state === 'missing-param'}}" fill size="lg" kind="missing-param" cta="返回" bind:cta="goBack" class="cy-fade-in" />
   <cy-error load-failure class="cy-fade-in" wx:elif="{{state === 'business-error'}}" title="入会申请加载失败" sub="{{errorText}}" retry="重新加载" bind:retry="loadRequests" />
-  <cy-error load-failure wx:elif="{{state === 'network-error'}}" title="网络连接失败" sub="{{errorText}}" retry="重新加载" bind:retry="loadRequests" />
+  <cy-error load-failure wx:elif="{{state === 'network-error'}}" title="网络连接失败" sub="{{errorText}}" retry="重新加载" bind:retry="loadRequests" class="cy-fade-in" />
 
   <block wx:elif="{{state === 'ready'}}">
     <view wx:if="{{refreshing}}" class="refreshing cy-refresh-float" aria-role="status" aria-live="polite">正在更新入会申请…</view>
-    <cy-inline-error load-failure wx:if="{{staleError}}" class="list-inline-error" kind="{{staleErrorKind}}" title="入会申请暂未更新"
+    <cy-inline-error load-failure wx:if="{{staleError}}" class="list-inline-error cy-fade-in" kind="{{staleErrorKind}}" title="入会申请暂未更新"
                      sub="{{staleError}}" action="重试更新" bind:action="loadRequests" />
-    <cy-empty wx:if="{{requests.length === 0}}" fill size="lg" title="暂无待审申请" />
+    <cy-empty wx:if="{{requests.length === 0}}" fill size="lg" title="暂无待审申请" class="cy-fade-in" />
 
     <!-- 稿 P3 30:2 的汇总行(「N 条待审 · 可直接通过或拒绝」)就是上面那条 .intro,
          由 buildIntro 按条数生成 —— 这里不要再摆一条一模一样的。 -->
-    <view wx:else class="request-list">
+    <view wx:else class="request-list cy-fade-in">
       <view class="request-card {{item.memberId == leavingMemberId ? 'request-card--leaving' : ''}}" wx:for="{{requests}}" wx:key="id">
         <view class="request-row">
           <cy-avatar class="request-avatar" size="88" src="{{item.avatar || '/images/d_profile.png'}}" />

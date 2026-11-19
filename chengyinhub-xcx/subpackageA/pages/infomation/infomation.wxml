@@ -34,9 +34,9 @@
   <cy-error load-failure class="cy-fade-in" wx:elif="{{tplError}}" title="现成玩法加载失败" sub="{{tplError}}" retry="重新加载" bind:retry="loadTemplates" />
   <cy-empty wx:elif="{{!templates.length}}" kind="empty" title="还没有上架的现成玩法"
             
-            cta="去发布广场" bind:cta="goTemplateSquare" />
+            cta="去发布广场" bind:cta="goTemplateSquare" class="cy-fade-in" />
   <block wx:else>
-    <view class="gl-tpl" wx:for="{{templates}}" wx:key="id" bindtap="goTemplateDetail" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
+    <view class="gl-tpl cy-fade-in" wx:for="{{templates}}" wx:key="id" bindtap="goTemplateDetail" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
       <image wx:if="{{item.imgUrl}}" class="gl-tpl-pic" src="{{item.imgUrl}}" mode="aspectFill" lazy-load="true" />
       <view wx:else class="gl-tpl-pic gl-tpl-pic--ph">{{item._initial}}</view>
       <view class="gl-tpl-main">
@@ -48,7 +48,7 @@
         </view>
       </view>
     </view>
-    <view class="gl-more" bindtap="goTemplateSquare" hover-class="cy-pressed" hover-stay-time="80">
+    <view class="gl-more cy-fade-in" bindtap="goTemplateSquare" hover-class="cy-pressed" hover-stay-time="80">
       <text class="gl-more-t">更多玩法</text><cy-icon name="arrow-right" size="28" />
     </view>
   </block>
@@ -69,7 +69,7 @@
   </view>
   <!-- nodata 此前只在 JS 里算,WXML 从没消费 ⇒ 列表为空时零反馈(C03-R1 修过,别回退) -->
   <block wx:elif="{{docsState === 'empty'}}">
-    <cy-empty wx:if="{{nodata}}" kind="empty" title="暂无玩法说明" />
+    <cy-empty wx:if="{{nodata}}" kind="empty" title="暂无玩法说明" class="cy-fade-in" />
   </block>
 
   <view class="gl-bottom-pad"></view>

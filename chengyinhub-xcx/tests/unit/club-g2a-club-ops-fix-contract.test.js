@@ -408,9 +408,9 @@ test('CU-C-74 负控:把类名放回 label,禁用词断言必须判红', () => {
 test('CU-C-76:广播入口按 canBroadcast 出两态,不可发送时写明是哪一种不能', () => {
   const wxml = read(TOPIC_DETAIL_WXML)
   const director = read(TOPIC_DETAIL_DIRECTOR_JS)
-  assert.match(wxml, /wx:if="\{\{canBroadcast\}\}" class="cli-entry" bindtap="goBroadcast"/,
+  assert.match(wxml, /wx:if="\{\{canBroadcast\}\}" class="cli-entry(?: cy-fade-in)?" bindtap="goBroadcast"/,
     '入口没有按 canBroadcast 分态 —— 零成员时仍可点')
-  assert.match(wxml, /wx:else class="cli-entry cli-entry--disabled"/, '没有不可发送的那一态')
+  assert.match(wxml, /wx:else class="cli-entry cli-entry--disabled(?: cy-fade-in)?"/, '没有不可发送的那一态')
   // 2026-09-25 leftover 批次:置灰那句从模板里的固定串改成投影算好的 broadcastDisabledText ——
   // 「本场没跑起来」和「跑起来了但没人可送达」是两件事,写在模板里就只剩一句。
   assert.match(wxml, /<text class="cli-sub">\{\{broadcastDisabledText\}\}<\/text>/,
@@ -435,9 +435,9 @@ test('CU-C-76:发送被驳回时按后端原因码出话,不再统一「操作�
 
 test('CU-C-76 负控:把分态去掉,入口不分态那条断言必须判红', () => {
   const wxml = read(TOPIC_DETAIL_WXML)
-  const mutated = wxml.replace('wx:if="{{canBroadcast}}" class="cli-entry"', 'class="cli-entry"')
+  const mutated = wxml.replace(/wx:if="\{\{canBroadcast\}\}" (class="cli-entry(?: cy-fade-in)?")/, '$1')
   assert.notEqual(mutated, wxml, '变异没生效:锚点已漂，这个负控在空转')
-  assert.equal(/wx:if="\{\{canBroadcast\}\}" class="cli-entry" bindtap="goBroadcast"/.test(mutated), false)
+  assert.equal(/wx:if="\{\{canBroadcast\}\}" class="cli-entry(?: cy-fade-in)?" bindtap="goBroadcast"/.test(mutated), false)
 })
 
 test('CU-C-76 负控:可点性不接原因码时,零成员入口判绿断言必须真红', () => {

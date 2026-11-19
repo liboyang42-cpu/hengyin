@@ -86,7 +86,7 @@ test('B67/B68：WebGL 墙/列表双视图与中性成长层级全部落地', () 
 
 test('负控二：B68 恢复彩色 discStyle 内联仪表必须判红', () => {
   const files = sources()
-  files.growthWxml = files.growthWxml.replace('class="gc-badge-disc"', 'class="gc-badge-disc" style="{{item.discStyle}}"')
+  files.growthWxml = files.growthWxml.replace(/class="gc-badge-disc( cy-img-ph)?"/, 'class="gc-badge-disc$1" style="{{item.discStyle}}"')
   assert.throws(() => assertAll(files), assert.AssertionError)
 })
 

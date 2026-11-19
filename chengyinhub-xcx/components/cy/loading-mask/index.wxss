@@ -34,7 +34,7 @@
   border-radius: 50%;
   border: 4rpx solid var(--cy-border-card);
   border-top-color: var(--cy-text-title);
-  animation: lm-spin 900ms linear infinite;
+  animation: lm-spin var(--cy-motion-spinner-cycle) linear infinite; /* motion-1118:与 cy-btn / cy-empty 同形制转圈同速 */
 }
 .lm.lm--reduced-motion .lm__spinner { animation: none; }
 @keyframes lm-spin { to { transform: rotate(360deg); } }

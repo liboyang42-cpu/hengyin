@@ -8,19 +8,19 @@
   <cy-page-title title="角色与权限" subtitle="{{activitySubtitle}}" safe-top="{{false}}" />
 
   <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="4" />
-  <cy-empty wx:elif="{{state === 'missing'}}" fill size="lg" kind="missing-param" title="链接已失效" cta="返回" bind:cta="goBack" />
+  <cy-empty wx:elif="{{state === 'missing'}}" fill size="lg" kind="missing-param" title="链接已失效" cta="返回" bind:cta="goBack" class="cy-fade-in" />
   <!-- 2026-08-26:权限拒绝原来和加载失败共用一个 error 态,渲染成「暂时不可用 + 重新加载」——
        给了一个永远点不成功的重试按钮,用户不会知道是权限问题。现在拆成三条。 -->
   <cy-error wx:elif="{{state === 'no-permission'}}" fill size="lg" retry=""
-            title="你没有管理角色的权限" sub="{{errorText || '仅主理人可分配角色'}}" auto-back />
-  <cy-error load-failure wx:elif="{{state === 'network-error'}}" title="网络连接失败" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" auto-back />
-  <cy-error load-failure wx:elif="{{state === 'error'}}" title="角色管理暂时不可用" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" auto-back />
-  <cy-empty wx:elif="{{state === 'empty'}}" fill size="lg" title="暂无成员" />
+            title="你没有管理角色的权限" sub="{{errorText || '仅主理人可分配角色'}}" auto-back class="cy-fade-in" />
+  <cy-error load-failure wx:elif="{{state === 'network-error'}}" title="网络连接失败" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" auto-back class="cy-fade-in" />
+  <cy-error load-failure wx:elif="{{state === 'error'}}" title="角色管理暂时不可用" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" auto-back class="cy-fade-in" />
+  <cy-empty wx:elif="{{state === 'empty'}}" fill size="lg" title="暂无成员" class="cy-fade-in" />
 
   <block wx:elif="{{state === 'ready'}}">
     <!-- Figma 290:393「当前委派」——主理人固定第一行(全部权限,不可撤销)，
          后面接实际委派；单卡 + 发丝分隔，撤销收进描述行内联文字。 -->
-    <view class="section">
+    <view class="section cy-fade-in">
       <text class="section-title">当前委派</text>
       <view class="ds-card">
         <view class="row">
@@ -46,7 +46,7 @@
 
     <!-- 稿 R1 290:393:分配区是一个标题 + 一张三行卡 + 一个「分配」大按钮,
          不是拆成带编号的两节。成员与角色都收进行内选择器,选中的名字显示在行右侧。 -->
-    <view class="section">
+    <view class="section cy-fade-in">
       <text class="section-title">分配固定角色</text>
       
       <view class="ds-card">

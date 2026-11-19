@@ -57,7 +57,7 @@ test('F13:没封面的票不出通用路线示意图', () => {
 
 test('F13:卡面封面块只在有图时挂;「生成中…」只在取码中出现', () => {
   const wxml = read('subpackageMember/signup/index.wxml').replace(/<!--[\s\S]*?-->/g, '');
-  assert.match(wxml, /<view class="wc__im" wx:if="\{\{item\.wImg\}\}">/);
+  assert.match(wxml, /<view class="wc__im(?: cy-img-ph)?" wx:if="\{\{item\.wImg\}\}">/); // motion-1118 v2:封面框挂占位色
   assert.match(wxml, /<text wx:elif="\{\{qrState === 'loading'\}\}" class="wc__qr-tip">生成中…<\/text>/);
   assert.doesNotMatch(wxml, /<text wx:else class="wc__qr-tip">生成中…/);
 });

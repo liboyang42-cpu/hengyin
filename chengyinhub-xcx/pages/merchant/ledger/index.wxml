@@ -23,22 +23,22 @@
     <cy-tabs class="ledger-filter" wx:if="{{merchantAccess.canReadFinance}}" variant="chip" shared-slab tabs="{{redemptionTabs}}" active="{{redemptionFilter}}" bind:change="onRedemptionFilter" />
     <view class="ledger-redemption-content" aria-role="region" aria-label="核销与退款" aria-busy="{{loading ? 'true' : 'false'}}">
       <cy-skeleton wx:if="{{loading && !hasLoaded}}" type="list" count="{{3}}" />
-      <cy-error load-failure wx:elif="{{error && !hasLoaded}}" size="lg" fill title="核销记录加载失败" sub="请稍后重试" retry="重新加载" bind:retry="retry" />
+      <cy-error load-failure wx:elif="{{error && !hasLoaded}}" size="lg" fill title="核销记录加载失败" sub="请稍后重试" retry="重新加载" bind:retry="retry" class="cy-fade-in" />
       <block wx:else>
-        <view class="ledger-inline-state" wx:if="{{(loading || error) && hasLoaded}}">
+        <view class="ledger-inline-state cy-fade-in" wx:if="{{(loading || error) && hasLoaded}}">
           <text class="ledger-sync" wx:if="{{loading && hasLoaded}}" aria-role="status">正在确认最新记录…</text>
           <cy-inline-error load-failure wx:if="{{error && hasLoaded}}" title="最新记录暂未取回"
                            action="重试" bind:action="retry" />
         </view>
 
-        <view class="fin-summary" wx:if="{{summary}}">
+        <view class="fin-summary cy-fade-in" wx:if="{{summary}}">
           <view class="fin-summary__cell"><text class="fin-summary__k">本月核销</text><text class="fin-summary__v">{{summary.countText}}</text></view>
           <view class="fin-summary__cell" wx:if="{{merchantAccess.canReadFinance}}"><text class="fin-summary__k">待结算</text><text class="fin-summary__v fin-summary__v--pending">{{summary.pendingDisplay}}</text></view>
           <view class="fin-summary__cell" wx:if="{{merchantAccess.canReadFinance}}"><text class="fin-summary__k">已入账</text><text class="fin-summary__v fin-summary__v--arrived">{{summary.arrivedDisplay}}</text></view>
         </view>
 
         <block wx:if="{{redemptionGroups.length}}">
-          <view class="fin-group" wx:for="{{redemptionGroups}}" wx:for-item="group" wx:key="dayKey">
+          <view class="fin-group cy-fade-in" wx:for="{{redemptionGroups}}" wx:for-item="group" wx:key="dayKey">
             <view class="fin-group__title">{{group.dayLabel}}</view>
             <view class="fin-card">
               <view class="fin-row" wx:for="{{group.rows}}" wx:key="recordKey" bindtap="goRedemptionDetail" data-item="{{item}}" hover-class="cy-pressed" aria-role="button" aria-label="{{item.recordType === 'aftercare' ? '查看退款详情' : '查看核销详情'}}">
@@ -56,7 +56,7 @@
             </view>
           </view>
         </block>
-        <cy-empty wx:elif="{{!loading && !error && !redemptionGroups.length}}" fill size="lg" kind="empty" title="还没有记录" />
+        <cy-empty wx:elif="{{!loading && !error && !redemptionGroups.length}}" fill size="lg" kind="empty" title="还没有记录" class="cy-fade-in" />
       </block>
       <text class="ledger-sync" wx:if="{{loadingMore}}" aria-role="status">正在加载更多…</text>
     </view>
@@ -65,12 +65,12 @@
   <block wx:elif="{{isProjectMessages}}">
     <cy-skeleton wx:if="{{loading && !hasLoaded}}" type="list" count="{{3}}" />
     <cy-error load-failure wx:elif="{{error && !hasLoaded}}" fill size="lg" title="近期动态加载失败"
-              sub="请稍后重试" retry="重新加载" bind:retry="retry" />
+              sub="请稍后重试" retry="重新加载" bind:retry="retry" class="cy-fade-in" />
     <block wx:else>
       <text class="ledger-sync" wx:if="{{loading && hasLoaded}}" aria-role="status">正在更新近期动态…</text>
-      <cy-inline-error load-failure wx:if="{{error && hasLoaded}}" title="最新动态暂未取回"
+      <cy-inline-error load-failure wx:if="{{error && hasLoaded}}" title="最新动态暂未取回" class="cy-fade-in"
                        action="重试" bind:action="retry" />
-      <view class="fin-group" wx:if="{{projectEvents.length}}">
+      <view class="fin-group cy-fade-in" wx:if="{{projectEvents.length}}">
         <text class="fin-group__title">本项目近期收入与核销</text>
         <view class="fin-card">
           <view class="fin-row" wx:for="{{projectEvents}}" wx:key="index">
@@ -82,7 +82,7 @@
           </view>
         </view>
       </view>
-      <cy-empty wx:elif="{{!loading && !error}}" kind="empty" fill size="lg"
+      <cy-empty wx:elif="{{!loading && !error}}" kind="empty" fill size="lg" class="cy-fade-in"
                 title="近期暂无项目动态" />
     </block>
   </block>

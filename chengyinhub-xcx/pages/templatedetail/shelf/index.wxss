@@ -1,3 +1,4 @@
+@import '../../../style/fade-in.wxss';
 /* 模板页货架 —— 1:1 照业主定稿 HTML 原型 v21(px × 2 = rpx)。
    玩家态深色;商家态(light)只换颜色变量，版式不变。 */
 .shelf {

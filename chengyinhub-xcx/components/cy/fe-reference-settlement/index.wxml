@@ -5,15 +5,15 @@
   </view>
   <text class="fe-ref-sub">参考金额，平台不代收代付，由主办方与店铺线下结款</text>
   <cy-skeleton wx:if="{{state === 'loading'}}" type="amount" count="{{1}}" />
-  <cy-inline-error load-failure wx:elif="{{state === 'error'}}" title="参考结算暂未取回" action="重试" bind:action="load" />
+  <cy-inline-error load-failure wx:elif="{{state === 'error'}}" title="参考结算暂未取回" action="重试" bind:action="load" class="cy-fade-in" />
   <block wx:else>
-    <view class="fe-ref-stats">
+    <view class="fe-ref-stats cy-fade-in">
       <view class="fe-ref-stat" wx:for="{{view.stats}}" wx:key="key">
         <text class="fe-ref-stat-label">{{item.label}}</text>
         <text class="fe-ref-stat-value">{{item.value}}</text>
       </view>
     </view>
-    <view class="fe-ref-group" wx:for="{{view.groups}}" wx:for-item="group" wx:key="key">
+    <view class="fe-ref-group cy-fade-in" wx:for="{{view.groups}}" wx:for-item="group" wx:key="key">
       <view class="fe-ref-group-head">
         <view class="fe-ref-group-main">
           <text class="fe-ref-group-title">{{group.title}}</text>

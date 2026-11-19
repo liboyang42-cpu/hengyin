@@ -13,11 +13,11 @@
   <cy-skeleton wx:if="{{pageState === 'loading'}}" type="card" count="3" />
   <cy-error load-failure wx:elif="{{pageState === 'error'}}" fill size="lg"
             title="退款售后加载失败" sub="{{errorMessage}}"
-            retry="重新加载" bind:retry="retry" auto-back />
+            retry="重新加载" bind:retry="retry" auto-back class="cy-fade-in" />
   <cy-empty wx:elif="{{pageState === 'no-permission'}}" kind="no-permission" fill size="lg"
-            title="当前身份不能查看退款售后" cta="{{accessMember ? '返回' : '申请入驻'}}" bind:cta="onDenyCta" />
+            title="当前身份不能查看退款售后" cta="{{accessMember ? '返回' : '申请入驻'}}" bind:cta="onDenyCta" class="cy-fade-in" />
 
-  <scroll-view wx:elif="{{pageState === 'ready'}}" scroll-y class="ac-scroll" enhanced show-scrollbar="{{false}}">
+  <scroll-view wx:elif="{{pageState === 'ready'}}" scroll-y class="ac-scroll cy-fade-in" enhanced show-scrollbar="{{false}}">
     <view class="ac-content">
       <view class="ac-hero">
         <view class="ac-actions" wx:if="{{canRespond}}">

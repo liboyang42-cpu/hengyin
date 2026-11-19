@@ -1,3 +1,4 @@
+@import '../../../style/fade-in.wxss';
 @import '../../../style/reduced-motion.wxss';
 /* r2-finish 榜单:月桂大名次(refs2/team-rank-laurel-frames)+ 深色玻璃数据卡,颜色全走 token */
 .rb { display: flex; flex-direction: column; gap: var(--cy-space-4); color: var(--cy-color-text-primary); }

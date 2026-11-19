@@ -6,7 +6,7 @@
   <cy-skeleton wx:if="{{loading && !card}}" type="detail" count="{{1}}" loading-label="正在准备自由探索" />
   <cy-state-shell wx:elif="{{errorText && !card}}" kind="{{errorKind}}"
                   title="{{errorText}}" sub="{{errorSub}}" primary="{{errorAction}}"
-                  fill size="lg" bind:primary="onStateAction" auto-back custom-back bind:back="goBack" />
+                  fill size="lg" bind:primary="onStateAction" auto-back custom-back bind:back="goBack" class="cy-fade-in" />
   <block wx:else>
     <!-- receipt=unknown:点它只重读不重写,所以文案是「再核对」不是「重试」。
          与商家页同一套状态条形制:色只在圆点,叙述交给排版。 -->
@@ -18,11 +18,11 @@
         <text class="cy-status__act" wx:if="{{receipt === 'unknown'}}">再确认一次</text>
       </view>
     </view>
-    <view class="circle-sync-state">
+    <view class="circle-sync-state cy-fade-in">
       <text wx:if="{{refreshing && card}}" class="circle-sync" aria-role="status">正在确认探索状态…</text>
     </view>
   <block wx:if="{{card}}">
-    <view class="hero">
+    <view class="hero cy-fade-in">
       
       <view class="title">{{theme.name}}</view>
       <view class="subtitle">{{theme.subtitle}}</view>
@@ -32,10 +32,10 @@
       <button class="share-btn" wx:if="{{!readOnly}}" open-type="share">邀请同行加入</button>
     </view>
 
-    <view class="readonly" wx:if="{{readOnlyText}}">{{readOnlyText}}</view>
+    <view class="readonly cy-fade-in" wx:if="{{readOnlyText}}">{{readOnlyText}}</view>
 
-    <view class="section-title">这次可探索的商家</view>
-    <view class="offer {{item.recorded ? 'offer-done' : ''}}" wx:for="{{offers}}" wx:key="offerId">
+    <view class="section-title cy-fade-in">这次可探索的商家</view>
+    <view class="offer {{item.recorded ? 'offer-done' : ''}} cy-fade-in" wx:for="{{offers}}" wx:key="offerId">
       <view class="offer-head"><text class="offer-code">{{item.candidateCode}}</text><text class="offer-name">{{item.candidateName}}</text><text class="offer-status">{{item.recorded ? '已记录' : ''}}</text></view>
       <view class="supply-name">{{item.supplyName}}</view>
       <view class="facts">主题作用：{{item.roleLabel}}</view>
@@ -51,8 +51,8 @@
       <button wx:if="{{!readOnly && !item.recorded}}" class="record-btn" data-id="{{item.offerId}}" loading="{{submitting}}" bindtap="recordOffer">自助记录这家</button>
     </view>
 
-    <view class="section-title" wx:if="{{!readOnly}}">主题轻互动</view>
-    <view class="interaction" wx:if="{{!readOnly}}" wx:for="{{interactions}}" wx:for-item="interaction" wx:key="stage">
+    <view class="section-title cy-fade-in" wx:if="{{!readOnly}}">主题轻互动</view>
+    <view class="interaction cy-fade-in" wx:if="{{!readOnly}}" wx:for="{{interactions}}" wx:for-item="interaction" wx:key="stage">
       <view class="interaction-title">{{interaction.title}}</view>
       <view class="interaction-prompt">{{interaction.prompt}}</view>
       <textarea wx:if="{{interaction.input === 'text'}}" class="note" maxlength="300" placeholder="写下这一刻" data-stage="{{interaction.stage}}" bindinput="onAnswerInput" />
@@ -73,12 +73,12 @@
       <button wx:if="{{!interaction.perRecordedOffer}}" class="answer-btn" data-stage="{{interaction.stage}}" loading="{{submitting}}" bindtap="submitAnswer">保存</button>
     </view>
 
-    <view class="complete" wx:if="{{card.completed}}">
+    <view class="complete cy-fade-in" wx:if="{{card.completed}}">
       <view class="complete-title">{{card.memoryTitle || '共同记忆卡'}}</view>
       <view class="complete-line" wx:for="{{card.memoryLines}}" wx:for-item="memoryLine" wx:key="*this">{{memoryLine}}</view>
       <view class="complete-empty" wx:if="{{!card.memoryLines.length}}">本次探索已完成，记录卡已生成。</view>
     </view>
-    <view class="history" wx:if="{{card.records && card.records.length}}">
+    <view class="history cy-fade-in" wx:if="{{card.records && card.records.length}}">
       <view class="section-title">我的探索记录</view>
       <view class="history-card" wx:for="{{card.records}}" wx:for-item="record" wx:key="id">
         <view class="history-name">{{record.candidateName || record.supplyName || '已记录商家'}}</view>
@@ -86,7 +86,7 @@
         <view class="history-note" wx:if="{{record.note}}">{{record.note}}</view>
       </view>
     </view>
-    <view class="disclaimer">本卡仅记录玩家自己的选择</view>
+    <view class="disclaimer cy-fade-in">本卡仅记录玩家自己的选择</view>
   </block>
   </block>
 </view>

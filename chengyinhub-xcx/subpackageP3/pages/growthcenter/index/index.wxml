@@ -17,7 +17,7 @@
       <view class="gc-score-person">
         <!-- PR10:兜底原指向不存在的 /images/growthcenter/avatar-default.svg ⇒ 无头像成员留一块空位把名字顶偏(p2-04)。
              改用全站唯一的默认头像 d_profile.png(cy-avatar placeholder 档同一张)。 -->
-        <image class="gc-score-avatar" src="{{profile.avatarUrl || '/images/d_profile.png'}}" mode="aspectFill" />
+        <view class="gc-score-avatar cy-img-ph"><image class="gc-score-avatar__im cy-img-fade {{imgOn.av ? 'cy-img-fade--on' : ''}}" src="{{profile.avatarUrl || '/images/d_profile.png'}}" mode="aspectFill" data-fade-key="av" bindload="onImgFadeLoad" /></view>
         <text class="gc-profile-name">{{profile.name}}</text>
       </view>
       <view class="gc-score-line">
@@ -52,7 +52,7 @@
     <view class="gc-section-head"><text class="gc-section-title">我的徽章</text><text wx:if="{{overviewAvailable.center}}" class="gc-section-meta">{{badgeCountText}}</text></view>
     <view wx:if="{{showBadges}}" class="gc-badge-list" aria-role="list" aria-label="我的徽章" style="{{pmPage === 1 ? '--pm-g:1;' : (pmPage === 2 ? '--pm-g-d:.32s;--pm-g-s:1;' : '')}}">
       <view class="gc-badge-row {{expandedBadge === item.code ? 'is-open' : ''}}" wx:for="{{badges}}" wx:key="code" data-code="{{item.code}}" bindtap="onBadgeTap" aria-role="button" aria-label="{{item.name}}，查看获得时刻" hover-class="gc-row--press" hover-stay-time="80">
-        <view class="gc-badge-disc"><image wx:if="{{item.iconUrl}}" class="gc-badge-icon" src="{{item.iconUrl}}" mode="aspectFit" /><text wx:else>{{item.initial}}</text></view>
+        <view class="gc-badge-disc cy-img-ph"><image wx:if="{{item.iconUrl}}" class="gc-badge-icon cy-img-fade {{imgOn['b' + index] ? 'cy-img-fade--on' : ''}}" src="{{item.iconUrl}}" mode="aspectFit" data-fade-key="b{{index}}" bindload="onImgFadeLoad" /><text wx:else>{{item.initial}}</text></view>
         <view class="gc-badge-copy">
           <text class="gc-badge-name">{{item.name}}</text>
           <text class="gc-badge-moment" wx:if="{{expandedBadge === item.code && item.unlockText}}">获得于 {{item.unlockText}}</text>

@@ -127,7 +127,7 @@ test('nearby and list retry controls inherit the 88rpx page action token', () =>
   for (const page of ['nearby', 'list']) {
     const view = read(`pages/coop/${page}/index.wxml`)
     const style = read(`pages/coop/${page}/index.wxss`)
-    assert.match(view, /<cy-error[^>]*class="retry-lg"/)
+    assert.match(view, /<cy-error[^>]*class="retry-lg(?: cy-fade-in)?"/)
     assert.match(style, /\.retry-lg\s*\{\s*--cy-btn-h-sm:\s*var\(--cy-btn-h\);\s*\}/)
     assert.throws(() => assert.match(style.replace('var(--cy-btn-h)', 'var(--cy-btn-h-sm)'), /--cy-btn-h-sm:\s*var\(--cy-btn-h\)/))
   }

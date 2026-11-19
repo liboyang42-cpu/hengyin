@@ -1,3 +1,4 @@
+@import '../../../../../style/fade-in.wxss';
 /* cy-post-compose —— 新建帖文弹窗(内容照 Figma 379:2484,呈现照 334:3563)
  *
  * 字号映射(稿 pt → token,1pt = 2rpx;新页面只读 ① 层 --cy-type-*):

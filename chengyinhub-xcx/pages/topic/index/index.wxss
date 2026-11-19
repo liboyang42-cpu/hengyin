@@ -2213,3 +2213,4 @@ button::after {
 
 /* 浮动购票按钮下仍能滚到最后一个站点。 */
 .topic-list--docked { padding-bottom: calc(2 * var(--cy-btn-h) + env(safe-area-inset-bottom)); }
+.topic--reduced .cy-img-fade { transition: none; } /* motion-1118 v2:App 内减少动效时封面/头图直接落地 */

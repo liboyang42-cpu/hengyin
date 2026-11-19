@@ -1,3 +1,4 @@
+@import '../../../style/fade-in.wxss';
 :host { display: block; }
 .direct-ledger { margin: 0 0 var(--cy-space-5); padding: var(--cy-space-4); border-radius: var(--cy-radius-lg); background: var(--cy-bg-card); color: var(--cy-text-title); }
 .direct-head { display: flex; justify-content: space-between; align-items: center; gap: var(--cy-space-2); }

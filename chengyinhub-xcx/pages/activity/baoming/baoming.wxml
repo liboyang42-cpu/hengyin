@@ -37,10 +37,10 @@
 <cy-skeleton wx:if="{{pageState === 'ready' && participantState === 'loading' && addressList.length === 0}}" type="list" count="1" />
 <cy-inline-error load-failure wx:elif="{{pageState === 'ready' && participantState === 'error'}}"
   title="参与人信息加载失败" sub="{{participantErrorMsg}}"
-  action="重试" bind:action="retryAddressList" />
+  action="重试" bind:action="retryAddressList" class="cy-fade-in" />
 <cy-inline-error load-failure wx:elif="{{pageState === 'ready' && participantState === 'staleError'}}"
   title="参与人信息暂未更新" sub="{{participantErrorMsg}}"
-  action="重试" bind:action="retryAddressList" />
+  action="重试" bind:action="retryAddressList" class="cy-fade-in" />
 
 <!-- 已选参与人信息 -->
 <view wx:if="{{pageState === 'ready' && selectedAddress}}" class="address-info" bindtap="checkAndShowAddressPopup" hover-class="cy-pressed" hover-stay-time="80">
@@ -285,10 +285,10 @@
       <cy-skeleton wx:if="{{participantState === 'loading' && addressList.length === 0}}" type="list" count="2" />
       <cy-inline-error load-failure wx:elif="{{participantState === 'error'}}"
         title="参与人信息加载失败" sub="{{participantErrorMsg}}"
-        action="重试" bind:action="retryAddressList" />
+        action="重试" bind:action="retryAddressList" class="cy-fade-in" />
       <cy-inline-error load-failure wx:elif="{{participantState === 'staleError'}}"
         title="参与人信息暂未更新" sub="{{participantErrorMsg}}"
-        action="重试" bind:action="retryAddressList" />
+        action="重试" bind:action="retryAddressList" class="cy-fade-in" />
       <view wx:for="{{addressList}}" wx:key="id" 
             class="address-item {{selectedAddress && item.id == selectedAddress.id ? 'active' : ''}}" 
             catchtap="selectAddress" data-item="{{item}}" aria-role="radio" aria-checked="{{selectedAddress && item.id == selectedAddress.id}}" hover-class="cy-pressed" hover-stay-time="80">
