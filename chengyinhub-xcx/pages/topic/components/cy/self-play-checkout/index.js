@@ -38,8 +38,10 @@ Component({
     onProfile() { this.triggerEvent('profile'); },
     onPass(e) { this.triggerEvent('pass', { id: e.currentTarget.dataset.id }); },
     onConsent(e) { this.triggerEvent('consentchange', { checked: !!(e.detail && e.detail.checked) }); },
+    onNotice() { this.triggerEvent('notice'); },
     onPay() {
       const v = this.data.view || {};
+      if (v.purchased) { this.triggerEvent('play'); return; }
       if (this.data.loading || v.loading || v.refused) return;
       if (v.failed) { this.triggerEvent('requote'); return; }
       this.triggerEvent('pay');

@@ -8,6 +8,7 @@ const merchantTheme = require('../../utils/merchant-theme.js');
 const { getScene } = require('../../utils/scene-registry.js');
 const { pushScene, popScene, currentScene, exitDecision } = require('../../utils/scene-stack.js');
 const { clearStorageForLogout } = require('../../utils/roam-player-memory.js');
+function identitySync() { return require('../../utils/identity-sync.js'); }
 Page({
 
   data: {
@@ -16,6 +17,7 @@ Page({
     userInfo: {},
     settingsAuthRequired: false,
     settingsAccessDenied: false,
+    hasAccount: false, // OR-038:游客不出「退出账号」
     // PR10 F-L5C-06:社区读闸关(含开关拉取失败)时「我的收藏」只剩主题,副标题不再提帖文
     invoiceOn: false,
     isMerchantView: false,
@@ -41,6 +43,7 @@ Page({
 
   onLoad(options) {
     this._skipInitialShow = true;
+    this.setData({ hasAccount: Number(app.getUserID && app.getUserID()) > 0 });
     this.syncCommunityEntry();
     this.syncViewStateAndTheme();
     this.getUserData();
@@ -49,6 +52,7 @@ Page({
 
   onShow() {
     this._hidden = false;
+    this.setData({ hasAccount: Number(app.getUserID && app.getUserID()) > 0 });
     this.syncViewStateAndTheme();
     if (this._skipInitialShow) this._skipInitialShow = false;
     else { this.syncCommunityEntry(); this.getUserData(); }
@@ -324,6 +328,8 @@ Page({
     const clearLocalLogin = function () {
       if (!clearStorageForLogout(wx)) return false;
       sendRecovery.invalidate();
+      // OR-014:会话七字段走 session-store.clearSession(内存+Storage 一致,登录代次前进、角色缓存清空)
+      if (typeof app.getSession === 'function') app.getSession().clearSession();
       app.globalData.authorization = '';
       app.globalData.open_id = '';
       app.globalData.user_id = '';
@@ -332,6 +338,7 @@ Page({
       app.globalData.nickname = '';
       app.globalData.role = ''; // 退出时一并清角色,避免内存残留导致身份错乱
       roleGuard.clear(); // 本地账号态清理成功后再清模块级权限缓存，失败可留在弹窗重试
+      try { const sync = identitySync(); if (sync && typeof sync.resetIdentity === 'function') sync.resetIdentity(); } catch (e) { /* 广播失败不挡退出 */ } // 派发 session-cleared,丢掉上一个账号的头像/昵称过渡值
       wx.reLaunch({ url: '/pages/index/index' });
       return true;
     };

@@ -9,7 +9,7 @@ const subscribe = require('../../../../utils/subscribe.js');
 const refundAmount = require('../../../utils/order-refund-amount.js');
 const { settlementView } = require('../../../utils/order-settlement-view.js');
 const { isUnknownHttpStatus } = require('../../../../utils/transport/failure-envelope.js');
-const { failureStatus } = require('../../../../utils/session/login-reload.js');
+const { failureStatus, retryLogin } = require('../../../../utils/session/login-reload.js');
 const { reader, sameReader } = require('../../../../utils/user-character.js');
 
 /* 稿 578:2312 的状态药丸:正在退款是琥珀(#FF9E14)。其余档位按语义配到既有状态色,
@@ -330,6 +330,7 @@ Component({
       loadState: 'loading',
       loadErrorText: '',
       loadFailureVisible: false,
+      loginRequired: false,
       // 批5 探店日完局面;非探店日单恒 show:false
       completion: emptyCompletion(),
       // 10-28 原型 C「发票」段;state: can | ing | issued | paused | blocked
@@ -528,6 +529,12 @@ Component({
     // 弹窗里就是回上一层场景(H09),不再猜页面栈。
     backToOrderList() {
       this.triggerEvent('back');
+    },
+
+    onLoginRetry() {
+      const orderId = this._orderId;
+      this.setData({ loadFailureVisible: false });
+      retryLogin(this, app, function () { this.setData({ loginRequired: false }); this.getData(orderId); });
     },
 
     goBack() {
@@ -943,11 +950,14 @@ Component({
           || response && response.reason === 'sessionChanged' || !sameReader(app, capturedReader)
           || /无权|权限不足|没有权限|请先登录/.test(text);
         if (denied) {
+          // OR-036:401/未登录时面板给「登录」按钮,登录后重读同一单
+          const status = failureStatus(response, statusCode);
+          const loginRequired = status === 401 || status === 2 || /请先登录|登录已/.test(text);
           that._invoiceKey = (that._invoiceKey || 0) + 1;
           that._consentKey = ''; that._consentOffer = null; that._consentRequestId = null;
           that.setData({ info: {}, invoiceRow: { show: false }, completion: emptyCompletion(),
             consentOffer: { show: false }, consentChecked: false, consentState: 'idle', primaryCta: '',
-            loadState: 'failed_business', loadErrorText: text, loadFailureVisible: true });
+            loadState: 'failed_business', loadErrorText: text, loadFailureVisible: true, loginRequired });
           return;
         }
         if (hasRendered || that.data.loadState === 'ready') { that.setData({ loadErrorText: '没刷新成功，显示的是之前的订单' }); return; }

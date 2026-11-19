@@ -2,6 +2,8 @@
 // 状态文案只来自服务端订单;退款走 POST /api/platform-pass/orders/{orderNo}/refund-apply {reason}(后端 fix/pass-backend-20261113),进度读订单 refund.reviewStatus。
 const app = getApp()
 const cyToast = require('../../../utils/toast.js')
+const modal = require('../../../utils/modal.js')
+const subscribe = require('../../../utils/subscribe.js')
 const { isBizOk } = require('../../../utils/response-shape.js')
 const pp = require('../../utils/platform-pass.js')
 const payFlow = require('../../utils/platform-pass-pay.js')
@@ -25,7 +27,9 @@ Page({
     busy: false,
     notice: '',
     refunding: false, // 正在填退款原因
-    reason: ''
+    reason: '',
+    words: pp.WORDS,
+    terms: []
   },
   onLoad(options) {
     this._orderNo = options && options.orderNo ? decodeURIComponent(options.orderNo) : ''
@@ -54,26 +58,69 @@ Page({
     payFlow.resume({ request, wx }, this._orderNo, canPay).then((r) => {
       if (this._unloaded) return
       this.setData({ busy: false })
-      if (r.state === 'cancelled') cyToast('已取消支付')
-      else if (r.state === 'pending') this.setData({ notice: '确认中' })
-      else if (r.state === 'failed') this.setData({ notice: r.message || '确认中' })
+      if (r.state === 'cancelled') cyToast(pp.WORDS.PAY_CANCELLED)
+      else if (r.state === 'closed') cyToast(pp.WORDS.CLOSED) // OR-010:订单已关闭/取消,不再拉起支付
+      else if (r.state === 'pending') this.setData({ notice: pp.WORDS.CONFIRMING })
+      else if (r.state === 'failed') this.setData({ notice: r.message || pp.WORDS.CONFIRMING })
       this.load()
     })
   },
-  onRefund() { this.setData({ refunding: true, notice: '' }) },
+  // OR-008:待付款单可取消;以服务端返回的订单状态为准
+  onCancelOrder() {
+    if (this.data.busy) return
+    modal.show({
+      dangerKey: 'pass.order.cancel',
+      success: (r) => {
+        if (!r || !r.confirm || this.data.busy || this._unloaded) return
+        this.setData({ busy: true, notice: '' })
+        request({ url: '/api/platform-pass/orders/' + encodeURIComponent(this._orderNo) + '/cancel', method: 'POST', write: true }).then((res) => {
+          if (this._unloaded) return
+          this.setData({ busy: false })
+          if (!isBizOk(res)) { this.setData({ notice: (res && res.msg) || '取消失败，请稍后再试' }); return }
+          if (res.data && res.data.status === 'CANCELLED') cyToast('订单已取消')
+          else this.setData({ notice: pp.orderStateText(res.data) })
+          this.load()
+        }, () => { if (!this._unloaded) this.setData({ busy: false, notice: '取消失败，请稍后再试' }) })
+      }
+    })
+  },
+  copyOrderNo() {
+    if (!this._orderNo) return
+    wx.setClipboardData({ data: this._orderNo })
+  },
+  goAssistant() {
+    if (this._navigating) return
+    this._navigating = true
+    wx.navigateTo({ url: '/subpackageB/pages/im/list/index', complete: () => { this._navigating = false } })
+  },
+  onRefund() {
+    this.setData({ refunding: true, notice: '' })
+    if (!this.data.terms.length) this._loadTerms()
+  },
+  // OR-024:退款须知与开通页同一来源(GET /api/platform-pass 的 terms;缺省固定两条)
+  _loadTerms() {
+    app.sendRequest({ url: '/api/platform-pass', method: 'GET', hideLoading: true, autoErrorToast: false,
+      success: (res) => { if (!this._unloaded) this.setData({ terms: pp.termRows(isBizOk(res) ? res.data : null) }) },
+      fail: () => { if (!this._unloaded) this.setData({ terms: pp.termRows(null) }) } })
+  },
   onReason(e) { this.setData({ reason: (e && e.detail && e.detail.value) || '' }) },
   onRefundCancel() { this.setData({ refunding: false }) },
   onRefundSubmit() {
     const reason = String(this.data.reason || '').trim()
     if (this.data.busy) return
     if (!reason) { this.setData({ notice: '请填写退款原因' }); return }
+    // OR-007:点提交时顺手请求退款结果订阅(须在点击手势内);审批后的站内信由服务端发
+    subscribe.request(['refund'])
     this.setData({ busy: true, notice: '' })
-    request({ url: '/api/platform-pass/orders/' + encodeURIComponent(this._orderNo) + '/refund-apply', method: 'POST', data: { reason } }).then((res) => {
+    request({ url: '/api/platform-pass/orders/' + encodeURIComponent(this._orderNo) + '/refund-apply', method: 'POST', write: true, data: { reason } }).then((res) => {
       if (this._unloaded) return
       this.setData({ busy: false })
       if (!isBizOk(res)) { this.setData({ notice: (res && res.msg) || '申请失败，请稍后再试' }); return }
       this.setData({ refunding: false, reason: '' })
-      cyToast('已提交退款申请')
+      // OR-006:按服务端回来的订单退款状态提示;已在处理中(409)走上面的 msg 分支
+      const st = res.data && res.data.refund && res.data.refund.reviewStatus
+      if (!st || st === 'PENDING') cyToast('已提交退款申请')
+      else this.setData({ notice: pp.refundText(res.data) || pp.orderStateText(res.data) })
       this.load()
     }, () => { if (!this._unloaded) this.setData({ busy: false, notice: '申请失败，请稍后再试' }) })
   },

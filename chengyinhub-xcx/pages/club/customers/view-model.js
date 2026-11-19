@@ -120,7 +120,8 @@ function shapeCustomerDetail(raw, expectedMemberId) {
       arrivedCount,
       pendingCount,
       refundedCount,
-      paidAmountText: amount == null ? '无查看权限' : `¥${trimMoney(amount)}`,
+      // MC-063:服务端下发 paidAmountText 时原样展示;老后端不带才回落本地格式化。
+      paidAmountText: amount == null ? '无查看权限' : (text(raw.summary.paidAmountText) || `¥${trimMoney(amount)}`),
       amountVisible: amount != null,
     },
     records,

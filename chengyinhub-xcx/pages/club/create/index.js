@@ -396,7 +396,6 @@ Page({
       clubType: d.clubType,
       activityPrefs: d.activityPrefs.join(','),
       city: d.city,
-      address: d.city,
       keywords: d.keywords,
       style: d.style
     };

@@ -58,6 +58,7 @@
         </block>
         <cy-empty wx:elif="{{!loading && !error && !redemptionGroups.length}}" fill size="lg" kind="empty" title="还没有记录" />
       </block>
+      <text class="ledger-sync" wx:if="{{loadingMore}}" aria-role="status">正在加载更多…</text>
     </view>
   </block>
 
@@ -171,6 +172,7 @@
       <cy-empty wx:elif="{{!settlementLoading.batches && !settlementErrors.batches}}" kind="empty"
                 title="还没有对公结算批次" />
     </view>
+    <text class="ledger-sync" wx:if="{{loadingMore}}" aria-role="status">正在加载更多…</text>
   </block>
 
   <block wx:else>

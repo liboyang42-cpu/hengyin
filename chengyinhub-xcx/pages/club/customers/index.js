@@ -7,6 +7,9 @@
 const app = getApp();
 const { shapeCustomerList } = require('./view-model.js'); const pageMotion = require('../../../utils/page-motion.js');
 
+// MC-057:按页读,触底续读;服务端不认分页(一次全给)时按 memberId 去重,没有新行就停。
+const PAGE_SIZE = 50;
+
 const FILTERS = Object.freeze([
   { key: 'all', label: '全部' },
   { key: 'repeat', label: '回头客' },
@@ -29,13 +32,13 @@ function isAuthFailure(value, statusCode) {
   const code = Number(bodyCode != null && [2, 401, 403].includes(Number(bodyCode)) ? bodyCode : statusCode);
   const message = String((value && (value.msg || value.message)) || '');
   return code === 2 || code === 401 || code === 403
-    || /请先登录|登录已|身份已|没有权限|无权|仅(?:俱乐部)?主理人/.test(message);
+    || /请先登录|登录已|身份已|没有[^，。,.]{0,12}权限|无权|仅(?:俱乐部)?主理人/.test(message);
 }
 
 function isForbidden(value, statusCode) {
   const bodyCode = value && (value.code != null ? value.code : value.statusCode);
   const code = Number(bodyCode != null && Number(bodyCode) === 403 ? bodyCode : statusCode);
-  return code === 403 || /没有权限|无权|仅(?:俱乐部)?主理人/.test(String((value && (value.msg || value.message)) || ''));
+  return code === 403 || /没有[^，。,.]{0,12}权限|无权|仅(?:俱乐部)?主理人/.test(String((value && (value.msg || value.message)) || ''));
 }
 
 Page({
@@ -70,6 +73,11 @@ Page({
   },
 
   onPullDownRefresh() { this.load(); },
+
+  onReachBottom() {
+    if (this.data.state !== 'ready' || !this._hasMore || this._loadingMore) return;
+    this.load(true);
+  },
 
   goBack() {
     if (getCurrentPages().length > 1) { wx.navigateBack({ delta: 1 }); return; }
@@ -110,25 +118,29 @@ Page({
     });
   },
 
-  load() {
+  load(append) {
     if (!this._clubId) {
       this.setData({ state: 'missing-param' });
       return;
     }
-    const epoch = (this._epoch || 0) + 1;
+    const more = append === true;
+    const epoch = more ? (this._epoch || 0) : (this._epoch || 0) + 1;
     this._epoch = epoch;
     const that = this;
-    this.setData({ state: this.data.state === 'ready' ? 'ready' : 'loading' });
+    const pageNum = more ? (this._pageNum || 1) + 1 : 1;
+    if (more) this._loadingMore = true;
+    else this.setData({ state: this.data.state === 'ready' ? 'ready' : 'loading' });
     app.sendRequest({
       hideLoading: true,
       url: '/api/club/crm/customers/list',
       autoErrorToast: false, // 失败由整页 auto-back fail 半屏讲原因,不再叠 toast
       method: 'POST',
       header: jsonHeader(),
-      data: jsonBody({ clubId: this._clubId, filter: this.data.filterKey, keyword: this.data.keyword }),
-      complete() { wx.stopPullDownRefresh(); },
+      data: jsonBody({ clubId: this._clubId, filter: this.data.filterKey, keyword: this.data.keyword, pageNum, pageSize: PAGE_SIZE }),
+      complete() { if (more) that._loadingMore = false; wx.stopPullDownRefresh(); },
       success(res) {
         if (epoch !== that._epoch) return;
+        if (more) { that.appendPage(res, pageNum); return; }
         if (!res || res.code != '200') {
           if (isAuthFailure(res)) { that.deny(res); return; }
           that.setData({ state: 'error', errorText: (res && res.msg) || '客户名单暂时不可用' });
@@ -139,6 +151,8 @@ Page({
           that.setData({ state: 'error', errorText: '客户名单加载失败' });
           return;
         }
+        that._pageNum = 1;
+        that._hasMore = shaped.items.length >= PAGE_SIZE && shaped.items.length < shaped.total;
         pageMotion.enter(that, 'pmList'); that.setData({
           state: shaped.items.length ? 'ready' : 'empty',
           everLoaded: true,
@@ -149,15 +163,32 @@ Page({
       },
       successStatusAbnormal(res, statusCode) {
         if (epoch !== that._epoch) return;
+        if (more) { that._hasMore = false; return; }
         if (isAuthFailure(res, statusCode)) { that.deny(res, statusCode); return; }
         that.setData({ state: 'error', errorText: (res && res.msg) || '客户名单暂时不可用' });
       },
       fail(value, statusCode) {
         if (epoch !== that._epoch) return;
+        if (more) return;
         if (isAuthFailure(value, statusCode)) { that.deny(value, statusCode); return; }
         that.setData({ state: 'network-error', errorText: '检查网络后重新加载客户名单' });
       },
     });
+  },
+
+  appendPage(res, pageNum) {
+    const shaped = res && res.code == '200' ? shapeCustomerList(res.data) : null;
+    if (!shaped) {
+      if (isAuthFailure(res)) this.deny(res);
+      return;
+    }
+    const seen = new Set(this.data.items.map((item) => item.memberId));
+    const fresh = shaped.items.filter((item) => !seen.has(item.memberId));
+    const items = this.data.items.concat(fresh);
+    this._pageNum = pageNum;
+    this._hasMore = fresh.length > 0 && shaped.items.length >= PAGE_SIZE && items.length < shaped.total;
+    if (!fresh.length) return;
+    this.setData({ items, countText: shaped.countText });
   },
 
   // 403 才是「岗位没权限」;401/登录失效/通用业务错误是另一回事,

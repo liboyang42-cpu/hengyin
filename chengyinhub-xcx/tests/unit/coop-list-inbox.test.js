@@ -122,12 +122,13 @@ test('负控①:删 tab 后俱乐部仍能从俱乐部详情「可对接的活�
   });
   const page = Object.assign({}, definition, { data: JSON.parse(JSON.stringify(definition.data)), setData(patch) { Object.assign(this.data, patch); } });
   page.data.club = { isOwner: true };
+  page.data.clubId = 21;
   const tap = { currentTarget: { dataset: { topicid: 8, name: '周末路线' } } };
   page.applyCoopPool(tap);
   page.applyCoopPool(tap);
   const writes = requests.filter(r => r.url === '/api/coop/pool/apply');
   assert.equal(writes.length, 1, '同步防重:连点只发一条申请');
-  assert.deepEqual(JSON.parse(writes[0].data), { topicId: 8, message: '带过 30 人' });
+  assert.deepEqual(JSON.parse(writes[0].data), { topicId: 8, clubId: 21, message: '带过 30 人' }, 'MC-052:带 clubId 供后端按归属校验');
   writes[0].success({ code: 200 });
   assert.match(toasts.pop(), /我发出的/);
   assert.ok(requests.some(r => r.url === '/api/coop/pool/list'), '成功后刷新，卡片变「已申请」');

@@ -89,7 +89,7 @@ test('购买页:到账分步只挂在服务端 PAID 之后,下单与支付链路
   assert.match(after, /order\.statusLabel === 'PAID'/)
   assert.ok(after.indexOf('unlockSteps') > after.indexOf("order.statusLabel === 'PAID'"))
   assert.ok(after.indexOf('giftSheet: true') < after.indexOf('unlockSteps'), '礼品仍先出领取码半屏')
-  assert.match(page, /wx\.requestPayment\(Object\.assign\(\{\}, p, \{\n\s*complete: \(\) => this\._verify\(order\.orderNo, 0\)/)
+  assert.match(page, /wx\.requestPayment\(Object\.assign\(\{\}, p, \{\n\s*success: \(\) => this\._verify\(order\.orderNo, 0\)/)
   const wxml = read('subpackageMember/market/pass/index.wxml')
   assert.match(wxml, /<cy-pass-unlock[^>]*show="\{\{unlock\.show\}\}"/)
   assert.match(wxml, /bind:done="onUnlockDone"/)

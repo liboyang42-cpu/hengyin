@@ -65,7 +65,7 @@
         <slider min="{{sliderMin}}" max="{{sliderMax}}" value="{{finalPrice}}" step="1"
                 activeColor="var(--cy-color-action-primary-bg)" backgroundColor="var(--cy-color-border-subtle)"
                 block-size="24" bindchange="onSliderChange" />
-        <view class="pg-range" wx:if="{{!isFreeExplore}}"><text>地板 {{money.amount2(floorText)}}</text><text>最高 {{money.amount2(sliderMax)}}</text></view>
+        <view class="pg-range" wx:if="{{!isFreeExplore || floorPositive}}"><text>地板 {{money.amount2(floorText)}}</text><text>最高 {{money.amount2(sliderMax)}}</text></view>
         <cy-inline-error class="pg-field-err" wx:if="{{selfPriceError}}" kind="field" title="{{selfPriceError}}" />
         <view class="pg-fee" wx:if="{{feeText}}">
           <view class="pg-fee-row"><text>平台服务费</text><text>{{feeText}}</text></view>

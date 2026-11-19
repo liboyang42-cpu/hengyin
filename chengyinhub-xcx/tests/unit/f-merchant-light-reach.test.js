@@ -19,8 +19,6 @@ const PLAYER_BY_DESIGN = {
   'pages/topic/index/index': '主题域,保持主题自己的强制配色',
   'subpackageRoam/citystamp/index': '城市签仪式页,漫游游戏设计域',
   'subpackageRoam/poi-detail/index': '据点历史链接落点(漫游域),商家主页只做重定向',
-  'pages/club/governance/index': '俱乐部治理是主理人(俱乐部域)页面,商家兼主理人时以主理人身份进入',
-  'pages/club/settlement/index': '俱乐部分润是俱乐部域页面,商家合作结算只把俱乐部来源转过去',
 };
 
 function walk(dir) {

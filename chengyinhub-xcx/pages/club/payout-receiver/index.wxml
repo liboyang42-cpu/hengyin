@@ -1,4 +1,4 @@
-<view class="theme-dark">
+<view class="theme-merchant">
   <cy-toast id="cy-toast" />
   <cy-modal-host id="cy-modal-host" />
   <view class="pr-page" style="padding-top: {{statusBarHeight + navBarHeight}}px;">

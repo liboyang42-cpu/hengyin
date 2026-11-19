@@ -63,7 +63,7 @@ Page({
     referenceDeltaText: '',
     saving: false,
     submitError: '',
-    isFreeExplore: false, isFree: false, confirmBlockReason: '', feeText: '', takeHomeText: '', sliderMin: 0, saleStatusText: '', pendingRows: [],
+    isFreeExplore: false, floorPositive: false, isFree: false, confirmBlockReason: '', feeText: '', takeHomeText: '', sliderMin: 0, saleStatusText: '', pendingRows: [],
     canConfirmPrice: false,
     themeClass: 'theme-merchant', phaseBlocked: false, priced: false, // P-34:priced = 已过定价阶段(终价已确认/开售后),与「还没到定价阶段」分开说
     // CU-C-70:成团人数为空/0 时的输入提示(与按钮禁用态同一把尺子)。
@@ -176,6 +176,8 @@ Page({
           subType: subType,
           confirmBlockReason: res.data.confirmBlockReason || '主题还没进入定价阶段',
           sliderMin: min,
+          // MC-037:自由探索有下限(floor>0)时滑杆下照样摆地板行,让人知道为什么拖不到更低。
+          floorPositive: floor > 0,
           lineup: lineup,
           floorText: money(res.data.priceMin),
           finalPrice: start,

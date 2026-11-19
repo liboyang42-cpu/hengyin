@@ -19,5 +19,8 @@
   color: var(--cy-text-body);
 }
 
+/* OR-020:未勾选就提交 —— 同意行本身高亮,不另出提示行 */
+.cck--alert .cck__txt { color: var(--cy-color-status-warning); }
+
 /* 合规勾选是关键操作,按下必须有反馈 —— 用户要确信自己真的勾上了 */
 .cck--press { opacity: 0.7; }

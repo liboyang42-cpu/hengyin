@@ -204,7 +204,7 @@ test('#4 JS 兜底不再回显原始代码:官方收件箱角色/状态、主题
   const director = read('pages/club/topic-detail/director.js')
   const fnSrc = director.match(/const GENERIC_OPS_STATUS[\s\S]*?\n}\n/)[0]
   const genericOpsStatusText = vm.runInNewContext(fnSrc + ';genericOpsStatusText')
-  assert.equal(genericOpsStatusText({ operationStatus: 'PAUSED', authorityMode: 'MANUAL', authorityEpoch: 3 }), '已暂停 · 人工接管 · 权威 3')
+  assert.equal(genericOpsStatusText({ operationStatus: 'PAUSED', authorityMode: 'MANUAL', authorityEpoch: 3 }), '已暂停 · 人工接管')
   assert.doesNotMatch(genericOpsStatusText({ operationStatus: 'NEW_STATE', authorityMode: 'X' }), /[A-Z_]{2,}/)
   assert.match(director, /genericOpsStatus: this\._genericControl \? genericOpsStatusText\(this\._genericControl\.run\) : ''/)
 })

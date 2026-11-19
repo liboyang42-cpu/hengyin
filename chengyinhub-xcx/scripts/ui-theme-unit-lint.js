@@ -42,7 +42,9 @@ const DOMAIN_RULES = [
   },
   {
     domain: 'merchant',
-    route: /^(?:pages\/(?:merchant\/(?!discover\/)|coop\/|publish\/|activity\/official-(?:detail|organizer)\/|topic\/(?:merchantinfo|merchantapply|pricing)\/)|subpackageMember\/(?:coupon\/|couponInfo\/))/
+    // 2026-11-17 业主批准 MC-038:俱乐部主办方视角页(名册/角色/治理/客户/结算/工作台/编辑/活动详情等)改商家浅色;
+    // 俱乐部申请(club/apply)仍是玩家视角深色,俱乐部详情与剧情页仍在共享域按视角二选一。
+    route: /^(?:pages\/club\/(?:badges|checkin-detail|create|customer-detail|customers|edit|enroll|event-ops|governance|group-code|join-requests|notify|payout-receiver|roles|settlement|topic-detail|workbench)\/|pages\/(?:merchant\/(?!discover\/)|coop\/|publish\/|activity\/official-(?:detail|organizer)\/|topic\/(?:merchantinfo|merchantapply|pricing)\/)|subpackageMember\/(?:coupon\/|couponInfo\/))/
   }
 ];
 

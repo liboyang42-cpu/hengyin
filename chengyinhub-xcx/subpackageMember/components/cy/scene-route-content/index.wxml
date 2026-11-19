@@ -16,7 +16,7 @@
   <cy-empty class="cy-fade-in" wx:elif="{{state === 'missing'}}" fill size="lg" kind="missing-param" cta="返回" bind:cta="close" />
   <cy-error load-failure class="cy-fade-in" wx:elif="{{state === 'error'}}" fill size="lg" title="这一页没能打开" sub="{{errorText}}" retry="重试" bind:retry="reload" />
   <cy-empty wx:elif="{{state === 'no-permission'}}" fill size="lg" kind="no-permission"
-    title="当前身份不能管理节点" sub="请联系店主开通" />
+    title="当前身份不能管理节点" />
   <cy-empty wx:elif="{{state === 'empty'}}" fill size="lg" title="{{emptyText}}" />
 
   <block wx:elif="{{state === 'ready'}}">

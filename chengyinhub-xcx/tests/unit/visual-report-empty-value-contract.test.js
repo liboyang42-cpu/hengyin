@@ -17,7 +17,7 @@ function assertRedemptionEmptyValueContract(js, wxml) {
   // v2:两种"没金额"要分开 —— 明确不产生现金给破折号,金额尚未成立给「待定」;都不得造 ¥0。
   assert.match(js, /item\.amountDisplay = item\.amountText != null \?/, '金额展示必须先判现金是否成立');
   // M-27(2026-11-02 第3轮):零现金右列留空,不再画破折号。
-  assert.match(js, /NO_CASH_SETTLEMENT' \? null : '待定'/, "null 不得造 ¥0:零现金右列留空，未成立给「待定」");
+  assert.match(js, /NO_CASH_SETTLEMENT' \? null : '¥0.00'/, "零现金右列留空，未成立金额按 MC-011=B 显示 ¥0.00(MC-015)");
   assert.doesNotMatch(wxml, /¥\{\{/, '所有金额符号必须包含在已校验的显示文本中');
   assert.doesNotMatch(wxml, /¥0\.00/, '待主题结算不得伪装成零金额');
 }

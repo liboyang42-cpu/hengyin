@@ -1,4 +1,5 @@
 const app = getApp();
+const toast = require('../../../utils/toast.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
 const { normalizeMarketingHome } = require('../utils/merchant-aggregate.js');
@@ -138,6 +139,7 @@ Page({
         if (!home) {
           this._routesLoading = false;
           this.setData({ routeScopeText: '', routesError: app.getRequestErrorMessage(res, '路线加载失败'), routesLoading: false });
+          this._toastRefreshFailed('routes');
           return;
         }
         this._routesLoading = false;
@@ -150,8 +152,15 @@ Page({
       fail: (res) => {
         this._routesLoading = false;
         this.setData({ routesError: app.getRequestErrorMessage(res, '路线加载失败'), routesLoading: false });
+        this._toastRefreshFailed('routes');
       },
     });
+  },
+
+  // MC-021:列表已有内容时刷新失败,保留旧列表并轻提示一次(空列表走原 cy-error 留白)。
+  _toastRefreshFailed(kind) {
+    const list = kind === 'routes' ? this.data.routes : this.data.events;
+    if (list && list.length) toast('刷新失败，请稍后重试');
   },
 
   loadEvents() {
@@ -164,6 +173,7 @@ Page({
         if (!res || (res.code != 200 && res.code != '200') || !Array.isArray(res.data)) {
           this._eventsLoading = false;
           this.setData({ eventsError: app.getRequestErrorMessage(res, '官方活动加载失败'), eventsLoading: false });
+          this._toastRefreshFailed('events');
           return;
         }
         // F21:关键承接方缺失(recruitmentBlocked)必须在卡面标出来,由商家决定补位;标缺口不撤下
@@ -176,6 +186,7 @@ Page({
       fail: (res) => {
         this._eventsLoading = false;
         this.setData({ eventsError: app.getRequestErrorMessage(res, '官方活动加载失败'), eventsLoading: false });
+        this._toastRefreshFailed('events');
       },
     });
   },

@@ -134,7 +134,7 @@ test('C-13 名册展开后按场次列出实收/已退/净额(¥,服务端分值
   ]);
   const wxml = read('pages/club/enroll/index.wxml');
   assert.match(wxml, /wx:for="\{\{team\.sessionMoney\}\}"/);
-  assert.match(wxml, /净额 \{\{m\.netText\}\}/);
+  assert.match(wxml, /实收减退款 \{\{m\.netText\}\}/);
 });
 
 // ───────── C-17 / C-02(2026-11-02 walk-fix)开一场只读票价、集合点与收款提示 ─────────

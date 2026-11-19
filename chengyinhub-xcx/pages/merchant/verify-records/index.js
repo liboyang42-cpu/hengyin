@@ -118,8 +118,11 @@ Page({
         if (!items) { if (settle()) failed(res); return; }
         collected.push.apply(collected, items);
         const total = Number(res.data.total) || 0;
-        if (items.length === PAGE_SIZE && collected.length < total && pageNum < MAX_PAGES) { readPage(pageNum + 1); return; }
+        const more = items.length === PAGE_SIZE && collected.length < total;
+        if (more && pageNum < MAX_PAGES) { readPage(pageNum + 1); return; }
         if (!settle()) return;
+        // MC-020:超过首批上限不再静默截断 —— 记下续读页,分段计数标「+」,触底按需续读。
+        this._morePage = more ? pageNum + 1 : 0;
         this.applyItems(collected, this.data.bucket);
       },
       fail: () => {
@@ -128,6 +131,32 @@ Page({
       },
     });
     readPage(1);
+  },
+
+  onReachBottom() {
+    if (!this._morePage || this._loadingMore || this.data.pageState !== 'ready' && this.data.pageState !== 'empty') return;
+    const seq = this._listSeq;
+    const pageNum = this._morePage;
+    this._loadingMore = true;
+    app.sendRequest({
+      hideLoading: true,
+      silentError: true,
+      url: '/api/merchant/finance/redemptions',
+      method: 'POST',
+      data: JSON.stringify({ filter: 'all', pageNum, pageSize: PAGE_SIZE }),
+      header: { 'Content-Type': 'application/json' },
+      success: (res) => {
+        this._loadingMore = false;
+        if (seq !== this._listSeq) return;
+        const items = isSuccess(res) ? shapeRecordList(res.data) : null;
+        if (!items) { toast('加载失败，请重试'); return; }
+        const all = (this._items || []).concat(items);
+        const total = Number(res.data.total) || 0;
+        this._morePage = items.length === PAGE_SIZE && all.length < total ? pageNum + 1 : 0;
+        this.applyItems(all, this.data.bucket);
+      },
+      fail: () => { this._loadingMore = false; toast('加载失败，请重试'); },
+    });
   },
 
   switchBucket(event) {
@@ -143,7 +172,7 @@ Page({
     this._items = items;
     pageMotion.enter(this, 'pmList'); this.setData({
       bucket,
-      tabs: STATUS_TABS.map(tab => ({ key: tab.key, label: `${tab.label} ${counts[tab.key] || 0}` })),
+      tabs: STATUS_TABS.map(tab => ({ key: tab.key, label: `${tab.label} ${counts[tab.key] || 0}${this._morePage && counts[tab.key] ? '+' : ''}` })),
       groups,
       pageState: groups.length ? 'ready' : 'empty',
       errorMessage: '',

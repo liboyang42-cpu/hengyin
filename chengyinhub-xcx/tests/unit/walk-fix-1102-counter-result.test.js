@@ -190,7 +190,7 @@ test('M-27 核销与退款行：无左侧状态点、副行是顾客姓名(有�
   assert.doesNotMatch(row, /顾客信息受保护/);
   assert.match(row, /<text wx:if="\{\{item\.customerName\}\}">\{\{item\.customerName\}\}<\/text>\s*<text wx:if="\{\{item\.timeText\}\}">\{\{item\.timeText\}\}<\/text>/);
   const src = read('pages/merchant/ledger/index.js');
-  assert.match(src, /displayState === 'NO_CASH_SETTLEMENT' \? null : '待定'/);
+  assert.match(src, /displayState === 'NO_CASH_SETTLEMENT' \? null : '¥0.00'/);
 });
 
 test('M-27 第4轮 核销行取服务端报名姓名,没有就空着;退款行不借用活动名当顾客', () => {

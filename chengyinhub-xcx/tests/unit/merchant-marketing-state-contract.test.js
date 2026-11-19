@@ -461,7 +461,8 @@ test('重新确认会清掉 entryError 并真的再走一次入口链路', async
 function assertDeniedHidesData(wxml) {
   assert.match(wxml, /title="你的岗位还没有营销数据权限"/,
     '拒权必须说清是岗位没开权限')
-  assert.match(wxml, /请联系店主开通/, '必须给出出路:联系店主开通')
+  assert.doesNotMatch(wxml, /请联系店主开通/, 'MC-046:不再挂「请联系店主开通」副文案,出路是「重新确认」')
+  assert.match(wxml, /action="重新确认"/)
   const guard = "wx:if=\"{{accessState !== 'denied'}}\""
   const guardIndex = wxml.indexOf(guard)
   assert.ok(guardIndex > 0, '数据区必须有一道「非拒权才渲染」的闸门')
@@ -487,7 +488,7 @@ test('岗位没有营销数据权限时只留说明,不渲染数据占位', () =
   })
 
   assert.equal(page.data.accessState, 'denied')
-  assert.equal(page.data.accessError, '请联系店主开通')
+  assert.equal(page.data.accessError, '')
   assert.equal(marketingRequest(), undefined, '拒权后不得再拉营销聚合')
 
   const wxml = fs.readFileSync(WXML_PATH, 'utf8')

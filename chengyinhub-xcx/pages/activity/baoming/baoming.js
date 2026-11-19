@@ -25,6 +25,7 @@ const { isValidMobile } = require('../../../utils/form-state.js');
 const indexFormat = require('../../../utils/index/index-format.js');
 const ticketSource = require('../../../utils/ticket-source.js');
 const familyTicket = require('../../../utils/family-ticket.js'); // F12 亲子票:只选儿童年龄
+const { refundRuleTiers } = require('../../../utils/refund-tiers.js'); // OR-022:退款三档同一份文案
 const marketingConsent = require('../../../utils/marketing-consent-entry.js');
 const quoteView = require('../utils/quote-view.js');
 const { hostReservationView } = require('../utils/host-reservation.js');
@@ -226,6 +227,7 @@ Page({
     skeletonItems: [1, 2], // 加载中两张卡:第三张会被底栏占位切掉一半(p08-baoming-loading)
     ticketList: [],
     selectedTicket: null,
+    refundTiers: [],
     childAgeOptions: [], childAgeLabels: [], childAge: null, // F12 亲子票儿童年龄(只要年龄,不要姓名)
     signupState: 'loading',
     ticketSoldOut: false,
@@ -791,6 +793,7 @@ Page({
             merchantClosed: activityInfo.merchantClosed === true,
             ticketList: ticketList,
             selectedTicket: selectedTicket,
+            refundTiers: refundRuleTiers(selectedTicket),
             ticketSoldOut: ticketIsSoldOut(selectedTicket),
             waitlistState: 'LOADING',
             waitlistEligibility: 'UNKNOWN',
@@ -883,6 +886,7 @@ Page({
       childAgeLabels: familyAge.childAgeLabels,
       childAge: familyAge.childAge,
       selectedTicket: ticket,
+      refundTiers: refundRuleTiers(ticket),
       totalAmount: parseFloat(Number(ticket.price).toFixed(2)),
       ticketSoldOut: ticketIsSoldOut(ticket),
       signupState: 'available',

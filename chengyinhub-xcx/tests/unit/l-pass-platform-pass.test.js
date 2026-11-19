@@ -24,20 +24,20 @@ test('关闭时整页不出售', () => {
 test('套餐卡:第一版只卖月卡并默认选中,标签写 30天·不自动续费,价格来自服务端分', () => {
   const v = pp.passView(ov, '', 'android', true);
   assert.equal(v.selected, 'MONTH');
-  assert.deepEqual(v.plans.map((p) => [p.code, p.price, p.line, p.best]), [['MONTH', '¥39', '30天·不自动续费', false]]);
+  assert.deepEqual(v.plans.map((p) => [p.code, p.price, p.line, p.best]), [['MONTH', '首发价 ¥39', '30天·不自动续费', false]]);
   assert.equal(v.count, 12);
 });
 
-test('按钮写服务端金额:未持有「开通 ¥39」,持有「续期 ¥39」', () => {
-  assert.equal(pp.passView(ov, '', 'ios', true).buyLabel, '开通 ¥39');
+test('按钮写服务端金额(OR-047 定稿):未持有「开通通行证 ¥39」,持有「续买30天 ¥39」', () => {
+  assert.equal(pp.passView(ov, '', 'ios', true).buyLabel, '开通通行证 ¥39');
   const held = pp.passView(Object.assign({}, ov, { holding: { active: true } }), '', 'ios', true);
-  assert.equal(held.buyLabel, '续期 ¥39');
+  assert.equal(held.buyLabel, '续买30天 ¥39');
 });
 
 test('购买前须知:可玩主题 / 有效期取服务端,适用范围与退款规则取 terms,缺项不出', () => {
   const v = pp.passView(Object.assign({}, ov, { terms: { seat: '仅限本人席位', refund: '开通后 7 天内可申请退款' } }), '', 'ios', true);
-  assert.deepEqual(v.facts.map((f) => [f.k, f.v]), [['可玩主题', '12 个主题'], ['适用范围', '仅限本人席位'], ['有效期', '30 天'], ['退款规则', '开通后 7 天内可申请退款']]);
-  assert.deepEqual(pp.passView(Object.assign({}, ov, { libraryCount: null }), '', 'ios', true).facts.map((f) => f.k), ['有效期']);
+  assert.deepEqual(v.facts.map((f) => [f.k, f.v]), [['可玩主题', '12 个主题'], ['适用范围', '仅限本人席位'], ['有效期', '30 天'], ['续费', '不自动续费'], ['退款规则', '开通后 7 天内可申请退款']]);
+  assert.deepEqual(pp.passView(Object.assign({}, ov, { libraryCount: null }), '', 'ios', true).facts.map((f) => f.k), ['有效期', '续费', '退款规则'], 'OR-024:续费与退款两条固定出');
 });
 
 test('数量未知不写 0;没有在售套餐按钮不可点', () => {
@@ -45,7 +45,7 @@ test('数量未知不写 0;没有在售套餐按钮不可点', () => {
   assert.equal(v.count, null);
   assert.equal(v.buyOff, true);
   assert.equal(v.buyLabel, '暂未开售');
-  assert.deepEqual(v.facts, []);
+  assert.deepEqual(v.facts.map((f) => [f.k, f.v]), [['续费', '不自动续费'], ['退款规则', '退款为整单']], 'OR-024:须知固定出');
 });
 
 test('渠道:iOS 和安卓设备支持且服务端可用都走虚拟支付', () => {
@@ -77,7 +77,9 @@ test('持有中:按钮写续期,有效期取服务端 coverageEnd', () => {
   const v = pp.passView(Object.assign({}, ov, { holding: { active: true, validTo: '2027-11-10 12:00:00', coverageEnd: '2027-12-10 12:00:00' } }), '', 'android', true);
   assert.equal(v.active, true);
   assert.equal(v.untilText, '2027.12.10');
-  assert.equal(v.buyLabel, '续期 ¥39');
+  assert.equal(v.buyLabel, '续买30天 ¥39');
+  const t = pp.passView(Object.assign({}, ov, { holding: { active: true, validToText: '2027-12-10', coverageEnd: '2027-12-10 12:00:00' } }), '', 'android', true);
+  assert.equal(t.untilText, '2027-12-10', 'OR-047:有效期优先用服务端 validToText');
 });
 
 test('主题库行:无 id / 名称不出,时长按分钟取整,不编城市', () => {
@@ -183,13 +185,13 @@ test('回到订单:已取消 / 已退款订单不再支付', async () => {
 test('订单状态与退款进度只来自服务端字段,读不到的状态不编', () => {
   const base = { orderNo: 'PPO1', priceFen: 3900, validDays: 30, paidTime: '2026-11-13 10:00:00', validTo: '2026-12-13 10:00:00' };
   const st = (status, refund) => pp.orderRow(Object.assign({}, base, { status, refund }));
-  assert.equal(st('PENDING').state, '待支付');
+  assert.equal(st('PENDING').state, '待付款');
   assert.equal(st('PAID').state, '已开通');
   assert.equal(st('CANCELLED').state, '已取消');
-  assert.equal(st('REFUNDING').state, '退款中');
+  assert.equal(st('REFUNDING').state, '退款处理中');
   assert.equal(st('REFUNDED').state, '已退款');
   assert.equal(st('WHAT').state, '状态确认中');
-  assert.equal(st('PAID', { reviewStatus: 'PENDING' }).refund, '退款申请审核中');
+  assert.equal(st('PAID', { reviewStatus: 'PENDING' }).refund, '退款审核中');
   assert.equal(st('PAID', { reviewStatus: 'REJECTED' }).refund, '退款申请未通过');
   assert.equal(pp.orderRow(base).amount, '¥39');
 });
@@ -217,9 +219,9 @@ test('结账:通行证覆盖 → ¥0、免费领取、明细多一行通行证�
   const products = [{ productId: 1, productName: '城市包', productKind: 2, cashPrice: 88, items: [{ topicId: 990014 }] }];
   const v = checkoutView({ info, quote, quoteState: 'ready', products });
   assert.equal(v.member, true);
-  assert.equal(v.totalText, '¥0.00');
+  assert.equal(v.totalText, '¥0');
   assert.equal(v.payLabel, '免费领取');
-  assert.deepEqual(v.bill.map((r) => [r.k, r.v]), [['自玩门票 × 1', '¥39.00'], ['通行证', '你已可直接游玩']]);
+  assert.deepEqual(v.bill.map((r) => [r.k, r.v]), [['自玩门票 × 1', '¥39'], ['通行证', '你已可直接游玩']]);
   assert.equal(v.single.strike, '');
   assert.deepEqual(v.passes, []);
 });
@@ -227,7 +229,7 @@ test('结账:通行证覆盖 → ¥0、免费领取、明细多一行通行证�
 test('结账:未覆盖时与原来一致(俱乐部减免照旧)', () => {
   const v = checkoutView({ info, quote: { payAmount: 31.2, memberDiscountYuan: 7.8 }, quoteState: 'ready' });
   assert.equal(v.member, false);
-  assert.deepEqual(v.bill.map((r) => r.v), ['¥39.00', '-¥7.80']);
+  assert.deepEqual(v.bill.map((r) => r.v), ['¥39', '-¥7.8']);
 });
 
 test('页面:新页在分包、插图用分包副本、新样式不加 keyframes、入口只在服务端开放时出现', () => {
@@ -279,5 +281,5 @@ test('页面:购买页不再引用普通 JSAPI 支付,确认中回到同一订�
   const js = fs.readFileSync(path.join(ROOT, 'subpackageMember/market/membership/index.js'), 'utf8');
   assert.doesNotMatch(js, /JSAPI|requestPayment\(/);
   assert.match(js, /_confirmOrderNo = r\.orderNo/);
-  assert.match(js, /buyError: '确认中'/);
+  assert.match(js, /buyError: pp\.WORDS\.CONFIRMING/);
 });

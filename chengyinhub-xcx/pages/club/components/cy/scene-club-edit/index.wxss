@@ -97,13 +97,6 @@
    一行里「字段名」和「填的值」不该一样亮。同样只在本组件覆盖,申请页不动。 */
 .cle .fi { color: var(--cy-text-body); }
 
-/* 管理员副标题(Figma 29:145) */
-.admin-note {
-  padding: 0 8rpx var(--cy-space-3);
-  font-size: var(--cy-font-label); color: var(--cy-color-text-tertiary);
-  line-height: var(--cy-leading-normal);
-}
-
 /* 定位:disclosure 行 */
 .disc-row { justify-content: space-between; }
 .disc-label { display: flex; flex-direction: column; gap: 6rpx; flex-shrink: 0; }

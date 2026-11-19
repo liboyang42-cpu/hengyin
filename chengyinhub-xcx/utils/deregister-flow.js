@@ -38,6 +38,16 @@ function executeAfterPassed(value, now) {
   return Number.isFinite(ts) && ts > 0 && ts <= (now == null ? Date.now() : now);
 }
 
+// OR-015:注销申请进入冷静期时服务端已撤销本账号全部令牌(AccountDeregistrationServiceImpl.apply → revokeAll),
+// 本机也随即清掉会话七字段与身份广播,页面停在冷静期卡片(只读);撤销申请时由请求层按需重新登录。
+function clearLocalSessionAfterPending() {
+  try { if (app && typeof app.getSession === 'function') app.getSession().clearSession(); } catch (e) { /* 清理失败不挡卡片 */ }
+  try {
+    const sync = require('./identity-sync.js');
+    if (sync && typeof sync.resetIdentity === 'function') sync.resetIdentity();
+  } catch (e) { /* noop */ }
+}
+
 function pendingPatch(data) {
   return { status: 'PENDING', executeAfter: executeAfterText(data.executeAfter),
     coolingOffEnded: executeAfterPassed(data.executeAfter), verificationMethod: 'UNAVAILABLE', canApply: false };
@@ -266,6 +276,7 @@ const methods = {
           const data = isOk(res) && isRecord(res.data) ? res.data : null;
           if (data && data.status === 'PENDING') {
             this.setData(Object.assign(pendingPatch(data), { submitting: false, applyError: '' }));
+            clearLocalSessionAfterPending();
             return;
           }
           const blockers = data && data.status === 'BLOCKED' ? blockerList(data.blockers) : null;
@@ -301,6 +312,7 @@ const methods = {
         const data = isOk(res) && isRecord(res.data) ? res.data : null;
         if (data && data.status === 'PENDING' && this.data.status === 'ELIGIBLE') {
           this.setData(Object.assign(pendingPatch(data), { submitting: false, applyError: '', smscode: '', confirmed: false }));
+          clearLocalSessionAfterPending();
         }
       },
       fail: () => {},

@@ -38,7 +38,8 @@ async function logoutThroughSettings(h) {
   reply(h.requests.filter(r=>r.url.endsWith('/api/logout')).at(-1),{code:200});await settle();
   for(const key of ['authorization','open_id','user_id','user_type','avatar','nickname','role']) assert.equal(h.app.globalData[key],'');
   assert.equal(h.storage.has('authorization'),false);
-  assert.equal(h.storage.has('cy_usage_choice_v1'),false);
+  // OR-038(2026-11-17 业主批准):隐私同意是这台设备的选择,退出账号保留;服务端按账号的同意台账仍各自补传
+  assert.equal(h.storage.has('cy_usage_choice_v1'),true);
   assert.equal([...h.storage.keys()].some(key=>key.startsWith('cy_consent_retry:')),false);
   assert.equal(h.storage.has('roam_memory_v1:7:sessions'),false);
   assert.equal(h.wx.relaunched,'/pages/index/index');
@@ -264,17 +265,14 @@ test('logout and another normal account login cannot consume the former owner co
   assert.equal(h.storage.get('cy_usage_pending_v1:7'),ledger);
   assert.equal(Object.keys(ledger.pending).length,2);
 });
-test('preserving an owner ledger on logout does not preserve the global choice or bypass a cold consent gate',async()=>{
+test('OR-038:logout keeps the device-level privacy choice, so a cold start does not re-open the consent gate',async()=>{
   const h=mount();const attempt=agreeDuringLogin(h);await settle();await exchange(h);
   consentReply(h.requests.find(r=>r.url.endsWith('/consents')));await settle();
   consentReply(h.requests.filter(r=>r.url.endsWith('/consents')).at(-1));await attempt;
   const ledger=h.storage.get('cy_usage_pending_v1:7');await logoutThroughSettings(h);
   assert.equal(h.storage.get('cy_usage_pending_v1:7'),ledger);
   h.app._usageConsent=null;h.app._consentClient=null;
-  const shown=h.shown(),loginCount=h.logins.length,requestCount=h.requests.length,waiting=h.app.firstLogin();await settle();
-  assert.equal(h.shown(),shown+1);
-  assert.equal(h.logins.length,loginCount);
-  assert.equal(h.requests.length,requestCount);
-  h.app.declineUsageConsent();await waiting;
+  const shown=h.shown();h.app.firstLogin();await settle();
+  assert.equal(h.shown(),shown,'device choice survives logout; no second consent gate');
   assert.equal(h.storage.get('cy_usage_pending_v1:7'),ledger);
 });

@@ -369,7 +369,6 @@ page { background: var(--cy-bg-page); }
   background: var(--cy-bg-page);
 }
 .review-editor-title { display: block; color: var(--cy-text-title); font-size: var(--cy-font-body); font-weight: 600; }
-.review-editor-sub { display: block; margin-top: var(--cy-space-1); color: var(--cy-text-secondary); font-size: var(--cy-font-caption); line-height: 1.5; }
 .review-editor-actions { justify-content: flex-end; gap: var(--cy-space-2); margin-top: var(--cy-space-3); }
 
 .review-loading-more,

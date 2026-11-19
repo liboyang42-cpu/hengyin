@@ -68,7 +68,9 @@ var WRITE_TOKENS = ['add', 'create', 'save', 'update', 'edit', 'delete', 'remove
   'follow', 'unfollow', 'action', 'report', 'comment', 'reply', 'use', 'start', 'finish', 'arrive', 'checkin',
   'reveal', 'discover', 'visit', 'claim', 'redeem', 'invite', 'accept', 'reject', 'respond', 'cancel',
   'withdraw', 'transfer', 'register', 'set', 'toggle', 'send', 'draft', 'vote', 'rate', 'posts', 'comments',
-  'replies', 'reports', 'team', 'teams', 'remix', 'copy', 'appeal'];
+  'replies', 'reports', 'team', 'teams', 'remix', 'copy', 'appeal',
+  // OR-037:通行证建单(POST …/orders)、虚拟支付回查确认(…/confirm)、退出登录(/api/logout)都是写
+  'confirm', 'orders', 'logout'];
 
 function pathTokens(url) {
   var path = String(url || '').split('?')[0].replace(/\/+$/, '');

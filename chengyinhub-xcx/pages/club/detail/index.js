@@ -279,7 +279,7 @@ function decorateInviteFeedback(item) {
     statusText: status.text,
     statusClass: status.key,
     partnerName: partner.name || '合作对象待补充',
-    topicText: item.topicName || (item.topicId ? '主题 #' + item.topicId : '活动待补充'),
+    topicText: item.topicName || (item.topicId ? '未命名' : '活动待补充'),
     timeText: item.createTime ? String(item.createTime).slice(5, 16) : '',
   });
 }
@@ -526,7 +526,8 @@ function isDemoClubId(id) {
 }
 
 Page({
-  onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; },
+  // MC-029:切后台可能被系统回收,等不到撤销条到期 —— 未撤销的移出成员此刻就提交(卸载同理)。
+  onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; const pending = this._pendingRemoval; this._pendingRemoval = null; if (typeof pending === 'function') pending(); },
   // 第九轮 m1-9:路线节点地址一点开地图
   onAddressTap(e) { openAddress().openFromEvent(e); },
   _clubAccessState: 'idle',
@@ -870,7 +871,7 @@ Page({
   },
 
   // 页面销毁:作废在途 AI 生成的回调,避免 setData after unload(sendRequest 不可中断)
-  onUnload() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
+  onUnload() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; const pendingRemoval = this._pendingRemoval; this._pendingRemoval = null; if (typeof pendingRemoval === 'function') pendingRemoval();
     this._scanDisposed = true; this._scanGeneration = (this._scanGeneration || 0) + 1;
     if (this._scanWorkflow) { this._scanWorkflow.destroy(); this._scanWorkflow = null; }
     if (this._scanLoadingOwners) { this._scanLoadingOwners.forEach(() => loading.hide()); this._scanLoadingOwners.clear(); }
@@ -2635,7 +2636,8 @@ Page({
     } else {
       const perks = [];
       if (Number(c.prioritySignupEnabled) === 1) perks.push('成员优先报名');
-      if (Number(c.memberDiscountPrice) > 0) perks.push('成员价 ¥' + Number(c.memberDiscountPrice));
+      // MC-063:成员价文本优先用服务端格式化的 memberDiscountPriceText;缺省沿用旧拼法。
+      if (Number(c.memberDiscountPrice) > 0) perks.push(typeof c.memberDiscountPriceText === 'string' && c.memberDiscountPriceText.trim() ? '成员价 ' + c.memberDiscountPriceText.trim() : '成员价 ¥' + Number(c.memberDiscountPrice));
       items.push({ key: 'events', icon: 'calendar', title: '报名俱乐部的局', sub: perks.join('、') });
     }
     items.push({ key: 'overview', icon: 'tab-club', title: '认识成员、攒贡献', sub: '' });
@@ -3414,10 +3416,24 @@ Page({
     const that = this;
     const before = this.data.members || [];
     this.setData({ members: before.filter((m) => String(m.memberId) !== String(memberId)) });
+    this._flushPendingRemoval();
+    let done = false;
+    const commit = () => {
+      if (done) return;
+      done = true;
+      if (that._pendingRemoval === commit) that._pendingRemoval = null;
+      that._doRemoveMember(memberId);
+    };
+    this._pendingRemoval = commit;
     cyToast.undo('已将「' + name + '」移出俱乐部', {
-      onUndo() { that.setData({ members: before }); },
-      onCommit() { that._doRemoveMember(memberId); },
+      onUndo() { done = true; if (that._pendingRemoval === commit) that._pendingRemoval = null; that.setData({ members: before }); },
+      onCommit: commit,
     });
+  },
+  _flushPendingRemoval() {
+    const commit = this._pendingRemoval;
+    this._pendingRemoval = null;
+    if (typeof commit === 'function') commit();
   },
   _doRemoveMember(memberId) {
     const that = this;
@@ -3457,8 +3473,10 @@ Page({
 
   // 2026-08-26:管理员(role=1)也拿到管理 tab。判据用 detail 已下发的 viewerIsAdmin,
   // 不额外请求;真闸在后端 canGovernClub,前端只是别把入口藏起来。
+  // MC-055:服务端下发 viewerCanGovern(clubAccessService 权限位)时以它为准;老后端不带就沿用 isOwner/viewerIsAdmin。
   canGovern(club) {
     const c = club || this.data.club;
+    if (c && typeof c.viewerCanGovern === 'boolean') return c.viewerCanGovern;
     return !!(c && (c.isOwner || c.viewerIsAdmin));
   },
 
@@ -3796,7 +3814,7 @@ Page({
         if (!r.confirm) { done(''); return; }
         app.sendRequest({
           url: '/api/coop/pool/apply', method: 'POST',
-          data: jsonBody({ topicId: topicId, message: r.content || '' }), header: jsonHeader(),
+          data: jsonBody({ topicId: topicId, clubId: that.data.clubId, message: r.content || '' }), header: jsonHeader(),
           success(res) {
             if (String(res && res.code) === '200') {
               done('已申请，可在协作邀请「我发出的」查看');
