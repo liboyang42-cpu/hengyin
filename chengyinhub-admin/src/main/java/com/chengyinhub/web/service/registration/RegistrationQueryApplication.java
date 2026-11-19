@@ -381,7 +381,20 @@ public class RegistrationQueryApplication {
         }
     }
 
+    /** OR-029：单页上限，客户端传更大也按此截断。 */
+    public static final int LIST_PAGE_SIZE_MAX = 50;
+    static final int LIST_PAGE_SIZE_DEFAULT = 20;
+
     public AjaxResult myRegistrationList(Long member_id, String owner_type, String status, Integer is_online) {
+        return myRegistrationList(member_id, owner_type, status, is_online, null, null);
+    }
+
+    /**
+     * 我的报名。pageNum/pageSize 都不传时与旧客户端一致（整表一次返回，total 为条数）；
+     * 传了任一个即分页，pageSize 夹在 [1, 50]。需在内存里按完成态过滤的 Tab 先过滤后分页，保证 total 准确。
+     */
+    public AjaxResult myRegistrationList(Long member_id, String owner_type, String status, Integer is_online,
+                                         Integer pageNum, Integer pageSize) {
 
 
         if (member_id == null || member_id <= 0) {
@@ -415,39 +428,36 @@ public class RegistrationQueryApplication {
         }
         registration.setMemberId(member_id);
 
+        boolean paged = pageNum != null || pageSize != null;
+        int pn = pageNum == null || pageNum < 1 ? 1 : pageNum;
+        int ps = pageSize == null ? LIST_PAGE_SIZE_DEFAULT : Math.max(1, Math.min(pageSize, LIST_PAGE_SIZE_MAX));
+        boolean completionFilter = ownerType >= 3 && ("2".equals(status) || "3".equals(status));
         List<CmsRegistration> list;
-        //startPage();
-        list = registrationService.selectCmsRegistrationList(registration);
+        if (paged && !completionFilter) {
+            com.github.pagehelper.PageHelper.startPage(pn, ps);
+        }
+        try {
+            list = registrationService.selectCmsRegistrationList(registration);
+        } finally {
+            if (paged && !completionFilter) com.github.pagehelper.PageHelper.clearPage();
+        }
+        // OR-029：同一主题/活动在一页里只查一次（原来每行各查一次）。
+        Map<Long, Optional<CmsTopic>> topics = new HashMap<>();
+        Map<Long, Optional<CmsActivity>> activities = new HashMap<>();
+        if (!completionFilter) attachOwners(list, topics, activities);
         for (CmsRegistration row : list) { attachExploreProgress(row); attachTopicCompleted(row); }
-        if (ownerType >= 3 && ("2".equals(status) || "3".equals(status))) {
+        if (completionFilter) {
             List<CmsRegistration> filtered = new ArrayList<>();
             for (CmsRegistration row : list) {
                 // ③ 探索票核销一家不算完成:必选章全核销或场次结束才进「已完成」(P-03)。
                 boolean completed = com.chengyinhub.business.service.support.ExploreTicketProgress.listCompleted(row);
                 if ("3".equals(status) == completed) filtered.add(row);
             }
-            list = filtered;
+            list = paged ? pageInMemory(filtered, pn, ps) : filtered;
+            attachOwners(list, topics, activities);
         }
         Map<Long, RefundApplication> latestRefunds = latestRegistrationRefunds(member_id);
         for (CmsRegistration reg : list) {
-            if (reg.getOwnerType() == 1) {
-                CmsTopic topic = topicService.selectCmsTopicById(reg.getOwnerId());
-                if (topic != null) {
-                    // 2026-09-18 UI-20 返修:存量主题 cms_topic.product_type 仍是 NULL 时,订单卡按它出
-                    // 「城市定向/自由探索」会整块标签消失;而游玩页 resolveMode 对同一主题已按票 mode 回落
-                    // 出「城市定向」,两边自相矛盾。这里复用同一条读侧回落规则,只改响应不下库。
-                    if (topic.getProductType() == null) {
-                        topic.setProductType(readTopicProductType(topic.getId()));
-                    }
-                    reg.setCmsTopic(topic);
-                }
-            }
-            if (reg.getOwnerType() == 2) {
-                CmsActivity activity = activityService.selectCmsActivityById(reg.getOwnerId());
-                if (activity != null) {
-                    reg.setCmsActivity(activity);
-                }
-            }
             attachRefundInfoForList(reg);
             attachManualRefundInfo(reg);
             reg.setRefundApplication(latestRefunds.get(reg.getId()));
@@ -461,6 +471,39 @@ public class RegistrationQueryApplication {
         registrationService.attachPartySnapshots(list);
         stampServerNow(list);
         return AjaxResult.success(list);
+    }
+
+    /** 按完成态过滤后的内存分页；用 PageHelper 的 Page 承载 total，控制器的 getDataTable 原样读出。 */
+    static List<CmsRegistration> pageInMemory(List<CmsRegistration> rows, int pageNum, int pageSize) {
+        com.github.pagehelper.Page<CmsRegistration> page = new com.github.pagehelper.Page<>(pageNum, pageSize);
+        page.setTotal(rows.size());
+        int from = (int) Math.min((long) (pageNum - 1) * pageSize, rows.size());
+        page.addAll(rows.subList(from, Math.min(from + pageSize, rows.size())));
+        return page;
+    }
+
+    private void attachOwners(List<CmsRegistration> list, Map<Long, Optional<CmsTopic>> topics,
+                              Map<Long, Optional<CmsActivity>> activities) {
+        for (CmsRegistration reg : list) {
+            if (reg.getOwnerType() == 1) {
+                CmsTopic topic = topics.computeIfAbsent(reg.getOwnerId(), id -> {
+                    CmsTopic loaded = topicService.selectCmsTopicById(id);
+                    // 2026-09-18 UI-20 返修:存量主题 cms_topic.product_type 仍是 NULL 时,订单卡按它出
+                    // 「城市定向/自由探索」会整块标签消失;而游玩页 resolveMode 对同一主题已按票 mode 回落
+                    // 出「城市定向」,两边自相矛盾。这里复用同一条读侧回落规则,只改响应不下库。
+                    if (loaded != null && loaded.getProductType() == null) {
+                        loaded.setProductType(readTopicProductType(loaded.getId()));
+                    }
+                    return Optional.ofNullable(loaded);
+                }).orElse(null);
+                if (topic != null) reg.setCmsTopic(topic);
+            }
+            if (reg.getOwnerType() == 2) {
+                CmsActivity activity = activities.computeIfAbsent(reg.getOwnerId(),
+                        id -> Optional.ofNullable(activityService.selectCmsActivityById(id))).orElse(null);
+                if (activity != null) reg.setCmsActivity(activity);
+            }
+        }
     }
 
     public AjaxResult myJoined(Long memberId) {

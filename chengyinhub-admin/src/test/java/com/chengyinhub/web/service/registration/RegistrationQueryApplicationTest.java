@@ -197,4 +197,49 @@ class RegistrationQueryApplicationTest {
         for (java.lang.reflect.Method method : RegistrationQueryApplication.class.getDeclaredMethods())
             assertNull(method.getAnnotation(Transactional.class), method.getName());
     }
+    // OR-029：显式分页参数才分页并夹上限；同一活动在一页里只查一次；完成态 Tab 先过滤后分页。
+    @Test void explicitPagingCapsPageSizeAndLoadsEachOwnerOnce() {
+        PageHelper.clearPage();
+        ICmsRegistrationService registrations = mock(ICmsRegistrationService.class);
+        ICmsActivityService activities = mock(ICmsActivityService.class);
+        IRefundService refunds = mock(IRefundService.class);
+        when(refunds.selectRefundList(any())).thenReturn(Collections.emptyList());
+        Page<CmsRegistration> rows = new Page<>(1, 50); rows.setTotal(120);
+        for (long id = 1; id <= 3; id++) {
+            CmsRegistration row = new CmsRegistration(); row.setId(id); row.setMemberId(7L); row.setOwnerType(2L);
+            row.setOwnerId(20L); row.setRegistrationStatus(1); rows.add(row);
+        }
+        int[] requestedSize = {0};
+        when(registrations.selectCmsRegistrationList(any())).thenAnswer(call -> {
+            Page<?> requested = PageHelper.getLocalPage();
+            requestedSize[0] = requested == null ? -1 : requested.getPageSize();
+            PageHelper.clearPage();
+            return rows;
+        });
+        CmsActivity activity = new CmsActivity(); activity.setId(20L);
+        when(activities.selectCmsActivityById(20L)).thenReturn(activity);
+        RegistrationQueryApplication app = application(registrations);
+        ReflectionTestUtils.setField(app, "activityService", activities);
+        ReflectionTestUtils.setField(app, "refundService", refunds);
+        try {
+            AjaxResult response = app.myRegistrationList(7L, "3", "0", null, 1, 500);
+            assertEquals(200, response.get("code"));
+            assertEquals(RegistrationQueryApplication.LIST_PAGE_SIZE_MAX, requestedSize[0]);
+            assertSame(rows, response.get("data"));
+            verify(activities, times(1)).selectCmsActivityById(20L);
+            for (CmsRegistration row : rows) assertSame(activity, row.getCmsActivity());
+            assertNull(PageHelper.getLocalPage());
+        } finally {
+            PageHelper.clearPage();
+        }
+    }
+
+    @Test void inMemoryPageKeepsFilteredTotal() {
+        java.util.List<CmsRegistration> all = new java.util.ArrayList<>();
+        for (long id = 1; id <= 5; id++) { CmsRegistration r = new CmsRegistration(); r.setId(id); all.add(r); }
+        java.util.List<CmsRegistration> second = RegistrationQueryApplication.pageInMemory(all, 2, 2);
+        assertEquals(java.util.List.of(3L, 4L), second.stream().map(CmsRegistration::getId).toList());
+        assertEquals(5L, ((Page<?>) second).getTotal());
+        assertTrue(RegistrationQueryApplication.pageInMemory(all, 9, 2).isEmpty());
+    }
 }
