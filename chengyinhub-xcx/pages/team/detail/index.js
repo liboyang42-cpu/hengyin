@@ -456,7 +456,7 @@ Page({
     const open = Array.isArray(this.data.openSeats) ? this.data.openSeats.length : null;
     // 邀请人写队长昵称(服务端 members 里 role 1 的那位);读不到就不写
     const lead = (this.data.members || []).find(m => m && Number(m.role) === 1) || null;
-    const inviter = lead ? String(lead.nickname || lead.nickName || '').trim() : '';
+    const inviter = lead ? String(lead.memberName || '').trim() : ''; // PG-010:members 已映射为 memberName
     this.setData({ inviteShow: true, inviteCard: { kind: 'invite', id: '', title: t.title || '来和我一起组队出发', cover: t.coverUrl || t.topicCover || '', meta: '邀请 · 来和我一起组队出发', inviter, seatsLeft: open } });
   },
   closeInvite() { this.setData({ inviteShow: false }); },

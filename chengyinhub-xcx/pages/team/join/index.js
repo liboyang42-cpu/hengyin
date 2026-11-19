@@ -152,6 +152,8 @@ Page({
           // F-W1-12:静默重登后仍 401/403 是身份问题,留可见的登录/权限说明,不按加载失败留白。
           // j4 F2:服务端明确拒绝(邀请已失效等)是业务结论,不是加载失败:写出理由并给返回出路,不留白。
           const refused = !authDenied && !!res && res.errorCode === 'TEAM_INFO_REFUSED';
+          // PG-014:手输加入码查不到时回到输入框,保留原输入并在字段下写理由,可直接换码重试。
+          if (that._byCode && !hasTeam) { that._backToCodeEntry(refused ? app.getRequestErrorMessage(res, '邀请已失效') : authDenied ? '当前邀请无法查看' : '邀请暂时不可用'); return; }
           that.setData({
             loading: false,
             refreshing: false,
@@ -165,6 +167,7 @@ Page({
       fail() {
         if (!current()) return;
         that._inviteLoading = false;
+        if (that._byCode && !hasTeam) { that._backToCodeEntry('网络没连上，检查网络后重试'); return; }
         that.setData({
           loading: false,
           refreshing: false,
@@ -185,11 +188,23 @@ Page({
     this.load();
   },
 
+  _backToCodeEntry(message) {
+    this.inviteCode = '';
+    this.codeEntry = true;
+    this.setData({ loading: false, refreshing: false, error: '', errorSub: '', codeEntry: true, codeError: message });
+  },
+
+  // PG-009:单页栈(分享卡直开)时返回首页,不再退出小程序
+  goBack() {
+    wx.navigateBack({ delta: 1, fail() { wx.switchTab({ url: '/pages/index/index' }); } });
+  },
+
   onCodeInput(e) { this.setData({ codeInput: (e.detail && e.detail.value) || '', codeError: '' }); },
   submitCode() {
     const code = normalizeJoinCode(this.data.codeInput);
     if (!code) { this.setData({ codeError: '加入码不对，检查一下再输' }); return; }
     this.inviteCode = code;
+    this._byCode = true;
     this.codeEntry = false;
     this.setData({ codeEntry: false, codeError: '' });
     this._openRecovery();

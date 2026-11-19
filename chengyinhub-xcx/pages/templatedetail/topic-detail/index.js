@@ -168,7 +168,7 @@ Page({
           loading: false,
           name: info.name || '',
           cover: a ? a.cover : (info.imgUrl || ''),
-          author: info.author || '城瘾',
+          author: info.author || '创作者', // PG-012:缺作者不冒充官方,官方只看 isOfficial
           official: Number(info.isOfficial) === 1,
           opening: info.description || '',
           openingExpanded: false,

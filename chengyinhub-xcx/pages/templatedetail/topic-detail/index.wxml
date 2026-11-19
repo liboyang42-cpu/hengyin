@@ -10,7 +10,7 @@
     <view class="xb-bg-mask"></view>
   </view>
 
-  <cy-nav-bar overlay pill="{{!!cover}}" />
+  <cy-nav-bar overlay pill="{{!!cover}}" custom-back bind:back="goBack" />
 
   <view class="xb-state" style="padding-top:{{statusBarHeight + navBarHeight + 24}}px;" wx:if="{{ loading }}">
     <cy-skeleton type="detail" />

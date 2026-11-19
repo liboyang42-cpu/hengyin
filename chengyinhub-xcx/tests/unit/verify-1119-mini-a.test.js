@@ -75,3 +75,18 @@ test('PG-007/PG-008/PG-044:地图搜索只留「最近」;筛选无关键词给�
     assert.match(read(p + '.wxss'), /\.date-picker-ind \{[^}]*var\(--cy-color-border-strong\)/, p);
   }
 });
+
+test('PG-009/PG-010/PG-012/PG-014:组队加入与主题详情返回、邀请人、作者兜底、加入码失败回输入框', () => {
+  const joinWxml = read('pages/team/join/index.wxml');
+  const joinJs = read('pages/team/join/index.js');
+  assert.match(joinWxml, /<cy-nav-bar custom-back bind:back="goBack" \/>/);
+  assert.match(joinJs, /goBack\(\) \{\n\s*wx\.navigateBack\(\{ delta: 1, fail\(\) \{ wx\.switchTab\(\{ url: '\/pages\/index\/index' \}\); \} \}\);/);
+  assert.match(read('pages/templatedetail/topic-detail/index.wxml'), /<cy-nav-bar overlay pill="\{\{!!cover\}\}" custom-back bind:back="goBack" \/>/);
+  assert.match(read('pages/team/detail/index.js'), /const inviter = lead \? String\(lead\.memberName \|\| ''\)\.trim\(\) : '';/);
+  const topic = read('pages/templatedetail/topic-detail/index.js');
+  assert.doesNotMatch(topic, /info\.author \|\| '城瘾'/);
+  assert.match(topic, /author: info\.author \|\| '创作者'/);
+  assert.match(joinJs, /this\._byCode = true;/);
+  assert.match(joinJs, /if \(that\._byCode && !hasTeam\) \{ that\._backToCodeEntry\(/);
+  assert.match(joinJs, /_backToCodeEntry\(message\) \{\n\s*this\.inviteCode = '';\n\s*this\.codeEntry = true;/);
+});
