@@ -109,8 +109,8 @@ public final class CastConfigSupport
             {
                 if (one == null || !one.isObject()) throw invalid("玩家身份选项格式不对");
                 String key = text(one, "key");
-                if (!IDENTITY_KEY.matcher(key).matches()) throw invalid("玩家身份标识无效:" + key);
-                if (!keys.add(key)) throw invalid("玩家身份标识重复:" + key);
+                if (!IDENTITY_KEY.matcher(key).matches()) throw invalid("玩家身份标识无效：" + key);
+                if (!keys.add(key)) throw invalid("玩家身份标识重复：" + key);
                 String title = text(one, "title").trim();
                 if (len(title) < 1 || len(title) > 8) throw invalid("玩家身份名称要 1 至 8 字");
                 String sub = text(one, "sub").trim();
@@ -135,17 +135,17 @@ public final class CastConfigSupport
             {
                 if (one == null || !one.isObject()) throw invalid("角色格式不对");
                 String id = text(one, "id");
-                if (!CAST_ID.matcher(id).matches()) throw invalid("角色标识无效:" + id);
-                if (!ids.add(id)) throw invalid("角色标识重复:" + id);
+                if (!CAST_ID.matcher(id).matches()) throw invalid("角色标识无效：" + id);
+                if (!ids.add(id)) throw invalid("角色标识重复：" + id);
                 String name = text(one, "name").trim();
                 if (len(name) < 1 || len(name) > 8) throw invalid("角色名要 1 至 8 字");
-                if (!names.add(name)) throw invalid("角色名重复:" + name);
+                if (!names.add(name)) throw invalid("角色名重复：" + name);
                 String identity = text(one, "identity").trim();
                 if (len(identity) > 30) throw invalid("角色身份最多 30 字");
                 String avatarUrl = text(one, "avatarUrl").trim();
                 if (!isMediaRef(avatarUrl, true)) throw invalid("角色头像只能是 https 地址或已上传的素材");
                 String color = text(one, "color");
-                if (!COLORS.contains(color)) throw invalid("角色颜色只能从预设里选:" + color);
+                if (!COLORS.contains(color)) throw invalid("角色颜色只能从预设里选：" + color);
                 JsonNode voice = one.get("voice");
                 String mode = "none";
                 String preset = null;
@@ -157,7 +157,7 @@ public final class CastConfigSupport
                     String p = text(voice, "preset");
                     if (!p.isEmpty())
                     {
-                        if (!VOICE_PRESETS.contains(p)) throw invalid("角色预设声音无效:" + p);
+                        if (!VOICE_PRESETS.contains(p)) throw invalid("角色预设声音无效：" + p);
                         preset = p;
                     }
                     if ("preset".equals(mode) && preset == null) throw invalid("选了预设声音就要指定是哪一种");
@@ -232,7 +232,7 @@ public final class CastConfigSupport
             if (ending != null && ending.isObject() && ending.hasNonNull("endingFor"))
             {
                 String endingFor = ending.get("endingFor").asText("");
-                if (!ids.contains(endingFor)) throw invalid("第 " + no + " 章:结局指向的角色不存在:" + endingFor);
+                if (!ids.contains(endingFor)) throw invalid("第 " + no + " 章：结局指向的角色不存在：" + endingFor);
             }
             if (chapter.getBlocks() == null) continue;
             for (ChapterBlockDTO block : chapter.getBlocks())
@@ -242,7 +242,7 @@ public final class CastConfigSupport
                 {
                     String speaker = block.getSpeaker() == null ? "" : block.getSpeaker().trim();
                     if (!PLAYER.equals(speaker) && !ids.contains(speaker))
-                        throw invalid("第 " + no + " 章:台词的说话人不在角色表里:" + speaker);
+                        throw invalid("第 " + no + " 章：台词的说话人不在角色表里：" + speaker);
                 }
                 else if ("branch".equals(block.getType()) && block.getOptions() != null)
                 {
@@ -253,7 +253,7 @@ public final class CastConfigSupport
                         {
                             String castId = delta == null ? null : delta.getCastId();
                             if (castId == null || !ids.contains(castId))
-                                throw invalid("第 " + no + " 章:分支信任变化指向的角色不存在:" + castId);
+                                throw invalid("第 " + no + " 章：分支信任变化指向的角色不存在：" + castId);
                         }
                     }
                 }

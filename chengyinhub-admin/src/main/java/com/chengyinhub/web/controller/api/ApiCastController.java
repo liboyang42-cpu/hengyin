@@ -73,7 +73,7 @@ public class ApiCastController extends BaseController
         }
     }
 
-    @Operation(summary = "台词配音地址(块自带配音优先,否则按角色预设声音合成并缓存)")
+    @Operation(summary = "台词配音地址(块自带配音优先，否则按角色预设声音合成并缓存)")
     @RateLimiter(time = 60, count = 30, limitType = LimitType.MEMBER)
     @GetMapping("/api/topic/cast/voice")
     public AjaxResult voice(Long topicId, Long chapterId, String blockKey, Long runId)

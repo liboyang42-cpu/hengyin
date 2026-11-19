@@ -188,7 +188,7 @@ public class CastRunService
         catch (AiServiceException e)
         {
             log.warn("角色台词合成失败 topicId={} chapterId={} blockKey={}: {}", topicId, chapterId, blockKey, e.getMessage());
-            throw coded("配音暂时生成不了,请稍后再试", 502, ERR_TTS_FAILED);
+            throw coded("配音暂时生成不了，请稍后再试", 502, ERR_TTS_FAILED);
         }
         return Collections.<String, Object>singletonMap("url", voiceCache.store(sha, vendorUrl));
     }
@@ -283,7 +283,7 @@ public class CastRunService
             throw new IllegalStateException("本局状态序列化失败", e);
         }
         session.setUpdateTime(new Date());
-        if (sessionMapper.updateStateCas(session) != 1) throw new ServiceException("本局状态已变化,请刷新后重试", 409);
+        if (sessionMapper.updateStateCas(session) != 1) throw new ServiceException("本局状态已变化，请刷新后重试", 409);
     }
 
     private static void requireLogin(Long memberId)
