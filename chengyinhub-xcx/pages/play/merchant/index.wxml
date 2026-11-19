@@ -26,9 +26,9 @@
     <view class="mp-sec">
       <view class="mp-sec__h">现场记录</view>
       <view class="mp-proof">
-        <view class="mp-proof__row {{node.arrived ? 'is-done' : ''}}"><text>1</text><view><text class="mp-proof__t">我已到店</text><text class="mp-proof__s">仅记录到店时间</text></view></view>
-        <view class="mp-proof__row {{node.selfReported ? 'is-done' : ''}}"><text>2</text><view><text class="mp-proof__t">拍摄现场凭证</text><text class="mp-proof__s">{{node.arrived ? (node.photoDesc || '拍一张能证明已到店的照片') : '到店后显示拍摄要求'}}</text></view></view>
-        <view class="mp-proof__row {{node.done ? 'is-done' : ''}}"><text>3</text><view><text class="mp-proof__t">商家核销</text><text class="mp-proof__s">商家核销的时刻才算服务开始</text></view></view>
+        <view class="mp-proof__row {{node.arrived ? 'is-done' : ''}}"><text>1</text><view><text class="mp-proof__t">我已到店</text></view></view>
+        <view class="mp-proof__row {{node.selfReported ? 'is-done' : ''}}"><text>2</text><view><text class="mp-proof__t">拍摄现场凭证</text><text class="mp-proof__s" wx:if="{{node.arrived && node.photoDesc}}">{{node.photoDesc}}</text></view></view>
+        <view class="mp-proof__row {{node.done ? 'is-done' : ''}}"><text>3</text><view><text class="mp-proof__t">商家核销</text></view></view>
       </view>
       <view class="mp-note" wx:if="{{node.arrived && node.rule}}">{{node.rule}}</view>
     </view>
