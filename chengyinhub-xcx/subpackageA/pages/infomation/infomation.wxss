@@ -24,13 +24,15 @@ page { background: var(--cy-bg-page); }
 
 /* ===== 三种玩法卡 ===== */
 .gl-modes { display: flex; flex-direction: column; gap: var(--cy-space-3); }
+/* U6(2026-11-19):说明句已删,卡里只剩「图标+名称」与「去看看」——两者同排,不再上下分两行留出空腰 */
 .gl-mode {
+  display: flex; align-items: center; gap: var(--cy-space-3);
   background: var(--cy-bg-card);
   border: 1rpx solid var(--cy-border-card);
   border-radius: var(--cy-radius-md);
-  padding: var(--cy-space-4);
+  padding: var(--cy-space-3) var(--cy-space-4);
 }
-.gl-mode-hd { display: flex; align-items: center; gap: var(--cy-space-2); }
+.gl-mode-hd { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--cy-space-2); }
 .gl-mode-ico {
   width: 72rpx; height: 72rpx; flex-shrink: 0;
   border-radius: 50%;
@@ -51,7 +53,7 @@ page { background: var(--cy-bg-page); }
   line-height: var(--cy-leading-normal);
 }
 /* 按钮不铺满整行:cy-btn host 默认 display:block,靠这层 flex 收成右对齐的短钮 */
-.gl-mode-act { margin-top: var(--cy-space-3); display: flex; justify-content: flex-end; }
+.gl-mode-act { flex-shrink: 0; display: flex; justify-content: flex-end; }
 .gl-mode-btn { width: 200rpx; }
 
 /* ===== 区块标题 ===== */
