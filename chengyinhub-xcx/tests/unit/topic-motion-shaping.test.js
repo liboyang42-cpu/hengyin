@@ -35,7 +35,7 @@ test('参与商家卡按商家去重,取封面/一句话介绍/权益', () => {
     { nodes: [{ name: '二站', registrationMerchantList: [{ memberId: 7, mmsMerchant: shop }, { mmsMerchant: {} }] }] }]
   const cards = m.buildMerchantCards(chapters)
   assert.equal(cards.length, 1)
-  assert.deepEqual(cards[0], { key: 'm-9', targetId: 7, name: '旧城咖啡', img: 'c.jpg', desc: '手冲', gift: '送饼干', place: '一站' })
+  assert.deepEqual(cards[0], { key: 'm-9', targetId: 7, name: '旧城咖啡', merchantId: 9, img: 'c.jpg', desc: '手冲', gift: '送饼干', place: '一站' })
 })
 
 test('故事卡:城市定向一章一张(末章叫终章),自由探索用商家', () => {
@@ -69,4 +69,16 @@ test('组队块只算本主题的队,还差人数 = 上限 − 已加入', () =>
   assert.deepEqual(t.rows[0].faces, ['a.png', 'b.png'])
   assert.equal(t.rows[1].title, '主题队伍')
   assert.deepEqual(m.buildTeams(null, 5), { rows: [], need: 0 })
+})
+
+test('FE-G4/G5 自由探索商家卡并入套票目录逐店权益:店名·权益·已含/需消费·预约·有效期;缺字段不写那段', () => {
+  const m = require('../../pages/topic/utils/topic-motion.js')
+  assert.equal(m.explorePerkLine({ perkName: '手冲一杯', included: true, reserveRequired: true, validEnd: '2026-12-31T15:00:00Z' }), '手冲一杯 · 已含 · 需预约 · 有效期至 12/31')
+  assert.equal(m.explorePerkLine({ perkName: '甜点', included: false, extraSpendText: '¥20' }), '甜点 · 需消费 ¥20')
+  assert.equal(m.explorePerkLine({ merchantName: '店' }), '', '老后端只有店名:不出权益行')
+  const cards = [{ key: 'm-9', merchantId: 9, name: '旧城咖啡' }, { key: 'm-8', merchantId: 8, name: '老面馆' }]
+  const merged = m.mergeExploreCatalog(cards, { items: [{ stores: [{ merchantId: 9, merchantName: '旧城咖啡', perkName: '手冲一杯', included: true }, { merchantName: '老面馆', perkName: '小菜' }] }] })
+  assert.equal(merged[0].perk, '手冲一杯 · 已含')
+  assert.equal(merged[1].perk, '小菜')
+  assert.deepEqual(m.mergeExploreCatalog(cards, null), cards, '目录读不到保持原卡')
 })

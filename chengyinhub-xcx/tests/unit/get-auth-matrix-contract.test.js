@@ -72,6 +72,7 @@ const MATRIX = [
   ['subpackageRoam/my-teams/index.js', "url: '/api/orient/team/lobby'", 'required', 'member', 'global-authenticated-read'],
   // 契约 §1.3 / §4:主题详情开局前准备读 /api/play/setup(requireLogin,只读已发布主题);活动详情联系主办读 /api/play/contact(requireLogin,只回俱乐部名称与电话)。
   ['pages/topic/index/index.js', "url: '/api/play/setup'", 'required', 'member', 'public-detail+viewer-personalization'],
+  ['pages/topic/index/index.js', "url: '/api/free-explore/bundle/catalog'", 'required', 'member', 'public-detail+viewer-personalization'],
   ['pages/activity/components/event-attendance/index.js', "url:'/api/play/contact'", 'required', 'member', 'public-detail+viewer-personalization'],
   ['subpackageMember/orient-score/index.js', "url: '/api/play/orient/session/current'", 'required', 'member', 'self-account'],
   ['subpackageMember/orient-score/index.js', "url: BASE + '/session/'", 'required', 'member', 'self-account'],
@@ -525,7 +526,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-11-18 FE-STORY 7.10:fabu 节点抽屉读本主题地点到访方式一处(作者本人,已入 MATRIX),136 → 137。
   // 2026-11-18 F11:自由探索参考结算组件一处、权益卡表单线下结算说明一处(均已入 MATRIX),137 → 139。
   // 2026-11-18 F10:作者编辑器读位置承接进度 /api/topic/fe/sale-readiness,139 → 140。
-  assert.equal(directCount, 140, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-11-19 FE-G4:主题详情自由探索参与商家卡读套票目录逐店权益一处(同 free-explore 页 catalog,已入 MATRIX),140 → 141。
+  assert.equal(directCount, 141, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。

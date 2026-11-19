@@ -488,6 +488,7 @@ Page({
     this._startKenBurns();
     this._loadTeams(data);
     this._loadPrep(data.id);
+    if (Number(data.productType) === 2) this._loadExplorePerks(data.id);
     this._loadFav(data.id);
     this._loadChars(data);
   },
@@ -701,6 +702,19 @@ Page({
 
   // 开局前准备(原型 B T-36,契约 §1.3):GET /api/play/setup 给可玩时段(非俱乐部且不是「不限」才有)、openNow 与作者准备项;
   // 两样都没配就整行不出(B1)。未成年夜间等平台规则只在服务端执行(/api/orient/safety/check),被拒时只写一句中性说明。
+  /** FE-G4:自由探索的参与商家卡补上逐店权益(读套票目录);读不到就保持原卡,不报错。 */
+  _loadExplorePerks(topicId) {
+    if (!topicId || !this._loggedIn()) return;   // 目录要登录;游客照旧看报名商家卡
+    const seq = this._perkSeq = (this._perkSeq || 0) + 1;
+    app.sendRequest({ url: '/api/free-explore/bundle/catalog', method: 'GET', hideLoading: true, autoErrorToast: false, data: { topicId },
+      success: (res) => {
+        if (this._unloaded || seq !== this._perkSeq || !res || String(res.code) !== '200' || !res.data) return;
+        const merchantCards = motion.mergeExploreCatalog(this.data.merchantCards, res.data);
+        this.setData({ merchantCards });
+      },
+      fail: () => {},
+    });
+  },
   _loadPrep(topicId) {
     if (!topicId || !this._loggedIn()) { this._prepSetup = null; this.setData({ prep: { show: false } }); return; }
     const seq = this._prepSeq = (this._prepSeq || 0) + 1;
