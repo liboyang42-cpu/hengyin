@@ -294,3 +294,11 @@ test('OR-036:订单详情未登录时结果面板给「登录」并重读同一�
   assert.match(read(dir + 'index.wxml'), /primary-text="\{\{loginRequired \? '登录' : ''\}\}" bind:primary="onLoginRetry"/)
   assert.match(read(dir + 'index.js'), /retryLogin\(this, app, function \(\) \{ this\.setData\(\{ loginRequired: false \}\); this\.getData\(orderId\); \}\);/)
 })
+
+test('OR-022:退款三档文案单一真源 utils/refund-rule.js,主题页旧路径只转出,报名结算页引用', () => {
+  const rule = require(path.join(ROOT, 'utils/refund-rule.js'))
+  assert.equal(require(path.join(ROOT, 'pages/topic/utils/refund-rule.js')), rule)
+  assert.equal(rule.refundRuleText({ price: 1, mode: 1 }), '集合前 24 小时以上全额退；24 小时内退 50%；开始后不退')
+  assert.deepEqual(rule.refundRuleTiers({ price: 0 }), [])
+  assert.doesNotMatch(read('pages/activity/baoming/baoming.wxml'), /<text>全额退<\/text>/)
+})
