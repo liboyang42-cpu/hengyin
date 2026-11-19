@@ -168,3 +168,11 @@ test('CG-ALL-11 桌面完成 / 替代站完成逐站标出,结算总览各数一
   assert.match(wxml, /wx:if="\{\{report\.deskCount > 0\}\}"[^\n]*桌面完成/)
   assert.match(wxml, /wx:if="\{\{report\.altCount > 0\}\}"[^\n]*替代站完成/)
 })
+
+test('PG-041 通行证订单缺单号:落缺参态只给返回,load 不再以空单号请求', () => {
+  const js = read('subpackageMember/market/pass-order/index.js')
+  assert.match(js, /if \(!this\._orderNo\) \{ this\.setData\(\{ state: 'missing' \}\); return \}/)
+  const load = js.slice(js.indexOf('  load() {'), js.indexOf('app.sendRequest', js.indexOf('  load() {')))
+  assert.match(load, /if \(!this\._orderNo\) \{ this\.setData\(\{ state: 'missing' \}\); return \}/)
+  assert.match(read('subpackageMember/market/pass-order/index.wxml'), /wx:elif="\{\{state === 'missing'\}\}"[^>]*kind="missing-param" cta="返回" bind:cta="goBack"/)
+})

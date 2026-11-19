@@ -34,11 +34,12 @@ Page({
   onLoad(options) {
     this._orderNo = options && options.orderNo ? decodeURIComponent(options.orderNo) : ''
     try { this._canVirtual = !!(wx.canIUse && wx.canIUse('requestVirtualPayment')) } catch (e) { this._canVirtual = false }
-    if (!this._orderNo) { this.setData({ state: 'error' }); return }
+    if (!this._orderNo) { this.setData({ state: 'missing' }); return }   // PG-041:缺单号落缺参态,不给「重试」空单号请求
     this.load()
   },
   onUnload() { this._unloaded = true },
   load() {
+    if (!this._orderNo) { this.setData({ state: 'missing' }); return }
     const seq = (this._seq = (this._seq || 0) + 1)
     this.setData({ state: 'loading' })
     app.sendRequest({ url: '/api/platform-pass/orders/' + encodeURIComponent(this._orderNo), method: 'GET', hideLoading: true, autoErrorToast: false, success: (res) => this._onOrder(seq, res), successStatusAbnormal: (res) => this._onOrder(seq, res), fail: () => this._onOrder(seq, null) })
