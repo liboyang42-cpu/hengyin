@@ -1769,3 +1769,9 @@ page {
 .cg-sheet-close { transition: var(--cy-tr-press); }
 .cg-picker-li { transition: var(--cy-tr-press); }
 .cg-count { font-variant-numeric: tabular-nums; }
+
+/* 2026-11-19 主人定稿:「高级设置」一个折叠组(标题行可点,右侧箭头展开时朝下) */
+.cg-sec--fold { min-height: var(--cy-btn-h); }
+.cg-fold-caret { color: var(--cy-color-text-secondary); transition: transform var(--cy-motion-fast) var(--cy-ease-out); }
+.cg-fold-caret.is-open { transform: rotate(90deg); }
+.cg--reduced-motion .cg-fold-caret { transition: none; }

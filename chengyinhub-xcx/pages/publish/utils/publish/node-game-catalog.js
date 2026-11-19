@@ -69,8 +69,10 @@ const GROUPS = [
       /* 《预制人生》三段(契约 §2.2 / §2.5)+ R14 检定(契约 §2.3 更正:不新造段,
          接的是 master 上既有的 check)。判定一律在服务端。 */
       { key: 'photoCheck', icon: 'camera', label: '拍照审核', sub: '拍一张，写清要拍到什么，提交后等待判定', section: 'photoCheck', validationMethod: 0 },
-      { key: 'check', icon: 'star', label: 'D20', sub: '掷一个二十面骰，点数够难度就成功', section: 'check', validationMethod: 0 },
-      { key: 'd20', icon: 'star', label: 'D20 加值', sub: '二十面骰 + 加值，对照 DC 判定结果', section: 'diceRoll', mode: 'd20', validationMethod: 0 },
+      /* 2026-11-19:两枚原先叫「D20」「D20 加值」,名字几乎一样。真实差别:check 只选简单 / 中等 / 困难一档,
+         加值来自主题里的角色属性;d20(diceRoll.mode=d20)由作者自己填难度 DC、固定加值和掷骰方式。 */
+      { key: 'check', icon: 'star', label: 'D20 三档难度', sub: '选简单、中等或困难，按角色属性加值', section: 'check', validationMethod: 0 },
+      { key: 'd20', icon: 'star', label: 'D20 自定难度', sub: '自己定难度 DC 和加值，成败各写一句', section: 'diceRoll', mode: 'd20', validationMethod: 0 },
       { key: 'typeIn', icon: 'clock', label: '输入挑战', sub: '照着一行字打，超时或打错不算', section: 'typeIn', validationMethod: 0 },
     ],
   },
@@ -97,17 +99,17 @@ const MODIFIERS = [
 ];
 // 旧 key 仍供配置/试玩与存量绑定使用；选择器只列基础玩法。
 const ALL = GROUPS.reduce((acc, group) => acc.concat(group.items), []).filter(item => item.key !== 'scan').concat([
-  { key: 'blindTaste', section: 'blindTaste', label: '闭眼盲品', icon: 'check' },
-  { key: 'dailySign', section: 'dailySign', label: '今日城市签', icon: 'edit' },
+  { key: 'blindTaste', section: 'blindTaste', label: '闭眼盲品', icon: 'check', sub: '闭眼尝一口，从几个选项里猜是什么' },
+  { key: 'dailySign', section: 'dailySign', label: '今日城市签', icon: 'edit', sub: '每天领一支签，领到就算完成' },
 ]);
 const CATEGORIES = ['全部', '问答', '推理', '互动', '挑战'];
 const form = (key, label, gameKey) => ({ key, label, gameKey });
 const BASE_GAMES = [
   { key: 'choice', label: '选项问答', category: '问答', icon: 'check', forms: [form('text', '文字选项', 'qaPick'), form('image', '图片选项', 'pricePair'), form('taste', '闭眼盲品', 'blindTaste'), form('reveal', '到期揭晓', 'predict')] },
-  { key: 'text', label: '文字问答', category: '问答', icon: 'edit', gameKey: 'qaText' },
+  { key: 'text', label: '文字问答', category: '问答', icon: 'edit', gameKey: 'qaText', sub: '出一道题，玩家打字作答' },
   { key: 'photo', label: '拍照', category: '问答', icon: 'camera', forms: [form('checkin', '拍照打卡', 'qaShot'), form('review', '拍照审核', 'photoCheck'), form('card', '拍物成卡', 'objectCard')] },
   { key: 'random', label: '随机结果', category: '互动', icon: 'gift', forms: [form('coin', '抛硬币', 'coin'), form('dice', '掷骰子', 'dice'), form('cards', '翻卡', 'random')] },
-  { key: 'check', label: 'D20', category: '挑战', icon: 'star', forms: [form('tier', '三档难度', 'check'), form('d20', 'D20 加值', 'd20')] },
+  { key: 'check', label: 'D20', category: '挑战', icon: 'star', forms: [form('tier', 'D20 三档难度', 'check'), form('d20', 'D20 自定难度', 'd20')] },
   ...['sort', 'match', 'classify'].map(key => Object.assign({}, ALL.find(item => item.key === key), { category: '推理', gameKey: key })),
   ...['estimate', 'hidden', 'profile'].map(key => Object.assign({}, ALL.find(item => item.key === key), { category: '互动', gameKey: key })),
   { key: 'sign', label: '签名留存', category: '互动', icon: 'edit', forms: [form('note', '一句留言', 'note'), form('citySign', '今日城市签', 'dailySign')] },

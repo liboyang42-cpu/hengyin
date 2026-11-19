@@ -41,14 +41,16 @@ const { formatDurationMinutes, gameTemplateCover } = require('../../../utils/tem
 const { resolveCategoryIcon } = require('../../../utils/category-icon.js');
 const { loadStoryFont } = require('../utils/publish/story-font.js'); const { storyFontUrl: STORY_FONT_URL } = require('../../../utils/config.js');
 const { splitRuleSteps } = require('../../../utils/rule-steps.js');
+const editorLayout = require('./editor-layout.js');
 const { rejectionNamesCover } = require('../utils/publish/cover-rejection.js');
 const { safeDecode } = require('../../../utils/safe-decode.js');
 
 /* 发布全量校验的报错顺序 —— validateForm 与「查看预览」置灰点击必须读同一份。
    2026-09-19 审查 F-PU-1:这里曾各自维护一份,发布那份漏了 interactionType,
    于是「据点玩法形态必选」的红字写出来了、按钮却放行,商家以为配好了。 */
-const PUBLISH_ERROR_ORDER = ['title', 'description', 'players', 'duration', 'categoryIds',
-  'interactionType', 'finish', 'advanced', 'voice', 'reward'];
+// 2026-11-19 主人定稿的页面顺序(玩法 → 玩法设置 → 封面名字 / 模板信息 → 高级设置):置灰按钮点了停在**页面上第一处**缺项
+const PUBLISH_ERROR_ORDER = ['finish', 'advanced', 'title', 'description', 'players', 'duration', 'categoryIds',
+  'interactionType', 'voice', 'reward'];
 
 function durationWithUnit(value) {
   const raw = String(value == null ? '' : value).trim();
@@ -469,6 +471,11 @@ Page({
     /* 玩法规则的展示形态:一行一步。真值仍在 formData.ruleInstructions(换行分隔),
        这里只是把它拆开给界面用,存盘前再拼回去 —— 不新建后端字段。 */
     ruleSteps: [''],
+    // 2026-11-19 主人:选填项收进一个「高级设置」折叠组,记住展开状态(见 editor-layout.js 顶部定稿)
+    advancedOpen: false,
+    answerRuleRows: [],
+    qaPh: editorLayout.QA_PLACEHOLDERS,
+    advancedErrorField: '',
     // 预览要演的那一屏玩法。null = 这个节点没开玩法配置,回落到基础验证那套
     pvKit: null,
     canPublishGame: false,
@@ -1398,6 +1405,7 @@ Page({
     this.setData({
       'formData.title': initialTitle,
       operationScope: options.scope === 'MERCHANT' ? 'MERCHANT' : '',
+      advancedOpen: editorLayout.readAdvancedOpen(wx),
       // R9-04:scope=my 说明 id 来自「我的模板」,回填要走 /api/template/myinfo 才能读草稿。
       // 它不参与写链路身份 —— 写身份仍只由 operationScope(MERCHANT)决定。
       isMyScope: options.scope === 'my' || options.templateScope === 'my',
@@ -2318,19 +2326,22 @@ Page({
   scrollToError: function (key) {
     const selectorMap = {
       title: 'sec-top',
-      description: 'sec-basic',
+      description: 'fld-description',
       players: 'sec-basic',
       duration: 'sec-basic',
-      categoryIds: 'sec-basic',
+      categoryIds: 'fld-categoryIds',
       // 「玩法形态」那排 chip 与它的红字都在「模板信息」卡里(temp/index.wxml:132-137)
       interactionType: 'sec-basic',
-      finish: 'sec-module',
-      advanced: 'sec-module',
+      finish: 'sec-game',
+      // 2026-11-19:缺项红字落在字段下面,定位也停在那个字段(认不出字段时停在玩法设置顶部那条红字)
+      advanced: this.data.advancedErrorField ? 'fld-' + this.data.advancedErrorField.replace('.', '-') : 'game-cfg',
       reward: this.hasModule('reward') && this.data.gameKey !== 'album' ? 'sec-reward' : 'sec-module', // M-20:停在「完成奖励」卡上,模块被移除才退回模块区顶
       story: 'fieldStory'
     };
     const target = selectorMap[key];
     if (!target) return;
+    // 折叠组里的项报错:先展开再滚过去(必填缺项不能藏在收起的组里)
+    if (editorLayout.ADVANCED_GROUP_ERRORS.indexOf(key) >= 0 && !this.data.advancedOpen) this.setData({ advancedOpen: true });
     // 先清空再设置,确保同 id 重复触发也能滚动
     this.setData({ scrollIntoView: '' });
     setTimeout(() => { this.setData({ scrollIntoView: target }); }, 30);
@@ -2835,6 +2846,7 @@ Page({
     }, () => {
       this._refreshOutcomeContract();
       this._syncSegments();
+      this._prefillRuleSteps();
       this.refreshPreviewState();
     });
     this._refreshSupportMatrix();
@@ -3264,6 +3276,26 @@ Page({
     const gameConfigError = PANEL_LIVE_ERROR_SECTIONS.indexOf(this.data.gameSection) >= 0
       ? advancedGameConfig.validate(this.data.advanced, this._advancedValidateOpts()) : '';
     if (gameConfigError !== this.data.gameConfigError) this.setData({ gameConfigError });
+    const answerRuleRows = editorLayout.answerRuleRows(this.data.advanced, this.data.gameSection, this.data.segmentOn);
+    if (JSON.stringify(answerRuleRows) !== JSON.stringify(this.data.answerRuleRows)) this.setData({ answerRuleRows });
+  },
+
+  /* 高级设置:一个折叠组,展开状态存本机(主人 2026-11-19:记住展开状态) */
+  toggleAdvancedGroup: function () {
+    const advancedOpen = !this.data.advancedOpen;
+    this.setData({ advancedOpen });
+    editorLayout.writeAdvancedOpen(wx, advancedOpen);
+  },
+
+  /* 玩法规则按所选玩法预填(可改);作者改过的不覆盖 */
+  _prefillRuleSteps: function () {
+    if (!this.data.gameSection) return;
+    if (!editorLayout.shouldPrefillRules(this.data.ruleSteps, this._autoRuleSteps)) return;
+    const steps = r5Editor.ruleSteps(this.data.advanced, this.data.gameSection);
+    if (!steps.length) return;
+    this._autoRuleSteps = steps.slice();
+    // 预填是派生内容,不算作者改动:页面还没动过就保持未改状态(退出不弹「未保存」)
+    this._setFormState({ ruleSteps: steps.slice(), 'formData.ruleInstructions': steps.join('\n') }, null, { pristine: !this.data.dirty });
   },
 
   /* 完成方式 ↔ 玩法名字的同一处取法(摘要与预览第 3 步共用,两处不再各算一份) */
@@ -3293,7 +3325,7 @@ Page({
 
     this._refreshEffectResources();
     if (this.data.effectErrors.length) errors.advanced = this.data.effectErrors[0].error;
-    this.setData({ errors });
+    this.setData({ errors, advancedErrorField: editorLayout.advancedErrorField(errors.advanced, this.data.gameSection) });
     if (draft) {
       if (errors.title) { this.scrollToError('title'); return false; }
       if (errors.finish) { this.scrollToError('finish'); return false; }

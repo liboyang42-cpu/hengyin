@@ -438,6 +438,14 @@ test('★面板里绑的状态字段都要真存在于默认配置(拼错一个�
   const re = /data-section="([^"]+)"[^>]*data-field="([^"]+)"/g
   let m
   while ((m = re.exec(wxml))) {
+    // 2026-11-19「高级设置 · 作答规则」按行动态绑定:展开成它可能绑到的每个字段再核对
+    if (m[1] === '{{item.section}}' && m[2] === '{{item.field}}') {
+      for (const f of require('../../pages/publish/temp/editor-layout.js').allAnswerRuleFields()) {
+        const one = d[f.section]
+        if (one == null) bad.push('段不存在: ' + f.section); else if (!(f.field in one)) bad.push(f.section + '.' + f.field + ' 不在默认配置里')
+      }
+      continue
+    }
     const seg = m[1].split('.').reduce((o, k) => (o == null ? o : o[k]), d)
     if (seg == null) { bad.push('段不存在: ' + m[1]); continue }
     if (!(m[2] in seg)) bad.push(m[1] + '.' + m[2] + ' 不在默认配置里')
