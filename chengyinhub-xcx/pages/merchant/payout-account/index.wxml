@@ -24,10 +24,11 @@
         <view class="fin-row__main"><text class="fin-row__t">开通状态</text></view>
         <text class="fin-row__v pa-state pa-state--{{account.stateTone}}">{{account.stateText}}</text>
       </view>
-      <view class="fin-row pa-row" wx:if="{{account.subMchid}}" aria-label="商户号，{{account.subMchid}}">
+      <!-- PG-083:商户号不直接上屏,改为复制项 -->
+      <view class="fin-row pa-row" wx:if="{{account.subMchid}}" bindtap="copySubMchid" aria-role="button" aria-label="复制商户号" hover-class="cy-pressed" hover-stay-time="80">
         <view class="fin-row__dot" aria-hidden="true" />
         <view class="fin-row__main"><text class="fin-row__t">商户号</text></view>
-        <text class="fin-row__v">{{account.subMchid}}</text>
+        <text class="fin-row__v">复制</text>
       </view>
       <view class="fin-row pa-row" wx:if="{{account.checkedText}}" aria-label="状态更新于{{account.checkedText}}">
         <view class="fin-row__dot" aria-hidden="true" />

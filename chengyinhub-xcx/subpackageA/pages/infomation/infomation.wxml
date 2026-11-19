@@ -63,10 +63,8 @@
   <cy-error load-failure class="cy-fade-in" wx:elif="{{docsState === 'error'}}" title="玩法文档加载失败" sub="{{docsError}}" retry="重试" bind:retry="getList" />
   <view class="gl-docs cy-fade-in" wx:elif="{{docsState === 'ready'}}">
     <block wx:for="{{list}}" wx:key="id">
+      <!-- PG-085:不可用条目直接不显示,不再以「即将上线」/「未命名条目」灰行占位 -->
       <cy-cell wx:if="{{item.usable}}" title="{{item.title}}" description="{{item.description}}" bindtap="goToDetail" data-id="{{item.id}}" />
-      <!-- disabled 显式写 {{true}}:自定义组件的 Boolean 属性写成裸属性时值的语义不稳,
-           不能让「不可点」这条依赖一个模糊写法 -->
-      <cy-cell wx:else disabled="{{true}}" arrow="{{false}}" title="{{item.title || '未命名条目'}}" description="即将上线" />
     </block>
   </view>
   <!-- nodata 此前只在 JS 里算,WXML 从没消费 ⇒ 列表为空时零反馈(C03-R1 修过,别回退) -->

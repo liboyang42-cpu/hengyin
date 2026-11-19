@@ -187,8 +187,7 @@
             <view class="xb-node-card" wx:for="{{ gallery }}" wx:key="index">
               <image class="xb-node-img" src="{{ item }}" mode="aspectFill" lazy-load="true" />
               <view class="xb-node-foot">
-                <text class="xb-node-name">节点 {{ index + 1 }}</text>
-                <text class="xb-node-desc ep1">{{ info.validationMethodStr || info.publisher || '待配置玩法' }}</text>
+                <text class="xb-node-desc ep1" wx:if="{{ info.validationMethodStr || info.publisher }}">{{ info.validationMethodStr || info.publisher }}</text>
               </view>
             </view>
           </view>

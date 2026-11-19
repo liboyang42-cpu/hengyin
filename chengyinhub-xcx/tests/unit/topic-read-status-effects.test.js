@@ -127,11 +127,12 @@ test('missing-ID preview guard exactly matches old server 500 callback refusal a
   const guarded = harness('pages/templatedetail/topic-preview/index.js', 500, '缺少模板ID')
   guarded.page._id = undefined
   guarded.page.load()
-  assert.deepEqual(plain(guarded.page.data), plain(old.page.data))
+  // PG-077:本地缺参文案改「链接已失效」(与 topic-detail 同口径),其余状态仍与旧服务端拒绝一致
+  assert.deepEqual(Object.assign(plain(guarded.page.data), { errorMsg: '' }), Object.assign(plain(old.page.data), { errorMsg: '' }))
   assert.equal(guarded.effects.requests.length, 0)
   assert.equal(old.effects.requests.length, 1)
   assert.equal(guarded.page.data.errorRefused, true)
-  assert.equal(guarded.page.data.errorMsg, '缺少模板ID')
+  assert.equal(guarded.page.data.errorMsg, '链接已失效')
   old.page.goBack(); guarded.page.goBack()
   assert.deepEqual(guarded.effects.navigation, old.effects.navigation)
   assert.deepEqual(guarded.effects.toasts, old.effects.toasts)

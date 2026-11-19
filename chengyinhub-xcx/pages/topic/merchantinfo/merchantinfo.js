@@ -1293,13 +1293,13 @@ Page({
       if (!application || Number(draft.chapterId) !== Number(this.data.selectedChapterId)) return;
       this._chapterApplying = true;
       this.setData({ chapterNodeSubmitting: true });
-      cyLoading.show('保存节点中...');
+      cyLoading.show('保存节点中…');
       this.submitChapterNodeDraft(draft);
       return;
     }
     this._chapterApplying = true;
     this.setData({ chapterNodeSubmitting: true });
-    cyLoading.show('提交申请中...'); if (emptyTopic) return this.submitChapterNodeDraft(draft, true); // 零章节:建章+申请+点位一个事务,不先 apply
+    cyLoading.show('提交申请中…'); if (emptyTopic) return this.submitChapterNodeDraft(draft, true); // 零章节:建章+申请+点位一个事务,不先 apply
     app.sendRequest({
       url: '/api/merchant/chapter-application/apply',
       method: 'POST',
@@ -1518,7 +1518,7 @@ Page({
     if (!payload) return;
     this._chapterApplying = true;
     this.setData({ chapterNodeSubmitting: true });
-    cyLoading.show('提交供给中...');
+    cyLoading.show('提交供给中…');
     app.sendRequest({
       url: '/api/coop/offer/enroll',
       method: 'POST',

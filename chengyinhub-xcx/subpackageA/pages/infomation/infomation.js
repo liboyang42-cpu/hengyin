@@ -233,10 +233,12 @@ Page({
       success(res) {
         if (res && res.code == '200' && Array.isArray(res.data)) {
           const list = normalizeInfomationList(res.data);
+          // PG-085:不可用条目(无标题/无正文/不可读标题)在 WXML 上直接不列;一条可用的都没有时落空态
+          const usableCount = list.filter((item) => item.usable).length;
           that.setData({
             list,
-            nodata: list.length < 1,
-            docsState: list.length ? 'ready' : 'empty',
+            nodata: usableCount < 1,
+            docsState: usableCount ? 'ready' : 'empty',
             docsError: '',
           });
           return;

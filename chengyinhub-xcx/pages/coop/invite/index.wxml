@@ -22,7 +22,7 @@
     <view class="inline-retry" bindtap="discoverOriginalInvites" aria-role="button" aria-label="查找当前账号原邀请请求" hover-class="cy-pressed" hover-stay-time="80">{{receiptLoading ? '查询中…' : '查找原邀请请求（含其他设备）'}}</view>
     <view wx:for="{{selected}}" wx:key="toId" class="inline-retry" data-toid="{{item.toId}}" bindtap="queryOriginalInvite" aria-role="button" aria-label="查询所选对象的原邀请请求" hover-class="cy-pressed" hover-stay-time="80">查询 {{item.name}} 的本机原请求</view>
     <cy-empty wx:if="{{receiptError}}" kind="error" title="原请求仍待确认" sub="{{receiptError}}" />
-    <view wx:for="{{receiptRows}}" wx:key="requestId"><text>请求 {{item.requestId}} · {{item.state === 'CREATED' ? ('已创建邀请 #' + item.inviteId + ' · 主题 #' + item.topicId + ' · 对象 #' + item.toId) : '结果仍待确认，请勿重复发送'}}</text></view>
+    <view wx:for="{{receiptRows}}" wx:key="requestId"><text>{{item.state === 'CREATED' ? '邀请已创建' : '结果仍待确认，请勿重复发送'}}</text></view>
     <view wx:if="{{receiptHasMore}}" class="inline-retry" bindtap="moreOriginalInvites" aria-role="button" aria-label="加载更多原邀请请求" hover-class="cy-pressed" hover-stay-time="80">加载更多原请求</view>
   </view>
 

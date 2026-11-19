@@ -39,7 +39,7 @@
           </view>
           <!-- 2026-10-27 真机走查 P-01:名字单独占一行，下面一行放「✓ 玩家 · 城市」(原同一行会把名字截成「Hi, 智能科…」) -->
           <view class="v3-hero-greet-row" style="top:{{heroActionsTop}}px; padding-right:{{heroActionsReserve}}px;">
-            <text class="v3-hero-hi">Hi, {{userInfo.nickname || '旅人'}}!</text>
+            <text class="v3-hero-hi">你好，{{userInfo.nickname || '旅人'}}！</text>
             <view wx:if="{{userInfo.nickname}}" class="v3-hero-mem flex-ac">
               <view class="v3-hero-mem-badge flex-ac flex-c">
                 <image class="v3-hero-mem-ic" src="/images/index-figma/icon-member.png" mode="aspectFit" />

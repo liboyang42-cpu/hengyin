@@ -34,7 +34,7 @@
     aria-label="查看{{item.topicName}}的章节承接" hover-class="cy-pressed" hover-stay-time="80">
     <view class="inv-top"><text>{{item.statusText}}</text></view>
     <view class="inv-main"><view class="inv-info">
-      <text class="inv-title">{{item.topicName || '主题 #' + item.topicId}}</text>
+      <text class="inv-title">{{item.topicName || '未命名主题'}}</text>
       <text class="inv-sub">{{item.chapterName}}{{item.ownerView && item.merchantName ? ' · ' + item.merchantName : ''}}</text>
     </view></view>
     <view class="inv-acts"><text class="inv-btn inv-btn--secondary">{{item.offerState === 'WITHDRAWN' ? '查看退出记录' : (item.ownerView ? '查看承接' : '查看与补供给')}}</text></view>

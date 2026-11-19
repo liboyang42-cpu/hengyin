@@ -312,3 +312,23 @@ test('PG-062/PG-086/PG-092:设置页删未绑定函数;编号不上屏;协议页
   assert.equal(lint.classifyPageDomain('pages/agreement/index'), 'shared');
   assert.equal(lint.classifyPageDomain('pages/club/workbench/index'), 'merchant');
 });
+
+test('PG-072..PG-094:文案、编号与私人页转发收口', () => {
+  assert.match(read('pages/index/index.wxml'), /你好，\{\{userInfo\.nickname \|\| '旅人'\}\}！/);
+  assert.match(read('pages/play/merchant/index.wxml'), /预计等待（分）/);
+  assert.doesNotMatch(read('pages/topic/merchantinfo/merchantinfo.js'), /中\.\.\.'/);
+  assert.equal(require('../../subpackageRoam/utils/official-route.js').distanceText(2), '2 公里');
+  assert.doesNotMatch(read('pages/templatedetail/templatedetail.wxml'), /节点 \{\{ index \+ 1 \}\}|待配置玩法/);
+  assert.doesNotMatch(read('pages/templatedetail/topic-preview/index.js'), /缺少模板ID/);
+  assert.doesNotMatch(read('subpackageTools/exploration-export/index.wxml'), /JSONL/);
+  const mine = read('pages/activity/official-mine/index.js');
+  assert.match(mine, /只会按原收件人恢复，结果不明或历史待核的不会重发。/);
+  assert.doesNotMatch(mine, /UNKNOWN及/);
+  assert.match(read('pages/activity/list/index.js'), /\{ key: '1', label: '即将上线' \}/);
+  assert.match(read('pages/merchant/game-node/index.wxml'), /placeholder="提交编号"/);
+  assert.doesNotMatch(read('pages/merchant/payout-account/index.wxml'), /<text class="fin-row__v">\{\{account\.subMchid\}\}<\/text>/);
+  assert.doesNotMatch(read('subpackageA/pages/infomation/infomation.wxml'), /即将上线/);
+  assert.doesNotMatch(read('pages/coop/list/index.wxml'), /'主题 #'/);
+  assert.doesNotMatch(read('pages/coop/invite/index.wxml'), /请求 \{\{item\.requestId\}\}|已创建邀请 #/);
+  assert.match(read('subpackageMember/order/order.js'), /wx\.hideShareMenu\(\{ menus: \['shareAppMessage', 'shareTimeline'\] \}\)/);
+});

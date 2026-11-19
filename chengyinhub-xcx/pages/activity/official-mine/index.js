@@ -29,7 +29,7 @@ function broadcastStatsText(res) {
   if (!finiteCount(reached) || !finiteCount(clicked)) return '';
   if (isRecord(res.data.deliveryCounts)) {
     const c=res.data.deliveryCounts;
-    return '站内已入库 '+(c.INAPP_STORED||0)+' · 订阅渠道受理 '+(c.CHANNEL_ACCEPTED||0)+' · 明确拒绝 '+(c.REJECTED||0)+' · 未提交 '+(c.NOT_SUBMITTED||0)+' · 可恢复 '+(c.RETRYABLE||0)+' · UNKNOWN '+(c.UNKNOWN||0)+' · 历史待核 '+(c.LEGACY_UNCONFIRMED||0)+' · 频控未发 '+(c.CAPPED||0)+'；不代表已读';
+    return '站内已入库 '+(c.INAPP_STORED||0)+' · 订阅渠道受理 '+(c.CHANNEL_ACCEPTED||0)+' · 明确拒绝 '+(c.REJECTED||0)+' · 未提交 '+(c.NOT_SUBMITTED||0)+' · 可恢复 '+(c.RETRYABLE||0)+' · 结果不明 '+(c.UNKNOWN||0)+' · 历史待核 '+(c.LEGACY_UNCONFIRMED||0)+' · 频控未发 '+(c.CAPPED||0)+'；不代表已读';
   }
   return '站内触达 ' + reached + ' 人 · 点击 ' + clicked + ' 人';
 }
@@ -182,7 +182,7 @@ Page({
     const index=Number(e.currentTarget.dataset.index),item=this.data.broadcasts[index];
     if(!item||!item._canRecover)return;const id=exactId(item.id);if(!id)return;
     const actor=reader(app);
-    require('../../../utils/modal.js').show({title:'安全恢复原投递',content:'仅沿原收件人和原意图恢复。UNKNOWN及历史待核不会重发。',success:r=>{
+    require('../../../utils/modal.js').show({title:'安全恢复原投递',content:'只会按原收件人恢复，结果不明或历史待核的不会重发。',success:r=>{
       if(!r.confirm||this._unloaded||this._broadcastHidden||!sameReader(app,actor))return;
       app.sendRequest({url:'/api/official/broadcast/'+id+'/recover',method:'POST',hideLoading:true,autoErrorToast:false,
        success:()=>{if(sameReader(app,actor))this.openBroadcastStats({currentTarget:{dataset:{index}}});},

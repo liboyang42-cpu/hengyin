@@ -14,6 +14,8 @@ Page({
     sceneCurrent: null,
   },
   onLoad(options) {
+    // PG-094:私人订单列表不可从右上角菜单转发;页面上的 onShareAppMessage 只服务宿主活动详情场景里的分享按钮
+    if (wx.hideShareMenu) wx.hideShareMenu({ menus: ['shareAppMessage', 'shareTimeline'] });
     // M-25(2026-10-27 业主):商家不报名游玩、没有订单 —— 商家视角从任何入口进订单页都直接换成「我的项目」
     if (roleGuard.isMerchantView()) {
       wx.redirectTo({ url: '/subpackageA/pages/myproject/index?scope=MERCHANT' });
@@ -62,6 +64,7 @@ Page({
     if (content) content.retryList();
   },
   onShareAppMessage(event) {
-    return activityShareFromEvent(event);
+    // 只接活动分享按钮(event.from === 'button');菜单转发已隐藏,不分享订单列表本身
+    return activityShareFromEvent(event) || { title: '城瘾', path: '/pages/index/index' };
   },
 });

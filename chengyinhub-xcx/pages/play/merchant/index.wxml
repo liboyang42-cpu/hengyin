@@ -38,7 +38,7 @@
       <view class="mp-stat">
         <view><text class="mp-stat__n">{{node.inStoreLoad != null ? node.inStoreLoad : '—'}}</text><text class="mp-stat__k">已到店待核销</text></view>
         <view><text class="mp-stat__n">{{node.serviceCapacity ? node.serviceCapacity.perHour : 0}}</text><text class="mp-stat__k">每小时接待</text></view>
-        <view><text class="mp-stat__n">{{node.expectedWaitMinutes != null ? node.expectedWaitMinutes : '—'}}</text><text class="mp-stat__k">预计等待(分)</text></view>
+        <view><text class="mp-stat__n">{{node.expectedWaitMinutes != null ? node.expectedWaitMinutes : '—'}}</text><text class="mp-stat__k">预计等待（分）</text></view>
       </view>
     </view>
 
