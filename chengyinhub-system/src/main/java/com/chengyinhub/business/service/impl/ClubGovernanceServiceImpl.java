@@ -102,6 +102,11 @@ public class ClubGovernanceServiceImpl implements ClubGovernanceService {
         if (!isActiveMember(member, clubId, targetMemberId)) {
             throw badRequest("目标账号不是本俱乐部正常成员");
         }
+        // MC-001:非主理人(副主理人等)只能封禁普通成员;对方持有俱乐部岗位或旧管理员 role=1 时只有主理人能动。
+        if (!principalMemberId.equals(access.getOwnerMemberId())
+                && targetHoldsClubRole(clubId, targetMemberId, member)) {
+            throw forbidden("只有主理人可以封禁有岗位的成员");
+        }
 
         ClubGovernanceBan row = new ClubGovernanceBan();
         row.setClubId(clubId);
@@ -558,6 +563,21 @@ public class ClubGovernanceServiceImpl implements ClubGovernanceService {
 
     private boolean isClubRecord(Club club, Long clubId) {
         return club != null && clubId.equals(club.getId()) && positive(club.getMemberId());
+    }
+
+    /** 目标是否持有本团岗位:旧管理员 role=1,或访问上下文里有普通成员以外的角色 / 场次委派。判不清按持有算。 */
+    private boolean targetHoldsClubRole(Long clubId, Long targetMemberId, ClubMember member) {
+        if (member != null && Integer.valueOf(1).equals(member.getRole())) return true;
+        try {
+            ClubAccessContext target = clubAccessService.resolveWithEventAccesses(targetMemberId, clubId);
+            if (target == null) return true;
+            for (String roleCode : target.getRoleCodes()) {
+                if (!ClubRoleCode.CLUB_MEMBER.equals(roleCode)) return true;
+            }
+            return !target.getEventAccesses().isEmpty();
+        } catch (RuntimeException e) {
+            return true;
+        }
     }
 
     private boolean isActiveMember(ClubMember member, Long clubId, Long memberId) {
