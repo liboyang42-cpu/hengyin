@@ -13,8 +13,8 @@
 const { applyStoryVars: applyVars } = require('./playkit-view.js');   // 台词里的 ASCII {name} 变量照旧交给它;{玩家}/{身份} 由本模块换
 const cyToast = require('../../../utils/toast.js');
 const audioSession = require('./audio-session.js');
+const { CAST_COLORS, normalizeCast, face, routeCastRow, remember, cached } = require('../../../utils/cast-config.js');   // 两个分包共用的配置规范化与缓存
 
-const CAST_COLORS = ['#E8604C', '#3D8BFD', '#2FB57A', '#B98AF0', '#F2B33D', '#8E8E93'];
 const VOICE_HIDDEN_CODES = ['CAST_TTS_NOT_CONFIGURED', 'CAST_VOICE_NONE', 'CAST_DISABLED'];
 const TICKS = 5;
 const PLAYER_FALLBACK = '你';
@@ -24,29 +24,6 @@ const str = (v) => (v == null ? '' : String(v));
 const isObj = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
 
 /* ---------------- 纯函数(单测:tests/unit/cast-play-1119.test.js) ---------------- */
-
-/** 服务端 castConfig → 玩家侧视图。没配 / 没开 / 形状不对一律 null(= 功能关闭)。 */
-function normalizeCast(raw) {
-  let cfg = raw;
-  if (typeof cfg === 'string') { try { cfg = JSON.parse(cfg); } catch (e) { return null; } }
-  if (!isObj(cfg) || cfg.enabled !== true) return null;
-  const cast = (Array.isArray(cfg.cast) ? cfg.cast : []).filter((c) => isObj(c) && str(c.id) && str(c.name).trim()).slice(0, 12).map((c) => {
-    const voice = isObj(c.voice) ? c.voice : {};
-    const lines = isObj(c.endingLines) ? c.endingLines : {};
-    return {
-      id: str(c.id), name: str(c.name).trim(), identity: str(c.identity).trim(),
-      avatarUrl: str(c.avatarUrl), color: CAST_COLORS.indexOf(c.color) >= 0 ? c.color : CAST_COLORS[5],
-      voice: { mode: ['preset', 'record', 'none'].indexOf(voice.mode) >= 0 ? voice.mode : 'none', preset: str(voice.preset) },
-      clues: (Array.isArray(c.clues) ? c.clues : []).filter(isObj).slice(0, 6)
-        .map((k) => ({ text: str(k.text).trim(), chapterId: k.chapterId == null || k.chapterId === '' ? null : str(k.chapterId) })),
-      lockedCount: Math.max(0, Number(c.lockedCount) || 0),   // 服务端不下发锁住线索的正文时给个数(契约 E4 后端跟进)
-      endingLines: { low: str(lines.low).trim(), mid: str(lines.mid).trim(), high: str(lines.high).trim() },
-    };
-  });
-  const identities = (Array.isArray(cfg.identities) ? cfg.identities : []).filter((x) => isObj(x) && str(x.key) && str(x.title).trim())
-    .slice(0, 4).map((x) => ({ key: str(x.key), title: str(x.title).trim(), sub: str(x.sub).trim() }));
-  return { enabled: true, playerName: cfg.playerName === true, playerIdentity: cfg.playerIdentity === true && identities.length > 0, identities, cast };
-}
 
 /** 本局玩家档案(服务端 routeState.playerProfile / 保存回包)→ {name, identityKey, identityTitle};没有 = null */
 function profileOf(raw) {
@@ -154,15 +131,6 @@ function clueView(member, reachedChapterIds) {
   return { open, locked, lockedText: locked ? '还有 ' + locked + ' 条，走到下一站再看' : '' };
 }
 
-function initialOf(name) { return Array.from(str(name).trim())[0] || ''; }
-
-/** 头像:有图用图,没图用彩色首字 */
-function face(member) {
-  const url = str(member.avatarUrl);
-  // media-asset:N 是作者素材引用,客户端解不了 → 用彩色首字,不画破图
-  return { url: /^media-asset:/.test(url) ? '' : url, initial: initialOf(member.name), color: member.color };
-}
-
 function cardView(cfg, castId, ctx) {
   const c = findCast(cfg, castId);
   if (!c) return null;
@@ -183,12 +151,6 @@ function playbill(cfg, profile, routeName) {
     rows: cfg.cast.map((c) => ({ id: c.id, name: c.name, identity: c.identity })),
     player: { name: (profile && profile.name) || PLAYER_FALLBACK, identity: (profile && profile.identityTitle) || '' },
   };
-}
-
-/** E5 主题详情「人物」:头像 54px、名字、身份的第一小句 */
-function routeCastRow(cfg) {
-  if (!cfg) return [];
-  return cfg.cast.map((c) => ({ id: c.id, name: c.name, face: face(c), identity: str(c.identity).split(/[，,。；;、]/)[0].trim() }));
 }
 
 /** 结局按信任挑角色:唯一最高且 > 0(与服务端 CastRunRules.pickByTrust 同口径);否则 '' */
@@ -260,11 +222,6 @@ function castHints(d) {
   if (isObj(d.routeState) && isObj(d.routeState.playerProfile)) return true;
   return (Array.isArray(d.chapters) ? d.chapters : []).some((c) => c && Array.isArray(c.blocks) && c.blocks.some((b) => b && b.type === 'line'));
 }
-
-/* ---------------- 主题详情与播放页共用的配置缓存 ---------------- */
-const cache = new Map();   // topicId → 规范化后的配置(null = 这个主题没开)
-function remember(topicId, raw) { if (topicId) cache.set(str(topicId), normalizeCast(raw)); return cache.get(str(topicId)) || null; }
-function cached(topicId) { return cache.has(str(topicId)) ? { cfg: cache.get(str(topicId)) } : null; }
 
 /* ---------------- 页面挂钩(pages/play/index.js) ---------------- */
 const data = {

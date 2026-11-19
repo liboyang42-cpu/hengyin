@@ -85,5 +85,5 @@
 .cf__book.is-in, .cf--reduced .cf__book { opacity: 1; transform: none; }
 .cf--reduced .cf__book { transition: none; }
 .cf__book-k { font-size: 22rpx; letter-spacing: .6em; padding-left: .6em; color: var(--lk-mute, rgba(245,245,242,.56)); } /* ds-ok 同 .cf__k 回落值;padding 抵掉末字字距,居中不偏 */
-.cf__book-t { margin-top: 28rpx; font-size: 64rpx; font-weight: 600; line-height: 1.3; letter-spacing: .06em; font-family: var(--lk-fd, inherit); }
+.cf__book-t { margin-top: 28rpx; font-size: 64rpx; font-weight: 600; line-height: 1.3; letter-spacing: .06em; font-family: var(--lk-fd, inherit); } /* ds-ok 契约 E2 章首大标题 */
 .cf__book-rule { margin-top: 40rpx; width: 56rpx; height: 1px; background: currentColor; opacity: .4; }

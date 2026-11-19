@@ -20,27 +20,27 @@
 .chfull__choice-q{ margin-bottom:var(--cy-space-4); font-size:34rpx; line-height:1.95; text-align:center; } /* ds-ok 同正文 17px/1.95 */
 .chfull__choice-o{ display:flex; align-items:baseline; gap:var(--cy-space-3); padding:var(--cy-space-4) var(--cy-space-1); border-top:1px solid var(--cy-color-border-strong); transition:opacity var(--cy-motion-fast, 150ms) var(--cy-ease-out, ease-out); }
 .chfull__choice-o:last-child{ border-bottom:1px solid var(--cy-color-border-strong); }
-.chfull__choice-n{ flex:none; min-width:32rpx; font-size:26rpx; opacity:.46; font-variant-numeric:tabular-nums; font-family:-apple-system, "PingFang SC", sans-serif; }
-.chfull__choice-t{ flex:1; min-width:0; font-size:32rpx; line-height:1.6; }
+.chfull__choice-n{ flex:none; min-width:32rpx; font-size:26rpx; opacity:.46; font-variant-numeric:tabular-nums; font-family:-apple-system, "PingFang SC", sans-serif; } /* ds-ok 选项序号比选项字小一档(13px) */
+.chfull__choice-t{ flex:1; min-width:0; font-size:32rpx; line-height:1.6; } /* ds-ok 契约 E3 选项 16px */
 .chfull__choice-o.is-off{ opacity:.3; }
 .play--reduced-motion .chfull__choice-o{ transition:none; }
 
 /* —— 共用:五格信任勾(角色卡 / 完成页) —— */
-.castend__tick{ width:36rpx; height:8rpx; border-radius:4rpx; background:var(--cy-color-border-strong); }
+.castend__tick{ width:36rpx; height:8rpx; border-radius:4rpx; background:var(--cy-color-border-strong); } /* ds-ok 信任勾 18×4px 细条 */
 
 /* —— C 起名 / E1 登场人物:整屏深色,一屏一件事 —— */
 .cstart, .cbill{ position:fixed; inset:0; z-index:var(--cy-z-modal); display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box; padding:calc(var(--cy-space-8) * 2) var(--cy-space-6) calc(env(safe-area-inset-bottom) + var(--cy-space-6)); background:var(--cy-color-bg-page); color:var(--cy-color-text-primary); opacity:0; transition:opacity var(--cy-motion-slow, 350ms) var(--cy-ease-out, ease-out); }
 .cstart.is-in, .cbill.is-in{ opacity:1; }
 .play--reduced-motion .cstart, .play--reduced-motion .cbill{ transition:none; opacity:1; }
 .cstart__q{ font-size:var(--cy-type-page-title); font-weight:600; line-height:1.35; }
-.cstart__in{ margin-top:var(--cy-space-6); padding:var(--cy-space-3) 0; min-height:96rpx; font-size:56rpx; border-bottom:1px solid var(--cy-color-border-strong); color:var(--cy-color-text-primary); }
+.cstart__in{ margin-top:var(--cy-space-6); padding:var(--cy-space-3) 0; min-height:96rpx; font-size:56rpx; border-bottom:1px solid var(--cy-color-border-strong); color:var(--cy-color-text-primary); } /* ds-ok 起名大输入框 28px(契约 C「large input」) */
 .cstart__ph{ color:var(--cy-color-text-disabled); }
 .cstart__ids{ margin-top:var(--cy-space-6); display:flex; flex-direction:column; gap:var(--cy-space-3); }
-.cstart__id{ display:flex; flex-direction:column; gap:var(--cy-space-1); padding:var(--cy-space-4); border-radius:var(--cy-radius-lg, 24rpx); background:var(--cy-color-bg-elevated); border:1px solid transparent; transition:border-color var(--cy-motion-fast, 150ms) var(--cy-ease-out, ease-out); }
+.cstart__id{ display:flex; flex-direction:column; gap:var(--cy-space-1); padding:var(--cy-space-4); border-radius:var(--cy-radius-lg); background:var(--cy-color-bg-elevated); border:1px solid transparent; transition:border-color var(--cy-motion-fast, 150ms) var(--cy-ease-out, ease-out); }
 .cstart__id.is-on{ border-color:var(--cy-color-text-primary); }
 .cstart__id-t{ font-size:var(--cy-type-card-title); font-weight:600; }
 .cstart__id-s{ font-size:var(--cy-type-body); color:var(--cy-color-text-tertiary); }
-.cstart__go{ display:flex; align-items:center; justify-content:center; min-height:var(--cy-btn-h, 96rpx); border-radius:999rpx; background:var(--cy-color-text-primary); color:var(--cy-color-text-inverse); font-size:var(--cy-type-button); font-weight:600; }
+.cstart__go{ display:flex; align-items:center; justify-content:center; min-height:var(--cy-btn-h); border-radius:var(--cy-radius-pill); background:var(--cy-color-text-primary); color:var(--cy-color-text-inverse); font-size:var(--cy-type-button); font-weight:600; }
 .cstart__go.is-busy{ opacity:.5; }
 .cbill__route{ font-size:var(--cy-type-caption); letter-spacing:.2em; color:var(--cy-color-text-tertiary); }
 .cbill__t{ margin:var(--cy-space-2) 0 var(--cy-space-6); font-size:var(--cy-type-page-title); font-weight:600; letter-spacing:.12em; }
@@ -52,7 +52,7 @@
 
 /* —— E4 角色卡:深色半屏 —— */
 .ccard-mask{ position:fixed; inset:0; z-index:var(--cy-z-sheet); background:rgba(0,0,0,.5); opacity:0; transition:opacity var(--cy-motion-slow, 350ms) var(--cy-ease-out, ease-out); } /* ds-ok 遮罩 */
-.ccard{ position:fixed; left:0; right:0; bottom:0; z-index:var(--cy-z-sheet); box-sizing:border-box; max-height:80vh; overflow-y:auto; padding:var(--cy-space-6) var(--cy-space-5) calc(env(safe-area-inset-bottom) + var(--cy-space-6)); border-radius:var(--cy-radius-xl, 40rpx) var(--cy-radius-xl, 40rpx) 0 0; background:var(--cy-color-bg-elevated); color:var(--cy-color-text-primary); transform:translateY(100%); transition:transform var(--cy-motion-slow, 350ms) var(--cy-ease-out, ease-out); }
+.ccard{ position:fixed; left:0; right:0; bottom:0; z-index:var(--cy-z-sheet); box-sizing:border-box; max-height:80vh; overflow-y:auto; padding:var(--cy-space-6) var(--cy-space-5) calc(env(safe-area-inset-bottom) + var(--cy-space-6)); border-radius:var(--cy-radius-xl) var(--cy-radius-xl) 0 0; background:var(--cy-color-bg-elevated); color:var(--cy-color-text-primary); transform:translateY(100%); transition:transform var(--cy-motion-slow, 350ms) var(--cy-ease-out, ease-out); }
 .ccard-mask.is-in{ opacity:1; }
 .ccard.is-in{ transform:none; }
 .play--reduced-motion .ccard, .play--reduced-motion .ccard-mask{ transition:none; }
@@ -62,10 +62,10 @@
 .ccard__copy{ flex:1; min-width:0; display:flex; flex-direction:column; gap:var(--cy-space-1); }
 .ccard__name{ font-size:var(--cy-type-sheet-title); font-weight:600; }
 .ccard__id{ font-size:var(--cy-type-body); color:var(--cy-color-text-secondary); }
-.ccard__play{ flex:none; display:flex; align-items:center; justify-content:center; min-width:88rpx; min-height:88rpx; border-radius:50%; background:var(--cy-color-bg-raised); font-size:28rpx; }
+.ccard__play{ flex:none; display:flex; align-items:center; justify-content:center; min-width:88rpx; min-height:88rpx; border-radius:50%; background:var(--cy-color-bg-raised); font-size:var(--cy-type-body); }
 .ccard__k{ margin:var(--cy-space-5) 0 var(--cy-space-2); font-size:var(--cy-type-caption); letter-spacing:.12em; color:var(--cy-color-text-tertiary); }
 .ccard__ticks{ display:flex; gap:var(--cy-space-1); }
-.ccard__clue{ padding:var(--cy-space-2) 0; font-size:30rpx; line-height:1.7; border-bottom:1px solid var(--cy-color-border-subtle); }
+.ccard__clue{ padding:var(--cy-space-2) 0; font-size:var(--cy-type-card-title); line-height:1.7; border-bottom:1px solid var(--cy-color-border-subtle); }
 .ccard__lock{ padding-top:var(--cy-space-2); font-size:var(--cy-type-body); color:var(--cy-color-text-tertiary); }
 
 /* —— E6 完成页「他们怎么看你」:书页式,名字在页边 —— */
@@ -73,6 +73,6 @@
 .castend__h{ margin-bottom:var(--cy-space-4); font-size:var(--cy-type-section-title); font-weight:600; text-align:center; letter-spacing:.12em; }
 .castend__row{ position:relative; padding:0 52rpx var(--cy-space-5) 140rpx; }
 .castend__who{ position:absolute; left:0; top:0; width:120rpx; font-size:20rpx; line-height:58rpx; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:.46; } /* ds-ok 同正文页边名字 */
-.castend__line{ font-size:30rpx; line-height:1.95; }
+.castend__line{ font-size:var(--cy-type-card-title); line-height:1.95; }
 .castend__row .castend__ticks{ display:flex; gap:var(--cy-space-1); margin-top:var(--cy-space-2); min-height:58rpx; align-items:center; }
-.castend__foot{ padding:var(--cy-space-3) 0 var(--cy-space-2); font-size:24rpx; line-height:1.6; text-align:center; color:var(--cy-color-text-tertiary); }
+.castend__foot{ padding:var(--cy-space-3) 0 var(--cy-space-2); font-size:var(--cy-type-label); line-height:1.6; text-align:center; color:var(--cy-color-text-tertiary); }
