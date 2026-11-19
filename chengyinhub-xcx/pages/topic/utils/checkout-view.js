@@ -8,7 +8,33 @@
 //   有效期写在单次购买卡上,沿用 topic-motion.passWindow(与建单同口径),信任行不重复。
 
 const { chapterCountText } = require('../../../utils/chapter-count.js');
-const { yuan } = require('../../../utils/money-format.js');
+const { yuan, yuanTrim } = require('../../../utils/money-format.js');
+const { refundRuleText } = require('../../../utils/refund-rule.js');
+
+// OR-046 定稿:结算页价格不补零(¥29.9 / ¥30),与票种半屏同一入口 money-format.yuanTrim。
+const price = yuanTrim;
+
+function pad2(n) { return n < 10 ? '0' + n : String(n); }
+
+/** OR-028:可玩期以服务端报价 validTo 为准(validToText 优先);报价没给才回落本地算的 win。 */
+function quoteUntilText(quote) {
+  if (!quote) return '';
+  if (typeof quote.validToText === 'string' && quote.validToText.trim()) return quote.validToText.trim();
+  const raw = quote.validTo;
+  if (raw === null || raw === undefined || raw === '') return '';
+  const d = new Date(typeof raw === 'string' && /^\d{4}-\d{2}-\d{2} /.test(raw) ? raw.replace(' ', 'T') + '+08:00' : raw);
+  return isNaN(d.getTime()) ? '' : pad2(d.getMonth() + 1) + '/' + pad2(d.getDate());
+}
+
+/** OR-028/OR-046:购买须知与退款规则 —— 服务端须知(quote.terms 文本或数组)优先,缺省列平台退款三档。 */
+function noticeLines(quote, pay) {
+  const terms = quote && quote.terms;
+  const list = Array.isArray(terms) ? terms : (typeof terms === 'string' ? [terms] : []);
+  const lines = list.map((t) => String(t || '').trim()).filter(Boolean);
+  if (lines.length) return lines;
+  const rule = refundRuleText({ price: pay, mode: 2 });
+  return rule ? [rule] : [];
+}
 
 function isNum(v) {
   return v !== null && v !== undefined && v !== '' && Number.isFinite(Number(v));
@@ -80,8 +106,8 @@ function checkoutView(o) {
   const bill = [];
   if (pay !== null) {
     const listAmount = member && isNum(quote.memberDiscountYuan) ? Number(quote.memberDiscountYuan) : (discount ? pay + discount : pay);
-    bill.push({ key: 'pass', k: '自玩门票 × 1', v: yuan(listAmount) });
-    if (discount) bill.push({ key: 'club', k: '俱乐部会员', v: '-' + yuan(discount), minus: true });
+    bill.push({ key: 'pass', k: '自玩门票 × 1', v: price(listAmount) });
+    if (discount) bill.push({ key: 'club', k: '俱乐部会员', v: '-' + price(discount), minus: true });
     if (member) bill.push({ key: 'member', k: '通行证', v: '你已可直接游玩', minus: true });
   }
 
@@ -94,26 +120,32 @@ function checkoutView(o) {
   const refused = opt.quoteState === 'refused';
   // E-B9:报价请求失败不退回标价(会员减免/通行证覆盖时应付可能是 ¥0),支付置灰,改给「重新获取价格」。
   const failed = opt.quoteState === 'failed';
+  // OR-046:已购买本主题(主题详情 isSignUp=1,或报价 purchased=true)→ 主按钮「继续游玩」,不再卖第二张
+  const purchased = Number(info.isSignUp) === 1 || !!(quote && quote.purchased === true);
+  const until = quoteUntilText(quote) || win.untilText || '';
+  const lines = noticeLines(quote, pay);
   return {
     pills: headPills(info),
     single: {
-      title: '自玩门票',
-      price: pay === null ? '—' : yuan(pay),
-      strike: discount ? yuan(pay + discount) : '',
-      line: win.untilText ? '可玩至 ' + win.untilText : ''
+      title: purchased ? '已购买本主题' : '自玩门票',
+      price: pay === null ? '—' : price(pay),
+      strike: discount ? price(pay + discount) : '',
+      line: until ? '可玩至 ' + until : ''
     },
+    purchased,
+    notice: lines.length ? { label: '购买须知与退款规则', lines } : null,
     member,
     passes: member ? [] : coveringPasses(opt.products, info.id),
     bill,
-    totalText: pay === null ? '—' : yuan(pay),
+    totalText: pay === null ? '—' : price(pay),
     trust,
     loading: opt.quoteState === 'loading',
     refused,
     failed,
     refusal: refused ? playerText(opt.refusal) : '',
     free,
-    payLabel: refused ? '暂不可购买' : (failed ? '重新获取价格' : (free ? '免费领取' : (pay === null ? '支付' : '支付 ' + yuan(pay))))
+    payLabel: purchased ? '继续游玩' : (refused ? '暂不可购买' : (failed ? '重新获取价格' : (free ? '免费领取' : (pay === null ? '支付' : '支付 ' + price(pay)))))
   };
 }
 
-module.exports = { checkoutView, playerText, coveringPasses, headPills, refundTrust, yuan };
+module.exports = { checkoutView, playerText, coveringPasses, headPills, refundTrust, yuan, price };

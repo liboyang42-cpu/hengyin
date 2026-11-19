@@ -302,3 +302,25 @@ test('OR-022:退款三档文案单一真源 utils/refund-rule.js,主题页旧路
   assert.deepEqual(rule.refundRuleTiers({ price: 0 }), [])
   assert.doesNotMatch(read('pages/activity/baoming/baoming.wxml'), /<text>全额退<\/text>/)
 })
+
+test('OR-003:自玩建单带报价签名,价变 409 重新报价', () => {
+  const js = read('pages/topic/index/index.js')
+  assert.match(js, /if \(quoted && quoted\.quoteSign\) body\.quoteSign = quoted\.quoteSign;/)
+  assert.match(js, /if \(res && res\.code == 409 && body\.quoteSign\) \{\s*that\._selfPlayReqId = null;\s*that\._refreshCheckoutQuote\(\);/)
+})
+
+test('OR-028 / OR-046:结算层可玩期读报价 validTo、须知入口、已购态与不补零价格', () => {
+  const { checkoutView } = require(path.join(ROOT, 'pages/topic/utils/checkout-view.js'))
+  const v = checkoutView({ info: { selfPlayPrice: 29.9 }, quoteState: 'ready', quote: { payAmount: 29.9, validToText: '12/31' }, win: { untilText: '01/09' } })
+  assert.equal(v.single.price, '¥29.9')
+  assert.equal(v.payLabel, '支付 ¥29.9')
+  assert.equal(v.single.line, '可玩至 12/31')
+  assert.equal(v.notice.label, '购买须知与退款规则')
+  const fallback = checkoutView({ info: { selfPlayPrice: 30 }, quoteState: 'ready', quote: { payAmount: 30 }, win: { untilText: '01/09' } })
+  assert.equal(fallback.single.line, '可玩至 01/09', '报价没给 validTo 时回落本地计算')
+  const owned = checkoutView({ info: { selfPlayPrice: 30, isSignUp: 1 }, quoteState: 'ready', quote: { payAmount: 30 } })
+  assert.equal(owned.single.title, '已购买本主题')
+  assert.equal(owned.payLabel, '继续游玩')
+  assert.match(read('pages/topic/components/cy/self-play-checkout/index.js'), /if \(v\.purchased\) \{ this\.triggerEvent\('play'\); return; \}/)
+  assert.match(read('pages/topic/index/index.wxml'), /bind:notice="onCheckoutNotice" bind:play="onCheckoutPlay"/)
+})

@@ -259,7 +259,7 @@ function buyOptions(info) {
   }
   return out.map((o) => Object.assign(o, {
     icon: o.people >= 3 ? 'team' : o.people === 2 ? 'two' : 'one',
-    priceText: o.price === null ? '' : money.yuan(o.price) + (o.from ? ' 起' : ''),
+    priceText: o.price === null ? '' : money.yuanTrim(o.price) + (o.from ? ' 起' : ''),
   }));
 }
 

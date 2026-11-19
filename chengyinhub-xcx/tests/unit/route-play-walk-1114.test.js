@@ -79,12 +79,12 @@ test('零共享免费次数不否认作者配置的免费提示，提示面板�
   assert.match(read('pages/play/play-help.wxss'), /\.phl-pop__card\{[^}]*background:var\(--cy-comp-sheet-player-bg\)/);
 });
 
-test('票种半屏和自玩结账共享两位小数金额格式', () => {
+test('票种半屏和自玩结账共享同一金额格式(OR-046 定稿:不补零)', () => {
   const { buyOptions } = require('../../pages/topic/utils/topic-motion.js');
   const { checkoutView } = require('../../pages/topic/utils/checkout-view.js');
   for (const price of [0, 29, 29.9, 29.95]) {
     const ticket = buyOptions({ selfPlay: 1, selfPlayPrice: price })[0].priceText;
     const checkout = checkoutView({ info: { selfPlay: 1, selfPlayPrice: price }, quoteState: 'ready', quote: { payAmount: price } }).totalText;
-    assert.equal(ticket, '¥' + price.toFixed(2)); assert.equal(ticket, checkout);
+    assert.equal(ticket, '¥' + String(price)); assert.equal(ticket, checkout);
   }
 });
