@@ -80,7 +80,7 @@
     <cy-error load-failure class="error-kind--{{targetsErrorKind}} cy-fade-in" wx:elif="{{targetsState === 'error'}}" title="合作对象加载失败" bind:retry="retryTargets" />
 
     <block wx:elif="{{presetTarget}}">
-      <view class="target target--locked">
+      <view class="target target--locked cy-fade-in">
         <image class="target-logo" src="{{presetTarget.logo || '/images/d_logo.png'}}" mode="aspectFill" lazy-load="true" />
         <view class="target-main"><view class="target-name ep1">{{presetTarget.name}}</view><view class="target-meta ep1">{{presetTarget.meta}}</view><view class="target-status">已选定，发送前不可更换</view></view>
         <view class="target-action target-action--locked">已锁定</view>
@@ -88,7 +88,7 @@
     </block>
 
     <block wx:elif="{{activeType === 1}}">
-      <view class="target" wx:for="{{clubs}}" wx:key="id" bindtap="toggleTarget" data-toid="{{item.id}}" data-name="{{item.name}}" data-logo="{{item.logo}}" data-meta="{{item.memberCount != null ? item.memberCount + ' 位成员' : '—'}}{{item.city ? ' · ' + item.city : ''}}"
+      <view class="target cy-fade-in" wx:for="{{clubs}}" wx:key="id" bindtap="toggleTarget" data-toid="{{item.id}}" data-name="{{item.name}}" data-logo="{{item.logo}}" data-meta="{{item.memberCount != null ? item.memberCount + ' 位成员' : '—'}}{{item.city ? ' · ' + item.city : ''}}"
         aria-role="checkbox" aria-checked="{{!!selectedMap[item.id]}}" aria-label="选择俱乐部：{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
         <image class="target-logo" src="{{item.logo || '/images/d_logo.png'}}" mode="aspectFill" lazy-load="true" />
         <view class="target-main"><view class="target-name ep1">{{item.name}}</view><view class="target-meta">{{item.memberCount != null ? item.memberCount + ' 位成员' : '—'}}{{item.city ? ' · ' + item.city : ''}}</view></view>
@@ -97,17 +97,17 @@
       <!-- CU-M-134:标题与说明几乎重复(「暂无可对接的俱乐部／平台还没有开放合作的俱乐部」)。
            CU-M-151:这一屏是从协作邀请空态「去发起邀请」推进来的,不能是一个只能看着的死胡同 ——
            给一个真能点的恢复动作(重新拉取合作对象),而不是再解释一遍平台口径。 -->
-      <cy-empty wx:if="{{!clubs.length}}" title="还没有可邀请的俱乐部" cta="刷新合作对象" bind:cta="retryTargets" />
+      <cy-empty class="cy-fade-in" wx:if="{{!clubs.length}}" title="还没有可邀请的俱乐部" cta="刷新合作对象" bind:cta="retryTargets" />
     </block>
 
     <block wx:else>
-      <view class="target" wx:for="{{merchants}}" wx:key="memberId" bindtap="toggleTarget" data-toid="{{item.memberId}}" data-name="{{item.name}}" data-logo="{{item.logo}}" data-meta="{{item.suitActivityTypes || item.address || '开放承接'}}"
+      <view class="target cy-fade-in" wx:for="{{merchants}}" wx:key="memberId" bindtap="toggleTarget" data-toid="{{item.memberId}}" data-name="{{item.name}}" data-logo="{{item.logo}}" data-meta="{{item.suitActivityTypes || item.address || '开放承接'}}"
         aria-role="checkbox" aria-checked="{{!!selectedMap[item.memberId]}}" aria-label="选择商家：{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
         <image class="target-logo" src="{{item.logo || '/images/d_logo.png'}}" mode="aspectFill" lazy-load="true" />
         <view class="target-main"><view class="target-name ep1">{{item.name}}</view><view class="target-meta ep1">{{item.suitActivityTypes || item.address || '开放承接'}}</view></view>
         <view class="target-action {{selectedMap[item.memberId] ? 'target-action--selected' : ''}}">{{selectedMap[item.memberId] ? '已选' : '邀请'}}</view>
       </view>
-      <cy-empty wx:if="{{!merchants.length}}" title="还没有可合作的商家" cta="刷新合作对象" bind:cta="retryTargets" />
+      <cy-empty class="cy-fade-in" wx:if="{{!merchants.length}}" title="还没有可合作的商家" cta="刷新合作对象" bind:cta="retryTargets" />
     </block>
 
     </view>
@@ -117,8 +117,8 @@
       <cy-skeleton wx:if="{{supplyTopicState === 'loading'}}" />
       <cy-error wx:elif="{{supplyTopicState === 'error'}}" title="无法确认主题" sub="{{supplyTopicError}}" retry="重新读取" bind:retry="retrySupplyTopic" class="cy-fade-in" />
       <block wx:elif="{{supplyStationRequired}}">
-        <view class="card-hint" wx:if="{{!selected.length}}">先选择合作商家，再选择该商家的已确定据点。</view>
-        <view wx:for="{{selected}}" wx:key="toId" class="target-main">
+        <view class="card-hint cy-fade-in" wx:if="{{!selected.length}}">先选择合作商家，再选择该商家的已确定据点。</view>
+        <view wx:for="{{selected}}" wx:key="toId" class="target-main cy-fade-in">
           <view class="target-name">{{item.name}}</view>
           <cy-skeleton wx:if="{{item.supplyState === 'loading'}}" />
           <cy-error wx:elif="{{item.supplyState === 'error'}}" title="据点读取失败" sub="{{item.supplyError}}" retry="刷新据点" bind:retry="retrySupplyStations" class="cy-fade-in" />

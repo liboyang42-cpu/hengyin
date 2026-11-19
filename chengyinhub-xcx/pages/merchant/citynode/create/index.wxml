@@ -50,24 +50,24 @@
       <cy-inline-error load-failure wx:elif="{{shopLoadError}}" kind="network" title="店铺资料没读出来"
         sub="{{shopLoadError}}" action="重试" bind:action="loadShop" class="cy-fade-in" />
       <block wx:elif="{{picked}}">
-        <view class="cy-addr-tap" bindtap="viewPicked" aria-role="button" aria-label="在地图中查看店址" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="cy-addr-tap cy-fade-in" bindtap="viewPicked" aria-role="button" aria-label="在地图中查看店址" hover-class="cy-pressed" hover-stay-time="80">
           <view class="cnc-addr">{{picked.name || '我的店'}}</view>
           <view class="cnc-addr-sub" wx:if="{{picked.address}}">{{picked.address}}</view>
         </view>
         <block wx:if="{{pickedFromProfile}}">
-          <view class="cnc-hint" wx:if="{{!addressConfirmed}}">
+          <view class="cnc-hint cy-fade-in" wx:if="{{!addressConfirmed}}">
             玩家需到达店址 {{radius || 80}} 米内，请确认位置
           </view>
-          <view class="cnc-addr-actions" wx:if="{{!addressConfirmed}}">
+          <view class="cnc-addr-actions cy-fade-in" wx:if="{{!addressConfirmed}}">
             <cy-btn class="cnc-addr-action" variant="primary" size="sm" bind:tap="confirmProfileAddress">确认这个店址</cy-btn>
             <cy-btn class="cnc-addr-action" variant="secondary" size="sm" bind:tap="repick">重新选择</cy-btn>
           </view>
         </block>
-        <cy-btn wx:if="{{!pickedFromProfile || addressConfirmed}}" variant="secondary" size="sm" bind:tap="repick">重新选择店址</cy-btn>
+        <cy-btn class="cy-fade-in" wx:if="{{!pickedFromProfile || addressConfirmed}}" variant="secondary" size="sm" bind:tap="repick">重新选择店址</cy-btn>
       </block>
       <block wx:else>
-        <view class="cnc-hint">请在地图上选择店门口</view>
-        <cy-btn variant="secondary" bind:tap="repick">在地图上标店址</cy-btn>
+        <view class="cnc-hint cy-fade-in">请在地图上选择店门口</view>
+        <cy-btn class="cy-fade-in" variant="secondary" bind:tap="repick">在地图上标店址</cy-btn>
       </block>
     </view>
 

@@ -20,12 +20,12 @@
   <cy-skeleton wx:if="{{pageState === 'loading'}}" type="list" count="{{4}}" />
 
   <block wx:elif="{{pageState === 'ready'}}">
-    <view class="inline-state" wx:if="{{refreshing}}" aria-role="status" aria-live="polite">正在刷新附近商家…</view>
-    <view class="inline-state inline-state--error error-kind--{{refreshErrorKind}}" wx:if="{{refreshErrorText}}" aria-role="alert" aria-live="assertive">
+    <view class="inline-state cy-fade-in" wx:if="{{refreshing}}" aria-role="status" aria-live="polite">正在刷新附近商家…</view>
+    <view class="inline-state inline-state--error error-kind--{{refreshErrorKind}} cy-fade-in" wx:if="{{refreshErrorText}}" aria-role="alert" aria-live="assertive">
       {{refreshErrorText}}<text class="inline-retry" bindtap="retry" aria-role="button" aria-label="重试刷新附近商家" hover-class="cy-pressed" hover-stay-time="80">重试</text>
     </view>
     <block wx:if="{{merchants.length}}">
-    <view class="merchant-result" wx:for="{{merchants}}" wx:key="id" wx:if="{{item.name}}">
+    <view class="merchant-result cy-fade-in" wx:for="{{merchants}}" wx:key="id" wx:if="{{item.name}}">
       <cy-merchant-card variant="venue" interactive="{{!!item.memberId}}"
         bind:tap="openMerchant" aria-label="查看{{item.name}}商家档案" data-memberid="{{item.memberId}}"
         name="{{item.name}}" cover="{{item.coverUrl || item.coverImage || item.photo || ''}}" logo="{{item.logo || ''}}"
@@ -39,7 +39,7 @@
       </view>
     </view>
     </block>
-    <cy-empty size="lg" style="flex:1;min-height:0;" kind="empty" wx:else fill title="附近暂无商家" cta="刷新附近商家" bind:cta="retry"></cy-empty>
+    <cy-empty class="cy-fade-in" size="lg" style="flex:1;min-height:0;" kind="empty" wx:else fill title="附近暂无商家" cta="刷新附近商家" bind:cta="retry"></cy-empty>
   </block>
 
   <!-- aaa 标准:未定位/空态统一垂直居中 + 放大文字图片(cy-error 原生 fill 变体,不再自己包一层) -->

@@ -8,7 +8,7 @@
   <cy-page-title title="群发通知" safe-top="{{false}}" />
 
   <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="4" />
-  <cy-empty wx:elif="{{state === 'missing-param'}}" fill size="lg" kind="missing-param" cta="返回" bind:cta="goBack" />
+  <cy-empty wx:elif="{{state === 'missing-param'}}" fill size="lg" kind="missing-param" cta="返回" bind:cta="goBack" class="cy-fade-in" />
   <!-- 2026-08-26:权限拒绝原来和加载失败共用一个 error 态,渲染成「暂时不可用 + 重新加载」——
        给了一个永远点不成功的重试按钮,用户不会知道是权限问题。现在拆成三条。 -->
   <cy-error wx:elif="{{state === 'no-permission'}}" fill size="lg" retry=""
@@ -20,7 +20,7 @@
 
     <!-- Figma 290:526「选择受众」——列表卡替换原先的两列 chip 网格；
          真实候选比稿子多两项(管理员/近90天未活跃)，全部保留，事件态提示按行内联。 -->
-    <view class="section">
+    <view class="section cy-fade-in">
       <text class="section-title">选择受众</text>
       <view class="ds-card">
         <!-- 第十轮 f3 第 5 项(p3 F7):不是从具体活动进来时,本场受众三行整行不出,不再挂三遍同一句说明。 -->
@@ -38,7 +38,7 @@
       </view>
     </view>
 
-    <view class="section">
+    <view class="section cy-fade-in">
       <text class="section-title">内容</text>
       <view class="ds-card ds-card--form">
         <text class="field-label">标题<text class="form-required" aria-hidden="true">*</text></text>
@@ -69,7 +69,7 @@
       </view>
     </view>
 
-    <view class="section" wx:if="{{campaign}}">
+    <view class="section cy-fade-in" wx:if="{{campaign}}">
       <!-- CU-C-135:投递是后台做的,send 回来常常还是 PROCESSING。原来这页只存那一次响应,
            既没有「待投递」也没有再读的入口 ⇒ 数字永远停在 4/0/0,用户看不出是卡在哪儿。 -->
       <view class="section-head">
@@ -112,7 +112,7 @@
       </button>
     </view>
 
-    <button class="send-btn" loading="{{sending}}" disabled="{{sending}}" bindtap="send">
+    <button class="send-btn cy-fade-in" loading="{{sending}}" disabled="{{sending}}" bindtap="send">
       {{sending ? '正在投递…' : '发送站内通知'}}
     </button>
   </block>

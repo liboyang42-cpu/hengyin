@@ -17,7 +17,7 @@
 
   <block wx:else>
     <!-- 客户与核销状态 -->
-    <view class="ckd-head">
+    <view class="ckd-head cy-fade-in">
       <cy-avatar class="ckd-ava" size="96" src="{{detail.avatar || '/images/d_profile.png'}}" name="{{detail.displayName}}" />
       <view class="ckd-head-main">
         <text class="ckd-name">{{detail.displayName}}</text>
@@ -39,7 +39,7 @@
     </view>
 
     <!-- 凭证本体 -->
-    <view class="ckd-card">
+    <view class="ckd-card cy-fade-in">
       <view class="ckd-topic">
         <image wx:if="{{detail.topicCover}}" class="ckd-cover" src="{{detail.topicCover}}" mode="aspectFill" lazy-load="true" />
         <view wx:else class="ckd-cover ckd-cover--empty"></view>
@@ -76,7 +76,7 @@
 
     <!-- 清退退款(2026-09-09 从报名名册行内挪来)。canRefund 由服务端判:
          主理人本人 + 这单已付款未核销,两条都成立才给按钮。 -->
-    <view wx:if="{{detail.canRefund}}" class="ckd-foot">
+    <view wx:if="{{detail.canRefund}}" class="ckd-foot cy-fade-in">
       <cy-inline-error wx:if="{{refundErrorUnknown}}" kind="network" title="退款结果待确认" sub="{{refundErrorText}}"
                        action="重新查询" bind:action="retryRefundReadback" />
       <cy-inline-error wx:elif="{{refundErrorText}}" kind="data" title="退款没有完成" sub="{{refundErrorText}}"

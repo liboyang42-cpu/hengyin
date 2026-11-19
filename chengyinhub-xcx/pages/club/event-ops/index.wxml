@@ -9,7 +9,7 @@
   <cy-page-title title="活动运营" safe-top="{{false}}" />
 
   <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="4" />
-  <cy-empty wx:elif="{{state === 'missing-param'}}" fill size="lg" kind="missing-param" cta="返回" bind:cta="goBack" />
+  <cy-empty wx:elif="{{state === 'missing-param'}}" fill size="lg" kind="missing-param" cta="返回" bind:cta="goBack" class="cy-fade-in" />
   <!-- 2026-08-26:权限拒绝原来和加载失败共用一个 error 态,渲染成「暂时不可用 + 重新加载」——
        给了一个永远点不成功的重试按钮,用户不会知道是权限问题。现在拆成三条。 -->
   <cy-error wx:elif="{{state === 'no-permission'}}" fill size="lg" retry=""
@@ -23,7 +23,7 @@
          本场名册与本场管理本来就只在带 activityId 时渲染,从「更多→场次管理」(只有 topicId)
          进来时这两段整段不出现,全量清单照旧是第一屏 —— 把本场提到最前不影响另一条路径。 -->
     <!-- 本场管理(Figma E1) -->
-    <view class="section" wx:if="{{canManage && activityId}}">
+    <view class="section cy-fade-in" wx:if="{{canManage && activityId}}">
       <text class="section-title">本场管理</text>
       <view class="card">
         <!-- CU-C-146:这张卡原来无条件挂一行「本场名册 · N 人」,正下方又是一整个同名 section,
@@ -74,7 +74,7 @@
       </view>
     </view>
 
-    <view class="section roster-section" wx:if="{{canCheckin}}">
+    <view class="section roster-section cy-fade-in" wx:if="{{canCheckin}}">
       <!-- CU-C-62:名册总数 = 三个到场桶之和(registered + arrived + noShow)。原来只数
            registered,活动一过点后端就把人挪进 arrived/noShow,标题必然归零。
            候补是另一份名单,不算在内(下面分桶各自有数)。 -->
@@ -88,8 +88,8 @@
       <cy-skeleton wx:if="{{rosterState === 'loading'}}" type="list" count="3" />
       <cy-error load-failure wx:elif="{{rosterState === 'error'}}" title="名册加载失败" sub="{{rosterError}}" retry="重试" bind:retry="loadRoster" class="cy-fade-in" />
       <block wx:elif="{{rosterState === 'ready'}}">
-        <cy-empty wx:if="{{activeRoster.length === 0}}" size="sm" title="这一段暂时没有成员" />
-        <view class="member-card" wx:for="{{activeRoster}}" wx:key="memberId">
+        <cy-empty class="cy-fade-in" wx:if="{{activeRoster.length === 0}}" size="sm" title="这一段暂时没有成员" />
+        <view class="member-card cy-fade-in" wx:for="{{activeRoster}}" wx:key="memberId">
           <view class="member-mark">{{item.displayName ? item.displayName[0] : item.nickname[0]}}</view>
           <view class="member-main">
             <text class="member-name">{{item.displayName || item.nickname}}</text>
@@ -112,7 +112,7 @@
     <!-- 日期清单(Figma E1):现有「已创建系列」列表,按系列而非逐日期展示 —— 后端
          /series/list 只回 futureDates 这一份日期字符串数组,没有逐日期报名数/锁定原因/
          取消状态字段,做不出稿上「12 人已报名 · 不可编辑」那种逐行状态,PR 里说明。 -->
-    <view class="section" wx:if="{{canManage}}">
+    <view class="section cy-fade-in" wx:if="{{canManage}}">
       <!-- p3 F4:还没有可开场主题、也没有系列 ⇒ 只给空态与「发布主题」,不画用不了的排期表单 -->
       <cy-empty wx:if="{{topicsLoaded && topics.length === 0 && seriesState === 'empty'}}" title="暂无可开场的主题" cta="发布主题" bind:cta="goPublishTopic" />
       <block wx:else>
@@ -123,7 +123,7 @@
         <cy-empty wx:elif="{{seriesState === 'empty'}}" title="还没有系列场次" class="cy-fade-in" />
         <block wx:else>
           <block wx:for="{{seriesRows}}" wx:key="id">
-            <view class="row {{editingSeriesId === item.id ? 'row--active' : ''}}"
+            <view class="row {{editingSeriesId === item.id ? 'row--active' : ''}} cy-fade-in"
               data-series-id="{{item.id}}" bindtap="beginEditSeries" aria-role="button"
               hover-class="{{submitting || seriesDetailLoading ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
               <view class="row-text">
@@ -134,7 +134,7 @@
               </view>
               <text class="row-value">{{editingSeriesId === item.id ? '编辑中' : '编辑未来场次'}}</text>
             </view>
-            <view class="row row--sub" data-series-id="{{item.id}}" catchtap="toggleSeriesDates"
+            <view class="row row--sub cy-fade-in" data-series-id="{{item.id}}" catchtap="toggleSeriesDates"
               aria-role="button" aria-label="{{expandedSeriesId === item.id ? '收起日期清单' : '展开日期清单'}}"
               hover-class="cy-pressed" hover-stay-time="80">
               <view class="row-text"><text class="row-meta">日期清单（含已过去与已取消的场次）</text></view>
@@ -142,12 +142,12 @@
             </view>
             <!-- Figma E1「日期清单」。series/detail 只回未来 ACTIVE 场次的日期,画不出
                  「已锁定 / 本场已取消」——「本场已取消」本身就是要看见的状态。 -->
-            <view class="occurrence-list" wx:if="{{expandedSeriesId === item.id}}">
+            <view class="occurrence-list cy-fade-in" wx:if="{{expandedSeriesId === item.id}}">
               <cy-skeleton wx:if="{{occurrenceState === 'loading'}}" type="list" count="2" />
               <cy-error wx:elif="{{occurrenceState === 'error'}}" load-failure="{{true}}" class="cy-fade-in" />
               <text wx:elif="{{occurrenceState === 'empty'}}" class="occurrence-note">暂无场次</text>
               <block wx:else>
-                <view class="occurrence-row" wx:for="{{occurrenceRows}}" wx:for-item="occ" wx:key="occurrenceId">
+                <view class="occurrence-row cy-fade-in" wx:for="{{occurrenceRows}}" wx:for-item="occ" wx:key="occurrenceId">
                   <view class="row-text">
                     <text class="row-title">{{occ.dateText}}</text>
                     <text class="row-meta">{{occ.meta}}</text>
@@ -156,7 +156,7 @@
                 </view>
               </block>
             </view>
-            <view class="divider"></view>
+            <view class="divider cy-fade-in"></view>
           </block>
         </block>
         <view class="row" bindtap="resetSeriesForm" aria-role="button"
@@ -172,7 +172,7 @@
 
     <!-- 重复方式(Figma E1):Figma 只给了「查看态」截图,没有编辑态 —— 这里保留原有的
          创建/编辑表单控件(下拉、日期选择器),因为它们同时也是这个页面创建/编辑系列的唯一入口。 -->
-    <view class="section" wx:if="{{canManage && !(topicsLoaded && topics.length === 0 && seriesState === 'empty')}}">
+    <view class="section cy-fade-in" wx:if="{{canManage && !(topicsLoaded && topics.length === 0 && seriesState === 'empty')}}">
       <text class="section-title">{{editingSeriesId ? '编辑未来场次' : '重复方式'}}</text>
       
 
@@ -243,7 +243,7 @@
     </view>
 
     <!-- 容量与候补(Figma E1) -->
-    <view class="section" wx:if="{{canManage && !editingSeriesId && topics.length > 0}}">
+    <view class="section cy-fade-in" wx:if="{{canManage && !editingSeriesId && topics.length > 0}}">
       <text class="section-title">容量与候补</text>
 
       <!-- 第十二轮 k3(p3 N11):多票种主题沿用各票容量,不给这一栏,也不再写一行解释 -->
@@ -265,7 +265,7 @@
         {{submitting ? '正在创建…' : '创建系列场次'}}
       </button>
     </view>
-    <view class="section" wx:if="{{canManage && editingSeriesId}}">
+    <view class="section cy-fade-in" wx:if="{{canManage && editingSeriesId}}">
       <button class="primary-btn" loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitSeries">
         {{submitting ? '正在更新…' : '保存未来场次'}}
       </button>

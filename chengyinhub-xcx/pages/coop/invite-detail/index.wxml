@@ -33,13 +33,13 @@
             auto-back custom-back bind:back="goBack" retry="重试" bind:retry="retry" class="cy-fade-in" />
 
   <block wx:else>
-    <view class="inline-state" wx:if="{{actionReceipt}}" aria-role="status" aria-live="polite">{{actionReceipt}}</view>
+    <view class="inline-state cy-fade-in" wx:if="{{actionReceipt}}" aria-role="status" aria-live="polite">{{actionReceipt}}</view>
     <!-- 行内错误走统一组件承接(U6:裸错误文案必须带恢复出口;这里是说明态,没有可重试的动作) -->
-    <cy-inline-error wx:if="{{actionError}}" kind="data" title="这个操作没完成" sub="{{actionError}}" />
+    <cy-inline-error class="cy-fade-in" wx:if="{{actionError}}" kind="data" title="这个操作没完成" sub="{{actionError}}" />
 
     <!-- 走查 v2(业主 2026-10-30「协作详情还是很乱」):上面一张主题卡把「谁、哪个主题、邀你接什么、什么状态」说完,
          下面条款 / 留言 / 操作各一张卡。联系方式并进条款卡,不再单独一行挂在标题下。 -->
-    <view class="iv">
+    <view class="iv cy-fade-in">
       <!-- 终态把封面压暗一档:与可操作的状态分开,但条款仍完整显示。
            CU-M-110 / CU-C-121:没有封面数据时容器整块不渲染,而不是只藏掉里面的 <image>。 -->
       <view class="cover {{tone === 'closed' ? 'cover--dim' : ''}}" wx:if="{{invite.cover}}">
@@ -67,7 +67,7 @@
       </view>
     </view>
 
-    <view class="card">
+    <view class="card cy-fade-in">
       <text class="card-title">合作条款</text>
       <view class="kv" wx:if="{{invite.viewerPartyName}}"><text class="k">{{box === 'received' ? '接收俱乐部' : '发起俱乐部'}}</text><text class="v">{{invite.viewerPartyName}}</text></view>
       <!-- 联系方式给不给由后端定(§3.8 只在已接受时下发)。没下发就照实说明,不留空、也不假装有 -->
@@ -95,7 +95,7 @@
       <view wx:if="{{partnerCredit}}" class="kv"><text class="k">{{partnerCredit.label}}</text><text class="v">{{partnerCredit.text}}</text></view>
     </view>
 
-    <view class="card">
+    <view class="card cy-fade-in">
       <text class="card-title">留言</text>
       <!-- CU-M-47:留言恒由发起方写(建约时的 message,后端只有建约写入,处理动作不覆盖它),
            所以发言身份只看方向:box=sent 即我是发起方 → 我方;写死「对方」会把本人写的留言标错。 -->
@@ -124,7 +124,7 @@
 
     <!-- 已接受:卡片上搬来的履约动作按「列表行」收纳在此(联系合作方 / 申报供给 / 评价 / 取消合作),
          底部动作条只留 ≤2 并排按钮 —— 不把动作堆成弹窗按钮。 -->
-    <view class="card" wx:if="{{invite.status === 1 && !invite.legacyReadonly}}">
+    <view class="card cy-fade-in" wx:if="{{invite.status === 1 && !invite.legacyReadonly}}">
       <text class="card-title">合作操作</text>
       <view class="op" wx:if="{{projectActionVisible}}" bindtap="openAcceptedProject" aria-role="button" aria-label="打开这条主题的项目页" hover-class="cy-pressed" hover-stay-time="80">
         <!-- CU-M-92:这一跳走 ?topicId=,由后端判身份进承接视图(关系入口 + 自己的点位/章节)。
@@ -167,7 +167,7 @@
 
     <!-- 底部动作条。收件箱待确认给两个(拒绝次要 / 接受实心);发件箱待确认只能撤回,
          按稿单动作不给实心;已接受欠保证金时给唯一实心(其余动作在上面那组列表行里);终态给一条不可点的说明。 -->
-    <view class="acts">
+    <view class="acts cy-fade-in">
       <block wx:if="{{invite.legacyReadonly}}">
         <view class="act act--dead">历史商家节点邀约仅供查看</view>
       </block>

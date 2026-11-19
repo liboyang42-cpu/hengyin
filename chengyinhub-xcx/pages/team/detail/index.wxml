@@ -19,11 +19,11 @@
                   title="{{error}}" sub="{{errorSub}}" primary="{{errorAction}}"
                   fill size="lg" bind:primary="onErrorAction" auto-back="{{errorKind !== 'missing-param'}}" class="cy-fade-in" />
   <block wx:else>
-    <view class="team-refresh-state">
+    <view class="team-refresh-state cy-fade-in">
       <text wx:if="{{refreshing && team}}" class="team-sync" aria-role="status">正在确认队伍状态…</text>
     </view>
   <block wx:if="{{team}}">
-    <view class="team-head">
+    <view class="team-head cy-fade-in">
       <view class="team-status {{team.status < 2 ? 'live' : ''}}">{{statusText}}</view>
       <view class="team-title">{{teamTitle || team.title || '一起出发的玩家队伍'}}</view>
       <view wx:if="{{!(leader && team.status == 0)}}" class="team-sub">{{team.joinMode == 2 ? '公开招募' : '仅邀请'}}</view>
@@ -35,7 +35,7 @@
 
     <!-- U06-01 席位(r2-join):已入队成员头像 + 空位虚线圈;空位数只来自服务端(seats.available 或 max-joined),
          读不到不画。下方小标签:持有效票 / 票已失效(红) / 待审申请 / 邀请到期 -->
-    <view class="team-card tm-seats" wx:if="{{members.length || openSeats.length || seatChips.length || inviteText}}">
+    <view class="team-card tm-seats cy-fade-in" wx:if="{{members.length || openSeats.length || seatChips.length || inviteText}}">
       <view class="tm-seat-strip {{seatIn === 1 ? 'is-pre' : ''}} {{seatBreath === 0 ? '' : 'is-lit'}}" wx:if="{{members.length || openSeats.length}}">
         <view class="tm-seat-cell" wx:for="{{members}}" wx:key="memberId" style="--tm-d: {{index * 70}}ms">
           <image class="tm-seat-av" src="{{item.memberAvatar || '/images/d_profile.png'}}" mode="aspectFill" />
@@ -51,7 +51,7 @@
       </view>
     </view>
 
-    <view class="team-actions" wx:if="{{team.status == 0}}">
+    <view class="team-actions cy-fade-in" wx:if="{{team.status == 0}}">
       <!-- l-after:邀请队友走统一的 Spotify 式邀请页(cy-share-card kind=invite);「发给微信好友」仍走本页 onShareAppMessage(按邀请码落加入页) -->
       <view class="team-action primary" bindtap="openInvite" aria-role="button" aria-label="邀请队友" hover-class="cy-pressed" hover-stay-time="80">邀请队友</view>
       <view wx:if="{{joined}}" class="team-action secondary" bindtap="openInviteQr"
@@ -62,7 +62,7 @@
 
     <!-- C-02b:队长在招募中可把「公开招募」改回「仅邀请」(或反向)。后端 join-mode 只认队长,
          UI 只在 status=0 给入口 —— 满员/进行中/已结束的队伍已不在「附近的队伍」里,切了也无处生效。 -->
-    <view class="team-card" wx:if="{{leader && team.status == 0}}">
+    <view class="team-card cy-fade-in" wx:if="{{leader && team.status == 0}}">
       <view class="team-member">
         <view class="team-member-main">
           <view class="team-member-name">公开招募</view>
@@ -74,8 +74,8 @@
     </view>
 
     <block wx:if="{{applicantsState}}">
-      <view class="team-section-title">入队申请{{applicants.length ? ' · ' + applicants.length : ''}}</view>
-      <cy-skeleton wx:if="{{applicantsState === 'loading'}}" type="list" count="1" loading-label="正在读取入队申请" />
+      <view class="team-section-title cy-fade-in">入队申请{{applicants.length ? ' · ' + applicants.length : ''}}</view>
+      <cy-skeleton class="cy-fade-in" wx:if="{{applicantsState === 'loading'}}" type="list" count="1" loading-label="正在读取入队申请" />
       <cy-inline-error wx:elif="{{applicantsState === 'error'}}" title="入队申请没读到" action="重试" bind:action="retryApplicants" class="cy-fade-in" />
       <view wx:else class="team-card cy-fade-in">
         <view wx:if="{{!applicants.length}}" class="team-member"><view class="team-member-main"><view class="team-member-role">暂无申请</view></view></view>
@@ -95,8 +95,8 @@
       </view>
     </block>
 
-    <view class="team-section-title">队伍成员</view>
-    <view class="team-card">
+    <view class="team-section-title cy-fade-in">队伍成员</view>
+    <view class="team-card cy-fade-in">
       <cy-empty wx:if="{{!members.length}}" kind="empty" title="还没有队员" />
       <view class="team-member" wx:for="{{members}}" wx:key="memberId">
         <image class="team-avatar" src="{{item.memberAvatar || '/images/d_profile.png'}}" mode="aspectFill" />
@@ -112,12 +112,12 @@
 
     <!-- 定向开关关闭 / 普通队伍 / 非成员(无法确认是否定向队)不适用看板:整段不渲染,不给普通队伍挂定向提示。
          原型 B T-32:成员 × 节点矩阵(横滑),最后一行写全队是否完成;排名名次按服务端顺排。 -->
-    <view wx:if="{{boardState === 'loading' || boardState === 'error' || boardState === 'login' || boardState === 'ready'}}" class="team-section-title">队伍进度</view>
-    <cy-skeleton wx:if="{{boardState === 'loading'}}" type="list" count="2" loading-label="正在加载队伍进度" />
-    <cy-inline-error wx:if="{{boardState === 'error' || boardState === 'login'}}"
+    <view wx:if="{{boardState === 'loading' || boardState === 'error' || boardState === 'login' || boardState === 'ready'}}" class="team-section-title cy-fade-in">队伍进度</view>
+    <cy-skeleton class="cy-fade-in" wx:if="{{boardState === 'loading'}}" type="list" count="2" loading-label="正在加载队伍进度" />
+    <cy-inline-error class="cy-fade-in" wx:if="{{boardState === 'error' || boardState === 'login'}}"
       title="{{boardState === 'login' ? boardMessage : '队伍进度加载失败'}}" action="{{boardState === 'login' ? '登录' : '重试'}}" bind:action="retryBoard" />
     <block wx:if="{{boardState === 'ready' && board}}">
-      <view class="team-card">
+      <view class="team-card cy-fade-in">
         <view class="team-member tm-sum"><view class="team-member-main"><view class="team-member-name">全队已完成 {{board.summary.teamDoneCount}} / {{board.summary.totalTasks || 0}} 个节点</view></view></view>
         <cy-empty wx:if="{{!board.tasks.length}}" title="暂无节点" />
         <scroll-view wx:else scroll-x class="tm-matrix" enhanced show-scrollbar="{{false}}">
@@ -131,10 +131,10 @@
           </view>
         </scroll-view>
       </view>
-      <view class="team-section-title">本场队伍排名</view>
-      <cy-skeleton wx:if="{{rankingState === 'loading'}}" type="list" count="2" loading-label="正在加载队伍排名" />
-      <cy-inline-error wx:if="{{rankingState === 'error'}}" title="队伍排名加载失败" action="重试" bind:action="retryBoard" />
-      <view wx:if="{{rankingState === 'ready'}}" class="team-card">
+      <view class="team-section-title cy-fade-in">本场队伍排名</view>
+      <cy-skeleton class="cy-fade-in" wx:if="{{rankingState === 'loading'}}" type="list" count="2" loading-label="正在加载队伍排名" />
+      <cy-inline-error class="cy-fade-in" wx:if="{{rankingState === 'error'}}" title="队伍排名加载失败" action="重试" bind:action="retryBoard" />
+      <view wx:if="{{rankingState === 'ready'}}" class="team-card cy-fade-in">
         <cy-empty wx:if="{{!boardRanks.length}}" title="暂无队伍排名" />
         <view class="team-member" wx:for="{{boardRanks}}" wx:key="teamId">
           <text class="tm-rank">{{item.rank}}</text>
@@ -145,13 +145,13 @@
     </block>
 
     <text wx:if="{{commandReject.action === 'quit' || commandReject.action === 'disband'}}" class="team-reject" aria-role="alert">{{commandReject.message}}</text>
-    <view class="team-actions" wx:if="{{joined && team.status < 2}}">
+    <view class="team-actions cy-fade-in" wx:if="{{joined && team.status < 2}}">
       <view class="team-action secondary" bindtap="quit" aria-role="button"
             aria-label="{{leader ? '退出并移交队长' : '退出队伍'}}" hover-class="cy-pressed" hover-stay-time="80">{{leader ? '退出并移交队长' : '退出队伍'}}</view>
       <view wx:if="{{leader}}" class="team-action danger" bindtap="disband"
             aria-role="button" aria-label="解散队伍" hover-class="cy-pressed" hover-stay-time="80">解散队伍</view>
     </view>
-    <view class="team-note team-report" wx:if="{{!leader}}" bindtap="openReport" aria-role="button" aria-label="举报这支队伍"
+    <view class="team-note team-report cy-fade-in" wx:if="{{!leader}}" bindtap="openReport" aria-role="button" aria-label="举报这支队伍"
           hover-class="cy-pressed" hover-stay-time="80">举报队伍</view>
   </block>
   </block>

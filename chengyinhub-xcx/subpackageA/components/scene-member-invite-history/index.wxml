@@ -40,7 +40,7 @@
     title="还没有人接受你的邀请" class="cy-fade-in" />
 
   <block wx:else>
-    <view class="ir-group" wx:for="{{groups}}" wx:for-item="group" wx:key="label">
+    <view class="ir-group cy-fade-in" wx:for="{{groups}}" wx:for-item="group" wx:key="label">
       <view class="ir-group-head">
         <text class="ir-group-title">{{group.label}}</text>
         <text class="ir-group-total">{{group.rewardText}}</text>
@@ -58,9 +58,9 @@
       </view>
     </view>
 
-    <view class="ir-more" wx:if="{{hasMore && !loading && !loadMoreError}}" bindtap="loadMore" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">加载更多</view>
+    <view class="ir-more cy-fade-in" wx:if="{{hasMore && !loading && !loadMoreError}}" bindtap="loadMore" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">加载更多</view>
     <!-- 下一页失败:留在「加载更多」原位,同一行样式,点按重试(不另起一张大错误卡) -->
-    <view class="ir-more" wx:if="{{loadMoreError && groups.length && !loading}}" bindtap="loadMore" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">没加载出来 · 重试</view>
-    <view class="ir-more ir-more--loading" wx:if="{{loading && groups.length}}">正在加载…</view>
+    <view class="ir-more cy-fade-in" wx:if="{{loadMoreError && groups.length && !loading}}" bindtap="loadMore" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">没加载出来 · 重试</view>
+    <view class="ir-more ir-more--loading cy-fade-in" wx:if="{{loading && groups.length}}">正在加载…</view>
   </block>
 </view>

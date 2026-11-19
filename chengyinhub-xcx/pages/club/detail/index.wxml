@@ -288,7 +288,7 @@
           <cy-error load-failure class="cy-fade-in" wx:elif="{{membersState === 'business-error'}}" title="成员列表加载失败" retry="重新加载" bind:retry="loadMembers" />
           <cy-error load-failure wx:elif="{{membersState === 'network-error'}}" title="网络连接失败" retry="重新加载" bind:retry="loadMembers" class="cy-fade-in" />
           <block wx:elif="{{membersState === 'ready'}}">
-            <view class="member" wx:for="{{members}}" wx:key="id">
+            <view class="member cy-fade-in" wx:for="{{members}}" wx:key="id">
               <cy-avatar class="member-avatar" size="72" src="{{item.avatar || '/images/d_profile.png'}}" name="{{item.nickname || '城瘾玩家'}}" clickable="{{true}}" catchtap="goMemberProfile" data-member-id="{{item.memberId}}" aria-role="button" aria-label="打开成员主页" hover-class="cy-pressed" hover-stay-time="80" />
               <view class="member-info" catchtap="goMemberProfile" data-member-id="{{item.memberId}}" hover-class="cy-pressed" hover-stay-time="80">
                 <view class="member-name">{{item.nickname || '城瘾玩家'}}<text wx:if="{{item.isOwner}}" class="member-owner">主理人</text><text wx:elif="{{item.role == 1}}" class="member-admin">管理员</text></view>
@@ -296,7 +296,7 @@
               </view>
               <view class="member-report" wx:if="{{canSeeMembers && item.memberId != myMemberId}}" catchtap="reportClubMember" data-member-id="{{item.memberId}}" data-nickname="{{item.nickname || ''}}" aria-role="button" aria-label="向平台举报 {{item.nickname || '该成员'}}" hover-class="cy-pressed" hover-stay-time="80">举报</view>
             </view>
-            <cy-empty wx:if="{{members.length === 0}}" size="sm" title="暂无成员" />
+            <cy-empty class="cy-fade-in" wx:if="{{members.length === 0}}" size="sm" title="暂无成员" />
           </block>
         </block>
         <cy-empty wx:else size="sm" title="加入俱乐部后可查看成员" />
@@ -427,7 +427,7 @@
         <cy-skeleton wx:if="{{clubStatsState === 'loading'}}" type="list" count="2" />
         <cy-error load-failure wx:elif="{{clubStatsState === 'error'}}" title="数据看板加载失败" sub="{{clubStatsError}}" retry="重新加载" bind:retry="loadClubStats" class="cy-fade-in" />
         <block wx:elif="{{clubStatsState === 'ready'}}">
-          <view class="club-stats-grid">
+          <view class="club-stats-grid cy-fade-in">
             <view class="club-stat"><text class="club-stat-value">{{clubStats.topicCount}}</text><text class="club-stat-label">项目</text></view>
             <view class="club-stat"><text class="club-stat-value">{{clubStats.participants}}</text><text class="club-stat-label">游玩人次</text></view>
             <view class="club-stat"><text class="club-stat-value">{{clubStats.completed}}</text><text class="club-stat-label">完成人次</text></view>
@@ -436,13 +436,13 @@
           <!-- CU-C-51 原有一行口径小字「仅统计本俱乐部自办项目。」;
                2026-11-02 第二轮按业主规则 3(无数据的辅助小字不出)撤掉,范围由标签「游玩人次」自己说清。
                本注释占住原三行,免得下方控件行号整体漂移。 -->
-          <view class="club-stats-topics" wx:if="{{clubStats.topics.length}}">
+          <view class="club-stats-topics cy-fade-in" wx:if="{{clubStats.topics.length}}">
             <view class="club-stats-topic" wx:for="{{clubStats.topics}}" wx:key="topicId">
               <text class="club-stats-topic-name">{{item.name}}</text>
               <text class="club-stats-topic-meta">{{item.completed}} / {{item.participants}} · {{item.completionRateText}}</text>
             </view>
           </view>
-          <cy-empty wx:else size="sm" title="还没有可统计的项目数据" />
+          <cy-empty class="cy-fade-in" wx:else size="sm" title="还没有可统计的项目数据" />
         </block>
       </view>
 
@@ -568,9 +568,9 @@
           <cy-error load-failure wx:elif="{{coopPoolState === 'error'}}" title="合作池加载失败" sub="{{coopPoolError}}"
                     retry="重试" bind:retry="retryCoopPool" class="cy-fade-in" />
           <block wx:elif="{{coopPoolState === 'ready'}}">
-            <cy-empty wx:if="{{!coopPool.length}}" size="sm" title="暂无开放承接的主题"
+            <cy-empty class="cy-fade-in" wx:if="{{!coopPool.length}}" size="sm" title="暂无开放承接的主题"
                       />
-            <view class="pool-card {{item.state === 'taken' ? 'is-dim' : ''}}" wx:for="{{coopPool}}" wx:key="topicId">
+            <view class="pool-card {{item.state === 'taken' ? 'is-dim' : ''}} cy-fade-in" wx:for="{{coopPool}}" wx:key="topicId">
               <view class="pool-card-top">
                 <text class="pool-card-name">{{item.name}}</text>
                 <text class="pool-card-state">{{item.stateText}}</text>
@@ -670,7 +670,7 @@
       <cy-skeleton wx:if="{{postRefState === 'loading'}}" type="list" count="3" />
       <cy-error load-failure wx:elif="{{postRefState === 'error'}}" title="游玩记录加载失败" sub="{{postRefErrorText}}" retry="重新加载" bind:retry="loadPostRefOptions" class="cy-fade-in" />
       <block wx:elif="{{postRefState === 'ready'}}">
-        <view class="post-ref-opt" wx:for="{{postRefOptions}}" wx:key="key"
+        <view class="post-ref-opt cy-fade-in" wx:for="{{postRefOptions}}" wx:key="key"
               data-index="{{index}}" catchtap="onPickPostRef"
               aria-role="button" aria-label="带上 {{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
           <view class="post-ref-opt-main">
@@ -679,7 +679,7 @@
           </view>
           <cy-icon class="post-ref-opt-arrow" name="slide-arrow" size="28" />
         </view>
-        <cy-empty wx:if="{{postRefOptions.length === 0}}" size="sm" title="还没有可以带的记录" />
+        <cy-empty class="cy-fade-in" wx:if="{{postRefOptions.length === 0}}" size="sm" title="还没有可以带的记录" />
       </block>
     </view>
   </cy-sheet>
@@ -765,7 +765,7 @@
         <cy-error load-failure class="cy-fade-in" wx:elif="{{membersState === 'business-error'}}" title="成员列表加载失败" retry="重新加载" bind:retry="loadMembers" />
         <cy-error load-failure wx:elif="{{membersState === 'network-error'}}" title="网络连接失败" retry="重新加载" bind:retry="loadMembers" class="cy-fade-in" />
         <block wx:elif="{{membersState === 'ready'}}">
-          <view class="member member--managed" wx:for="{{members}}" wx:key="id">
+          <view class="member member--managed cy-fade-in" wx:for="{{members}}" wx:key="id">
             <cy-avatar class="member-avatar" size="72" src="{{item.avatar || '/images/d_profile.png'}}" name="{{item.nickname || '城瘾玩家'}}" clickable="{{true}}" catchtap="goMemberProfile" data-member-id="{{item.memberId}}" aria-role="button" aria-label="打开成员主页" hover-class="cy-pressed" hover-stay-time="80" />
             <view class="member-info" catchtap="goMemberProfile" data-member-id="{{item.memberId}}" hover-class="cy-pressed" hover-stay-time="80">
               <view class="member-name">{{item.nickname || '城瘾玩家'}}<text wx:if="{{item.isOwner}}" class="member-owner">主理人</text><text wx:elif="{{item.role == 1}}" class="member-admin">管理员</text></view>
@@ -777,7 +777,7 @@
               <view class="member-remove" wx:if="{{(club.isOwner || canManageMembers || (club.viewerIsAdmin && item.role != 1)) && item.memberId !== club.memberId}}" catchtap="removeMember" data-member-id="{{item.memberId}}" data-member-name="{{item.nickname || '这位成员'}}" aria-role="button" aria-label="移除 {{item.nickname || '该成员'}}" hover-class="cy-pressed" hover-stay-time="80">移除</view>
             </view>
           </view>
-          <cy-empty wx:if="{{members.length === 0}}" size="sm" title="暂无成员" />
+          <cy-empty class="cy-fade-in" wx:if="{{members.length === 0}}" size="sm" title="暂无成员" />
         </block>
       </view>
 

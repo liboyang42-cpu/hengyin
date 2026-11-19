@@ -586,23 +586,23 @@
     <cy-skeleton wx:if="{{ layers.clubHome.state === 'loading' }}" type="list" count="{{ 3 }}" />
     <cy-inline-error wx:elif="{{ layers.clubHome.state === 'error' }}" kind="data" title="俱乐部主页没读到" action="重试" data-act="reloadClubHome" bind:action="emit" class="cy-fade-in" />
     <block wx:else>
-      <image class="lv-cover" wx:if="{{ layers.clubHome.cover }}" src="{{ layers.clubHome.cover }}" mode="aspectFill" />
-      <view class="lv-id">
+      <image class="lv-cover cy-fade-in" wx:if="{{ layers.clubHome.cover }}" src="{{ layers.clubHome.cover }}" mode="aspectFill" />
+      <view class="lv-id cy-fade-in">
         <image class="dr-avatar dr-avatar--round lv-logo" wx:if="{{ layers.clubHome.logo }}" src="{{ layers.clubHome.logo }}" mode="aspectFill" />
         <view class="dr-avatar dr-avatar--round dr-avatar--fallback lv-logo" wx:else>{{ layers.clubHome.initial }}</view>
         <view class="lv-to-t"><text class="lv-home-n">{{ layers.clubHome.name }}</text><text class="lv-to-s" wx:if="{{ layers.clubHome.meta }}">{{ layers.clubHome.meta }}</text></view>
       </view>
-      <view class="lv-stats">
+      <view class="lv-stats cy-fade-in">
         <view class="lv-stat" wx:for="{{ layers.clubHome.stats }}" wx:key="label"><text class="lv-stat-n">{{ item.value }}</text><text class="lv-stat-l">{{ item.label }}</text></view>
       </view>
-      <view class="lv-tags" wx:if="{{ layers.clubHome.tags.length || layers.clubHome.areas.length }}">
+      <view class="lv-tags cy-fade-in" wx:if="{{ layers.clubHome.tags.length || layers.clubHome.areas.length }}">
         <text class="lv-tag" wx:for="{{ layers.clubHome.tags }}" wx:key="*this">{{ item }}</text>
         <text class="lv-tag lv-tag--area" wx:for="{{ layers.clubHome.areas }}" wx:key="*this">{{ item }}</text>
       </view>
       <text class="lv-bio" wx:if="{{ layers.clubHome.bio }}">{{ layers.clubHome.bio }}</text>
       <block wx:if="{{ layers.clubHome.acts.length }}">
-        <view class="dg-label">最近带过的活动</view>
-        <scroll-view class="lv-acts" scroll-x enhanced show-scrollbar="{{ false }}">
+        <view class="dg-label cy-fade-in">最近带过的活动</view>
+        <scroll-view class="lv-acts cy-fade-in" scroll-x enhanced show-scrollbar="{{ false }}">
           <view class="lv-act" wx:for="{{ layers.clubHome.acts }}" wx:key="id">
             <image class="lv-act-img" wx:if="{{ item.img }}" src="{{ item.img }}" mode="aspectFill" />
             <view class="lv-act-img lv-act-img--none" wx:else></view>
@@ -611,12 +611,12 @@
         </scroll-view>
       </block>
       <block wx:if="{{ layers.clubHome.post }}">
-        <view class="dg-label">最近动态</view>
-        <view class="dcard lv-post"><text class="lv-post-t">{{ layers.clubHome.post.text }}</text><text class="lv-post-m">{{ layers.clubHome.post.time }}</text></view>
+        <view class="dg-label cy-fade-in">最近动态</view>
+        <view class="dcard lv-post cy-fade-in"><text class="lv-post-t">{{ layers.clubHome.post.text }}</text><text class="lv-post-m">{{ layers.clubHome.post.time }}</text></view>
       </block>
       <block wx:if="{{ layers.clubHome.members.length }}">
-        <view class="dg-label">成员</view>
-        <view class="lv-members">
+        <view class="dg-label cy-fade-in">成员</view>
+        <view class="lv-members cy-fade-in">
           <block wx:for="{{ layers.clubHome.members }}" wx:key="id">
             <image class="dr-avatar dr-avatar--round" wx:if="{{ item.avatar }}" src="{{ item.avatar }}" mode="aspectFill" />
             <view class="dr-avatar dr-avatar--round dr-avatar--fallback" wx:else>{{ item.initial }}</view>

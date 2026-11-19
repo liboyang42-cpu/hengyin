@@ -12,7 +12,7 @@
     <cy-empty wx:elif="{{loadState === 'empty'}}" kind="empty" title="还没有节点承接" sub="去招商弹窗邀请商家承接吧" class="cy-fade-in" />
 
     <block wx:elif="{{loadState === 'ready'}}">
-      <view class="ctm__card">
+      <view class="ctm__card cy-fade-in">
         <block wx:for="{{stations}}" wx:key="name" wx:for-item="station">
           <view class="ctm__hairline" wx:if="{{index > 0}}"></view>
           <view class="ctm__row">
@@ -37,7 +37,7 @@
       </view>
 
       <text class="ctm__section">招商与条款</text>
-      <view class="ctm__card">
+      <view class="ctm__card cy-fade-in">
         <block wx:for="{{onboarding}}" wx:key="mode" wx:for-item="entry">
           <view class="ctm__hairline" wx:if="{{index > 0}}"></view>
           <view class="ctm__row" data-mode="{{entry.mode}}" bindtap="onOpenOnboarding" aria-role="button" aria-label="{{entry.label}}" hover-class="cy-pressed" hover-stay-time="80">

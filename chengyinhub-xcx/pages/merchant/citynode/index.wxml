@@ -42,7 +42,7 @@
     title="当前身份不能管理节点" cta="{{merchantAccess.active ? '返回' : '申请入驻'}}" bind:cta="onDenyCta" class="cy-fade-in" />
 
   <block wx:elif="{{accessState === 'ready' && !loading && !loadErr}}">
-    <view class="cn-node-wrap" wx:for="{{applications}}" wx:key="id">
+    <view class="cn-node-wrap cy-fade-in" wx:for="{{applications}}" wx:key="id">
       <view class="cn-node cn-node--application">
         <view class="cn-node-main">
           <view class="cn-node-top">
@@ -64,12 +64,12 @@
         data-poiid="{{item.id}}" bind:action="retryCancel" />
     </view>
 
-    <cy-empty size="lg" style="flex:1;min-height:0;" kind="empty"
+    <cy-empty class="cy-fade-in" size="lg" style="flex:1;min-height:0;" kind="empty"
       wx:if="{{nodes.length === 0 && applications.length === 0}}" fill
       title="还没有节点" sub="申请上漫游地图"
       cta="{{merchantAccess.canManageProjects && quotaState === 'ready' && used < max ? '投放节点' : ''}}" bind:cta="goCreate" />
 
-    <view class="cn-node-wrap" wx:for="{{nodes}}" wx:key="poiId">
+    <view class="cn-node-wrap cy-fade-in" wx:for="{{nodes}}" wx:key="poiId">
       <view class="cn-node">
         <view class="cn-node-main">
           <view class="cn-node-top">

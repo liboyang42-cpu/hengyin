@@ -10,15 +10,15 @@
 <cy-skeleton wx:if="{{state === 'loading' || state === 'redirecting'}}" type="card" count="{{skeletonItems.length}}" />
 
   <block wx:else>
-    <cy-error load-failure wx:if="{{state === 'network-error'}}" title="资料加载失败" sub="{{message}}"
+    <cy-error class="cy-fade-in" load-failure wx:if="{{state === 'network-error'}}" title="资料加载失败" sub="{{message}}"
               bind:retry="retryLoad" fill="{{true}}" size="lg" auto-back />
-    <cy-empty wx:elif="{{state === 'invalid'}}" cta="返回" bind:cta="onBack" fill="{{true}}" size="lg" kind="missing-param" />
-    <cy-empty wx:else title="商家不存在或未开放"
+    <cy-empty class="cy-fade-in" wx:elif="{{state === 'invalid'}}" cta="返回" bind:cta="onBack" fill="{{true}}" size="lg" kind="missing-param" />
+    <cy-empty class="cy-fade-in" wx:else title="商家不存在或未开放"
               sub=""
               cta="回首页" bind:cta="goHome" fill="{{true}}" size="lg" kind="empty" />
 
     <!-- 冷启动进来的没有上一页,只给「返回」等于把人困死;所以回首页恒在,返回按栈深出。 -->
-    <view class="pr-exits">
+    <view class="pr-exits cy-fade-in">
       <text wx:if="{{state === 'network-error'}}" class="pr-exit" bindtap="goHome"
             aria-role="button" aria-label="回首页" hover-class="cy-pressed">回首页</text>
       <text wx:if="{{canBack}}" class="pr-exit" bindtap="goBack"

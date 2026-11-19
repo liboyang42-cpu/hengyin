@@ -17,13 +17,13 @@
       <cy-error wx:elif="{{state === 'error'}}" title="加载失败" retry="重试" bind:retry="load" class="cy-fade-in" />
       <block wx:elif="{{tab === 'shop'}}">
         <!-- l-pass 通行证(平台会员):服务端 enabled 才出;点进通行证页购买 -->
-        <view class="mk-member" wx:if="{{member}}" bindtap="goMembership" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="通行证 {{member.side}}">
+        <view class="mk-member cy-fade-in" wx:if="{{member}}" bindtap="goMembership" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="通行证 {{member.side}}">
           <text class="mk-member__t">通行证</text>
           <text class="mk-member__s" wx:if="{{member.side}}">{{member.side}}</text>
           <cy-icon name="chevron-right" size="28" />
         </view>
-        <cy-empty fill class="cy-fill-state" size="lg" wx:if="{{!products.length && !member}}" kind="empty" title="暂无在售通行证" />
-        <view class="mk-card" wx:for="{{products}}" wx:key="id" bindtap="openProduct" data-id="{{item.id}}"
+        <cy-empty fill class="cy-fill-state cy-fade-in" size="lg" wx:if="{{!products.length && !member}}" kind="empty" title="暂无在售通行证" />
+        <view class="mk-card cy-fade-in" wx:for="{{products}}" wx:key="id" bindtap="openProduct" data-id="{{item.id}}"
               hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="{{item.name}}">
           <view class="mk-card__head">
             <text class="mk-card__kind" wx:if="{{item.kind}}">{{item.kind}}</text>

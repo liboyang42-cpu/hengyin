@@ -10,8 +10,8 @@
       <cy-error wx:elif="{{state === 'error'}}" title="积分明细加载失败" retry="重试" bind:retry="load" class="cy-fade-in" />
       <cy-empty fill class="cy-fill-state cy-fade-in" size="lg" wx:elif="{{state === 'empty'}}" kind="empty" title="还没有积分记录" />
       <block wx:else>
-        <cy-tabs variant="chip" tabs="{{filters}}" active="{{filter}}" bind:change="onFilter" />
-        <cy-empty fill class="cy-fill-state" size="lg" wx:if="{{filterEmpty}}" kind="empty" title="{{filter === 'income' ? '还没有获得积分的记录' : '还没有使用积分的记录'}}" />
+        <cy-tabs class="cy-fade-in" variant="chip" tabs="{{filters}}" active="{{filter}}" bind:change="onFilter" />
+        <cy-empty fill class="cy-fill-state cy-fade-in" size="lg" wx:if="{{filterEmpty}}" kind="empty" title="{{filter === 'income' ? '还没有获得积分的记录' : '还没有使用积分的记录'}}" />
         <view class="ph-group" wx:for="{{groups}}" wx:for-item="group" wx:key="key" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
           <text class="ph-group__title">{{group.label}}</text>
           <view class="ph-group__card">
@@ -28,9 +28,9 @@
             </view>
           </view>
         </view>
-        <view class="ph__more" wx:if="{{hasMore}}" bindtap="loadMore" aria-role="button" aria-label="加载更多积分记录"
+        <view class="ph__more cy-fade-in" wx:if="{{hasMore}}" bindtap="loadMore" aria-role="button" aria-label="加载更多积分记录"
               hover-class="cy-pressed" hover-stay-time="80">加载更多</view>
-        <view class="ph__more ph__more--end" wx:elif="{{paged}}">已经到底了</view>
+        <view class="ph__more ph__more--end cy-fade-in" wx:elif="{{paged}}">已经到底了</view>
       </block>
     </view>
   </view>

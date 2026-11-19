@@ -19,10 +19,10 @@
                   title="{{error}}" sub="{{errorSub}}" primary="{{errorAction}}"
                   fill size="lg" bind:primary="onErrorAction" auto-back="{{errorKind !== 'missing-param'}}" class="cy-fade-in" />
   <block wx:else>
-    <view class="team-refresh-state">
+    <view class="team-refresh-state cy-fade-in">
       <text wx:if="{{refreshing && team}}" class="team-sync" aria-role="status">正在确认邀请状态…</text>
     </view>
-  <view wx:if="{{codeEntry}}" class="tj-code">
+  <view wx:if="{{codeEntry}}" class="tj-code cy-fade-in">
     <cy-field label="加入码" value="{{codeInput}}" placeholder="粘贴队长给的加入码" maxlength="{{40}}" clearable
               error="{{!!codeError}}" error-text="{{codeError}}" bind:input="onCodeInput" />
     <view class="team-actions">
@@ -31,11 +31,11 @@
     </view>
   </view>
   <block wx:if="{{team}}">
-    <view class="team-head tj-head">
+    <view class="team-head tj-head cy-fade-in">
       <view class="team-title">{{team.title || '一起出发的玩家队伍'}}</view>
     </view>
     <!-- U06-01 加入页(r2-join):席位一排(已入队实心、空位虚线,空位数只来自服务端),右侧人数;下方加入方式与邀请到期 -->
-    <view class="team-card tj-card">
+    <view class="team-card tj-card cy-fade-in">
       <view class="tj-seats {{seatIn === 1 ? 'is-pre' : ''}}" wx:if="{{joinedSeats.length || openSeats.length}}">
         <view class="tj-seat is-on" wx:for="{{joinedSeats}}" wx:key="*this" style="--tj-d: {{index * 70}}ms"><cy-icon name="tab-me" size="36" /></view>
         <view class="tj-seat" wx:for="{{openSeats}}" wx:key="*this" style="--tj-d: {{(joinedSeats.length + index) * 70}}ms"><cy-icon name="plus" size="32" /></view>
@@ -46,7 +46,7 @@
       </view>
       <view class="tj-invite" wx:if="{{inviteText}}"><cy-icon name="clock" size="28" /><text class="tj-invite__v">{{inviteText}}</text></view>
     </view>
-    <view class="tj-bar">
+    <view class="tj-bar cy-fade-in">
     <cy-inline-error wx:if="{{joinError}}" kind="error" title="{{joinError}}" />
     <text wx:elif="{{joinHint && !joined}}" class="team-reject tj-hint" aria-role="status">{{joinHint}}</text>
     <view class="team-actions tj-actions">

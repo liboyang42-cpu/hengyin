@@ -60,19 +60,19 @@ module.exports = { valid: valid };
       <cy-inline-error load-failure class="rel-inline-error cy-fade-in" wx:elif="{{pageState === 'error'}}" kind="data"
         title="合作数据加载失败" sub="{{error}}" action="重新加载" bind:action="retryRelation" />
       <block wx:else>
-        <view wx:if="{{refreshing}}" class="refresh-note" aria-role="status" aria-live="polite">
+        <view wx:if="{{refreshing}}" class="refresh-note cy-fade-in" aria-role="status" aria-live="polite">
           <text>正在更新合作对象</text>
         </view>
-        <cy-inline-error load-failure class="rel-inline-error" wx:if="{{clubError}}" kind="data"
+        <cy-inline-error load-failure class="rel-inline-error cy-fade-in" wx:if="{{clubError}}" kind="data"
           title="部分俱乐部资料暂不可用" sub="{{clubError}}" action="重新加载" bind:action="loadRelationHome" />
         <!-- 俱乐部换新版俱乐部卡；整卡进主页看资料，按钮「发起合作」直达 type=1 邀约表单 -->
-        <view class="rel-list" wx:if="{{relation.valid(clubs).length}}">
+        <view class="rel-list cy-fade-in" wx:if="{{relation.valid(clubs).length}}">
           <view class="rel-item" wx:for="{{relation.valid(clubs)}}" wx:key="id" wx:if="{{item.displayName}}" style="--pmi:{{index}};">
             <cy-club-card club="{{item}}" audience="merchant" interactive="{{true}}"
               data-id="{{item.id}}" aria-label="查看{{item.displayName}}俱乐部档案" bind:tap="goClub" bind:action="goClub"  hover-class="cy-pressed" hover-stay-time="80"/>
           </view>
         </view>
-        <cy-empty wx:elif="{{!clubError}}" kind="empty" title="暂无可合作俱乐部" />
+        <cy-empty class="cy-fade-in" wx:elif="{{!clubError}}" kind="empty" title="暂无可合作俱乐部" />
       </block>
     </block>
   </view>

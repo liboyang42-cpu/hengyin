@@ -32,7 +32,7 @@
     <view class="mt-err cy-fade-in" wx:elif="{{mineError}}" bindtap="retryReload" aria-role="button" aria-label="队伍获取失败，点按重试" hover-class="cy-pressed" hover-stay-time="80">队伍获取失败 · 点按重试</view>
     <block wx:elif="{{groups.length}}">
       <block wx:for="{{groups}}" wx:for-item="g" wx:key="key">
-        <view class="mt-sec">{{g.title}}</view>
+        <view class="mt-sec cy-fade-in">{{g.title}}</view>
         <view class="mt-card cy-rise-in" style="animation-delay: {{index < 8 ? index * 60 : 480}}ms" wx:for="{{g.rows}}" wx:key="key" data-index="{{index}}" data-group="{{g.key}}" bindtap="openRow"
               aria-role="button" aria-label="{{item.name}}，{{item.badge}}" hover-class="cy-pressed" hover-stay-time="80">
           <view class="mt-card__top">

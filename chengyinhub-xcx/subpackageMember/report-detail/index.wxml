@@ -13,7 +13,7 @@
       <cy-state-shell wx:elif="{{state === 'error'}}" kind="data" title="举报进度加载失败"
                       sub="{{errorSub}}" primary="重试" bind:primary="retry" class="cy-fade-in" />
       <block wx:else>
-        <view class="rd-card">
+        <view class="rd-card cy-fade-in">
           <view class="rd-card__head">
             <text class="rd-card__title">{{report.targetText}} · {{report.reasonText}}</text>
             <cy-tag variant="{{report.stageTone}}">{{report.stageText}}</cy-tag>
@@ -24,28 +24,28 @@
           <text class="rd-card__privacy" wx:if="{{report.privacyText}}">{{report.privacyText}}</text>
         </view>
 
-        <view class="rd-section" wx:if="{{report.decisionSummary}}">
+        <view class="rd-section cy-fade-in" wx:if="{{report.decisionSummary}}">
           <text class="rd-section__label">处理结论</text>
           <text class="rd-section__text">{{report.decisionSummary}}</text>
         </view>
-        <view class="rd-section" wx:if="{{report.description}}">
+        <view class="rd-section cy-fade-in" wx:if="{{report.description}}">
           <text class="rd-section__label">你的举报说明</text>
           <text class="rd-section__text">{{report.description}}</text>
         </view>
 
-        <view class="rd-section">
+        <view class="rd-section cy-fade-in">
           <text class="rd-section__label">处理进度</text>
           <cy-timeline wx:if="{{nodes.length}}" nodes="{{nodes}}" />
           <text wx:else class="rd-section__text rd-section__text--muted">暂时还没有进度记录</text>
         </view>
 
-        <view class="rd-actions" wx:if="{{report.appealable}}">
+        <view class="rd-actions cy-fade-in" wx:if="{{report.appealable}}">
           <cy-btn variant="secondary" bindtap="openAppeal">提交申诉</cy-btn>
         </view>
-        <view class="rd-actions" wx:elif="{{report.appealing}}">
+        <view class="rd-actions cy-fade-in" wx:elif="{{report.appealing}}">
           <text class="rd-actions__hint">申诉已受理，复核结果会更新在这里</text>
         </view>
-        <view class="rd-link" bindtap="goMine" aria-role="button" aria-label="查看我的全部举报"
+        <view class="rd-link cy-fade-in" bindtap="goMine" aria-role="button" aria-label="查看我的全部举报"
               hover-class="cy-pressed" hover-stay-time="80">查看我的全部举报</view>
       </block>
     </view>

@@ -14,13 +14,13 @@
             sub="{{permissionDeniedSub}}" retry="" bind:back="goBack" auto-back custom-back class="cy-fade-in" />
 
   <block wx:elif="{{permissionState === 'ready'}}">
-  <view class="sub">{{clubName || '我的俱乐部'}} · {{ teams.length || 0 }} 个团</view>
+  <view class="sub cy-fade-in">{{clubName || '我的俱乐部'}} · {{ teams.length || 0 }} 个团</view>
   <view wx:if="{{refreshing}}" class="refreshing cy-refresh-float" aria-role="status" aria-live="polite">正在更新报名名册…</view>
-  <cy-inline-error load-failure wx:if="{{staleError}}" class="list-inline-error" kind="{{staleErrorKind}}" title="报名名册暂未更新"
+  <cy-inline-error load-failure wx:if="{{staleError}}" class="list-inline-error cy-fade-in" kind="{{staleErrorKind}}" title="报名名册暂未更新"
                    sub="{{staleError}}" action="重试更新" bind:action="retryLoadTeams" />
 
   <!-- 加载中 -->
-  <cy-skeleton wx:if="{{teamsState === 'loading'}}" type="card" count="3" loading-label="正在加载报名名册" />
+  <cy-skeleton class="cy-fade-in" wx:if="{{teamsState === 'loading'}}" type="card" count="3" loading-label="正在加载报名名册" />
 
   <!-- 业务失败 / 网络失败:都不能落入空态 -->
   <cy-error load-failure class="cy-fade-in" wx:elif="{{teamsState === 'business-error'}}" title="报名名册加载失败" retry="重新加载" bind:retry="retryLoadTeams" />
@@ -48,12 +48,12 @@
         <cy-error load-failure wx:elif="{{team._detailState === 'business-error'}}" title="报名详情加载失败" retry="重试" bind:retry="retryTeamDetail" data-index="{{ti}}" data-topic-id="{{team.id}}" class="cy-fade-in" />
         <cy-error load-failure wx:elif="{{team._detailState === 'network-error'}}" title="网络连接失败" retry="重试" bind:retry="retryTeamDetail" data-index="{{ti}}" data-topic-id="{{team.id}}" class="cy-fade-in" />
         <block wx:elif="{{team._detailState === 'ready'}}">
-          <view class="team-summary" wx:if="{{team.summary}}">
+          <view class="team-summary cy-fade-in" wx:if="{{team.summary}}">
             已支付 {{ team.summary.paidCount || 0 }} 人 · 可退款 {{ team.summary.refundableCount || 0 }} 人
             <text wx:if="{{team.summary.signupDeadlineText}}"> · 截止 {{team.summary.signupDeadlineText}}</text>
           </view>
           <!-- C-13:每场票款,与库逐分对账;只有主理人收得到金额。 -->
-          <view class="money" wx:if="{{team.sessionMoney.length}}">
+          <view class="money cy-fade-in" wx:if="{{team.sessionMoney.length}}">
             <view class="money-row" wx:for="{{team.sessionMoney}}" wx:key="activityId" wx:for-item="m">
               <view class="money-label ep1">{{m.label || '场次'}}<text class="money-tag" wx:if="{{m.cancelled}}">已取消</text></view>
               <view class="money-nums">
@@ -61,8 +61,8 @@
               </view>
             </view>
           </view>
-          <cy-empty wx:if="{{team.tickets.length === 0}}" class="enroll-inline-empty" size="sm" title="该团暂无票种" />
-          <view class="ticket" wx:for="{{team.tickets}}" wx:key="name" wx:for-item="tk" wx:if="{{!tk.hideEmpty}}">
+          <cy-empty wx:if="{{team.tickets.length === 0}}" class="enroll-inline-empty cy-fade-in" size="sm" title="该团暂无票种" />
+          <view class="ticket cy-fade-in" wx:for="{{team.tickets}}" wx:key="name" wx:for-item="tk" wx:if="{{!tk.hideEmpty}}">
             <view class="ticket-top">
               <view class="ticket-name ep1">{{tk.name || '票种'}}</view>
               <!-- 「已报名 12 人 · 上限 20」两行压成一行分数:同屏比对多个票种时,

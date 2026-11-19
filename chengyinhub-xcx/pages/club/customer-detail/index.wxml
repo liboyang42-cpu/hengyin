@@ -22,18 +22,18 @@
   <block wx:elif="{{state === 'ready'}}">
     <!-- 客户名就是本页 L1 大标题(稿子里 26px 那行),交给共享的 cy-page-title 出间距;
          头像按稿贴右上,绝对定位到标题行上,不参与标题的上下基准。 -->
-    <view class="cd-head">
+    <view class="cd-head cy-fade-in">
       <cy-page-title title="{{detail.summary.displayName}}" safe-top="{{false}}" flush />
       <cy-avatar class="cd-head-ava" size="112" src="{{detail.summary.avatar}}" name="{{detail.summary.displayName}}" />
     </view>
     <text class="cd-last">{{detail.summary.lastInteractionText}}</text>
 
-    <view class="cd-amount">
+    <view class="cd-amount cy-fade-in">
       <text class="cd-amount-label">累计实付</text>
       <!-- K2-B:服务端不下发金额时这里是「无查看权限」,不是 ¥0 -->
       <text class="cd-amount-value {{detail.summary.amountVisible ? '' : 'cd-amount-value--locked'}}">{{detail.summary.paidAmountText}}</text>
     </view>
-    <view wx:if="{{detail.summary.phoneText}}" class="cd-phone-row">
+    <view wx:if="{{detail.summary.phoneText}}" class="cd-phone-row cy-fade-in">
       <text class="cd-phone">{{detail.summary.phoneText}}</text>
       <view wx:if="{{detail.summary.phoneCallable}}" class="cd-call" bindtap="callCustomer"
         aria-role="button" aria-label="拨打 {{detail.summary.displayName}} 的电话" hover-class="cy-pressed" hover-stay-time="80">
@@ -42,7 +42,7 @@
     </view>
 
     <text class="cd-section">客户概览</text>
-    <view class="cd-stats">
+    <view class="cd-stats cy-fade-in">
       <view class="cd-stat">
         <text class="cd-stat-num">{{detail.summary.arrivedCount}}</text>
         <text class="cd-stat-label">到店次数</text>
@@ -58,7 +58,7 @@
     </view>
 
     <text class="cd-section">参与记录</text>
-    <view wx:if="{{detail.records.length}}" class="cd-records">
+    <view wx:if="{{detail.records.length}}" class="cd-records cy-fade-in">
       <view class="cd-record" wx:for="{{detail.records}}" wx:key="key" data-topic-id="{{item.topicId}}"
             bindtap="openRecord" aria-role="button" aria-label="查看活动 {{item.title}}"
             hover-class="cy-pressed" hover-stay-time="80">
@@ -78,16 +78,16 @@
       </view>
     </view>
     <!-- K2-C 暂无记录 -->
-    <cy-empty wx:else class="cd-record-empty" title="暂无参与记录" />
+    <cy-empty wx:else class="cd-record-empty cy-fade-in" title="暂无参与记录" />
 
     <!-- K2-F:编辑态就地替换「标签与备注」这一段,不另开弹层 -->
-    <view class="cd-section-row">
+    <view class="cd-section-row cy-fade-in">
       <text class="cd-section {{editing ? 'cd-section--editing' : ''}}">{{editing ? '编辑标签与备注' : '标签与备注'}}</text>
       <text wx:if="{{editing}}" class="cd-section-cancel" bindtap="cancelEdit"
             aria-role="button" aria-label="取消编辑标签与备注" hover-class="cy-pressed" hover-stay-time="80">取消</text>
     </view>
 
-    <view wx:if="{{!editing}}" class="cd-tagcard">
+    <view wx:if="{{!editing}}" class="cd-tagcard cy-fade-in">
       <view class="cd-tags" wx:if="{{detail.tags.length}}">
         <text class="cd-tag" wx:for="{{detail.tags}}" wx:key="index">{{item}}</text>
       </view>
@@ -98,7 +98,7 @@
       </view>
     </view>
 
-    <view wx:else class="cd-tagcard">
+    <view wx:else class="cd-tagcard cy-fade-in">
       <view class="cd-tags" wx:if="{{draftTags.length}}">
         <view class="cd-tag cd-tag--editable" wx:for="{{draftTags}}" wx:key="index" data-index="{{index}}"
               bindtap="removeTag" aria-role="button" aria-label="移除标签 {{item}}" hover-class="cy-pressed" hover-stay-time="80">

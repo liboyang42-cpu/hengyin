@@ -20,14 +20,14 @@
   <cy-empty wx:elif="{{state === 'empty'}}" fill size="lg" title="{{emptyText}}" class="cy-fade-in" />
 
   <block wx:elif="{{state === 'ready'}}">
-    <view class="src-summary" wx:if="{{metrics.length}}">
+    <view class="src-summary cy-fade-in" wx:if="{{metrics.length}}">
       <view class="src-metric" wx:for="{{metrics}}" wx:key="label">
         <text class="src-metric__label">{{item.label}}</text>
         <text class="src-metric__value">{{item.value}}</text>
       </view>
     </view>
 
-    <view class="src-detail" wx:if="{{detail && (sceneId === 'member-order-detail' || sceneId === 'settings-how-to-play-detail' || sceneId === 'club-manage')}}">
+    <view class="src-detail cy-fade-in" wx:if="{{detail && (sceneId === 'member-order-detail' || sceneId === 'settings-how-to-play-detail' || sceneId === 'club-manage')}}">
       <text class="src-detail__title">{{detail.title || detail.name || detail.topicName || detail.templateName || '详情'}}</text>
       <text class="src-detail__sub">{{detail.description || detail.topicDesc || detail.activityDesc || detail.nodeName || detail.statusText || ''}}</text>
       <view class="src-detail__rows">
@@ -37,7 +37,7 @@
       </view>
     </view>
 
-    <view class="src-favorites" wx:if="{{sceneId === 'settings-likes' && items.length}}">
+    <view class="src-favorites cy-fade-in" wx:if="{{sceneId === 'settings-likes' && items.length}}">
       <view class="src-favorite-card" wx:for="{{items}}" wx:key="key">
         <image wx:if="{{img.first(item.raw.imgUrl) || img.first(item.raw.imgArr)}}" class="src-favorite-card__cover" lazy-load="true"
           src="{{img.first(item.raw.imgUrl) || img.first(item.raw.imgArr)}}"
@@ -55,7 +55,7 @@
       </view>
     </view>
 
-    <view class="src-list" wx:if="{{items.length && sceneId !== 'settings-likes'}}">
+    <view class="src-list cy-fade-in" wx:if="{{items.length && sceneId !== 'settings-likes'}}">
       <view class="src-list__item" wx:for="{{items}}" wx:key="key" data-index="{{index}}" bindtap="onItemTap" aria-role="button" aria-label="打开{{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
         <view class="src-list__main">
           <text class="src-list__title">{{item.title}}</text>
@@ -69,7 +69,7 @@
       </view>
     </view>
 
-    <view class="src-form" wx:if="{{formType}}">
+    <view class="src-form cy-fade-in" wx:if="{{formType}}">
       <view class="src-form__success" wx:if="{{submitted}}">本次提交已收到，结果会在真实状态返回后更新。</view>
       <view class="src-form__submitting" wx:if="{{submitting}}" aria-role="status">提交中</view>
       <cy-error wx:elif="{{submitError}}" title="提交没有完成" sub="{{submitError}}" retry="重试" bind:retry="submitForm" />
@@ -162,7 +162,7 @@
       </view>
     </view>
 
-    <view class="src-inline-actions" wx:if="{{sceneId === 'club-manage'}}">
+    <view class="src-inline-actions cy-fade-in" wx:if="{{sceneId === 'club-manage'}}">
       <button class="src-secondary" bindtap="openSecondary" data-action="club-edit">编辑俱乐部</button>
       <button class="src-secondary" wx:if="{{detail.topicId}}" bindtap="openSecondary" data-action="group-code">出示团码</button>
     </view>

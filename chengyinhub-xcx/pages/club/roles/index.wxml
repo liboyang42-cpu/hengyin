@@ -20,7 +20,7 @@
   <block wx:elif="{{state === 'ready'}}">
     <!-- Figma 290:393「当前委派」——主理人固定第一行(全部权限,不可撤销)，
          后面接实际委派；单卡 + 发丝分隔，撤销收进描述行内联文字。 -->
-    <view class="section">
+    <view class="section cy-fade-in">
       <text class="section-title">当前委派</text>
       <view class="ds-card">
         <view class="row">
@@ -46,7 +46,7 @@
 
     <!-- 稿 R1 290:393:分配区是一个标题 + 一张三行卡 + 一个「分配」大按钮,
          不是拆成带编号的两节。成员与角色都收进行内选择器,选中的名字显示在行右侧。 -->
-    <view class="section">
+    <view class="section cy-fade-in">
       <text class="section-title">分配固定角色</text>
       
       <view class="ds-card">

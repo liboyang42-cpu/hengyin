@@ -82,7 +82,7 @@
       <!-- r2-finish b3-p8(业主「UI需要优化一下」):本局回忆改成一条时间线 —— 换天写日期,每站一个点,照片跟在那一站下面 -->
       <block wx:elif="{{memoryState === 'ready'}}">
         <text class="jn-mem-who" wx:if="{{memory.participants}}">{{memory.participants}}</text>
-        <view class="jn-tl">
+        <view class="jn-tl cy-fade-in">
           <view class="jn-tl__item" wx:for="{{memory.moments}}" wx:key="key">
             <text class="jn-tl__day" wx:if="{{item.showDay}}">{{item.day}}</text>
             <view class="jn-tl__row">
