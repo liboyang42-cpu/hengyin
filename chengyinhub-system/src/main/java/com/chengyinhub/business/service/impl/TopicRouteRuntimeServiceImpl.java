@@ -4264,21 +4264,94 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
 
         String text = com.chengyinhub.business.service.support.CastRunRules.resolveVars(
                 block.path("content").asText(""), castCallerName(memberId, topicId, runId));
+        return Collections.<String, Object>singletonMap("url",
+                castSynthesize(voiceId, preset, text, "topicId=" + topicId + " chapterId=" + chapterId + " blockKey=" + blockKey));
+    }
+
+    @Override
+    public Map<String, Object> castPresetSample(Long memberId, String preset) {
+        castRequireLogin(memberId);
+        String voiceId = com.chengyinhub.business.service.support.CastVoicePresets.voiceId(preset);
+        if (voiceId == null) throw new ServiceException("预设声音无效", 400);
+        return Collections.<String, Object>singletonMap("url",
+                castSynthesize(voiceId, preset, com.chengyinhub.business.service.support.CastVoicePresets.SAMPLE_LINE, "sample"));
+    }
+
+    /** sha256(preset + text) 命中缓存直接回;没命中才合成一次并落 OSS。TTS 没配齐 = 503 CAST_TTS_NOT_CONFIGURED。 */
+    private String castSynthesize(String voiceId, String preset, String text, String what) {
         String sha = com.chengyinhub.business.service.support.CastRunRules.sha256Hex(preset + text);
         if (castVoiceCache == null || castVoiceClient == null || !castVoiceClient.usable()) {
             // 没配 TTS:如实回一个客户端可识别的错误码,不 500。
             throw castCoded("配音服务未开通", 503, com.chengyinhub.business.service.support.CastRunRules.ERR_TTS_NOT_CONFIGURED);
         }
         String hit = castVoiceCache.find(sha);
-        if (hit != null) return Collections.<String, Object>singletonMap("url", hit);
+        if (hit != null) return hit;
         String vendorUrl;
         try {
             vendorUrl = castVoiceClient.synthesize(voiceId, text);
         } catch (com.chengyinhub.business.service.ai.AiServiceException e) {
-            CAST_LOG.warn("角色台词合成失败 topicId={} chapterId={} blockKey={}: {}", topicId, chapterId, blockKey, e.getMessage());
+            CAST_LOG.warn("角色配音合成失败 {}: {}", what, e.getMessage());
             throw castCoded("配音暂时生成不了，请稍后再试", 502, com.chengyinhub.business.service.support.CastRunRules.ERR_TTS_FAILED);
         }
-        return Collections.<String, Object>singletonMap("url", castVoiceCache.store(sha, vendorUrl));
+        return castVoiceCache.store(sha, vendorUrl);
+    }
+
+    @Override
+    public JsonNode castConfigForPlayer(Long memberId, Long topicId, String stored) {
+        JsonNode cfg = com.chengyinhub.business.service.support.CastConfigSupport.parse(stored);
+        if (cfg == null) return null;
+        java.util.Set<Long> reached = java.util.Collections.emptySet();
+        if (memberId != null && memberId > 0 && topicId != null && topicId > 0 && castHasChapterClues(cfg)) {
+            TopicRouteSession session;
+            try {
+                session = TopicRouteSessionScope.findCurrent(routeMapper, memberId, topicId, null);
+            } catch (RuntimeException e) {
+                session = null;   // 读不到本局 = 按没有本局处理:只露开局线索,不因此让主题信息读失败
+            }
+            if (session != null) reached = castReachedChapters(topicId, session);
+        }
+        return com.chengyinhub.business.service.support.CastConfigSupport.playerView(cfg, reached);
+    }
+
+    private static boolean castHasChapterClues(JsonNode cfg) {
+        for (JsonNode member : cfg.path("cast"))
+            for (JsonNode clue : member.path("clues"))
+                if (clue.hasNonNull("chapterId")) return true;
+        return false;
+    }
+
+    /** 本局到过的章节:按主题章节顺序,到过 / 完成 / 当前所在节点所属的最远一章及之前全部;有本局但还没到任何站 = 第一章。 */
+    private java.util.Set<Long> castReachedChapters(Long topicId, TopicRouteSession session) {
+        java.util.Set<Long> out = new LinkedHashSet<Long>();
+        if (cmsTopicChapterMapper == null) return out;
+        com.chengyinhub.business.domain.CmsTopicChapter query = new com.chengyinhub.business.domain.CmsTopicChapter();
+        query.setTopicId(topicId);
+        List<com.chengyinhub.business.domain.CmsTopicChapter> chapters = cmsTopicChapterMapper.selectCmsTopicChapterList(query);
+        if (chapters == null || chapters.isEmpty()) return out;
+        TopicRouteEngine.State state;
+        try {
+            state = castReadState(session);
+        } catch (ServiceException e) {
+            state = new TopicRouteEngine.State();
+        }
+        java.util.Set<Long> nodeIds = new LinkedHashSet<Long>();
+        if (state.getVisitedNodeIds() != null) nodeIds.addAll(state.getVisitedNodeIds());
+        if (state.getCompletedNodeIds() != null) nodeIds.addAll(state.getCompletedNodeIds());
+        if (state.getCurrentNodeId() != null) nodeIds.add(state.getCurrentNodeId());
+        java.util.Set<Long> touched = new java.util.HashSet<Long>();
+        if (!nodeIds.isEmpty() && nodeMapper != null) {
+            CmsTopicNode nodeQuery = new CmsTopicNode();
+            nodeQuery.setTopicId(topicId);
+            List<CmsTopicNode> nodes = nodeMapper.selectCmsTopicNodeList(nodeQuery);
+            if (nodes != null) for (CmsTopicNode node : nodes)
+                if (node != null && nodeIds.contains(node.getId()) && node.getChapterId() != null) touched.add(node.getChapterId());
+        }
+        int furthest = 0;
+        for (int i = 0; i < chapters.size(); i++)
+            if (chapters.get(i) != null && touched.contains(chapters.get(i).getId())) furthest = i;
+        for (int i = 0; i <= furthest; i++)
+            if (chapters.get(i) != null && chapters.get(i).getId() != null) out.add(chapters.get(i).getId());
+        return out;
     }
 
     private String castCallerName(Long memberId, Long topicId, Long runId) {

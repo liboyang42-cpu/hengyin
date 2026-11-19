@@ -2233,9 +2233,15 @@ public class ApiTopicController extends BaseController {
             // R2-B10 玩家侧只读下发:归一化后的主题数值规则(保存时已归一化,这里原样透传)。
             // 未配置 = null(不下发);作者关了检定 = 下发 checkEnabled=false。新增字段,不改已有字段。
             topicInfoVO.setJourneyRules(com.chengyinhub.business.service.support.JourneyInitialState.publicRules(cmsTopic.getJourneyRulesJson()));
-            // 角色(Cast)v1:玩家侧同样下发角色表(无秘密字段);列为 NULL = null(功能关闭)。
-            topicInfoVO.setCastConfig(cmsTopicMapper == null ? null : com.chengyinhub.business.service.support.CastConfigSupport.parse(
-                    cmsTopicMapper.selectCastConfigById(topicId)));
+            // 角色(Cast)v1:玩家侧下发角色表;列为 NULL = null(功能关闭)。
+            // 契约 E4:未解锁的线索不下发正文,只给 cast[].lockedCount(按调用者在本主题的当前局到过的章节判定)。
+            if (cmsTopicMapper != null) {
+                String storedCast = cmsTopicMapper.selectCastConfigById(topicId);
+                topicInfoVO.setCastConfig(topicRouteRuntimeService != null
+                        ? topicRouteRuntimeService.castConfigForPlayer(memberId, topicId, storedCast)
+                        : com.chengyinhub.business.service.support.CastConfigSupport.playerView(
+                                com.chengyinhub.business.service.support.CastConfigSupport.parse(storedCast), java.util.Collections.<Long>emptySet()));
+            }
             // R22-SEC S1:主题级剧情配置整段不下发 —— journey_story_json 含结局条件(when)、
             // optionalClues 与 relationKey,属于剧透;阶段结算 / 结局 / 尾声由 /api/play/journey 下的接口
             // 按本局状态专门给出。作者侧的编辑回显走 topicEditDetail 的显式字段,不受影响。
@@ -3333,16 +3339,19 @@ public class ApiTopicController extends BaseController {
         return vo;
     }
 
-    @Operation(summary = "台词配音地址(块自带配音优先，否则按角色预设声音合成并缓存)")
+    @Operation(summary = "台词配音地址(块自带配音优先，否则按角色预设声音合成并缓存);只给 preset 不给 chapterId/blockKey 时为编辑器试听")
     @RateLimiter(time = 60, count = 30, limitType = LimitType.MEMBER)
     @GetMapping("/cast/voice")
-    public AjaxResult castVoice(Long topicId, Long chapterId, String blockKey, Long runId)
+    public AjaxResult castVoice(Long topicId, Long chapterId, String blockKey, Long runId, String preset)
     {
         Long memberId;
         try { memberId = getAppUserId(); } catch (Exception e) { memberId = 0L; }
         if (memberId == null || memberId <= 0) return error("请先登录");
         try
         {
+            // 编辑器「试听」:念服务端固定示例句,客户端不能指定文本。
+            if (chapterId == null && (blockKey == null || blockKey.trim().isEmpty()) && preset != null && !preset.trim().isEmpty())
+                return success(topicRouteRuntimeService.castPresetSample(memberId, preset.trim()));
             return success(topicRouteRuntimeService.castLineVoice(memberId, topicId, chapterId, blockKey, runId));
         }
         catch (ServiceException e)

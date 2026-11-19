@@ -12,6 +12,9 @@ public final class CastVoicePresets
 {
     private static final Map<String, String> VOICES;
 
+    /** 编辑器「试听」念的固定示例句;与小程序 pages/publish/fabu/theme-cast.js 的 SAMPLE_LINE 一致,文本只取服务端这份。 */
+    public static final String SAMPLE_LINE = "今晚的风有点凉，我们走吧。";
+
     static
     {
         Map<String, String> voices = new LinkedHashMap<String, String>();

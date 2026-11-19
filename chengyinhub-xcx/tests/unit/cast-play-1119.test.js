@@ -102,6 +102,12 @@ test('信任五格、线索解锁、结局脚注、页脚与时长', () => {
   assert.equal(clues.lockedText, '还有 1 条，走到下一站再看')
   assert.deepEqual(cast.clueView(cfg.cast[0], ['12']).open, ['她怕黑', '钥匙在鞋里'], '到过那一章就解锁')
   assert.equal(cast.clueView(Object.assign({}, cfg.cast[1], { lockedCount: 2 }), []).locked, 2, '服务端只给个数时照样显示')
+  // 玩家读口(info-to-user)按本局进度裁过:下发的线索都是已解锁的,锁住的只给 lockedCount,不再按本机进度二次上锁
+  const redacted = cast.normalizeCast({ enabled: true, cast: [{ id: 'c_r', name: '阿柚', color: '#3D8BFD',
+    clues: [{ text: '开局就知道', chapterId: null }, { text: '第一章知道', chapterId: 12 }], lockedCount: 3 }] }).cast[0]
+  const rv = cast.clueView(redacted, [])
+  assert.deepEqual(rv.open, ['开局就知道', '第一章知道']); assert.equal(rv.locked, 3)
+  assert.equal(rv.lockedText, '还有 3 条，走到下一站再看')
   const card = cast.cardView(cfg, 'c_a', { trust: { c_a: 2 }, reached: [], voiceKey: 'k1' })
   assert.equal(card.trustLabel, '林雾对你'); assert.equal(card.ticks.filter((t) => t.on).length, 2); assert.equal(card.voice, true)
   assert.equal(cast.cardView(cfg, 'nobody', {}), null)

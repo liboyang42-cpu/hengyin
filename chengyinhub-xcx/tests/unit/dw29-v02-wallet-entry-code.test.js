@@ -53,7 +53,8 @@ test('V-02 背面只有标题和码:不露原始 token、不显示倒计时、�
 test('V-02 7 天内到期才写 N 天内过期，当天写今天过期，其余不写', () => {
   const { page } = loadPage()
   const pad = n => String(n).padStart(2, '0')
-  const at = days => { const d = new Date(); d.setDate(d.getDate() + days); d.setHours(23, 59, 0, 0); /* 按自然日加,夏令时切换不差一天 */ return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' 23:59:00' }
+  // 业务日期按中国时区(utils/ticket-expiry.js);用 UTC+8 的日历取「今天」,测试主机在 UTC 16:00 后跑也不差一天
+  const at = days => { const d = new Date(Date.now() + 8 * 3600000); d.setUTCDate(d.getUTCDate() + days); return d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate()) + ' 23:59:00' }
   // 主线「付款确认后才展示有效票」:样例票都带已付款
   page._topic = { state: 'ready', list: [
     { id: 11, registrationStatus: 2, paymentStatus: 2, cmsTopic: { name: '海上方舟' } },

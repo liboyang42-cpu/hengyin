@@ -23,8 +23,12 @@ import java.util.regex.Pattern;
  * <pre>
  * {enabled, playerName, playerIdentity,
  *  identities:[{key,title,sub}] ≤4,
- *  cast:[{id,name,identity,avatarUrl,color,voice:{mode,preset}}] ≤12}
+ *  cast:[{id,name,identity,avatarUrl,color,voice:{mode,preset,url},
+ *         clues:[{text,chapterId|null}] ≤6, endingLines:{low,mid,high}}] ≤12}
  * </pre>
+ *
+ * clues(E4「你知道的」)与 endingLines(E6 结局台词)是契约 E 段的字段;玩家侧下发前由 {@link #playerView}
+ * 把未解锁线索的正文换成 lockedCount,正文只给作者读口。
  *
  * 列为 null = 功能关闭,接口原样回 null。保存时只留契约字段(未知字段丢弃),校验失败抛 400 的 {@link ServiceException}。
  * 故事块里的引用(line.speaker、branch 选项 trust.castId、结局章 ending.endingFor)由 {@link #checkStoryRefs} 对照本配置校验。
@@ -33,6 +37,10 @@ public final class CastConfigSupport
 {
     public static final int MAX_IDENTITIES = 4;
     public static final int MAX_CAST = 12;
+    public static final int MAX_CLUES = 6;
+    public static final int MAX_CLUE_TEXT = 40;
+    public static final int MAX_ENDING_LINE = 60;
+    public static final List<String> ENDING_BANDS = Collections.unmodifiableList(Arrays.asList("low", "mid", "high"));
     public static final String PLAYER = "player";
     public static final Set<String> COLORS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
             "#E8604C", "#3D8BFD", "#2FB57A", "#B98AF0", "#F2B33D", "#8E8E93")));
@@ -149,6 +157,7 @@ public final class CastConfigSupport
                 JsonNode voice = one.get("voice");
                 String mode = "none";
                 String preset = null;
+                String voiceUrl = "";
                 if (voice != null && !voice.isNull())
                 {
                     if (!voice.isObject()) throw invalid("角色声音格式不对");
@@ -161,6 +170,40 @@ public final class CastConfigSupport
                         preset = p;
                     }
                     if ("preset".equals(mode) && preset == null) throw invalid("选了预设声音就要指定是哪一种");
+                    voiceUrl = text(voice, "url").trim();
+                    if (!isMediaRef(voiceUrl, true)) throw invalid("角色录音只能是 https 地址或已上传的素材");
+                    if (!"record".equals(mode)) voiceUrl = "";
+                }
+                ArrayNode clues = JSON.createArrayNode();
+                JsonNode rawClues = one.get("clues");
+                if (rawClues != null && !rawClues.isNull())
+                {
+                    if (!rawClues.isArray()) throw invalid("角色线索必须是数组");
+                    if (rawClues.size() > MAX_CLUES) throw invalid("每个角色的线索最多 " + MAX_CLUES + " 条");
+                    for (JsonNode clue : rawClues)
+                    {
+                        if (clue == null || !clue.isObject()) throw invalid("角色线索格式不对");
+                        String clueText = text(clue, "text").trim();
+                        if (len(clueText) < 1 || len(clueText) > MAX_CLUE_TEXT)
+                            throw invalid("每条线索要 1 至 " + MAX_CLUE_TEXT + " 字");
+                        ObjectNode c = clues.addObject();
+                        c.put("text", clueText);
+                        Long chapterId = chapterRef(clue.get("chapterId"));
+                        if (chapterId == null) c.putNull("chapterId");
+                        else c.put("chapterId", chapterId);
+                    }
+                }
+                ObjectNode endingLines = JSON.createObjectNode();
+                JsonNode rawLines = one.get("endingLines");
+                if (rawLines != null && !rawLines.isNull())
+                {
+                    if (!rawLines.isObject()) throw invalid("角色结局台词格式不对");
+                    for (String band : ENDING_BANDS)
+                    {
+                        String line = text(rawLines, band).trim();
+                        if (len(line) > MAX_ENDING_LINE) throw invalid("结局台词每档最多 " + MAX_ENDING_LINE + " 字");
+                        if (!line.isEmpty()) endingLines.put(band, line);
+                    }
                 }
                 ObjectNode row = cast.addObject();
                 row.put("id", id);
@@ -171,6 +214,9 @@ public final class CastConfigSupport
                 ObjectNode v = row.putObject("voice");
                 v.put("mode", mode);
                 if (preset != null) v.put("preset", preset);
+                if (!voiceUrl.isEmpty()) v.put("url", voiceUrl);
+                if (clues.size() > 0) row.set("clues", clues);
+                if (endingLines.size() > 0) row.set("endingLines", endingLines);
             }
         }
         try
@@ -259,6 +305,56 @@ public final class CastConfigSupport
                 }
             }
         }
+    }
+
+    /**
+     * 玩家侧下发视图(契约 E4 后端跟进):已解锁的线索留正文,未解锁的只计入 cast[].lockedCount,正文一律不下发。
+     * 线索在 chapterId 为 null 时总是解锁;否则本局到过那一章才解锁。reachedChapterIds 为空 = 没有本局 / 游客。
+     * 不改入参;cfg 为 null 原样回 null。
+     */
+    public static JsonNode playerView(JsonNode cfg, Set<Long> reachedChapterIds)
+    {
+        if (cfg == null || !cfg.isObject()) return cfg;
+        ObjectNode out = cfg.deepCopy();
+        JsonNode cast = out.get("cast");
+        if (cast == null || !cast.isArray()) return out;
+        for (JsonNode member : cast)
+        {
+            if (!(member instanceof ObjectNode)) continue;
+            ObjectNode row = (ObjectNode) member;
+            JsonNode clues = row.get("clues");
+            ArrayNode open = JSON.createArrayNode();
+            int locked = 0;
+            if (clues != null && clues.isArray())
+            {
+                for (JsonNode clue : clues)
+                {
+                    JsonNode chapter = clue.get("chapterId");
+                    Long chapterId = chapter == null || chapter.isNull() ? null : chapter.asLong(0L);
+                    boolean unlocked = chapter == null || chapter.isNull()
+                            || (chapterId != null && chapterId > 0 && reachedChapterIds != null && reachedChapterIds.contains(chapterId));
+                    if (unlocked) open.add(clue.deepCopy());
+                    else locked++;
+                }
+            }
+            row.remove("clues");
+            if (open.size() > 0) row.set("clues", open);
+            row.put("lockedCount", locked);
+        }
+        return out;
+    }
+
+    /** 线索解锁章:null / 空串 = 开局就有;否则必须是正整数章节 id(数字或数字串)。 */
+    private static Long chapterRef(JsonNode v)
+    {
+        if (v == null || v.isNull()) return null;
+        if (v.isTextual() && v.asText().trim().isEmpty()) return null;
+        long id;
+        if (v.isIntegralNumber()) id = v.asLong();
+        else if (v.isTextual() && v.asText().trim().matches("[1-9][0-9]{0,18}")) id = Long.parseLong(v.asText().trim());
+        else throw invalid("线索的解锁章节无效");
+        if (id <= 0) throw invalid("线索的解锁章节无效");
+        return id;
     }
 
     private static boolean bool(JsonNode cfg, String field)

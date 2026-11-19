@@ -7,7 +7,6 @@ const cyToast = require('../../../utils/toast.js');
 const modal = require('../../../utils/modal.js');
 
 const STORY_LINE_ITEM = { kind: 'line', label: '对白', icon: 'comment' };
-const SAMPLE_LINE = '今晚的风有点凉，我们走吧。';
 const REC_MAX_MS = 60000;
 const VOICE_CHIPS = storyCast.PRESETS.map((p) => ({ value: p.value, label: p.label })).concat([{ value: 'none', label: '不出声' }]);
 // 成员弹窗里各字段的锚点(问题 field → scroll-into-view 的 id)
@@ -279,7 +278,7 @@ const methods = {
     this.setData({ castPreviewing: preset });
     app.sendRequest({
       url: '/api/topic/cast/voice', method: 'GET', hideLoading: true, autoErrorToast: false,
-      data: { topicId: this.data.editingTopicId || '', preset, sample: SAMPLE_LINE },
+      data: { topicId: this.data.editingTopicId || '', preset },   // 试听念服务端固定的示例句(CastVoicePresets.SAMPLE_LINE),不上传文本
       success: (res) => {
         if (this._unloaded || token !== this._castPreviewToken) return;
         const url = res && Number(res.code) === 200 && res.data && res.data.url;

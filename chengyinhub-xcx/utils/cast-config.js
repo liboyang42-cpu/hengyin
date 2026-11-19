@@ -21,7 +21,8 @@ function normalizeCast(raw) {
       voice: { mode: ['preset', 'record', 'none'].indexOf(voice.mode) >= 0 ? voice.mode : 'none', preset: str(voice.preset) },
       clues: (Array.isArray(c.clues) ? c.clues : []).filter(isObj).slice(0, 6)
         .map((k) => ({ text: str(k.text).trim(), chapterId: k.chapterId == null || k.chapterId === '' ? null : str(k.chapterId) })),
-      lockedCount: Math.max(0, Number(c.lockedCount) || 0),   // 服务端不下发锁住线索的正文时给个数(契约 E4 后端跟进)
+      lockedCount: Math.max(0, Number(c.lockedCount) || 0),   // 服务端不下发锁住线索的正文,只给个数(契约 E4)
+      redacted: typeof c.lockedCount === 'number',            // 玩家读口按本局进度裁过:下发的线索就是已解锁的
       endingLines: { low: str(lines.low).trim(), mid: str(lines.mid).trim(), high: str(lines.high).trim() },
     };
   });

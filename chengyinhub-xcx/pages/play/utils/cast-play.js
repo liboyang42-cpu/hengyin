@@ -119,14 +119,15 @@ function trustTicks(value) {
 }
 function trustBand(value) { const v = Number(value) || 0; return v < 0 ? 'low' : (v >= 3 ? 'high' : 'mid'); }
 
-/** E4 线索:到过那一章(或不限章)才露正文;没到的只给个数 */
+/** E4 线索:到过那一章(或不限章)才露正文;没到的只给个数。服务端裁过(redacted)时下发的就是已解锁的,锁住的只有 lockedCount */
 function clueView(member, reachedChapterIds) {
   const reached = new Set((reachedChapterIds || []).map(str));
   const open = [];
   let locked = Number(member && member.lockedCount) || 0;
+  const trusted = !!(member && member.redacted);
   (member && member.clues || []).forEach((k) => {
     if (!k.text) return;
-    if (k.chapterId == null || reached.has(k.chapterId)) open.push(k.text); else locked += 1;
+    if (trusted || k.chapterId == null || reached.has(k.chapterId)) open.push(k.text); else locked += 1;
   });
   return { open, locked, lockedText: locked ? '还有 ' + locked + ' 条，走到下一站再看' : '' };
 }
@@ -244,13 +245,20 @@ function methods(req) {
       // 没在详情页读过:只有回包里真有角色的痕迹(台词块 / 本局档案)才补读一次主题信息 ——
       // 没有角色的主题开局请求与今天逐条一致,不多一次查询、不多等一拍
       if (!castHints(d) || this._castLoading === topicId) return;
+      this._castFetch(topicId, false);
+    },
+    /** 读主题信息里的 castConfig。refresh=true:只换内存里的配置(线索随本局进度解锁),读失败保留原配置、不重铺正文 */
+    _castFetch(topicId, refresh) {
       this._castLoading = topicId;
       this._castReady = req('/api/topic/info-to-user', 'POST', { id: topicId }, undefined, true).then((res) => {
         if (this._castLoading !== topicId) return;
         this._castLoading = '';
         const ok = res && (res.code == 200 || res.code == '200') && isObj(res.data);
-        this._castSet(ok ? remember(topicId, res.data.castConfig) : null);
+        if (!refresh) { this._castSet(ok ? remember(topicId, res.data.castConfig) : null); return; }
+        const cfg = ok ? remember(topicId, res.data.castConfig) : null;
+        if (cfg && this._cast) this._cast = cfg;
       }).catch(() => { if (this._castLoading === topicId) this._castLoading = ''; });
+      return this._castReady;
     },
     _castSet(cfg) {
       const was = !!this._cast;
@@ -383,6 +391,17 @@ function methods(req) {
       if (!card) return;
       this.setData({ 'cast.card': Object.assign(card, { in: !!this.data.reducedMotion }) },
         () => { if (!this.data.reducedMotion) setTimeout(() => this.setData({ 'cast.card.in': true }), 20); });
+      // 服务端按本局进度裁线索:缓存的配置可能是开局前读的,还有锁住的就补读一次,读到后原卡就地刷新线索
+      const topicId = str(this.data.topicId);
+      const chapterKey = topicId + ':' + str((this.data.chapter || {}).id);
+      if (!card.clues.locked || !topicId || this._castLoading || this._castCluesAt === chapterKey) return;
+      this._castCluesAt = chapterKey;
+      this._castFetch(topicId, true).then(() => {
+        const shown = this.data.cast.card;
+        if (!shown || !shown.show || shown.id !== card.id) return;
+        const fresh = cardView(this._cast, card.id, { trust: this._castMine().trust, reached, voiceKey });
+        if (fresh) this.setData({ 'cast.card.clues': fresh.clues });
+      });
     },
     closeCastCard() { this.setData({ 'cast.card.show': false }); },
     /** 角色卡上的播放:放刚点的那一句 */

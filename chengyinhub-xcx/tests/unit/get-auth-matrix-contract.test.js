@@ -197,7 +197,7 @@ const MATRIX = [
   /* 2026-10-22 L21 BL-186 章节阶段结算:ApiPlayJourneyController.stageEnd 同一控制器,currentMemberId()<=0 直接拒,
      读本人本局 session 的本章结算 —— 与 /journey/ending 同档。 */
   ['pages/play/index.js', "req('/api/play/journey/stage-end'", 'required', 'member', 'current-session'],
-  /* 2026-11-19 角色 Cast v1:台词配音地址 ApiCastController.voice(feat/cast-backend-1119),memberId<=0 直接拒;
+  /* 2026-11-19 角色 Cast v1:台词配音地址 ApiTopicController.castVoice(GET /api/topic/cast/voice),memberId<=0 直接拒;
      已发布主题登录即可听、草稿只有主题主人,按 runId 只读本人本局的名字代入 {玩家} —— 点了才读,不写。 */
   ['pages/play/utils/cast-play.js', "req('/api/topic/cast/voice', 'GET'", 'required', 'member', 'public-detail+viewer-personalization'],
   /* 2026-10-22 L21 BL-185 主题发布前试检查:ApiTopicStateKeyController.publishCheck 走 editableDenial ——
@@ -238,7 +238,7 @@ const MATRIX = [
   ['pages/publish/components/topic-state-keys/index.js', "url: '/api/topic/state-keys', method: 'GET'", 'required', 'publisher', 'self-publisher'],
   // 文档二 L3：下一站条件与效果读同一个注册表补名字（主题本人或商家代管 scope）。
   ['pages/publish/fabu/theme-route-names.js', "url: '/api/topic/state-keys', method: 'GET'", 'required', 'publisher', 'self-publisher'],
-  // 2026-11-19 cast-contract-1119:编辑角色弹窗「试听」预设声音。草稿只有主题主人能听,已发布任何登录用户可听(#873 ApiCastController,MEMBER 限流)。
+  // 2026-11-19 cast-contract-1119:编辑角色弹窗「试听」预设声音。同一 GET /api/topic/cast/voice 的试听模式(只给 preset):登录即可,念服务端固定示例句(ApiTopicController.castVoice,MEMBER 限流)。
   ['pages/publish/fabu/theme-cast.js', "url: '/api/topic/cast/voice', method: 'GET'", 'required', 'publisher', 'self-publisher'],
   ['pages/publish/fabu/theme-d20-page.js', "url: '/api/topic/play-setup', method: 'GET'", 'required', 'publisher', 'self-publisher'],
   // 2026-11-04 第九轮 m4(owner 批准):官方路线列表与详情游客可读,只回已上架路线,游客走 PresetRouteGuestProjection。

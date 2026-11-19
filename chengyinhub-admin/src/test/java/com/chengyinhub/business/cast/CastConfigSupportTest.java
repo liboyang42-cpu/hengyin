@@ -183,4 +183,97 @@ class CastConfigSupportTest
         cfg.put("enabled", "yes");
         rejected(cfg);
     }
+
+    @Test
+    void 线索与结局台词_规范化往返_上限与长度() throws Exception
+    {
+        ObjectNode cfg = config();
+        ObjectNode member = (ObjectNode) cfg.get("cast").get(0);
+        ArrayNode clues = member.putArray("clues");
+        clues.addObject().put("text", " 她左手有道疤 ").putNull("chapterId");
+        clues.addObject().put("text", "她三年前离开过乐队").put("chapterId", 55);
+        clues.addObject().put("text", "字符串章节号也认").put("chapterId", "56");
+        member.putObject("endingLines").put("low", "你走吧。").put("mid", "").put("high", "下次还一起来。").put("extra", "丢");
+        JsonNode back = JSON.readTree(CastConfigSupport.normalize(cfg)).get("cast").get(0);
+        assertEquals(3, back.get("clues").size());
+        assertEquals("她左手有道疤", back.get("clues").get(0).get("text").asText());
+        assertTrue(back.get("clues").get(0).get("chapterId").isNull());
+        assertEquals(55L, back.get("clues").get(1).get("chapterId").asLong());
+        assertEquals(56L, back.get("clues").get(2).get("chapterId").asLong());
+        assertEquals("你走吧。", back.get("endingLines").get("low").asText());
+        assertFalse(back.get("endingLines").has("mid"));
+        assertFalse(back.get("endingLines").has("extra"));
+
+        ObjectNode tooMany = config();
+        ArrayNode seven = ((ObjectNode) tooMany.get("cast").get(0)).putArray("clues");
+        for (int i = 0; i < 7; i++) seven.addObject().put("text", "线索" + i).putNull("chapterId");
+        assertTrue(rejected(tooMany).getMessage().contains("最多 6"));
+
+        ObjectNode emptyText = config();
+        ((ObjectNode) emptyText.get("cast").get(0)).putArray("clues").addObject().put("text", "  ").putNull("chapterId");
+        rejected(emptyText);
+
+        ObjectNode longText = config();
+        ((ObjectNode) longText.get("cast").get(0)).putArray("clues").addObject().put("text", "字".repeat(41)).putNull("chapterId");
+        rejected(longText);
+
+        ObjectNode badChapter = config();
+        ((ObjectNode) badChapter.get("cast").get(0)).putArray("clues").addObject().put("text", "x").put("chapterId", "第一章");
+        rejected(badChapter);
+
+        ObjectNode longLine = config();
+        ((ObjectNode) longLine.get("cast").get(0)).putObject("endingLines").put("high", "字".repeat(61));
+        rejected(longLine);
+        ObjectNode sixty = config();
+        ((ObjectNode) sixty.get("cast").get(0)).putObject("endingLines").put("high", "字".repeat(60));
+        CastConfigSupport.normalize(sixty);
+    }
+
+    @Test
+    void 录音声音_只在record时保留url_且必须是素材或https() throws Exception
+    {
+        ObjectNode cfg = config();
+        ((ObjectNode) cfg.get("cast").get(0)).putObject("voice").put("mode", "record").put("url", "media-asset:12");
+        assertEquals("media-asset:12", JSON.readTree(CastConfigSupport.normalize(cfg)).get("cast").get(0).get("voice").get("url").asText());
+
+        ObjectNode preset = config();
+        ((ObjectNode) preset.get("cast").get(0)).putObject("voice").put("mode", "preset").put("preset", "youth").put("url", "media-asset:12");
+        assertFalse(JSON.readTree(CastConfigSupport.normalize(preset)).get("cast").get(0).get("voice").has("url"));
+
+        ObjectNode bad = config();
+        ((ObjectNode) bad.get("cast").get(0)).putObject("voice").put("mode", "record").put("url", "http://insecure.example.cn/a.mp3");
+        rejected(bad);
+    }
+
+    @Test
+    void 玩家视图_未解锁线索不下发正文_只给lockedCount() throws Exception
+    {
+        ObjectNode cfg = config();
+        ArrayNode clues = ((ObjectNode) cfg.get("cast").get(0)).putArray("clues");
+        clues.addObject().put("text", "开局就知道").putNull("chapterId");
+        clues.addObject().put("text", "第一章才知道").put("chapterId", 55);
+        clues.addObject().put("text", "第二章才知道").put("chapterId", 56);
+        JsonNode stored = CastConfigSupport.parse(CastConfigSupport.normalize(cfg));
+
+        JsonNode guest = CastConfigSupport.playerView(stored, java.util.Collections.<Long>emptySet()).get("cast").get(0);
+        assertEquals(1, guest.get("clues").size());
+        assertEquals("开局就知道", guest.get("clues").get(0).get("text").asText());
+        assertEquals(2, guest.get("lockedCount").asInt());
+        assertFalse(guest.toString().contains("第一章才知道"));
+        assertFalse(guest.toString().contains("第二章才知道"));
+
+        JsonNode mid = CastConfigSupport.playerView(stored, new java.util.HashSet<>(java.util.Arrays.asList(55L))).get("cast").get(0);
+        assertEquals(2, mid.get("clues").size());
+        assertEquals(1, mid.get("lockedCount").asInt());
+        assertFalse(mid.toString().contains("第二章才知道"));
+
+        // 不改入参(作者读口仍是全文)
+        assertEquals(3, stored.get("cast").get(0).get("clues").size());
+        assertNull(CastConfigSupport.playerView(null, java.util.Collections.<Long>emptySet()));
+        // 没有线索的角色也给 lockedCount=0,不多出 clues 键
+        ObjectNode plain = config();
+        JsonNode none = CastConfigSupport.playerView(CastConfigSupport.parse(CastConfigSupport.normalize(plain)), null).get("cast").get(0);
+        assertFalse(none.has("clues"));
+        assertEquals(0, none.get("lockedCount").asInt());
+    }
 }

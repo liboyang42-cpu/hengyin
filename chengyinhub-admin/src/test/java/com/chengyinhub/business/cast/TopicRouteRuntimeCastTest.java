@@ -17,6 +17,7 @@ import com.chengyinhub.business.service.support.AppMediaReferenceGuard;
 import com.chengyinhub.business.service.support.CastVoiceAudioCache;
 import com.chengyinhub.business.service.support.TopicRouteEngine;
 import com.chengyinhub.common.exception.ServiceException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -279,5 +280,62 @@ class TopicRouteRuntimeCastTest
         ServiceException e = assertThrows(ServiceException.class, () -> service.castLineVoice(OWNER, 10L, CHAPTER, "l1", RUN));
         assertEquals(404, e.getCode());
         assertEquals("章节不存在", e.getMessage());
+    }
+
+    @Test
+    void 试听_固定示例句_按预设音色合成_未知预设被拒_未开通回错误码() throws Exception
+    {
+        when(voiceClient.usable()).thenReturn(true);
+        String text = com.chengyinhub.business.service.support.CastVoicePresets.SAMPLE_LINE;
+        when(voiceCache.find(sha("youth" + text))).thenReturn(null);
+        when(voiceClient.synthesize("longcheng_v2", text)).thenReturn("https://dashscope-result.oss-cn-beijing.aliyuncs.com/s.mp3");
+        when(voiceCache.store(eq(sha("youth" + text)), anyString())).thenReturn("https://oss.example.cn/sample.mp3");
+        assertEquals("https://oss.example.cn/sample.mp3", service.castPresetSample(8L, "youth").get("url"));
+        assertEquals(400, assertThrows(ServiceException.class, () -> service.castPresetSample(8L, "robot")).getCode());
+        assertEquals(401, assertThrows(ServiceException.class, () -> service.castPresetSample(0L, "youth")).getCode());
+        when(voiceClient.usable()).thenReturn(false);
+        assertEquals(CastRunRules.ERR_TTS_NOT_CONFIGURED,
+                assertThrows(ServiceException.class, () -> service.castPresetSample(8L, "youth")).getDetailMessage());
+    }
+
+    @Test
+    void 玩家角色配置_按本局到过的章节解锁线索_其余只给个数() throws Exception
+    {
+        com.chengyinhub.business.mapper.CmsTopicNodeMapper nodeMapper = org.mockito.Mockito.mock(com.chengyinhub.business.mapper.CmsTopicNodeMapper.class);
+        TopicRouteRuntimeServiceImpl withNodes = new TopicRouteRuntimeServiceImpl(sessionMapper, topicMapper, nodeMapper, null, null, null);
+        ReflectionTestUtils.setField(withNodes, "cmsTopicChapterMapper", chapterMapper);
+        String stored = "{\"enabled\":true,\"cast\":[{\"id\":\"c_abc123\",\"name\":\"林姐\",\"color\":\"#E8604C\",\"clues\":["
+                + "{\"text\":\"开局\",\"chapterId\":null},{\"text\":\"一章\",\"chapterId\":55},"
+                + "{\"text\":\"二章\",\"chapterId\":56},{\"text\":\"三章\",\"chapterId\":57}]}]}";
+        java.util.List<CmsTopicChapter> chapters = new java.util.ArrayList<>();
+        for (long id : new long[] {55L, 56L, 57L}) { CmsTopicChapter c = new CmsTopicChapter(); c.setId(id); c.setTopicId(TOPIC); chapters.add(c); }
+        when(chapterMapper.selectCmsTopicChapterList(any())).thenReturn(chapters);
+        com.chengyinhub.business.domain.CmsTopicNode n1 = new com.chengyinhub.business.domain.CmsTopicNode();
+        n1.setId(301L); n1.setChapterId(55L);
+        com.chengyinhub.business.domain.CmsTopicNode n2 = new com.chengyinhub.business.domain.CmsTopicNode();
+        n2.setId(302L); n2.setChapterId(56L);
+        when(nodeMapper.selectCmsTopicNodeList(any())).thenReturn(java.util.Arrays.asList(n1, n2));
+
+        // 游客:只有开局线索
+        JsonNode guest = withNodes.castConfigForPlayer(0L, TOPIC, stored).get("cast").get(0);
+        assertEquals(1, guest.get("clues").size());
+        assertEquals(3, guest.get("lockedCount").asInt());
+
+        // 本局走到第二章的站(当前节点 302)→ 一章、二章解锁,三章只给个数
+        run.setStateJson("{\"currentNodeId\":302,\"visitedNodeIds\":[301]}");
+        when(sessionMapper.selectMemberTopicSessions(OWNER, TOPIC)).thenReturn(java.util.Collections.singletonList(run));
+        when(sessionMapper.selectCurrentByOwner(0L, TOPIC, OWNER)).thenReturn(run);
+        JsonNode mine = withNodes.castConfigForPlayer(OWNER, TOPIC, stored).get("cast").get(0);
+        assertEquals(3, mine.get("clues").size());
+        assertEquals(1, mine.get("lockedCount").asInt());
+        assertEquals(false, mine.toString().contains("三章"));
+
+        // 有本局但还没到任何站 = 在第一章
+        run.setStateJson("{}");
+        JsonNode fresh = withNodes.castConfigForPlayer(OWNER, TOPIC, stored).get("cast").get(0);
+        assertEquals(2, fresh.get("clues").size());
+        assertEquals(2, fresh.get("lockedCount").asInt());
+
+        assertEquals(null, withNodes.castConfigForPlayer(OWNER, TOPIC, null));
     }
 }

@@ -294,6 +294,21 @@ public interface ITopicRouteRuntimeService {
      */
     Map<String, Object> castLineVoice(Long memberId, Long topicId, Long chapterId, String blockKey, Long runId);
 
+    /**
+     * 角色(Cast)v1 · 编辑器「试听」:按预设声音念服务端固定的一句示例(不接受客户端文本),同一缓存 / 同一 TTS。
+     * 任何登录用户可调(只有 5 个预设 × 1 句,首次合成后全部命中缓存)。
+     *
+     * @return {url}
+     */
+    Map<String, Object> castPresetSample(Long memberId, String preset);
+
+    /**
+     * 角色(Cast)v1 · 玩家侧下发的 castConfig(契约 E4):未解锁线索不下发正文,只给 cast[].lockedCount。
+     * 解锁 = 线索 chapterId 为 null,或调用者在该主题的当前局已到过那一章(按主题章节顺序,到过的最远一章及之前)。
+     * 游客 / 没有本局:只解锁 chapterId 为 null 的线索。stored 为 null 时回 null(功能关闭)。
+     */
+    JsonNode castConfigForPlayer(Long memberId, Long topicId, String stored);
+
     static String sessionKey(Long memberId, Long topicId, Long activityId) {
         return String.valueOf(memberId) + ':' + String.valueOf(topicId) + ':'
                 + String.valueOf(activityId == null ? 0L : activityId);
