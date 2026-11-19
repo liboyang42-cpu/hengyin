@@ -1187,7 +1187,7 @@ Page({
             endDate: params.endDate || '',
             minPrice: params.minPrice == null ? 0 : params.minPrice,
             maxPrice: params.maxPrice == null ? 1000 : params.maxPrice,
-            sortType: params.sortType || '1'
+            sortType: '1' // PG-007:只留「最近」排序
           })
         });
       } catch (e) {

@@ -59,3 +59,19 @@ test('PG-006:漫游地图据点评价带并复用 request_id,成功后清掉', (
   assert.match(js, /if \(!this\._reviewReq \|\| this\._reviewReq\.poiId !== String\(c\.id\)\)/);
   assert.match(js, /this\._reviewReq = null;\n\s*this\.setData\(\{ 'poiCard\.myText': ''/);
 });
+
+test('PG-007/PG-008/PG-044:地图搜索只留「最近」;筛选无关键词给提示;日期面板按身份切深浅', () => {
+  const map = noComments(read('pages/searchmap/index.wxml'));
+  assert.doesNotMatch(map, /最热/);
+  assert.match(read('pages/searchmap/index.js'), /sortType: '1' \/\/ PG-007/);
+  const js = read('pages/search2/index.js');
+  const filter = js.slice(js.indexOf('  searchFilter() {'), js.indexOf('  // 选择日期'));
+  assert.match(filter, /\n\s*this\.navigateToSearchList\(\);\n\s*\},/);
+  assert.match(js, /toast\('请输入关键词或选择类别'\)/);
+  for (const p of ['pages/search2/index', 'pages/searchmap/index']) {
+    const wxml = read(p + '.wxml');
+    assert.match(wxml, /<cy-date-sheet [^>]*dark="\{\{!merchantView\}\}"/, p);
+    assert.doesNotMatch(wxml, /indicator-style="[^"]*rgba/, p);
+    assert.match(read(p + '.wxss'), /\.date-picker-ind \{[^}]*var\(--cy-color-border-strong\)/, p);
+  }
+});

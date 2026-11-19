@@ -213,10 +213,6 @@
           <view class="tit">最近</view>
           <cy-icon wx:if="{{activeSort === '1'}}" class="ck" name="check" size="40" />
         </view>
-        <view class="dd {{activeSort === '2' ? 'active' : ''}}" bindtap="selectSort" data-value="2" hover-class="cy-pressed" hover-stay-time="80">
-          <view class="tit">最热</view>
-          <cy-icon wx:if="{{activeSort === '2'}}" class="ck" name="check" size="40" />
-        </view>
       </view>
     </view>
   </view>
@@ -230,9 +226,9 @@
 <cy-category-sheet show="{{merchantCategorySheetVisible}}" type="MERCHANT" num="{{1}}"
   ids="{{filterConditions.categoryId || ''}}" bind:select="onMerchantCategoryChange" bind:close="closeMerchantCategorySheet" />
 
-<cy-date-sheet show="{{dateSheetVisible}}" title="{{datePickerTitle}}" dark="{{true}}"
+<cy-date-sheet show="{{dateSheetVisible}}" title="{{datePickerTitle}}" dark="{{!merchantView}}"
   bind:cancel="cancelDatePicker" bind:confirm="confirmDatePicker">
-    <picker-view class="date-picker-view pw-wheel" value="{{datePickerValue}}" indicator-style="height:88rpx; border-top:1rpx solid rgba(128,128,128,0.45); border-bottom:1rpx solid rgba(128,128,128,0.45);" mask-style="background: transparent;" bindchange="onDatePickerChange">
+    <picker-view class="date-picker-view pw-wheel" value="{{datePickerValue}}" indicator-class="date-picker-ind" mask-style="background: transparent;" bindchange="onDatePickerChange">
       <picker-view-column>
         <view class="date-picker-item" wx:for="{{datePickerYears}}" wx:key="*this">{{ item || 0 }}年</view>
       </picker-view-column>

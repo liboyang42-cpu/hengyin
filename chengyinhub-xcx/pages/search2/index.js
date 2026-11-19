@@ -249,10 +249,8 @@ Page({
       filterConditions: filterConditions
     });
 
-    // 如果有关键词，跳转到搜索结果页面
-    if (this.data.searchKeyword || this.data.activeCategory) {
-      this.navigateToSearchList();
-    }
+    // PG-008:有关键词/类别就进结果页;都没有时 navigateToSearchList 给「请输入关键词或选择类别」,不再静默关弹层
+    this.navigateToSearchList();
   },
 
   // 选择日期
