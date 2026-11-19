@@ -3,6 +3,8 @@
 -- 2) play_run_start_mode:本局开局方式。DESK = 桌面完成(不定位开局，奖励只发探索值与徽章);
 --    ALT = 在替代站开局。正常在首站开局不写行(开局时清掉同主题旧行)。
 -- 只新建两张表，不改既有表与数据，可重复执行。本文件只生成，不直接操作任何线上库。
+-- 落库顺序:先于 jar 部署执行;jar 读不到这两张表时开局方式按正常开局处理、桌面完成请求失败关闭。
+-- 回滚:旧 jar 不读这两张表，可原样保留;确需撤销时 DROP TABLE play_run_start_mode, cms_topic_alt_station(先确认无数据)。
 
 CREATE TABLE IF NOT EXISTS cms_topic_alt_station (
     id          BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
