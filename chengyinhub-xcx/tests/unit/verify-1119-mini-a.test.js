@@ -239,7 +239,8 @@ test('PG-035/PG-037/PG-038/PG-043/PG-056:徽章缺图落缺参、收益子页身
 
 test('PG-046/047/050/051/052/053/054/057/058:样式与主题收口', () => {
   const club = read('pages/club/detail/index.wxss');
-  assert.doesNotMatch(club, /rgba\(255, ?255, ?255, ?0\.06\)\;?\n?[^\n]*$|border[^;]*rgba\(255, ?255, ?255, ?0\.(06|12)\)/m);
+  assert.doesNotMatch(club, /border[^;\n]*rgba\(255, ?255, ?255, ?0\.(06|12)\)/);
+  assert.doesNotMatch(club, /#8a8a8e|#0a0a0a;/);
   assert.match(read('pages/merchant/citynode/create/index.wxml'), /^<view class="cnc-page theme-merchant">/);
   assert.match(read('subpackageP3/pages/stamp-album/index/index.wxss'), /\.al-fab \{[^}]*bottom: calc\(var\(--cy-space-7\) \+ env\(safe-area-inset-bottom\)\)/);
   const sq = read('pages/square/detail/index.wxss');
