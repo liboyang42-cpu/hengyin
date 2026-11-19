@@ -417,7 +417,7 @@ public class ApiPlayProgressController extends BaseController {
     }
 
     @Operation(summary = "设置本局玩家档案(名字 / 身份)")
-    @RateLimiter(time = 60, count = 20, limitType = LimitType.MEMBER)
+    @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/run/profile")
     public AjaxResult runProfile(@RequestBody java.util.Map<String, Object> body)
     {
@@ -437,7 +437,7 @@ public class ApiPlayProgressController extends BaseController {
     }
 
     @Operation(summary = "记录剧情分支块的选择(服务端结算角色信任)")
-    @RateLimiter(time = 10, count = 60, limitType = LimitType.MEMBER)
+    @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/run/branch")
     public AjaxResult runBranch(@RequestBody java.util.Map<String, Object> body)
     {
