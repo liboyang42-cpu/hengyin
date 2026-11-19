@@ -218,6 +218,30 @@ class PlayerRunReportApplicationTest {
     }
 
     @Test
+    void nodePhotoAndRunStartModeAreReportedForOwnerOnly() {
+        PlayerNodeProgress row = progress(1L, 100, "SOLVED");
+        row.setPicUrl("media-asset:55");
+        PlayerNodeProgress hidden = progress(2L, 100, "SOLVED");
+        hidden.setPicUrl("media-asset:56");
+        when(progressService.selectPlayerNodeProgressList(any())).thenReturn(List.of(row, hidden));
+        com.chengyinhub.business.service.support.AppMediaReferenceGuard media =
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.support.AppMediaReferenceGuard.class);
+        when(media.visibleUrl("media-asset:55", VIEWER)).thenReturn("https://cdn.example/own.jpg");
+        when(media.visibleUrl("media-asset:56", VIEWER)).thenReturn("");
+        org.springframework.test.util.ReflectionTestUtils.setField(application, "mediaReferences", media);
+        com.chengyinhub.business.service.PlayRunStartModeService modes =
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.PlayRunStartModeService.class);
+        when(modes.runMode(VIEWER, 0L, TOPIC)).thenReturn("DESK");
+        org.springframework.test.util.ReflectionTestUtils.setField(application, "playRunStartModeService", modes);
+
+        PlayerRunReportVO vo = (PlayerRunReportVO) application.report(VIEWER, null, TOPIC).get(AjaxResult.DATA_TAG);
+
+        assertEquals("https://cdn.example/own.jpg", vo.getNodes().get(0).getPhotoUrl());
+        assertNull(vo.getNodes().get(1).getPhotoUrl(), "看不见的照片不下发");
+        assertEquals("DESK", vo.getRunStartMode());
+    }
+
+    @Test
     void inProgressUnscoredRunReturnsNotScoredAndNoRank() {
         PlayerNodeProgress revealed = progress(1L, null, "REVEALED");
         when(progressService.selectPlayerNodeProgressList(any())).thenReturn(List.of(revealed));

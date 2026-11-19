@@ -118,7 +118,11 @@ public class PlayerRunReportVO {
         private Integer score;
         private Boolean scored;
         private Date checkinTime;
+        /** 本站玩家自己拍的照片(结算页展示用);只给本人看得见的地址，没有则为 null。 */
+        private String photoUrl;
 
+        public String getPhotoUrl() { return photoUrl; }
+        public void setPhotoUrl(String photoUrl) { this.photoUrl = photoUrl; }
         public Long getNodeId() { return nodeId; }
         public void setNodeId(Long nodeId) { this.nodeId = nodeId; }
         public String getName() { return name; }
