@@ -113,7 +113,20 @@ public class ApiAnalyticsController extends BaseController {
             "npc_chat_open",
             "npc_chat_submit",
             "npc_chat_complete",
-            "npc_chat_cancel"
+            "npc_chat_cancel",
+            // CG-01-P2-9 / CG-09-P2-6 / CG-10-P2-6 游玩过程记录:bizType=topic_node,bizId=节点 id;
+            // properties 只放 nodeId/level/issueKind 这类码，不放题面、答案或玩家输入原文。
+            "stage_enter",
+            "hint_open",
+            "stage_skip",
+            "assisted_complete",
+            "wrong_answer",
+            "stage_issue_report",
+            "material_view"
+    ));
+    /** stage_issue_report 的分类码:替代材料 / 找不到 / 看不清 / 逻辑有误。 */
+    private static final Set<String> STAGE_ISSUE_KINDS = new HashSet<>(Arrays.asList(
+            "ALT_MATERIAL", "NOT_FOUND", "UNREADABLE", "LOGIC_ERROR"
     ));
     private static final Set<String> ROAM_AI_SURFACE_EVENTS = new HashSet<>(Arrays.asList(
             "roam_route_story_shown",
@@ -240,6 +253,9 @@ public class ApiAnalyticsController extends BaseController {
             if (containsSensitiveProperties(item.getPropertiesJson())) {
                 return "事件属性不得包含敏感个人信息";
             }
+            if ("stage_issue_report".equals(item.getEventName()) && !hasStageIssueKind(item.getPropertiesJson())) {
+                return "问题分类不合法";
+            }
             if (ROAM_AI_SURFACE_EVENTS.contains(item.getEventName()) && !isMinimalRoamAiSurfaceEvent(item)) {
                 return "漫游 AI 表面埋点不得关联业务对象或携带属性";
             }
@@ -296,6 +312,18 @@ public class ApiAnalyticsController extends BaseController {
         return value.matches("^1[3-9]\\d{9}$")
                 || value.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")
                 || value.matches("^\\d{15,19}$");
+    }
+
+    private boolean hasStageIssueKind(String propertiesJson) {
+        if (StringUtils.isBlank(propertiesJson)) {
+            return false;
+        }
+        try {
+            JsonNode root = OBJECT_MAPPER.readTree(propertiesJson);
+            return root != null && root.isObject() && STAGE_ISSUE_KINDS.contains(root.path("issueKind").asText(""));
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /** 四个 V1 表面只记“发生过”，避免 session/POI 可被反查成路线或地点。 */
