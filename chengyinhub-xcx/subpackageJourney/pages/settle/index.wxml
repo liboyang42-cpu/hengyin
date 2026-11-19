@@ -98,7 +98,6 @@
       <view class="st-pop__card">
         <cy-illus name="star" size="180" delay="{{100}}" reduced-motion="{{reduced}}" />
         <text class="st-pop__t">谢谢</text>
-        <text class="st-pop__s">评价会公开，只显示昵称。</text>
         <cy-btn variant="primary" bindtap="goShare">去分享</cy-btn>
       </view>
     </view>

@@ -266,3 +266,24 @@ test('PG-048/PG-090:本局计分页改 custom 导航 + cy-nav-bar/cy-page-title/
   assert.doesNotMatch(wxml.replace(/data-[a-z-]+="[^"]*"/g, ""), /\{\{item\.sessionId\}\}|\{\{score\.sessionId\}\}|流水 \{\{|\{\{item\.id\}\}|\{\{item\.nodeId|\{\{item\.referenceId\}\}|\{\{score\.settlement\.id\}\}|\{\{pending\.requestId/);
   assert.doesNotMatch(wxml, /\{\{item\.kind\}\}|\{\{pending\.kind\}\}/);
 });
+
+test('PG-063/064/065/066/068/070/071/090:辅助说明与编号按清单撤除', () => {
+  const gone = [
+    ['pages/index/index.wxml', /v3-hero-action-subtitle/],
+    ['pages/roam/index.wxml', /用于到点打卡与轨迹记录|边走边揭开地图迷雾/],
+    ['subpackageRoam/nearby/index.wxml', /class="psub"/],
+    ['subpackageJourney/pages/settle/index.wxml', /评价会公开，只显示昵称/],
+    ['pages/shezhi/shezhi.wxml', /class="reg-opt-s"/],
+    ['pages/activity/components/event-attendance/index.wxml', /WGS84/],
+    ['pages/publish/fabu/index.wxml', /mode-opt__desc|切换后另存为新草稿/],
+    ['pages/topic/index/index.wxml', /Beta 主题，欢迎评论反馈/],
+    ['subpackageA/pages/infomationdetail/infomationdetail.wxml', /适用玩法版本暂未标注/],
+    ['pages/coop/invite/index.wxml', /先发布主题后再发起协作邀请/],
+    ['subpackageP3/pages/stamp-camera/index/index.wxml', /双指缩放裁切/],
+    ['subpackageMember/complaint/index.wxml', /仅限已报名并支付的活动/],
+    ['subpackageMember/complaint/index.js', /'活动#'/],
+    ['subpackageMember/report-mine/index.wxml', /编号 \{\{item\.id\}\}/],
+    ['subpackageMember/report-detail/index.wxml', /编号 \{\{report\.id\}\}/],
+  ];
+  for (const [f, re] of gone) assert.doesNotMatch(read(f), re, f);
+});

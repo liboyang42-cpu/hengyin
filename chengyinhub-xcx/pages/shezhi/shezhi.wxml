@@ -63,7 +63,6 @@
       <view class="reg-ic club"><image src="/pages/shezhi/images/icon_flag_blue.svg" mode="aspectFit" /></view>
       <view class="reg-opt-body">
         <view class="reg-opt-t">成为俱乐部主理人</view>
-        <view class="reg-opt-s">主理人身份 · 之后可创建俱乐部带团</view>
       </view>
       <cy-icon class="reg-arrow" name="arrow-right" size="28" />
     </view>
@@ -71,7 +70,6 @@
       <view class="reg-ic shop"><image src="/images/icon_shop.svg" mode="aspectFit" /></view>
       <view class="reg-opt-body">
         <view class="reg-opt-t">商家</view>
-        <view class="reg-opt-s">提供场地 · 参与招募 · 发布优惠</view>
       </view>
       <cy-icon class="reg-arrow" name="arrow-right" size="28" />
     </view>

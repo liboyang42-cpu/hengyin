@@ -20,7 +20,7 @@
   </view>
 
   <view class="sc-hint" wx:if="{{!shot && !camErr}}" style="left:{{screenL}}px;top:{{screenT}}px;width:{{screenW}}px;height:{{screenH}}px;">
-    <text>双指缩放裁切 {{cropScaleLabel}}</text>
+    <text>{{cropScaleLabel}}</text>
   </view>
 
   <view class="sc-err" wx:if="{{camErr}}" style="left:{{screenL}}px;top:{{screenT}}px;width:{{screenW}}px;height:{{screenH}}px;">

@@ -31,14 +31,15 @@ const HERO_OVERLAY_OPENER = '<view class="hero-info dt__txt"'
 // Beta 试玩区:后端 betaFlag 是唯一真源,前端只渲染不推断。
 // 这批断言盯的是「渲染到没到」和「谁能看到转正入口」,不是像素。
 
-test('主题详情 Beta 条挂在 betaFlag 上，说明文案与徽标同区', () => {
+test('主题详情 Beta 条挂在 betaFlag 上，只留徽标不带说明小字', () => {
   const wxml = stripWxmlComments(read('pages/topic/index/index.wxml'))
   const beta = balancedBlock(wxml, BETA_OPENER)
 
   assert.ok(wxml.includes(BETA_OPENER), 'Beta 条必须存在')
   assert.match(beta, /wx:if="\{\{info\.betaFlag==1\}\}"/, 'Beta 条只在 betaFlag==1 时渲染')
   assert.match(beta, /topic-beta__badge[^<]*>\s*Beta 试玩/, '徽标文案要出现')
-  assert.match(beta, /topic-beta__note[^<]*>[^<]*反馈/, '说明文案要讲清楚要什么(反馈)')
+  // PG-068(2026-11-17 业主批准):「Beta 主题，欢迎评论反馈」说明小字撤掉,只留徽标
+  assert.doesNotMatch(beta, /topic-beta__note/)
 })
 
 test('转正入口只给作者，且调的是服务端 graduate 端点', () => {

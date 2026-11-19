@@ -598,13 +598,13 @@ function assertShutterDiscoverable(wxml) {
   const hint = wxml.match(/<view class="sc-hint"[\s\S]*?<\/view>/)
   assert.ok(hint, 'sc-hint 提示必须存在')
   assert.match(hint[0], /\{\{cropScaleLabel\}\}/, '缩放倍率必须留着:双指裁切是看不出来的操作')
-  assert.match(hint[0], /缩放|裁切/, '提示必须说清这一屏能做什么:' + hint[0])
+  // PG-070(2026-11-17 业主批准):「双指缩放裁切」说明小字撤掉,只留倍率读数
   // 快门本身要可见 —— 不可见就又回到「主动作靠猜」那个病灶
   assert.match(wxml, /class="sc-shutter"[\s\S]{0,300}?bindtap="onShutter"/, '快门必须是看得见且可点的那一枚')
   assert.doesNotMatch(wxml, /sc-shutter-hit/, '不许退回透明热区')
 }
 
-test('C06-6 集邮相机:快门看得见,缩放裁切有文字说明', () => {
+test('C06-6 集邮相机:快门看得见,缩放倍率读数在位', () => {
   assertShutterDiscoverable(read(CAMERA_WXML))
 })
 
