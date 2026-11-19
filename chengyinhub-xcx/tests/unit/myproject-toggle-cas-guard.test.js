@@ -6,7 +6,7 @@
 //
 // 承重不变量:
 //  - 主题卡必须上送 expectedUserStatus = 渲染这一刻的态(_online),后端据此做 CAS
-//  - 活动卡走另一个接口,**不许**塞这个参数
+//  - 活动卡走另一个接口,带它自己的 expectedPublishStatus(#866),**不许**塞主题那个参数
 //  - 同一张卡在途时重复点只发一次请求;不同卡互不影响
 //  - ★ flag 必须能被归零:success / fail / complete / **同步抛错** / onShow 五条路都要清
 //    (本仓栽过「在途 flag 卡住 = 永久死锁,热启动都不自愈」)
@@ -84,13 +84,29 @@ test('未上架的卡上送 expectedUserStatus = 0', () => {
   assert.equal(sent[0].data.expectedUserStatus, 0);
 });
 
-test('活动卡走另一个接口,不许塞 expectedUserStatus', () => {
+test('活动卡走另一个接口,上送 expectedPublishStatus(#866),不塞 expectedUserStatus', () => {
   const page = makePage();
   page.toggleStatus(tap(103, true, 'activity'));
 
   assert.equal(sent[0].url, '/api/activity/update_publish_status');
   assert.equal('expectedUserStatus' in sent[0].data, false,
     '活动线没有这个参数，乱塞会让它成为一个谁也不读的假字段');
+  assert.equal(sent[0].data.expectedPublishStatus, 1, '已上架的活动卡期望态 = 1');
+  page.toggleStatus(tap(104, false, 'activity'));
+  assert.equal(sent[1].data.expectedPublishStatus, 0, '已下架的活动卡期望态 = 0');
+
+  const server = require('node:fs').readFileSync(require('node:path').join(__dirname,
+    '../../../chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java'), 'utf8');
+  assert.match(server, /public AjaxResult activityUpdatePublishStatus\(String id, String scope, String expectedPublishStatus\)/,
+    '参数名以后端为准');
+});
+
+test('活动上下架冲突:后端原话原样透出', () => {
+  const page = makePage();
+  page.reload = () => {};
+  page.toggleStatus(tap(105, true, 'activity'));
+  sent[0].success({ code: 500, msg: '状态已变化，请刷新后重试' });
+  assert.equal(toasts[toasts.length - 1], '状态已变化，请刷新后重试');
 });
 
 test('在途守卫:同一张卡重复点只发一次', () => {

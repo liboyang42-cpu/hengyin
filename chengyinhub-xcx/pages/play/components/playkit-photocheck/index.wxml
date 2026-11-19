@@ -40,7 +40,7 @@
   </view>
   <view class="pc__alt" wx:if="{{pendingPath && !judging && !passed}}" bindtap="onRetake"
         aria-role="button" aria-label="重拍" hover-class="g-btn--press" hover-stay-time="80">重拍</view>
-  <view class="pc__alt" wx:elif="{{allowSkip && skipOffer && !passed && !judging}}" bindtap="onSkipPhoto"
+  <view class="pc__alt" wx:elif="{{recordOnly && skipOffer && !passed && !judging}}" bindtap="onTextConfirm"
         aria-role="button" aria-label="不拍照，继续" hover-class="g-btn--press" hover-stay-time="80">不拍照，继续</view>
 </cy-play-stage>
 

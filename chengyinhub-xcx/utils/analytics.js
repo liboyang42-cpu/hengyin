@@ -38,7 +38,8 @@ const ALLOWED_EVENTS = {
   // P0 自由定向推荐条:换一个 / 采纳(完成即推荐节点)
   play_rec_swap: true,
   play_rec_accept: true,
-  // CG-01-P2-9 / CG-09-P2-6 玩法站过程:进站 / 开提示 / 跳过 / 辅助完成 / 答错 / 玩家报问题(只记站 id 与枚举码)
+  // CG-01-P2-9 / CG-09-P2-6 玩法站过程(后端 #866 ApiAnalyticsController 同名白名单):进站 / 开提示 / 跳过 /
+  // 辅助完成 / 答错 / 玩家报问题(issueKind) / 看资料图。bizType=topic_node、bizId=站 id,只记枚举码
   stage_enter: true,
   hint_open: true,
   stage_skip: true,

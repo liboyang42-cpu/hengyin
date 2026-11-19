@@ -109,9 +109,9 @@ const OUT_OF_PROJECTION = {
   preview: '不是配置投影，是编辑页预览标记:玩家侧恒 false,只有 advanced-game-preview 给 true',
   photoVerified: 'C1:服务端由 verdict 派生(只有视觉模型当场 PASS 才为真),不是配置/状态原字段；缺失即 false',
   rewardCeiling: 'C1:服务端按 passed + photoVerified 派生的奖励上限，没过之前不下发；缺失即空串',
-  // CG-ALL-12(后端 #866):只记录由投影里的 mode=RECORD 派生,不是独立投影字段
-  recordOnly: 'CG-ALL-12:由 mode=RECORD 派生的「只记录」;其它 mode 为 false',
-  allowSkip: 'CG-ALL-12:只记录站拒绝相机时可文字确认继续(SUBMIT_PHOTO_RECORD textConfirmed);由 mode=RECORD 派生',
+  // CG-ALL-12(#866):后端投影的是 photoCheck.mode(=RECORD,与 CARD 同一个键),不另起 photoMode;
+  // recordOnly 由 mode 派生,mode 本身照常搬运。缺失即 false,这一屏与今天相同
+  recordOnly: 'CG-ALL-12:由 photoCheck.mode === RECORD 派生的「只记录」;缺失即 false',
 }
 
 test('照片提交阶段与审核中来自页面本地状态，服务端段字段不能注入', () => {

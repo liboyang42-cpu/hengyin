@@ -71,20 +71,45 @@ test('CG-07-P2-2 结算总览单独数出辅助完成(跳过 / 看过答案)的�
   assert.match(wxml, /wx:if="\{\{report\.assistedCount > 0\}\}"><text class="st-two__v">\{\{report\.assistedCount\}\}<\/text><text class="st-two__l">辅助完成<\/text>/)
 })
 
-test('CG-ALL-12 只记录拍照:photoCheck.mode=RECORD 才生效,提交走 SUBMIT_PHOTO_RECORD,文字确认 = {textConfirmed:true};缺省同今天', () => {
-  const { serverAction, serverPayload } = require('../../pages/play/utils/playkit-view.js')
+const JAVA_RUNTIME = '../chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImpl.java'
+const JAVA_PROJECTION = '../chengyinhub-system/src/main/java/com/chengyinhub/business/util/AdvancedGamePublicProjection.java'
+
+test('CG-ALL-12 只记录拍照(#866):读 photoCheck.mode=RECORD,提交走 SUBMIT_PHOTO_RECORD;判定站仍 SUBMIT_PHOTO_CHECK', () => {
+  const view = require('../../pages/play/utils/playkit-view.js')
+  const { serverAction, serverPayload, photoSubmitAction, PHOTO_RECORD_MODE } = view
+  // 后端真名:公开投影只 copy mode(不是 photoMode);运行期 recordPhotoMode 认 mode === "RECORD";动作名 SUBMIT_PHOTO_RECORD
+  const projection = read(JAVA_PROJECTION)
+  assert.match(projection, /putIfText\(value, "mode", source\);/)
+  assert.doesNotMatch(projection, /photoMode/)
+  const runtime = read(JAVA_RUNTIME)
+  assert.match(runtime, new RegExp('"' + PHOTO_RECORD_MODE + '"\\.equals\\(photoCheck\\.path\\("mode"\\)'))
+  assert.match(runtime, /case "SUBMIT_PHOTO_RECORD":/)
+  assert.match(runtime, /if \(recordPhotoMode\(config\.get\("photoCheck"\)\)\) throw new IllegalArgumentException\("这一站拍照只做记录"\);/)
+  assert.match(runtime, /text\(payload, "imageUrl"\)/)
+  assert.match(runtime, /payload\.get\("textConfirmed"\)/)
+  const cfg = require('../../pages/publish/utils/publish/advanced-game-config.js')
+  assert.ok(cfg.PHOTO_CHECK_MODES.includes(PHOTO_RECORD_MODE), '与发布端 PHOTO_CHECK_MODES(后端镜像)同一个取值')
+
   const now = new Date('2026-11-19T10:00:00+08:00')
-  const kit = pickPlayKit({ sessionId: 's1', version: 1, playKit: { photoCheck: { title: '留念', mode: 'RECORD', textConfirmed: true } } }, now)
+  const kit = pickPlayKit({ sessionId: 's1', version: 1, playKit: { photoCheck: { title: '留念', mode: 'RECORD' } } }, now)
   assert.equal(kit.type, 'photocheck')
   assert.equal(kit.recordOnly, true)
-  assert.equal(kit.allowSkip, true)
-  assert.equal(kit.textConfirmed, true)
-  const bare = pickPlayKit({ sessionId: 's1', version: 1, playKit: { photoCheck: { title: '拍', mode: 'CARD' } } }, now)
-  assert.equal(bare.recordOnly, false)
-  assert.equal(bare.allowSkip, false)
-  assert.equal(serverAction('photocheck', 'skip'), 'SUBMIT_PHOTO_RECORD')
-  assert.deepEqual(serverPayload('photocheck', 'skip', {}), { textConfirmed: true })
-  assert.match(read('pages/play/index.js'), /name: kit\.recordOnly \? 'SUBMIT_PHOTO_RECORD' : 'SUBMIT_PHOTO_CHECK'/)
+  assert.equal(kit.mode, 'RECORD', '不是 CARD,不进拍物成卡那一屏')
+  assert.equal(photoSubmitAction(kit), 'SUBMIT_PHOTO_RECORD')
+  const legacy = pickPlayKit({ sessionId: 's1', version: 1, playKit: { photoCheck: { title: '拍', photoMode: 'RECORD' } } }, now)
+  assert.equal(legacy.recordOnly, false, '旧的自造键 photoMode 不认')
+  assert.equal(photoSubmitAction(legacy), 'SUBMIT_PHOTO_CHECK')
+  const card = pickPlayKit({ sessionId: 's1', version: 1, playKit: { photoCheck: { title: '卡', mode: 'CARD' } } }, now)
+  assert.equal(photoSubmitAction(card), 'SUBMIT_PHOTO_CHECK')
+  // 文字确认继续:SUBMIT_PHOTO_RECORD {textConfirmed:true};不再借 SKIP_SENSOR_STATION
+  assert.equal(serverAction('photocheck', 'textconfirm'), 'SUBMIT_PHOTO_RECORD')
+  assert.deepEqual(serverPayload('photocheck', 'textconfirm', {}), { textConfirmed: true })
+  assert.equal(serverAction('photocheck', 'skip'), '')
+  // 运行期视图(AdvancedGameRuntimeServiceImpl 只记录站才 put textConfirmed)同段下发
+  assert.match(runtime, /if \(recordPhotoMode\(cfg\)\) value\.put\("textConfirmed", st\.path\("textConfirmed"\)\.asBoolean\(false\)\);/)
+  const confirmed = pickPlayKit({ sessionId: 's1', version: 1, playKit: { photoCheck: { title: '留念', mode: 'RECORD', passed: true, textConfirmed: true } } }, now)
+  assert.equal(confirmed.textConfirmed, true)
+  assert.equal(kit.textConfirmed, false)
 
   const def = loadComponent('pages/play/components/playkit-photocheck/index.js')
   const obs = def.observers['show, tries, maxTries, passed, flagged, degraded, fallback, lastReason']
@@ -92,21 +117,31 @@ test('CG-ALL-12 只记录拍照:photoCheck.mode=RECORD 才生效,提交走 SUBMI
   obs.call(vm, true, 1, 3, true, false, false, 'retake', '')
   assert.equal(vm.data.verdict, '已记录')
   assert.equal(vm.data.triesLabel, '')
+  const typed = { data: Object.assign({}, def.data, { recordOnly: true, textConfirmed: true }), setData(p) { Object.assign(this.data, p) }, replayMotion() {} }
+  obs.call(typed, true, 1, 0, true, false, false, 'retake', '')
+  assert.equal(typed.data.verdict, '没拍照，已继续')
   const judge = { data: Object.assign({}, def.data), setData(p) { Object.assign(this.data, p) }, replayMotion() {} }
   obs.call(judge, true, 1, 3, true, false, false, 'retake', '')
   assert.equal(judge.data.verdict, '这张过了', '审核模式不变')
   const wxml = read('pages/play/components/playkit-photocheck/index.wxml')
   assert.match(wxml, /judging \? \(recordOnly \? '保存中…' : '审核中…'\)/)
-  assert.match(read('pages/play/components/playkit/index.wxml'), /record-only="\{\{kit\.recordOnly\}\}" allow-skip="\{\{kit\.allowSkip\}\}"\n  bind:shoot="onShoot" bind:resubmit="onResubmit" bind:skip="onSkip"/)
+  assert.match(read('pages/play/components/playkit/index.wxml'), /record-only="\{\{kit\.recordOnly\}\}" text-confirmed="\{\{kit\.textConfirmed\}\}"\n  bind:shoot="onShoot" bind:resubmit="onResubmit" bind:textconfirm="onTextConfirm"/)
+  assert.match(read('pages/play/components/playkit/index.js'), /onTextConfirm\(\) \{ this\._emit\('textconfirm'\); \}/)
+  // 页面:拍照提交与重新提交都按站别取动作名;只记录站不走模型同意;失败同样回到那一屏
+  const page = read('pages/play/index.js')
+  assert.match(page, /name: photoSubmitAction\(kit\),/)
+  assert.match(page, /\(kit\.recordOnly \? Promise\.resolve\(\) : this\._ensurePhotoConsent\(current\)\)\.then/)
+  assert.match(page, /if \(action === 'SUBMIT_PHOTO_RECORD'\) this\._notifyPhotoFail\(/)
+  assert.match(page, /actionName === 'SUBMIT_PHOTO_CHECK' \|\| actionName === 'SUBMIT_PHOTO_RECORD'\) this\._trackPhotoJudging/)
 })
 
-test('CG-ALL-12 / CG-ALL-29 相机被拒且允许跳过:亮出「不拍照，继续」,文字确认后才发跳过;拍完先预览,可重拍', () => {
+test('CG-ALL-12 / CG-ALL-29 只记录站相机被拒:亮出「不拍照，继续」,文字确认后才发 textconfirm;拍完先预览,可重拍', () => {
   const shown = []
   const modalPath = require.resolve(path.join(ROOT, 'utils/modal.js'))
   const saved = require.cache[modalPath]
   require.cache[modalPath] = { id: modalPath, filename: modalPath, loaded: true, exports: { show: (o) => shown.push(o) } }
   const def = loadComponent('pages/play/components/playkit-photocheck/index.js')
-  const inst = { data: Object.assign({}, def.data, { allowSkip: true, recordOnly: true }), events: [] }
+  const inst = { data: Object.assign({}, def.data, { recordOnly: true }), events: [] }
   inst.setData = (p) => Object.assign(inst.data, p)
   inst.triggerEvent = (n, d) => inst.events.push([n, d])
   for (const [k, fn] of Object.entries(def.methods)) inst[k] = fn.bind(inst)
@@ -114,11 +149,19 @@ test('CG-ALL-12 / CG-ALL-29 相机被拒且允许跳过:亮出「不拍照，继
   global.wx = { chooseMedia: (o) => o.fail({ errMsg: 'chooseMedia:fail auth deny' }), vibrateShort() {} }
   try { inst.onShoot() } finally { global.wx = prevWx }
   assert.equal(inst.data.skipOffer, true)
-  inst.onSkipPhoto()
+  inst.onTextConfirm()
   assert.equal(shown.length, 1)
   assert.deepEqual(inst.events, [], '没确认不发')
   shown[0].success({ confirm: true })
-  assert.deepEqual(inst.events, [['skip', undefined]])
+  assert.deepEqual(inst.events, [['textconfirm', undefined]])
+
+  // 判定站(非只记录)相机被拒:不给文字确认这条路
+  const judged = { data: Object.assign({}, def.data), events: [] }
+  judged.setData = (p) => Object.assign(judged.data, p)
+  judged.triggerEvent = (n, d) => judged.events.push([n, d])
+  for (const [k, fn] of Object.entries(def.methods)) judged[k] = fn.bind(judged)
+  judged.onTextConfirm()
+  assert.deepEqual(judged.events, [])
 
   inst.events.length = 0
   global.wx = { chooseMedia: (o) => o.success({ tempFiles: [{ tempFilePath: 'wxfile://a.jpg', size: 1 }] }), vibrateShort() {} }
@@ -131,6 +174,7 @@ test('CG-ALL-12 / CG-ALL-29 相机被拒且允许跳过:亮出「不拍照，继
     inst.onShoot()
   } finally { global.wx = prevWx }
   assert.deepEqual(inst.events, [['shoot', { tempFilePath: 'wxfile://a.jpg', size: 1 }]])
+  assert.match(read('pages/play/components/playkit-photocheck/index.wxml'), /wx:elif="\{\{recordOnly && skipOffer && !passed && !judging\}\}" bindtap="onTextConfirm"/)
   if (saved) require.cache[modalPath] = saved; else delete require.cache[modalPath]
 })
 
@@ -156,15 +200,34 @@ test('CG-09-P2-5 / CG-10-D-3 题面下常驻「看不清？查看资料图」:�
   }
   assert.match(read('pages/play/components/playkit-qa/index.wxml'), /wx:if="\{\{referenceUrl\}\}" bindtap="onOpenReference"[^>]*>看不清？查看资料图</)
   assert.match(read('pages/play/components/playkit-hangman/index.wxml'), /wx:if="\{\{referenceUrl\}\}" bindtap="onOpenReference"[^>]*>看不清？查看资料图</)
+  // #866 白名单里看资料图是 material_view(不是 hint_open)
   assert.match(read('pages/play/index.js'), /case 'reference': this\._stageEvent\('material_view', \(this\._kit\(\) \|\| \{\}\)\.nodeId\); return;/)
 })
 
-test('CG-ALL-11 本局开局方式(runStartMode DESK / ALT)标在结算结果后面;没下发时同今天', () => {
+test('CG-ALL-11 / CG-ALL-12(#866):战报读整局 runStartMode 与逐站 photoUrl,不再自造逐站 DESK/ALT', () => {
+  const vo = read('../chengyinhub-system/src/main/java/com/chengyinhub/business/domain/vo/PlayerRunReportVO.java')
+  assert.match(vo, /private String runStartMode;/)
+  assert.match(vo, /private String photoUrl;/)
+  const mode = read('../chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/RunStartMode.java')
+  assert.match(mode, /DESK = "DESK"/)
+  assert.match(mode, /ALT = "ALT"/)
   const v = require('../../subpackageJourney/utils/journey-view.js')
-  assert.equal(v.reportView({ runState: 'COMPLETED', completionKind: 'LEGITIMATE_COMPLETION', runStartMode: 'DESK' }).startModeText, '桌面完成')
-  assert.equal(v.reportView({ runState: 'COMPLETED', completionKind: 'LEGITIMATE_COMPLETION', runStartMode: 'ALT' }).startModeText, '替代站开局')
-  assert.equal(v.reportView({ runState: 'COMPLETED', completionKind: 'LEGITIMATE_COMPLETION' }).startModeText, '')
-  assert.match(read('subpackageJourney/pages/settle/index.wxml'), /\{\{report\.result\}\}\{\{report\.startModeText \? ' · ' \+ report\.startModeText : ''\}\}/)
+  const r = v.reportView({ runState: 'COMPLETED', completionKind: 'LEGITIMATE_COMPLETION', runStartMode: 'DESK',
+    nodes: [{ nodeId: 1, photoUrl: 'https://x/1.jpg' }, { nodeId: 2, completionMode: 'DESK' }, { nodeId: 3, photoUrl: null }] })
+  assert.equal(r.startModeText, '桌面完成')
+  assert.deepEqual(r.nodes.map((n) => n.mode), ['', '', ''], '逐站 completionMode 没有 DESK/ALT')
+  assert.deepEqual(r.nodes.map((n) => n.photoUrl), ['https://x/1.jpg', '', ''])
+  assert.deepEqual(r.photoUrls, ['https://x/1.jpg'])
+  assert.equal(v.reportView({ runState: 'COMPLETED', runStartMode: 'ALT' }).startModeText, '替代站开局')
+  assert.equal(v.reportView({ runState: 'COMPLETED', runStartMode: null }).startModeText, '', '正常开局不出')
+  assert.equal(v.reportView({ runState: 'COMPLETED' }).deskCount, undefined)
+  const wxml = read('subpackageJourney/pages/settle/index.wxml')
+  assert.match(wxml, /wx:if="\{\{report\.startModeText\}\}"><text class="st-two__v">\{\{report\.startModeText\}\}<\/text>/)
+  assert.doesNotMatch(wxml, /deskCount|altCount/)
+  const report = read('subpackageJourney/pages/report/index.wxml')
+  assert.match(report, /wx:if="\{\{item\.photoUrl\}\}" class="jn-row__pic" bindtap="previewNodePhoto"/)
+  const page = read('subpackageJourney/pages/report/index.js')
+  assert.match(page, /previewNodePhoto\(e\) \{/)
 })
 
 test('PG-041 通行证订单缺单号:落缺参态只给返回,load 不再以空单号请求', () => {

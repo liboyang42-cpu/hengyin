@@ -656,8 +656,10 @@ Page({
     inflight[key] = true;
     const url = ds.biz === 'activity' ? '/api/activity/update_publish_status' : '/api/topic/update_user_status';
     const data = { id: id, scope: this.data.operationScope };
-    // 活动线是另一个接口,没有这个参数,别乱塞
-    if (ds.biz !== 'activity') data.expectedUserStatus = ds.online ? 1 : 0;
+    // 两条线各认各的期望态参数名:主题 expectedUserStatus;活动 expectedPublishStatus(#866 ApiActivityController
+    // CAS,0 下架中 / 1 已上架)。不符时后端回「状态已变化，请刷新后重试」,下面原样透出
+    if (ds.biz === 'activity') data.expectedPublishStatus = ds.online ? 1 : 0;
+    else data.expectedUserStatus = ds.online ? 1 : 0;
     const that = this;
     let settled = false;
     // complete 兜底清 flag。request-client 保证 complete 恰好触发一次(重登重试时也只在最后一跳),

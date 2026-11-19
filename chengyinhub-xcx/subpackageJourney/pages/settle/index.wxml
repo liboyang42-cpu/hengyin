@@ -19,13 +19,14 @@
         <view class="st-spk st-spk--a"><cy-illus name="sparkles" size="80" bare delay="{{900}}" reduced-motion="{{reduced}}" /></view>
         <view class="st-spk st-spk--b"><cy-illus name="sparkles" size="56" bare delay="{{1100}}" reduced-motion="{{reduced}}" /></view>
       </view>
-      <text class="st-kicker st-rise" style="--i:0">{{report.result}}{{report.startModeText ? ' · ' + report.startModeText : ''}}</text>
+      <text class="st-kicker st-rise" style="--i:0">{{report.result}}</text>
       <text class="st-title st-rise" style="--i:1">{{topicName || '本局'}}</text>
       <text class="st-rank st-rise" style="--i:2" wx:if="{{report.rankSub}}">本关<text class="st-rank__n">{{report.rankText}}</text></text>
       <view class="st-two st-rise" style="--i:3">
         <view class="st-two__c" wx:if="{{report.scored}}"><text class="st-two__v">{{cnt.f(report.scoreText, soK)}}</text><text class="st-two__l">分数</text></view>
         <view class="st-two__c"><text class="st-two__v">{{report.nodesText}}</text><text class="st-two__l">节点</text></view>
         <view class="st-two__c" wx:if="{{report.assistedCount > 0}}"><text class="st-two__v">{{report.assistedCount}}</text><text class="st-two__l">辅助完成</text></view>
+        <view class="st-two__c" wx:if="{{report.startModeText}}"><text class="st-two__v">{{report.startModeText}}</text><text class="st-two__l">开局</text></view>
       </view>
     </view>
 

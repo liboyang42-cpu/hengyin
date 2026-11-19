@@ -78,7 +78,8 @@ Component({
     onCheckAction(e) { this._emit((e.detail && e.detail.action) || ''); },   // 检定卡:roll / reroll / settle
     onOpen() { this._emit('open'); },
     onContinue() { this._emit('continue'); },
-    onReference() { this._emit('reference'); },   // CG-10-D-3:看过资料图,页面记一条
+    onReference() { this._emit('reference'); },
+    onTextConfirm() { this._emit('textconfirm'); },   // CG-ALL-12:只记录拍照站「不拍照，继续」   // CG-10-D-3:看过资料图,页面记一条
     onAnswer(e) { this._emit('answer', e.detail); },
     onGiveUp(e) { this._emit('giveup', e.detail); },
     onNameChange(e) { this._emit('namechange', e.detail); },
