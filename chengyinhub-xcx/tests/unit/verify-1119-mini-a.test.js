@@ -175,3 +175,12 @@ test('PG-024/PG-059/PG-081:商家报名缺参落 missing、门店标题随门店
   assert.match(wxml, /wx:elif="\{\{loadState === 'missing'\}\}">\s*<cy-empty kind="missing-param"/);
   assert.match(wxml, /<block wx:if="\{\{shop\.name \|\| shop\.address \|\| shop\.businessTime\}\}">\s*<view class="ma-shop-note">/);
 });
+
+test('PG-026/PG-027:商家主题页参数先判 >0;招募广场浏览分支游客直接读公开详情', () => {
+  const js = read('pages/topic/merchantinfo/merchantinfo.js');
+  assert.match(js, /const optTopicId = parseInt\(options\.topicId\) \|\| 0;/);
+  assert.match(js, /else if \(options\.id && !options\.topicId && optId > 0\) \{/);
+  assert.match(js, /if \(!projectMemberId\(\) && this\.data\.fromMerchantJoin\) \{[\s\S]{0,200}this\._guestBrowse = true;[\s\S]{0,80}this\.loadBrowseData\(false\);/);
+  assert.match(js, /!!page\._guestBrowse && key === 'loadBrowseData'/);
+  assert.match(js, /Number\(d\.productType\) === 2 && !that\._guestBrowse/);
+});

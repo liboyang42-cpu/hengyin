@@ -107,7 +107,8 @@ function currentProjectRead(page, key) {
   const sameRead = () => !page._disposed && !page._unloaded && (page._projectReadEpoch || 0) === epoch
     && page.data.topicId === topicId && (key !== 'loadDetail' || page.data.regId === regId)
     && page.data.operationScope === scope && reads[key] === seq && (reads.loadProjectHome || 0) === homeSeq;
-  const current = () => sameRead() && !!owner && projectMemberId() === owner;
+  const current = () => sameRead() && (owner ? projectMemberId() === owner
+    : !!page._guestBrowse && key === 'loadBrowseData' && !projectMemberId());
   // 请求客户端逐跳校验 UID/token；自有续期成功可换 token，页面只核验本次读的 epoch。
   current.handle = (res, status) => {
     if (!sameRead()) return true;
@@ -337,15 +338,18 @@ Page({
     // 1. 商家首页"我的参与"卡片:id=regId & topicId=topicId  → 承接视图
     // 2. 只带 topicId(项目主页,如发布成功后跳过来)         → 身份由后端判
     // 3. 品牌招募广场"浏览主题":id=topicId                  → 浏览视图
-    if (options.topicId && options.id) {
-      this.setData({ regId: parseInt(options.id), topicId: parseInt(options.topicId) });
+    // PG-026:先 parseInt 并判 >0,非数字/0 不再带 NaN 去请求,统一落缺参态。
+    const optTopicId = parseInt(options.topicId) || 0;
+    const optId = parseInt(options.id) || 0;
+    if (options.topicId && options.id && optTopicId > 0 && optId > 0) {
+      this.setData({ regId: optId, topicId: optTopicId });
       this.reloadProjectPrivate();
-    } else if (options.topicId) {
+    } else if (options.topicId && !options.id && optTopicId > 0) {
       // 身份不由前端猜:同一个人可能既是发布者又接了一站,判据在服务端。
-      this.setData({ topicId: parseInt(options.topicId) });
+      this.setData({ topicId: optTopicId });
       this.reloadProjectPrivate();
-    } else if (options.id) {
-      this.setData({ topicId: parseInt(options.id), fromMerchantJoin: true });
+    } else if (options.id && !options.topicId && optId > 0) {
+      this.setData({ topicId: optId, fromMerchantJoin: true });
       this.reloadProjectPrivate();
     } else {
       // 2026-09-16 截图冒烟:id 与 topicId 都没有时原先是空壳(渲染出「未命名路线 · 开放时间待定」),
@@ -523,6 +527,15 @@ Page({
 
   reloadProjectPrivate() {
     if (this._disposed || this._unloaded || this._hidden || this.data.missingParam) return;
+    // PG-027:品牌招募广场「浏览主题」只读公开详情,游客不等登录;报名状态等私有读与写操作登录后再要。
+    if (!projectMemberId() && this.data.fromMerchantJoin) {
+      this._projectMemberId = '';
+      this._guestBrowse = true;
+      this.setData({ projectReadAuth: '' });
+      this.loadBrowseData(false);
+      return;
+    }
+    this._guestBrowse = false;
     if (!projectMemberId()) {
       this.clearProjectPrivate(true);
       waitForInitialSession(this, app, this.reloadProjectPrivate);
@@ -598,7 +611,7 @@ Page({
           // 承接报名阶段只展示项目事实，不展示玩家评价或阵容。
           that.setData({ statBar: buildTopicStatBar(d).filter(cell => cell.key !== 'rating' && cell.key !== 'merchant') });
           that.setData({ info: d, coverFailed: false, detailCoverFailed: false, browseLoadError: '' });
-          if (Number(d.productType) === 2) {
+          if (Number(d.productType) === 2 && !that._guestBrowse) {
             that.refreshMyChapterApplications();
             that.loadMerchantRecruitmentChapters();
             that.loadMyChapterNodes();
