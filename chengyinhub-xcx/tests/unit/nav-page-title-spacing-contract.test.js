@@ -525,7 +525,8 @@ test('全仓 85 个 cy-page-title 页面：共享标题统一提供上 space-5 /
   // 2026-11-13 pass-mini +1:通行证订单详情页(cy-nav-bar + cy-page-title)⇒ 95。
   // 2026-11-14 free-explore-1114 +1:商家套票预约页(同 verify-records 结构)⇒ 96。
   // 2026-11-19 PG-034/PG-040/PG-042 −4:coop/withdraw 两页、couponInfo、tixian 下线 ⇒ 92。
-  assert.equal(files.length, 92, 'cy-page-title 页面清单漂移时必须重新做间距归类')
+  // 2026-11-19 PG-048 +1:本局计分 orient-score 改 cy-nav-bar + 共享 cy-page-title ⇒ 93。
+  assert.equal(files.length, 93, 'cy-page-title 页面清单漂移时必须重新做间距归类')
 // 2026-09-02:+2 俱乐部客户列表与客户详情，复用 shared page-title 间距，64→66。
 //   客户详情的头像绝对定位在标题行上，不进入标题流，不影响上 space-5 / 下 space-2。
   files.forEach((rel) => {

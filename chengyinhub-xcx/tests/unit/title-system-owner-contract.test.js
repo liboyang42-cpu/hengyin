@@ -73,6 +73,7 @@ const EXPECTED_NAV_ROUTES = [
   'subpackageMember/tixianjilu/tixianjilu',
   'pages/mylike/mylike', 'subpackageMember/mycanyu/mycanyu', 'subpackageMember/mycanyuinfo/mycanyuinfo',
   'subpackageMember/myinvite/myinvite', 'subpackageMember/complaint/index', 'subpackageRoam/citynode-code/index',
+  'subpackageMember/orient-score/index', // 2026-11-19 PG-048:本局计分改 cy-nav-bar + cy-page-title
   'pages/activity/detail/index', 'pages/activity/baoming/baoming', 'pages/activity/list/index',
   'pages/activity/official-detail/index', 'pages/activity/official-inbox/index',
   'pages/activity/official-mine/index',
@@ -182,6 +183,7 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   'subpackageMember/order/order', 'subpackageMember/orderinfo/orderinfo',
   'subpackageMember/tixianjilu/tixianjilu', 'pages/mylike/mylike', 'subpackageMember/mycanyu/mycanyu',
   'subpackageMember/mycanyuinfo/mycanyuinfo', 'subpackageMember/myinvite/myinvite', 'subpackageMember/complaint/index',
+  'subpackageMember/orient-score/index', // 2026-11-19 PG-048
   'subpackageRoam/session/index',
   'pages/activity/official-inbox/index',
   'pages/activity/official-mine/index', 'subpackageA/pages/myproject/index',
@@ -375,7 +377,8 @@ function assertTitleInventory(readSource = read) {
   // 2026-11-13 pass-mini +1(custom 导航):通行证订单详情 market/pass-order ⇒ 173;custom 172。
   // 2026-11-19 PG-020/PG-021 −2(均 custom 导航)⇒ custom 170。
   // 2026-11-19 PG-034/PG-040/PG-042 −4(均 custom 导航)⇒ custom 166。
-  assert.equal(rows.filter((row) => row.custom).length, 166)
+  // 2026-11-19 PG-048 +1:本局计分 orient-score 改 custom 导航 ⇒ 167。
+  assert.equal(rows.filter((row) => row.custom).length, 167)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
   //   均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 = 133；custom 导航 129 + 2 = 131。
   const knownRoutes = new Set(routes)

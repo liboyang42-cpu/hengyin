@@ -256,3 +256,13 @@ test('PG-046/047/050/051/052/053/054/057/058:样式与主题收口', () => {
   assert.match(read('subpackageP3/pages/growthcenter/index/index.wxml'), /<cy-page-title class="gc-title" title="成长中心" \/>/);
   assert.doesNotMatch(read('pages/topic/merchantinfo/merchantinfo.wxss'), /#D4CFC4/);
 });
+
+test('PG-048/PG-090:本局计分页改 custom 导航 + cy-nav-bar/cy-page-title/cy-toast,屏上不露编号与类型码', () => {
+  const json = JSON.parse(read('subpackageMember/orient-score/index.json'));
+  assert.equal(json.navigationStyle, 'custom');
+  for (const c of ['cy-nav-bar', 'cy-page-title', 'cy-toast']) assert.ok(json.usingComponents[c], c);
+  const wxml = noComments(read('subpackageMember/orient-score/index.wxml'));
+  assert.match(wxml, /<cy-page-title title="本局计分"/);
+  assert.doesNotMatch(wxml, /\{\{item\.sessionId\}\}|\{\{score\.sessionId\}\}|\{\{item\.entryId\}\}|\{\{item\.id\}\}|\{\{entryId\}\}|\{\{item\.nodeId|\{\{item\.referenceId\}\}|\{\{score\.settlement\.id\}\}|\{\{pending\.requestId/);
+  assert.doesNotMatch(wxml, /\{\{item\.kind\}\}|\{\{pending\.kind\}\}/);
+});
