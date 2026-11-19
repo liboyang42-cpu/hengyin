@@ -40,6 +40,12 @@ public interface IFreeExploreBundleService {
 
     Map<String, Object> catalog(Long topicId);
 
+    /**
+     * FE-G4:主题详情的逐店卡片(必选位置的生效承接):店名、权益名、含在票内/另付说明、需预约、有效期。
+     * 只读展示,不看售卖开关;读不到返回空列表。
+     */
+    default List<Map<String, Object>> merchantCards(Long topicId) { return java.util.Collections.emptyList(); }
+
     Map<String, Object> orderView(Long memberId, Long registrationId);
 
     /** 下单结果 UNKNOWN 时按客户端幂等键(cms_registration.request_id)回读回执。 */

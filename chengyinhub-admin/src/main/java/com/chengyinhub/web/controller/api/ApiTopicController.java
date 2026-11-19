@@ -120,6 +120,9 @@ public class ApiTopicController extends BaseController {
     /** [P0-16] ③ 权益容量/覆盖率(展示口径)。 */
     @Autowired
     private com.chengyinhub.business.service.IPerkLedgerService perkLedgerService;
+    /** FE-G4:自由探索主题详情的逐店卡片(只读展示)。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IFreeExploreBundleService freeExploreBundleService;
 
     /** 拍板 2026-09-16 #10:营业状态门禁,给下单入口下发「商家暂停营业」提示。 */
     @Autowired
@@ -2182,6 +2185,17 @@ public class ApiTopicController extends BaseController {
         public Integer visitRadius;
     }
 
+    /** FE-G4:展示用,读不到(含未落迁移的库)只让卡片缺席,不影响主题详情。 */
+    private List<Map<String, Object>> exploreMerchantCards(Long topicId) {
+        if (freeExploreBundleService == null) return null;
+        try {
+            return freeExploreBundleService.merchantCards(topicId);
+        } catch (RuntimeException e) {
+            logger.warn("自由探索逐店卡片读取失败 topicId={}", topicId, e);
+            return null;
+        }
+    }
+
     @PostMapping("/info-to-user")
     @Parameters({
             @Parameter(name = "id", description = "主题id")
@@ -2510,6 +2524,7 @@ public class ApiTopicController extends BaseController {
                     && cmsTopic.getProductType() == ProductType.FREE_EXPLORE) {
                 topicInfoVO.setPerkSellableCapacity(perkLedgerService.topicSellableCapacity(topicId));
                 topicInfoVO.setPerkCoverageStatus(perkLedgerService.topicCoverageStatus(topicId));
+                topicInfoVO.setExploreMerchantCards(exploreMerchantCards(topicId));
             }
 
             return success(topicInfoVO);
