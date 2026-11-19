@@ -2003,7 +2003,7 @@ button::after {
    进 expand + emphasized-decelerate,收 collapse + accelerate;减弱动态直接到位 */
 .topic .chap-card__desc { max-height: 0; overflow: hidden; opacity: 0; transform: translateY(-12rpx); transition: opacity var(--cy-motion-collapse) var(--cy-ease-accelerate), transform var(--cy-motion-collapse) var(--cy-ease-accelerate); }
 .topic .chap-card.is-open .chap-card__desc { max-height: none; opacity: 1; transform: none; transition: opacity var(--cy-motion-expand) var(--cy-ease-emphasized-decelerate), transform var(--cy-motion-expand) var(--cy-ease-emphasized-decelerate); }
-.topic .chap-card__txt { display: block; padding-top: 12rpx; font-size: 25rpx; line-height: 1.6; color: #cfcfd3; white-space: pre-wrap; } /* ds-ok: 与活动内容正文同色 */
+.topic .chap-card__txt { display: block; padding-top: 12rpx; font-size: 25rpx; font-weight: 400; line-height: 1.6; color: #cfcfd3; white-space: pre-wrap; } /* ds-ok: 与活动内容正文同色 */
 .topic--reduced .chap-card__desc, .topic--reduced .chap-card.is-open .chap-card__desc { transition: none; }
 /* 活动内容正文 */
 .topic .det3 .cont1 .txt1.para, .topic .det3 text.txt1 { font-size: 27rpx; line-height: 1.75; color: #cfcfd3; padding-left: 0; } /* ds-ok */
