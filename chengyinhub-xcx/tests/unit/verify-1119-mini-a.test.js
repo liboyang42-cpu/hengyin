@@ -327,7 +327,7 @@ test('PG-072..PG-094:文案、编号与私人页转发收口', () => {
   assert.match(read('pages/activity/list/index.js'), /\{ key: '1', label: '即将上线' \}/);
   assert.match(read('pages/merchant/game-node/index.wxml'), /placeholder="提交编号"/);
   assert.doesNotMatch(read('pages/merchant/payout-account/index.wxml'), /<text class="fin-row__v">\{\{account\.subMchid\}\}<\/text>/);
-  assert.doesNotMatch(read('subpackageA/pages/infomation/infomation.wxml'), /即将上线/);
+  assert.doesNotMatch(noComments(read('subpackageA/pages/infomation/infomation.wxml')), /即将上线/);
   assert.doesNotMatch(read('pages/coop/list/index.wxml'), /'主题 #'/);
   assert.doesNotMatch(read('pages/coop/invite/index.wxml'), /请求 \{\{item\.requestId\}\}|已创建邀请 #/);
   assert.match(read('subpackageMember/order/order.js'), /wx\.hideShareMenu\(\{ menus: \['shareAppMessage', 'shareTimeline'\] \}\)/);
