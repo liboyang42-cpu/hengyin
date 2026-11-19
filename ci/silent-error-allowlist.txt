@@ -224,7 +224,7 @@ chengyinhub-xcx/subpackageMember/points-history/index.js 1  # 积分明细首次
 chengyinhub-xcx/subpackageMember/report-mine/index.js 2  # 我的举报列表首次失败落 cy-state-shell 错误态带重试,刷新失败走自管 toast;原因表读不到只用兜底名
 chengyinhub-xcx/subpackageMember/report-detail/index.js 4  # 举报进度失败落 error/no-permission 页内态(error 带重试),刷新失败自管 toast;申诉失败落 cy-sheet fail(含后端原因),未知先回读再落 unknown 可同幂等键重试
 chengyinhub-xcx/subpackageMember/components/cy/report-sheet/index.js 2  # BL-32 共用举报半屏:读原因失败落 loadfail 结果半屏(带重试),提交失败落 fail/unknown 结果半屏(含后端原因、同键重试),关自动 toast 避免双弹
-chengyinhub-xcx/pages/merchant/verify-records/index.js 2  # BL-76:access/me 与核销记录读取失败都落页内 cy-error(带重新加载);关全局 toast 避免双弹。
+chengyinhub-xcx/pages/merchant/verify-records/index.js 3  # BL-76:access/me 与核销记录读取失败都落页内 cy-error(带重新加载);MC-020 触底续读失败自己 toast「加载失败，请重试」;关全局 toast 避免双弹。
 chengyinhub-xcx/subpackageP3/pages/object-cards/index/index.js 1  # BL-79:改名失败(后端原文/网络)回显在改名半屏 cy-field 错误位;关全局 toast 避免双弹。
 chengyinhub-xcx/pages/activity/official-mine/index.js 1  # BL-80:通知复盘读取失败如实写在该卡触达行并可再点重试;关全局 toast 避免双弹。
 chengyinhub-xcx/pages/play/merchant/components/safety-rating-sheet/index.js 3  # 2026-10-15 BL-89 安全感受评价半屏:选项读取/商家 ID 换取/提交失败均落半屏内 cy-inline-error(含后端资格报错原文)，保留输入可重试，关闭全局 toast 免双弹
