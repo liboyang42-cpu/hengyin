@@ -577,6 +577,7 @@ function pickPlayKit(view, now) {
         title: seg.title || '',
         lead: seg.lead || '',
         imageUrl: seg.imageUrl || '',
+        imageAlt: typeof seg.imageAlt === 'string' ? seg.imageAlt.trim() : '',   // CG-ALL-13:服务端给了才有
         audioUrl: seg.audioUrl || '',
         // 选项文案要给,**哪个是对的不给** —— 判定回来之后才知道
         /* UG-02:选项图只在服务端给了可显示地址时出现;没给或是 media-asset 引用就只显示文字 */

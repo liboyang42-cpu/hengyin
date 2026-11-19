@@ -69,6 +69,7 @@ Component({
     theme: { type: String, value: 'dark' },       // dark | light
     title: { type: String, value: '' },
     imageUrl: { type: String, value: '' },
+    imageAlt: { type: String, value: '' },       // CG-ALL-13:题图读不出时的替代文字(服务端没给就用通用一句)
     audioUrl: { type: String, value: '' },
     lead: { type: String, value: '' },
     options: { type: Array, value: [] },
@@ -110,6 +111,7 @@ Component({
        会自己触发自己,死循环把运行时打挂 —— 截图跑到第 8 张 DevTools
        直接断连,就是这么来的,而且控制台一条错都没有。 */
     optionList: [],
+    imgFailed: false,
     picGrid: false,
     typed: '',
     /* F02 答错后全选高亮保留的输入(input selection-end);-1 = 不选 */
@@ -131,6 +133,7 @@ Component({
     poolCanClear: false,
   },
   observers: {
+    imageUrl() { if (this.data.imgFailed) this.setData({ imgFailed: false }); },
     acceptedInput(value) {
       if (value && this.data.mode === 'type' && this.data.passed) this.setData({ typed: value });
       if (value && this.data.poolOn && this.data.passed) this._syncQaPool();
@@ -514,6 +517,9 @@ Component({
       if (exhausted && stage) stage.fail(false);
     },
 
+    /** CG-ALL-13:题图读不出来不留破图,换成替代文字 + 重试(重挂 image 再取一次)。 */
+    onQuestionImgError() { this.setData({ imgFailed: true }); },
+    onRetryQuestionImg() { this.setData({ imgFailed: false }); },
     onPreviewQuestion() {
       const current = this.data.imageUrl;
       if (current) wx.previewImage({ current, urls: [current] });
