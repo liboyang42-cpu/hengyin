@@ -106,6 +106,10 @@ public class ApiTopicController extends BaseController {
     @Autowired(required = false)
     private com.chengyinhub.business.mapper.CmsTopicMapper cmsTopicMapper;
 
+    /** 角色(Cast)v1 台词配音:读本局玩家档案做 {玩家} 替换,本局状态归路线运行时。 */
+    @Autowired
+    private com.chengyinhub.business.service.ITopicRouteRuntimeService topicRouteRuntimeService;
+
     /**
      * 「来源」栏投影（官方 / 俱乐部 / 会员）。
      * ⚠️ 不要换成 ITopicListProjectionService —— 那个带后台超管闸且会带出运营账本。
@@ -3327,5 +3331,23 @@ public class ApiTopicController extends BaseController {
         // 预告节点不带 templateId,setNodes 现算的玩法数恒为 0;章节卡要写「含 N 个玩法」,这里按已上架节点补回个数
         vo.setTemplateCount(TopicChapterVO.countTemplates(nodes, chapter.getTemplateCount()));
         return vo;
+    }
+
+    @Operation(summary = "台词配音地址(块自带配音优先，否则按角色预设声音合成并缓存)")
+    @RateLimiter(time = 60, count = 30, limitType = LimitType.MEMBER)
+    @GetMapping("/cast/voice")
+    public AjaxResult castVoice(Long topicId, Long chapterId, String blockKey, Long runId)
+    {
+        Long memberId;
+        try { memberId = getAppUserId(); } catch (Exception e) { memberId = 0L; }
+        if (memberId == null || memberId <= 0) return error("请先登录");
+        try
+        {
+            return success(topicRouteRuntimeService.castLineVoice(memberId, topicId, chapterId, blockKey, runId));
+        }
+        catch (ServiceException e)
+        {
+            return com.chengyinhub.business.service.support.CastRunRules.refusal(e);
+        }
     }
 }

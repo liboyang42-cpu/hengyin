@@ -38,6 +38,10 @@ public class ApiPlayProgressController extends BaseController {
     @Autowired
     private PlayContentManifestApplication playContentManifestApplication;
 
+    /** 角色(Cast)v1:本局玩家档案与剧情分支选择,本局状态归路线运行时(topic_route_session.state_json)。 */
+    @Autowired
+    private com.chengyinhub.business.service.ITopicRouteRuntimeService topicRouteRuntimeService;
+
     /** OPS-01：只观测映射到 POST /api/play/arrive 的这条路径；测试直接 new 时为 null。 */
     @Autowired(required = false)
     private GameSloMetrics gameSlo;
@@ -410,6 +414,47 @@ public class ApiPlayProgressController extends BaseController {
     public AjaxResult unlockHint(Long nodeId)
     {
         return playPuzzleCommandApplication.unlockHint(currentMemberId(), nodeId);
+    }
+
+    @Operation(summary = "设置本局玩家档案(名字 / 身份)")
+    @RateLimiter(time = 60, count = 20, limitType = LimitType.MEMBER)
+    @PostMapping("/run/profile")
+    public AjaxResult runProfile(@RequestBody java.util.Map<String, Object> body)
+    {
+        Long memberId = currentMemberId();
+        if (memberId == null || memberId <= 0) return error("请先登录");
+        try
+        {
+            return success(topicRouteRuntimeService.saveRunProfile(memberId,
+                    com.chengyinhub.common.core.text.Convert.toLong(body.get("runId")),
+                    body.get("name") == null ? null : String.valueOf(body.get("name")),
+                    body.get("identityKey") == null ? null : String.valueOf(body.get("identityKey"))));
+        }
+        catch (com.chengyinhub.common.exception.ServiceException e)
+        {
+            return com.chengyinhub.business.service.support.CastRunRules.refusal(e);
+        }
+    }
+
+    @Operation(summary = "记录剧情分支块的选择(服务端结算角色信任)")
+    @RateLimiter(time = 10, count = 60, limitType = LimitType.MEMBER)
+    @PostMapping("/run/branch")
+    public AjaxResult runBranch(@RequestBody java.util.Map<String, Object> body)
+    {
+        Long memberId = currentMemberId();
+        if (memberId == null || memberId <= 0) return error("请先登录");
+        try
+        {
+            return success(topicRouteRuntimeService.recordStoryBranch(memberId,
+                    com.chengyinhub.common.core.text.Convert.toLong(body.get("runId")),
+                    com.chengyinhub.common.core.text.Convert.toLong(body.get("chapterId")),
+                    body.get("blockKey") == null ? null : String.valueOf(body.get("blockKey")),
+                    com.chengyinhub.common.core.text.Convert.toInt(body.get("optionIndex"))));
+        }
+        catch (com.chengyinhub.common.exception.ServiceException e)
+        {
+            return com.chengyinhub.business.service.support.CastRunRules.refusal(e);
+        }
     }
 
     private Long currentMemberId()

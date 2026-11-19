@@ -8,12 +8,20 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 角色 Cast v1 的纯规则(无 IO,便于单测):信任结算、按信任挑结局、台词变量替换、玩家档案视图。
+ * 角色 Cast v1 的纯规则(无 IO,便于单测):信任结算、按信任挑结局、台词变量替换、玩家档案视图、错误码与拒绝回包。
  */
 public final class CastRunRules
 {
     public static final String VAR_PLAYER = "{玩家}";
     public static final String DEFAULT_PLAYER_NAME = "你";
+
+    /** 客户端可识别的错误码(放在 AjaxResult.data.errorCode)。 */
+    public static final String ERR_TTS_NOT_CONFIGURED = "CAST_TTS_NOT_CONFIGURED";
+    public static final String ERR_CAST_DISABLED = "CAST_DISABLED";
+    public static final String ERR_VOICE_NONE = "CAST_VOICE_NONE";
+    public static final String ERR_TTS_FAILED = "CAST_TTS_FAILED";
+
+    public static final int MAX_PLAYER_NAME = 12;
 
     private CastRunRules()
     {
@@ -84,5 +92,36 @@ public final class CastRunRules
         view.put("identityKey", profile.get("identityKey"));
         view.put("identityTitle", profile.get("identityTitle"));
         return view;
+    }
+
+    /**
+     * 业务拒绝 → AjaxResult:沿用异常里的 4xx/5xx(其它一律 400);带 CAST_ 错误码时放 data.errorCode,
+     * 客户端据此识别「配音未开通」等。/api/play/run/* 与 /api/topic/cast/voice 共用。
+     */
+    public static com.chengyinhub.common.core.domain.AjaxResult refusal(com.chengyinhub.common.exception.ServiceException e)
+    {
+        Integer code = e.getCode();
+        com.chengyinhub.common.core.domain.AjaxResult result = com.chengyinhub.common.core.domain.AjaxResult.error(
+                code != null && code >= 400 && code < 600 ? code : 400, e.getMessage());
+        String errorCode = e.getDetailMessage();
+        if (errorCode != null && errorCode.startsWith("CAST_"))
+            result.put(com.chengyinhub.common.core.domain.AjaxResult.DATA_TAG, java.util.Collections.singletonMap("errorCode", errorCode));
+        return result;
+    }
+
+    /** 配音缓存键:sha256 十六进制小写。 */
+    public static String sha256Hex(String text)
+    {
+        try
+        {
+            byte[] hash = java.security.MessageDigest.getInstance("SHA-256").digest(text.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder(hash.length * 2);
+            for (byte b : hash) hex.append(String.format("%02x", b & 0xff));
+            return hex.toString();
+        }
+        catch (java.security.NoSuchAlgorithmException impossible)
+        {
+            throw new IllegalStateException("SHA-256 不可用", impossible);
+        }
     }
 }
