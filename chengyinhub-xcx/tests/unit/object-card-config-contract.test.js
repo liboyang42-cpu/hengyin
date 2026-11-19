@@ -131,7 +131,7 @@ test('★objectCard 的三个字段:配置段有默认、后端 Validator 认、
   assert.deepEqual(cfg.PHOTO_CARD_FIELDS.filter((f) => !server.has(f)), [],
     '本地有、后端 validatePhotoCheck 不认:商家填了会被原样存回却没人读')
 
-  assert.deepEqual(serverEnum('PHOTO_CHECK_MODES'), ['CARD'])
+  assert.deepEqual(serverEnum('PHOTO_CHECK_MODES'), ['CARD', 'RECORD'])
   assert.deepEqual(cfg.PHOTO_CHECK_MODES, serverEnum('PHOTO_CHECK_MODES'),
     '前后端 mode 枚举错开 = 一边放行一边判死')
   assert.deepEqual(cfg.PHOTO_CARD_STYLES, serverEnum('PHOTO_CARD_STYLES'),
