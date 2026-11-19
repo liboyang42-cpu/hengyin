@@ -194,3 +194,8 @@ test('MC-057:客户列表按页请求,触底续读,服务端不分页时去重�
   assert.match(js, /onReachBottom\(\) \{/)
   assert.match(js, /const fresh = shaped\.items\.filter\(\(item\) => !seen\.has\(item\.memberId\)\);/)
 })
+
+test('MC-063:客户累计金额与成员价优先展示服务端格式化文本', () => {
+  assert.match(read('pages/club/customers/view-model.js'), /text\(raw\.summary\.paidAmountText\) \|\| `¥\$\{trimMoney\(amount\)\}`/)
+  assert.match(read('pages/club/detail/index.js'), /'成员价 ' \+ c\.memberDiscountPriceText\.trim\(\)/)
+})

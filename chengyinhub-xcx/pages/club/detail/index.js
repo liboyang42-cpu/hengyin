@@ -2636,7 +2636,8 @@ Page({
     } else {
       const perks = [];
       if (Number(c.prioritySignupEnabled) === 1) perks.push('成员优先报名');
-      if (Number(c.memberDiscountPrice) > 0) perks.push('成员价 ¥' + Number(c.memberDiscountPrice));
+      // MC-063:成员价文本优先用服务端格式化的 memberDiscountPriceText;缺省沿用旧拼法。
+      if (Number(c.memberDiscountPrice) > 0) perks.push(typeof c.memberDiscountPriceText === 'string' && c.memberDiscountPriceText.trim() ? '成员价 ' + c.memberDiscountPriceText.trim() : '成员价 ¥' + Number(c.memberDiscountPrice));
       items.push({ key: 'events', icon: 'calendar', title: '报名俱乐部的局', sub: perks.join('、') });
     }
     items.push({ key: 'overview', icon: 'tab-club', title: '认识成员、攒贡献', sub: '' });
