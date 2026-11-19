@@ -401,7 +401,7 @@
         </view>
         <view class="drow {{gpsOk ? '' : 'is-off'}}" bindtap="onLocationRowTap" aria-role="button" aria-label="自动记录足迹{{gpsOk ? '，已开启' : '，定位未开启'}}" hover-class="cy-pressed" hover-stay-time="80">
           <view class="dic pic pic--track"></view>
-          <view class="dcopy"><text class="dt">自动记录足迹</text><text class="ds">{{gpsOk ? '走过的路会画进通关卡' : '定位没开，路画不出来'}}</text></view>
+          <view class="dcopy"><text class="dt">自动记录足迹</text><text class="ds">{{gpsOk ? (perkOnlyTopic ? '走过的路会记下来' : '走过的路会画进通关卡') : '定位没开，路画不出来'}}</text></view>
           <view class="dsw {{gpsOk ? 'is-on' : ''}}" aria-role="switch" aria-checked="{{gpsOk}}" aria-label="自动记录足迹"><view class="dsw-i"></view></view>
         </view>
         </block>
@@ -621,7 +621,7 @@
         <!-- 已核销环:分段圆弧,一家一段,核销一家亮一段(2026-09-05 用户拍板:要圆形不要刻度条)。
              段数 = 商家数,亮暗由 JS 的 ringSegs 给;弧由 ring.wxs 拼成 SVG data URL(conic-gradient 渲染层不认)。 -->
         <view class="fx-unlock" wx:if="{{storyGate}}" aria-role="text">已解锁 <text class="fx-unlock__n">{{storyUnlocked}} / {{storyTotal}}</text> 章</view>
-        <view class="fx-ring" wx:else>
+        <view class="fx-ring" wx:elif="{{!perkOnlyTopic}}">
           <image class="fx-ring__arc" src="{{ring.svg(ringSegs)}}" mode="aspectFit" aria-hidden="true" />
           <view class="fx-ring__c">
             <text class="fx-ring__n">{{doneCount}}/{{total}}</text>
@@ -634,14 +634,14 @@
           <!-- 2026-09-22 地图模式整个删掉,这里只剩卡包一种看法 —— 原来那枚「在地图上看这些商户」
                会把卡包换成一块已经不存在的地图(空白屏且没有返回),随地图层一并摘除。 -->
           <view class="fx-meta__row">
-            <text class="fx-meta__l">{{chapterCards.length}} 章 · {{merchantCount}} 家商家</text>
+            <text class="fx-meta__l">{{perkOnlyTopic ? '' : chapterCards.length + ' 章 · '}}{{merchantCount}} 家商家</text>
           </view>
         </view>
       </view>
     </view>
 
     <view class="fx-lhd fx-veil {{headIn || packOpen ? 'is-in' : ''}}">
-      <text class="fx-lhd__t">探索节点</text>
+      <text class="fx-lhd__t" wx:if="{{!perkOnlyTopic}}">探索节点</text>
       <!-- P-28:自由探索也有游玩工具(我的权益 / 入场码 / 旅程手记),与城市定向同一份菜单 -->
       <view class="fx-lhd__more" wx:if="{{!isPreview}}" bindtap="toggleSessionTools" aria-role="button" aria-label="{{sessionToolsOpen ? '收起游玩工具' : '游玩工具'}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="more" size="30" /></view>
     </view>
@@ -813,10 +813,10 @@
         <view class="fx-hero__stt">{{hero.node.crowded && !hero.node.done ? (hero.node.waitText || '排队中，建议先去别家') : hero.node.statusText}}</view>
       </view>
       <!-- ① 章节:这一段讲的是「这一章」,不是这个玩法 -->
-      <view class="fx-hero__ey fx-hero__in" style="--i:1" wx:if="{{hero.node.chapMeta}}">{{hero.node.chapMeta}}</view>
+      <view class="fx-hero__ey fx-hero__in" style="--i:1" wx:if="{{hero.node.chapMeta && !perkOnlyTopic}}">{{hero.node.chapMeta}}</view>
       <view class="fx-hero__name fx-hero__in" style="--i:1">{{hero.node.chapName || hero.node.name}}</view>
       <view class="fx-hero__ey fx-hero__in" style="--i:2" wx:if="{{hero.node.storyLocked && hero.node.distText}}">{{hero.node.distText}}</view>
-      <view class="fx-hero__hook fx-hero__in" style="--i:2" wx:if="{{hero.node.hook}}"><text class="fx-hero__hook-k">小瘾说</text>{{hero.node.hook}}</view>
+      <view class="fx-hero__hook fx-hero__in" style="--i:2" wx:if="{{hero.node.hook && !perkOnlyTopic}}"><text class="fx-hero__hook-k">小瘾说</text>{{hero.node.hook}}</view>
 
       <!-- ② 店铺:整卡可点进分身对话;导航行单独可点,不跟卡片抢 -->
       <view class="fx-hero__ey fx-hero__ey--gap fx-hero__in" style="--i:3" wx:if="{{hero.node.isMerchant}}">店铺</view>
@@ -1049,7 +1049,7 @@
     <view class="rdrop__next" bindtap="closeRewardDrop" aria-role="button" aria-label="继续下一步" hover-class="cy-pressed" hover-stay-time="80">继续</view>
   </view>
 </view>
-<view class="banner" wx:if="{{hud.bottomCard(screen, allDone && !canContinueGames, nav, nextNode, null) === 'banner'}}" bindtap="openFinish" hover-class="cy-pressed" hover-stay-time="80">
+<view class="banner" wx:if="{{hud.bottomCard(screen, allDone && !canContinueGames, nav, nextNode, null) === 'banner' && !perkOnlyTopic}}" bindtap="openFinish" hover-class="cy-pressed" hover-stay-time="80">
   <view class="b1">{{mode==2 ? '本轮探索已完成' : doneCount + '处旧址已点亮'}}</view>
   <view class="b2 serif">{{mode==2 ? '看看这一天的收获' : '领取你的城市足迹卡'}}</view>
 </view>

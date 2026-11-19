@@ -442,7 +442,7 @@ const themeTrade = require('./utils/theme-trade.js');
 const themePlans = require('./utils/theme-plans.js');
 const playerOps = require('./utils/theme-player-ops.js');
 const { loadStoryFont } = require('./utils/story-font.js'); const { storyFontUrl: STORY_FONT_URL } = require('../../utils/config.js');
-const playOverlays = require('./utils/play-hud-overlays.js'); const playTopbar = require('./utils/play-topbar.js'); const locOnce = require('./utils/play-location-once.js'); const { connectionFailure } = require('./utils/play-net-fail.js'); const playLook = require('./utils/play-look.js'); const stageEvents = require('./utils/stage-events.js'); /* 故事流顶栏:罗盘⇄地图、背包、案件册、各站奖励 */
+const playOverlays = require('./utils/play-hud-overlays.js'); const playTopbar = require('./utils/play-topbar.js'); const locOnce = require('./utils/play-location-once.js'); const { connectionFailure } = require('./utils/play-net-fail.js'); const playLook = require('./utils/play-look.js'); const stageEvents = require('./utils/stage-events.js'); const { perkOnlyOf } = require('./utils/perk-only.js'); /* 故事流顶栏:罗盘⇄地图、背包、案件册、各站奖励 */
 const feStoryGate = require('./utils/fe-story-gate.js'); const feVisit = require('./utils/fe-story-visit.js'); // 自由探索:只读已到访地点的章节
 const chapterVideo = require('./chapter-video.js'); const packDetail = require('./utils/pack-detail.js'); const menuOpen = require('./utils/menu-open.js');
 Page({
@@ -597,7 +597,7 @@ Page({
     // 爆炸的粒子/光条是数据驱动的(WXML 不能生成元素),开包那一刻才建,收场即清空。
     blastRays: [], blastShards: [], measuring: false,
     tileH: 0,                     // 瓦片行高:按剩余高度等分,4 家竖版大卡 / 6 家近方卡
-    nodes: [], total: 0, merchantCount: 0, merchantDoneCount: 0, doneCount: 0, allDone: false, topicCompleted: false,
+    nodes: [], total: 0, merchantCount: 0, merchantDoneCount: 0, perkOnlyTopic: false, doneCount: 0, allDone: false, topicCompleted: false,
     remainingGameCount: 0, canContinueGames: false,
     fmNodes: [], fmPolyline: [], fmTrail: [], fmTeamPins: [], teamRail: [], teamFollowKey: '', teamConsent: { show: false, share: true }, routeCard: { on: false, ready: false }, routeMap: { points: [], lines: [], subkey: '', layerStyle: 1, tone: '' }, fmPlayer: null, fmCenter: { lat: 31.2304, lng: 121.4737 },
     fmSubkey: MAP_DARK.subkey, fmLayerStyle: MAP_DARK.layerStyle, /* 2026-11-14 owner:左上雷达与另两张图一样跟主题外观 */ fmTone: '', fmStyleReady: !mapStyleConfigured(), // S9 暗色底图预留,见上方 MAP_DARK 注释
@@ -1754,6 +1754,7 @@ Page({
   openChapStory() {
     const v = this.data.hero.node || {};
     if (v.storyLocked === true) return;   // 未到访的章不打开(服务端也不下发正文)
+    if (this.data.perkOnlyTopic) return;  // FE-G9:整个主题都没有玩法(纯权益探店)时不开故事流
     const chapter = (this.data.chapterCards || []).find((c) => c.id != null && String(c.id) === String(v.chapterId));
     const thoughtKeys = [];
     for (const b of ((chapter && chapter.blocks) || [])) {
@@ -4704,6 +4705,7 @@ Page({
     that._versionedRouteState = that._routeStateVersionKnown(d.routeState) ? routeState : null;
     that._routeNodeCatalog = catalog;
     that._applyLook(d.look); const chapter = that.buildChapter(d, nodes); /* 画面风格先落,章节配色 / 时间段才取得到 */
+    that._serverPerkOnly = typeof d.perkOnly === 'boolean' ? d.perkOnly : (typeof d.noGame === 'boolean' ? d.noGame : null);   // FE-G7:服务端主题级「全部无玩法」;没下发时按节点推
     this._historyNodes = [];
     that._passExpiresAt = d.expiresAt || '';
     this.setData({
@@ -5065,7 +5067,7 @@ Page({
       this._chapterTrailShownId = String(activeChapter.id);
     }
     const merchantCount = new Set(visibleNodes.filter((node) => Number(node.merchantId) > 0)
-      .map((node) => String(node.merchantId))).size; const merchantDoneCount = new Set(visibleNodes.filter((node) => Number(node.merchantId) > 0 && node.done).map((node) => String(node.merchantId))).size; // x-fix2 P-3:「我的权益」按商家数,与卡包头同口径
+      .map((node) => String(node.merchantId))).size; const perkOnlyTopic = perkOnlyOf(mode, visibleNodes, this._serverPerkOnly); const merchantDoneCount = new Set(visibleNodes.filter((node) => Number(node.merchantId) > 0 && node.done).map((node) => String(node.merchantId))).size; // x-fix2 P-3:「我的权益」按商家数,与卡包头同口径
     // 卡包只拆一次:本局拆过的,重进直接落定发好的牌,不再每次重放撕包(实走 B11)
     if (mode === 2 && !this.data.packOpen && !this.data.isPreview && storyResume.read(this._runSessionScope()).packOpened) {
       this.setData({ packOpen: true, headIn: true });
@@ -5076,7 +5078,7 @@ Page({
       'hero.node': heroNode ? Object.assign({}, seatTiles.find((tile) => String(tile.nodeId) === String(heroNode.nodeId)), this._heroView(heroNode)) : this.data.hero.node,
       remainingGameCount: nodes.filter((node) => node.hasTemplate && (mode === 2 && Number(node.merchantId) > 0
         ? node.hasGame && !node.gameDone : !node.done)).length, canContinueGames,
-      total: visibleNodes.length, merchantCount, merchantDoneCount, seatTiles, ringSegs, searchPlaces }, () => { wx.nextTick(() => packDetail.ensure(this)); /* 细节打磨 S4:卡包流光 / 悬浮 */
+      total: visibleNodes.length, merchantCount, merchantDoneCount, perkOnlyTopic, seatTiles, ringSegs, searchPlaces }, () => { wx.nextTick(() => packDetail.ensure(this)); /* 细节打磨 S4:卡包流光 / 悬浮 */
       if (chapterChanged) this.openChapterFull(); this._refreshNavRim();
       wx.nextTick(() => this._measureDeal());   // 布局落定后才量得到瓦片/卡包的真实矩形
       // 探店日:核销完最后一家回到本页(onShow 重拉)时自动弹结算 —— 只认 allDone 上升沿,
