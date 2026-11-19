@@ -35,6 +35,10 @@ public class PricingServiceImpl implements IPricingService {
 
     @Autowired private com.chengyinhub.business.service.support.PureContentExploreService pureContentExploreService;
 
+    /** MC-034:主办方钱相关站内信;单元装配未注入时为 null。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.OrganizerMoneyNotice organizerMoneyNotice;
+
     /** [P0-50] 计酬成本上界:算「全通关必亏」硬闸用。 */
     @Autowired
     private com.chengyinhub.business.mapper.MerchantChapterOfferMapper offerMapper;
@@ -579,6 +583,10 @@ public class PricingServiceImpl implements IPricingService {
         }
         // canonical15 含人工责任/授权事实，锁价流程无权替运营补值或自动提审。
         // 本事务最多推进到 PRICING；运营保存 canonical 草稿后显式提交开售审。
+        // MC-034:锁价成功告诉主题主办方(提交后独立投递;失败只记日志,不影响锁价)。
+        if (organizerMoneyNotice != null) {
+            organizerMoneyNotice.priceLocked(topic.getMemberId(), topicId, topic.getName());
+        }
         return 1;
     }
 

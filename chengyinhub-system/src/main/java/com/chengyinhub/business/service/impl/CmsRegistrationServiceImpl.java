@@ -93,6 +93,10 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Autowired
     private com.chengyinhub.business.service.support.CommittedBusinessNotice committedBusinessNotice;
 
+    /** MC-034:买票成功告诉主办方;未注入(单元装配)时跳过。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.OrganizerMoneyNotice organizerMoneyNotice;
+
     @Autowired
     private AlarmService alarmService;
     @Autowired private WechatVerifiedPaymentFactService verifiedPaymentFacts;
@@ -3405,7 +3409,42 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             registerPaymentAfterCommit(paidRegistrationIds, registration.getMemberId(),
                     registration.getActivityTitle(), freshPaymentClaimed);
         }
+        if (freshPaymentClaimed) {
+            notifyOrganizerOfPurchase(registration);
+        }
         return "SUCCESS";
+    }
+
+    /**
+     * MC-034:新付款(本次真正抢到支付成功 CAS)才告诉主办方「有新报名」。主办方 = 活动创建者 / 主题发布者;
+     * 买家自己就是主办方时不发。任何异常只记日志 —— 通知不能拖垮收款事务。
+     */
+    void notifyOrganizerOfPurchase(CmsRegistration registration) {
+        if (organizerMoneyNotice == null || registration == null || registration.getOwnerId() == null) return;
+        try {
+            Long organizer = null;
+            String title = registration.getActivityTitle();
+            String bizType;
+            if (Long.valueOf(2L).equals(registration.getOwnerType())) {
+                bizType = "ACTIVITY";
+                CmsActivity activity = cmsActivityMapper.selectCmsActivityById(registration.getOwnerId());
+                if (activity != null) {
+                    organizer = activity.getMemberId();
+                    if (activity.getName() != null) title = activity.getName();
+                }
+            } else {
+                bizType = "TOPIC";
+                CmsTopic topic = cmsTopicMapper.selectCmsTopicById(registration.getOwnerId());
+                if (topic != null) {
+                    organizer = topic.getMemberId();
+                    if (topic.getName() != null) title = topic.getName();
+                }
+            }
+            if (organizer == null || organizer.equals(registration.getMemberId())) return;
+            organizerMoneyNotice.ticketPurchased(organizer, bizType, registration.getOwnerId(), registration.getId(), title);
+        } catch (RuntimeException e) {
+            logger.warn("[支付回调] 主办方新报名站内信未登记 registrationId={}", registration.getId());
+        }
     }
 
     private CmsRegistration freezeTicketSourceOnPayment(CmsRegistration registration) {

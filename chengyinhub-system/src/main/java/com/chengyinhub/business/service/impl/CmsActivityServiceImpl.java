@@ -53,6 +53,10 @@ public class CmsActivityServiceImpl implements ICmsActivityService
 {
     private static final Logger logger = LoggerFactory.getLogger(CmsActivityServiceImpl.class);
 
+    /** MC-034:主办方钱相关站内信;单元装配未注入时为 null,不影响结算。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.OrganizerMoneyNotice organizerMoneyNotice;
+
     @Autowired
     private CmsActivityMapper cmsActivityMapper;
 
@@ -469,6 +473,10 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         logger.info("活动结算成功: activityId={}, 总销售额={}, 商户佣金={}, 设计者佣金={}, 平台佣金={}",
                 activity.getId(), totalSales, settlement.getMerchantCommissionAmount(),
                 settlement.getDesignerCommissionAmount(), settlement.getPlatformCommissionAmount());
+        // MC-034:分润到账告诉收款方(提交后独立投递;失败只记日志,不影响本次结算)。
+        if (organizerMoneyNotice != null) {
+            organizerMoneyNotice.activitySettled(payee, activity.getId(), activity.getName(), payeeAmount);
+        }
 
         return true;
     }

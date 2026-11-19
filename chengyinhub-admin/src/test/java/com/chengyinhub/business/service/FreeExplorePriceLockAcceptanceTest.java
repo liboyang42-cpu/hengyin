@@ -246,6 +246,22 @@ class FreeExplorePriceLockAcceptanceTest {
 
     // ------------------------------------------------------------------ (b) 缺条件原话拒绝 + 零写入
 
+    /** MC-034:锁价成功告诉主题主办方;被拒的锁价不发。 */
+    @Test
+    void confirm_notifiesTopicOwnerOnlyOnSuccess() {
+        com.chengyinhub.business.service.support.OrganizerMoneyNotice notice =
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.support.OrganizerMoneyNotice.class);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "organizerMoneyNotice", notice);
+        freeExploreTopic(3);
+        assertThrows(IllegalStateException.class,
+                () -> service.confirmPrice(TOPIC_ID, new BigDecimal("128.00"), null, 37, new BigDecimal("100"), 4));
+        verify(notice, never()).priceLocked(any(), any(), any());
+
+        CmsTopic topic = freeExploreTopic(2);
+        service.confirmPrice(TOPIC_ID, new BigDecimal("128.00"), null, 37, new BigDecimal("100"), 4);
+        verify(notice).priceLocked(OWNER_ID, TOPIC_ID, topic.getName());
+    }
+
     @Test
     void refuse_notInPricingLifecycle() {
         for (Integer lifecycle : new Integer[] {null, 1, 3}) {
