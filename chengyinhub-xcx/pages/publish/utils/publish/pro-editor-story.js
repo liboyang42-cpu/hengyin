@@ -4,6 +4,7 @@
 var materials = require('./pro-editor-materials.js');
 var storyEnding = require('./story-ending.js');
 var storyInline = require('./story-inline.js');
+var storyCast = require('./story-cast.js');
 var MAX_BLOCKS_PER_CHAPTER = 200;
 
 function clone(input) {
@@ -83,7 +84,11 @@ function isBranchType(type) { return type === 'branch'; }
 function normalizeBranchOptions(options) {
   var list = (Array.isArray(options) ? options : []).map(function (item) {
     var to = String(item && item.to == null ? 'continue' : item.to).trim();
-    return { text: String(item && item.text == null ? '' : item.text), to: BRANCH_TO.test(to) ? to : 'continue' };
+    var option = { text: String(item && item.text == null ? '' : item.text), to: BRANCH_TO.test(to) ? to : 'continue' };
+    // D2 信任(角色契约 1119):选项上的 trust 原样带着;关掉角色开关也不丢
+    var trust = storyCast.normalizeTrust(item && item.trust);
+    if (trust.length) option.trust = trust;
+    return option;
   });
   while (list.length < BRANCH_MIN_OPTIONS) list.push({ text: '', to: 'continue' });
   return list.slice(0, BRANCH_MAX_OPTIONS);
@@ -370,6 +375,9 @@ function materializeChapter(source, makeKey) {
     if (isBranchType(block.type)) {
       return Object.assign({}, block, { key: block.key || keyFactory(), type: 'branch', content: String(block.content == null ? '' : block.content), options: normalizeBranchOptions(block.options) });
     }
+    if (storyCast.isLineType(block.type)) {
+      return Object.assign({}, block, { key: block.key || keyFactory(), type: 'line' }, storyCast.lineFields(block));
+    }
     if (block.type === 'text') {
       return Object.assign({}, block, {
         key: block.key || keyFactory(),
@@ -483,9 +491,17 @@ function toPayloadChapter(source) {
         var text = String(item.text == null ? '' : item.text).trim();
         if (!text) throw new Error('每条分支都要写玩家看到的选项');
         if (text.length > BRANCH_MAX_OPTION_TEXT) throw new Error('分支选项不能超过 ' + BRANCH_MAX_OPTION_TEXT + ' 字');
-        return { text: text, to: item.to };
+        return item.trust ? { text: text, to: item.to, trust: item.trust } : { text: text, to: item.to };
       });
       return Object.assign(authored, { type: 'branch', key: block.key, content: question, options: options });
+    }
+    if (storyCast.isLineType(block.type)) {
+      var lineProblem = storyCast.lineIssue(block);
+      if (lineProblem) throw new Error(lineProblem);
+      var lineOut = storyCast.lineFields(block);
+      var linePayload = Object.assign(authored, { type: 'line', key: block.key, speaker: lineOut.speaker, content: lineOut.content.trim() });
+      if (lineOut.audioUrl) linePayload.audioUrl = lineOut.audioUrl; else delete linePayload.audioUrl;
+      return linePayload;
     }
     if (isDreamType(block.type)) {
       // 契约 §3.2 的块形状带 key:后端 ChapterBlockReadSupport 原样透传,
@@ -817,13 +833,21 @@ function applyStoryCommand(input, command) {
   if (command.type === 'insertMediaAt') {
     if (draft.chapter.blocks.length >= MAX_BLOCKS_PER_CHAPTER) throw new Error('每章最多 200 个内容块');
     if (!isMediaType(command.mediaType) && !isDreamType(command.mediaType) && !isMoodType(command.mediaType) && !isThoughtType(command.mediaType)
-      && !isGalleryType(command.mediaType) && !isBranchType(command.mediaType)
+      && !isGalleryType(command.mediaType) && !isBranchType(command.mediaType) && !storyCast.isLineType(command.mediaType)
       && !PLAIN_BLOCKS[command.mediaType]) throw new Error('不支持的媒体块类型');
     var mediaAt = insertionIndex(draft.chapter.blocks, command.index);
     // 图片组:先按版式落一组空格,再逐格选图(与梦块同一条「先落块再配」的规矩)
     if (isGalleryType(command.mediaType)) {
       var newLayout = galleryLayoutOf(command.layout);
       draft.chapter.blocks.splice(mediaAt, 0, { key: command.blockKey, type: 'gallery', layout: newLayout, images: normalizeGalleryImages(command.images, newLayout) });
+      synchronizeChapter(draft.chapter);
+      return { draft: draft, insertedBlockKey: command.blockKey };
+    }
+    // 对白(角色契约 1119):先选谁在说话再落块,内容在块里直接写
+    if (storyCast.isLineType(command.mediaType)) {
+      var speaker = String(command.speaker == null ? '' : command.speaker).trim();
+      if (!speaker) throw new Error('先选谁在说话');
+      draft.chapter.blocks.splice(mediaAt, 0, { key: command.blockKey, type: 'line', speaker: speaker, content: String(command.content == null ? '' : command.content), audioUrl: '' });
       synchronizeChapter(draft.chapter);
       return { draft: draft, insertedBlockKey: command.blockKey };
     }
@@ -1002,7 +1026,7 @@ function applyStoryCommand(input, command) {
     var mediaIndex = draft.chapter.blocks.findIndex(function (item) {
       // 非文字 / 非节点的块都从这里删(氛围、伏笔、内心声音、异常以前漏了,点叉号只弹「未找到」)
       return item && item.key === command.blockKey && (isMediaType(item.type) || isDreamType(item.type)
-        || isMoodType(item.type) || isThoughtType(item.type) || isGalleryType(item.type) || isBranchType(item.type) || !!PLAIN_BLOCKS[item.type]);
+        || isMoodType(item.type) || isThoughtType(item.type) || isGalleryType(item.type) || isBranchType(item.type) || storyCast.isLineType(item.type) || !!PLAIN_BLOCKS[item.type]);
     });
     if (mediaIndex < 0) throw new Error('未找到要删除的媒体块');
     draft.chapter.blocks.splice(mediaIndex, 1);
@@ -1190,6 +1214,10 @@ function applyStoryCommand(input, command) {
         if (!BRANCH_TO.test(optionTo)) throw new Error('分支去向无效');
         nextOptions[optionIndex].to = optionTo;
       }
+      if (command.option.trust != null) {
+        var trustRows = storyCast.normalizeTrust(command.option.trust);
+        if (trustRows.length) nextOptions[optionIndex].trust = trustRows; else delete nextOptions[optionIndex].trust;
+      }
     }
     if (command.addOption) {
       if (nextOptions.length >= BRANCH_MAX_OPTIONS) throw new Error('最多 ' + BRANCH_MAX_OPTIONS + ' 条分支');
@@ -1202,6 +1230,34 @@ function applyStoryCommand(input, command) {
       nextOptions.splice(removeAt, 1);
     }
     branchBlock.options = nextOptions;
+    synchronizeChapter(draft.chapter);
+    return { draft: draft };
+  }
+
+  // ── 对白:换说话的人 / 改内容 / 录音;换成「旁白」= 变回普通段落(内容保留) ──
+  if (command.type === 'updateLine') {
+    var lineIndex = draft.chapter.blocks.findIndex(function (item) { return item && item.key === command.blockKey && storyCast.isLineType(item.type); });
+    if (lineIndex < 0) throw new Error('未找到要编辑的对白');
+    var lineBlock = draft.chapter.blocks[lineIndex];
+    if (command.speaker === 'narrator') {
+      var asText = { key: lineBlock.key, type: 'text', content: String(lineBlock.content == null ? '' : lineBlock.content) };
+      // 台词的 cond 与正文的 when 同形(#873):变回段落时挪过去,正文块上不能带 cond
+      Object.assign(asText, whenOf({ when: lineBlock.cond }));
+      draft.chapter.blocks.splice(lineIndex, 1, asText);
+      synchronizeChapter(draft.chapter);
+      return { draft: draft };
+    }
+    if (command.speaker != null) {
+      var nextSpeaker = String(command.speaker).trim();
+      if (!nextSpeaker) throw new Error('先选谁在说话');
+      lineBlock.speaker = nextSpeaker;
+    }
+    if (command.content != null) {
+      var nextLine = String(command.content);
+      if (Array.from(nextLine.trim()).length > storyCast.LINE_MAX) throw new Error('每句对白最多 ' + storyCast.LINE_MAX + ' 字');
+      lineBlock.content = nextLine;
+    }
+    if (command.audioUrl != null) lineBlock.audioUrl = String(command.audioUrl).trim();
     synchronizeChapter(draft.chapter);
     return { draft: draft };
   }

@@ -1,0 +1,157 @@
+<!-- 角色(cast-contract-1119 · A):列表层 + 编辑角色层,两层都是 cy-sheet(同画面风格层的 node-sheet 卡片语言)。
+     逻辑在 theme-cast.js;数据只有 formData.castConfig 一份。 -->
+<cy-sheet show="{{castSheetShow}}" fixed="full" stacked="{{castEdit.show}}" bind:close="closeCastSheet">
+  <view class="node-sheet cast-sheet">
+    <view class="node-sheet__top">
+      <view class="node-sheet__close" bindtap="closeCastSheet" aria-role="button" aria-label="关闭角色" hover-class="cy-pressed" hover-stay-time="80">关闭</view>
+      <view class="node-sheet__done" bindtap="doneCastSheet" aria-role="button" aria-label="完成角色" hover-class="cy-pressed" hover-stay-time="80">完成</view>
+    </view>
+    <view class="node-sheet__titlebar"><text class="node-sheet__name node-sheet__name--static">角色</text></view>
+
+    <!-- 玩家:起名 / 身份(身份打开后下面列身份,最多 4 个) -->
+    <view class="node-card" id="cast-player">
+      <view class="node-card__row">
+        <view class="node-card__ico"><cy-icon name="tab-me" size="32" /></view>
+        <view class="node-card__main"><text class="node-card__title">玩家起名</text></view>
+        <cy-switch checked="{{castView.playerName}}" data-field="playerName" bindchange="onCastPlayerSwitch" accessibility-label="玩家起名" />
+      </view>
+      <view class="node-card__hr"></view>
+      <view class="node-card__row">
+        <view class="node-card__ico"><cy-icon name="star" size="32" /></view>
+        <view class="node-card__main"><text class="node-card__title">玩家身份</text></view>
+        <cy-switch checked="{{castView.playerIdentity}}" data-field="playerIdentity" bindchange="onCastPlayerSwitch" accessibility-label="玩家身份" />
+      </view>
+      <block wx:if="{{castView.playerIdentity}}">
+        <view class="cast-ident" wx:for="{{castView.identities}}" wx:key="key" id="cast-identity{{index}}">
+          <view class="node-card__hr"></view>
+          <view class="cast-ident__row">
+            <input class="cast-ident__title" value="{{item.title}}" data-i="{{index}}" data-field="title" bindinput="onCastIdentityInput" maxlength="8" placeholder="身份，如：记者" placeholder-class="ed-cap__ph" aria-label="第 {{index + 1}} 个身份" />
+            <view class="sx-br__x" data-i="{{index}}" catchtap="removeCastIdentity" aria-role="button" aria-label="删除这个身份" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
+          </view>
+          <input class="cast-ident__sub" value="{{item.sub}}" data-i="{{index}}" data-field="sub" bindinput="onCastIdentityInput" maxlength="24" placeholder="一句话：来做什么" placeholder-class="ed-cap__ph" aria-label="第 {{index + 1}} 个身份的说明" />
+          <cy-inline-error wx:if="{{castError.field === 'identity' + index}}" kind="field" title="{{castError.message}}" />
+        </view>
+        <view class="node-card__hr"></view>
+        <view class="cast-add {{castView.idAtMax ? 'is-off' : ''}}" bindtap="addCastIdentity" aria-role="button" aria-label="添加身份" aria-disabled="{{castView.idAtMax}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" /><text>添加身份</text></view>
+        <cy-inline-error wx:if="{{castError.field === 'identities'}}" kind="field" title="{{castError.message}}" />
+      </block>
+    </view>
+
+    <!-- 角色行:脸 / 名字 / 身份 / 声音;右侧 ⋯ = 上移 / 下移 / 删除 -->
+    <view class="node-card" id="cast-list" wx:if="{{castView.list.length}}">
+      <block wx:for="{{castView.list}}" wx:key="id">
+        <view class="node-card__hr" wx:if="{{index > 0}}"></view>
+        <view class="node-card__row cast-row" data-id="{{item.id}}" bindtap="editCastMember" aria-role="button" aria-label="编辑{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="cast-face cast-face--md" style="background: {{item.color}}"><image wx:if="{{item.img}}" class="cast-face__img" src="{{item.img}}" mode="aspectFill" /><text wx:else>{{item.initial}}</text></view>
+          <view class="node-card__main">
+            <text class="node-card__title">{{item.name}}</text>
+            <text class="node-card__value" wx:if="{{item.identity || item.voiceLabel}}">{{item.identity}}{{item.identity && item.voiceLabel ? ' · ' : ''}}{{item.voiceLabel}}</text>
+          </view>
+          <view class="cast-row__more" data-id="{{item.id}}" catchtap="openCastRowMenu" aria-role="button" aria-label="移动或删除{{item.name}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="more" size="32" /></view>
+        </view>
+      </block>
+    </view>
+    <view class="cast-add cast-add--dashed {{castView.atMax ? 'is-off' : ''}}" id="cast-add" bindtap="addCastMember" aria-role="button" aria-label="添加角色" aria-disabled="{{castView.atMax}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="32" /><text>添加角色</text></view>
+    <view class="cast-err" wx:if="{{castError.field === 'add'}}"><cy-inline-error kind="field" title="{{castError.message}}" /></view>
+  </view>
+</cy-sheet>
+<cy-option-sheet show="{{castRowMenu.show}}" items="{{castRowMenu.items}}" immediate bind:select="onCastRowMenu" bind:cancel="closeCastRowMenu" />
+
+<!-- 编辑角色(iOS 式半屏,同 #860 叠层规范):头像 + 名字 + 一句话身份 + 声音 + 颜色 + 你知道的 + 结局台词。
+     「完成」一直可点:有缺项就滚到那一栏、红字说清楚(#871)。 -->
+<cy-sheet show="{{castEdit.show}}" fixed="full" bind:close="closeCastMember">
+  <view class="node-sheet cast-member" wx:if="{{castEdit.m}}">
+    <view class="node-sheet__top">
+      <view class="node-sheet__close" bindtap="closeCastMember" aria-role="button" aria-label="取消编辑角色" hover-class="cy-pressed" hover-stay-time="80">取消</view>
+      <view class="node-sheet__done {{castEdit.errField ? 'is-disabled' : ''}}" bindtap="saveCastMember" aria-role="button" aria-label="完成编辑角色" hover-class="cy-pressed" hover-stay-time="80">完成</view>
+    </view>
+    <scroll-view class="cast-member__scroll" scroll-y enhanced show-scrollbar="{{false}}" scroll-into-view="{{castEdit.scrollTo}}" scroll-with-animation>
+      <view class="cast-avatar" id="cm-avatar">
+        <view class="cast-face cast-face--lg" style="background: {{castEdit.m.color}}" bindtap="pickCastAvatar" aria-role="button" aria-label="{{castEdit.m.avatarUrl ? '更换头像' : '上传头像'}}" hover-class="cy-pressed" hover-stay-time="80">
+          <image wx:if="{{castEdit.avatarPreview}}" class="cast-face__img" src="{{castEdit.avatarPreview}}" mode="aspectFill" />
+          <text wx:else>{{castEdit.initial}}</text>
+          <view class="cast-face__badge"><cy-icon name="camera" size="24" /></view>
+        </view>
+        <cy-inline-error wx:if="{{castEdit.errField === 'avatar'}}" kind="field" title="{{castEdit.errMsg}}" />
+      </view>
+
+      <view class="node-card" id="cm-name">
+        <view class="node-card__row">
+          <view class="node-card__main">
+            <text class="node-card__title">名字<text class="g-req">*</text></text>
+            <input class="cast-input" value="{{castEdit.m.name}}" data-field="name" bindinput="onCastMemberInput" maxlength="8" placeholder="苏禾" placeholder-class="ed-cap__ph" aria-label="名字" />
+          </view>
+        </view>
+        <cy-inline-error wx:if="{{castEdit.errField === 'name'}}" kind="field" title="{{castEdit.errMsg}}" />
+        <view class="node-card__hr"></view>
+        <view class="node-card__row" id="cm-identity">
+          <view class="node-card__main">
+            <text class="node-card__title">一句话身份</text>
+            <input class="cast-input" value="{{castEdit.m.identity}}" data-field="identity" bindinput="onCastMemberInput" maxlength="30" placeholder="主唱，三年前先走的人" placeholder-class="ed-cap__ph" aria-label="一句话身份" />
+          </view>
+        </view>
+        <cy-inline-error wx:if="{{castEdit.errField === 'identity'}}" kind="field" title="{{castEdit.errMsg}}" />
+      </view>
+
+      <view class="node-card" id="cm-voice">
+        <view class="node-card__row">
+          <view class="node-card__main"><text class="node-card__title">声音</text></view>
+          <view class="node-pill" wx:if="{{castEdit.m.voice.mode === 'preset' && !castTtsOff}}" bindtap="previewCastVoice" aria-role="button" aria-label="试听这个声音" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="play-filled" size="24" /><text>{{castPreviewing ? '播放中' : '试听'}}</text></view>
+        </view>
+        <view class="look-chips cast-chips">
+          <view wx:for="{{castVoiceChips}}" wx:key="value" class="look-chip {{(item.value === 'none' && castEdit.m.voice.mode === 'none') || (castEdit.m.voice.mode === 'preset' && castEdit.m.voice.preset === item.value) ? 'is-on' : ''}}" data-value="{{item.value}}" bindtap="onCastVoice" aria-role="button" aria-label="{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
+        </view>
+        <view class="node-card__hr"></view>
+        <view class="node-card__row" bindtap="toggleCastRecord" aria-role="button" aria-label="{{castEdit.recording ? '停止录音' : '用自己的声音录'}}" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="node-card__main"><text class="node-card__title {{castEdit.recording ? 'cast-rec-on' : ''}}">{{castEdit.recording ? '录音中，点一下停止' : '用自己的声音录'}}</text></view>
+          <text class="node-card__value" wx:if="{{castEdit.m.voice.mode === 'record' && castEdit.m.voice.url}}">已录好</text>
+          <cy-icon name="chevron-right" size="24" />
+        </view>
+        <cy-inline-error wx:if="{{castEdit.errField === 'voice'}}" kind="field" title="{{castEdit.errMsg}}" />
+      </view>
+
+      <view class="node-card" id="cm-color">
+        <view class="node-card__row">
+          <view class="node-card__main"><text class="node-card__title">颜色</text></view>
+          <view class="cast-dots">
+            <view wx:for="{{castColors}}" wx:key="*this" class="cast-dot {{castEdit.m.color === item ? 'is-on' : ''}}" style="background: {{item}}" data-color="{{item}}" bindtap="onCastColor" aria-role="button" aria-label="颜色 {{index + 1}}" aria-selected="{{castEdit.m.color === item}}" hover-class="cy-pressed" hover-stay-time="80"></view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 你知道的(E4 线索):最多 6 条,每条 1–40 字,开局就有或走到某章解锁 -->
+      <view class="node-card" id="cm-clues">
+        <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">你知道的</text></view></view>
+        <view class="cast-clue" wx:for="{{castEdit.m.clues}}" wx:key="index" id="cm-clue{{index}}">
+          <view class="node-card__hr"></view>
+          <view class="cast-ident__row">
+            <input class="cast-ident__title" value="{{item.text}}" data-i="{{index}}" bindinput="onCastClueInput" maxlength="40" placeholder="她总把吉他背在左肩" placeholder-class="ed-cap__ph" aria-label="第 {{index + 1}} 条" />
+            <view class="sx-br__x" data-i="{{index}}" catchtap="removeCastClue" aria-role="button" aria-label="删除这一条" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
+          </view>
+          <cy-dropdown topic-editor="{{true}}" range="{{castClueOptions}}" range-key="label" data-i="{{index}}" bind:change="onCastClueChapter">
+            <view class="story-var-entry {{item.chapterId != null ? 'is-on' : ''}}" aria-role="button" aria-label="什么时候知道" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="lock" size="24" /><text>{{castEdit.clueLabels[index]}}</text></view>
+          </cy-dropdown>
+          <cy-inline-error wx:if="{{castEdit.errField === 'clue' + index}}" kind="field" title="{{castEdit.errMsg}}" />
+        </view>
+        <view class="node-card__hr"></view>
+        <view class="cast-add {{castEdit.atClueMax ? 'is-off' : ''}}" bindtap="addCastClue" aria-role="button" aria-label="添加一条" aria-disabled="{{castEdit.atClueMax}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" /><text>添加一条</text></view>
+        <cy-inline-error wx:if="{{castEdit.errField === 'clues'}}" kind="field" title="{{castEdit.errMsg}}" />
+      </view>
+
+      <!-- 结局台词(E6):按信任高低各一句,可空 -->
+      <view class="node-card" id="cm-ending">
+        <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">结局台词</text></view></view>
+        <view class="node-card__hr"></view>
+        <view class="cast-ident__row"><text class="cast-band">信任低</text><input class="cast-ident__title" value="{{castEdit.m.endingLines.low}}" data-band="low" bindinput="onCastEndingLine" maxlength="60" placeholder="你走吧，别回头。" placeholder-class="ed-cap__ph" aria-label="信任低时的结局台词" /></view>
+        <view class="node-card__hr"></view>
+        <view class="cast-ident__row"><text class="cast-band">信任中</text><input class="cast-ident__title" value="{{castEdit.m.endingLines.mid}}" data-band="mid" bindinput="onCastEndingLine" maxlength="60" placeholder="下次再一起唱吧。" placeholder-class="ed-cap__ph" aria-label="信任中等时的结局台词" /></view>
+        <view class="node-card__hr"></view>
+        <view class="cast-ident__row"><text class="cast-band">信任高</text><input class="cast-ident__title" value="{{castEdit.m.endingLines.high}}" data-band="high" bindinput="onCastEndingLine" maxlength="60" placeholder="谢谢你今晚来了。" placeholder-class="ed-cap__ph" aria-label="信任高时的结局台词" /></view>
+        <cy-inline-error wx:if="{{castEdit.errField === 'ending_low' || castEdit.errField === 'ending_mid' || castEdit.errField === 'ending_high'}}" kind="field" title="{{castEdit.errMsg}}" />
+      </view>
+
+      <view class="cast-delete" wx:if="{{!castEdit.isNew}}" bindtap="deleteCastMember" aria-role="button" aria-label="删除这个角色" hover-class="cy-pressed" hover-stay-time="80">删除角色</view>
+      <view class="sx-br__pad"></view>
+    </scroll-view>
+  </view>
+</cy-sheet>

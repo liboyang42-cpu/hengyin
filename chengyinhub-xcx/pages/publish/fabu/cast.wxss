@@ -1,0 +1,45 @@
+/* 角色(cast-contract-1119):首页卡的叠脸、列表 / 编辑弹窗、故事流里的对白段、分支信任。
+   颜色只用 token;角色色来自数据(内联 style),不写进样式表。 */
+.cast-faces { display: flex; align-items: center; margin-top: var(--cy-space-1); }
+.cast-faces .cast-face + .cast-face { margin-left: -12rpx; }
+.cast-faces__n { margin-left: var(--cy-space-2); font-size: var(--cy-font-caption); color: var(--cy-color-text-tertiary); }
+.cast-card__switch { flex: none; margin-left: var(--cy-space-2); }
+.cast-face { position: relative; flex: none; display: flex; align-items: center; justify-content: center; border-radius: 50%; overflow: hidden; color: var(--cy-color-text-inverse); font-weight: 700; box-sizing: border-box; }
+.cast-face--sm { width: 48rpx; height: 48rpx; font-size: var(--cy-font-caption); border: 3rpx solid var(--cy-color-bg-surface); }
+.cast-face--md { width: 72rpx; height: 72rpx; margin-right: var(--cy-space-3); font-size: var(--cy-font-body); }
+.cast-face--lg { width: 160rpx; height: 160rpx; overflow: visible; font-size: var(--cy-font-title); }
+.cast-face--plain { background: var(--cy-color-bg-surface-subtle); color: var(--cy-color-text-secondary); }
+.cast-face__img { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 50%; }
+.cast-face__badge { position: absolute; right: -4rpx; bottom: -4rpx; width: 52rpx; height: 52rpx; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--cy-color-bg-surface); color: var(--cy-color-text-primary); box-shadow: 0 0 0 2rpx var(--cy-color-border-subtle); }
+.cast-row__more { width: var(--cy-btn-h); height: var(--cy-btn-h); margin-right: calc(-1 * var(--cy-space-2)); display: flex; align-items: center; justify-content: center; color: var(--cy-color-text-tertiary); }
+.cast-add { min-height: var(--cy-btn-h); display: flex; align-items: center; justify-content: center; gap: 6rpx; color: var(--cy-color-text-primary); font-size: var(--cy-font-label); font-weight: 600; }
+.cast-add--dashed { margin: 0 var(--cy-space-4) var(--cy-space-3); border: 2rpx dashed var(--cy-color-border-strong); border-radius: var(--cy-radius-md); }
+.cast-add.is-off { color: var(--cy-color-text-placeholder); }
+.cast-err { margin: 0 var(--cy-space-4); }
+.cast-ident { padding: 0 var(--cy-space-3-5); }
+.cast-ident__row { display: flex; align-items: center; gap: var(--cy-space-2); padding: 0 var(--cy-space-3-5); }
+.cast-ident .cast-ident__row { padding: 0; }
+.cast-ident__title { flex: 1; min-width: 0; height: var(--cy-btn-h); color: var(--cy-color-text-primary); font-size: var(--cy-font-body); }
+.cast-ident__sub { height: 64rpx; padding-bottom: var(--cy-space-2); color: var(--cy-color-text-secondary); font-size: var(--cy-font-caption); }
+.cast-member__scroll { height: calc(80vh - 120rpx); }
+.cast-avatar { display: flex; flex-direction: column; align-items: center; padding: var(--cy-space-4) 0 var(--cy-space-3); }
+.cast-input { height: 64rpx; margin-top: var(--cy-space-1); color: var(--cy-color-text-primary); font-size: var(--cy-font-body); }
+.cast-chips { padding: 0 var(--cy-space-3-5) var(--cy-space-3); }
+.cast-rec-on { color: var(--cy-color-action-danger-bg); }
+.cast-dots { display: flex; gap: var(--cy-space-2); }
+.cast-dot { width: 48rpx; height: 48rpx; border-radius: 50%; box-sizing: border-box; }
+.cast-dot.is-on { box-shadow: 0 0 0 4rpx var(--cy-color-bg-surface), 0 0 0 8rpx var(--cy-color-text-primary); }
+.cast-clue { padding: 0 var(--cy-space-3-5) var(--cy-space-2); }
+.cast-clue .cast-ident__row { padding: 0; }
+.cast-band { flex: none; width: 96rpx; color: var(--cy-color-text-secondary); font-size: var(--cy-font-caption); }
+.cast-delete { min-height: var(--cy-btn-h); margin: var(--cy-space-2) var(--cy-space-4); display: flex; align-items: center; justify-content: center; color: var(--cy-color-action-danger-bg); font-size: var(--cy-font-body); font-weight: 600; }
+
+/* 故事流里的对白:与段落同一行宽;说话的人小字浅灰挂在段首,不当标题 */
+.sx-line { position: relative; flex-wrap: wrap; }
+.sx-line__who { flex: none; margin-right: var(--cy-space-2); padding-top: 10rpx; color: var(--cy-color-text-tertiary); font-size: var(--cy-font-caption); font-weight: 400; line-height: 1.7; }
+.sx-line__rec { flex: none; height: 56rpx; margin-left: var(--cy-space-1); padding: 0 var(--cy-space-2); display: flex; align-items: center; gap: 4rpx; border-radius: var(--cy-radius-pill); color: var(--cy-color-text-tertiary); font-size: var(--cy-font-caption); }
+.sx-line__rec.is-on { color: var(--cy-color-action-danger-bg); }
+
+/* 分支选项的信任步进器 */
+.sx-trust { display: inline-flex; align-items: center; gap: var(--cy-space-1); margin-right: var(--cy-space-2); }
+.sx-trust__n { color: var(--cy-color-text-primary); font-size: var(--cy-font-caption); }
