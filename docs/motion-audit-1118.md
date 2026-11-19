@@ -241,7 +241,7 @@ iOS 现有三个动效的取值有改动：
 | HomeFeedView | Tab 0；详情页 push；5 个入口以 sheet 打开 | 卡片按压（QuestifyCardButtonStyle），封面淡入 | 顶部的 ProgressView 行加载完消失，列表整体上跳 | App Store Today：灰占位卡淡切成内容 | 用 `.redacted` 占位行加 content 淡入 | M（留档：要定占位样式，等同新组件） |
 | ActivityBrowserView | Tab 1，push | 卡片按压 | 转圈直接换成列表、空态或错误态，内容硬跳出来 | Mail / App Store 淡切 | 在 ZStack 上加 `.animation(QuestifyMotion.content, value: 是否在转圈)`，开减少动效时不播 | S ✅ |
 | RoamBrowserView | Tab 3；详情以 sheet 打开；城市、附近、体验 push | 无 | 行用了 `.buttonStyle(.plain)`，按下没有反馈；详情 sheet 没有设 detents，一打开就是全屏 | 地图地点卡：中/大两档 detents，行按下高亮 | 行改用 QuestifyCardButtonStyle ✅；detents 要定档位，属于设计决策 | S ✅ / M（留档） |
-| ClubHomeView | Tab 2 | 俱乐部卡片按压 | 定位转圈换成内容时硬切 | 设置 | 同 ActivityBrowser 的做法 | S（留档，下批跟进） |
+| ClubHomeView | Tab 2 | 俱乐部卡片按压 | 定位转圈换成内容时硬切 | 设置 | 同 ActivityBrowser 的做法：List 上挂 `.animation(QuestifyMotion.content, value: 定位 phase)`（Phase 已是 Equatable），开减少动效时不播 | S ✅ |
 | AccountView | Tab 4，Form | 系统行高亮 | 无 | 设置 | — | — |
 | ActivityDetailView / TopicDetailView / SquareDetailView | push / sheet | 无 | 转圈换成内容时硬切；Square 有 3 个转圈各自弹出 | App Store 详情页：骨架淡入 | 统一的「加载容器」：redacted 占位加淡切 | M（留档） |
 | SearchMapExplorerView | push；区域和筛选以 sheet 打开 | 卡片按压 | 结果转圈硬切 | 地图 | 同加载容器 | M（留档） |
@@ -266,7 +266,7 @@ iOS 现有三个动效的取值有改动：
 | RoamStampViews（集章草稿） | push | 预览展开带淡入 | 收起时直接消失，展开和收起不对称 | — | 收起也走 QuestifyMotion.content | S ✅ |
 | PaymentProviderReturnSheet | sheet，禁止下拉关闭 | 无 | 支付成功后强制等 2 秒自动关闭，期间没有「完成」，也不能下拉关闭；成功时没有对勾动画，也没有触感 | Apple Pay：对勾加触感，然后关闭 | 加「完成」按钮、淡切、`.sensoryFeedback(.success)` | M（留档：支付链路，按规矩不碰支付相关代码） |
 | PublishingContextHandoffViews（发布结果） | sheet，禁止下拉关闭 | 无 | 能跳转时会隐藏「完成」并强制等 2 秒 | 系统结果页总有「完成」 | 始终显示「完成」，保留自动关闭 | S ✅ |
-| 模板「已保存 / 已发布」面板 | sheet [.medium] | 无 | 有按钮；成功时没有触感 | — | 加 `.sensoryFeedback(.success)` | S（留档：新增触感属于新反馈类型，待业主确认） |
+| 模板「已保存 / 已发布」面板 | sheet [.medium] | 无 | 有按钮；成功时没有触感 | — | 面板出现时一次 `.sensoryFeedback(.success)`（保存、发布两个面板） | S ✅ |
 | Medium-detent sheet（提现客服、俱乐部资料、收入、订单、举报、步行导航） | sheet | 系统 | 无 | 地图 | — | — |
 | RoamPosterScan / RoamStampCamera | fullScreenCover | 系统 | 无（相机全屏） | 相机 | — | — |
 
@@ -283,7 +283,7 @@ iOS 字面动画清单：
 2. 小程序玩法和原型页里的字面时长（play / roam / pass-reveal / look-transition / ai-insight / ai-npc / signup / topic 首页 / landing 等）：这些是业主定稿的原型值，收回 token 等于改设计。
 3. 小程序 page-motion 交错延迟收成 stagger token：纯重构，收益低。
 4. iOS 统一加载容器（`.redacted` 占位加淡切），覆盖首页、详情、搜索等页面里 352 个只有转圈的加载态：要新组件，也要定占位样式。
-5. iOS 漫游详情 sheet 的 detents、社区帖改成 Button、支付返回页补「完成」和触感、模板结果页触感、媒体库从缩略图放大、AR 的 SCNAction 时长。
+5. iOS 漫游详情 sheet 的 detents、社区帖改成 Button、支付返回页补「完成」和触感、媒体库从缩略图放大、AR 的 SCNAction 时长。
 
 ## 6. 验证
 
@@ -300,9 +300,7 @@ iOS 字面动画清单：
 
 - 小程序 S 项已全部落地：骨架屏分支淡入（92 个 wxml）、cy-tabs icon 档改用 token、loading-mask 转圈同速、双端 token 对照表加契约。
 - iOS 已落地的 S 项：token 镜像、4 处改用 App 自己的减少动效开关、15 处补按压反馈（商家运营入口、模板行、俱乐部运营工作台三处因 CI UI 用例失败已回退，见第 4 节）、活动列表淡切、双击缩放过渡、集章预览收起动画、发布结果「完成」常显。
-- 没做的 S 项有 2 个：
-  - ClubHome 定位态淡切：它是 List Section 里的 switch，phase 类型要先确认是否可比较（Equatable）；
-  - 模板结果页触感：属于新增的反馈类型，要业主确认。
+- 剩余 2 个 S 项已补：ClubHome 定位态淡切、模板保存/发布结果面板成功触感（iOS #152）。
 - M / L 项都留在本文档（第 2、4、5 节）。
 
-STATUS: PARTIAL 2 个 S 项留档（ClubHome 定位态淡切、模板结果页成功触感）；iOS 改动没在模拟器或真机编译运行（Linux 环境），小程序没在开发者工具截图自验，需要在 Mac 上补验
+STATUS: S 项全部落地；iOS 改动已在 CI 编译并跑单测/UI 用例（结果见 PR），小程序未在开发者工具截图自验，需负责人在开发者工具和真机上按 PR STATUS 评论逐页核对
