@@ -208,9 +208,27 @@ public final class AnswerPolicy
         for (char c : trimmed.toCharArray()) {
             if (c >= '！' && c <= '～') normalized.append((char) (c - 0xFEE0)); // 全角ASCII→半角
             else if (c == '　') normalized.append(' '); // 全角空格(trim/\\s+ 都不动它,原样落半角空格)
-            else normalized.append(c);
+            else normalized.append(foldApostrophe(c));
         }
         return normalized.toString();
+    }
+
+    /**
+     * CG-08-P2-5:弯撇号/单引号变体(‘ ’ ‛ ′ ʼ)一律按半角撇号 ' 判。全角 ＇ 已由上面的全角→半角覆盖。
+     * 输入法自动把 ' 换成 ’ 是玩家无感的,不应因此判错。
+     */
+    public static char foldApostrophe(char c)
+    {
+        return c == '\u2018' || c == '\u2019' || c == '\u201B' || c == '\u2032' || c == '\u02BC' ? '\'' : c;
+    }
+
+    /** 整串折叠撇号变体，其它字符逐字不动。 */
+    public static String foldApostrophes(String value)
+    {
+        if (value == null) return null;
+        StringBuilder out = new StringBuilder(value.length());
+        for (char c : value.toCharArray()) out.append(foldApostrophe(c));
+        return out.toString();
     }
 
     /** 高级 qa.TYPE 历史语义:答案里用、或英文逗号分隔的每一段都是合法写法。 */
@@ -234,10 +252,10 @@ public final class AnswerPolicy
     public static boolean matchesLegacyAdvancedType(String answerText, String submitted)
     {
         if (submitted == null) return false;
-        String got = submitted.trim().toLowerCase();
+        String got = foldApostrophes(submitted.trim().toLowerCase());
         if (got.isEmpty()) return false;
         for (String one : legacyAnswerTextCandidates(answerText)) {
-            if (one.toLowerCase().equals(got)) return true;
+            if (foldApostrophes(one.toLowerCase()).equals(got)) return true;
         }
         return false;
     }
