@@ -126,6 +126,32 @@ class ClubEventAttendanceServiceImplTest {
         assertEquals("阿舟", ((Map<?, ?>) noShow.get(1)).get("displayName"));
     }
 
+    /** 默认昵称兜底带报名时刻:createTime/registrationTime 来自 Map 结果,Connector/J 8 回 LocalDateTime,不能只认 Date。 */
+    @Test
+    void defaultNicknameFallbackShowsSignupTimeForDateAndLocalDateTime() {
+        java.time.LocalDateTime local = java.time.LocalDateTime.of(2026, 11, 19, 10, 30, 0);
+        java.util.Date localAsDate = java.util.Date.from(local.atZone(java.time.ZoneId.systemDefault()).toInstant());
+        java.util.Date date = new java.util.Date(1_700_000_000_000L);
+        Map<String, Object> withDate = row(61L, "城瘾用户", null, null, 0);
+        withDate.put("createTime", date);
+        Map<String, Object> withLocal = row(62L, "城瘾用户", null, null, 0);
+        withLocal.put("createTime", local);
+        Map<String, Object> withRegistrationLocal = row(63L, "城瘾用户", null, null, 0);
+        withRegistrationLocal.put("registrationTime", local);
+        when(mapper.selectPaidRoster(ACTIVITY)).thenReturn(Arrays.asList(withDate, withLocal, withRegistrationLocal));
+        when(mapper.selectWaitlistRoster(ACTIVITY)).thenReturn(Collections.emptyList());
+
+        Map<String, Object> roster = service.roster(ACTOR, CLUB, ACTIVITY);
+
+        List<?> noShow = (List<?>) roster.get("noShow");
+        assertEquals(com.chengyinhub.business.util.OrganiserPersonName.pick(null, "城瘾用户", null, date, "报名"),
+                ((Map<?, ?>) noShow.get(0)).get("displayName"));
+        String expectedLocal = com.chengyinhub.business.util.OrganiserPersonName.pick(null, "城瘾用户", null, localAsDate, "报名");
+        assertEquals(true, expectedLocal.contains("·"));
+        assertEquals(expectedLocal, ((Map<?, ?>) noShow.get(1)).get("displayName"));
+        assertEquals(expectedLocal, ((Map<?, ?>) noShow.get(2)).get("displayName"));
+    }
+
     @Test
     void jdbcLocalDateTimeCheckinIsReturnedAsArrived() {
         LocalDateTime arrivedAt = LocalDateTime.of(2026, 9, 22, 8, 3, 51);

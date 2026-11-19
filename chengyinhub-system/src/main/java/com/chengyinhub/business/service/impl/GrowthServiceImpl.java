@@ -254,7 +254,7 @@ public class GrowthServiceImpl implements IGrowthService {
         for (GrowthMission mission : missions) {
             if (!growthMissionProgressMapper.hasRegistrationAward(memberId, mission.getMissionCode(), registrationId)) {
                 accepted += completeMission(memberId, mission, "registration", registrationId,
-                        (Date) event.get("createTime"));
+                        DateUtils.asDate(event.get("createTime")));
             }
         }
         if (storeVerifyGrowthDeliveryMapper.markProcessed(registrationId) != 1) {

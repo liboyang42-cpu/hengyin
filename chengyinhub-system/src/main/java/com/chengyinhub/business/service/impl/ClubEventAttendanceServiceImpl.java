@@ -15,8 +15,6 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -240,9 +238,10 @@ public class ClubEventAttendanceServiceImpl implements IClubEventAttendanceServi
         Object nickname = row.get("nickname");
         String nick = nickname == null ? "" : String.valueOf(nickname).trim();
         // 第十二轮 k3(p3 N4):兜底不再给「成员#id」,默认昵称带报名时刻。
-        Object signedAt = row.get("createTime") instanceof java.util.Date ? row.get("createTime") : row.get("registrationTime");
+        Date signedAt = dateValue(row.get("createTime"));
+        if (signedAt == null) signedAt = dateValue(row.get("registrationTime"));
         row.put("displayName", com.chengyinhub.business.util.OrganiserPersonName.pick(realName, nick, null,
-                signedAt instanceof java.util.Date ? (java.util.Date) signedAt : null, "报名"));
+                signedAt, "报名"));
         return row;
     }
 
@@ -280,11 +279,7 @@ public class ClubEventAttendanceServiceImpl implements IClubEventAttendanceServi
     private long number(Object value) { return value instanceof Number ? ((Number) value).longValue() : 0L; }
     private Long longValue(Object value) { return value instanceof Number ? ((Number) value).longValue() : null; }
     private Date dateValue(Object value) {
-        if (value instanceof Date) return (Date) value;
-        if (value instanceof LocalDateTime) {
-            return Date.from(((LocalDateTime) value).atZone(ZoneId.systemDefault()).toInstant());
-        }
-        return null;
+        return com.chengyinhub.common.utils.DateUtils.asDate(value);
     }
     private boolean positive(Long value) { return value != null && value > 0; }
     protected Date now() { return new Date(); }

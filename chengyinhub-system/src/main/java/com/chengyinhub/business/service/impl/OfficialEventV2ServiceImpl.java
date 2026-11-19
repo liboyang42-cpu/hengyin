@@ -2118,8 +2118,11 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
     }
 
     private boolean anchorTooFast(Map<String, Object> anchor, double targetLat, double targetLng) {
-        if (anchor == null || !(anchor.get("foundAt") instanceof Date) || !(anchor.get("lat") instanceof Number) || !(anchor.get("lng") instanceof Number)) return false;
-        long elapsed = Math.max(1L, (System.currentTimeMillis() - ((Date) anchor.get("foundAt")).getTime()) / 1000L);
+        if (anchor == null || !(anchor.get("lat") instanceof Number) || !(anchor.get("lng") instanceof Number)) return false;
+        // Connector/J 8 对 Map 结果的 DATETIME 回 LocalDateTime；instanceof Date 守卫会让真库下的速度校验静默失效。
+        Date foundAt = com.chengyinhub.common.utils.DateUtils.asDate(anchor.get("foundAt"));
+        if (foundAt == null) return false;
+        long elapsed = Math.max(1L, (System.currentTimeMillis() - foundAt.getTime()) / 1000L);
         double distance = GeoDistanceUtils.haversineMeters(((Number) anchor.get("lat")).doubleValue(), ((Number) anchor.get("lng")).doubleValue(), targetLat, targetLng);
         return distance > MIN_SPEED_DISTANCE_M && distance / elapsed > MAX_MOVE_SPEED_MPS;
     }

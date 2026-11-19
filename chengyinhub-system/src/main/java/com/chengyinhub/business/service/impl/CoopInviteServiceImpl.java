@@ -245,8 +245,9 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
         java.util.Map<Long, java.util.Date> out = new java.util.HashMap<>();
         if (ids == null || ids.isEmpty()) return out;
         for (java.util.Map<String, Object> row : coopInviteMapper.selectReadTimes(ids)) {
-            Object id = row.get("id"), at = row.get("readTime");
-            if (id instanceof Number && at instanceof java.util.Date) out.put(((Number) id).longValue(), (java.util.Date) at);
+            Object id = row.get("id");
+            java.util.Date at = DateUtils.asDate(row.get("readTime"));
+            if (id instanceof Number && at != null) out.put(((Number) id).longValue(), at);
         }
         return out;
     }

@@ -1933,6 +1933,33 @@ class OfficialEventV2ServiceTest {
     }
 
     @Test
+    void gate0_负控_真库LocalDateTime锚点_相对上次POI发现瞬移也必须拒() {
+        // Connector/J 8 对 resultType=map 的 DATETIME 返回 LocalDateTime；instanceof Date 守卫曾让速度校验对真数据静默失效。
+        ArrivalFixture f = arrivalFixture(true);
+        java.util.Map<String, Object> anchor = anchorLoc(0L, "30.0000", "120.0000");
+        anchor.put("foundAt", java.time.LocalDateTime.now().minusSeconds(10));
+        when(f.roamMapper.selectLastPoiFoundLoc(101L)).thenReturn(anchor);
+
+        java.util.Map<String, Object> result = f.service.verifyArrival(7L, 101L, arrivalRequest());
+
+        assertEquals("MOVE_TOO_FAST", result.get("reason"));
+        assertNoEvidence(f);
+    }
+
+    @Test
+    void gate0_负控_真库LocalDateTime锚点_相对上次被接受到达瞬移也必须拒() {
+        ArrivalFixture f = arrivalFixture(true);
+        java.util.Map<String, Object> anchor = anchorLoc(0L, "30.0000", "120.0000");
+        anchor.put("foundAt", java.time.LocalDateTime.now().minusSeconds(60));
+        when(f.v2Mapper.selectLastAcceptedArrivalLoc(101L)).thenReturn(anchor);
+
+        java.util.Map<String, Object> result = f.service.verifyArrival(7L, 101L, arrivalRequest());
+
+        assertEquals("MOVE_TOO_FAST", result.get("reason"));
+        verify(f.v2Mapper, org.mockito.Mockito.never()).insertEvidenceIgnore(org.mockito.ArgumentMatchers.any(OfficialEventMissionEvidence.class));
+    }
+
+    @Test
     void gate0_负控_同任务半分钟内重复验证必须节流() {
         ArrivalFixture f = arrivalFixture(true);
         OfficialEventArrivalVerification previous = new OfficialEventArrivalVerification();

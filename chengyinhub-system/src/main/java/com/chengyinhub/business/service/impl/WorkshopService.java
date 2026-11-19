@@ -485,7 +485,7 @@ public class WorkshopService {
     }
     private static long cursor(Long before) { if (before!=null && before<=0) throw failure(400,"INVALID_CURSOR"); return before==null?Long.MAX_VALUE:before; }
     private static BigDecimal yuan(Map<String,Object> row) { return BigDecimal.valueOf(number(row,"amount_fen"),2); }
-    private static String instant(Object date) { return date instanceof Date d ? d.toInstant().toString() : Objects.toString(date,""); }
+    private static String instant(Object date) { Date d = com.chengyinhub.common.utils.DateUtils.asDate(date); return d == null ? "" : d.toInstant().toString(); }
     private static void member(long member) { if (member<=0) throw failure(401,"LOGIN_REQUIRED"); }
     private static void key(String key) { if (key==null || !key.matches("[A-Za-z0-9_-]{1,80}")) throw failure(400,"INVALID_REQUEST_ID"); }
     private static void digest(String value) { if (value==null || !value.matches("[a-f0-9]{64}")) throw failure(400,"INVALID_HASH"); }
