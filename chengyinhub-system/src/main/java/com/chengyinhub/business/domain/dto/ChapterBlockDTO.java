@@ -20,7 +20,7 @@ public class ChapterBlockDTO implements Serializable
 {
     private static final long serialVersionUID = 1L;
 
-    @Schema(description = "块类型：text / node / image / audio / dream / mood / thought / voice / odd / reveal / divider / gallery / branch / cap", example = "text")
+    @Schema(description = "块类型：text / node / image / audio / dream / mood / thought / voice / odd / reveal / divider / gallery / branch / cap / line", example = "text")
     private String type;
 
     @Schema(description = "文本块正文；仅 type=text 时有效")
@@ -122,6 +122,40 @@ public class ChapterBlockDTO implements Serializable
     public List<BranchOptionDTO> getOptions() { return options; }
     public void setOptions(List<BranchOptionDTO> options) { this.options = options; }
 
+    /* 2026-11-19 角色(Cast)v1:台词块 line = 角色说的一句话。 */
+    @Schema(description = "台词说话人；仅 type=line：player 或 castConfig.cast[].id(c_xxxxxx)", example = "c_ab12cd")
+    private String speaker;
+
+    @Schema(description = "台词自带配音；仅 type=line：空 / media-asset:N / https 地址")
+    private String audioUrl;
+
+    @Schema(description = "台词显示条件；仅 type=line，可缺省；形状同正文 when:{op:HAS_TAG,value}")
+    private JsonNode cond;
+
+    public String getSpeaker() { return speaker; }
+    public void setSpeaker(String speaker) { this.speaker = speaker; }
+    public String getAudioUrl() { return audioUrl; }
+    public void setAudioUrl(String audioUrl) { this.audioUrl = audioUrl; }
+    public JsonNode getCond() { return cond; }
+    public void setCond(JsonNode cond) { this.cond = cond; }
+
+    /** 分支选项上的信任变化:选了这条,对应角色的信任 +delta(-2..2)。只由服务端在记录选择时结算。 */
+    public static class TrustDeltaDTO implements Serializable
+    {
+        private static final long serialVersionUID = 1L;
+
+        @Schema(description = "角色 id", example = "c_ab12cd")
+        private String castId;
+
+        @Schema(description = "信任变化 -2..2", example = "1")
+        private Integer delta;
+
+        public String getCastId() { return castId; }
+        public void setCastId(String castId) { this.castId = castId; }
+        public Integer getDelta() { return delta; }
+        public void setDelta(Integer delta) { this.delta = delta; }
+    }
+
     /** 分支任务的一条分支:玩家看到的选项文字 + 去向(continue 继续本章 / end 结束本章 / chapter:N 跳到第 N 章)。 */
     public static class BranchOptionDTO implements Serializable
     {
@@ -137,6 +171,12 @@ public class ChapterBlockDTO implements Serializable
         public void setText(String text) { this.text = text; }
         public String getTo() { return to; }
         public void setTo(String to) { this.to = to; }
+
+        @Schema(description = "选这条时角色信任变化(可缺省)：[{castId, delta -2..2}]")
+        private List<TrustDeltaDTO> trust;
+
+        public List<TrustDeltaDTO> getTrust() { return trust; }
+        public void setTrust(List<TrustDeltaDTO> trust) { this.trust = trust; }
     }
 
     /** 段内一段格式:bold / italic / strike,区间左闭右开。 */

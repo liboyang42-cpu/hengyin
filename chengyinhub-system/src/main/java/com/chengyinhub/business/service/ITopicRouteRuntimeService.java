@@ -270,6 +270,30 @@ public interface ITopicRouteRuntimeService {
     }
     java.util.Set<String> tags(Long memberId, Long topicId, Long activityId);
 
+    /**
+     * 角色(Cast)v1 · POST /api/play/run/profile:写本局玩家档案(名字 / 身份)到 state_json.playerProfile。
+     * 只有本局主人、本局进行中;名字 1–12 字并过内容安全;identityKey 可缺省,给了必须是 castConfig.identities 里的。
+     *
+     * @return {playerProfile:{name,identityKey,identityTitle}}
+     */
+    Map<String, Object> saveRunProfile(Long memberId, Long runId, String name, String identityKey);
+
+    /**
+     * 角色(Cast)v1 · POST /api/play/run/branch:记录本局在某个章节剧情 branch 块上的选择,
+     * 按服务端存的选项 trust 结算 state_json.trust。同一 chapterId:blockKey 只记第一次(重复返回 duplicate=true)。
+     *
+     * @return {chapterId,blockKey,optionIndex,to,duplicate}
+     */
+    Map<String, Object> recordStoryBranch(Long memberId, Long runId, Long chapterId, String blockKey, Integer optionIndex);
+
+    /**
+     * 角色(Cast)v1 · GET /api/topic/cast/voice:台词配音地址。块自带 audioUrl 直接回;否则按说话角色预设声音合成,
+     * 按 sha256(preset + text) 缓存。已发布主题登录即可听;草稿只有主题主人。
+     *
+     * @return {url}
+     */
+    Map<String, Object> castLineVoice(Long memberId, Long topicId, Long chapterId, String blockKey, Long runId);
+
     static String sessionKey(Long memberId, Long topicId, Long activityId) {
         return String.valueOf(memberId) + ':' + String.valueOf(topicId) + ':'
                 + String.valueOf(activityId == null ? 0L : activityId);

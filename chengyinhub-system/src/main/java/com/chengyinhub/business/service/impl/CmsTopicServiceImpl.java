@@ -2259,6 +2259,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             if (chapter.getBlocks() != null) for (com.chengyinhub.business.domain.dto.ChapterBlockDTO block : chapter.getBlocks()) {
                 if ("image".equals(block.getType()) || "audio".equals(block.getType()))
                     block.setUrl(mediaPublicationGuard.requireMedia(owner, block.getUrl(), publish));
+                // 角色 Cast v1:台词自带配音与音频块同一道归属 / 发布闸;空串 = 没配音,不过闸。
+                if ("line".equals(block.getType()) && block.getAudioUrl() != null && !block.getAudioUrl().trim().isEmpty())
+                    block.setAudioUrl(mediaPublicationGuard.requireMedia(owner, block.getAudioUrl().trim(), publish));
                 if (("dream".equals(block.getType()) || "gallery".equals(block.getType())) && block.getImages() != null)
                     for (com.chengyinhub.business.domain.dto.ChapterBlockDTO.DreamImageDTO image : block.getImages())
                         image.setUrl(mediaPublicationGuard.requireMedia(owner, image.getUrl(), publish));
@@ -2732,6 +2735,12 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         String runtimeRaw = mediaPublicationGuard.requireJson(memberId, dto.getThemeRuntimeConfig(), !saveDraft);
         topic.setThemeRuntimeConfigJson(com.chengyinhub.business.service.support.ThemeRuntimeConfig.withoutClientBindings(runtimeRaw));
         topic.setLookJson(com.chengyinhub.business.util.ThemeLook.normalize(dto.getLook()));
+        // 角色(Cast)v1:校验 + 规范化,头像素材过同一道归属 / 发布闸;故事里的 line / trust / endingFor 引用对照它校验。
+        String castConfig = com.chengyinhub.business.service.support.CastConfigSupport.normalize(dto.getCastConfig());
+        if (castConfig != null) castConfig = mediaPublicationGuard.requireJson(memberId, castConfig, !saveDraft);
+        topic.setCastConfigJson(castConfig);
+        com.chengyinhub.business.service.support.CastConfigSupport.checkStoryRefs(dto.getChapters(),
+                com.chengyinhub.business.service.support.CastConfigSupport.parse(castConfig));
         com.chengyinhub.business.service.support.ThemeRuntimeConfig.assertJourneyReferences(
                 com.chengyinhub.business.service.support.ThemeRuntimeConfig.parseForNodeSave(runtimeRaw),
                 com.chengyinhub.business.domain.JourneyRules.parse(topic.getJourneyRulesJson()));
@@ -3244,6 +3253,13 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         String runtimeRaw = mediaPublicationGuard.requireJson(memberId, dto.getThemeRuntimeConfig() == null ? exist.getThemeRuntimeConfigJson() : dto.getThemeRuntimeConfig(), !draft);
         patch.setThemeRuntimeConfigJson(com.chengyinhub.business.service.support.ThemeRuntimeConfig.withoutClientBindings(dto.getThemeRuntimeConfig()));
         patch.setLookJson(com.chengyinhub.business.util.ThemeLook.normalize(dto.getLook()));
+        // 角色(Cast)v1:未传 = 不改列(沿用库里的配置校验故事引用);传了就整份替换。
+        String castConfig = com.chengyinhub.business.service.support.CastConfigSupport.normalize(dto.getCastConfig());
+        if (castConfig != null) castConfig = mediaPublicationGuard.requireJson(memberId, castConfig, !draft);
+        patch.setCastConfigJson(castConfig);
+        com.chengyinhub.business.service.support.CastConfigSupport.checkStoryRefs(dto.getChapters(),
+                com.chengyinhub.business.service.support.CastConfigSupport.parse(
+                        castConfig != null ? castConfig : cmsTopicMapper.selectCastConfigById(topicId)));
         com.chengyinhub.business.service.support.ThemeRuntimeConfig.assertJourneyReferences(
                 com.chengyinhub.business.service.support.ThemeRuntimeConfig.parseForNodeSave(runtimeRaw),
                 com.chengyinhub.business.domain.JourneyRules.parse(patch.getJourneyRulesJson() == null ? exist.getJourneyRulesJson() : patch.getJourneyRulesJson()));

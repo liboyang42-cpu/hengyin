@@ -320,6 +320,11 @@ public class TopicCreateDTO implements Serializable {
      * 要关闭已配的规则就显式传 {"schemaVersion":1,"checkEnabled":false}。
      */
     private String themeRuntimeConfig;
+
+    /** 角色(Cast)配置 v1:对象或其 JSON 字符串;缺省/null = 不改(新建时 = 关闭)。 */
+    private com.fasterxml.jackson.databind.JsonNode castConfig;
+    public com.fasterxml.jackson.databind.JsonNode getCastConfig() { return castConfig; }
+    public void setCastConfig(com.fasterxml.jackson.databind.JsonNode castConfig) { this.castConfig = castConfig; }
     public String getThemeRuntimeConfig() { return themeRuntimeConfig; }
     public void setThemeRuntimeConfig(String v) { themeRuntimeConfig = v; }
 

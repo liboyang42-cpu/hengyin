@@ -372,17 +372,7 @@ public class OssCardCutoutStorage implements CardCutoutStorage {
         if(ownerId==null || ownerId<=0 || mediaAssets==null || !isAliyunResultAddress(vendorUrl))
             throw new com.chengyinhub.common.exception.ServiceException("语音媒体来源暂不可用");
         try {
-            URI uri=new URI(vendorUrl);
-            if(uri.getPort()!=-1 && uri.getPort()!=443 || uri.getFragment()!=null)throw new IOException("invalid origin");
-            java.net.InetAddress[] addresses=resolveMediaHost(uri.getHost());
-            if(addresses.length==0)throw new IOException("missing origin");
-            for(java.net.InetAddress address:addresses) {
-                if(!publicMediaAddress(address))throw new IOException("invalid origin");
-            }
-            byte[] bytes=download(vendorUrl,10*1024*1024);
-            if(bytes==null || bytes.length<3 || bytes.length>10*1024*1024
-                    || !(bytes[0]=='I' && bytes[1]=='D' && bytes[2]=='3'
-                        || (bytes[0]&255)==255 && (bytes[1]&224)==224))throw new IOException("invalid audio");
+            byte[] bytes=fetchVendorMp3(vendorUrl);
             JSONObject uploaded=FileOssUploadUtils.uploadPendingWithOwner(
                     new ServerMultipartFile(bytes,"npc-reply.mp3","audio/mpeg"),String.valueOf(ownerId),"npc_reply_audio");
             if(uploaded==null)throw new IOException("missing receipt");
@@ -391,6 +381,39 @@ public class OssCardCutoutStorage implements CardCutoutStorage {
             throw new com.chengyinhub.common.exception.ServiceException("语音媒体暂不可用，文字回答仍可查看");
         }
     }
+    /** 厂商临时音频 → 校验来源(仅阿里云结果域、公网地址)与 mp3 头后下载;NPC 回复配音与角色台词配音共用这一道。 */
+    private byte[] fetchVendorMp3(String vendorUrl) throws Exception {
+        URI uri=new URI(vendorUrl);
+        if(uri.getPort()!=-1 && uri.getPort()!=443 || uri.getFragment()!=null)throw new IOException("invalid origin");
+        java.net.InetAddress[] addresses=resolveMediaHost(uri.getHost());
+        if(addresses.length==0)throw new IOException("missing origin");
+        for(java.net.InetAddress address:addresses) {
+            if(!publicMediaAddress(address))throw new IOException("invalid origin");
+        }
+        byte[] bytes=download(vendorUrl,10*1024*1024);
+        if(bytes==null || bytes.length<3 || bytes.length>10*1024*1024
+                || !(bytes[0]=='I' && bytes[1]=='D' && bytes[2]=='3'
+                    || (bytes[0]&255)==255 && (bytes[1]&224)==224))throw new IOException("invalid audio");
+        return bytes;
+    }
+
+    /**
+     * 角色 Cast v1:台词配音写到确定性私有对象 {@code objectKey}(cast_voice/{sha256}.mp3),同一句只合成一次。
+     * 平台生成的作者台词(作者已发布内容)不走玩家媒体待审链路;返回短期签名地址。
+     */
+    public String cacheGeneratedAudio(String objectKey, String vendorUrl) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+        if(!isAliyunResultAddress(vendorUrl))
+            throw new com.chengyinhub.common.exception.ServiceException("语音媒体来源暂不可用");
+        try {
+            FileOssUploadUtils.putPrivateGeneratedObject(objectKey, fetchVendorMp3(vendorUrl), "audio/mpeg");
+            return FileOssUploadUtils.generateShortLivedPresignedUrl(objectKey, 3600);
+        } catch(Exception e) {
+            log.warn("角色台词配音落 OSS 失败 key={} host={}: {}", objectKey, hostOf(vendorUrl), e.toString());
+            throw new com.chengyinhub.common.exception.ServiceException("语音媒体暂不可用");
+        }
+    }
+
     java.net.InetAddress[] resolveMediaHost(String host) throws java.net.UnknownHostException {return java.net.InetAddress.getAllByName(host);}
     static boolean publicMediaAddress(java.net.InetAddress address) {
         if(address==null || address.isAnyLocalAddress() || address.isLoopbackAddress() || address.isLinkLocalAddress()

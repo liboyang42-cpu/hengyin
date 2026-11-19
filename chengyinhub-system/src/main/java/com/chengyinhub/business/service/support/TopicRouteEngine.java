@@ -527,6 +527,15 @@ public class TopicRouteEngine {
         private String actorRoleCode;
         /** 调用方注入的奖励上限:true = 只放行 XP / 徽章(自报传感完成)。不落库。 */
         private boolean rewardCeilingXpBadgeOnly;
+        /** 角色 Cast v1:本局各角色信任 {castId:int};只由服务端在记录剧情分支选择时累加。空时不写出,老局形状不变。 */
+        @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
+        private Map<String, Integer> trust = new LinkedHashMap<String, Integer>();
+        /** 角色 Cast v1:本局玩家档案 {name, identityKey};空时不写出。 */
+        @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
+        private Map<String, String> playerProfile = new LinkedHashMap<String, String>();
+        /** 角色 Cast v1:剧情分支块的选择 {"chapterId:blockKey": 选项下标(0 起)};同一块只记一次,信任只结算一次。 */
+        @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
+        private Map<String, Integer> storyChoices = new LinkedHashMap<String, Integer>();
 
         public State() {}
         public State copy() {
@@ -543,8 +552,15 @@ public class TopicRouteEngine {
             }
             out.environment.putAll(environment);
             out.actorRoleCode = actorRoleCode; out.rewardCeilingXpBadgeOnly = rewardCeilingXpBadgeOnly;
+            out.trust.putAll(trust); out.playerProfile.putAll(playerProfile); out.storyChoices.putAll(storyChoices);
             return out;
         }
+        public Map<String, Integer> getTrust() { return trust; }
+        public void setTrust(Map<String, Integer> trust) { this.trust = trust == null ? new LinkedHashMap<String, Integer>() : trust; }
+        public Map<String, String> getPlayerProfile() { return playerProfile; }
+        public void setPlayerProfile(Map<String, String> playerProfile) { this.playerProfile = playerProfile == null ? new LinkedHashMap<String, String>() : playerProfile; }
+        public Map<String, Integer> getStoryChoices() { return storyChoices; }
+        public void setStoryChoices(Map<String, Integer> storyChoices) { this.storyChoices = storyChoices == null ? new LinkedHashMap<String, Integer>() : storyChoices; }
         public String getStatus() { return status; }
         public void setStatus(String status) { this.status = status; }
         public Long getCurrentNodeId() { return currentNodeId; }

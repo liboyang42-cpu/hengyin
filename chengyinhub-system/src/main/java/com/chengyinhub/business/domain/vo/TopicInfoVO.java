@@ -142,6 +142,12 @@ public class TopicInfoVO {
      */
     private String journeyRules;
 
+    /** 角色(Cast)配置 v1;NULL = 功能关闭。 */
+    private com.fasterxml.jackson.databind.JsonNode castConfig;
+
+    public com.fasterxml.jackson.databind.JsonNode getCastConfig() { return castConfig; }
+    public void setCastConfig(com.fasterxml.jackson.databind.JsonNode castConfig) { this.castConfig = castConfig; }
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public Long getMemberId() { return memberId; }

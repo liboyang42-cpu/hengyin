@@ -106,6 +106,10 @@ public class ApiTopicController extends BaseController {
     @Autowired(required = false)
     private com.chengyinhub.business.mapper.CmsTopicMapper cmsTopicMapper;
 
+    /** 角色(Cast)v1 台词配音:读本局玩家档案做 {玩家} 替换,本局状态归路线运行时。 */
+    @Autowired
+    private com.chengyinhub.business.service.ITopicRouteRuntimeService topicRouteRuntimeService;
+
     /**
      * 「来源」栏投影（官方 / 俱乐部 / 会员）。
      * ⚠️ 不要换成 ITopicListProjectionService —— 那个带后台超管闸且会带出运营账本。
@@ -1138,6 +1142,9 @@ public class ApiTopicController extends BaseController {
         data.put("journeyRules", topic.getJourneyRulesJson());
         data.put("themeRuntimeConfig", topic.getThemeRuntimeConfigJson());
         data.put("look", cmsTopicMapper == null ? null : cmsTopicMapper.selectLookJsonById(topic.getId()));
+        // 角色(Cast)v1:对象;列为 NULL = null(功能关闭)。
+        data.put("castConfig", cmsTopicMapper == null ? null : com.chengyinhub.business.service.support.CastConfigSupport.parse(
+                cmsTopicMapper.selectCastConfigById(topic.getId())));
         // R8-STORY 同款回显:主题级剧情配置与保存入参同名
         data.put("journeyStory", topic.getJourneyStoryJson());
         data.put("openingChapterId", com.chengyinhub.business.domain.JourneyStory.openingChapterId(topic.getJourneyStoryJson()));
@@ -2226,6 +2233,9 @@ public class ApiTopicController extends BaseController {
             // R2-B10 玩家侧只读下发:归一化后的主题数值规则(保存时已归一化,这里原样透传)。
             // 未配置 = null(不下发);作者关了检定 = 下发 checkEnabled=false。新增字段,不改已有字段。
             topicInfoVO.setJourneyRules(com.chengyinhub.business.service.support.JourneyInitialState.publicRules(cmsTopic.getJourneyRulesJson()));
+            // 角色(Cast)v1:玩家侧同样下发角色表(无秘密字段);列为 NULL = null(功能关闭)。
+            topicInfoVO.setCastConfig(cmsTopicMapper == null ? null : com.chengyinhub.business.service.support.CastConfigSupport.parse(
+                    cmsTopicMapper.selectCastConfigById(topicId)));
             // R22-SEC S1:主题级剧情配置整段不下发 —— journey_story_json 含结局条件(when)、
             // optionalClues 与 relationKey,属于剧透;阶段结算 / 结局 / 尾声由 /api/play/journey 下的接口
             // 按本局状态专门给出。作者侧的编辑回显走 topicEditDetail 的显式字段,不受影响。
@@ -3321,5 +3331,23 @@ public class ApiTopicController extends BaseController {
         // 预告节点不带 templateId,setNodes 现算的玩法数恒为 0;章节卡要写「含 N 个玩法」,这里按已上架节点补回个数
         vo.setTemplateCount(TopicChapterVO.countTemplates(nodes, chapter.getTemplateCount()));
         return vo;
+    }
+
+    @Operation(summary = "台词配音地址(块自带配音优先，否则按角色预设声音合成并缓存)")
+    @RateLimiter(time = 60, count = 30, limitType = LimitType.MEMBER)
+    @GetMapping("/cast/voice")
+    public AjaxResult castVoice(Long topicId, Long chapterId, String blockKey, Long runId)
+    {
+        Long memberId;
+        try { memberId = getAppUserId(); } catch (Exception e) { memberId = 0L; }
+        if (memberId == null || memberId <= 0) return error("请先登录");
+        try
+        {
+            return success(topicRouteRuntimeService.castLineVoice(memberId, topicId, chapterId, blockKey, runId));
+        }
+        catch (ServiceException e)
+        {
+            return com.chengyinhub.business.service.support.CastRunRules.refusal(e);
+        }
     }
 }

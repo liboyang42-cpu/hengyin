@@ -78,6 +78,11 @@ final class ChapterFlowCompiler
     private static final int MIN_DREAM_IMAGES = 1;
     private static final int MAX_DREAM_IMAGES = 6;
     private static final int MAX_DREAM_LINE = 80;
+    /** 台词(2026-11-19 角色 Cast v1):speaker = player 或 castConfig 里的角色 id;说话人是否存在由保存服务对照 castConfig 校验。 */
+    private static final String TYPE_LINE = "line";
+    static final int MAX_LINE_LENGTH = 300;
+    private static final int MIN_TRUST_DELTA = -2;
+    private static final int MAX_TRUST_DELTA = 2;
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final TypeReference<List<Object>> STORED_BLOCKS_TYPE = new TypeReference<List<Object>>() { };
 
@@ -133,6 +138,10 @@ final class ChapterFlowCompiler
                 if (chapter.getNodes() != null && !chapter.getNodes().isEmpty())
                     throw invalid(chapterNumber, "结局章里不能放站点或玩法");
                 com.fasterxml.jackson.databind.JsonNode when = ending.get("when");
+                if (ending.has("endingFor") && !ending.get("endingFor").isNull()
+                        && !(ending.get("endingFor").isTextual()
+                            && com.chengyinhub.business.service.support.CastConfigSupport.CAST_ID.matcher(ending.get("endingFor").asText()).matches()))
+                    throw invalid(chapterNumber, "结局归属角色 endingFor 格式不对");
                 if (ending.path("fallback").asBoolean(false)) endingFallbacks++;
                 else if (when == null || !when.isArray() || when.size() == 0)
                     throw invalid(chapterNumber, "结局章要选一个触发条件,或者设为兜底");
@@ -178,6 +187,11 @@ final class ChapterFlowCompiler
                 }
                 if (!block.getKey().matches("[A-Za-z0-9_-]{1,64}") || !blockKeys.add(block.getKey())) {
                     throw invalid(chapterNumber, "内容块标识无效或重复");
+                }
+                if ((block.getSpeaker() != null || block.getAudioUrl() != null || block.getCond() != null)
+                        && !TYPE_LINE.equals(block.getType()))
+                {
+                    throw invalid(chapterNumber, "只有台词块可以带说话人、配音或台词条件");
                 }
                 if (block.getLocationRequired() != null && !TYPE_NODE.equals(block.getType()))
                 {
@@ -271,7 +285,31 @@ final class ChapterFlowCompiler
                             throw invalid(chapterNumber, "分支去向只能是 continue / end / chapter:N:" + option.getTo());
                         if (to.startsWith("chapter:") && Integer.parseInt(to.substring(8)) > chapters.size())
                             throw invalid(chapterNumber, "分支去向指向了不存在的章:" + to);
+                        validateTrust(option.getTrust(), chapterNumber);
                     }
+                }
+                else if (TYPE_LINE.equals(block.getType()))
+                {
+                    /* 台词:一句话 + 说话人 + 可选配音 + 可选条件。表现块,不进 description。 */
+                    if (block.getNodeIndex() != null || block.getUrl() != null || block.getImages() != null
+                            || block.getOptions() != null || block.getLayout() != null || block.getCap() != null
+                            || block.getWho() != null || block.getWhen() != null)
+                        throw invalid(chapterNumber, "line 块只能带说话人、台词、配音与条件");
+                    String speaker = block.getSpeaker() == null ? "" : block.getSpeaker().trim();
+                    if (!com.chengyinhub.business.service.support.CastConfigSupport.PLAYER.equals(speaker)
+                            && !com.chengyinhub.business.service.support.CastConfigSupport.CAST_ID.matcher(speaker).matches())
+                        throw invalid(chapterNumber, "台词说话人只能是 player 或角色 id:" + block.getSpeaker());
+                    String said = block.getContent() == null ? "" : block.getContent().trim();
+                    int saidLength = said.codePointCount(0, said.length());
+                    if (saidLength < 1 || saidLength > MAX_LINE_LENGTH)
+                        throw invalid(chapterNumber, "台词要写内容,最多 " + MAX_LINE_LENGTH + " 字");
+                    if (!com.chengyinhub.business.service.support.CastConfigSupport.isMediaRef(
+                            block.getAudioUrl() == null ? "" : block.getAudioUrl().trim(), true))
+                        throw invalid(chapterNumber, "台词配音只能是 https 地址或已上传的素材");
+                    com.fasterxml.jackson.databind.JsonNode cond = block.getCond();
+                    if (cond != null && !cond.isNull() && (!cond.isObject() || !"HAS_TAG".equals(cond.path("op").asText())
+                            || !WHEN_TAG.matcher(cond.path("value").asText("")).matches()))
+                        throw invalid(chapterNumber, "台词条件只能是「选过某个选项」或「某个伏笔应验了」");
                 }
                 else if (TYPE_CAP.equals(block.getType()))
                 {
@@ -514,7 +552,7 @@ final class ChapterFlowCompiler
                 }
                 else
                 {
-                    throw invalid(chapterNumber, "块类型只允许 text / node / image / audio / dream / mood / thought / voice / odd / reveal / divider / gallery / branch / cap");
+                    throw invalid(chapterNumber, "块类型只允许 text / node / image / audio / dream / mood / thought / voice / odd / reveal / divider / gallery / branch / cap / line");
                 }
             }
 
@@ -536,6 +574,25 @@ final class ChapterFlowCompiler
         if (endingChapters > 0 && endingFallbacks != 1)
             throw new ChapterFlowValidationException("结局章里必须恰好有一章是兜底(其它结局都不中时走它)");
         return new CompiledFlow(compiled);
+    }
+
+    /** 分支选项的信任变化:每条 castId 格式正确、不重复,delta 为 -2..2 的整数,且不能为 0。 */
+    private static void validateTrust(List<ChapterBlockDTO.TrustDeltaDTO> trust, int chapterNumber)
+    {
+        if (trust == null) return;
+        if (trust.size() > com.chengyinhub.business.service.support.CastConfigSupport.MAX_CAST)
+            throw invalid(chapterNumber, "一条分支的信任变化最多 " + com.chengyinhub.business.service.support.CastConfigSupport.MAX_CAST + " 条");
+        Set<String> seen = new HashSet<>();
+        for (ChapterBlockDTO.TrustDeltaDTO one : trust)
+        {
+            String castId = one == null || one.getCastId() == null ? "" : one.getCastId().trim();
+            if (!com.chengyinhub.business.service.support.CastConfigSupport.CAST_ID.matcher(castId).matches())
+                throw invalid(chapterNumber, "信任变化的角色 id 格式不对:" + castId);
+            if (!seen.add(castId)) throw invalid(chapterNumber, "同一条分支对同一角色只能写一次信任变化:" + castId);
+            Integer delta = one.getDelta();
+            if (delta == null || delta < MIN_TRUST_DELTA || delta > MAX_TRUST_DELTA || delta == 0)
+                throw invalid(chapterNumber, "信任变化只能是 -2 至 2(不为 0)");
+        }
     }
 
     /**
@@ -841,9 +898,28 @@ final class ChapterFlowCompiler
                         Map<String, Object> one = new LinkedHashMap<>();
                         one.put("text", option.getText().trim());
                         one.put("to", option.getTo().trim());
+                        if (option.getTrust() != null && !option.getTrust().isEmpty())
+                        {
+                            List<Map<String, Object>> trust = new ArrayList<>();
+                            for (ChapterBlockDTO.TrustDeltaDTO delta : option.getTrust())
+                            {
+                                Map<String, Object> d = new LinkedHashMap<>();
+                                d.put("castId", delta.getCastId().trim());
+                                d.put("delta", delta.getDelta());
+                                trust.add(d);
+                            }
+                            one.put("trust", trust);
+                        }
                         options.add(one);
                     }
                     row.put("options", options);
+                }
+                else if (TYPE_LINE.equals(block.getType()))
+                {
+                    row.put("speaker", block.getSpeaker().trim());
+                    row.put("content", block.getContent().trim());
+                    row.put("audioUrl", block.getAudioUrl() == null ? "" : block.getAudioUrl().trim());
+                    if (block.getCond() != null && !block.getCond().isNull()) row.put("cond", block.getCond());
                 }
                 else if (TYPE_CAP.equals(block.getType()))
                 {
