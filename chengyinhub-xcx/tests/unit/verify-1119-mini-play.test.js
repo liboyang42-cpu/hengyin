@@ -109,7 +109,7 @@ test('CG-ALL-23 逐字打出过的段落本局记住,再进故事流(完成第 1
   delete global.wx
 })
 
-test('CG-01-P2-9 / CG-09-P2-6 玩法站过程埋点:只记站 id 与枚举码,六个事件两端白名单都有', () => {
+test('CG-01-P2-9 / CG-09-P2-6 玩法站过程埋点:按后端口径 topic_node + 节点 id,只记枚举码,七个事件两端白名单都有', () => {
   const tracked = []
   const analyticsPath = require.resolve(path.join(ROOT, 'utils/analytics.js'))
   const toastPath = require.resolve(path.join(ROOT, 'utils/toast.js'))
@@ -128,8 +128,8 @@ test('CG-01-P2-9 / CG-09-P2-6 玩法站过程埋点:只记站 id 与枚举码,�
   page.onIssueSheetSelect({ detail: { index: 2 } })
   assert.equal(page.data.issueSheetShow, false)
   assert.deepEqual(tracked, [
-    ['stage_enter', { bizType: 'topic', bizId: 9, properties: { nodeId: '5' } }],
-    ['stage_issue', { bizType: 'topic', bizId: 9, properties: { nodeId: '6', category: 'UNCLEAR' } }],
+    ['stage_enter', { bizType: 'topic_node', bizId: 5, properties: { topicId: '9' } }],
+    ['stage_issue_report', { bizType: 'topic_node', bizId: 6, properties: { topicId: '9', issueKind: 'UNREADABLE' } }],
   ])
   page.data.isPreview = true
   assert.equal(page._stageEvent('stage_enter', 5), false, '预览不记')
@@ -138,7 +138,7 @@ test('CG-01-P2-9 / CG-09-P2-6 玩法站过程埋点:只记站 id 与枚举码,�
 
   const client = read('utils/analytics.js')
   const server = fs.readFileSync(path.join(ROOT, '../chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAnalyticsController.java'), 'utf8')
-  for (const ev of ['stage_enter', 'hint_open', 'skip', 'assisted_complete', 'wrong_answer', 'stage_issue']) {
+  for (const ev of ['stage_enter', 'hint_open', 'stage_skip', 'assisted_complete', 'wrong_answer', 'stage_issue_report', 'material_view']) {
     assert.match(client, new RegExp('\\n  ' + ev + ': true,'), ev)
     assert.match(server, new RegExp('"' + ev + '"'), ev)
   }
@@ -147,7 +147,7 @@ test('CG-01-P2-9 / CG-09-P2-6 玩法站过程埋点:只记站 id 与枚举码,�
   assert.match(read('pages/play/play-help.wxml'), /<cy-option-sheet immediate show="\{\{issueSheetShow\}\}"/)
   assert.match(js, /if \(answerWrong\) that\._stageEvent\('wrong_answer', g\.nodeId\);/)
   assert.match(js, /this\._stageEvent\('assisted_complete', g\.nodeId, \{ via: 'reveal' \}\);/)
-  assert.match(js, /this\._stageEvent\('skip', nodeId\); this\._stageEvent\('assisted_complete', nodeId, \{ via: 'skip' \}\);/)
+  assert.match(js, /this\._stageEvent\('stage_skip', nodeId\); this\._stageEvent\('assisted_complete', nodeId, \{ via: 'skip' \}\);/)
   assert.match(read('pages/play/utils/play-help-panel.js'), /this\._stageEvent\('hint_open', c\.nodeId\)/)
   assert.match(read('pages/play/play-help.wxml'), /bindtap="reportStageIssue"[^>]*aria-label="这一站有问题"/)
 })

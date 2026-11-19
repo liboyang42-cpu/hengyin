@@ -71,18 +71,20 @@ test('CG-07-P2-2 结算总览单独数出辅助完成(跳过 / 看过答案)的�
   assert.match(wxml, /wx:if="\{\{report\.assistedCount > 0\}\}"><text class="st-two__v">\{\{report\.assistedCount\}\}<\/text><text class="st-two__l">辅助完成<\/text>/)
 })
 
-test('CG-ALL-12 只记录拍照:服务端 photoMode=RECORD 才生效,拍了写「已记录」、不出重拍次数;缺省同今天', () => {
+test('CG-ALL-12 只记录拍照:photoCheck.mode=RECORD 才生效,提交走 SUBMIT_PHOTO_RECORD,文字确认 = {textConfirmed:true};缺省同今天', () => {
   const { serverAction, serverPayload } = require('../../pages/play/utils/playkit-view.js')
   const now = new Date('2026-11-19T10:00:00+08:00')
-  const kit = pickPlayKit({ sessionId: 's1', version: 1, playKit: { photoCheck: { title: '留念', photoMode: 'record', allowSkip: true } } }, now)
+  const kit = pickPlayKit({ sessionId: 's1', version: 1, playKit: { photoCheck: { title: '留念', mode: 'RECORD', textConfirmed: true } } }, now)
   assert.equal(kit.type, 'photocheck')
   assert.equal(kit.recordOnly, true)
   assert.equal(kit.allowSkip, true)
-  const bare = pickPlayKit({ sessionId: 's1', version: 1, playKit: { photoCheck: { title: '拍', allowSkip: 'yes' } } }, now)
+  assert.equal(kit.textConfirmed, true)
+  const bare = pickPlayKit({ sessionId: 's1', version: 1, playKit: { photoCheck: { title: '拍', mode: 'CARD' } } }, now)
   assert.equal(bare.recordOnly, false)
-  assert.equal(bare.allowSkip, false, '只认真的 true')
-  assert.equal(serverAction('photocheck', 'skip'), 'SKIP_SENSOR_STATION')
-  assert.deepEqual(serverPayload('photocheck', 'skip', {}), { game: 'photoCheck' })
+  assert.equal(bare.allowSkip, false)
+  assert.equal(serverAction('photocheck', 'skip'), 'SUBMIT_PHOTO_RECORD')
+  assert.deepEqual(serverPayload('photocheck', 'skip', {}), { textConfirmed: true })
+  assert.match(read('pages/play/index.js'), /name: kit\.recordOnly \? 'SUBMIT_PHOTO_RECORD' : 'SUBMIT_PHOTO_CHECK'/)
 
   const def = loadComponent('pages/play/components/playkit-photocheck/index.js')
   const obs = def.observers['show, tries, maxTries, passed, flagged, degraded, fallback, lastReason']
@@ -154,19 +156,15 @@ test('CG-09-P2-5 / CG-10-D-3 题面下常驻「看不清？查看资料图」:�
   }
   assert.match(read('pages/play/components/playkit-qa/index.wxml'), /wx:if="\{\{referenceUrl\}\}" bindtap="onOpenReference"[^>]*>看不清？查看资料图</)
   assert.match(read('pages/play/components/playkit-hangman/index.wxml'), /wx:if="\{\{referenceUrl\}\}" bindtap="onOpenReference"[^>]*>看不清？查看资料图</)
-  assert.match(read('pages/play/index.js'), /case 'reference': this\._stageEvent\('hint_open', \(this\._kit\(\) \|\| \{\}\)\.nodeId, \{ via: 'reference' \}\); return;/)
+  assert.match(read('pages/play/index.js'), /case 'reference': this\._stageEvent\('material_view', \(this\._kit\(\) \|\| \{\}\)\.nodeId\); return;/)
 })
 
-test('CG-ALL-11 桌面完成 / 替代站完成逐站标出,结算总览各数一格;服务端没下发时同今天', () => {
+test('CG-ALL-11 本局开局方式(runStartMode DESK / ALT)标在结算结果后面;没下发时同今天', () => {
   const v = require('../../subpackageJourney/utils/journey-view.js')
-  const r = v.reportView({ runState: 'COMPLETED', completionKind: 'LEGITIMATE_COMPLETION',
-    nodes: [{ nodeId: 1, completionMode: 'DESK' }, { nodeId: 2, completionMode: 'ALT' }, { nodeId: 3, completionMode: 'ALT' }, { nodeId: 4 }] })
-  assert.deepEqual(r.nodes.map((n) => n.mode), ['桌面完成', '替代站完成', '替代站完成', ''])
-  assert.equal(r.deskCount, 1)
-  assert.equal(r.altCount, 2)
-  const wxml = read('subpackageJourney/pages/settle/index.wxml')
-  assert.match(wxml, /wx:if="\{\{report\.deskCount > 0\}\}"[^\n]*桌面完成/)
-  assert.match(wxml, /wx:if="\{\{report\.altCount > 0\}\}"[^\n]*替代站完成/)
+  assert.equal(v.reportView({ runState: 'COMPLETED', completionKind: 'LEGITIMATE_COMPLETION', runStartMode: 'DESK' }).startModeText, '桌面完成')
+  assert.equal(v.reportView({ runState: 'COMPLETED', completionKind: 'LEGITIMATE_COMPLETION', runStartMode: 'ALT' }).startModeText, '替代站开局')
+  assert.equal(v.reportView({ runState: 'COMPLETED', completionKind: 'LEGITIMATE_COMPLETION' }).startModeText, '')
+  assert.match(read('subpackageJourney/pages/settle/index.wxml'), /\{\{report\.result\}\}\{\{report\.startModeText \? ' · ' \+ report\.startModeText : ''\}\}/)
 })
 
 test('PG-041 通行证订单缺单号:落缺参态只给返回,load 不再以空单号请求', () => {

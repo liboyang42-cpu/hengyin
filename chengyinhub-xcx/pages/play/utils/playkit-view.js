@@ -332,8 +332,10 @@ function buildPhotoCheck(seg, receipt, placeName) {
     photoFailKind: '',
     photoJudging: false,
     // CG-ALL-12:服务端 photoMode=RECORD 才是「只记录」;allowSkip 只认真的 true。缺省两项都 false,这一屏与今天相同
-    recordOnly: String(seg.photoMode || '').toUpperCase() === 'RECORD',
-    allowSkip: seg.allowSkip === true,
+    // CG-ALL-12(后端 #866):photoCheck.mode=RECORD 即只记录;只记录站拒绝相机时可文字确认继续
+    recordOnly: seg.mode === 'RECORD',
+    allowSkip: seg.mode === 'RECORD',
+    textConfirmed: seg.textConfirmed === true,
   };
 }
 
@@ -1044,8 +1046,8 @@ const ACTION_OF = {
   'shout:skip': 'SKIP_SENSOR_STATION',
   'walk:readfail': 'REPORT_SENSOR_FAILURE',
   'walk:skip': 'SKIP_SENSOR_STATION',
-  /* CG-ALL-12:只记录的拍照站,玩家文字确认「不拍照，继续」后走同一条跳过(服务端按 allowSkip 收) */
-  'photocheck:skip': 'SKIP_SENSOR_STATION',
+  /* CG-ALL-12:只记录的拍照站,玩家文字确认「不拍照，继续」= SUBMIT_PHOTO_RECORD {textConfirmed:true} */
+  'photocheck:skip': 'SUBMIT_PHOTO_RECORD',
   'shout:submit': 'SUBMIT_SHOUT',
   'countdown:finish': 'SUBMIT_COUNTDOWN',
   'stopwatch:submit': 'SUBMIT_STOPWATCH',
@@ -1102,7 +1104,6 @@ const SENSOR_GAME_OF = {
   quiethold: 'quietHold',
   shout: 'shout',
   walk: 'steps',
-  photocheck: 'photoCheck',
 };
 
 function serverAction(type, action) {
@@ -1123,6 +1124,7 @@ function serverPayload(type, action, detail) {
     return game ? { game: game } : {};
   }
   if (SENSOR_GAME_OF[type] && action === 'readfail' && d.unsupported === true) return { game: SENSOR_GAME_OF[type], denied: true };
+  if (type === 'photocheck' && action === 'skip') return { textConfirmed: true };   // CG-ALL-12 只记录:文字确认不拍
   if (SENSOR_GAME_OF[type] && (action === 'readfail' || action === 'skip')) return { game: SENSOR_GAME_OF[type] };
   if (SENSOR_GAME_OF[type] && action === 'micdenied') return { game: SENSOR_GAME_OF[type], denied: true };
   switch (type + ':' + action) {

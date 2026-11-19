@@ -482,7 +482,7 @@ Page({
   }),
   /** UG-08:跳过已由服务端结算(0 分 + 辅助完成)。不放庆祝、不走 onComplete,收起任务页后重读服务端进度。 */
   onHelpSkipped(nodeId) {
-    this._stageEvent('skip', nodeId); this._stageEvent('assisted_complete', nodeId, { via: 'skip' });   // CG-01-P2-9
+    this._stageEvent('stage_skip', nodeId); this._stageEvent('assisted_complete', nodeId, { via: 'skip' });   // CG-01-P2-9
     if (String((this.data.game || {}).nodeId) !== String(nodeId)) return;
     this.setData({ screen: '', 'helpPanel.show': false });
     this.loadData();
@@ -8052,7 +8052,7 @@ Page({
       return;
     }
     switch (evt.action) {
-      case 'reference': this._stageEvent('hint_open', (this._kit() || {}).nodeId, { via: 'reference' }); return;   // CG-10-D-3
+      case 'reference': this._stageEvent('material_view', (this._kit() || {}).nodeId); return;   // CG-10-D-3
       case 'retry': {
         const game = this.selectComponent('#advancedGame');
         const state = game && game.data && game.data.state;
@@ -8152,7 +8152,7 @@ Page({
       else if (kit.type === 'photocheck') {
         // 判定全在服务端(契约 §2.2):只报图片地址。客户端本地算分那套已删,别把 score 塞回来
         this._submitKitPhoto(detail, {
-          name: 'SUBMIT_PHOTO_CHECK',
+          name: kit.recordOnly ? 'SUBMIT_PHOTO_RECORD' : 'SUBMIT_PHOTO_CHECK',   // CG-ALL-12 只记录站不审
           payload: (url) => ({ imageUrl: url }),
           onUploaded: (url) => { this._kitPhotoUrl = url; },
         });

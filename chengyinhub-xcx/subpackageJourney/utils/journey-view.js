@@ -88,9 +88,8 @@ function reportView(data) {
   };
   // CG-07-P2-2:结算总览把辅助完成(跳过 / 看过答案)的节点单独数出来,与自己解出的区分开
   view.assistedCount = list(data.nodes).filter(record).filter(node => node.completionMode === 'SKIPPED' || node.completionMode === 'REVEALED').length;
-  // CG-ALL-11:整局里有桌面 / 替代站完成的站,结算总览各数一格
-  view.deskCount = list(data.nodes).filter(record).filter(node => node.completionMode === 'DESK').length;
-  view.altCount = list(data.nodes).filter(record).filter(node => node.completionMode === 'ALT').length;
+  // CG-ALL-11(后端 #866):本局开局方式 runStartMode=DESK 桌面完成 / ALT 替代站开局,结算总览标在结果后面
+  view.startModeText = data.runStartMode === 'DESK' ? '桌面完成' : (data.runStartMode === 'ALT' ? '替代站开局' : '');
   view.shareTitle = view.win ? '我通关了，一起来玩' : '一起来玩';
   return view;
 }
