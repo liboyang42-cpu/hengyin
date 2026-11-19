@@ -11,6 +11,7 @@
       <view class="hm__how pk-in" wx:if="{{!solved}}">
         <view class="hm__how-link" bindtap="onToggleHowto" aria-role="button" aria-expanded="{{howtoOpen}}" aria-label="怎么填" hover-class="hm__press" hover-stay-time="80">怎么填</view>
         <view class="hm__how-body" wx:if="{{howtoOpen}}" aria-live="polite">{{howto || DEFAULT_HOWTO}}</view>
+        <view class="hm__how-link" wx:if="{{referenceUrl}}" bindtap="onOpenReference" aria-role="button" aria-label="看不清？查看资料图" hover-class="hm__press" hover-stay-time="80">看不清？查看资料图</view>
       </view>
 
       <view class="hm__board pk-in {{solved ? 'is-ok' : ''}} {{verdict === 'no' ? 'is-no' : ''}}" aria-role="group" aria-label="{{solved ? '答案：' + display : (poolOn ? '答案格，点已填的格子把字退回' : '点格子，用系统键盘输入')}}">

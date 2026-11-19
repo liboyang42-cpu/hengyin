@@ -48,6 +48,9 @@ const RESULT_LABEL = {
   NOT_STARTED: '未开始'
 };
 
+// CG-ALL-11:桌面完成 / 替代站完成与跳过、看答案一样逐站标出来;服务端没下发这两种时与今天相同
+const NODE_MODE_LABEL = { SKIPPED: '已跳过', REVEALED: '看过答案', DESK: '桌面完成', ALT: '替代站完成' };
+
 function reportView(data) {
   if (!record(data)) return null;
   const completed = isNum(data.completedNodes) ? data.completedNodes : null;
@@ -78,13 +81,16 @@ function reportView(data) {
     nodes: list(data.nodes).filter(record).map(node => ({
       key: String(node.nodeId),
       name: node.name || '节点',
-      mode: node.completionMode === 'SKIPPED' ? '已跳过' : node.completionMode === 'REVEALED' ? '看过答案' : '',
+      mode: NODE_MODE_LABEL[node.completionMode] || '',
       scoreText: node.scored === true && isNum(node.score) ? String(node.score) : '不计分'
     })),
     rewardsText: data.rewardsState === 'AVAILABLE' ? rewardsSummary(data.rewards) : ''
   };
   // CG-07-P2-2:结算总览把辅助完成(跳过 / 看过答案)的节点单独数出来,与自己解出的区分开
   view.assistedCount = list(data.nodes).filter(record).filter(node => node.completionMode === 'SKIPPED' || node.completionMode === 'REVEALED').length;
+  // CG-ALL-11:整局里有桌面 / 替代站完成的站,结算总览各数一格
+  view.deskCount = list(data.nodes).filter(record).filter(node => node.completionMode === 'DESK').length;
+  view.altCount = list(data.nodes).filter(record).filter(node => node.completionMode === 'ALT').length;
   view.shareTitle = view.win ? '我通关了，一起来玩' : '一起来玩';
   return view;
 }

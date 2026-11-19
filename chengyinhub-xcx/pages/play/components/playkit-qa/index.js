@@ -69,7 +69,8 @@ Component({
     theme: { type: String, value: 'dark' },       // dark | light
     title: { type: String, value: '' },
     imageUrl: { type: String, value: '' },
-    imageAlt: { type: String, value: '' },       // CG-ALL-13:题图读不出时的替代文字(服务端没给就用通用一句)
+    imageAlt: { type: String, value: '' },
+    referenceUrl: { type: String, value: '' },   // CG-10-D-3:看不清时的资料图(内容配了才有)       // CG-ALL-13:题图读不出时的替代文字(服务端没给就用通用一句)
     audioUrl: { type: String, value: '' },
     lead: { type: String, value: '' },
     options: { type: Array, value: [] },
@@ -518,6 +519,12 @@ Component({
     },
 
     /** CG-ALL-13:题图读不出来不留破图,换成替代文字 + 重试(重挂 image 再取一次)。 */
+    onOpenReference() {
+      const url = this.data.referenceUrl;
+      if (!url) return;
+      wx.previewImage({ current: url, urls: [url] });
+      this.triggerEvent('reference');
+    },
     onQuestionImgError() { this.setData({ imgFailed: true }); },
     onRetryQuestionImg() { this.setData({ imgFailed: false }); },
     onPreviewQuestion() {

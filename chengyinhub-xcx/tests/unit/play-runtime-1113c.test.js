@@ -25,7 +25,7 @@ test('逐字猜词解开后在故事流里也有「继续」,并回到页面收�
   assert.match(read('pages/play/index.wxml'), /\(playKit\.kit\.type === 'qa' \|\| playKit\.kit\.type === 'hangman'\)[^>]*bindtap="continueStoryGame"[\s\S]{0,120}>继续<\/view>/)
   const js = read('pages/play/components/playkit-hangman/index.js')
   assert.match(js, /onContinue\(\) \{ this\.triggerEvent\(this\.data\.inline \? 'continue' : 'close'\); \}/)
-  assert.match(read('pages/play/components/playkit/index.wxml'), /<cy-playkit-hangman[\s\S]*?bind:continue="onContinue" \/>/)
+  assert.match(read('pages/play/components/playkit/index.wxml'), /<cy-playkit-hangman[\s\S]*?bind:continue="onContinue"[^>]*\/>/)
   const play = read('pages/play/index.js')
   assert.match(play, /\(evt\.type === 'qa' \|\| evt\.type === 'hangman'\) && this\._kit\(\)\.type === evt\.type && this\.data\.playKit\.readyForBase/)
 })

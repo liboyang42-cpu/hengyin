@@ -131,3 +131,40 @@ test('CG-ALL-12 / CG-ALL-29 相机被拒且允许跳过:亮出「不拍照，继
   assert.deepEqual(inst.events, [['shoot', { tempFilePath: 'wxfile://a.jpg', size: 1 }]])
   if (saved) require.cache[modalPath] = saved; else delete require.cache[modalPath]
 })
+
+test('CG-09-P2-5 / CG-10-D-3 题面下常驻「看不清？查看资料图」:内容配了才出,点开记一条', () => {
+  const now = new Date('2026-11-19T10:00:00+08:00')
+  const qa = pickPlayKit({ sessionId: 's1', version: 1, playKit: { qa: { mode: 'TYPE', title: '题', referenceImage: 'https://x/ref.png' } } }, now)
+  assert.equal(qa.referenceUrl, 'https://x/ref.png')
+  const { hangmanKit } = require('../../pages/play/utils/playkit-questo.js')
+  assert.equal(hangmanKit({ slots: [], referenceImage: 'https://x/r.png' }).referenceUrl, 'https://x/r.png')
+  assert.equal(hangmanKit({ slots: [] }).referenceUrl, '')
+  for (const rel of ['pages/play/components/playkit-qa/index.js', 'pages/play/components/playkit-hangman/index.js']) {
+    const def = loadComponent(rel)
+    const previews = []
+    const events = []
+    const prev = global.wx
+    global.wx = { previewImage: (o) => previews.push(o.current) }
+    try {
+      def.methods.onOpenReference.call({ data: { referenceUrl: '' }, triggerEvent: (n) => events.push(n) })
+      def.methods.onOpenReference.call({ data: { referenceUrl: 'https://x/r.png' }, triggerEvent: (n) => events.push(n) })
+    } finally { global.wx = prev }
+    assert.deepEqual(previews, ['https://x/r.png'], rel)
+    assert.deepEqual(events, ['reference'], rel)
+  }
+  assert.match(read('pages/play/components/playkit-qa/index.wxml'), /wx:if="\{\{referenceUrl\}\}" bindtap="onOpenReference"[^>]*>看不清？查看资料图</)
+  assert.match(read('pages/play/components/playkit-hangman/index.wxml'), /wx:if="\{\{referenceUrl\}\}" bindtap="onOpenReference"[^>]*>看不清？查看资料图</)
+  assert.match(read('pages/play/index.js'), /case 'reference': this\._stageEvent\('hint_open', \(this\._kit\(\) \|\| \{\}\)\.nodeId, \{ via: 'reference' \}\); return;/)
+})
+
+test('CG-ALL-11 桌面完成 / 替代站完成逐站标出,结算总览各数一格;服务端没下发时同今天', () => {
+  const v = require('../../subpackageJourney/utils/journey-view.js')
+  const r = v.reportView({ runState: 'COMPLETED', completionKind: 'LEGITIMATE_COMPLETION',
+    nodes: [{ nodeId: 1, completionMode: 'DESK' }, { nodeId: 2, completionMode: 'ALT' }, { nodeId: 3, completionMode: 'ALT' }, { nodeId: 4 }] })
+  assert.deepEqual(r.nodes.map((n) => n.mode), ['桌面完成', '替代站完成', '替代站完成', ''])
+  assert.equal(r.deskCount, 1)
+  assert.equal(r.altCount, 2)
+  const wxml = read('subpackageJourney/pages/settle/index.wxml')
+  assert.match(wxml, /wx:if="\{\{report\.deskCount > 0\}\}"[^\n]*桌面完成/)
+  assert.match(wxml, /wx:if="\{\{report\.altCount > 0\}\}"[^\n]*替代站完成/)
+})

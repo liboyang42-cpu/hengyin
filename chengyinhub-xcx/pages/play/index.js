@@ -8050,6 +8050,7 @@ Page({
       return;
     }
     switch (evt.action) {
+      case 'reference': this._stageEvent('hint_open', (this._kit() || {}).nodeId, { via: 'reference' }); return;   // CG-10-D-3
       case 'retry': {
         const game = this.selectComponent('#advancedGame');
         const state = game && game.data && game.data.state;

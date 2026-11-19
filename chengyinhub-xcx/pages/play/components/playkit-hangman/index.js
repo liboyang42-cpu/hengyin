@@ -83,7 +83,8 @@ Component({
     inputMode: { type: String, value: '' },   // 'pool' = 字母池;缺省 / 'keyboard' = 系统键盘(原样)
     pool: { type: Array, value: [] },          // 服务端候选字(已按本局打乱、已去掉提示移除的干扰字)
     wrongFeedback: { type: String, value: '' },
-    howto: { type: String, value: '' },        // CG-01-P2-5:本站填格说明(服务端没给就用通用一句)
+    howto: { type: String, value: '' },
+    referenceUrl: { type: String, value: '' },   // CG-10-D-3:看不清时的资料图(内容配了才有)        // CG-01-P2-5:本站填格说明(服务端没给就用通用一句)
   },
   data: { groups: [], active: -1, pop: -1, typedText: '', focused: false, cursor: 0, blankCount: 0, verdict: '', canSubmit: false,
     poolOn: false, poolRows: [], canClear: false, howtoOpen: false, DEFAULT_HOWTO: '一格填一个字或字母；拼音不写声调，ü 用 V 代替。' },
@@ -114,6 +115,12 @@ Component({
   lifetimes: { detached() { this._clearPop(); } },
   methods: {
     onToggleHowto() { this.setData({ howtoOpen: !this.data.howtoOpen }); },
+    onOpenReference() {
+      const url = this.data.referenceUrl;
+      if (!url) return;
+      wx.previewImage({ current: url, urls: [url] });
+      this.triggerEvent('reference');
+    },
     _paintCells: paintCells,
     _groupCells: groupCells,
     _distribute: distribute,

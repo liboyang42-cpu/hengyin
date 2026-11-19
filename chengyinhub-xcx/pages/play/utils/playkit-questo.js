@@ -61,6 +61,8 @@ function hangmanKit(seg) {
     wrongFeedback: s.solved !== true && typeof s.lastFeedback === 'string' ? s.lastFeedback : '',
     // CG-01-P2-5:本站「怎么填」说明,服务端 / 内容配了才有,缺省由组件给通用一句
     howto: typeof s.howto === 'string' ? s.howto.trim() : '',
+    // CG-10-D-3:题物看不清时的资料图,内容配了才有入口
+    referenceUrl: typeof s.referenceImage === 'string' ? s.referenceImage.trim() : '',
   };
 }
 
