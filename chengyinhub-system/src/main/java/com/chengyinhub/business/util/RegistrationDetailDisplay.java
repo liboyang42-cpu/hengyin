@@ -21,13 +21,40 @@ public final class RegistrationDetailDisplay {
     }
 
     public static void enrich(CmsRegistration registration, ICmsTopicChapterService chapterService) {
+        enrich(registration, chapterService, null, new Date());
+    }
+
+    /**
+     * FE-G6:权益行名优先「店名 · 权益名」(rowNames 按章节给,缺则退回章节名);
+     * 待核销行在售后处理中写「售后处理中」,场次已结束写「已过期」。只改展示,不改权益状态。
+     */
+    public static void enrich(CmsRegistration registration, ICmsTopicChapterService chapterService,
+                              java.util.Map<Long, String> rowNames, Date now) {
         if (registration == null) {
             return;
         }
         registration.setPhone(PiiCryptoService.maskPhone(registration.getPhone()));
         registration.setPaymentTypeLabel(paymentTypeLabel(registration.getPaymentType()));
         registration.setRefundDeadlineDisplay(refundDeadlineDisplay(registration.getRefundInfo(), registration));
-        enrichEntitlements(registration.getEntitlements(), chapterService);
+        enrichEntitlements(registration.getEntitlements(), chapterService, rowNames,
+                sessionEnded(registration, now), afterSaleInProgress(registration.getManualRefundCaseStatus()));
+    }
+
+    /** 探索票所在场次已结束(与扫码/开玩闸同一判据 ExploreTicketUsePolicy)。 */
+    static boolean sessionEnded(CmsRegistration registration, Date now) {
+        if (registration == null || registration.getCmsActivity() == null
+                || registration.getCmsActivity().getEndDate() == null) {
+            return false;
+        }
+        return now != null && !now.before(registration.getCmsActivity().getEndDate());
+    }
+
+    /** 人工退款工单还在处理(未到「不退款 / 凭证已核验」终态)。 */
+    static boolean afterSaleInProgress(String manualRefundCaseStatus) {
+        return manualRefundCaseStatus != null
+                && !com.chengyinhub.business.domain.ActivityCancelManualRefundCase.STATUS_NO_REFUND.equals(manualRefundCaseStatus)
+                && !com.chengyinhub.business.domain.ActivityCancelManualRefundCase.STATUS_MANUAL_REFUND_EVIDENCE_VERIFIED
+                        .equals(manualRefundCaseStatus);
     }
 
     static String paymentTypeLabel(Integer paymentType) {
@@ -89,11 +116,21 @@ public final class RegistrationDetailDisplay {
 
     static void enrichEntitlements(List<RegistrationEntitlement> entitlements,
                                    ICmsTopicChapterService chapterService) {
+        enrichEntitlements(entitlements, chapterService, null, false, false);
+    }
+
+    static void enrichEntitlements(List<RegistrationEntitlement> entitlements, ICmsTopicChapterService chapterService,
+                                   java.util.Map<Long, String> rowNames, boolean sessionEnded, boolean afterSale) {
         if (entitlements == null || entitlements.isEmpty()) {
             return;
         }
         for (RegistrationEntitlement e : entitlements) {
-            e.setStatusLabel(entitlementStatusLabel(e.getStatus()));
+            e.setStatusLabel(entitlementStatusLabel(e.getStatus(), sessionEnded, afterSale));
+            String rowName = rowNames == null || e.getChapterId() == null ? null : rowNames.get(e.getChapterId());
+            if (rowName != null && !rowName.trim().isEmpty()) {
+                e.setChapterName(rowName);
+                continue;
+            }
             if (chapterService == null || e.getChapterId() == null) {
                 continue;
             }
@@ -104,6 +141,14 @@ public final class RegistrationDetailDisplay {
                 e.setChapterName("章节 " + e.getChapterId());
             }
         }
+    }
+
+    static String entitlementStatusLabel(Integer status, boolean sessionEnded, boolean afterSale) {
+        if (Integer.valueOf(0).equals(status)) {
+            if (afterSale) return "售后处理中";
+            if (sessionEnded) return "已过期";
+        }
+        return entitlementStatusLabel(status);
     }
 
     static String entitlementStatusLabel(Integer status) {

@@ -202,7 +202,8 @@ public class RegistrationQueryApplication {
             attachSoleTicketCancelAmounts(java.util.Collections.singletonList(registration));
             registration.setRefundApplication(latestRegistrationRefund(registration.getId(), memberId));
             // 订单详情展示 enrich:脱敏手机号 / 支付方式文案 / 退款截止文案 / 权益章节名
-            com.chengyinhub.business.util.RegistrationDetailDisplay.enrich(registration, topicChapterService);
+            com.chengyinhub.business.util.RegistrationDetailDisplay.enrich(registration, topicChapterService,
+                    entitlementRowNames(registration.getEntitlements()), new Date());
             registration.setSettlementSummary(settlementSummary(registration, memberId));
             registrationService.attachPartySnapshots(java.util.Collections.singletonList(registration));
             long detailNow = System.currentTimeMillis();
@@ -471,6 +472,21 @@ public class RegistrationQueryApplication {
         registrationService.attachPartySnapshots(list);
         stampServerNow(list);
         return AjaxResult.success(list);
+    }
+
+    /** FE-G6:权益行「店名 · 权益名」;没有权益行或读不到时返回 null(展示退回章节名)。 */
+    private Map<Long, String> entitlementRowNames(List<RegistrationEntitlement> entitlements) {
+        if (perkLedgerService == null || entitlements == null || entitlements.isEmpty()) return null;
+        List<Long> chapterIds = new ArrayList<>();
+        for (RegistrationEntitlement e : entitlements) {
+            if (e != null && e.getChapterId() != null && !chapterIds.contains(e.getChapterId())) chapterIds.add(e.getChapterId());
+        }
+        if (chapterIds.isEmpty()) return null;
+        try {
+            return perkLedgerService.entitlementRowNames(chapterIds);
+        } catch (RuntimeException e) {
+            return null;
+        }
     }
 
     /** 按完成态过滤后的内存分页；用 PageHelper 的 Page 承载 total，控制器的 getDataTable 原样读出。 */

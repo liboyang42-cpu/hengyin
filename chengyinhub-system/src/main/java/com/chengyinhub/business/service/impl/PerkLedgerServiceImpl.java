@@ -1013,6 +1013,36 @@ public class PerkLedgerServiceImpl implements IPerkLedgerService {
     private com.chengyinhub.business.mapper.CoopPerkMapper coopPerkMapper;
 
     @Override
+    public java.util.Map<Long, String> entitlementRowNames(List<Long> chapterIds) {
+        if (chapterIds == null || chapterIds.isEmpty()) return java.util.Collections.emptyMap();
+        List<MerchantChapterOffer> rows;
+        try {
+            rows = offerMapper.selectLiveDisplayByChapterIds(chapterIds);
+        } catch (RuntimeException e) {
+            logger.warn("订单权益行店名读取失败 chapters={}", chapterIds, e);
+            return java.util.Collections.emptyMap();
+        }
+        return rowNamesOf(rows);
+    }
+
+    /** 一章恰好一家生效供给才命名;多家时不知道玩家会去哪家,留给调用方退回章节名。 */
+    static java.util.Map<Long, String> rowNamesOf(List<MerchantChapterOffer> rows) {
+        java.util.Map<Long, String> names = new java.util.HashMap<>();
+        java.util.Set<Long> ambiguous = new java.util.HashSet<>();
+        for (MerchantChapterOffer o : rows == null ? java.util.Collections.<MerchantChapterOffer>emptyList() : rows) {
+            if (o == null || o.getChapterId() == null) continue;
+            String store = o.getMerchantName() == null ? "" : o.getMerchantName().trim();
+            if (store.isEmpty()) continue;
+            String perk = o.getPerkName() == null ? "" : o.getPerkName().trim();
+            String label = perk.isEmpty() ? store : store + " · " + perk;
+            if (names.containsKey(o.getChapterId())) ambiguous.add(o.getChapterId());
+            else names.put(o.getChapterId(), label);
+        }
+        names.keySet().removeAll(ambiguous);
+        return names;
+    }
+
+    @Override
     public String livePerkName(Long chapterId, Long merchantId) {
         if (chapterId == null || merchantId == null || coopPerkMapper == null) return null;
         MerchantChapterOffer offer = findLiveOffer(chapterId, merchantId);
