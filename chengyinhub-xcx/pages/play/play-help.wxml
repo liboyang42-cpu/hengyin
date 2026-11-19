@@ -51,3 +51,17 @@
   </view>
   </scroll-view>
 </view>
+
+<!-- CG-01-P2-7 证据卡回看:与提示同一套居中弹窗;每张 = 站名 + 解开后的那段话 -->
+<view class="phl-pop" wx:if="{{evidence.show}}">
+  <view class="phl-pop-mask" bindtap="closeEvidenceCards" catchtouchmove="noop" hover-class="none" aria-role="button" aria-label="关闭证据卡"></view>
+  <scroll-view class="phl-pop__card" scroll-y enhanced show-scrollbar="{{false}}">
+  <view class="tb-sheet ptb phl">
+    <view class="tb-close" bindtap="closeEvidenceCards" aria-role="button" aria-label="关闭证据卡" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="32" /></view>
+    <text class="tb-title">证据卡</text>
+    <view class="tb-group" wx:for="{{evidence.items}}" wx:key="key">
+      <view class="tb-row"><view class="tb-copy"><text class="tb-name">{{item.name}}</text><text class="tb-clue-copy" user-select>{{item.text}}</text></view></view>
+    </view>
+  </view>
+  </scroll-view>
+</view>

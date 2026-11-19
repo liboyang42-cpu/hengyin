@@ -442,7 +442,7 @@ const themeTrade = require('./utils/theme-trade.js');
 const themePlans = require('./utils/theme-plans.js');
 const playerOps = require('./utils/theme-player-ops.js');
 const { loadStoryFont } = require('./utils/story-font.js'); const { storyFontUrl: STORY_FONT_URL } = require('../../utils/config.js');
-const playOverlays = require('./utils/play-hud-overlays.js'); const playTopbar = require('./utils/play-topbar.js'); const locOnce = require('./utils/play-location-once.js'); const { connectionFailure } = require('./utils/play-net-fail.js'); const playLook = require('./utils/play-look.js'); const stageEvents = require('./utils/stage-events.js'); const { perkOnlyOf } = require('./utils/perk-only.js'); /* 故事流顶栏:罗盘⇄地图、背包、案件册、各站奖励 */
+const playOverlays = require('./utils/play-hud-overlays.js'); const playTopbar = require('./utils/play-topbar.js'); const locOnce = require('./utils/play-location-once.js'); const { connectionFailure } = require('./utils/play-net-fail.js'); const playLook = require('./utils/play-look.js'); const stageEvents = require('./utils/stage-events.js'); const { perkOnlyOf } = require('./utils/perk-only.js'); const evidenceKit = require('./utils/evidence-cards.js'); /* 故事流顶栏:罗盘⇄地图、背包、案件册、各站奖励 */
 const feStoryGate = require('./utils/fe-story-gate.js'); const feVisit = require('./utils/fe-story-visit.js'); // 自由探索:只读已到访地点的章节
 const chapterVideo = require('./chapter-video.js'); const packDetail = require('./utils/pack-detail.js'); const menuOpen = require('./utils/menu-open.js');
 Page({
@@ -492,11 +492,11 @@ Page({
   ...themeTrade.methods(req),
   ...themePlans.methods(req),
   ...playerOps.methods(req),
-  ...playOverlays.methods(req, uuid4), ...playTopbar.methods(req), ...playLook.methods(), ...stageEvents.methods(), ...locOnce.methods(), ...feStoryGate.methods(req),
+  ...playOverlays.methods(req, uuid4), ...playTopbar.methods(req), ...playLook.methods(), ...stageEvents.methods(), ...evidenceKit.methods(), ...locOnce.methods(), ...feStoryGate.methods(req),
   _routeState: normalizeRouteState(null),
 
   data: {
-    ...orientLifecycle.data, ...playTopbar.data, ...playHelpPanel.data, ...kitCard.data, ...locOnce.data, ...stagePops.data,
+    ...orientLifecycle.data, ...evidenceKit.data, ...playTopbar.data, ...playHelpPanel.data, ...kitCard.data, ...locOnce.data, ...stagePops.data,
     arrivalGuard: null,
     guardAppealView: null,
     communityPostWrite: false,
@@ -5078,7 +5078,7 @@ Page({
       'hero.node': heroNode ? Object.assign({}, seatTiles.find((tile) => String(tile.nodeId) === String(heroNode.nodeId)), this._heroView(heroNode)) : this.data.hero.node,
       remainingGameCount: nodes.filter((node) => node.hasTemplate && (mode === 2 && Number(node.merchantId) > 0
         ? node.hasGame && !node.gameDone : !node.done)).length, canContinueGames,
-      total: visibleNodes.length, merchantCount, merchantDoneCount, perkOnlyTopic, seatTiles, ringSegs, searchPlaces }, () => { wx.nextTick(() => packDetail.ensure(this)); /* 细节打磨 S4:卡包流光 / 悬浮 */
+      total: visibleNodes.length, merchantCount, merchantDoneCount, perkOnlyTopic, evidenceCount: evidenceKit.evidenceCards(nodes).length, seatTiles, ringSegs, searchPlaces }, () => { wx.nextTick(() => packDetail.ensure(this)); /* 细节打磨 S4:卡包流光 / 悬浮 */
       if (chapterChanged) this.openChapterFull(); this._refreshNavRim();
       wx.nextTick(() => this._measureDeal());   // 布局落定后才量得到瓦片/卡包的真实矩形
       // 探店日:核销完最后一家回到本页(onShow 重拉)时自动弹结算 —— 只认 allDone 上升沿,

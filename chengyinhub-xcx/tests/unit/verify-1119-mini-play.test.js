@@ -171,3 +171,18 @@ test('FE-G7/G8/G9 整个主题无玩法:隐藏已完成环、章节读数、故�
   assert.match(js, /if \(this\.data\.perkOnlyTopic\) return;/)
   assert.match(js, /const perkOnlyTopic = perkOnlyOf\(mode, visibleNodes, this\._serverPerkOnly\);/)
 })
+
+test('CG-01-P2-7 证据卡回看:收本局已完成且写了文字反馈的站,工具菜单有入口', () => {
+  const { evidenceCards, methods } = require(path.join(ROOT, 'pages/play/utils/evidence-cards.js'))
+  const nodes = [{ nodeId: 1, name: '一站', done: true, passText: ' 门楣上的字 ' }, { nodeId: 2, name: '二站', done: false, passText: '未完成' }, { nodeId: 3, name: '三站', done: true, passText: '' }]
+  assert.deepEqual(evidenceCards(nodes), [{ key: '1', name: '一站', text: '门楣上的字' }])
+  const page = Object.assign({ data: { nodes, sessionToolsOpen: true }, setData(p) { for (const k of Object.keys(p)) { if (k.includes('.')) { const [a, b] = k.split('.'); this.data[a][b] = p[k] } else this.data[k] = p[k] } } }, methods())
+  page.openEvidenceCards()
+  assert.equal(page.data.sessionToolsOpen, false)
+  assert.equal(page.data.evidence.items.length, 1)
+  page.closeEvidenceCards()
+  assert.equal(page.data.evidence.show, false)
+  assert.match(read('pages/play/index.wxml'), /wx:if="\{\{evidenceCount > 0\}\}" bindtap="openEvidenceCards"/)
+  assert.match(read('pages/play/play-help.wxml'), /<view class="phl-pop" wx:if="\{\{evidence\.show\}\}">/)
+  assert.match(read('pages/play/index.js'), /evidenceCount: evidenceKit\.evidenceCards\(nodes\)\.length/)
+})
