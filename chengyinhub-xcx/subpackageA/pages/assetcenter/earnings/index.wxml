@@ -9,7 +9,7 @@
 <cy-page-title title="账户收益" safe-top="{{false}}" />
 
 <view class="er-shell">
-  <cy-scene-asset-earnings id="assetEarnings" theme="{{merchantView ? 'merchant' : 'player'}}" bind:open="openScene" />
+  <cy-scene-asset-earnings id="assetEarnings" class="er-earnings" theme="{{merchantView ? 'merchant' : 'player'}}" bind:open="openScene" />
 </view>
 
 <view class="er-scene-host" wx:if="{{sceneCurrent && sceneCurrent.id === 'asset-income-detail'}}" catchtouchmove="blockSceneTouch">
