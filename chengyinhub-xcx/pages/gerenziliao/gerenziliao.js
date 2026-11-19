@@ -1,6 +1,12 @@
 const cyLoading = require('../../utils/loading.js');
 const toast = require('../../utils/toast.js');
 const app = getApp();
+
+// OR-014:主页背景按账号分键(member_hero_bg:<账号>),换号不串;取不到账号沿用旧键。
+function heroBgKey() {
+  const id = String((app && typeof app.getUserID === 'function' && app.getUserID()) || '');
+  return /^[1-9]\d*$/.test(id) ? 'member_hero_bg:' + id : 'member_hero_bg';
+}
 const { isRecordList } = require('../../utils/response-shape.js');
 const { isValidMobile } = require('../../utils/form-state.js');
 const nicknameCheck = require('./nickname-check.js');
@@ -444,7 +450,7 @@ Page({
     var that = this
     this._unloaded = false;
     let hero = '';
-    try { hero = wx.getStorageSync('member_hero_bg') || ''; } catch (e) { hero = ''; }
+    try { hero = wx.getStorageSync(heroBgKey()) || ''; } catch (e) { hero = ''; }
     if (hero) this.setData({ heroImg: hero });
     this._hidden = false;
     // V-21:「关于」里的「编辑」带 field=introduction 进来,资料读完直接打开个人介绍面板
@@ -781,7 +787,7 @@ Page({
     const that = this;
     app.chooseImage(function (urls) {
       if (!urls || !urls.length || that._unloaded) return;
-      try { wx.setStorageSync('member_hero_bg', urls[0]); } catch (e) { /* 存不下就只换这一屏 */ }
+      try { wx.setStorageSync(heroBgKey(), urls[0]); } catch (e) { /* 存不下就只换这一屏 */ }
       that.setData({ heroImg: urls[0] });
       toast('背景已更新');
     }, 1, { crop: true, cropScale: '16:9' });

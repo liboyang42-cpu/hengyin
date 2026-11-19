@@ -80,11 +80,11 @@ test('跨端契约:后端 quote 出参必须带 refundDeadline/refundableNow,且
 test('退款档位:集合前 24 小时内下单先确认「取消只退 50%」,结算页列出三档', () => {
   assert.match(baomingJs, /_quoteRefundPercentNow === 50/)
   assert.match(baomingJs, /title: '取消只退 50%'/)
-  // OR-022:三档文案改由 utils/refund-rule.js 单一真源下发,结算页逐行渲染 refundTiers
+  // OR-022:三档文案改由 utils/refund-tiers.js 单一真源下发,结算页逐行渲染 refundTiers
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/activity/baoming/baoming.wxml'), 'utf8')
   assert.match(wxml, /<view class="setly_li" wx:for="\{\{refundTiers\}\}" wx:key="key">/)
   assert.match(baomingJs, /refundTiers: refundRuleTiers\(selectedTicket\)/)
-  const { refundRuleTiers } = require(path.join(ROOT, 'utils/refund-rule.js'))
+  const { refundRuleTiers } = require(path.join(ROOT, 'utils/refund-tiers.js'))
   assert.deepEqual(refundRuleTiers({ price: 10, mode: 1 }).map((t) => [t.when, t.result]),
     [['集合前 24 小时以上', '全额退'], ['集合前 24 小时内', '退 50%'], ['开始后', '不退']])
 })
@@ -92,7 +92,7 @@ test('退款档位:集合前 24 小时内下单先确认「取消只退 50%」,�
 test('2026-11-03 通行证三档:③ 自由探索票(mode=2)也列三档,写「开始前」,不再被隐藏', () => {
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/activity/baoming/baoming.wxml'), 'utf8')
   assert.doesNotMatch(wxml, /selectedTicket\.mode != 2\}\}" class="(sec-title|setly)"/)
-  const { refundRuleTiers } = require(path.join(ROOT, 'utils/refund-rule.js'))
+  const { refundRuleTiers } = require(path.join(ROOT, 'utils/refund-tiers.js'))
   assert.equal(refundRuleTiers({ price: 10, mode: 2 })[0].when, '开始前 24 小时以上')
   assert.match(baomingJs, /该场次已进入开始前 24 小时/)
 })

@@ -295,8 +295,8 @@ test('OR-036:订单详情未登录时结果面板给「登录」并重读同一�
   assert.match(read(dir + 'index.js'), /retryLogin\(this, app, function \(\) \{ this\.setData\(\{ loginRequired: false \}\); this\.getData\(orderId\); \}\);/)
 })
 
-test('OR-022:退款三档文案单一真源 utils/refund-rule.js,主题页旧路径只转出,报名结算页引用', () => {
-  const rule = require(path.join(ROOT, 'utils/refund-rule.js'))
+test('OR-022:退款三档文案单一真源 utils/refund-tiers.js,主题页 refund-rule 只转出,报名结算页引用', () => {
+  const rule = require(path.join(ROOT, 'utils/refund-tiers.js'))
   assert.equal(require(path.join(ROOT, 'pages/topic/utils/refund-rule.js')), rule)
   assert.equal(rule.refundRuleText({ price: 1, mode: 1 }), '集合前 24 小时以上全额退；24 小时内退 50%；开始后不退')
   assert.deepEqual(rule.refundRuleTiers({ price: 0 }), [])
@@ -323,4 +323,34 @@ test('OR-028 / OR-046:结算层可玩期读报价 validTo、须知入口、已�
   assert.equal(owned.payLabel, '继续游玩')
   assert.match(read('pages/topic/components/cy/self-play-checkout/index.js'), /if \(v\.purchased\) \{ this\.triggerEvent\('play'\); return; \}/)
   assert.match(read('pages/topic/index/index.wxml'), /bind:notice="onCheckoutNotice" bind:play="onCheckoutPlay"/)
+})
+
+test('OR-014 / OR-038:退出账号走 clearSession、重置身份广播、游客不出退出按钮、设备级偏好保留', () => {
+  const js = read('pages/shezhi/shezhi.js')
+  assert.match(js, /app\.getSession\(\)\.clearSession\(\);/)
+  assert.match(js, /sync\.resetIdentity\(\)/)
+  assert.match(read('pages/shezhi/shezhi.wxml'), /<view class="sz-logout" wx:if="\{\{hasAccount\}\}">/)
+  const { DEVICE_LEVEL_KEYS } = require(path.join(ROOT, 'utils/roam-player-memory.js'))
+  for (const key of ['cy_usage_choice_v1', 'play_reduced_motion', 'roam_reduced_motion']) assert.ok(DEVICE_LEVEL_KEYS.has(key), key)
+  const sync = require(path.join(ROOT, 'utils/identity-sync.js'))
+  const seen = []
+  const off = sync.onIdentityChange((evt) => seen.push(evt.scope))
+  sync.resetIdentity()
+  off()
+  assert.deepEqual(seen, ['session-cleared'])
+})
+
+test('OR-014:游玩轨迹与主页背景按账号分键', () => {
+  assert.match(read('pages/play/utils/play-trail.js'), /STORE_KEY \+ ':' \+ id/)
+  for (const f of ['pages/gerenziliao/gerenziliao.js', 'subpackageMember/components/cy/profile/index.js']) {
+    const src = read(f)
+    assert.match(src, /'member_hero_bg:' \+ id/, f)
+    assert.doesNotMatch(src, /StorageSync\('member_hero_bg'/, f)
+  }
+})
+
+test('OR-015:注销进入冷静期后清本机会话(服务端已 revokeAll)', () => {
+  const js = read('utils/deregister-flow.js')
+  assert.equal((js.match(/clearLocalSessionAfterPending\(\);/g) || []).length, 2)
+  assert.match(js, /app\.getSession\(\)\.clearSession\(\)/)
 })

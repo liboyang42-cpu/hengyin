@@ -191,10 +191,10 @@ test('删除本地账号键失败时返回失败且绝不删除漫游桶', () =>
   assert.equal(clearCalls, 0)
 })
 
-test('退出只保留严格账号同意台账，不保留全局选择、重试键或伪前缀', () => {
+test('退出只保留严格账号同意台账与设备级偏好(OR-038),不保留重试键或伪前缀', () => {
   const completed = { versions: { privacy_policy: 'v2.1', user_service_agreement: 'v2.2' }, pending: {} }
   const pending = { versions: completed.versions, pending: { privacy_policy: { docVersion: 'v2.1', requestId: 'original-consent' } } }
-  const rejected = ['cy_usage_choice_v1', 'cy_consent_retry:7|privacy_policy|app_launch|AGREE||',
+  const rejected = ['cy_consent_retry:7|privacy_policy|app_launch|AGREE||',
     'cy_consent_retry:7|photo|third_party|AGREE||', 'cy_usage_pending_v1:', 'cy_usage_pending_v1:0',
     'cy_usage_pending_v1:-7', 'cy_usage_pending_v1:07', 'cy_usage_pending_v1:7e0',
     'cy_usage_pending_v1:7extra', 'cy_usage_pending_v1:7:other', 'cy_usage_pending_v1:7\n']
@@ -203,7 +203,9 @@ test('退出只保留严格账号同意台账，不保留全局选择、重试�
   const storage = memoryStorage(Object.fromEntries(rejected.map(key => [key, 'must-delete'])))
   storage.setStorageSync('cy_usage_pending_v1:7', completed)
   storage.setStorageSync('cy_usage_pending_v1:8', pending)
+  for (const key of ['cy_usage_choice_v1', 'play_reduced_motion', 'roam_reduced_motion', 'roam_fog_off', 'cy_map_kind', 'home_city_location_declined']) storage.setStorageSync(key, 'device')
   assert.equal(clearStorageForLogout(storage), true)
+  for (const key of ['cy_usage_choice_v1', 'play_reduced_motion', 'roam_reduced_motion', 'roam_fog_off', 'cy_map_kind', 'home_city_location_declined']) assert.equal(storage.getStorageSync(key), 'device', key)
   assert.equal(storage.getStorageSync('cy_usage_pending_v1:7'), completed)
   assert.equal(storage.getStorageSync('cy_usage_pending_v1:8'), pending)
   for (const key of rejected) assert.equal(storage.getStorageSync(key), undefined, key)

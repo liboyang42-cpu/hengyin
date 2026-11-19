@@ -9,7 +9,7 @@
 
 const { chapterCountText } = require('../../../utils/chapter-count.js');
 const { yuan, yuanTrim } = require('../../../utils/money-format.js');
-const { refundRuleText } = require('../../../utils/refund-rule.js');
+const { refundRuleText } = require('./refund-rule.js');
 
 // OR-046 定稿:结算页价格不补零(¥29.9 / ¥30),与票种半屏同一入口 money-format.yuanTrim。
 const price = yuanTrim;
