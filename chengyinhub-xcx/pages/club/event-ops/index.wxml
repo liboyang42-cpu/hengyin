@@ -1,5 +1,5 @@
 <wxs src="../../../utils/wxs/display-label.wxs" module="dl" />
-<view class="theme-dark">
+<view class="theme-merchant">
   <cy-toast id="cy-toast" />
   <cy-access-gate kind="login" />
   <cy-loading-mask id="cy-loading" />

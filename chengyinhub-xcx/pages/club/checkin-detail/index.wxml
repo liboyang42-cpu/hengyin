@@ -1,7 +1,7 @@
 <!-- Figma K3 核销详情 · 俱乐部端。八张稿是同一页的八个态:
      A–E 五个业务态走同一套布局,只换状态字/核销行/履约轨迹;
      F 无权限、G 加载失败是整屏态;H 是手机号无查看权限的变体(由服务端决定,不是前端分支)。 -->
-<view class="ckd theme-dark">
+<view class="ckd theme-merchant">
   <cy-toast id="cy-toast" />
   <cy-access-gate kind="login" />
   <cy-nav-bar plain />

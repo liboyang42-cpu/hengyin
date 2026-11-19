@@ -1420,19 +1420,19 @@ test('导演回执索引落盘失败时 fail closed，网络请求不得发出',
   assert.match(harness.toasts[0].title, /无法安全保存/)
 })
 
-test('导演页收编进俱乐部端恒暗（2026-09-02 改稿，不再是全站唯一的浅色管理页）', () => {
+test('导演台宿主页随俱乐部主办方视角改浅色（2026-11-17 MC-038）', () => {
   // 2026-09-03:导演台不再是独立页面,主题由宿主页(活动详情)承担 ——
   // 组件本身不带页面级主题类,所以这条要看宿主页而不是 directorView()。
   const route = 'pages/club/topic-detail/index'
   const source = read(DIRECTOR_HOST_WXML)
   const themes = topLevelThemeClasses(source)
-  assert.equal(classifyPageDomain(route), 'player', '导演台已归默认域，不再是专属 club 主题域的特例')
-  assert.equal(themes.has('theme-dark'), true, '俱乐部导演台深链页恒暗，与 pages/club/detail 等其余俱乐部页一致')
-  assert.equal(themes.has('theme-merchant'), false, '不许再挂 theme-merchant')
+  assert.equal(classifyPageDomain(route), 'merchant', '主办方视角页归商家浅色域')
+  assert.equal(themes.has('theme-merchant'), true, '俱乐部导演台宿主页按主办方视角浅色')
+  assert.equal(themes.has('theme-dark'), false, '不许再挂 theme-dark')
 
-  const broken = source.replace(/\btheme-dark\b/, 'theme-merchant')
-  assert.notEqual(broken, source, '负控必须实际把导演台改回商家浅色')
-  assert.equal(topLevelThemeClasses(broken).has('theme-dark'), false)
+  const broken = source.replace(/\btheme-merchant\b/, 'theme-dark')
+  assert.notEqual(broken, source, '负控必须实际把导演台改回深色')
+  assert.equal(topLevelThemeClasses(broken).has('theme-merchant'), false)
 })
 
 test('角色接管入口只向已确认且已有角色的成员展示', () => {

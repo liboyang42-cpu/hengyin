@@ -1,5 +1,5 @@
 <!-- 深链兼容壳(§4.1):站内从俱乐部管理点开的是弹窗;这一页只服务外部直达。 -->
-<view class="theme-dark">
+<view class="theme-merchant">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />

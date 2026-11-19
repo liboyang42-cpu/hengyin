@@ -1,4 +1,4 @@
-<view class="theme-dark {{reducedMotion ? 'cy-motion-reduced' : ''}}">
+<view class="theme-merchant {{reducedMotion ? 'cy-motion-reduced' : ''}}">
   <cy-toast id="cy-toast" />
   <cy-access-gate kind="login" />
   <cy-loading-mask id="cy-loading" />

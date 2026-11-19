@@ -1,5 +1,5 @@
 <!-- 返回钮在条件容器之外:出码态(cy-club-game-code-sheet)同样要有退出口,不能只有选场次态才有 -->
-<view class="theme-dark">
+<view class="theme-merchant">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />

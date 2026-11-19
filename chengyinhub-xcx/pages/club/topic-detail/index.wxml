@@ -1,7 +1,7 @@
 <!-- 俱乐部 · 活动详情(Figma ★俱乐部·全流程 H1–H6)
      六态共用一套骨架,差异只在:状态胶囊 / 是否出未通过原因 / 是否出核销 / 是否出接下来 / 主键文案与可点性。
      ⚠️ 这是俱乐部视角的「主题」,不是商家承接视角 —— 别和 pages/topic/merchantinfo 混。 -->
-<view class="theme-dark">
+<view class="theme-merchant">
   <cy-toast id="cy-toast" />
   <cy-access-gate kind="login" />
   <cy-loading-mask id="cy-loading" />

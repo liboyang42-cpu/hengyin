@@ -80,8 +80,8 @@ test('MC-021:合作中心列表非空时刷新失败轻提示,不再无声', () 
 
 test('MC-029:俱乐部详情切后台/卸载时冲刷待发的移出成员请求,且只发一次', () => {
   const js = read('pages/club/detail/index.js')
-  assert.match(js, /onHide\(\) \{[\s\S]{0,200}this\._flushPendingRemoval\(\);/)
-  assert.match(js, /onUnload\(\) \{[^\n]*this\._flushPendingRemoval\(\);/)
+  assert.match(js, /onHide\(\) \{[^\n]*const pending = this\._pendingRemoval; this\._pendingRemoval = null; if \(typeof pending === 'function'\) pending\(\);/)
+  assert.match(js, /onUnload\(\) \{[^\n]*if \(typeof pendingRemoval === 'function'\) pendingRemoval\(\);/)
   const rm = js.slice(js.indexOf('  removeMember(e) {'), js.indexOf('  _doRemoveMember('))
   assert.match(rm, /if \(done\) return;\s*done = true;/)
   assert.match(rm, /onUndo\(\) \{ done = true;/)
@@ -101,4 +101,22 @@ test('MC-036:模板页发布能力卡失败不再吞掉,置 capabilityError,点�
 test('MC-037:自由探索有下限时滑杆下显示地板行', () => {
   assert.match(read('pages/topic/pricing/index.wxml'), /<view class="pg-range" wx:if="\{\{!isFreeExplore \|\| floorPositive\}\}">/)
   assert.match(read('pages/topic/pricing/index.js'), /floorPositive: floor > 0,/)
+})
+
+test('MC-038:俱乐部主办方视角 17 页根节点浅色并归商家域;申请页仍是玩家深色', () => {
+  const lint = require(path.join(ROOT, 'scripts/ui-theme-unit-lint.js'))
+  const pages = ['badges', 'checkin-detail', 'create', 'customer-detail', 'customers', 'edit', 'enroll', 'event-ops',
+    'governance', 'group-code', 'join-requests', 'notify', 'payout-receiver', 'roles', 'settlement', 'topic-detail', 'workbench']
+  for (const p of pages) {
+    const route = `pages/club/${p}/index`
+    const themes = lint.topLevelThemeClasses(read(route + '.wxml'))
+    assert.equal(themes.has('theme-merchant'), true, route)
+    assert.equal(themes.has('theme-dark'), false, route)
+    assert.equal(lint.classifyPageDomain(route), 'merchant', route)
+    const json = JSON.parse(read(route + '.json'))
+    assert.equal(json.navigationBarTextStyle, 'black', route)
+    assert.equal(json.backgroundColor, '#F3F4F4', route)
+  }
+  assert.equal(lint.classifyPageDomain('pages/club/apply/index'), 'player')
+  assert.equal(lint.topLevelThemeClasses(read('pages/club/apply/index.wxml')).has('theme-dark'), true)
 })

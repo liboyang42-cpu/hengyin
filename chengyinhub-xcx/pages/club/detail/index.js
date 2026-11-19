@@ -526,11 +526,8 @@ function isDemoClubId(id) {
 }
 
 Page({
-  onHide() {
-    this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
-    // MC-029:切后台可能被系统回收,等不到撤销条到期 —— 未撤销的移出成员此刻就提交。
-    this._flushPendingRemoval();
-  },
+  // MC-029:切后台可能被系统回收,等不到撤销条到期 —— 未撤销的移出成员此刻就提交(卸载同理)。
+  onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; const pending = this._pendingRemoval; this._pendingRemoval = null; if (typeof pending === 'function') pending(); },
   // 第九轮 m1-9:路线节点地址一点开地图
   onAddressTap(e) { openAddress().openFromEvent(e); },
   _clubAccessState: 'idle',
@@ -874,7 +871,7 @@ Page({
   },
 
   // 页面销毁:作废在途 AI 生成的回调,避免 setData after unload(sendRequest 不可中断)
-  onUnload() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; this._flushPendingRemoval();
+  onUnload() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; const pendingRemoval = this._pendingRemoval; this._pendingRemoval = null; if (typeof pendingRemoval === 'function') pendingRemoval();
     this._scanDisposed = true; this._scanGeneration = (this._scanGeneration || 0) + 1;
     if (this._scanWorkflow) { this._scanWorkflow.destroy(); this._scanWorkflow = null; }
     if (this._scanLoadingOwners) { this._scanLoadingOwners.forEach(() => loading.hide()); this._scanLoadingOwners.clear(); }
