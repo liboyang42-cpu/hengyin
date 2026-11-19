@@ -57,7 +57,7 @@
         <cy-inline-error wx:if="{{mediaError}}" title="{{mediaError}}" action="刷新" bind:action="loadOwnMedia" />
         <text wx:if="{{!mediaAuthRequired && !mediaLoading && !mediaError && !mediaRows.length}}" class="privacy-setting-body">暂无已上传媒体</text>
         <cy-card wx:for="{{mediaRows}}" wx:key="assetId" class="privacy-media-row">
-          <text>{{item.typeLabel}} #{{item.assetId}} · {{item.stateLabel}}</text>
+          <text>{{item.typeLabel}} · {{item.stateLabel}}</text>
           <text wx:if="{{item.reviewReason}}" class="privacy-setting-body">{{item.reviewReason}}</text>
           <view class="privacy-actions">
             <cy-btn variant="secondary" size="sm" data-id="{{item.assetId}}" disabled="{{!!mediaBusyId}}" aria-disabled="{{!!mediaBusyId}}" bindtap="previewOwnMedia">本人预览</cy-btn>

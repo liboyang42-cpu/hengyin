@@ -9,7 +9,7 @@
    <text class="attendance__text">{{snapshot.config.role}} {{snapshot.config.phone}}</text><button bindtap="contact">联系值班岗位</button>
    <view wx:if="{{snapshot.config.backupPhone}}"><text class="attendance__text">{{snapshot.config.backupRole}} {{snapshot.config.backupPhone}}</text><button data-backup="true" bindtap="contact">联系备用岗位</button></view>
    <text class="attendance__text">集合点：{{snapshot.config.meetingName}} · {{snapshot.config.meetingAddress}}</text>
-   <text class="attendance__text">WGS84：{{snapshot.config.latitude}}, {{snapshot.config.longitude}}</text>
+   <text class="attendance__text">集合点坐标：{{snapshot.config.latitude}}, {{snapshot.config.longitude}}</text>
   </view>
   <text class="attendance__text">拨号不代表已接听或救援已受理；不上传你的位置。保险不是参与必要条件。</text>
   <text class="attendance__text">签到窗口：{{snapshot.checkinWindow || '尚未配置'}}（北京时间）</text>

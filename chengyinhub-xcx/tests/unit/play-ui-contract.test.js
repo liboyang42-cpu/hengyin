@@ -579,7 +579,8 @@ test('自由漫游会话内可重看规则，演示点只由开发环境闸门�
   // 同上:关闭走的是本页的 onProtoSheetClose(能返回就返回上一层,否则 requestSceneClose,
   //   脏态确认仍归 requestSceneClose 管)。断的是「关闭真的接到场景栈上」。
   assert.match(roamWxml, /class="psheet__x"[^>]*catchtap="onProtoSheetClose"/)
-  assert.match(initWorld, /selectDemoRoamPois\(getApp\(\), \[/)
+  // PG-061:演示种子点挪到 subpackageRoam/data/roam-demo-pois.js,开发开关打开时异步载入
+  assert.match(initWorld, /selectDemoRoamPois\(getApp\(\), this\._demoPoisFactory \? this\._demoPoisFactory\(P, MOCK_IMG\) : \[\]\)/)
   assert.match(initWorld, /\.map\(\(p\) => \(\{ \.\.\.p, demo: true/)
   assert.match(syncMarkers, /content: p\.demo \? '演示点 · 非真实\\n' \+ p\.name : p\.name/)
   assert.match(startVisit, /poi\.demo[\s\S]*?演示点仅供浏览/)

@@ -41,12 +41,12 @@ test('preview without an ID keeps the existing refusal state and never requests 
     assert.equal(requests.length, 0)
     assert.equal(page.data.loading, false)
     assert.equal(page.data.errorRefused, true)
-    assert.equal(page.data.errorMsg, '缺少模板ID')
+    assert.equal(page.data.errorMsg, '链接已失效')
     assert.deepEqual(Array.from(page.data.cards), [])
     assert.equal(page.data.name, '')
     page.load()
     assert.equal(requests.length, 0)
-    assert.equal(page.data.errorMsg, '缺少模板ID')
+    assert.equal(page.data.errorMsg, '链接已失效')
   }
 })
 
@@ -95,7 +95,7 @@ test('a missing-ID retry invalidates any earlier detail response', () => {
   page.load()
   requests[0].success({ code: 200, data: { name: '旧主题', games: [] } })
   assert.equal(requests.length, 1)
-  assert.equal(page.data.errorMsg, '缺少模板ID')
+  assert.equal(page.data.errorMsg, '链接已失效')
   assert.equal(page.data.errorRefused, true)
   assert.equal(page.data.loading, false)
   assert.equal(page.data.name, '')

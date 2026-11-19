@@ -9,6 +9,9 @@
     <text class="b3__title">徽章</text>
     <view class="b3__back b3__back--ghost"></view>
   </view>
+  <!-- PG-035:缺/非法图片参数落缺参态,不再渲染示例徽章图 -->
+  <view class="b3__missing" wx:if="{{missing}}"><cy-empty kind="missing-param" fill size="lg" cta="返回" bind:cta="goBack" /></view>
+  <block wx:else>
   <view class="b3__stage">
     <image class="b3__fallback" wx:if="{{renderState !== 'ready'}}" src="{{fallbackSrc}}" mode="aspectFit" binderror="onFallbackError" aria-role="img" aria-label="{{name}}，{{sub}}，静态预览" />
     <!-- 双样式分流:enamel=3D珐琅转台;glow=二维发光大卡(与勋章墙同族观感,CSS 光环) -->
@@ -27,5 +30,6 @@
   <view class="b3__sub" wx:if="{{sub}}">{{sub}}</view>
   <view class="b3__hint" wx:if="{{motionReduced && renderState === 'ready'}}">已减少动态效果</view>
   <view class="b3__hint" aria-live="polite">{{renderState === 'loading' ? (style === 'glow' ? '正在准备发光徽章…' : '正在准备 3D 徽章…') : (renderState === 'fallback' ? '静态预览' : (style === 'glow' ? '' : (style === 'pin' ? '点一下转一圈，左右拖动' : '')))}}</view>
+  </block>
 </view>
 </view>

@@ -412,7 +412,8 @@ module.exports = {
   // (本支) "u3Handler": 62,
     // 2026-09-16 截图冒烟修复(本批):merchantinfo 缺参态按「与其它详情页一致」补了
     //   <cy-nav-bar bind:back="goBack">,该页 goBack 的零绑定债务(81 号)真的被消费 ⇒ 81→80。
-    "u3Handler": 55,
+    // 2026-11-19 verify-1119-mini-a:PG-062 删 shezhi goEdit/goPinpai/goRuzhu、PG-034 删 coop/withdraw(goBack)四条零绑定债务出账,55→51。
+    "u3Handler": 51,
     // 2026-09-06 孤儿页清理:club/dissolution-blockers(focusType/focusId)与 merchant/discover(loaded)
     //   三页级零消费字段随页面整删,u4Field 170→167,digest 取门禁实测。
     // 2026-09-06 原生 toast 收口:simple#toast / templateadd#id / infomationdetail#id 三条零消费债务已被真消费,167→164。
@@ -431,7 +432,8 @@ module.exports = {
     //   this.data.toType/toId,门禁实测不再命中。两条登记出账,棘轮回 149,digest 复算。
     // 2026-11-02 商家首页不再计算 revBars(页面细节优化):一条零消费债务出账,103 → 102,digest 复算。
     // 2026-11-04 第十一轮 g3 p1 F-10:结算页积分行按 userInfo.point 显示,baoming userInfo 零消费债务真消费出账,100 → 99。
-    "u4Field": 98,
+    // 2026-11-19 verify-1119-mini-a:PG-091 citynode-code 改场景薄壳,poiId 真被 WXML 消费,零消费债务出账 98→97。
+    "u4Field": 97,
       // 2026-08-26 圈层主题接回主题货架:新增 circleTheme import,两条 _coverFail 动态 setData
       //   等量下移(269→270 / 281→282,行号取门禁实测)。调用点与强化理由不变,显式改 digest。
     // 2026-08-27 合并 #883:activity/list 三条 U4-DYNAMIC 登记行号 +2(129→131/151→153/231→233,
@@ -586,7 +588,7 @@ module.exports = {
       //   —— 长按 3 秒结束的逻辑接到了主键的 touchstart/touchend 上。99→97,digest 显式更新。
             // 2026-09-15 C1 简易发布预设单一真源:内置预设(PRESETS/TEMPLATES)与站点手动编辑链整体删除,
       //   9 条零绑定 handler(预设/站点/地图)一并消失;棘轮 90→81,digest 取门禁实测。
-"9edcf74048ce8211078c6ff881268d1ae72a01273eda82a0cb4c1f8f8c6d15c4",
+"1edd693376ea4d15197fd8e1049847ef64094fb42c604e216e25bf29dc9f4e61",
       // 2026-08-23 高级玩法编辑器接线后 errors/totalNodes 已被真实消费，债务 194→192。
       // 2026-08-23 全页面返回审计：pricing/partner 的 topicId 现用于根栈返回，真实消费后债务 192→191。
       // 2026-08-25 816 并入:key 集合按上面的逐条核对结果变化,digest 显式更新。
@@ -602,7 +604,7 @@ module.exports = {
       // 2026-09-19 批复1-a=2 还清:partner#toType/toId 两条随页复活短暂回账(151 键)后当场还债出账,
       //   key 集回到退役前那份 149,digest 按当前 key 集合实算。
 // 2026-11-03 第九轮 m1-9:merchant/apply 店铺地址预览与已提交申请的地址一点开地图,locationLat/locationLng 真被读取,两条零消费债务还清出账,u4Field 102→100,digest 按门禁 baselineKeyDigest 重算。
-"u4Debt": "3a86e396f45ac350f6c8b977eff1bfa38b96062217b97cfc51730e12792fa992",
+"u4Debt": "00d84cbc80b34077092fd1457dad15eca45311be3c56041edf97eee31cc37e39",
       // 2026-08-17 漫游 S1 施工:条数不变(65),只是 pages/roam/index.js 的两处
       //   `...this._calcArch()` 动态 setData 行号从 3263/3305 移到 3261/3303
       //   (删掉 _apiCheckin 与 /api/play/arrive 那段后整段上移)。
@@ -1232,7 +1234,6 @@ module.exports = {
     "chengyinhub-xcx/subpackageMember/components/cy/scene-member-order-detail/index.js#goBack": "存量零绑定债务：goBack 在同页 WXML 与 JS 调用图均无入口；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/subpackageMember/components/cy/scene-route-content/index.js#onFilterTap": "存量零绑定债务：onFilterTap 在同页 WXML 与 JS 调用图均无入口；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/pages/addressinfo/addressinfo.js#onDefaultChange": "存量零绑定债务：onDefaultChange 在同页 WXML 与 JS 调用图均无入口；owner=小程序，到期=2026-09-30",
-    "chengyinhub-xcx/pages/coop/withdraw/index.js#goBack": "存量零绑定债务：goBack 在同页 WXML 与 JS 调用图均无入口；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/pages/gerenziliao/gerenziliao.js#onCaseIntroductonChange": "存量零绑定债务：onCaseIntroductonChange 在同页 WXML 与 JS 调用图均无入口；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/pages/merchant/decor/index.js#goBack": "存量零绑定债务：goBack 在同页 WXML 与 JS 调用图均无入口；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/pages/merchant/index/index.js#goSearch": "存量零绑定债务：goSearch 在同页 WXML 与 JS 调用图均无入口；owner=小程序，到期=2026-09-30",
@@ -1267,9 +1268,6 @@ module.exports = {
     "chengyinhub-xcx/pages/roam/index.js#onShareSwipe": "存量零绑定债务：onShareSwipe 在同页 WXML 与 JS 调用图均无入口；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/pages/roam/index.js#goSearchMap": "存量零绑定债务：goSearchMap 在同页 WXML 与 JS 调用图均无入口；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/pages/roam/index.js#onRoamDrawerTap": "存量零绑定债务：onRoamDrawerTap 在同页 WXML 与 JS 调用图均无入口；owner=小程序，到期=2026-09-30",
-    "chengyinhub-xcx/pages/shezhi/shezhi.js#goPinpai": "存量零绑定债务：goPinpai 在同页 WXML 与 JS 调用图均无入口；owner=小程序，到期=2026-09-30",
-    "chengyinhub-xcx/pages/shezhi/shezhi.js#goRuzhu": "存量零绑定债务：goRuzhu 在同页 WXML 与 JS 调用图均无入口；owner=小程序，到期=2026-09-30",
-    "chengyinhub-xcx/pages/shezhi/shezhi.js#goEdit": "存量零绑定债务：goEdit 在同页 WXML 与 JS 调用图均无入口；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/pages/square/detail/index.js#onImageLoad": "存量零绑定债务：onImageLoad 在同页 WXML 与 JS 调用图均无入口；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/pages/square/detail/index.js#onCommentBlur": "存量零绑定债务：onCommentBlur 在同页 WXML 与 JS 调用图均无入口；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/pages/talent/list/index.js#onHeroTap": "存量零绑定债务：onHeroTap 在同页 WXML 与 JS 调用图均无入口；owner=小程序，到期=2026-09-30",
@@ -1377,8 +1375,7 @@ module.exports = {
     "chengyinhub-xcx/subpackageMember/mytemplate/mytemplate.js#filterCategoryId": "存量零消费债务：filterCategoryId 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/subpackageMember/mytemplate/mytemplate.js#total": "存量零消费债务：total 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/subpackageMember/signup/index.js#hasMore": "存量零消费债务：hasMore 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
-    "chengyinhub-xcx/subpackageMember/signup/index.js#nodata": "存量零消费债务：nodata 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
-    "chengyinhub-xcx/subpackageRoam/citynode-code/index.js#poiId": "存量零消费债务：poiId 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30"
+    "chengyinhub-xcx/subpackageMember/signup/index.js#nodata": "存量零消费债务：nodata 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30"
   },
   // 2026-08-25 模板页删「圈层自由探索」「热门节点榜」两节:条数不变(54),
   //   pages/template/index.js 两条 _coverFail 动态 setData 因上方 getCircleThemes/

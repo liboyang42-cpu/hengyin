@@ -1,4 +1,5 @@
-<view class="review-page theme-merchant" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+<!-- PG-029:公开口碑(玩家看商家)走玩家深色,管理态是商家浅色 -->
+<view class="review-page {{mode === 'public' ? 'theme-dark' : 'theme-merchant'}}" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
   <view wx:if="{{mode === 'manage' && replyPending}}" class="review-recovery" aria-role="alert">
     <text class="review-recovery__text">回复结果待确认</text>
     <cy-inline-error wx:if="{{replyError}}" kind="error" title="{{replyError}}" />

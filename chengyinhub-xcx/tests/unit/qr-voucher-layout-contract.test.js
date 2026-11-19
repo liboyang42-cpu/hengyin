@@ -255,7 +255,6 @@ test('二维码错误态布局契约可判红（回潮与关键约束负控）',
  * 治法:组件把「我外面是什么底」显式化成 surface 两档 —— scrim 沿用钉死浅字,
  * host 整套改走主题 token。这里同时钉两件事:覆盖存在,且**两档底都算得出对比度**。 */
 const TOKENS = read('style/tokens.wxss')
-const ABOUT_WXML = read('pages/shezhi/about/index.wxml')
 const HOST_TEXT = ['.qr__err-txt', '.qr__desc', '.qr__secondary']
 const DARK_SCOPE = 'page.theme-dark,'
 const LIGHT_SCOPE = 'page.theme-light,'
@@ -311,11 +310,7 @@ function assertHostSurface(source) {
         `${selector} 在${surfaceName}页底 ${pageBg} 上必须 ≥4.5:1，实得 ${ratio.toFixed(2)}(${token}=${fg})`)
     }
   }
-  // ④ 调用方必须真的选档:关于页 embedded 在会翻转的页面底上
-  const aboutVoucher = ABOUT_WXML.match(/<cy-qr-voucher\b[\s\S]*?\/>/)
-  assert.ok(aboutVoucher, '关于页玩家个人码的 cy-qr-voucher 调用点未找到，锚点失效')
-  assert.match(aboutVoucher[0], /\bsurface="host"/,
-    '关于页必须声明 surface="host" —— 不传就落回 scrim 档，浅字压浅底的 bug 原样回来')
+  // ④ PG-011:关于页「我的二维码」块已删除,host 档目前无调用方;组件侧 ①-③ 契约仍钉住,将来接入方须传 surface="host"。
 }
 
 test('surface=host:铺在页面底上的正文随主题取色,暗/日间两档都可读', () => {
@@ -369,12 +364,4 @@ test('负控:host 承载面契约可判红(覆盖被抽掉 / 退回钉死浅字 
     assert.throws(() => assertHostSurface(mutant.apply(SOURCE)), undefined, mutant.name)
   }
 
-  // 调用方那条也得能红:把关于页的 surface="host" 摘掉,正文会落回 scrim 档
-  const droppedCallSite = ABOUT_WXML.replace(/\n\s*surface="host"/, '')
-  assert.notEqual(droppedCallSite, ABOUT_WXML, '负控变异失败:关于页没有 surface="host"')
-  assert.throws(
-    () => assert.match(droppedCallSite.match(/<cy-qr-voucher\b[\s\S]*?\/>/)[0], /\bsurface="host"/),
-    assert.AssertionError,
-    '关于页摘掉 surface="host" 时必须判红',
-  )
 })

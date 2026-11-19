@@ -742,11 +742,6 @@
       "sourceBlob": "65223b3ffa1a9408a87d7f9b4023ab3a9e402376"
     },
     {
-      "from": "utils/ai-theme-draft-journal.js",
-      "to": "pages/publish/utils/ai-theme-draft-journal.js",
-      "sourceBlob": "02015aa8f406b7d4e55c69172fd532e4fe77906a"
-    },
-    {
       "from": "utils/club-edit-draft.js",
       "to": "pages/club/utils/club-edit-draft.js",
       "sourceBlob": "79292cb778b502c5124be8060afb6fc841b96222"

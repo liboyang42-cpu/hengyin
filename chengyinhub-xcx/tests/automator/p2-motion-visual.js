@@ -146,56 +146,7 @@ async function reLaunchVerified(mp, route, expectedRoute) {
   return page
 }
 
-async function runAiFlow(mp, outputDir, manifest) {
-  const page = await reLaunchVerified(mp, '/pages/publish/simple/index', '/pages/publish/simple/index')
-  await page.waitFor(200)
-  addAssertion(manifest, 'ai.route', routeOf(page) === '/pages/publish/simple/index', routeOf(page))
-  await page.setData({
-    aiGenerating: true,
-    aiError: '',
-    aiPlan: null,
-    aiQuotaLoaded: true,
-    aiRemaining: 3,
-    reducedMotion: false,
-  })
-  await page.waitFor(120)
-
-  let progress = await page.$('cy-progress-status')
-  addAssertion(manifest, 'ai.single-request.host', Boolean(progress), { found: Boolean(progress) })
-  const motionRoot = await progress.$('.ps')
-  const motionClass = motionRoot && await motionRoot.attribute('class')
-  const runnerCount = (await progress.$$('.ps__runner')).length
-  const stepCount = (await progress.$$('.ps__step')).length
-  const motionData = await page.data()
-  addAssertion(manifest, 'ai.single-request.state', motionData.aiGenerating === true
-    && runnerCount === 1 && stepCount === 0, {
-    aiGenerating: motionData.aiGenerating,
-    runnerCount,
-    stepCount,
-  })
-  addAssertion(manifest, 'ai.motion.enabled', !String(motionClass || '').includes('ps--reduced-motion'), motionClass)
-  await capture(mp, outputDir, manifest, 'ai.motion', '01-ai-motion.png')
-
-  await page.setData({ reducedMotion: true })
-  await page.waitFor(100)
-  progress = await page.$('cy-progress-status')
-  const reducedRoot = progress && await progress.$('.ps')
-  const reducedClass = reducedRoot && await reducedRoot.attribute('class')
-  const reducedData = await page.data()
-  addAssertion(manifest, 'ai.reduced-motion.static-fallback', reducedData.reducedMotion === true
-    && String(reducedClass || '').includes('ps--reduced-motion'), {
-    reducedMotion: reducedData.reducedMotion,
-    className: reducedClass,
-  })
-  await capture(mp, outputDir, manifest, 'ai.reduced-motion', '02-ai-reduced-motion.png')
-  manifest.flows.ai = {
-    route: routeOf(page),
-    injectedState: 'aiGenerating=true, no fabricated steps/percent',
-    motionClass,
-    reducedClass,
-  }
-}
-
+// PG-021:AI 起草流程所在的 publish/simple 整页删除,runAiFlow 随页移除。
 async function installLedgerFixture(mp) {
   return mp.evaluate(function (memberId) {
     var app = getApp()
@@ -710,7 +661,6 @@ async function main() {
       endpoint: session.endpoint,
     })
 
-    await runAiFlow(session.mp, outputDir, manifest)
     await runLedgerFlow(session.mp, outputDir, manifest)
     await runFollowFlow(session.mp, outputDir, manifest)
 

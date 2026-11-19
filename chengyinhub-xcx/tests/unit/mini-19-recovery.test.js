@@ -188,7 +188,7 @@ test('R16 旁白关闭暂停实际_audio，R17归一化坐标可以导航', () =
 test('R18 收齐实际分页才显示统计；加载中、失败后切换不伪造零', () => {
   const requests = [], app = { getUserID: () => 9, sendRequest: value => requests.push(value) }, earningsView = require('../../subpackageA/utils/earnings-view.js');
   const p = host({ state: 'loading', mode: 'income' }); const file = 'subpackageA/pages/assetcenter/analysis/index.js';
-  const locals = { app, earningsView, asWithdraw: rows => (rows || []).filter(row => row.eventType === 3) };
+  const locals = { app, earningsView, isLoginRequired: require('../../utils/session/login-reload.js').isLoginRequired, asWithdraw: rows => (rows || []).filter(row => row.eventType === 3) };
   for (const name of ['load', '_render', 'switchMode']) p[name] = method(file, name, locals);
   p.load(); p.switchMode({ currentTarget: { dataset: { mode: 'withdraw' } } }); assert.equal(p.data.state, 'loading');
   const now = new Date(), row = id => ({ id, changeType: 1, eventType: 3, changeBalance: 2, createTime: `${now.getFullYear()}/${now.getMonth() + 1}/1` });

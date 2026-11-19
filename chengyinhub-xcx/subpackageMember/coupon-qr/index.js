@@ -5,6 +5,7 @@ const app = getApp();
 const credential = require('../utils/coupon-credential.js');
 const { readReducedMotion } = require('../../utils/motion-preference.js');
 const datetime = require('../../utils/datetime.js');
+const { safeDecode } = require('../../utils/safe-decode.js');
 
 // 换码失败后的受控自动重试间隔:等待壳/错误态不再永久冻结,到点后自动重取真实 token。
 const RETRY_DELAY_MS = 5000;
@@ -51,7 +52,7 @@ Page({
       entryState: id ? 'ready' : 'missing-param'
     });
     if (params.name) {
-      this.setData({ 'coupon.couponName': decodeURIComponent(params.name) });
+      this.setData({ 'coupon.couponName': safeDecode(params.name) });
     }
   },
 

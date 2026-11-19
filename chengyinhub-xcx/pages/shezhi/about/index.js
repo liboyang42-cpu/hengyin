@@ -54,10 +54,6 @@ Page({
     });
   },
 
-  explainQrPending() {
-    toast('身份码开通后会自动出现');
-  },
-
   copyAttributionLink(e) {
     const link = (e.currentTarget.dataset || {}).link;
     if (!link) return;

@@ -81,6 +81,8 @@ Page({
     }
     this._scope = options.scope === 'MERCHANT' ? 'MERCHANT' : '';
     this.setData({ topicId: topicId, themeClass: options.club === '1' ? 'theme-dark' : 'theme-merchant' }); // 第十二轮 k4(j2 N-15):俱乐部主理人进来用深色
+    // PG-028:深色进来时状态栏前景同步切白(index.json 默认 black 只配浅色商家态)
+    if (options.club === '1' && wx.setNavigationBarColor) wx.setNavigationBarColor({ frontColor: '#ffffff', backgroundColor: '#000000', fail() {} });
     this.preview();
   },
 

@@ -26,6 +26,11 @@ Page({
   },
 
   onShow() { merchantTheme.merchantPageShow(); },
+  // PG-083:商户号只给复制,不直接展示
+  copySubMchid() {
+    const id = this.data.account && this.data.account.subMchid;
+    if (id) wx.setClipboardData({ data: String(id) });
+  },
   onHide() { merchantTheme.merchantPageRestore(); },
   onUnload() { merchantTheme.merchantPageRestore(); },
 

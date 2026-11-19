@@ -239,7 +239,7 @@
     <view class="gn-sheet">
       <view class="gn-field">
         <text class="gn-label">核验编号<text class="form-required" aria-hidden="true">*</text></text>
-        <input class="gn-input" type="number" value="{{verifyDraft.submissionId}}" placeholder="输入玩家提交页显示的正整数编号"
+        <input class="gn-input" type="number" value="{{verifyDraft.submissionId}}" placeholder="提交编号"
                maxlength="19" bindinput="onSubmissionIdInput" />
       </view>
       <view class="gn-segment">

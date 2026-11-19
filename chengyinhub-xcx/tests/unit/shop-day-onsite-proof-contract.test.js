@@ -34,8 +34,8 @@ test('探店日凭证由真实 handler 驱动且失败态被 WXML 消费(F08:「
   assert.match(js, /wx\.getLocation\(\{ type: 'gcj02', isHighAccuracy: true/)
   assert.match(js, /\/api\/play\/checkin/)
   assert.match(js, /\/api\/play\/photo/)
-  assert.match(wxml, /记录到店时间/)
-  assert.match(wxml, /核销的时刻才算服务开始/)
+  // PG-065(2026-11-17 业主批准「删说明小字」):三步凭证的副说明撤掉,只留步骤名
+  assert.doesNotMatch(wxml, /仅记录到店时间|核销的时刻才算服务开始/)
 })
 
 test('探店日页面不承载领券条件与售卖读数(B5 于 2026-08-15 收窄:游戏可作扫码后体验层)', () => {

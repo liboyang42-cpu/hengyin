@@ -90,8 +90,9 @@ test('节点码不进验票端点，但带一句指路与可跳转出口', () =>
 test('出码口的兜底 TTL 只有这一个真源,且等于服务端签发口径', () => {
   const fs = require('node:fs');
   const path = require('node:path');
+  // PG-091:subpackageRoam/citynode-code 已改为 cy-scene-qr-citynode 薄壳(组件要求服务端给 ttlMs,缺了即报错不猜),不再自带出码。
+  assert.doesNotMatch(fs.readFileSync(path.join(__dirname, '../..', 'subpackageRoam/citynode-code/index.js'), 'utf8'), /ttlMs/);
   const issuers = [
-    'subpackageRoam/citynode-code/index.js',
     'pages/merchant/game-node/index.js',
   ];
   for (const rel of issuers) {

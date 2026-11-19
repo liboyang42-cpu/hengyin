@@ -97,7 +97,6 @@
     <view class="psheet__x" catchtap="closeSheet" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"><view class="psheet__x-i"></view></view>
     <view class="pbody">
       <text class="ph1">{{current.heading}}</text>
-      <text class="psub">{{current.sub}}</text>
       <view class="mt-members">
         <view class="avs" wx:if="{{current.faces.length}}">
           <view class="avs__i" wx:for="{{current.faces}}" wx:key="index"><cy-avatar size="sm" src="{{item}}" bordered /></view>
@@ -125,7 +124,6 @@
            current.heading 就是 activityName(拿不到才退回队名),别用 current.name:
            那一档兜底是「玩家队伍」,标题会变成「我的队伍 · 玩家队伍」。 -->
       <text class="ph1">我的队伍 · {{current.heading}}</text>
-      <text class="psub">{{leaderSub}}</text>
       <text class="mt-label">申请加入({{applicants.length}})</text>
       <view class="mt-app" wx:for="{{applicants}}" wx:key="memberId">
         <cy-avatar size="md" src="{{item.avatar}}" name="{{item.name}}" />
@@ -179,7 +177,6 @@
         <text class="pmini">{{topic.eyebrow}}</text>
       </view>
       <text class="ph1 ph1--tight">{{topic.title}}</text>
-      <text class="psub">{{topic.desc}}</text>
       <view class="btnrow">
         <view class="btn2 btn2--w" bindtap="openTopicPage" aria-role="button" aria-label="查看详情" hover-class="cy-pressed" hover-stay-time="80">查看详情</view>
       </view>

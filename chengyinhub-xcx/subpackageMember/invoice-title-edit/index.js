@@ -62,9 +62,12 @@ Page({
     this.mutate('titles/save-request', payload, 'title-save', (value, requestId) => invoice.titleSaveReceipt(value, requestId, payload.id), result => {
       if (result.status === 'success') { this.saved(); return; }
       if (result.status !== 'unknown') this._titleIntent = null;
-      this.setData({ titlePending: result.status === 'unknown', titleRequestId: result.requestId || '',
-        saveError: result.status === 'unknown' ? '' : String(result.response && result.response.msg || ''),
-        draft: Object.assign({}, this.data.draft, { taxNo: '' }), canSubmit: false });
+      // PG-049:只有结果不明(unknown)时清掉敏感税号;明确失败保留输入,改完可直接重提
+      const unknown = result.status === 'unknown';
+      const nextDraft = unknown ? Object.assign({}, this.data.draft, { taxNo: '' }) : this.data.draft;
+      this.setData({ titlePending: unknown, titleRequestId: result.requestId || '',
+        saveError: unknown ? '' : String(result.response && result.response.msg || ''),
+        draft: nextDraft, canSubmit: unknown ? false : canSubmit(nextDraft) });
     }, body => {
       // Sensitive input stays only in this visible page's memory, never in wx storage.
       this._titleIntent = Object.freeze(Object.assign({}, body));

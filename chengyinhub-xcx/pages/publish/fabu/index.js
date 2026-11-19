@@ -71,6 +71,7 @@ function emptyChapterForm(name = '', opening = false) {
 const proEditorMaterials = require('../utils/publish/pro-editor-materials.js');
 const proEditorStory = require('../utils/publish/pro-editor-story.js');
 const storyInline = require('../utils/publish/story-inline.js');
+const { safeDecode } = require('../../../utils/safe-decode.js');
 // 段首哨兵:非首段的 textarea 前面垫一个零宽空格。微信 textarea 在段首按退格不发任何事件,
 // 垫了它之后退格会删掉这个字符 → 收到一次 input、值里没了哨兵 → 当成「并入上一段」。
 const STORY_SENTINEL = '​';
@@ -3310,7 +3311,7 @@ Page({
       editLoading: !!editingTopicId,
       editLoadError: '',
       operationScope: options.scope === 'MERCHANT' ? 'MERCHANT' : '',
-      'formData.name': options.templateName ? decodeURIComponent(options.templateName) : '',
+      'formData.name': options.templateName ? safeDecode(options.templateName) : '',
       'formData.clubId': options.clubId || '',   // 从俱乐部入口发团:预选并锁定归属
       'editingTicket.mode': entryMode,
       chrome: resolveMenuChrome(windowInfo, menuButtonInfo),
@@ -4183,7 +4184,7 @@ Page({
     const fmt = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
     const startDate = `${fmt(start)} 10:00`;
     const endDate = `${fmt(end)} 18:00`;
-    const name = this.data.formData.name || (hasTemplateName ? decodeURIComponent(options.templateName) : '城市街角探索');
+    const name = this.data.formData.name || (hasTemplateName ? safeDecode(options.templateName) : '城市街角探索');
 
     this.setData({
       // 分类必须经标签页选真实分类(留空让 validateForm 拦截,避免发出 mock 分类id)
@@ -6240,28 +6241,6 @@ Page({
       showCategoryModal: false
     });
   },
-  // 切换分类选择
-  toggleCategorySelect(e) {
-    let categoryId = e.currentTarget.dataset.id;
-    let categoryName = e.currentTarget.dataset.name;
-    let selectedIds = [...this.data.selectedCategoryIds];
-    let selectedNames = [...this.data.selectedCategoryNames];
-
-    let index = selectedIds.indexOf(categoryId);
-    if (index > -1) {
-      selectedIds.splice(index, 1);
-      selectedNames.splice(index, 1);
-    } else {
-      selectedIds.push(categoryId);
-      selectedNames.push(categoryName);
-    }
-
-    this.setData({
-      selectedCategoryIds: selectedIds,
-      selectedCategoryNames: selectedNames
-    });
-  },
-
   // 确认分类选择
   confirmCategorySelect() {
     this.setData({

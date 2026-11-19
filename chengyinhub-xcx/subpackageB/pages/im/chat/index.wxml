@@ -209,8 +209,6 @@
 
   <cy-sheet show="{{!!reviewResult}}" title="生成时记录" bind:close="closeReviewResult">
     <view class="review-result" wx:if="{{reviewResult}}">
-      <view wx:if="{{reviewResult.taskId}}">审核任务 #{{reviewResult.taskId}}</view>
-      <view wx:if="{{reviewResult.bizId}}">业务 #{{reviewResult.bizId}}</view>
       <view>{{reviewResult.outcome}}</view>
       <view>原因：{{reviewResult.reason}}</view>
       <view>{{reviewResult.followUp}}</view>

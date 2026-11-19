@@ -292,8 +292,6 @@ const MATRIX = [
   // 2026-10-22 W10b #27:NPC 对话原请求只读回读,ApiAiNpcController.chatRequest 只按登录态 + 原会话 + requestId 读本人记录。
   ['subpackageMember/components/cy/npc-chat/index.js', "url: '/api/ai/npc/chat/request'", 'required', 'member', 'self-account'],
   // W10b #22:简易 AI 起草按 requestId 只读回读,ApiAiController.themeDraftRequest 键按登录会员隔离。
-  ['pages/publish/simple/index.js', "url: '/api/ai/theme/draft/request'", 'required', 'author', 'self-account'],
-  ['pages/publish/simple/index.js', "url: '/api/ai/theme/draft/recovery'", 'required', 'author', 'self-account'],
   // W10b #25:本人资料审核回执(只取登录态)与门店 AI 形象审核回执(商家 PROFILE_WRITE,按登录商家派生)。
   ['pages/gerenziliao/gerenziliao.js', "url: '/api/user/profile/review'", 'required', 'member', 'self-account'],
   ['pages/merchant/decor/ai-npc/index.js', "url: '/api/merchant/npc/review'", 'required', 'merchant', 'self-merchant'],
@@ -531,7 +529,10 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-11-19 FE-G4:主题详情自由探索参与商家卡读套票目录逐店权益一处(同 free-explore 页 catalog,已入 MATRIX),140 → 141。
   // 2026-11-19 OR-024:通行证退款页读概览 terms 一处(已入 MATRIX),140 → 141。
   // 2026-11-19 合流:FE-G4 +1 与 OR-024 +1 叠加,140 → 142。
-  assert.equal(directCount, 142, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+ '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-11-19 PG-021:简易发布页删除,其 AI 草稿 request / recovery 两处直接 GET 随页删除,140 → 138。
+  // 2026-11-19 三线合流:142 − 2 = 140。
+  assert.equal(directCount, 140, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。

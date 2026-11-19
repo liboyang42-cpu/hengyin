@@ -82,7 +82,7 @@ const FIXTURE_OVERRIDES = {
     chapterRecruitmentState: 'idle',
     coopState: 'idle',
   },
-  B11: { state: 'error', errMsg: '暂时无法生成核销码，请稍后重试' },
+  B11: { state: 'error', errorText: '暂时无法生成核销码，请稍后重试' },
   B23: {
     pageState: 'ready',
     participantState: 'ready',

@@ -332,8 +332,10 @@ Page({
         const shaped = res && (res.code === 200 || res.code === '200')
           ? shapeAftercareListPage(res.data, bucket) : null;
         if (!shaped) { failed = true; finish(); return; }
-        items.push.apply(items, shaped.items.filter(item => item.recordType === 'REFUND'
-          && Number.isSafeInteger(item.refundId) && item.refundId > 0));
+        // PG-031:人工退款工单(MANUAL_CASE)同样并入台账,点进售后详情的工单视图
+        items.push.apply(items, shaped.items.filter(item => (item.recordType === 'REFUND'
+          && Number.isSafeInteger(item.refundId) && item.refundId > 0)
+          || (item.recordType === 'MANUAL_CASE' && Number.isSafeInteger(item.manualCaseId) && item.manualCaseId > 0)));
         finish();
       });
     });
@@ -542,12 +544,13 @@ Page({
     // 第十二轮 k6(j1 N4 / p2 N-3):右列只放商家自己的钱。玩家拿回的钱从来不是从商家扣走的,
     // 服务端给出「这单商家还剩多少 / 少了多少」(merchantNetAmount)才画;拿不到就不画,不再画玩家退款额的负数。
     const net = canReadFinance === false ? null : money(row.merchantNetAmount);
-    const title = row.titleText || ''; // MC-044:账本行不露退款单号/编号,没有标题就只写「退款」
+    const manual = row.recordType === 'MANUAL_CASE';   // PG-031:人工退款工单行
+    const title = manual ? '人工退款工单' : (row.titleText || ''); // MC-044:账本行不露退款单号/编号,没有标题就只写「退款」
     const status = row.statusText || '状态待确认';
     return Object.assign(item, {
-      recordKey: 'aftercare:' + row.refundId,
+      recordKey: manual ? 'aftercare-manual:' + row.manualCaseId : 'aftercare:' + row.refundId,
       recordType: 'aftercare',
-      recordId: row.refundId,
+      recordId: manual ? row.manualCaseId : row.refundId,
       refundBucket: row.bucket,
       title: title ? '退款 · ' + title : '退款',
       customerDisplayName: row.activityTitleText || row.sourceText || '',
@@ -660,6 +663,7 @@ Page({
     if (!item) return;
     // 退款条目仍回原来的售后详情页(UI-06),不能拿退款单号去查核销详情。
     if (item.recordType === 'aftercare') {
+      if (item.manualCaseId) { wx.navigateTo({ url: `/pages/merchant/aftercare/detail/index?recordType=MANUAL_CASE&manualCaseId=${item.manualCaseId}` }); return; }
       if (!item.refundId) return;
       wx.navigateTo({ url: `/pages/merchant/aftercare/detail/index?refundId=${item.refundId}` });
       return;

@@ -45,7 +45,7 @@ beforeEach(() => {
     switchTab: (o) => sandbox.switchTabs.push(o && o.url),
     redirectTo: (o) => sandbox.redirects.push(o && o.url),
     reLaunch: (o) => sandbox.navigates.push(o && o.url),
-    setNavigationBarTitle() {}, stopPullDownRefresh() {},
+    setNavigationBarTitle() {}, stopPullDownRefresh() {}, getStorageSync: () => '', setNavigationBarColor() {}, setBackgroundColor() {},
     getWindowInfo: () => ({ windowWidth: 375 }),
     getSystemInfoSync: () => ({ windowWidth: 375 }),
   }

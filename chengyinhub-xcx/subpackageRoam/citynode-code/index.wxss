@@ -10,3 +10,11 @@
   padding: var(--cy-space-4);
   box-sizing: border-box;
 }
+
+/* PG-091:出码卡由 cy-scene-qr-citynode 内嵌渲染,页面只给整屏暗底容器。 */
+.cc-scene {
+  min-height: 100vh;
+  background: var(--cy-color-bg-page);
+  padding: var(--cy-space-4);
+  box-sizing: border-box;
+}

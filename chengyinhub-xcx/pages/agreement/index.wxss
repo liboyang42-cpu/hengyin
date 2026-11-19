@@ -1,3 +1,4 @@
+@import '../../style/merchant-light-scope.wxss'; /* PG-092:共享页,商家浅色只作用于根节点 */
 /* 左右统一 --cy-page-x(原 40rpx 让正文比 cy-page-title 内缩 8rpx);
    标题区 → 第一个区块的 space-5 由 cy-page-title 统一承担。 */
 .agr-page {

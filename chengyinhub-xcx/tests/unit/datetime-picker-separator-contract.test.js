@@ -25,7 +25,7 @@ const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8')
 
 const CALLERS = [
   ['pages/publish/components/reward-selector/index.wxml', 'pages/publish/components/reward-selector/index.json'],
-  ['subpackageMember/couponInfo/couponInfo.wxml', 'subpackageMember/couponInfo/couponInfo.json'],
+  // PG-040:couponInfo 建券页下线
 ]
 
 test('两处有效期选择都走 cy-datetime-range,不再自己拼滚轮', () => {

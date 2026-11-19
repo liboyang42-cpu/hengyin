@@ -2,7 +2,7 @@
 
 // 2026-09-15 收款模型定稿 §3:平台不打款,个人余额「提现」一律改为弹平台客服微信号线下处理。
 // 本契约钉住三件事:
-//   ① 6 个提现入口点击后都打开同一个客服弹窗,且不发 /api/withdrawal/create;
+//   ① 4 个提现入口(原 6 个,PG-034/PG-042 下线两页)点击后都打开同一个客服弹窗,且不发 /api/withdrawal/create;
 //   ② 弹窗正文/按钮文案与复制行为(复制的是常量里的号,不是别的);
 //   ③ 微信号全仓只有 utils/withdraw-cs.js 一处字面量。
 // 负控:把任一入口改回旧逻辑(不弹客服、回到提现请求/跳转)必须判红。
@@ -66,7 +66,7 @@ function loadWithdrawCs(source = read(WITHDRAW_CS_PATH)) {
   return { api: sandbox.module.exports, calls }
 }
 
-// —— 6 个入口的落点:handler + 驱动方式 ——
+// —— 4 个入口的落点:handler + 驱动方式 ——
 const ENTRIES = [
   {
     id: '资产中心→账户收益的「提现」',
@@ -75,20 +75,7 @@ const ENTRIES = [
     drive(page) { page.openScene({ detail: { id: 'member-withdraw' } }) },
     forbidden: [/\/api\/withdrawal\/create/, /submitBankWithdrawal/, /txSheet\.show':\s*true/],
   },
-  {
-    id: '独立提现页「确认提现」',
-    file: 'subpackageMember/tixian/tixian.js',
-    signature: /^  saveData: function\(\)/m,
-    drive(page) { page.saveData() },
-    forbidden: [/\/api\/withdrawal\/create/, /submitBankWithdrawal/],
-  },
-  {
-    id: '商家提现页「前往银行卡提现」',
-    file: 'pages/coop/withdraw/index.js',
-    signature: /^  goBankWithdraw\(\)/m,
-    drive(page) { page.goBankWithdraw() },
-    forbidden: [/\/api\/withdrawal\/create/, /submitBankWithdrawal/, /subpackageMember\/tixian/],
-  },
+  // PG-034/PG-042:独立提现页 subpackageMember/tixian 与商家提现壳 pages/coop/withdraw 已下线。
   {
     id: '俱乐部结算页「提现到银行卡」',
     file: 'pages/club/settlement/index.js',
@@ -297,7 +284,7 @@ ENTRIES.forEach((entry) => {
   })
 })
 
-// 负控:6 个入口逐个退回旧链路(跳银行卡表单)都必须判红 —— 只钉两个入口时,
+// 负控:4 个入口逐个退回旧链路(跳银行卡表单)都必须判红 —— 只钉两个入口时,
 // 另外四个的正向断言没有「能变红」的证据,等于没有门禁。
 ENTRIES.forEach((entry) => {
   test(`负控:${entry.id} 退回旧提现链路时必须判红`, () => {

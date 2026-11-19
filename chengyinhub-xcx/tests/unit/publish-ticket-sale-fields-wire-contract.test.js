@@ -116,8 +116,6 @@ test('专业版:售票时间没填时上送 null,不许拼出非法串', () => {
 // buildPayload 等)在 wxml 上零绑定,是纯孤儿代码,随 2026-09 审查 #14 整块删除,
 // buildPayload 锚点已不存在。发布口只剩 fabu,上面两条用例钉的就是它。
 // 留一条负向钉:孤儿链路不许半截复活(复活了就得重新回答售票时间口径)。
-test('简易页不再有 buildPayload(孤儿发布链已随审查 #14 删除)', () => {
-  const src = fs.readFileSync(path.resolve(__dirname, SIMPLE), 'utf8');
-  assert.doesNotMatch(src, /buildPayload\s*\(/,
-    '简易页又长出提交 payload 构造 —— 先回答「这一页到底发不发主题」,再谈补全口径');
+test('简易页已整页删除(PG-021),发布口只剩 fabu', () => {
+  assert.equal(fs.existsSync(path.resolve(__dirname, SIMPLE)), false, '简易页不许复活成第二条发布链');
 });

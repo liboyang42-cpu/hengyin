@@ -21,7 +21,8 @@ test('page cleanup audit covers the manifest and retains unresolved external and
   for (const tab of manifest.tabBar.list) assert.equal(audit.rows.find(row => row.page === tab.pagePath).verdict, 'KEEP');
   assert.equal(audit.rows.find(row => row.page === 'pages/play/circle/index').verdict, 'KEEP');
   const unresolved = audit.rows.filter(row => row.verdict === 'UNSURE');
-  assert.equal(unresolved.length, 4);
+  // 2026-11-19 PG-020/PG-034:topicadd 与 coop/withdraw 两页删除,UNSURE 4 → 1(club/workbench)。
+  assert.equal(unresolved.length, 1);
   for (const row of unresolved) assert.ok(row.tests.length > 1);
   assert.ok(audit.externalSources.some(row => row.text.includes('wx.subscribe.page')));
 });
@@ -43,5 +44,5 @@ test('page cleanup audit counts only navigation consumers as references; idle me
   assert.ok(agreement.mentions.length > 0, '负控前提:协议页确有闲置提及');
   assert.deepEqual(agreement.references, []);
   const unreferenced = audit.rows.filter(row => !row.references.length).map(row => row.page);
-  assert.ok(unreferenced.includes('pages/coop/withdraw/records/index'));
+  assert.ok(unreferenced.includes('pages/merchant/profile/index'));
 });

@@ -1,7 +1,7 @@
 <!-- 真实 caller 全是 navigateTo(shezhi.js:125 / deregister/index.js:49)⇒ 真·二级页。
      cy-nav-bar 的箭头无条件渲染,但组件内 onBack 在页面栈只有 1 页时什么都不做
      ⇒ 深链直达时是死箭头。按 shezhi 既有范式接管:箭头照常可见,返回一定有出口。 -->
-<view class="theme-dark">
+<view class="{{isMerchantView ? 'theme-merchant' : 'theme-dark'}}">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />

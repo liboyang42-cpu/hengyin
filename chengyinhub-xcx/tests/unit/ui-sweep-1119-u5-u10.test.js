@@ -195,23 +195,4 @@ test('U10 优惠券列表:非商家身份后端 403 → 原地无权限态「当
   assert.deepEqual(navigations, ['/pages/merchant/apply/index'])
 })
 
-test('U10 新建优惠券(已关闭):cy-empty 已注册、玩家深色、关闭态整屏居中带「返回」', () => {
-  const json = JSON.parse(read('subpackageMember/couponInfo/couponInfo.json'))
-  assert.equal(json.usingComponents['cy-empty'], '/components/cy/empty/index', '未注册时关闭态整页空白')
-  const wxml = read('subpackageMember/couponInfo/couponInfo.wxml')
-  assert.match(wxml, /class="fabu \{\{couponCreationEnabled \? '' : 'fabu--closed'\}\} \{\{couponCreationEnabled \|\| isMerchant \? 'theme-merchant theme-topic-editor' : 'theme-dark'\}\}"/)
-  assert.match(wxml, /<cy-empty class="coupon-creation-closed" wx:if="\{\{!couponCreationEnabled\}\}" fill size="lg" title="暂未开放新建优惠券" cta="返回" bind:cta="exitPage" \/>/)
-  assert.match(rule(read('subpackageMember/couponInfo/couponInfo.wxss'), '.fabu--closed'), /display:\s*flex;\s*flex-direction:\s*column/)
-
-  const player = mountPage('subpackageMember/couponInfo/couponInfo.js')
-  player.page.onLoad({})
-  assert.equal(player.page.data.isMerchant, false)
-  assert.deepEqual(player.navigations, ['/subpackageMember/coupon/coupon'], '栈底时回到券列表')
-  player.page.onShow()
-  assert.deepEqual(player.themes, ['dark'])
-
-  const merchant = mountPage('subpackageMember/couponInfo/couponInfo.js', { getCurrentPages: () => [{}, {}] })
-  merchant.page.onLoad({ scope: 'MERCHANT' })
-  assert.equal(merchant.page.data.isMerchant, true)
-  assert.deepEqual(merchant.navigations, ['back'])
-})
+// PG-040(2026-11-17 业主批准):建券页 couponInfo 整页下线,U10 关闭态用例随页移除。

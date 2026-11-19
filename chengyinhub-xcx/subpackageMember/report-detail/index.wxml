@@ -19,7 +19,7 @@
             <cy-tag variant="{{report.stageTone}}">{{report.stageText}}</cy-tag>
           </view>
           <text class="rd-card__hint">{{report.stageHint}}</text>
-          <text class="rd-card__meta">编号 {{report.id}}{{report.createText ? ' · 提交于 ' + report.createText : ''}}</text>
+          <text class="rd-card__meta" wx:if="{{report.createText}}">提交于 {{report.createText}}</text>
           <text class="rd-card__meta" wx:if="{{report.etaText}}">{{report.etaText}}</text>
           <text class="rd-card__privacy" wx:if="{{report.privacyText}}">{{report.privacyText}}</text>
         </view>

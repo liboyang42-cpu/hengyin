@@ -9,14 +9,7 @@ const read = (rel) => fs.readFileSync(path.join(root, rel), 'utf8');
 // 发布收尾 Lane G2:4 个已合文案组源码在 master 上但没有锁定文案的专项测试(回归缺口)。
 // 这里按当前文案原样锁住;改文案须同步改本测试,并确认语义(不承诺/不混用)仍成立。
 const GROUPS = {
-  'tutorial-version-copy': [
-    ['subpackageA/components/scene-how-to-play-detail/index.wxml',
-      '适用玩法版本暂未标注；教程用于说明，实际任务、完成条件与奖励以游玩页为准。'],
-    ['subpackageA/pages/infomation/infomation.wxml',
-      '实际玩法以游玩页规则为准'],
-    ['subpackageA/pages/infomationdetail/infomationdetail.wxml',
-      '适用玩法版本暂未标注；教程用于说明，实际任务、完成条件与奖励以游玩页为准。'],
-  ],
+  // 2026-11-19 PG-070(业主 2026-11-17 批准「删说明小字」):tutorial-version-copy 三处说明已撤,改由下方反向断言锁定。
   'group-code-copy': [
     ['pages/club/group-code/index.wxml', 'title="活动核验团码"'],
     // 第十轮 f3 第 5 项(j2 F-24):入队页这句说明按 owner「删说明小字」规则撤掉(旧锁定是被取代的旧决定);
@@ -37,3 +30,10 @@ for (const [group, entries] of Object.entries(GROUPS)) {
     }
   });
 }
+
+test('PG-070:教程版本说明三处已撤,不许回潮', () => {
+  for (const f of ['subpackageA/components/scene-how-to-play-detail/index.wxml', 'subpackageA/pages/infomation/infomation.wxml', 'subpackageA/pages/infomationdetail/infomationdetail.wxml']) {
+    const src = fs.readFileSync(path.join(root, f), "utf8")
+    assert.doesNotMatch(src, /适用玩法版本暂未标注|实际玩法以游玩页规则为准/, f)
+  }
+})

@@ -161,15 +161,29 @@ Page({
     if (ctx.loadMore) return;
     this.setData({
       feedState: ctx.hasSnapshot ? 'stale-error' : 'error',
-      feedLoginRequired: false,
-      feedError: requestError(res, '动态加载失败，请重试'),
+      feedLoginRequired: !!(res && res.loginRequired),
+      feedError: res && res.loginRequired ? '' : requestError(res, '动态加载失败，请重试'),
     });
   },
 
-  retryFeed() { return this.loadFeed(); },
+  retryFeed() {
+    if (!this.data.feedLoginRequired) return this.loadFeed();
+    const login = typeof app.firstLogin === 'function' ? app.firstLogin() : null;
+    return Promise.resolve(login).then(() => {
+      if (!this._unloaded && app.getUserID()) this.loadFeed();
+    }, () => {});
+  },
 
   _feedSources(requestId) {
     const that = this;
+    const communityOn = typeof app.canUseCommunity === 'function' && app.canUseCommunity(false);
+    // PG-001:游客读俱乐部帖文被拒时,有社区帖就只显示社区帖;两路都没有才落「登录后查看帖文」。
+    const guestClubFail = function (res, beforeId, resolve, reject) {
+      if (app.getUserID() > 0) return false;
+      if (communityOn) resolve({ rows: [], hasMore: false, cursor: beforeId });
+      else reject({ loginRequired: true });
+      return true;
+    };
     const sources = [{ fetch: function (beforeId) {
       return new Promise(function (resolve, reject) {
         const data = { scope: 'all', limit: FEED_PAGE_SIZE };
@@ -181,11 +195,17 @@ Page({
           header: { 'Content-Type': 'application/json' },
           success(res) {
             if (!isOkRes(res) || !isRecord(res.data) || !isRecordList(res.data.rows)
-                || typeof res.data.hasMore !== 'boolean') return reject(res);
+                || typeof res.data.hasMore !== 'boolean') {
+              if (guestClubFail(res, beforeId, resolve, reject)) return;
+              return reject(res);
+            }
             const rows = res.data.rows.map(discoverFeed.normalizeClubPost);
             resolve({ rows: rows, hasMore: res.data.hasMore, cursor: rows.length ? rows[rows.length - 1].id : beforeId });
           },
-          fail(res) { if (requestId === that._feedRequestId) that._onFeedFail(that._feedCtx, res); reject(res); },
+          fail(res) {
+            if (guestClubFail(res, beforeId, resolve, reject)) return;
+            if (requestId === that._feedRequestId) that._onFeedFail(that._feedCtx, res); reject(res);
+          },
         });
       });
     } }];

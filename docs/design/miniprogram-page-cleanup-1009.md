@@ -52,10 +52,10 @@ node --test tests/unit/page-cleanup-audit.test.js
 | 页面 | 页面性质及外发证据 | 非自身测试证据 | 判定与 owner 待确认 |
 | --- | --- | --- | --- |
 | `pages/play/circle/index` | 旧圈玩法入口；文件头说明历史分享只能进入此处，onShareAppMessage 仍存在；通过新玩法入口兼容恢复 | `tests/unit/play-state-recovery-contract.test.js:81`；`tests/unit/dialog-contract-r3-contract.test.js:60`；`tests/unit/nav-route-exists.test.js:204` | **KEEP**；明确分享目标，不能删除 |
-| `pages/publish/topicadd/topicadd` | 已变为主题编辑器 fabu 的兼容 redirect 壳；无当前完整路由导航/QR/订阅字面量，但历史卡片/后台投放未核验 | `tests/unit/topic-editor-theme-contract.test.js:242`；`tests/unit/publish-creator-uiux-recovery-contract.test.js:173`；`tests/unit/nav-route-exists.test.js:200`（另有自身 shell 测试） | **UNSURE**；创作者/主题编辑 owner 确认是否仍有旧编辑入口、分享、QR、订阅消息或管理后台动态链接 |
+| `pages/publish/topicadd/topicadd` | 已变为主题编辑器 fabu 的兼容 redirect 壳；无当前完整路由导航/QR/订阅字面量，但历史卡片/后台投放未核验 | `tests/unit/topic-editor-theme-contract.test.js:242`；`tests/unit/publish-creator-uiux-recovery-contract.test.js:173`；`tests/unit/nav-route-exists.test.js:200`（另有自身 shell 测试） | **UNSURE**；创作者/主题编辑 owner 确认是否仍有旧编辑入口、分享、QR、订阅消息或管理后台动态链接；**2026-11-19 已删除**(PG-020/PG-034,业主 2026-11-17 批准) |
 | `pages/club/workbench/index` | 俱乐部工作台迁移后的兼容壳，保留 id 与失败恢复；无当前完整导航/外发字面量 | `tests/unit/club-detail-ia-contract.test.js:11`；`tests/unit/club-route-recovery-contract.test.js:115`；`tests/unit/access-gate-contract.test.js:71` | **UNSURE**；俱乐部 owner 确认运营人员书签、分享/QR/订阅消息与后台工作台深链已迁移；不能凭新台替换即删旧入口 |
-| `pages/coop/withdraw/index` | 已停用的合作提现入口；历史深链说明仍在 `subpackageMember/tixianjilu/tixianjilu.js:6`，当前未发现完整导航/外发调用 | `tests/unit/withdraw-cs-popup-contract.test.js:87`；`tests/unit/access-gate-contract.test.js:136`；`tests/unit/merchant-top-level-theme-contract.test.js:13` | **UNSURE**；资金/商家 owner 确认旧收益页/客服链接、QR、订阅消息和后台配置；未获确认前保留停用说明页 |
-| `pages/coop/withdraw/records/index` | 旧记录页 redirect 壳，带重试/单飞恢复；同上历史深链说明 | `tests/unit/ui-shots-0916-fix-contract.test.js:327`；`tests/unit/access-gate-contract.test.js:137`；`tests/unit/coop-dialog-gap-contract.test.js:36` | **UNSURE**；资金/商家 owner 确认旧记录外发目标、QR/订阅消息及动态路由；保留网络失败恢复契约 |
+| `pages/coop/withdraw/index` | 已停用的合作提现入口；历史深链说明仍在 `subpackageMember/tixianjilu/tixianjilu.js:6`，当前未发现完整导航/外发调用 | `tests/unit/withdraw-cs-popup-contract.test.js:87`；`tests/unit/access-gate-contract.test.js:136`；`tests/unit/merchant-top-level-theme-contract.test.js:13` | **UNSURE**；资金/商家 owner 确认旧收益页/客服链接、QR、订阅消息和后台配置；未获确认前保留停用说明页；**2026-11-19 已删除**(PG-020/PG-034,业主 2026-11-17 批准) |
+| `pages/coop/withdraw/records/index` | 旧记录页 redirect 壳，带重试/单飞恢复；同上历史深链说明 | `tests/unit/ui-shots-0916-fix-contract.test.js:327`；`tests/unit/access-gate-contract.test.js:137`；`tests/unit/coop-dialog-gap-contract.test.js:36` | **UNSURE**；资金/商家 owner 确认旧记录外发目标、QR/订阅消息及动态路由；保留网络失败恢复契约；**2026-11-19 已删除**(PG-020/PG-034,业主 2026-11-17 批准) |
 
 上述 tests 路径均相对 `chengyinhub-xcx/`。每页完整引用列表由只读脚本输出；不以自身测试阻止删除，而是明确列出的**跨页测试**已违反本次 DELETE 条件。
 
@@ -100,10 +100,8 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `subpackageB/pages/im/list/index` | 否 | `chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiImController.java:64` | KEEP |
 | `subpackageB/pages/im/chat/index` | 否 | `chengyinhub-xcx/pages/coop/invite-detail/index.js:296` | KEEP |
 | `pages/publish/fabu/index` | 否 | `chengyinhub-admin/sql/migration_oms_ticket_sale_fields_20260918.sql:4` | KEEP |
-| `pages/publish/simple/index` | 否 | `chengyinhub-xcx/components/cy/publish-sheet/index.js:65` | KEEP |
 | `pages/publish/temp/index` | 否 | `chengyinhub-admin/sql/migration_20260825_named_mechanic_advanced_config.sql:26` | KEEP |
 | `pages/publish/activity/index` | 否 | `chengyinhub-xcx/pages/merchant/decor/index.js:902` | KEEP |
-| `pages/publish/topicadd/topicadd` | 否 | 无直接源引用；兼容契约/外发历史待确认 | UNSURE |
 | `pages/publish/template-intro/index` | 否 | `chengyinhub-xcx/components/cy/publish-sheet/index.js:84` | KEEP |
 | `pages/club/apply/index` | 否 | `chengyinhub-xcx/pages/club/create/index.js:184` | KEEP |
 | `pages/club/badges/index` | 否 | `chengyinhub-xcx/pages/club/detail/index.js:2377` | KEEP |
@@ -166,8 +164,6 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `pages/coop/nearby/index` | 否 | `chengyinhub-xcx/pages/coop/invite/index.js:461` | KEEP |
 | `pages/coop/finance/index` | 否 | `chengyinhub-xcx/pages/coop/settlement-detail/index.js:135` | KEEP |
 | `pages/coop/settlement-detail/index` | 否 | `chengyinhub-xcx/components/cy/scene-merchant-profit/index.js:178` | KEEP |
-| `pages/coop/withdraw/index` | 否 | `chengyinhub-xcx/subpackageMember/tixianjilu/tixianjilu.js:6` | UNSURE |
-| `pages/coop/withdraw/records/index` | 否 | `chengyinhub-xcx/subpackageMember/tixianjilu/tixianjilu.js:6` | UNSURE |
 | `pages/square/detail/index` | 否 | `chengyinhub-xcx/pages/mylike/mylike.js:313` | KEEP |
 | `pages/search2/index` | 否 | `chengyinhub-xcx/pages/merchant/index/index.js:1026` | KEEP |
 | `pages/search2/result/index` | 否 | `chengyinhub-xcx/pages/search2/index.js:135` | KEEP |
@@ -196,7 +192,6 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `subpackageMember/coupon-wallet/index` | 否 | `chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:1753` | KEEP |
 | `subpackageMember/coupon-qr/index` | 否 | `chengyinhub-xcx/utils/scene-registry.js:48` | KEEP |
 | `subpackageMember/coupon/coupon` | 否 | `chengyinhub-xcx/pages/merchant/index/index.js:278` | KEEP |
-| `subpackageMember/couponInfo/couponInfo` | 否 | `chengyinhub-xcx/subpackageMember/coupon/coupon.js:203` | KEEP |
 | `subpackageMember/mycanyu/mycanyu` | 否 | `chengyinhub-xcx/pages/activity/baoming/baoming.js:466` | KEEP |
 | `subpackageMember/mycanyuinfo/mycanyuinfo` | 否 | `chengyinhub-xcx/utils/scene-registry.js:59` | KEEP |
 | `subpackageMember/myinvite/myinvite` | 否 | `chengyinhub-xcx/utils/scene-registry.js:65` | KEEP |
@@ -208,7 +203,6 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `subpackageMember/report-detail/index` | 否 | `` | KEEP |
 | `subpackageMember/appeal-mine/index` | 否 | `chengyinhub-xcx/pages/shezhi/shezhi.js:218` | KEEP |
 | `subpackageMember/signup/index` | 否 | `chengyinhub-xcx/pages/play/index.js:2876` | KEEP |
-| `subpackageMember/tixian/tixian` | 否 | `chengyinhub-xcx/utils/scene-registry.js:63` | KEEP |
 | `subpackageMember/tixianjilu/tixianjilu` | 否 | `chengyinhub-xcx/pages/coop/withdraw/records/index.js:7` | KEEP |
 | `subpackageMember/market/passes/index` | 否 | `chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:2349` | KEEP |
 | `subpackageMember/market/pass/index` | 否 | `chengyinhub-xcx/subpackageMember/market/passes/index.js:92` | KEEP |

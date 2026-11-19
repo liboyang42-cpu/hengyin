@@ -103,10 +103,6 @@ Page({
     wx.navigateBack({ fail() { wx.switchTab({ url: '/pages/member/index/index' }); } });
   },
 
-  goPinpai() {
-    wx.navigateTo({ url: '/pages/merchant/decor/index' });
-  },
-
   // 注册商户/俱乐部 → 选择身份
   // 身份选择器走场景栈,不再用独立 show 位(否则能和 sceneCurrent 同屏渲两个面板)。
   openRegPicker() { this.openScene('settings-identity-picker'); },
@@ -149,9 +145,6 @@ Page({
     this.closeScene();
     wx.navigateTo({ url: '/pages/merchant/apply/index' });
   },
-  // 兼容旧入口
-  goRuzhu() { this.openRegPicker(); },
-
   goInfomation() {
     wx.navigateTo({ url: '/subpackageA/pages/infomation/infomation' });
   },
@@ -167,16 +160,6 @@ Page({
     wx.navigateTo({ url: '/pages/gerenziliao/gerenziliao' });
   },
 
-  // 编辑按钮按身份分流:商户→店铺装修;非商户→个人资料详情(二者不并存)
-  goEdit() {
-    if (this.data.isMerchantView) {
-      wx.navigateTo({ url: '/pages/merchant/decor/index' });
-    } else if (this.data.isClubView) {
-      wx.navigateTo({ url: '/pages/club/detail/index?owner=1&tab=manage' });
-    } else {
-      wx.navigateTo({ url: '/pages/gerenziliao/gerenziliao' });
-    }
-  },
 
   // qx-b3 P2:玩家推广中心(只读本人归因与分配明细)
   goPromo() {

@@ -9,6 +9,7 @@ const systemCard = require('./system-card-target.js');
 const roleGuard = require('../../../../utils/roleGuard.js');
 function openAddress() { return require('../../../../utils/open-address.js') }
 const merchantTheme = require('../../../../utils/merchant-theme.js');
+const { safeDecode } = require('../../../../utils/safe-decode.js');
 const app = getApp();
 // 距底部不超过这个距离(px)视为「在看最新消息」,轮询到新消息时跟随滚动(U-142)
 const NEAR_BOTTOM_PX = 120;
@@ -146,7 +147,7 @@ Page({
     } catch (e) {}
     const type = parseInt(options.type) || 1;
     const conversationId = parseInt(options.conversationId) || 0;
-    const name = decodeURIComponent(options.name || '');
+    const name = safeDecode(options.name || '');
     // hero 区(顶栏下方居中会话名,不再放头像)高度:先按内容粗估作首屏占位,
     // onReady 里再用 boundingClientRect 实测覆正——避免手工凑 rpx 数字跟 wxss 实际布局对不齐。
     const heroGuessRpx = 96;
@@ -169,7 +170,7 @@ Page({
       conversationId: conversationId,
       name: name,
       heroName: this._heroName(name, type),
-      avatar: decodeURIComponent(options.avatar || ''),
+      avatar: safeDecode(options.avatar || ''),
       type: type,
       readOnly: readOnly,
       moreSheetItems: readOnly ? ['隐藏会话'] : ['举报这条消息', '举报对方', '拉黑', '隐藏会话'],

@@ -389,16 +389,7 @@ test('C 原有两条不可用判据保留:标题空 / 正文空', () => {
   assert.equal(b.usable, false)
 })
 
-test('C 不可读行的显式状态文案是「内容待完善，暂不可查看」且不可点、无 chevron', () => {
-  const wxml = stripComments(read(INFO_WXML))
-  // 只取 wx:else 那一枚 cy-cell 标签本身 —— 按 'item.usable' 切会把可用分支的 bindtap 也带进来(假红)
-  const unusable = /<cy-cell\s+wx:else[^>]*\/>/.exec(wxml)
-  assert.ok(unusable, '必须有 wx:else 的不可读行分支')
-  assert.match(unusable[0], /即将上线/)
-  assert.match(unusable[0], /disabled="\{\{true\}\}"/, '必须显式 disabled')
-  assert.match(unusable[0], /arrow="\{\{\s*false\s*\}\}"/, '不得留 chevron 暗示可点')
-  assert.doesNotMatch(unusable[0], /bindtap|catchtap/, '不可读行不得挂点击')
-})
+// PG-085:不可读行不再渲染(原「即将上线」灰行退场),由 c03-r2 的 usable 渲染契约钉住
 
 /* ---------- D · 底栏占位的几何证明 ---------- */
 

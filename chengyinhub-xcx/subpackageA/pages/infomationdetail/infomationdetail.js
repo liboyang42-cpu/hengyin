@@ -1,7 +1,11 @@
 const app = getApp();
+// PG-036:与资料列表同源按身份切主题(商家浅色 / 玩家深色)
+const policy = require('../../../utils/identity/identity-policy.js');
+const merchantTheme = require('../../../utils/merchant-theme.js');
 
 Page({
   data: {
+    isMerchantView: false,
     id: '', // 文章ID
     detailData: {}, // 详情数据
     contentNodes: [], // 解析后的HTML节点
@@ -16,7 +20,23 @@ Page({
     notfound: false
   },
 
+  onShow() { this.syncViewTheme(); },
+  onHide() { merchantTheme.merchantPageRestore(); },
+  onUnload() { merchantTheme.merchantPageRestore(); },
+
+  syncViewTheme() {
+    const isMerchantView = policy.isMerchantView({
+      role: wx.getStorageSync('role'),
+      userType: wx.getStorageSync('user_type'),
+      debugView: wx.getStorageSync('debug_user_view'),
+    });
+    if (isMerchantView !== this.data.isMerchantView) this.setData({ isMerchantView });
+    if (isMerchantView) merchantTheme.merchantPageShow();
+    else merchantTheme.merchantPageRestore();
+  },
+
   onLoad(options) {
+    this.syncViewTheme();
     if (options.id) {
       this.setData({
         id: options.id

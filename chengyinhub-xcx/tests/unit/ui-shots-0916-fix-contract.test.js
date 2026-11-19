@@ -325,8 +325,7 @@ function loadTixianjilu(source) {
 }
 
 test('商家提现记录深链:redirect 带 theme=merchant,目标页挂 theme-merchant;玩家入口仍是暗色', () => {
-  assert.match(read('pages/coop/withdraw/records/index.js'),
-    /const RECORDS_URL = '\/subpackageMember\/tixianjilu\/tixianjilu\?theme=merchant';/)
+  // PG-034:商家提现记录深链壳 pages/coop/withdraw/records 下线;tixianjilu 仍按 theme=merchant 分档
 
   const merchant = loadTixianjilu()
   merchant.onLoad({ theme: 'merchant' })
@@ -356,8 +355,8 @@ test('页面根主题门禁:提现记录归共享域(双主题),相邻玩家页�
   assert.equal(classifyPageDomain('subpackageMember/tixianjilu/tixianjilu'), 'shared')
   const themes = topLevelThemeClasses(read('subpackageMember/tixianjilu/tixianjilu.wxml'))
   assert.ok(themes.has('theme-dark') && themes.has('theme-merchant'))
-  // 对照:共享域正则只放行 tixianjilu,相邻的提现发起页 tixian 仍按玩家域判(没有被顺手放宽)
-  assert.equal(classifyPageDomain('subpackageMember/tixian/tixian'), 'player')
+  // 对照:共享域正则只放行 tixianjilu,相邻玩家页仍按玩家域判(没有被顺手放宽);tixian 已于 PG-042 下线
+  assert.equal(classifyPageDomain('subpackageMember/tixianjilu-x/index'), 'player')
 })
 
 // ---------- 5. 券有效期展示只到日(2026-09-17 拍板,替代上一轮「最多到分钟」) ----------

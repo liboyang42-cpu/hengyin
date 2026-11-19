@@ -7,7 +7,10 @@ const BASE = '/api/orient/scoring';
 const ok = response => response && Number(response.code) === 200;
 
 Page({
-  data: { state: 'loading', stateTitle: '', score: null, pending: null, busy: false,
+  data: { statusBarHeight: (app.globalData || {}).statusBarHeight || 20, navBarHeight: (app.globalData || {}).navBarHeight || 44,
+    // PG-090:操作类型码映射中文,屏上不露编号与英文码
+    kindLabels: { SYNC: '同步任务', SETTLE: '结算本局', APPEAL: '计分申诉', DISPUTE: '成绩争议', STORAGE: '本机记录' },
+    state: 'loading', stateTitle: '', score: null, pending: null, busy: false,
     board: null, boardState: '', notice: '', form: '', reason: '', nodeId: '', entryId: '', formError: '', sessions: [], canChoose: false },
   onLoad(options) { this._scope = view.scope(options); this._epoch = 0; this._hidden = false; },
   onShow() { this._hidden = false; this.load(); },

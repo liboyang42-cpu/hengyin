@@ -34,11 +34,11 @@ test('markRead 只留最近 50 个;storage 抛错不崩', () => {
   assert.equal(n.markRead('c', 1, bad), false)
 })
 
-test('页面接入:帖子 tab 顶部挂公告块,loadPosts(demo+接口)与已读后刷新', () => {
+test('页面接入:帖子 tab 顶部挂公告块,loadPosts(接口)与已读后刷新', () => {
   const root = path.join(__dirname, '../..')
   const wxml = fs.readFileSync(path.join(root, 'pages/club/detail/index.wxml'), 'utf8')
   assert.ok(wxml.indexOf("activeTab === 'posts'") < wxml.indexOf('cy-club-pinned-notice'))
   assert.ok(wxml.indexOf('cy-club-pinned-notice') < wxml.indexOf('post-composer-collapsed'))
   const js = fs.readFileSync(path.join(root, 'pages/club/detail/index.js'), 'utf8')
-  assert.equal((js.match(/pinnedNotices: clubPinnedNotice\.pick/g) || []).length, 3) // demo + 接口 + 已读后刷新
+  assert.equal((js.match(/pinnedNotices: clubPinnedNotice\.pick/g) || []).length, 2) // 接口 + 已读后刷新(PG-023 演示分支已删)
 })

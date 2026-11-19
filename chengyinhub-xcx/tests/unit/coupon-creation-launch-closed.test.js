@@ -37,15 +37,10 @@ test('default launch config and shared submit helper refuse every new coupon typ
 });
 
 test('list entry, standalone deep link and reward creation handlers cannot open or submit new coupons', () => {
+  // PG-040:列表页 GoAdd 与建券页 couponInfo 已整体下线
   const list = mount('subpackageMember/coupon/coupon.js');
-  list.instance.GoAdd();
-  assert.deepEqual(list.navigations, []);
-  const page = mount('subpackageMember/couponInfo/couponInfo.js');
-  page.instance.onLoad({ scope: 'MERCHANT' });
-  page.instance.onSubmit();
-  assert.equal(page.instance.data.couponCreationEnabled, false);
-  assert.deepEqual(page.navigations, ['back']);
-  assert.deepEqual(page.requests, []);
+  assert.equal(typeof list.instance.GoAdd, 'undefined');
+  assert.equal(fs.existsSync(path.join(ROOT, 'subpackageMember/couponInfo')), false);
   const reward = mount('pages/publish/components/reward-selector/index.js', true);
   for (const kind of ['COUPON', 'PASS']) {
     reward.instance.data.rewardKind = kind;
@@ -71,7 +66,6 @@ test('existing coupons and passes still load and can be selected and cleared', (
 
 test('all rendered creation surfaces are gated and admin directory only saves existing coupons', () => {
   assert.doesNotMatch(read('subpackageMember/coupon/coupon.wxml'), /GoAdd|发布优惠券|发一张到店券/);
-  assert.match(read('subpackageMember/couponInfo/couponInfo.wxml'), /<block wx:if="\{\{couponCreationEnabled\}\}">/);
   const reward = read('pages/publish/components/reward-selector/index.wxml');
   assert.match(reward, /wx:if="\{\{allowCreate && couponCreationEnabled\}\}" slot="footer"/);
   assert.match(reward, /show="\{\{creating && couponCreationEnabled\}\}"/);
