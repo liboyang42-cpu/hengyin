@@ -179,7 +179,7 @@
           <text class="pd-entry-card__title">角色</text>
           <view class="cast-faces" wx:if="{{castCard.count}}">
             <view wx:for="{{castCard.faces}}" wx:key="id" class="cast-face cast-face--sm" style="background: {{item.color}}"><image wx:if="{{item.img}}" class="cast-face__img" src="{{item.img}}" mode="aspectFill" /><text wx:else>{{item.initial}}</text></view>
-            <text class="cast-faces__n">{{castCard.count}} 位</text>
+            <text class="cast-faces__n">{{castCard.count || 0}} 位</text>
           </view>
         </view>
         <view class="cast-card__switch"><cy-switch checked="{{castCard.on}}" bindchange="onCastSwitch" accessibility-label="角色" /></view>

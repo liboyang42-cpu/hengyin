@@ -25,10 +25,10 @@
         <view class="cast-ident" wx:for="{{castView.identities}}" wx:key="key" id="cast-identity{{index}}">
           <view class="node-card__hr"></view>
           <view class="cast-ident__row">
-            <input class="cast-ident__title" value="{{item.title}}" data-i="{{index}}" data-field="title" bindinput="onCastIdentityInput" maxlength="8" placeholder="身份，如：记者" placeholder-class="ed-cap__ph" aria-label="第 {{index + 1}} 个身份" />
+            <input class="cast-ident__title" value="{{item.title}}" data-i="{{index}}" data-field="title" bindinput="onCastIdentityInput" maxlength="8" placeholder="身份，如：记者" placeholder-class="ed-cap__ph" aria-label="第 {{index + 1 || 1}} 个身份" />
             <view class="sx-br__x" data-i="{{index}}" catchtap="removeCastIdentity" aria-role="button" aria-label="删除这个身份" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
           </view>
-          <input class="cast-ident__sub" value="{{item.sub}}" data-i="{{index}}" data-field="sub" bindinput="onCastIdentityInput" maxlength="24" placeholder="一句话：来做什么" placeholder-class="ed-cap__ph" aria-label="第 {{index + 1}} 个身份的说明" />
+          <input class="cast-ident__sub" value="{{item.sub}}" data-i="{{index}}" data-field="sub" bindinput="onCastIdentityInput" maxlength="24" placeholder="一句话：来做什么" placeholder-class="ed-cap__ph" aria-label="第 {{index + 1 || 1}} 个身份的说明" />
           <cy-inline-error wx:if="{{castError.field === 'identity' + index}}" kind="field" title="{{castError.message}}" />
         </view>
         <view class="node-card__hr"></view>
@@ -125,7 +125,7 @@
         <view class="cast-clue" wx:for="{{castEdit.m.clues}}" wx:key="index" id="cm-clue{{index}}">
           <view class="node-card__hr"></view>
           <view class="cast-ident__row">
-            <input class="cast-ident__title" value="{{item.text}}" data-i="{{index}}" bindinput="onCastClueInput" maxlength="40" placeholder="她总把吉他背在左肩" placeholder-class="ed-cap__ph" aria-label="第 {{index + 1}} 条" />
+            <input class="cast-ident__title" value="{{item.text}}" data-i="{{index}}" bindinput="onCastClueInput" maxlength="40" placeholder="她总把吉他背在左肩" placeholder-class="ed-cap__ph" aria-label="第 {{index + 1 || 1}} 条" />
             <view class="sx-br__x" data-i="{{index}}" catchtap="removeCastClue" aria-role="button" aria-label="删除这一条" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
           </view>
           <cy-dropdown topic-editor="{{true}}" range="{{castClueOptions}}" range-key="label" data-i="{{index}}" bind:change="onCastClueChapter">
