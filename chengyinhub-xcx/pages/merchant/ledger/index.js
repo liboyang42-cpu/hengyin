@@ -482,25 +482,9 @@ Page({
     const scopeMemberId = this._scopeMemberId;
     const pageNum = this._pageState[key].pageNum + 1;
     const canReadFinance = Boolean(this.data.merchantAccess.canReadFinance);
-    let url = '';
-    let query = { pageNum, pageSize: PAGE_SIZE };
-    let epoch = 0;
-    if (key === 'redemptions') {
-      const filter = canReadFinance ? this.data.redemptionFilter : 'all';
-      url = '/api/merchant/finance/redemptions';
-      query = Object.assign(query, { filter }, this._topicId ? { topicId: this._topicId } : {});
-      epoch = this._redemptionEpoch;
-    } else if (key === 'entries') {
-      url = '/api/merchant/finance/settlement-entries';
-      query.source = this.data.source || 'all';
-      epoch = (this._settlementSectionEpoch || {}).entries;
-    } else {
-      url = '/api/merchant/finance/public-transfer-batches';
-      epoch = (this._settlementSectionEpoch || {}).batches;
-    }
-    this._loadingMore = true;
-    this.setData({ loadingMore: true });
-    this.request(url, query, (res) => {
+    const query = { pageNum, pageSize: PAGE_SIZE };
+    const epoch = key === 'redemptions' ? this._redemptionEpoch : (this._settlementSectionEpoch || {})[key];
+    const done = (res) => {
       this._loadingMore = false;
       if (!this._isCurrentMemberScope(scopeMemberId)) return;
       const current = key === 'redemptions' ? this._redemptionEpoch : (this._settlementSectionEpoch || {})[key];
@@ -521,7 +505,17 @@ Page({
       } else {
         this.setData({ loadingMore: false, batches: this.data.batches.concat(res.data.rows.map(this.batchRow)) });
       }
-    });
+    };
+    this._loadingMore = true;
+    this.setData({ loadingMore: true });
+    if (key === 'redemptions') {
+      const filter = canReadFinance ? this.data.redemptionFilter : 'all';
+      this.request('/api/merchant/finance/redemptions', Object.assign(query, { filter }, this._topicId ? { topicId: this._topicId } : {}), done);
+    } else if (key === 'entries') {
+      this.request('/api/merchant/finance/settlement-entries', Object.assign(query, { source: this.data.source || 'all' }), done);
+    } else {
+      this.request('/api/merchant/finance/public-transfer-batches', query, done);
+    }
   },
 
   overviewRow(row) {

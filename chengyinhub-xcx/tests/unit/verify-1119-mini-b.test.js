@@ -94,7 +94,7 @@ test('MC-024:商家首页章节回退名不再拼原始编号', () => {
 test('MC-036:模板页发布能力卡失败不再吞掉,置 capabilityError,点发布补拉仍失败给提示', () => {
   const js = read('pages/template/index.js')
   assert.doesNotMatch(js, /fail\(\) \{ \/\* 能力卡失败不阻断页面 \*\/ \}/)
-  assert.match(js, /that\.setData\(\{ capabilityError: true \}\);/)
+  assert.match(js, /that\._capabilityError = true;/)
   assert.match(js, /if \(!this\._pubLoaded\) this\.getPublishHome\(true\);/)
 })
 

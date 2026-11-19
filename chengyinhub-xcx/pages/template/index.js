@@ -12,7 +12,6 @@ const merchantAccessPolicy = require('../../utils/merchant-access-policy.js');
 Page({
   _pubLoaded: false,
   data: {
-    capabilityError: false,
     reducedMotion: false,
     pageMetaStyle: '',
     operationScope: '',
@@ -122,7 +121,7 @@ Page({
     const that = this;
     // MC-036:失败不再吞掉 —— 数字保持 0,记 capabilityError;用户点发布时补拉仍失败就提示。
     const failed = () => {
-      that.setData({ capabilityError: true });
+      that._capabilityError = true; // 页面上已无能力数字可标注,失败记在实例上,由用户点发布时提示
       if (fromUser === true) cyToast('发布信息加载失败，请重试');
     };
     const ROLE_TEXT = { player: '玩家', club: '俱乐部主理人', merchant: '商家' };
@@ -145,8 +144,8 @@ Page({
             })
             : (d.permission || {});
           that._pubLoaded = true;
+          that._capabilityError = false;
           that.setData({
-            capabilityError: false,
             pub: {
               role: merchantScoped ? 'merchant' : (d.role || 'player'),
               roleText: merchantScoped ? '商家' : (ROLE_TEXT[d.role] || '玩家'),
