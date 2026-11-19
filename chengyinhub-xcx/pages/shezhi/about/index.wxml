@@ -14,21 +14,6 @@
       <view wx:if="{{aigcFilingNo}}" class="about-app__version about-app__filing">{{aigcFilingNo}}</view>
     </view>
 
-    <view class="about-section">
-      <view class="about-section__title">我的二维码</view>
-      <cy-qr-voucher
-        embedded="{{true}}"
-        surface="host"
-        show="{{true}}"
-        state="error"
-        show-logo="{{false}}"
-        error-text="玩家个人码待生成"
-        retry-text=""
-        mask-closable="{{false}}"
-        bind:retry="explainQrPending"
-      />
-    </view>
-
     <view class="about-section about-section--menu">
       <cy-cell tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_agreement.svg" title="用户服务协议" description="" bind:tap="openAgreement" />
       <cy-cell tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_headset.svg" title="联系我们" open-type="contact" hairline="{{false}}" />

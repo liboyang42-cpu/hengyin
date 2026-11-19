@@ -90,3 +90,8 @@ test('PG-009/PG-010/PG-012/PG-014:组队加入与主题详情返回、邀请人�
   assert.match(joinJs, /if \(that\._byCode && !hasTeam\) \{ that\._backToCodeEntry\(/);
   assert.match(joinJs, /_backToCodeEntry\(message\) \{\n\s*this\.inviteCode = '';\n\s*this\.codeEntry = true;/);
 });
+
+test('PG-011:关于页删除「我的二维码」块与 explainQrPending', () => {
+  assert.doesNotMatch(read('pages/shezhi/about/index.wxml'), /我的二维码|cy-qr-voucher/);
+  assert.doesNotMatch(read('pages/shezhi/about/index.js'), /explainQrPending/);
+});
