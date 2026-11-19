@@ -41,12 +41,34 @@ class ApiMerchantOperatorEndpointTest {
         assertAll(
                 () -> assertEquals(HttpStatus.SUCCESS,
                         controller.upcomingRuns(Collections.emptyMap()).get("code")),
-                () -> assertEquals(HttpStatus.SUCCESS, controller.verificationRecords().get("code")));
+                () -> assertEquals(HttpStatus.SUCCESS, controller.verificationRecords(null, null).get("code")));
         verify(fulfillment).listUpcomingRuns(OWNER, null);
         org.mockito.ArgumentCaptor<CmsRegistrationScan> query =
                 org.mockito.ArgumentCaptor.forClass(CmsRegistrationScan.class);
         verify(scans).selectCmsRegistrationScanList(query.capture());
         assertEquals(OWNER, query.getValue().getMemberId());
+    }
+
+    /** MC-023:核销台账分页在 SQL 里做(PageHelper,页大小封顶 100,按时间倒序),响应仍是数组并带 total。 */
+    @Test
+    void verificationRecordsArePagedInSqlWithCap() {
+        ApiMerchantController controller = operatorController(MerchantRoleCode.MERCHANT_CHECKIN);
+        ICmsRegistrationScanService scans = mock(ICmsRegistrationScanService.class);
+        java.util.List<String> seen = new java.util.ArrayList<>();
+        when(scans.selectCmsRegistrationScanList(any(CmsRegistrationScan.class))).thenAnswer(inv -> {
+            com.github.pagehelper.Page<?> page = com.github.pagehelper.page.PageMethod.getLocalPage();
+            seen.add(page.getPageNum() + "|" + page.getPageSize() + "|" + page.getOrderBy());
+            return Collections.emptyList();
+        });
+        ReflectionTestUtils.setField(controller, "cmsRegistrationScanService", scans);
+
+        var result = controller.verificationRecords(3, 500);
+
+        assertEquals(HttpStatus.SUCCESS, result.get("code"));
+        assertEquals("3|100|create_time desc, id desc", seen.get(0));
+        assertEquals(0L, result.get("total"));
+        assertEquals(java.util.ArrayList.class, result.get("data").getClass());
+        assertEquals(null, com.github.pagehelper.page.PageMethod.getLocalPage());
     }
 
     @Test

@@ -550,7 +550,7 @@ class ApiMerchantLedgerControllerTest {
         ReflectionTestUtils.setField(controller, "umsMemberBalanceDetailService", balanceService);
         ReflectionTestUtils.setField(controller, "cmsRegistrationScanService", scanService);
 
-        AjaxResult result = controller.events();
+        AjaxResult result = controller.events(null, null);
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
         // 核销员没有 FINANCE_READ:收入流水一块都不读,只读本店核销记录。
@@ -574,7 +574,7 @@ class ApiMerchantLedgerControllerTest {
         when(scanService.selectCmsRegistrationScanList(any(CmsRegistrationScan.class)))
                 .thenReturn(Collections.emptyList());
 
-        AjaxResult result = controller.events();
+        AjaxResult result = controller.events(null, null);
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
         org.mockito.ArgumentCaptor<UmsMemberBalanceDetail> balance =
@@ -585,6 +585,45 @@ class ApiMerchantLedgerControllerTest {
                 org.mockito.ArgumentCaptor.forClass(CmsRegistrationScan.class);
         verify(scanService).selectCmsRegistrationScanList(scan.capture());
         assertEquals(OWNER_MEMBER_ID, scan.getValue().getMemberId());
+    }
+
+    /** MC-014:收入金额缺失时不拼「+¥0」;MC-023:每个来源在 SQL 里按时间倒序限量,结果按页切。 */
+    @Test
+    void incomeWithoutAmountOmitsMoneyAndSourcesArePagedInSql() {
+        IUmsMemberBalanceDetailService balanceService = mock(IUmsMemberBalanceDetailService.class);
+        ICmsRegistrationScanService scanService = mock(ICmsRegistrationScanService.class);
+        ApiMerchantController controller = new LoggedInOwnerController();
+        attachOwnerAccess(controller);
+        ReflectionTestUtils.setField(controller, "umsMemberBalanceDetailService", balanceService);
+        ReflectionTestUtils.setField(controller, "cmsRegistrationScanService", scanService);
+        java.util.List<UmsMemberBalanceDetail> incomes = new java.util.ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            UmsMemberBalanceDetail b = new UmsMemberBalanceDetail();
+            b.setEventType(1L);
+            b.setChangeBalance(i == 0 ? null : new java.math.BigDecimal("12.50"));
+            b.setCreateTime(new java.util.Date(1_000_000L - i * 1000L));
+            incomes.add(b);
+        }
+        java.util.List<Object> pageSeen = new java.util.ArrayList<>();
+        when(balanceService.selectUmsMemberBalanceDetailList(any(UmsMemberBalanceDetail.class))).thenAnswer(inv -> {
+            com.github.pagehelper.Page<?> page = com.github.pagehelper.page.PageMethod.getLocalPage();
+            pageSeen.add(page == null ? null : page.getPageSize() + "|" + page.getOrderBy());
+            return incomes;
+        });
+        when(scanService.selectCmsRegistrationScanList(any(CmsRegistrationScan.class)))
+                .thenReturn(Collections.emptyList());
+
+        AjaxResult first = controller.events(1, 2);
+        java.util.List<?> rows = (java.util.List<?>) first.get(AjaxResult.DATA_TAG);
+        assertEquals(2, rows.size());
+        assertEquals("主题分润", ((Map<?, ?>) rows.get(0)).get("content"));
+        assertEquals("主题分润 +¥12.50", ((Map<?, ?>) rows.get(1)).get("content"));
+        assertEquals("2|create_time desc, id desc", pageSeen.get(0));
+        assertEquals(null, com.github.pagehelper.page.PageMethod.getLocalPage(), "分页上下文必须清掉");
+
+        AjaxResult second = controller.events(2, 2);
+        assertEquals(1, ((java.util.List<?>) second.get(AjaxResult.DATA_TAG)).size());
+        assertEquals("4|create_time desc, id desc", pageSeen.get(1));
     }
 
     /**
@@ -624,7 +663,7 @@ class ApiMerchantLedgerControllerTest {
         when(scanService.selectCmsRegistrationScanList(any(CmsRegistrationScan.class)))
                 .thenReturn(java.util.Arrays.asList(registrationRow, verified));
 
-        AjaxResult result = controller.events();
+        AjaxResult result = controller.events(null, null);
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
         java.util.List<?> events = (java.util.List<?>) result.get(AjaxResult.DATA_TAG);
