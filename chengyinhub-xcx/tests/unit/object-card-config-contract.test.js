@@ -95,7 +95,8 @@ const NOT_CARRIED = {
   minConfidence: '分数线是服务端判定的事，展示出来只会引来讨价还价',
   xp: '经验由通关结算那条链发，这一屏不显示',
   lastConfidence: '模型给的置信度不对玩家说话',
-  verdict: 'C1:服务端原判定码(PASS/DEGRADED/FALLBACK_PASS/REJECT);玩家屏只认派生的 photoVerified,不按判定码另讲一套',
+  verdict: 'C1:服务端原判定码(PASS/DEGRADED/FALLBACK_PASS/REJECT/RECORDED);玩家屏只认派生的 photoVerified,不按判定码另讲一套',
+  textConfirmed: 'CG-ALL-12 只记录模式：拒绝相机文字确认的记录位，只给结算页用；拍照这一屏不读，客户端接入时把这条账删掉',
 }
 
 /* 客户端 kit 里**不是**从 playKit.photoCheck 投影搬来的键。它们另有来源,所以不参与上面
