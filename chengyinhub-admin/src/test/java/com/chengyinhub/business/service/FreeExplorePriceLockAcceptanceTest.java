@@ -303,7 +303,7 @@ class FreeExplorePriceLockAcceptanceTest {
         IllegalStateException e = assertThrows(IllegalStateException.class,
                 () -> service.confirmPrice(TOPIC_ID, null, new BigDecimal("66.60"), null, null, null));
         assertEquals("无人带票价 66.60 不高于计酬成本上界 70:玩家全部通关时,每个必选章节最贵的计酬商家都要付一次人头费,"
-                + "合计 70 ≥ 票价 ⇒ 每张票必亏。请提高票价、降低人头费、或把部分章节改成权益档/引流档。", e.getMessage());
+                + "合计 70，票价不高于成本，每张票都会亏损。请提高票价、降低人头费、或把部分章节改成权益档/引流档。", e.getMessage());
         assertNoWrite();
     }
 

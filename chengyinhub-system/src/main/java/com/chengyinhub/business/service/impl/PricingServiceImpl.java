@@ -149,7 +149,7 @@ public class PricingServiceImpl implements IPricingService {
     private String revshareRefusal(String which, BigDecimal price, BigDecimal cost) {
         return which + " " + price + " 不高于计酬成本上界 " + cost
                 + ":玩家全部通关时,每个必选章节最贵的计酬商家都要付一次人头费,合计 " + cost
-                + " ≥ 票价 ⇒ 每张票必亏。请提高票价、降低人头费、或把部分章节改成权益档/引流档。";
+                + "，票价不高于成本，每张票都会亏损。请提高票价、降低人头费、或把部分章节改成权益档/引流档。";
     }
 
     /** 规则行与四个费率字段必须齐全;缺任何一个都拒绝,不回落任何默认值。 */
@@ -278,9 +278,11 @@ public class PricingServiceImpl implements IPricingService {
         }
         // T10:权益成本从服务端已申报权益汇总(单人成本合计),不信任前端传值
         BigDecimal perkCost = nz(coopPerkMapper.sumUnitCostByTopicId(topicId));
-        // 定价预览用 **live** 费率:此刻还没锁价、没有快照,「按现在的费率该定多少」正是这里要答的。
-        // 锁价(confirmPrice)会把这一刻的 live 值冻进主题,之后结算只认那份快照。
-        PricingResult r = compute(sumShareRate, guaranteeRate, sumFixedFee, leadPerHead, perkCost, platformRate());
+        // 定价预览:未锁价(无快照)用 **live** 费率 ——「按现在的费率该定多少」正是这里要答的。
+        // MC-006:已锁价的主题有冻结快照,结算只认那份快照,预览也必须按快照算(platformRateOf),
+        // 否则调一次平台费率,已开售主题的预览就和实际结算对不上。
+        CmsTopic rateTopic = cmsTopicMapper == null ? null : cmsTopicMapper.selectCmsTopicById(topicId);
+        PricingResult r = compute(sumShareRate, guaranteeRate, sumFixedFee, leadPerHead, perkCost, platformRateOf(rateTopic));
         r.setSubType(subType);
         r.setProductType(productType);
         r.setLineup(lineup);
