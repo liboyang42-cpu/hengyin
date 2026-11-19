@@ -333,3 +333,46 @@ All Maven calls held `/usr/bin/flock /data/workspace/.mvn.lock` and ran offline 
 ### Acceptance (`qa/acceptance-r3`, wave 8)
 
 Full `run_all.py` result: **17 of 18 flows pass**, the same as Wave 7. F04's paid path is TEST-SKIP. F06 fails only on app A5. No new defects. Details are in `qa/acceptance/REPORT.md` (wave 8).
+
+## Wave 9 (City Monopoly gaps r3)
+
+Merged into `integration/backend-app-r3` on the `work` VPS with `--no-ff`. The branch was cut from `d43976db8` (the Wave 8 tip) and was not already contained.
+
+| Branch | Tip | Merge commit | Notes |
+|---|---|---|---|
+| `origin/fix/city-gaps-r3` | `b884d44ef` | `259ad0932` | Clean. Receipt: `qa/CITY-GAPS-R3.md`. (1) `claim/quote` NPE (HTTP-envelope code 500) for a board point without `place_id` fixed (boxed ternary). (2) `districtName` / `districtColorToken` / `districts[]` on map, property and nearby reads. (3) `deedSerial` per board district, issued at first claim and kept on takeover. (4) `cityTerritory` IM system cards (`PLACE_LOST`, `DEFENDED`, `RENT`, `RENT_SETTLED`) through `INotifyService`, in-app channel only. (5) On-site challenge task verifier `CityOnSiteTaskService` + `POST /api/city-game/territory/challenge/task/submit`. Migration `migration_20261126_city_gaps_r3.sql`, declared in `ci/migration-dependencies.json` by the branch (one line, `["20261124_city_numbers_attr"]`). |
+
+Review notes:
+- **Migration:** additive and re-runnable. It adds a guarded `ADD COLUMN` (`deed_serial`, virtual `deed_serial_live`, `UNIQUE (board_id, district_id, deed_serial_live)`) and `CREATE TABLE IF NOT EXISTS` (`city_deed_counter`, `city_onsite_task_submission`). The backfill only numbers live MONOPOLY deeds that are still NULL, and `INSERT IGNORE` adds `city_district` rows without overwriting existing ones. No points or financial ledger table is touched. The rollback is documented in the header.
+- **Deed serial under concurrency:** `issueDeedSerial` runs inside the `@Transactional` `claimCommand`, after every check and the 积分 debit. `INSERT … ON DUPLICATE KEY UPDATE last_serial = last_serial + 1` holds the counter row's X lock until commit, and the following `SELECT … FOR UPDATE` reads its own value, so concurrent first claims in one district are serialized. A rolled-back claim also rolls back its number. The partial unique key is the backstop. A takeover sets the old row to `REVOKED` before it inserts the new row with the same serial, so the key never collides. The concurrency test runs on H2 (MySQL mode). On MySQL, two first claims racing to create a district's counter row could, in theory, get an InnoDB deadlock; that claim would roll back cleanly and can be retried. Low risk, not observed.
+- **Notifications:** sent only `afterCommit`. A rejected or rolled-back command notifies no one, and a send failure is logged and swallowed. `RENT` is sent only after `onVisit` has passed every self-visit, team, staff, diversity, device, pair and daily-cap rule (`granted > 0`), at most once per holder per board day. `RENT_SETTLED` is sent once per holder per settle run and never for VOID rent. The WeChat subscribe channel returns false for the event; no new push provider.
+- **Money:** none. Every amount is 积分 (`currency POINTS`). Tasks never move points. Notifications only report amounts that the existing fee split already credited.
+- **Privacy:** task-submission coordinates are cleared after 30 days by `DataRetentionServiceImpl`, and deregistration deletes the rows.
+
+### Tests (VPS, targeted only; full suites ran on the cloud agent, see the receipt)
+
+All Maven calls held `/usr/bin/flock /data/workspace/.mvn.lock` and ran offline with `LANG=C.UTF-8 LC_ALL=C.UTF-8`, `-Xmx1536m -Dspring.test.context.cache.maxSize=4`, `-pl chengyinhub-admin -am`, and `CHENGYIN_CITY_GAME_MYSQL_IT=1`.
+
+- **Selection:** every test class that references `CityMonopolyService`, `CityOnSiteTaskService`, `CityTaskVerifier`, `RoamTerritoryService`, `InAppNotifyChannel`, `NotifyServiceImpl`, `INotifyService`, `NotifyEvent`, `WxSubscribeChannel`, `CityLocationRetentionService`, `DataRetentionServiceImpl`, `AccountDeregistration*`, `ApiCityMonopolyController`, the two new tables, or `migration-dependencies.json`. Excluded: `*MySqlIT` and `GenericGameplayHttpE2eIT`. Added: the 14 `business.it.*MyBatisTest` classes, `CityGapsR3Test`, `CityDeedSerialConcurrencyTest` and `CityGameMysqlIntegrationTest`. That makes 112 classes.
+- **Result: `Tests run: 1293, Failures: 0, Errors: 0, Skipped: 195`, `BUILD SUCCESS`.**
+  - `CityGapsR3Test` 15/15, `CityOnSiteTaskServiceTest` 11/11, `CityDeedSerialConcurrencyTest` 3/3, `CityTerritoryNotifyChannelTest` 3/3, `CityR3RateLimitContractTest` 1/1, `AccountDeregistrationR3ErasureTest` 2/2.
+  - `CityGameMysqlIntegrationTest` 3/3 and `AccountDeregistrationR3ErasureMyBatisTest` 1/1 ran against be-int-mysql.
+- **Package:** `chengyinhub-admin.jar` is 123,502,019 bytes. The `target/` directories were deleted afterwards.
+
+### TEST `8120` deploy
+
+- Under `/usr/bin/flock /data/workspace/.deploy.lock` at 17:25 UTC (2026-11-19), the migration was applied first with the mysql client, as in earlier waves (`cy_migration_history` stays at 0 rows). Tables went `691 -> 693`. The backfill gave the two live `qa-d1` deeds serials 1 and 2, and seeded `city_district` `qa-d2` for a TEST-only point.
+- Then the jar was swapped. `Started RuoYiApplication in 22.955 seconds`, and `GET /` returned 200 after 23 s. Rollback jar: `app/app.jar.prev-5acc166a0` (Wave 8). The schema change is additive and can stay on rollback.
+- The only `Caused by` in the log is the missing WeChat Pay `apiclient_key.pem`, the same as on the previous jar.
+- **Live check** (`/tmp/r3w9-verify.py`, 14/14, as City fixture players 9009 and 9004 on `qa-monopoly-1`):
+  - **Claim quote:** for TEST-only point `qa-pt-np1` (`place_id NULL`), the old jar answered code 500 `系统繁忙`. The new jar returns a normal quote (`targetKey board:…:qa-pt-np1`, no `poiId`, `cost 60`, `POINTS`).
+  - **District names:** map and nearby return `districts[]` and `districtName` on every item.
+  - **Deed serial:** 9009's fresh claim got `deedSerial 1` in `qa-d2`, the same on `property/{id}` and in the DB counter.
+  - **Challenge task:** the challenge quote carries the N35 `task` block (`PHOTO_PRESENCE`, 80 m).
+  - **Defender notification:** 9004's challenge (`LOSS`) put a `cityTerritory` / `DEFENDED` card in 9009's system conversation.
+
+### Acceptance (`qa/acceptance-r3`, wave 9)
+
+Full `run_all.py` result: **17 of 18 flows pass**, the same as Waves 7 and 8. F04's paid path is TEST-SKIP, and F06 fails only on app A5.
+
+In F09, the fresh claim got deed serial 3 in `qa-d1`, and the takeover sent 9001 a `PLACE_LOST` card. No new defects. Details are in `qa/acceptance/REPORT.md` (wave 9).
