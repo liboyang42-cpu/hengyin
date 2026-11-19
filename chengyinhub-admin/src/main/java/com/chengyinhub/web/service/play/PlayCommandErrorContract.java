@@ -124,6 +124,21 @@ public final class PlayCommandErrorContract
      * 需要客户端先改变输入 / 先完成前置才能继续;原样重发不会成功。
      * 只用于可证明尚未产生业务副作用的路径(登录/参数/归属/节点查无/配置缺合同/解锁未到)。
      */
+    /**
+     * 站点未解锁 / 须先完成上一站:正常的业务拒绝,不是服务器错误。
+     * 用 423(Locked)作信封 code(不与 409「路线版本冲突、刷新重试」混用),errorCode=ROUTE_LOCKED。
+     */
+    public static AjaxResult routeLocked(String message)
+    {
+        return AjaxResult.error(ROUTE_LOCKED_CODE, message)
+                .put("errorCode", ROUTE_LOCKED)
+                .put("retryable", false)
+                .put("refreshRequired", false)
+                .put("intentNotExecuted", true);
+    }
+
+    public static final int ROUTE_LOCKED_CODE = 423;
+
     public static AjaxResult rejected(String message, String errorCode)
     {
         return AjaxResult.error(message)

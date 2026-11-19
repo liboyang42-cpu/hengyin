@@ -159,7 +159,7 @@ public class PlayPreferenceApplication {
         if (unlockErr == null) {
             unlockErr = playNodeContext.routeAccessError(memberId, out.playCtx.actId, out.playCtx.topicId, out.node, routeActionId);
         }
-        if (unlockErr != null) { out.error = error(unlockErr); return out; }
+        if (unlockErr != null) { out.error = PlayCommandErrorContract.routeLocked(unlockErr); return out; }
         int mode = playNodeContext.resolveMode(out.playCtx.actId, out.playCtx.topicId);
         if (mode == PlayMode.FREE_COLLECT
                 && !playNodeContext.isPureOnlineNode(out.node)

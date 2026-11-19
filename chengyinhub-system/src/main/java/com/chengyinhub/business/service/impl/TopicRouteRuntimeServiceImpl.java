@@ -1494,6 +1494,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
                 if (row.has("chapterId")) node.setChapterId(row.path("chapterId").asLong());
                 liveNodes.add(node);
             }
+            liveNodes = inPlayOrder(liveNodes, nodes(scope.topic.getId()));
         }
         Set<Long> completed = completed(scope);
         TopicRouteEngine.State initial = new TopicRouteEngine.State();
@@ -1664,14 +1665,24 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         return view;
     }
 
-    /** Existing linear state already records the initial node universe and insertion order. */
+    /**
+     * 本局冻结的是节点集合(建局后新增的站不进本局);顺序跟随游玩顺序(章节 sort_id → 节点 sort_id → id),
+     * 即 liveNodes 的顺序。早先按冻结插入顺序走,作者跨章调过顺序的路线会把下一站算错并卡死。
+     */
     private List<CmsTopicNode> linearSessionNodes(TopicRouteSession session, List<CmsTopicNode> liveNodes) {
         Map<Long, String> frozen = readEngineState(session.getStateJson()).getNodeStates();
         if (frozen == null || frozen.isEmpty()) return liveNodes; // Pre-snapshot compatibility.
-        Map<Long, CmsTopicNode> available = new LinkedHashMap<Long, CmsTopicNode>();
-        for (CmsTopicNode node : liveNodes) available.put(node.getId(), node);
         List<CmsTopicNode> ordered = new ArrayList<CmsTopicNode>();
-        for (Long id : frozen.keySet()) if (available.containsKey(id)) ordered.add(available.get(id));
+        for (CmsTopicNode node : liveNodes) if (frozen.containsKey(node.getId())) ordered.add(node);
+        return ordered;
+    }
+
+    /** 冻结站点表按当前游玩顺序排列;不在当前节点表里的站保持原相对次序排在最后。 */
+    private List<CmsTopicNode> inPlayOrder(List<CmsTopicNode> stations, List<CmsTopicNode> playOrder) {
+        Map<Long, Integer> rank = new java.util.HashMap<Long, Integer>();
+        for (CmsTopicNode node : playOrder) if (node.getId() != null) rank.putIfAbsent(node.getId(), rank.size());
+        List<CmsTopicNode> ordered = new ArrayList<CmsTopicNode>(stations);
+        ordered.sort(java.util.Comparator.comparingInt(node -> rank.getOrDefault(node.getId(), Integer.MAX_VALUE)));
         return ordered;
     }
 
@@ -1705,6 +1716,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             TopicRouteEngine.State stored = readEngineState(session.getStateJson());
             view.setStatus(stored.getStatus()); view.setCurrentNodeId(stored.getCurrentNodeId()); view.setRecommendedNodeId(stored.getRecommendedNodeId());
             view.setNodeStates(new LinkedHashMap<Long,String>(stored.getNodeStates()));
+            realignLinearCursor(view, linearSessionNodes(session, liveNodes), stored);
         }
         view.setSessionId(session.getId());
         view.setVersion(session.getVersion());
@@ -1712,6 +1724,26 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         appendOpening(view, session, readEngineState(session.getStateJson()));
         appendThoughts(view, session, readEngineState(session.getStateJson()));
         return view;
+    }
+
+    /**
+     * 早先按冻结插入顺序推进的局可能把当前站存成了「顺序靠后但 id 最小」的站(路线卡死)。
+     * 进行中的线性局读出时,当前站一律按游玩顺序取第一个未完成站,PLAYABLE 只给它。
+     */
+    private void realignLinearCursor(TopicRouteState view, List<CmsTopicNode> ordered, TopicRouteEngine.State stored) {
+        if (!"ACTIVE".equals(view.getStatus()) || stored.getCurrentNodeId() == null || ordered.isEmpty()) return;
+        Long first = null;
+        for (CmsTopicNode node : ordered) {
+            if (!stored.getCompletedNodeIds().contains(node.getId())) { first = node.getId(); break; }
+        }
+        if (first == null || first.equals(stored.getCurrentNodeId())) return;
+        boolean storedInOrder = false;
+        for (CmsTopicNode node : ordered) if (node.getId().equals(stored.getCurrentNodeId())) storedInOrder = true;
+        if (!storedInOrder) return;
+        view.setCurrentNodeId(first); view.setRecommendedNodeId(first);
+        Map<Long, String> states = view.getNodeStates();
+        if (TopicRouteState.PLAYABLE.equals(states.get(stored.getCurrentNodeId()))) states.put(stored.getCurrentNodeId(), TopicRouteState.DISCOVERED_LOCKED);
+        states.put(first, TopicRouteState.PLAYABLE);
     }
 
     private TopicRouteState toView(TopicRouteSession session) { return toView(session, readEngineState(session.getStateJson())); }

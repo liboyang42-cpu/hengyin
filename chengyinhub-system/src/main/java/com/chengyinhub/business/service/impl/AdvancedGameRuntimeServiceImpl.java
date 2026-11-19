@@ -1318,7 +1318,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
      * 跳过准入。三条都必须成立,少一条就拒,不做「差不多能跳」的放宽:
      * <ol>
      *   <li>作者在**冻结**阶梯里配了 {@code SKIP} 层 —— 没配就是没这功能;</li>
-     *   <li>该节点不是现实凭证类(扫码/拍照/计步/相册/竞猜):跳过不能替代现场证明;</li>
+     *   <li>该节点不是现实凭证类(扫码/拍照/计步/相册/竞猜):跳过不能替代现场证明;
+     *       拍照只是另一个主玩法之后的证据步时不算(随主玩法跳过,拍照步按可选);</li>
      *   <li>节点模板验真方式不是扫码(4)或现场到达(5):跳过不能绕到达围栏。</li>
      * </ol>
      */
@@ -1334,6 +1335,10 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             throw new IllegalArgumentException("该节点未配置跳过");
         }
         for (String section : new String[] { "scan", "photoCheck", "steps", "album", "predict" }) {
+            // 拍照作为另一个主玩法之后的证据步(GameplayOutcomeRules.isEvidenceStep)时随主玩法一起跳过;
+            // 只有拍照本身就是主玩法(纯拍照站)才仍按现场凭证拒绝跳过。
+            if ("photoCheck".equals(section)
+                    && com.chengyinhub.business.service.support.GameplayOutcomeRules.isEvidenceStep(config, section)) continue;
             if (enabled(config.get(section))) {
                 throw new IllegalArgumentException("该节点依赖现场凭证，不能跳过");
             }

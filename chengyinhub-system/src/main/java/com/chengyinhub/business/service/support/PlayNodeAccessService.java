@@ -147,7 +147,6 @@ public class PlayNodeAccessService {
 
     private boolean isPrevDone(Long memberId, Long actId, CmsTopicNode node)
     {
-        long mySort = node.getSortId() == null ? 0L : node.getSortId();
         CmsTopicNode allProbe = new CmsTopicNode();
         allProbe.setTopicId(node.getTopicId());
         allProbe.setStatus(1L);
@@ -163,9 +162,14 @@ public class PlayNodeAccessService {
             if (p.getStatus() != null && p.getStatus() == 1) doneIds.add(p.getNodeId());
         }
 
-        for (CmsTopicNode n : all) {
-            long s = n.getSortId() == null ? 0L : n.getSortId();
-            if (s < mySort && !doneIds.contains(n.getId())) return false;
+        // 与路线 seam 同一游玩顺序:章节 sort_id → 节点 sort_id → id。
+        com.chengyinhub.business.domain.CmsTopicChapter chapterProbe = new com.chengyinhub.business.domain.CmsTopicChapter();
+        chapterProbe.setTopicId(node.getTopicId());
+        List<com.chengyinhub.business.domain.CmsTopicChapter> chapters = cmsTopicChapterService == null ? null
+                : cmsTopicChapterService.selectCmsTopicChapterList(chapterProbe);
+        for (CmsTopicNode n : RoutePlayOrder.sort(all, chapters)) {
+            if (node.getId().equals(n.getId())) break;
+            if (!doneIds.contains(n.getId())) return false;
         }
         return true;
     }
