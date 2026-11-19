@@ -924,10 +924,10 @@
       <view class="ai-plan-row">
         <input class="ai-plan-input" value="{{aiClubStyle}}" bindinput="onClubAiStyle" maxlength="20"
                disabled="{{aiState === 'generating'}}"
-               placeholder="俱乐部风格(选填)" placeholder-class="ai-plan-ph" />
+               placeholder="俱乐部风格（选填）" placeholder-class="ai-plan-ph" />
         <input class="ai-plan-input ai-plan-input--sm" value="{{aiDurationMin}}" bindinput="onClubAiDuration" type="number" maxlength="4"
                disabled="{{aiState === 'generating'}}"
-               placeholder="时长(分钟)" placeholder-class="ai-plan-ph" />
+               placeholder="时长（分钟）" placeholder-class="ai-plan-ph" />
       </view>
 
       <!-- 动作区 -->

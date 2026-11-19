@@ -149,3 +149,12 @@ test('MC-046:按清单删除辅助说明', () => {
   }
   assert.doesNotMatch(read('pages/merchant/decor/perks/index.wxml'), /· 仅自己可见/)
 })
+
+test('MC-047 / MC-048 / MC-049:删审核时效句与退款截止句,占位括号改全角', () => {
+  assert.doesNotMatch(read('pages/merchant/apply/index.wxml'), /个工作日完成审核/)
+  assert.doesNotMatch(read('pages/club/topic-detail/index.wxml'), /退款截止为集合前 24 小时/)
+  const detail = read('pages/club/detail/index.wxml')
+  assert.match(detail, /俱乐部风格（选填）/)
+  assert.match(detail, /时长（分钟）/)
+  assert.doesNotMatch(detail, /\(选填\)|\(分钟\)/)
+})

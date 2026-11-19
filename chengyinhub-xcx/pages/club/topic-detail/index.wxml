@@ -661,7 +661,6 @@
     <cy-date-field mode="time" value="{{opsTimeDraft.time}}" bind:change="onOpsTimeChange">
       <view class="ctd-director-field__picker">{{opsTimeDraft.time || '选择时间'}}</view>
     </cy-date-field>
-    <text class="ctd-opstime__hint">退款截止为集合前 24 小时</text>
     <view class="ctd-director-field__acts">
       <view class="ctd-director-field__act" bindtap="closeOpsTimeSheet" aria-role="button" aria-label="取消修改集合时间" hover-class="cy-pressed" hover-stay-time="80">取消</view>
       <view class="ctd-director-field__act ctd-director-field__act--primary {{opsTimeSubmitting ? 'is-disabled' : ''}}"
