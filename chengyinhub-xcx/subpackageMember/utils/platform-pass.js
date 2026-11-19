@@ -13,6 +13,29 @@ function yuanFen(fen) {
   return '¥' + (Number.isInteger(y) ? String(y) : y.toFixed(2))
 }
 
+// OR-026:通行证付款/退款状态统一词表,页面与订单行都从这里取字,不各写各的。
+const WORDS = Object.freeze({
+  PENDING: '待付款',
+  RESUME: '继续付款',
+  CONFIRMING: '付款结果确认中',
+  PAY_CANCELLED: '已取消本次付款',
+  REFUND_REVIEW: '退款审核中',
+  REFUNDING: '退款处理中',
+  REFUNDED: '已退款',
+  REFUND_REJECTED: '退款申请未通过',
+  STATE_UNKNOWN: '状态确认中',
+  CLOSED: '订单已不可支付',
+})
+
+// OR-018:商品名统一;订单名按 planCode 取套餐名。
+const PLAN_NAME = Object.freeze({ MONTH: '城瘾30天通行证' })
+const PASS_NAME = '城瘾30天通行证'
+
+function planName(code, validDays) {
+  if (PLAN_NAME[code]) return PLAN_NAME[code]
+  return '城瘾通行证' + (isNum(validDays) ? ' · ' + Number(validDays) + ' 天' : '')
+}
+
 function pad(n) { return n < 10 ? '0' + n : String(n) }
 
 function dateText(v) {
@@ -55,7 +78,9 @@ function planCard(p, selected) {
   } else {
     line = (p.title || '') + (isNum(p.validDays) ? ' · ' + Number(p.validDays) + ' 天' : '')
   }
-  return { code, price: yuanFen(p.priceFen), line, on: code === selected }
+  // OR-047 按定稿:月卡价标「首发价 ¥39」
+  const price = yuanFen(p.priceFen)
+  return { code, price: code === 'MONTH' ? '首发价 ' + price : price, line, on: code === selected }
 }
 
 /** 年卡按天比月卡便宜才挂「最划算」。 */
@@ -104,12 +129,20 @@ function passView(o, selected, platform, canVirtual) {
     plans: cards,
     selected: sel,
     active,
-    untilText: active ? dateText(holding.coverageEnd || holding.validTo) : '',
+    // OR-047:有效期优先用服务端 holding.validToText,缺省回落本地格式化
+    untilText: active ? (typeof holding.validToText === 'string' && holding.validToText.trim() ? holding.validToText.trim() : dateText(holding.coverageEnd || holding.validTo)) : '',
     channel,
-    buyLabel: !cards.length ? '暂未开售' : (!channel ? ch.reason : (active ? '续期 ' : '开通 ') + priceText),
+    buyLabel: !cards.length ? '暂未开售' : (!channel ? ch.reason : (active ? '续买30天 ' : '开通通行证 ') + priceText),
     buyOff: !cards.length || !channel,
     facts: factRows(ov, count, monthly)
   }
+}
+
+/** OR-024:退款页须知 —— 只要续费与退款两条,服务端 terms 有就用服务端文本。 */
+function termRows(ov) {
+  const t = (ov && ov.terms) || {}
+  const txt = (v) => (typeof v === 'string' && v.trim() ? v.trim() : '')
+  return [{ k: '续费', v: txt(t.renewal) || '不自动续费' }, { k: '退款规则', v: txt(t.refund) || '退款为整单' }]
 }
 
 /** 购买前须知:全部来自服务端(overview.terms + 套餐天数 + 可玩主题数),缺哪项就不出哪项。 */
@@ -122,24 +155,37 @@ function factRows(ov, count, plan) {
   if (txt(t.seat)) rows.push({ k: '适用范围', v: txt(t.seat) })
   const period = txt(t.period) || (plan && isNum(plan.validDays) ? Number(plan.validDays) + ' 天' : '')
   if (period) rows.push({ k: '有效期', v: period })
-  if (txt(t.refund)) rows.push({ k: '退款规则', v: txt(t.refund) })
-  return rows
+  // OR-024:须知固定出「不自动续费、退款为整单」;服务端 terms 下发后以服务端文本为准
+  return rows.concat(termRows(ov))
 }
 
-const ORDER_STATE = { PENDING: '待支付', PAID: '已开通', CANCELLED: '已取消', REFUNDING: '退款中', REFUNDED: '已退款' }
-const REFUND_STATE = { PENDING: '退款申请审核中', APPROVED: '退款申请已通过', REJECTED: '退款申请未通过' }
+const ORDER_STATE = { PENDING: WORDS.PENDING, PAID: '已开通', CANCELLED: '已取消', REFUNDING: WORDS.REFUNDING, REFUNDED: WORDS.REFUNDED }
+const REFUND_STATE = { PENDING: WORDS.REFUND_REVIEW, APPROVED: WORDS.REFUNDING, REJECTED: WORDS.REFUND_REJECTED }
 
 /** 订单状态只来自服务端;读不到的状态不编,写「状态确认中」。 */
 function orderStateText(order) {
   const st = order && order.status
-  return ORDER_STATE[st] || '状态确认中'
+  return ORDER_STATE[st] || WORDS.STATE_UNKNOWN
 }
 
 /** 退款进度:服务端 order.refund.reviewStatus(NONE = 没有申请);没有记录返回空。 */
 function refundText(order) {
   const r = order && order.refund
-  if (!r || !r.reviewStatus || r.reviewStatus === 'NONE') return ''
-  return REFUND_STATE[r.reviewStatus] || '退款确认中'
+  if (!r || !r.reviewStatus || r.reviewStatus === 'NONE' || order.status === 'REFUNDED') return ''
+  return REFUND_STATE[r.reviewStatus] || WORDS.STATE_UNKNOWN
+}
+
+/** OR-048:已退款给金额与时间;未通过给原因与复核路径。字段来自服务端 order.refund。 */
+function refundDetail(order) {
+  const r = (order && order.refund) || {}
+  if (isNum(r.refundedFen) && (order.status === 'REFUNDED' || r.reviewStatus === 'APPROVED')) {
+    return { kind: 'refunded', amount: yuanFen(r.refundedFen), time: dateText(r.decidedTime) }
+  }
+  if (r.reviewStatus === 'REJECTED') {
+    const reason = typeof r.decision === 'string' ? r.decision.trim() : ''
+    return { kind: 'rejected', reason, time: dateText(r.decidedTime) }
+  }
+  return null
 }
 
 /** 通行证订单行(我的订单 / 订单详情共用)。 */
@@ -147,13 +193,17 @@ function orderRow(o) {
   if (!o || !o.orderNo) return null
   return {
     key: String(o.orderNo),
-    name: '通行证' + (isNum(o.validDays) ? ' · ' + Number(o.validDays) + ' 天' : ''),
+    name: planName(o.planCode, o.validDays),
+    // OR-017:副标题写套餐与日期,订单号只在详情页「复制订单号」
+    sub: [isNum(o.validDays) ? Number(o.validDays) + '天' : '', dateText(o.paidTime || o.createdTime)].filter(Boolean).join(' · '),
+    refundDetail: refundDetail(o),
     state: orderStateText(o),
     refund: refundText(o),
     amount: yuanFen(o.priceFen),
     time: dateText(o.paidTime || o.createdTime),
     status: String(o.status || ''),
     canResume: o.status === 'PENDING',
+    canCancel: o.status === 'PENDING',
     canRefund: o.status === 'PAID' && (!o.refund || !o.refund.reviewStatus || o.refund.reviewStatus === 'NONE' || o.refund.reviewStatus === 'REJECTED'),
     validTo: o.status === 'PAID' ? dateText(o.validTo) : ''
   }
@@ -171,4 +221,4 @@ function libraryRow(r) {
   return { id: String(r.topicId), name: String(r.name), cover: r.imgUrl || '', data: data.join(' · '), tags }
 }
 
-module.exports = { channelState, orderRow, orderStateText, refundText, pickChannel, passView, planCard, bestCode, libraryRow, dateText, yuanFen, platformOf }
+module.exports = { WORDS, PASS_NAME, planName, refundDetail, termRows, channelState, orderRow, orderStateText, refundText, pickChannel, passView, planCard, bestCode, libraryRow, dateText, yuanFen, platformOf }

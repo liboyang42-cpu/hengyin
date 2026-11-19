@@ -47,6 +47,8 @@ const MATRIX = [
   // 2026-11-13 pass-mini:回到订单继续支付先读本人订单;订单详情页读本人订单(同 ApiPlatformPassController.order,按订单号 + 本人归属);我的订单读 /api/platform-pass/orders 走 passes 页既有 get 封装。
   ['subpackageMember/utils/platform-pass-pay.js', "url: '/api/platform-pass/orders/' + encodeURIComponent(orderNo), method: 'GET'", 'required', 'member', 'self-account'],
   ['subpackageMember/market/pass-order/index.js', "url: '/api/platform-pass/orders/' + encodeURIComponent(this._orderNo), method: 'GET'", 'required', 'member', 'self-account'],
+  // 2026-11-19 OR-024:退款页须知读通行证概览 terms(公开概览,同 passes 页入口卡)。
+  ['subpackageMember/market/pass-order/index.js', "url: '/api/platform-pass', method: 'GET'", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
   // 2026-11-10 qx-b5(qx-c3 补登,按服务端实际守卫;以下路径均不在 SecurityConfig 放行清单,落 anyRequest().authenticated()):
   //   报名页促销目录 ApiMarketingPromotionController /catalog:requireAppMemberId,按场次回目录并带本人可用性。
   ['pages/activity/baoming/baoming.js', "url: '/api/marketing/promotions/catalog'", 'required', 'member', 'public-detail+viewer-personalization'],
@@ -525,7 +527,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-11-18 FE-STORY 7.10:fabu 节点抽屉读本主题地点到访方式一处(作者本人,已入 MATRIX),136 → 137。
   // 2026-11-18 F11:自由探索参考结算组件一处、权益卡表单线下结算说明一处(均已入 MATRIX),137 → 139。
   // 2026-11-18 F10:作者编辑器读位置承接进度 /api/topic/fe/sale-readiness,139 → 140。
-  assert.equal(directCount, 140, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-11-19 OR-024:通行证退款页读概览 terms 一处(已入 MATRIX),140 → 141。
+  assert.equal(directCount, 141, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。

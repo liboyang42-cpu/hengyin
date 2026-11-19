@@ -11,6 +11,7 @@
     "cy-toast": "/components/cy/toast/index",
     "cy-access-gate": "/components/cy/access-gate/index",
     "cy-field": "/components/cy/field/index",
-    "cy-inline-error": "/components/cy/inline-error/index"
+    "cy-inline-error": "/components/cy/inline-error/index",
+    "cy-modal-host": "/components/cy/modal-host/index"
   }
 }

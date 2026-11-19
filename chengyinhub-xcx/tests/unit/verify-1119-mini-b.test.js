@@ -207,3 +207,63 @@ test('OR-020:自玩结算未勾选同意时同意行高亮,不再单独出提示
   assert.match(read('components/cy/consent-check/index.wxml'), /cck--alert/)
   assert.match(read('components/cy/consent-check/index.js'), /alert: \{ type: Boolean, value: false \}/)
 })
+
+test('OR-001:通行证/商品详情/通行证列表三页不再整页登录闸,写动作走 ensureLoginFor', () => {
+  for (const p of ['membership', 'pass', 'passes']) {
+    assert.doesNotMatch(read(`subpackageMember/market/${p}/index.wxml`), /cy-access-gate/, p)
+    assert.doesNotMatch(read(`subpackageMember/market/${p}/index.json`), /cy-access-gate/, p)
+  }
+  assert.match(read('subpackageMember/market/pass-order/index.wxml'), /cy-access-gate kind="login"/)
+  assert.match(read('subpackageMember/market/membership/index.js'), /onBuy\(\) \{\s*if \(app\.ensureLoginFor/)
+})
+
+test('OR-006 / OR-007 / OR-008 / OR-010 / OR-017 / OR-048:通行证订单详情', () => {
+  const js = read('subpackageMember/market/pass-order/index.js')
+  const wxml = read('subpackageMember/market/pass-order/index.wxml')
+  assert.match(js, /if \(!st \|\| st === 'PENDING'\) cyToast\('已提交退款申请'\)/)
+  assert.match(js, /subscribe\.request\(\['refund'\]\)/)
+  assert.match(js, /dangerKey: 'pass\.order\.cancel'/)
+  assert.match(js, /'\/cancel', method: 'POST'/)
+  assert.match(js, /r\.state === 'closed'\) cyToast\(pp\.WORDS\.CLOSED\)/)
+  assert.doesNotMatch(wxml, /\{\{row\.key\}\}/)
+  assert.match(wxml, /复制订单号/)
+  assert.match(wxml, /row\.refundDetail\.kind === 'refunded'/)
+  assert.match(wxml, /联系城瘾小助手/)
+  assert.match(read('utils/danger-actions.js'), /'pass\.order\.cancel': \{/)
+})
+
+test('OR-018 / OR-026 / OR-047 / OR-048:通行证视图词表与定稿文案', () => {
+  const pp = require(path.join(ROOT, 'subpackageMember/utils/platform-pass.js'))
+  assert.equal(pp.WORDS.PENDING, '待付款')
+  assert.equal(pp.WORDS.PAY_CANCELLED, '已取消本次付款')
+  assert.equal(pp.WORDS.CONFIRMING, '付款结果确认中')
+  const row = pp.orderRow({ orderNo: 'PPO9', planCode: 'MONTH', validDays: 30, priceFen: 3900, status: 'REFUNDED', paidTime: '2026-11-01 10:00:00',
+    refund: { reviewStatus: 'APPROVED', refundedFen: 3900, decidedTime: '2026-11-03 10:00:00' } })
+  assert.equal(row.name, '城瘾30天通行证')
+  assert.equal(row.sub, '30天 · 2026.11.01')
+  assert.deepEqual(row.refundDetail, { kind: 'refunded', amount: '¥39', time: '2026.11.03' })
+  const rej = pp.orderRow({ orderNo: 'PPO8', planCode: 'MONTH', status: 'PAID', refund: { reviewStatus: 'REJECTED', decision: '已使用超过 3 个主题' } })
+  assert.equal(rej.refundDetail.reason, '已使用超过 3 个主题')
+  const ov = { enabled: true, plans: [{ planCode: 'MONTH', priceFen: 3900, validDays: 30 }], channels: { xpay: { available: true } } }
+  assert.equal(pp.passView(ov, '', 'ios', true).buyLabel, '开通通行证 ¥39')
+  assert.equal(pp.passView(ov, '', 'ios', true).plans[0].price, '首发价 ¥39')
+  const wxml = read('subpackageMember/market/membership/index.wxml')
+  assert.match(wxml, /title="城瘾30天通行证"/)
+  assert.doesNotMatch(wxml, /持证 ¥0/)
+})
+
+test('OR-019 / OR-024:续买放底栏,开通按钮上方固定同意须知', () => {
+  const wxml = read('subpackageMember/market/membership/index.wxml')
+  const foot = wxml.slice(wxml.indexOf('<view class="pp__foot"'))
+  assert.match(foot, /<cy-consent-check[^>]*text="已阅读并同意购买须知：不自动续费、退款为整单"/)
+  assert.ok(foot.indexOf('cy-consent-check') < foot.indexOf('bindtap="onBuy"'))
+  assert.doesNotMatch(wxml, /pp__renew/)
+  assert.match(read('subpackageMember/market/membership/index.js'), /if \(!this\.data\.agreed\) \{ this\.setData\(\{ agreeAlert: true \}\); return \}/)
+})
+
+test('OR-009:商品购买区分支付结果,取消直接提示,按单号回查', () => {
+  const js = read('subpackageMember/market/pass/index.js')
+  assert.match(js, /success: \(\) => this\._verify\(order\.orderNo, 0\)/)
+  assert.match(js, /data: \{ limit: 20, orderNo \}/)
+  assert.doesNotMatch(js, /complete: \(\) => this\._verify/)
+})

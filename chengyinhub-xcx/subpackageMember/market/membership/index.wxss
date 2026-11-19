@@ -31,16 +31,14 @@
 .pp__plan-p { display: block; font-size: var(--cy-type-sheet-title); font-weight: 800; }
 .pp__plan-l { display: block; margin-top: 4rpx; font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
 .pp__rib { position: absolute; right: 20rpx; top: -18rpx; padding: 4rpx 16rpx; border-radius: var(--cy-radius-pill); background: var(--cy-color-brand); color: var(--cy-color-text-on-light); font-size: var(--cy-type-micro); font-weight: 700; }
-.pp__renew { min-height: 88rpx; display: flex; align-items: center; justify-content: center; border-radius: var(--cy-radius-pill); border: 1px solid var(--cy-color-border-default); font-size: var(--cy-type-button); font-weight: 600; }
-.pp__renew.is-off { opacity: .45; }
 .pp__terms { display: block; text-align: center; font-size: var(--cy-type-caption); color: var(--cy-color-text-tertiary); }
 .pp__err { display: block; text-align: center; font-size: var(--cy-type-label); color: var(--cy-color-status-danger); }
-.pp__pad { height: calc(260rpx + env(safe-area-inset-bottom)); }
+.pp__pad { height: calc(360rpx + env(safe-area-inset-bottom)); }
 .pp__foot { position: fixed; left: 0; right: 0; bottom: 0; z-index: var(--cy-z-sticky); padding: 28rpx 40rpx calc(28rpx + env(safe-area-inset-bottom)); background: linear-gradient(180deg, transparent, var(--cy-color-bg-page) 55%); }
 .pp__pill { height: 104rpx; border-radius: var(--cy-radius-pill); background: var(--cy-color-text-primary); color: var(--cy-color-bg-page); display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-button); font-weight: 600; }
 .pp__pill.is-off { opacity: .45; }
+.pp__agree { display: block; margin-bottom: var(--cy-space-2); }
 
 /* 细节打磨二期 L1/L5/L7 */
 .pp__row { transition: var(--cy-tr-press); }
-.pp__renew { transition: var(--cy-tr-press); }
 .pp__pill { transition: var(--cy-tr-press); }

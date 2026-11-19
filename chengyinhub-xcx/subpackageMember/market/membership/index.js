@@ -42,6 +42,8 @@ Page({
     view: { enabled: false },
     buying: false,
     buyError: '',
+    agreed: false,
+    agreeAlert: false,
     reduced: false
   },
   onLoad() {
@@ -84,8 +86,14 @@ Page({
     this._selected = code // 选中态由 view 渲染,这里只记住
     this.setData({ view: pp.passView(this._overview, code, this._platform, this._canVirtual) })
   },
+  onAgree(e) {
+    const checked = !!(e && e.detail && e.detail.checked)
+    this.setData({ agreed: checked, agreeAlert: false })
+  },
   onBuy() {
     if (app.ensureLoginFor && !app.ensureLoginFor('checkout', () => this.onBuy(), { owner: this, target: () => [this.data.view && this.data.view.selected, this.data.view && this.data.view.channel] })) return
+    // OR-024:没同意须知先高亮同意行,不发起开通
+    if (!this.data.agreed) { this.setData({ agreeAlert: true }); return }
     if (this._readOwner !== session.identity(app)) { this.load(); return }
     const v = this.data.view
     if (this.data.buying || !v || v.buyOff || !v.channel) return
@@ -98,10 +106,10 @@ Page({
       this.setData({ buying: false })
       if (r.state === 'paid') { this._intent = null; this._celebrate(r.order); return }
       // 取消支付只是这次没付:不动已有会员,订单留在我的订单里
-      if (r.state === 'cancelled') { cyToast('已取消支付'); return }
+      if (r.state === 'cancelled') { cyToast(pp.WORDS.PAY_CANCELLED); return }
       if (r.state === 'pending') {
         this._confirmOrderNo = r.orderNo || ''
-        this.setData({ buyError: '确认中' })
+        this.setData({ buyError: pp.WORDS.CONFIRMING })
         return
       }
       this.setData({ buyError: r.message || '开通失败，请稍后再试' })

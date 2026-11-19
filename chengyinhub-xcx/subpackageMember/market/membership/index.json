@@ -1,6 +1,6 @@
 {
   "navigationStyle": "custom",
-  "navigationBarTitleText": "通行证",
+  "navigationBarTitleText": "城瘾30天通行证",
   "navigationBarTextStyle": "white",
   "backgroundColor": "#000000",
   "usingComponents": {
@@ -10,7 +10,7 @@
     "cy-empty": "/components/cy/empty/index",
     "cy-icon": "/components/cy/icon/index",
     "cy-toast": "/components/cy/toast/index",
-    "cy-access-gate": "/components/cy/access-gate/index",
+    "cy-consent-check": "/components/cy/consent-check/index",
     "cy-inline-error": "/components/cy/inline-error/index",
     "cy-illus": "/subpackageMember/components/cy-illus/index",
     "cy-frames": "/subpackageMember/components/cy-frames/index"

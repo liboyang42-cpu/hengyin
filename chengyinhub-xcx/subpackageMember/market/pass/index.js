@@ -9,6 +9,7 @@ const login = require('../../../utils/auth/require-login.js')
 const session = require('../../../utils/session/login-reload.js')
 const { isBizOk } = require('../../../utils/response-shape.js')
 const mv = require('../../utils/market-view.js')
+const { WORDS } = require('../../utils/platform-pass.js')
 const pu = require('../../utils/pass-unlock-view.js')
 const { readReducedMotion } = require('../../../utils/motion-preference.js')
 
@@ -169,8 +170,13 @@ Page({
       success: (res) => {
         const p = isBizOk(res) && res.data && res.data.payParams
         if (!p) { this.setData({ buying: false, buyError: mv.reasonText(res && res.reasonCode) }); return }
+        // OR-009:区分结果 —— 取消直接说已取消本次付款;成功按单号回查;其他失败只回查一次(SDK 失败不等于没扣款)
         wx.requestPayment(Object.assign({}, p, {
-          complete: () => this._verify(order.orderNo, 0)
+          success: () => this._verify(order.orderNo, 0),
+          fail: (e) => {
+            if (/cancel/.test(String((e && e.errMsg) || ''))) { this.setData({ buying: false }); cyToast(WORDS.PAY_CANCELLED); return }
+            this._verify(order.orderNo, 2)
+          }
         }))
       },
       fail: () => this.setData({ buying: false, buyError: '结果待确认，请到我的订单查看' })
@@ -178,14 +184,15 @@ Page({
   },
   _verify(orderNo, attempt) {
     app.sendRequest({
-      url: '/api/marketing/product/orders', method: 'GET', data: { limit: 20 }, hideLoading: true, autoErrorToast: false,
+      // OR-009:按单号查(orderNo 参数;服务端未支持单查前仍在本人近 20 单里按单号找)
+      url: '/api/marketing/product/orders', method: 'GET', data: { limit: 20, orderNo }, hideLoading: true, autoErrorToast: false,
       success: (res) => {
         const row = isBizOk(res) && Array.isArray(res.data) ? res.data.find((o) => o && o.orderNo === orderNo) : null
         if (row && row.statusLabel === 'PAID') { this._afterOrder(row); return }
         if (attempt < 2) { setTimeout(() => this._verify(orderNo, attempt + 1), 1500); return }
-        this.setData({ buying: false, buyError: row ? mv.orderStateText(row) : '支付结果确认中，请到我的订单查看' })
+        this.setData({ buying: false, buyError: row ? mv.orderStateText(row) : WORDS.CONFIRMING + '，请到我的订单查看' })
       },
-      fail: () => this.setData({ buying: false, buyError: '支付结果确认中，请到我的订单查看' })
+      fail: () => this.setData({ buying: false, buyError: WORDS.CONFIRMING + '，请到我的订单查看' })
     })
   },
   onUnlockDone() {
