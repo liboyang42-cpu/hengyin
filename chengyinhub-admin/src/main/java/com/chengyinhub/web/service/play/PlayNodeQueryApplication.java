@@ -827,8 +827,9 @@ public class PlayNodeQueryApplication {
         }
         data.put("chapters", chapters);
         data.put("nodes", read.nodes);
-        // FE-G7:主题级「只有权益、没有游戏」(加字段;判据见 PerkDisplayTerms.perkOnly)
-        data.put("perkOnly", PerkDisplayTerms.perkOnly(read.playMode, read.nodes));
+        // FE-G7:主题级「只有权益、没有游戏」(判据见 PerkDisplayTerms.perkOnly)。只在为 true 时加字段,
+        // 其余情况不下发,城市定向等既有 /nodes 响应保持与改动前快照逐字一致(CityRouteNodesSnapshotTest)。
+        if (Boolean.TRUE.equals(PerkDisplayTerms.perkOnly(read.playMode, read.nodes))) data.put("perkOnly", true);
         // 规则16:当前可玩集合(nodes/total/doneCount)保持原样;本人已正式完成、但已普通下架的节点
         // 另放 historyNodes 供手记/剧情卡只读回看——不进入 total/完成率/解锁/推荐/地图,也不含任何
         // 可写字段(题面/答案/模板/checkinCode),历史卡没有重新挑战入口。
