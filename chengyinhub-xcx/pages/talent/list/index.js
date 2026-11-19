@@ -102,10 +102,7 @@ Page({
       && typeof app.loadFeatureFlags === 'function' ? app.loadFeatureFlags() : Promise.resolve();
     Promise.resolve(gate).then(function () {
       if (!that._feedCurrent(ctx)) return null;
-      const sources = that._feedSources(ctx.requestId);
-      // PG-001:游客只读社区帖文;俱乐部帖文流要登录,两路都没有时落登录入口。
-      if (!sources.length) return Promise.reject({ loginRequired: true });
-      that._feedMerger = discoverFeed.createFeedMerger(sources);
+      that._feedMerger = discoverFeed.createFeedMerger(that._feedSources(ctx.requestId));
       return that._feedMerger.take(FEED_PAGE_SIZE);
     }).then(function (page) {
       if (!page || !that._feedCurrent(ctx)) return;
@@ -179,8 +176,15 @@ Page({
 
   _feedSources(requestId) {
     const that = this;
-    const sources = [];
-    if (app.getUserID() > 0) sources.push({ fetch: function (beforeId) {
+    const communityOn = typeof app.canUseCommunity === 'function' && app.canUseCommunity(false);
+    // PG-001:游客读俱乐部帖文被拒时,有社区帖就只显示社区帖;两路都没有才落「登录后查看帖文」。
+    const guestClubFail = function (res, beforeId, resolve, reject) {
+      if (app.getUserID() > 0) return false;
+      if (communityOn) resolve({ rows: [], hasMore: false, cursor: beforeId });
+      else reject({ loginRequired: true });
+      return true;
+    };
+    const sources = [{ fetch: function (beforeId) {
       return new Promise(function (resolve, reject) {
         const data = { scope: 'all', limit: FEED_PAGE_SIZE };
         if (beforeId) data.beforeId = beforeId;
@@ -191,15 +195,21 @@ Page({
           header: { 'Content-Type': 'application/json' },
           success(res) {
             if (!isOkRes(res) || !isRecord(res.data) || !isRecordList(res.data.rows)
-                || typeof res.data.hasMore !== 'boolean') return reject(res);
+                || typeof res.data.hasMore !== 'boolean') {
+              if (guestClubFail(res, beforeId, resolve, reject)) return;
+              return reject(res);
+            }
             const rows = res.data.rows.map(discoverFeed.normalizeClubPost);
             resolve({ rows: rows, hasMore: res.data.hasMore, cursor: rows.length ? rows[rows.length - 1].id : beforeId });
           },
-          fail(res) { if (requestId === that._feedRequestId) that._onFeedFail(that._feedCtx, res); reject(res); },
+          fail(res) {
+            if (guestClubFail(res, beforeId, resolve, reject)) return;
+            if (requestId === that._feedRequestId) that._onFeedFail(that._feedCtx, res); reject(res);
+          },
         });
       });
-    } });
-    if (typeof app.canUseCommunity === 'function' && app.canUseCommunity(false)) {
+    } }];
+    if (communityOn) {
       sources.push({ fetch: function (pageNum) {
         const page = pageNum || 1;
         return new Promise(function (resolve, reject) {

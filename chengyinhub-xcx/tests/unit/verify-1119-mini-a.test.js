@@ -9,10 +9,9 @@ const read = (rel) => fs.readFileSync(path.join(root, rel), 'utf8');
 const exists = (rel) => fs.existsSync(path.join(root, rel));
 const noComments = (s) => s.replace(/<!--[\s\S]*?-->/g, '');
 
-test('PG-001:游客的发现帖文流只读社区帖,俱乐部帖文一路要登录,两路都没有时落登录入口', () => {
+test('PG-001:游客读俱乐部帖文被拒时只显示社区帖,两路都没有时落登录入口', () => {
   const js = read('pages/talent/list/index.js');
-  assert.match(js, /if \(app\.getUserID\(\) > 0\) sources\.push\(\{ fetch: function \(beforeId\)/);
-  assert.match(js, /if \(!sources\.length\) return Promise\.reject\(\{ loginRequired: true \}\);/);
+  assert.match(js, /if \(communityOn\) resolve\(\{ rows: \[\], hasMore: false, cursor: beforeId \}\);\n\s*else reject\(\{ loginRequired: true \}\);/);
   assert.match(js, /feedLoginRequired: !!\(res && res\.loginRequired\)/);
   assert.match(js, /retryFeed\(\) \{\n\s*if \(!this\.data\.feedLoginRequired\) return this\.loadFeed\(\);/);
 });
@@ -27,4 +26,17 @@ test('PG-002/PG-004:我的队伍重试不把点击事件当回调;登录门只�
   assert.doesNotMatch(wxml, /<cy-access-gate/);
   assert.match(wxml, /wx:if="\{\{tab === 'mine' && guest\}\}"/);
   assert.match(js, /if \(!app\.ensureLoginFor\('team'/);
+});
+
+test('PG-003:URL 参数解码走 utils/safe-decode,坏 % 序列回退原值', () => {
+  const { safeDecode } = require('../../utils/safe-decode.js');
+  assert.equal(safeDecode('%E5%9F%8E'), '城');
+  assert.equal(safeDecode('%E5%9F'), '%E5%9F');
+  assert.equal(safeDecode(undefined), '');
+  for (const f of ['subpackageRoam/citystamp/index.js', 'subpackageB/pages/im/chat/index.js', 'pages/play/poi-challenge/index.js',
+    'subpackageMember/utils/public-catalog.js', 'subpackageMember/coupon-qr/index.js', 'subpackageMember/market/gift/index.js']) {
+    assert.doesNotMatch(read(f), /decodeURIComponent\(/, f);
+    assert.match(read(f), /require\('[./]+utils\/safe-decode\.js'\)/, f);
+  }
+  assert.doesNotMatch(read('pages/publish/fabu/index.js'), /decodeURIComponent\(options\.templateName\)/);
 });

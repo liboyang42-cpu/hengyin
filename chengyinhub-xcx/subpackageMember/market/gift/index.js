@@ -3,6 +3,7 @@ const app = getApp()
 const { isBizOk } = require('../../../utils/response-shape.js')
 const mv = require('../../utils/market-view.js')
 const { enter, beats } = require('../../../utils/page-motion.js')
+const { safeDecode } = require('../../../utils/safe-decode.js')
 
 Page({
   data: {
@@ -13,7 +14,7 @@ Page({
     claiming: false
   },
   onLoad(options) {
-    this._token = options && options.token ? decodeURIComponent(options.token) : ''
+    this._token = options && options.token ? safeDecode(options.token) : ''
     if (!this._token) this.setData({ state: 'failed', reason: mv.claimReasonText('TOKEN_REQUIRED') })
     // 徽章弹入、光圈循环外扩:transition 分段重放,减少动态效果时都不播(光圈停在隐身)
     enter(this, 'gfIn')

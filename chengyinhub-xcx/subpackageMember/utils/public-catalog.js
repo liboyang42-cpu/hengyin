@@ -1,6 +1,7 @@
 // §20.1 公开目录 + UI-P3 主题合集落地:匿名只读 POST /api/public-catalog/{city/list,list,filters,info}。
 // 只展示服务端给出的事实:没有就不画(不补 0、不猜城市名、不回退旧价、不造评分/人数/到货提醒)。
 // 筛选只发合法枚举;交付形态、玩法、团体/学校选项全部来自 /filters,空集合就不出对应筛选。
+const { safeDecode } = require('../../utils/safe-decode.js')
 
 const PRODUCT_TYPE_LABELS = { 1: '经典定向', 2: '自由探索' }
 const DELIVERY_LABELS = { SELF_PLAY: '自玩', GUIDED_SESSION: '带队场次', CLUB_HOSTED: '俱乐部场次' }
@@ -152,7 +153,7 @@ function sharePath(route, selected) {
 function selectedFromOptions(options) {
   const o = options || {}
   const s = {}
-  FIELDS.forEach((f) => { if (o[f] != null && o[f] !== '') s[f] = decodeURIComponent(String(o[f])) })
+  FIELDS.forEach((f) => { if (o[f] != null && o[f] !== '') s[f] = safeDecode(o[f]) })
   if (s.city_code && !CITY_CODE.test(s.city_code)) delete s.city_code
   return s
 }
