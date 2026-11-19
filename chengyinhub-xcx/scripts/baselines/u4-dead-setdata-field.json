@@ -267,7 +267,6 @@
     "subpackageMember/components/scene-member-participation-detail/index.js::id::A2",
     "subpackageMember/coupon-qr/index.js::couponHistoryId::A2",
     "subpackageMember/coupon/coupon.js::operationScope::A2",
-    "subpackageMember/couponInfo/couponInfo.js::operationScope::A2",
     "subpackageMember/mycanyu/mycanyu.js::sceneStack::A1",
     "subpackageMember/mytemplate/mytemplate.js::filterCategoryId::A1",
     "subpackageMember/mytemplate/mytemplate.js::page::A2",

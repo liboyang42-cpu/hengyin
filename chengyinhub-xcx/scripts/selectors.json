@@ -107,16 +107,6 @@
   "selector": "#ticketSection, .slopes-tabbar",
   "min": 2
  },
- "B51": {
-  "selector": ".simple-ai__chip text",
-  "min": 3,
-  "textIncludes": [
-   "老城建筑与咖啡",
-   "周末亲子探险",
-   "雨天室内漫游"
-  ],
-  "visibleMin": 3
- },
  "B52": {
   "selector": ".cg-hero-body, .cg-count, .cg-label, .cg-sec",
   "min": 1
@@ -1146,11 +1136,6 @@
    "cy-empty"
   ]
  },
- "D15": {
-  "selector": ".coupon-creation-closed",
-  "min": 1,
-  "_why": "R14 暂关新建优惠券，深链检查关闭状态与返回导航；不再以恒渲染外壳冒充表单可用。"
- },
  "D16": {
   "selector": ".cq-page",
   "min": 1,
@@ -1158,14 +1143,6 @@
  },
  "D17": {
   "selector": ".cq-done",
-  "min": 1
- },
- "D19": {
-  "selector": ".txcon_top_je_qian, .txcon_ly_inp",
-  "min": 1
- },
- "D20": {
-  "selector": ".txcon_ly--filled",
   "min": 1
  },
  "D21": {

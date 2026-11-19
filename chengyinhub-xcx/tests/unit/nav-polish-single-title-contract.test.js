@@ -10,7 +10,6 @@ const ROOT = path.join(__dirname, '../..');
 // 本轮去重的 7 页(样板 = subpackageMember/coupon/coupon)
 const PAGES = [
   'subpackageMember/coupon/coupon.wxml',
-  'subpackageMember/couponInfo/couponInfo.wxml',
   'pages/publish/activity/index.wxml',
   'subpackageP3/pages/growthcenter/index/index.wxml',
   'pages/coop/list/index.wxml',

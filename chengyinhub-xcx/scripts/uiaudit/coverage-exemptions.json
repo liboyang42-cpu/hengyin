@@ -8,11 +8,6 @@
       "altVerification": "tests/unit/qx-b8-public-catalog.test.js(锁住带 id 进主题页、其余回首页,以及旧 catalog/detail 分享卡经 onPageNotFound 转到主题页)。"
     },
     {
-      "pagePath": "pages/coop/withdraw/records/index",
-      "reason": "历史深链兼容壳:onLoad 第一句就 wx.redirectTo 到 /subpackageMember/tixianjilu/tixianjilu,自身 wxml 只有一个无 class 的空 view。截它只能截到转跳前的一帧空白,那不是任何人会看到的界面。",
-      "altVerification": "行为断言:reLaunch 本路由后回读 getCurrentPages(),末项 route 必须是 subpackageMember/tixianjilu/tixianjilu(见 scripts/uiaudit/behavior-assertions.md §D)。目标页本身由 D 域矩阵行拍到。"
-    },
-    {
       "pagePath": "subpackageP3/pages/stamp-camera/index/index",
       "reason": "结构性拍不了:整页是相机取景器,模拟器给不出相机流,automator 也无法授予相机权限。拍出来只会是权限拒绝态或黑帧,而黑帧正是本仓最会反向制造假 bug 的那类图。",
       "altVerification": "tests/unit/stamp-camera-layout.test.js + tests/unit/stamp-crop.test.js 锁布局与裁切;取景与拍照归真机手验(真机清单里单列)。"

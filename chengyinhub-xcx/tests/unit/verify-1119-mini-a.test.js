@@ -214,3 +214,12 @@ test('PG-032/PG-033:批量标签不写死颜色;账户收益页删除 tx* 提现
   assert.doesNotMatch(wxml, /\btx[A-Z]\w*|<cy-sheet/);
   assert.match(js, /withdrawCs\.showWithdrawCsPopup\(\)/);
 });
+
+test('PG-034/PG-040/PG-042:商家提现两页、建券页与独立提现页下线,入口与注册表同步收口', () => {
+  for (const dir of ['pages/coop/withdraw', 'subpackageMember/couponInfo', 'subpackageMember/tixian']) assert.equal(exists(dir), false, dir);
+  const app = read('app.json');
+  assert.doesNotMatch(app, /"withdraw\/index"|"withdraw\/records\/index"|couponInfo|"tixian\/tixian"/);
+  assert.doesNotMatch(read('subpackageMember/coupon/coupon.js'), /GoAdd|couponInfo/);
+  const { getScene } = require('../../utils/scene-registry.js');
+  assert.equal(getScene('member-withdraw').route, '/subpackageA/pages/assetcenter/earnings/index');
+});

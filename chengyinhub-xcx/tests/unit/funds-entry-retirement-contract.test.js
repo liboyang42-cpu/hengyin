@@ -21,7 +21,6 @@ const ROOT = path.resolve(__dirname, '../..')
 const PAGES = {
   merchantInfo: 'pages/topic/merchantinfo/merchantinfo.js',
   earnings: 'subpackageA/pages/assetcenter/earnings/index.js',
-  standaloneWithdraw: 'subpackageMember/tixian/tixian.js',
   sceneRoute: 'subpackageMember/components/cy/scene-route-content/index.js',
 }
 
@@ -85,8 +84,8 @@ test('工作台分润明细就地弹出，全部收益进商家浅色账户收�
 function assertWithdrawalCapabilityGuards(sources = {}) {
   const component = sources.component || read('subpackageA/components/scene-asset-earnings/index.js')
   const earnings = sources.earnings || read(PAGES.earnings)
-  const standalone = sources.standalone || read(PAGES.standaloneWithdraw)
-  for (const [name, source] of Object.entries({ component, earnings, standalone })) {
+  // PG-042:独立提现页下线,只剩两处入口读能力
+  for (const [name, source] of Object.entries({ component, earnings })) {
     assert.match(source, /roleGuard\.can\(['"]withdrawable['"]\)/, `${name} 必须读取 withdrawable 能力`)
     assert.doesNotMatch(source, /roleGuard\.role\(\) === ['"]player['"]/, `${name} 不得再按玩家角色硬拦提现`)
   }
@@ -123,8 +122,8 @@ test('退役:三个原写入口的处理器里不得再出现建单/预检调用
     assert.ok(start >= 0 && end > start, `切片失败: ${from} → ${to}`)
     return stripComments(source.slice(start, end))
   }
-  const standalone = sliceBetween(read(PAGES.standaloneWithdraw), 'saveData: function()', 'getUserData: function()')
-  assert.doesNotMatch(standalone, /withdrawal\/create|submitBankWithdrawal/)
+  // PG-042:独立提现页 subpackageMember/tixian 已下线
+  assert.equal(fs.existsSync(path.join(ROOT, 'subpackageMember/tixian')), false)
 
   // PG-033:账户收益页的 txSheet 表单与提交死代码已整块删除
   const earnings = stripComments(read(PAGES.earnings))

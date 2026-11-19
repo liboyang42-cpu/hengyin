@@ -7206,30 +7206,6 @@
    "error"
   ]
  },
- "B51": {
-  "data": {
-   "aiPlan": null,
-   "aiError": "",
-   "aiQuotaLoaded": true,
-   "aiPrompts": [
-    "老城建筑与咖啡",
-    "周末亲子探险",
-    "雨天室内漫游"
-   ],
-   "aiPlanNodes": [
-    "老城建筑与咖啡",
-    "周末亲子探险",
-    "雨天室内漫游"
-   ]
-  },
-  "dropped": [],
-  "switchKeys": [
-   "aiError",
-   "aiPlanNodes",
-   "aiQuotaLoaded",
-   "aiPrompts"
-  ]
- },
  "B52": {
   "data": {
    "pvStepKey": "challenge",
@@ -12626,21 +12602,6 @@
    "summaryItems"
   ]
  },
- "D15": {
-  "data": {
-   "submitError": "",
-   "submitErrorKind": "",
-   "submitErrorTitle": "",
-   "submitErrorRetryable": false
-  },
-  "dropped": [],
-  "switchKeys": [
-   "submitError",
-   "submitErrorKind",
-   "submitErrorTitle",
-   "submitErrorRetryable"
-  ]
- },
  "D17": {
   "data": {
    "qrState": "ready",
@@ -12689,30 +12650,6 @@
    "state",
    "errMsg",
    "pollError"
-  ]
- },
- "D19": {
-  "data": {
-   "balanceErr": false,
-   "balanceLoaded": true
-  },
-  "dropped": [],
-  "switchKeys": [
-   "balanceErr",
-   "balanceLoaded"
-  ]
- },
- "D20": {
-  "data": {
-   "balanceLoaded": true,
-   "balanceErr": false,
-   "balanceText": "128.00",
-   "withdrawHistorySheet": false
-  },
-  "dropped": [],
-  "switchKeys": [
-   "balanceErr",
-   "balanceLoaded"
   ]
  },
  "D21": {
@@ -13534,11 +13471,6 @@
    "errorText"
   ]
  },
- "E05": {
-  "data": null,
-  "dropped": [],
-  "switchKeys": []
- },
  "E07": {
   "data": {
    "tpl": {
@@ -14255,52 +14187,6 @@
    "error"
   ]
  },
- "E18": {
-  "data": {
-   "aiIdea": "周末咖啡与老建筑",
-   "aiGenerating": false,
-   "aiError": "",
-   "aiPlan": {
-    "title": "武康路咖啡建筑漫游",
-    "storyline": "沿着武康路寻找两处建筑细节与店铺故事。"
-   },
-   "aiPlanNodes": [
-    {
-     "name": "武康大楼",
-     "description": "观察红砖立面的转角",
-     "confirmed": true,
-     "address": "武康路 1 号",
-     "longitude": "121.4352",
-     "latitude": "31.2106"
-    },
-    {
-     "name": "安福路话剧院",
-     "description": "找到门楣上的年份",
-     "confirmed": true,
-     "address": "安福路 288 号",
-     "longitude": "121.4256",
-     "latitude": "31.2127"
-    }
-   ],
-   "canEnterAiEditor": true,
-   "aiTraceId": "trace-demo-0807",
-   "aiQuotaLoaded": true,
-   "aiRemaining": 4,
-   "aiPrompts": [
-    "老城建筑与咖啡",
-    "周末亲子探险",
-    "雨天室内漫游"
-   ],
-   "mode": 2
-  },
-  "dropped": [],
-  "switchKeys": [
-   "aiError",
-   "aiPlanNodes",
-   "aiQuotaLoaded",
-   "aiPrompts"
-  ]
- },
  "E19": {
   "data": {
    "difficultyOptions": [
@@ -14817,44 +14703,6 @@
    "state",
    "errMsg",
    "pollError"
-  ]
- },
- "E29": {
-  "data": {
-   "startdate": "2026-08-15 00:00",
-   "enddate": "2026-09-30 23:59",
-   "array2": [
-    "请选择",
-    "礼品券",
-    "9折券",
-    "8折券",
-    "体验卡"
-   ],
-   "index2": 1,
-   "couponTypeSheetVisible": false,
-   "formData": {
-    "name": "到店立减 10 元",
-    "startTime": "2026-08-15 00:00",
-    "endTime": "2026-09-30 23:59",
-    "publishCount": 100,
-    "couponType": 1,
-    "description": "满 69 元可用，每人限用一张。"
-   },
-   "canSubmit": true,
-   "isSubmitting": false,
-   "displayStartTime": "2026-08-15",
-   "displayEndTime": "2026-09-30",
-   "submitError": "",
-   "submitErrorKind": "",
-   "submitErrorTitle": "",
-   "submitErrorRetryable": false
-  },
-  "dropped": [],
-  "switchKeys": [
-   "submitError",
-   "submitErrorKind",
-   "submitErrorTitle",
-   "submitErrorRetryable"
   ]
  },
  "E30": {

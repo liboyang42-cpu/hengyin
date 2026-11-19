@@ -23,17 +23,8 @@ function assertTixianFormRetired(js, wxml) {
   assert.match(wxml, /bindtap="saveData"/, '页面唯一的提现动作是联系客服(弹客服微信)')
 }
 
-test('独立提现页:银行卡表单已退役,只剩客服入口', () => {
-  assertTixianFormRetired(read('subpackageMember/tixian/tixian.js'), read('subpackageMember/tixian/tixian.wxml'))
-})
+// PG-042:独立提现页 subpackageMember/tixian 下线,表单退役用例随页移除。
 
-test('负控:银行卡表单加回独立提现页时必须判红', () => {
-  const wxml = read('subpackageMember/tixian/tixian.wxml')
-  const js = read('subpackageMember/tixian/tixian.js')
-  const brokenWxml = wxml.replace('bindtap="saveData"', 'bindtap="saveData" disabled="{{!canSubmit}}"')
-  assert.notEqual(brokenWxml, wxml, '负控锚点失效:独立提现页没有 saveData 接线')
-  assert.throws(() => assertTixianFormRetired(js, brokenWxml), assert.AssertionError)
-})
 
 test('经典商家报名：提交报名只读 JS canSubmit', () => {
   const js = read('pages/topic/merchantapply/index.js')
@@ -232,7 +223,6 @@ test('玩法模板起名页已退役删除:不得注册、不得残留页面文�
 const SIMPLE_FORM_ROUTES = [
   ['参与人信息', 'pages/addressinfo/addressinfo', '保存参与人信息'],
   ['投诉', 'subpackageMember/complaint/index', '提交投诉'],
-  ['优惠券', 'subpackageMember/couponInfo/couponInfo', '发布优惠券'],
 ]
 
 test('其余必填表单主按钮统一只读 canSubmit', () => {

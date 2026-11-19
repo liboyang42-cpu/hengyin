@@ -234,20 +234,8 @@ test('模板上下架重复点击只发一次', () => {
 
 })
 
-test('提现页的资金提交门闩随建单链路一起退役,只留客服弹窗', () => {
-  // 2026-09-15 收款模型定稿 §3:平台不打款,本页「确认提现」不再建提现单。
-  // 原来这两条钉的是「submitting 门闩要暴露给按钮 / 同步异常也要释放门闩」——
-  // 门闩守的那次资金提交已不存在,留着就是守一个假事实。改成反向断言:
-  // saveData 必须只弹平台客服微信,不得再出现门闩置位与建单/预检调用。
-  const js = read('subpackageMember/tixian/tixian.js')
-  const body = js.slice(js.indexOf('saveData: function()'), js.indexOf('getUserData: function()'))
-  const stripped = body.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '')
-  assert.match(stripped, /withdrawCs\.showWithdrawCsPopup\(\)/, '「确认提现」必须弹平台客服微信')
-  assert.doesNotMatch(stripped, /submitBankWithdrawal|withdrawal\/create/, '不得再建提现单')
-  assert.doesNotMatch(stripped, /_submitting\s*=\s*true|submitting:\s*true/, '资金门闩已随建单链路退役')
-  // 2026-09-16:表单本身也已退役(页面只留客服入口)——门闩与输入控件一起从 wxml 撤除。
-  assert.doesNotMatch(read('subpackageMember/tixian/tixian.wxml'), /canSubmit|placeholder-class="tx-placeholder"/,
-    '银行卡表单已退役，页面不该再有提交门闩或银行卡输入控件')
+test('独立提现页随资金建单链路一起下线(PG-042)', () => {
+  assert.equal(fs.existsSync(path.join(ROOT, 'subpackageMember/tixian')), false)
 })
 
 test('设置页查询俱乐部失败不再假装用户未申请，并用真实图标替代字符箭头', () => {

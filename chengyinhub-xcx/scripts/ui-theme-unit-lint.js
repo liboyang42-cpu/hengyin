@@ -40,11 +40,11 @@ const DOMAIN_RULES = [
     // 2026-11-19 ui-sweep U10:我发布的优惠券(coupon)与建券页(couponInfo)进共享域 —— 商家(scope=MERCHANT/商家视角)浅色,玩家深色。
     // 2026-11-19 PG-029:商家口碑页(merchant/reviews)进共享域 —— 公开态(玩家看商家)深色,管理态商家浅色。
     // 2026-11-19 PG-036:资料详情(infomationdetail)随资料列表进共享域,按 policy.isMerchantView 二选一。
-    route: /^(?:pages\/merchant\/reviews\/|subpackageA\/pages\/infomationdetail\/|pages\/coop\/finance\/index$|pages\/topic\/pricing\/index$|pages\/(?:template|templatedetail|talent|shezhi|mylike|crop|searchmap|search2)\/|pages\/square\/detail\/|pages\/club\/(?:topic-story|detail)\/|pages\/activity\/(?:detail|official-(?:inbox|mine|detail|organizer))\/|subpackageMember\/(?:mytemplate|tixianjilu|coupon|couponInfo)\/|subpackageA\/pages\/(?:infomation|myproject|assetcenter\/(?:earnings|analysis|income-detail))\/|subpackageB\/pages\/im\/)/
+    route: /^(?:pages\/merchant\/reviews\/|subpackageA\/pages\/infomationdetail\/|pages\/coop\/finance\/index$|pages\/topic\/pricing\/index$|pages\/(?:template|templatedetail|talent|shezhi|mylike|crop|searchmap|search2)\/|pages\/square\/detail\/|pages\/club\/(?:topic-story|detail)\/|pages\/activity\/(?:detail|official-(?:inbox|mine|detail|organizer))\/|subpackageMember\/(?:mytemplate|tixianjilu|coupon)\/|subpackageA\/pages\/(?:infomation|myproject|assetcenter\/(?:earnings|analysis|income-detail))\/|subpackageB\/pages\/im\/)/
   },
   {
     domain: 'merchant',
-    route: /^(?:pages\/(?:merchant\/(?!discover\/)|coop\/|publish\/|activity\/official-(?:detail|organizer)\/|topic\/(?:merchantinfo|merchantapply|pricing)\/)|subpackageMember\/(?:coupon\/|couponInfo\/))/
+    route: /^(?:pages\/(?:merchant\/(?!discover\/)|coop\/|publish\/|activity\/official-(?:detail|organizer)\/|topic\/(?:merchantinfo|merchantapply|pricing)\/)|subpackageMember\/coupon\/)/
   }
 ];
 

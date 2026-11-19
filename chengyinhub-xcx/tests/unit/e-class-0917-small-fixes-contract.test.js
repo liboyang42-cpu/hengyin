@@ -30,17 +30,4 @@ test('A-14-3:搜索入口页不再绑死字段 searchLoading', () => {
   assert.match(broken, /loading="\{\{searchLoading\}\}"/, '负控必须复现死绑定');
 });
 
-test('COUPON-RPT-10:E29 截图桩券类型与 COUPON_TYPE_LABELS 同源(含体验卡)', () => {
-  const matrix = read('scripts/shot-matrix.js');
-  const line = matrix.split('\n').find((row) => row.includes("'E29'"));
-  assert.ok(line, 'shot-matrix 必须有 E29 行');
-  const matched = line.match(/array2:\s*(\[[^\]]*\])/);
-  assert.ok(matched, 'E29 行必须带 array2 fixture');
-  const fixture = JSON.parse(matched[1].replace(/'/g, '"'));
-  assert.deepEqual(fixture, COUPON_TYPE_LABELS, 'fixture 必须等于真源(0=请选择,1/2/3 券种,4=体验卡)');
-  assert.ok(fixture.includes('体验卡'), '旧四项(无体验卡)会拍出过期证据');
-
-  // 负控:旧四项 fixture 必须被判红
-  const broken = 'array2: [\'请选择\', \'礼品券\', \'9折券\', \'8折券\']';
-  assert.notDeepEqual(JSON.parse(broken.match(/\[[^\]]*\]/)[0].replace(/'/g, '"')), COUPON_TYPE_LABELS);
-});
+// PG-040:建券页 couponInfo 下线,E29 截图行随页删除。

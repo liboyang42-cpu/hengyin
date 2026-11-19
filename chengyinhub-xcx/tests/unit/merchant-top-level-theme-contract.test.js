@@ -12,7 +12,7 @@ const PAGES = [
   'pages/merchant/relation/index.js',
   'pages/merchant/citynode/index.js',
   'pages/coop/finance/index.js',
-  'pages/coop/withdraw/index.js',
+  // PG-034:pages/coop/withdraw 已下线
 ]
 const read = relativePath => fs.readFileSync(path.join(ROOT, relativePath), 'utf8')
 

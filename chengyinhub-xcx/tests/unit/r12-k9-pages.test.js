@@ -172,9 +172,7 @@ test('p2 N-15:AI 形象保存后的状态签跟回执走', () => {
   assert.match(read('pages/merchant/decor/ai-npc/index.js'), /auditStatus: receipt && receipt\.review === 'APPROVED' \? 1 : \(receipt && receipt\.review === 'REJECTED' \? 2 : 0\)/);
 });
 
-test('p2 N-13:投放数不预填假 0', () => {
-  assert.match(read('subpackageMember/couponInfo/couponInfo.wxml'), /placeholder="请输入投放数量" value="\{\{formData\.publishCount \|\| ''\}\}"/);
-});
+// PG-040:couponInfo 建券页下线,投放数用例随页移除。
 
 test('j1:结算到账提醒没问过授权时不写说明行;到上限的标题不怪身份;开场标题与按钮留间距', () => {
   const js = read('pages/merchant/ledger/index.js');

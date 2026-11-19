@@ -67,10 +67,10 @@ const EXPECTED_NAV_ROUTES = [
   'pages/club/apply/index',
   'pages/agreement/index', 'pages/deregister/index', 'pages/gerenziliao/gerenziliao', 'pages/userinfo/userinfo',
   'subpackageMember/mytemplate/mytemplate', 'subpackageMember/coupon-qr/index', 'subpackageMember/coupon/coupon',
-  'subpackageMember/couponInfo/couponInfo', 'subpackageMember/order/order', 'subpackageMember/orderinfo/orderinfo',
+  'subpackageMember/order/order', 'subpackageMember/orderinfo/orderinfo',
   // 2026-08-24：userinfo 正常态仍由 cy-profile 持有标题；缺 userId 的深链恢复态
   // 在页面壳显示 cy-nav-bar + cy-page-title，因此静态盘点重新纳入该路由。
-  'subpackageMember/tixian/tixian', 'subpackageMember/tixianjilu/tixianjilu',
+  'subpackageMember/tixianjilu/tixianjilu',
   'pages/mylike/mylike', 'subpackageMember/mycanyu/mycanyu', 'subpackageMember/mycanyuinfo/mycanyuinfo',
   'subpackageMember/myinvite/myinvite', 'subpackageMember/complaint/index', 'subpackageRoam/citynode-code/index',
   'pages/activity/detail/index', 'pages/activity/baoming/baoming', 'pages/activity/list/index',
@@ -120,7 +120,6 @@ const EXPECTED_NAV_ROUTES = [
   'pages/coop/list/index', 'pages/coop/invite-detail/index', 'pages/coop/invite/index', 'pages/coop/nearby/index',
   'pages/coop/finance/index',
   'pages/coop/settlement-detail/index',
-  'pages/coop/withdraw/index', 'pages/coop/withdraw/records/index',
   /* 2026-09-22 Phase 0 物品卡实验室页:custom 导航 + cy-nav-bar,顶栏只有返回钮。 */
   /* 2026-09-22 Phase 3 藏品册页:同上,custom 导航 + cy-nav-bar。 */
   'subpackageP3/pages/object-cards/index/index',
@@ -179,8 +178,8 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   'pages/club/apply/index',
   'pages/shezhi/shezhi', 'pages/shezhi/about/index', 'pages/agreement/index', 'pages/deregister/index', 'pages/userinfo/userinfo',
   'pages/shezhi/marketing/index',
-  'subpackageMember/mytemplate/mytemplate', 'subpackageMember/coupon/coupon', 'subpackageMember/couponInfo/couponInfo',
-  'subpackageMember/order/order', 'subpackageMember/orderinfo/orderinfo', 'subpackageMember/tixian/tixian',
+  'subpackageMember/mytemplate/mytemplate', 'subpackageMember/coupon/coupon',
+  'subpackageMember/order/order', 'subpackageMember/orderinfo/orderinfo',
   'subpackageMember/tixianjilu/tixianjilu', 'pages/mylike/mylike', 'subpackageMember/mycanyu/mycanyu',
   'subpackageMember/mycanyuinfo/mycanyuinfo', 'subpackageMember/myinvite/myinvite', 'subpackageMember/complaint/index',
   'subpackageRoam/session/index',
@@ -211,7 +210,6 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   'pages/coop/list/index', 'pages/coop/invite-detail/index', 'pages/coop/invite/index', 'pages/coop/nearby/index',
   'pages/coop/finance/index',
   'pages/coop/settlement-detail/index',
-  'pages/coop/withdraw/index', 'pages/coop/withdraw/records/index',
   /* 2026-09-22 Phase 0 物品卡实验室页:普通玩家二级页,左对齐大标题「立体藏品卡」由 cy-page-title 出。 */
   /* 2026-09-22 Phase 3 藏品册页:普通玩家二级页,左对齐大标题「藏品册」由 cy-page-title 出。 */
   // 2026-10-30 业主定稿 P-3:集邮册、藏品册成了「收集册」两段,大标题由 album-head 组件给,不再用 cy-page-title。
@@ -372,10 +370,12 @@ function assertTitleInventory(readSource = read) {
   // 2026-11-14 free-explore-1114 +1(custom 导航):商家套票预约 pages/merchant/bundle-reservations ⇒ 174;custom 173。
   // 2026-11-18 F14c(PG-025)−1:合集详情 catalog/detail 下线;catalog/index 只留无内容的重定向页(custom 导航,无 cy-nav-bar)⇒ 173;custom 172。
   // 2026-11-19 PG-020/PG-021 −2:topicadd 兼容壳与 publish/simple 快速配置页删除 ⇒ 171。
-  assert.equal(rows.length, 171, '注册页面盘点数量发生漂移,需重新核对标题规范')
+  // 2026-11-19 PG-034/PG-040/PG-042 −4:coop/withdraw 两页、couponInfo、tixian 下线 ⇒ 167。
+  assert.equal(rows.length, 167, '注册页面盘点数量发生漂移,需重新核对标题规范')
   // 2026-11-13 pass-mini +1(custom 导航):通行证订单详情 market/pass-order ⇒ 173;custom 172。
   // 2026-11-19 PG-020/PG-021 −2(均 custom 导航)⇒ custom 170。
-  assert.equal(rows.filter((row) => row.custom).length, 170)
+  // 2026-11-19 PG-034/PG-040/PG-042 −4(均 custom 导航)⇒ custom 166。
+  assert.equal(rows.filter((row) => row.custom).length, 166)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
   //   均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 = 133；custom 导航 129 + 2 = 131。
   const knownRoutes = new Set(routes)

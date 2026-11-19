@@ -23,7 +23,7 @@ const registry = fs.readFileSync(path.join(root, 'chengyinhub-xcx/utils/scene-re
 const entries = navigationEntries(runtimeSources(path.join(root, 'chengyinhub-xcx')))
   .concat(registry.flatMap((line, index) => [...line.matchAll(/route:\s*'(\/[^']+)'/g)]
     .map(match => ({ rel: 'utils/scene-registry.js', line: index + 1, route: match[1], consumer: 'scene-registry' }))));
-const candidates = new Set(['pages/play/circle/index', 'pages/club/workbench/index', 'pages/coop/withdraw/index', 'pages/coop/withdraw/records/index']);
+const candidates = new Set(['pages/play/circle/index', 'pages/club/workbench/index']);
 const rows = pages.map(page => {
   const directory = 'chengyinhub-xcx/' + page.slice(0, page.lastIndexOf('/') + 1);
   const prefix = page.slice(0, page.lastIndexOf('/'));
