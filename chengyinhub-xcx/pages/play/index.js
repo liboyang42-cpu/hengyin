@@ -1915,7 +1915,7 @@ Page({
           const cy = it.top + it.height / 2 - box.top;
           const inView = that.data.reducedMotion || (it.bottom > box.top + 80 && it.top < box.bottom - 40);
           if (ln.in && !inView) return { ...ln, in: false, dir: cy < 0 ? 'down' : 'up', d: 0 };
-          if (!ln.in && inView) { const d = (order++) * 0.35; if (chapterFull && ln.fx === 'decode') that._decodeLine(i); return { ...ln, in: true, dir, d }; } /* 解码:滑进来时才开始还原 */
+          if (!ln.in && inView) { const d = (order++) * 0.35; if (chapterFull && ln.fx === 'decode') that._decodeLine(i); if (chapterFull && ln.typedKey) that._markTyped(ln.typedKey); return { ...ln, in: true, dir, d }; } /* 解码:滑进来时才开始还原 */
           return ln;
         });
         // 只发显形状态中真正改变的路径,不把文字、图片与玩法配置整表重传。
