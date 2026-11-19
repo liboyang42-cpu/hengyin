@@ -289,8 +289,6 @@ const MATRIX = [
   // 2026-10-22 W10b #27:NPC 对话原请求只读回读,ApiAiNpcController.chatRequest 只按登录态 + 原会话 + requestId 读本人记录。
   ['subpackageMember/components/cy/npc-chat/index.js', "url: '/api/ai/npc/chat/request'", 'required', 'member', 'self-account'],
   // W10b #22:简易 AI 起草按 requestId 只读回读,ApiAiController.themeDraftRequest 键按登录会员隔离。
-  ['pages/publish/simple/index.js', "url: '/api/ai/theme/draft/request'", 'required', 'author', 'self-account'],
-  ['pages/publish/simple/index.js', "url: '/api/ai/theme/draft/recovery'", 'required', 'author', 'self-account'],
   // W10b #25:本人资料审核回执(只取登录态)与门店 AI 形象审核回执(商家 PROFILE_WRITE,按登录商家派生)。
   ['pages/gerenziliao/gerenziliao.js', "url: '/api/user/profile/review'", 'required', 'member', 'self-account'],
   ['pages/merchant/decor/ai-npc/index.js', "url: '/api/merchant/npc/review'", 'required', 'merchant', 'self-merchant'],
@@ -525,7 +523,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-11-18 FE-STORY 7.10:fabu 节点抽屉读本主题地点到访方式一处(作者本人,已入 MATRIX),136 → 137。
   // 2026-11-18 F11:自由探索参考结算组件一处、权益卡表单线下结算说明一处(均已入 MATRIX),137 → 139。
   // 2026-11-18 F10:作者编辑器读位置承接进度 /api/topic/fe/sale-readiness,139 → 140。
-  assert.equal(directCount, 140, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-11-19 PG-021:简易发布页删除,其 AI 草稿 request / recovery 两处直接 GET 随页删除,140 → 138。
+  assert.equal(directCount, 138, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。

@@ -63,7 +63,8 @@ const EXCLUDED_DESIGN_DOMAINS = [
   }
 ];
 const EXCLUSION_PATH_CONTRACT = /^pages\/(?:play|roam)\/$/;
-const THEMELESS_REDIRECT_SHELLS = new Set(['pages/publish/topicadd/topicadd']);
+// PG-020:topicadd 兼容壳已删除;无主题重定向壳登记保留为空集,新增须显式登记。
+const THEMELESS_REDIRECT_SHELLS = new Set();
 
 const UNIT_WORDS = [
   '公里', '千米', '小时', '分钟', '米', '家', '%', '次', '张', '人', '元',
@@ -181,10 +182,8 @@ function pageRoutes(appJson) {
 function findThemeErrors(root = XCX_ROOT) {
   const appJson = JSON.parse(fs.readFileSync(path.join(root, 'app.json'), 'utf8'));
   const routes = pageRoutes(appJson);
-  if (THEMELESS_REDIRECT_SHELLS.size !== 1
-    || !THEMELESS_REDIRECT_SHELLS.has('pages/publish/topicadd/topicadd')
-    || !routes.includes('pages/publish/topicadd/topicadd')) {
-    throw new Error('无主题重定向壳必须保持唯一，且只能是已注册的 topicadd 兼容页');
+  for (const shell of THEMELESS_REDIRECT_SHELLS) {
+    if (!routes.includes(shell)) throw new Error('无主题重定向壳必须是已注册页面: ' + shell);
   }
   return routes.filter((route) => !isExcludedDesignPath(`${route}/`)).flatMap((route) => {
     const file = path.join(root, `${route}.wxml`);

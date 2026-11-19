@@ -6241,28 +6241,6 @@ Page({
       showCategoryModal: false
     });
   },
-  // 切换分类选择
-  toggleCategorySelect(e) {
-    let categoryId = e.currentTarget.dataset.id;
-    let categoryName = e.currentTarget.dataset.name;
-    let selectedIds = [...this.data.selectedCategoryIds];
-    let selectedNames = [...this.data.selectedCategoryNames];
-
-    let index = selectedIds.indexOf(categoryId);
-    if (index > -1) {
-      selectedIds.splice(index, 1);
-      selectedNames.splice(index, 1);
-    } else {
-      selectedIds.push(categoryId);
-      selectedNames.push(categoryName);
-    }
-
-    this.setData({
-      selectedCategoryIds: selectedIds,
-      selectedCategoryNames: selectedNames
-    });
-  },
-
   // 确认分类选择
   confirmCategorySelect() {
     this.setData({

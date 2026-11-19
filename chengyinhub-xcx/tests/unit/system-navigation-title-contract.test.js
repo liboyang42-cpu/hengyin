@@ -173,31 +173,12 @@ function assertDirectProfessionalEntryCallers() {
   })
 }
 
-function runTopicaddRedirect(options) {
-  let definition
-  const redirects = []
-  vm.runInNewContext(read(TOPICADD_REDIRECT_SHELL + '.js'), {
-    Page(config) { definition = config },
-    wx: {
-      redirectTo({ url }) { redirects.push(url) },
-    },
-  }, { filename: TOPICADD_REDIRECT_SHELL + '.js' })
-  assert.ok(definition, 'topicadd 重定向壳必须注册 Page')
-  definition.onLoad(options)
-  return redirects
-}
-
 test('5 个专业编辑入口(6 处跳转)全部直达 fabu', () => {
   assertDirectProfessionalEntryCallers()
 })
 
-test('topicadd 兼容壳使用 redirectTo，并原样透传 templateName/mode/clubId', () => {
-  assert.deepEqual(runTopicaddRedirect({
-    templateName: '夜 行&档案',
-    mode: '0',
-    clubId: 'club/7',
-  }), ['/pages/publish/fabu/index?templateName=%E5%A4%9C%20%E8%A1%8C%26%E6%A1%A3%E6%A1%88&mode=0&clubId=club%2F7'])
-  assert.deepEqual(runTopicaddRedirect({}), ['/pages/publish/fabu/index'])
+test('PG-020:topicadd 兼容壳已删除', () => {
+  assert.equal(fs.existsSync(path.join(__dirname, '../..', TOPICADD_REDIRECT_SHELL + '.js')), false)
 })
 
 test('二级页已转 Revolut 式 custom 导航:返回钮 + 返回钮下大标题 + 让位', () => {

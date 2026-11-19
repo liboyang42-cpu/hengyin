@@ -154,13 +154,11 @@ test('发布编辑页销毁时让新增身份、模板与编辑回调全部失�
 
 function assertVisibleRecoveryMarkup(overrides = {}) {
   const intro = overrides.intro || read('pages/publish/template-intro/index.wxml')
-  const topicaddJs = overrides.topicaddJs || read('pages/publish/topicadd/topicadd.js')
 
   assert.match(intro, /cardsLoading/)
   assert.match(intro, /cardsError/)
   assert.doesNotMatch(intro, /class="ti-dots"/, '静态圆点会伪装成不存在的轮播交互')
-  assert.match(topicaddJs, /wx\.reLaunch\(/)
-  assert.match(topicaddJs, /wx\.switchTab\(/)
+  // PG-020:topicadd 兼容壳已删除,不再校验其重定向兜底。
 }
 
 test('创建链路每页都有可见恢复路径、离页保护和可访问操作', () => {

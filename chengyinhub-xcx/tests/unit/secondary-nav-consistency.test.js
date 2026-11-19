@@ -89,19 +89,12 @@ function assertSingleBackAffordance(wxml, label) {
   assert.deepEqual(extraBacks, [], `${label} 除 cy-nav-bar 外不得再画返回钮(${extraBacks.length} 处),返回入口只能有一个`)
 }
 
-test('publish/simple 的返回入口只有 cy-nav-bar 一个', () => {
-  assertSingleBackAffordance(read('pages/publish/simple/index.wxml'), 'publish simple')
-})
-
-test('negative control: publish/simple 自带圆形返回钮回潮必须判红', () => {
-  const source = read('pages/publish/simple/index.wxml')
-  // 2026-10-28 p86:自绘页头撤掉,锚点换成页身第一块 hero;2026-11-11 f-merchant 撤掉 hero,锚点换成兴趣标签卡
-  const mutated = source.replace(
-    '      <view class="simple-ai__tags"',
-    '      <view class="simple-ai__back" bindtap="onAiBack" aria-label="返回">‹</view>\n      <view class="simple-ai__tags"',
-  )
-  assert.notEqual(mutated, source, '变异锚点失效(源码已改动?)')
-  assert.throws(() => assertSingleBackAffordance(mutated, 'publish simple'), assert.AssertionError)
+// PG-021:publish/simple 整页删除;assertSingleBackAffordance 负控改用合成片段。
+test('negative control: 自带圆形返回钮回潮必须判红', () => {
+  const source = '<cy-nav-bar />\n<view class="body"></view>'
+  assert.doesNotThrow(() => assertSingleBackAffordance(source, 'synthetic'))
+  const mutated = source.replace('<view class="body">', '<view class="x__back" bindtap="onBack" aria-label="返回">‹</view><view class="body">')
+  assert.throws(() => assertSingleBackAffordance(mutated, 'synthetic'), assert.AssertionError)
 })
 
 test('negative control: a non-hero page reintroducing a pill is rejected', () => {

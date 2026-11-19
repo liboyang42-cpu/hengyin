@@ -86,7 +86,7 @@ const EXPECTED_NAV_ROUTES = [
   'subpackageP3/pages/growthcenter/index/index',
   'subpackageP3/pages/growthcenter/leaderboard/index',
   'subpackageP3/pages/stamp-album/index/index', 'subpackageB/pages/im/list/index',
-  'subpackageB/pages/im/chat/index', 'pages/publish/simple/index', 'pages/publish/temp/index',
+  'subpackageB/pages/im/chat/index', 'pages/publish/temp/index',
   'pages/publish/activity/index',
   'pages/publish/template-intro/index', // 2026-10-23 templateadd 退役删除
   'pages/club/create/index', 'pages/club/detail/index', 'pages/club/edit/index', 'pages/club/enroll/index', 'pages/club/checkin-detail/index', 'pages/club/join-requests/index',
@@ -371,9 +371,11 @@ function assertTitleInventory(readSource = read) {
   // 2026-11-12 club-payout-binding +1(custom 导航):个人收款 pages/club/payout-receiver ⇒ 172;custom 171。
   // 2026-11-14 free-explore-1114 +1(custom 导航):商家套票预约 pages/merchant/bundle-reservations ⇒ 174;custom 173。
   // 2026-11-18 F14c(PG-025)−1:合集详情 catalog/detail 下线;catalog/index 只留无内容的重定向页(custom 导航,无 cy-nav-bar)⇒ 173;custom 172。
-  assert.equal(rows.length, 173, '注册页面盘点数量发生漂移,需重新核对标题规范')
+  // 2026-11-19 PG-020/PG-021 −2:topicadd 兼容壳与 publish/simple 快速配置页删除 ⇒ 171。
+  assert.equal(rows.length, 171, '注册页面盘点数量发生漂移,需重新核对标题规范')
   // 2026-11-13 pass-mini +1(custom 导航):通行证订单详情 market/pass-order ⇒ 173;custom 172。
-  assert.equal(rows.filter((row) => row.custom).length, 172)
+  // 2026-11-19 PG-020/PG-021 −2(均 custom 导航)⇒ custom 170。
+  assert.equal(rows.filter((row) => row.custom).length, 170)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
   //   均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 = 133；custom 导航 129 + 2 = 131。
   const knownRoutes = new Set(routes)
@@ -400,14 +402,10 @@ test('标题盘点:注册页面与当前规范基线可回读', () => {
   assertTitleInventory()
 })
 
-test('topicadd 重定向壳保留 app.json 注册，但不再拥有可见导航或页面标题', () => {
+test('PG-020:topicadd 重定向壳已删除并摘出 app.json', () => {
   const app = JSON.parse(read('app.json'))
   const routes = app.pages.concat(app.subPackages.flatMap((pkg) => pkg.pages.map((page) => `${pkg.root}/${page}`)))
-  const source = routeSources(TOPICADD_REDIRECT_SHELL)
-  assert.ok(routes.includes(TOPICADD_REDIRECT_SHELL), '兼容历史页面栈期间 topicadd 必须保留注册')
-  assert.doesNotMatch(source.wxml, /<cy-nav-bar\b|<cy-page-title\b|class="(?:h1|cy-h1|m-h1)"/)
-  assert.equal((source.json.usingComponents || {})['cy-nav-bar'], undefined)
-  assert.equal((source.json.usingComponents || {})['cy-page-title'], undefined)
+  assert.ok(!routes.includes(TOPICADD_REDIRECT_SHELL))
 })
 
 test('负控:myinvite 源码摘掉 page-title 时真实盘点必须判红', () => {

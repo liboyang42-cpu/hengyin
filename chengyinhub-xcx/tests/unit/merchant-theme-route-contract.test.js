@@ -39,12 +39,12 @@ test('商家工作域从 app.json 自动发现且页面顶层显式挂商家主�
   })
   assert.deepEqual(
     merchantRoutes.filter((route) => THEMELESS_REDIRECT_SHELLS.has(route)),
-    ['pages/publish/topicadd/topicadd'],
-    '无实体主题根的商家域重定向壳必须保持显式、唯一',
+    [],
+    'PG-020:topicadd 兼容壳已删除,商家域不再有无实体主题根的重定向壳',
   )
 })
 
-test('负控:topicadd 重定向壳重新渲染实体节点必须判红', () => {
+test('负控:重定向壳重新渲染实体节点必须判红', () => {
   const broken = '<view class="theme-topic-editor"></view>'
   assert.equal(hasPageEntityMarkup(broken), true, '重定向壳长回实体 UI 后必须离开无主题豁免')
 })
@@ -85,9 +85,7 @@ test('搜索地图是共享页:双主题通过,缺任一主题仍被真实门禁
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'searchmap-theme-'))
   t.after(() => fs.rmSync(root, { recursive: true, force: true }))
   fs.mkdirSync(path.join(root, 'pages/searchmap'), { recursive: true })
-  fs.mkdirSync(path.join(root, 'pages/publish/topicadd'), { recursive: true })
-  fs.writeFileSync(path.join(root, 'app.json'), JSON.stringify({ pages: [route, 'pages/publish/topicadd/topicadd'] }))
-  fs.writeFileSync(path.join(root, 'pages/publish/topicadd/topicadd.wxml'), '<!-- redirect shell -->')
+  fs.writeFileSync(path.join(root, 'app.json'), JSON.stringify({ pages: [route] }))
   const file = path.join(root, route + '.wxml')
   fs.writeFileSync(file, read(route + '.wxml'))
   assert.deepEqual(findThemeErrors(root), [], '真实双主题页面必须通过')

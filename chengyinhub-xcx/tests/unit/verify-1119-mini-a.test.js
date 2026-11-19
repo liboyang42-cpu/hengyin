@@ -144,3 +144,18 @@ test('PG-017:站点商家页缺节点时从游玩页重读后再找;链接直达
   assert.equal(page.data.notFound, false);
   assert.equal(page.data.node.name, 'A');
 });
+
+test('PG-018/PG-019:合作邀请卡只留「去处理」;fabu 只定义一份 toggleCategorySelect', () => {
+  const wxml = noComments(read('subpackageB/pages/im/list/index.wxml'));
+  assert.doesNotMatch(wxml, />回复<|>拒绝<|>接受合作</);
+  assert.match(wxml, /catchtap="openInvite"[^>]*>去处理</);
+  assert.equal((read('pages/publish/fabu/index.js').match(/^\s+toggleCategorySelect[:(]/gm) || []).length, 1);
+});
+
+test('PG-020/PG-021:topicadd 与 simple 页删除并摘出 app.json 与主题 lint 白名单', () => {
+  assert.equal(exists('pages/publish/topicadd'), false);
+  assert.equal(exists('pages/publish/simple'), false);
+  const app = read('app.json');
+  assert.doesNotMatch(app, /topicadd|"simple\/index"/);
+  assert.doesNotMatch(read('scripts/ui-theme-unit-lint.js'), /topicadd/);
+});

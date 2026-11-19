@@ -267,19 +267,7 @@ test('地图列表在已有内容翻页失败时显示局部重试', () => {
   assert.match(wxml, /<cy-skeleton[^>]*type="map-card"/);
 });
 
-test('AI 起草只陈述不透明任务，不伪造阶段或百分比', () => {
-  const wxml = source('pages/publish/simple/index.wxml');
-  const progress = wxml.match(/<cy-progress-status[^>]*>/);
-  assert.ok(progress, '生成请求需要紧凑任务态');
-  assert.match(progress[0], /density="compact"/);
-  assert.match(progress[0], /title="正在生成主题草稿"/);
-  assert.match(progress[0], /sub="完成后仍需你确认地点"/);
-  assert.doesNotMatch(progress[0], /\b(?:steps|current|percent)=/);
-  assert.match(wxml,
-    /<cy-progress-status\b[^>]*wx:if="\{\{aiGenerating\}\}"[\s\S]*?<cy-inline-error\b[^>]*wx:elif="\{\{aiError\}\}"/,
-    'AI 失败必须与生成中互斥，不能在请求 complete 前短暂同屏');
-  assert.doesNotMatch(wxml, /class="simple-ai__error"/);
-});
+// PG-021:AI 起草所在的 publish/simple 整页删除,对应用例随页移除。
 
 test('主题详情只接受具备可渲染名称的数据', () => {
   const malformed = loadTopicPage();

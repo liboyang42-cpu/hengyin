@@ -28,8 +28,7 @@ const NAV_WITHOUT_L1_TITLE = new Set([
   'subpackageP3/pages/stamp-album/index/index.wxml',
   'subpackageP3/pages/object-cards/index/index.wxml',
   'pages/merchant/decor/ai-npc/index.wxml',
-  // 2026-10-28 p86:快速配置 —— 「快速配置」在 cy-nav-bar 居中,正文首屏是问句 + 兴趣气泡
-  'pages/publish/simple/index.wxml',
+  // 2026-11-19 PG-021:快速配置 publish/simple 整页删除,条目随页移除。
   // 2026-11-10 qx-b5(qx-c3 归类):领取礼品 —— 「领取礼品」在 cy-nav-bar 居中,正文是整屏 cy-empty 结果态 + 底部按钮,没有 L1 大标题行。
   'subpackageMember/market/gift/index.wxml',
   // 2026-11-10 l-pass:通行证页(原型 ps-pass)—— 「通行证」在 overlay cy-nav-bar 居中,正文首屏是暖橙渐变上的通行证插图 + 大字可玩主题数,没有 L1 大标题行。

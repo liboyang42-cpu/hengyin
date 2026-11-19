@@ -148,8 +148,6 @@
     "pages/publish/fabu/index.js::startdate::A2",
     "pages/publish/fabu/index.js::totalDuration::A1",
     "pages/publish/fabu/index.js::totalStats::A1",
-    "pages/publish/simple/index.js::aiTraceId::A2",
-    "pages/publish/simple/index.js::operationScope::A2",
     "pages/publish/temp/index.js::correctAnswerIndex::A1",
     "pages/publish/temp/index.js::correctAnswerOptions::A1",
     "pages/publish/temp/index.js::merchantAccess::A2",

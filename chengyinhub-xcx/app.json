@@ -66,10 +66,8 @@
       "name": "subpackagePublish",
       "pages": [
         "fabu/index",
-        "simple/index",
         "temp/index",
         "activity/index",
-        "topicadd/topicadd",
         "template-intro/index"
       ]
     },

@@ -155,7 +155,6 @@ const PUBLISH_FORM_ROUTES = [
   ['pages/publish/fabu/step3.wxml', 'canSaveTicket'],
   ['pages/publish/temp/index.wxml', 'canOpenPreview'],
   ['pages/publish/temp/index.wxml', 'canPublishGame'],
-  ['pages/publish/simple/index.wxml', 'canEnterAiEditor'],
 ]
 
 test('发布链路路由清单：每个必填主操作都读取 JS 派生态', () => {
@@ -166,17 +165,13 @@ test('发布链路路由清单：每个必填主操作都读取 JS 派生态', (
   assert.match(read('pages/publish/temp/index.js'), /canOpenPreview:\s*false/)
   assert.match(read('pages/publish/temp/index.js'), /refreshPreviewState\s*:\s*function\s*\(\)/)
   assert.match(read('pages/publish/temp/index.js'), /_collectValidationErrors\s*:\s*function\s*\(draft\)/)
-  assert.match(read('pages/publish/simple/index.js'), /canEnterAiEditor:\s*false/)
-  assert.match(read('pages/publish/simple/index.js'), /refreshEnterEditorState\s*\(\)/)
 })
 
-test('topicadd 已退役为重定向壳，不得残留表单或主操作状态', () => {
-  const js = read('pages/publish/topicadd/topicadd.js')
-  const wxml = read('pages/publish/topicadd/topicadd.wxml')
-  assert.doesNotMatch(js, /canEnterPro|onInputChange|gotoPro|_validTitle/)
-  assert.doesNotMatch(wxml, /<input\b|<cy-btn\b|bindtap=/)
-  assert.match(js, /2026-10 之后删除本页并从 app\.json 摘除/)
-  assert.match(js, /兼容用户手机上的历史页面栈/)
+test('PG-020/PG-021:topicadd 兼容壳与 simple 快速配置页已删除并摘出 app.json', () => {
+  const app = read('app.json')
+  assert.doesNotMatch(app, /topicadd\/topicadd|"simple\/index"/)
+  assert.equal(fs.existsSync(path.join(ROOT, 'pages/publish/topicadd')), false)
+  assert.equal(fs.existsSync(path.join(ROOT, 'pages/publish/simple')), false)
 })
 
 function assertTempOptionalFieldsRefresh(source) {
