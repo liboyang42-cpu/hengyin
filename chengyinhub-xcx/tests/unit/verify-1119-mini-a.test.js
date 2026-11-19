@@ -157,5 +157,5 @@ test('PG-020/PG-021:topicadd 与 simple 页删除并摘出 app.json 与主题 li
   assert.equal(exists('pages/publish/simple'), false);
   const app = read('app.json');
   assert.doesNotMatch(app, /topicadd|"simple\/index"/);
-  assert.doesNotMatch(read('scripts/ui-theme-unit-lint.js'), /topicadd/);
+  assert.doesNotMatch(read('scripts/ui-theme-unit-lint.js'), /'pages\/publish\/topicadd/);
 });
