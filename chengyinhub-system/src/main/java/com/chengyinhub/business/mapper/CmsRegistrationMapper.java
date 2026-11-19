@@ -70,6 +70,13 @@ public interface CmsRegistrationMapper
     /** 部分退款(集合前 24 小时内退 50%)后主办方保留的实付部分合计,结算时补进销售额。 */
     BigDecimal selectRetainedSalesAfterPartialRefundByActivityId(Long activityId);
 
+    /**
+     * MC-007:部分退款留存部分的平台费(未取整):逐单按报名冻结的 fee_platform_rate 计;
+     * 存量单冻结费率为空时回落 fallbackRate(当前活动规则费率)。行集合与上面的留存额同一谓词。
+     */
+    BigDecimal selectRetainedPlatformFeeAfterPartialRefundByActivityId(@org.apache.ibatis.annotations.Param("activityId") Long activityId,
+                                                                      @org.apache.ibatis.annotations.Param("fallbackRate") BigDecimal fallbackRate);
+
 
     /**
      * 查询活动/主题报名

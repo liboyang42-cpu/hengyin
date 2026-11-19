@@ -48,6 +48,12 @@ class ApiClubReportTest {
         ReflectionTestUtils.setField(c, "clubPostService", clubPostService);
         ReflectionTestUtils.setField(c, "clubPostCommentService", clubPostCommentService);
         ReflectionTestUtils.setField(c, "auditTaskService", auditTaskService);
+        // MC-031:举报动态先过俱乐部可见性;这里的帖子都在一个公开俱乐部里。
+        com.chengyinhub.business.service.IClubService clubs = mock(com.chengyinhub.business.service.IClubService.class);
+        com.chengyinhub.business.domain.Club club = new com.chengyinhub.business.domain.Club();
+        club.setId(1L);
+        when(clubs.selectClubById(any())).thenReturn(club);
+        ReflectionTestUtils.setField(c, "clubService", clubs);
         return c;
     }
 

@@ -46,6 +46,10 @@ public class PublicClubVO {
     private Boolean viewerIdentityUnavailable;
     private Integer pendingJoinRequestCount;
     private Integer nonOwnerMemberCount;
+    /** MC-063:成员优惠价的展示文案(「¥12.50」);没设优惠价为 null。 */
+    private String memberDiscountPriceText;
+    /** MC-055:查看者在本团是否有治理能力(只供前端决定入口出不出,真闸仍在各写接口上)。游客/取不到为 false。 */
+    private Boolean viewerCanGovern = false;
 
     public static PublicClubVO from(Club club) {
         PublicClubVO vo = new PublicClubVO();
@@ -83,7 +87,15 @@ public class PublicClubVO {
         vo.viewerIdentityUnavailable = club.getViewerIdentityUnavailable();
         vo.pendingJoinRequestCount = club.getPendingJoinRequestCount();
         vo.nonOwnerMemberCount = club.getNonOwnerMemberCount();
+        vo.memberDiscountPriceText = moneyText(club.getMemberDiscountPrice());
         return vo;
+    }
+
+    /** 与结算页同一写法:「¥151.32」不带空格,负数「−¥2.00」;null 回 null。 */
+    public static String moneyText(BigDecimal v) {
+        if (v == null) return null;
+        BigDecimal x = v.setScale(2, java.math.RoundingMode.HALF_UP);
+        return (x.signum() < 0 ? "\u2212¥" : "¥") + x.abs().toPlainString();
     }
 
     public Long getId() { return id; }
@@ -118,4 +130,7 @@ public class PublicClubVO {
     public Boolean getViewerIdentityUnavailable() { return viewerIdentityUnavailable; }
     public Integer getPendingJoinRequestCount() { return pendingJoinRequestCount; }
     public Integer getNonOwnerMemberCount() { return nonOwnerMemberCount; }
+    public String getMemberDiscountPriceText() { return memberDiscountPriceText; }
+    public Boolean getViewerCanGovern() { return viewerCanGovern; }
+    public void setViewerCanGovern(Boolean viewerCanGovern) { this.viewerCanGovern = viewerCanGovern; }
 }

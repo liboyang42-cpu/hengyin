@@ -83,6 +83,27 @@ class ApiRegistrationPayExpiredCodeTest {
         verify(checkoutService).retryPayment(7L, 99L, true);
     }
 
+    @Test
+    void malformedIdIsRejectedWithoutLeakingNumberFormatText() {
+        for (String bad : new String[] {"abc", "0", "-3", null}) {
+            AjaxResult pay = controller.pay(bad);
+            assertEquals(500, pay.get("code"));
+            assertEquals("参数错误", pay.get("msg"));
+            assertEquals("参数错误", controller.payApp(bad).get("msg"));
+            assertEquals("参数错误", controller.cancelRegistration(bad).get("msg"));
+        }
+        org.mockito.Mockito.verifyNoInteractions(checkoutService);
+    }
+
+    @Test
+    void technicalExceptionTextIsMaskedButBusinessTextKept() {
+        when(checkoutService.retryPayment(7L, 99L))
+                .thenThrow(new IllegalStateException("java.lang.NullPointerException at com.chengyinhub.X"));
+        assertEquals(com.chengyinhub.common.utils.UserSafeMessage.GENERIC, controller.pay("99").get("msg"));
+        when(checkoutService.retryPayment(7L, 98L)).thenThrow(new RuntimeException("该订单已支付"));
+        assertEquals("该订单已支付", controller.pay("98").get("msg"));
+    }
+
     private ConsentRecord agreedConsent() {
         ConsentRecord record = new ConsentRecord();
         record.setMemberId(7L);

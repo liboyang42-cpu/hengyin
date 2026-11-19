@@ -280,6 +280,27 @@ class ClubSessionMerchantFeeSettlementTest {
         verify(members, never()).addBalance(eq(MERCHANT), any());
     }
 
+    /** MC-034:结算成功给收款方发分润到账通知(金额 = 实际打给收款方的那份);拒结时不发。 */
+    @Test
+    void settledSessionNotifiesThePayeeAndRefusedOneDoesNot() {
+        com.chengyinhub.business.service.support.OrganizerMoneyNotice notice =
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.support.OrganizerMoneyNotice.class);
+        org.springframework.test.util.ReflectionTestUtils.setField(svc, "organizerMoneyNotice", notice);
+        terms(0, null, null);
+        assertEquals(1, svc.executeActivitySettlement());
+        verify(notice).activitySettled(PRINCIPAL, ACTIVITY, "外滩钟声 · 周六场", new BigDecimal("132.40"));
+    }
+
+    @Test
+    void refusedSessionSendsNoSettlementNotice() {
+        com.chengyinhub.business.service.support.OrganizerMoneyNotice notice =
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.support.OrganizerMoneyNotice.class);
+        org.springframework.test.util.ReflectionTestUtils.setField(svc, "organizerMoneyNotice", notice);
+        terms(2, "45.00", "45.00");
+        assertThrows(IllegalStateException.class, svc::executeActivitySettlement);
+        verify(notice, never()).activitySettled(any(), any(), any(), any());
+    }
+
     @Test
     void percentageTermsRefuseTheSessionWithAnAlarmAndMoveNoMoney() {
         terms(1, null, null);

@@ -958,4 +958,85 @@ class ApiPlayGpsGeofenceValidationTest
         assertEquals("该站配置异常，暂时无法打卡", result.get("msg"));
         verifyNoProgressAndNoReward();
     }
+
+    // ---- CG-ALL-11 替代站 / 桌面完成(开局方式由开局闸原 owner IShopDayProofService 读写) ----
+
+    private IShopDayProofService runStart;
+
+    private void installRunModes()
+    {
+        runStart = mock(IShopDayProofService.class);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "shopDayProofService", runStart);
+        java.util.Map<String, Object> alt = new java.util.LinkedHashMap<>();
+        alt.put("id", 7L);
+        alt.put("name", "替代站");
+        alt.put("longitude", "121.6");
+        alt.put("latitude", "31.4");
+        when(runStart.altStation(TOPIC, 7L)).thenReturn(alt);
+    }
+
+    private AjaxResult arriveWithStartMode(String longitude, String latitude, String startMode, String altStationId)
+    {
+        org.springframework.mock.web.MockHttpServletRequest request = new org.springframework.mock.web.MockHttpServletRequest();
+        if (startMode != null) request.setParameter("startMode", startMode);
+        if (altStationId != null) request.setParameter("altStationId", altStationId);
+        org.springframework.web.context.request.RequestContextHolder.setRequestAttributes(
+                new org.springframework.web.context.request.ServletRequestAttributes(request));
+        try {
+            return arrive(longitude, latitude);
+        } finally {
+            org.springframework.web.context.request.RequestContextHolder.resetRequestAttributes();
+        }
+    }
+
+    @Test
+    void deskStartNeedsNoLocationRecordsDeskAndCapsRewards()
+    {
+        installRunModes();
+        when(runStart.deskRun(PLAYER, ACTIVITY, TOPIC)).thenReturn(true);
+        AjaxResult result = arriveWithStartMode(null, null, "DESK", null);
+
+        assertEquals(200, result.get("code"), String.valueOf(result));
+        verify(runStart).recordRunStart(PLAYER, ACTIVITY, TOPIC, "DESK", null);
+        verify(pointsAwardService, never()).award(anyLong(), anyLong(), anyLong(), any());
+    }
+
+    @Test
+    void deskStartFailsClosedWhenModeCannotBeRecorded()
+    {
+        installRunModes();
+        org.mockito.Mockito.doThrow(new IllegalStateException("开局方式暂时不可用"))
+                .when(runStart).recordRunStart(PLAYER, ACTIVITY, TOPIC, "DESK", null);
+        try {
+            AjaxResult result = arriveWithStartMode(null, null, "DESK", null);
+            assertNotEquals(200, result.get("code"));
+        } catch (RuntimeException refused) {
+            // 开局随之失败(异常外抛同样算拒绝)
+        }
+        verifyNoProgressAndNoReward();
+    }
+
+    @Test
+    void altStartUsesAltStationFenceAndUnknownAltIsRejected()
+    {
+        installRunModes();
+        AjaxResult unknown = arriveWithStartMode("121.6", "31.4", "ALT", "99");
+        assertEquals("替代站不可用", unknown.get("msg"));
+        verifyNoProgressAndNoReward();
+
+        AjaxResult result = arriveWithStartMode("121.6", "31.4", "ALT", "7");
+        assertEquals(200, result.get("code"), String.valueOf(result));
+        verify(runStart).recordRunStart(PLAYER, ACTIVITY, TOPIC, "ALT", 7L);
+    }
+
+    @Test
+    void normalStartClearsStaleModeAndUnknownModeIsIgnored()
+    {
+        installRunModes();
+        assertEquals("离起点太远，请到起点 300 米内再开始", arriveWithStartMode("121.6", "31.4", "TELEPORT", null).get("msg"));
+        AjaxResult result = arriveWithStartMode(NODE_LNG, NODE_LAT, null, null);
+        assertEquals(200, result.get("code"));
+        verify(runStart).recordRunStart(PLAYER, ACTIVITY, TOPIC, null, null);
+        verify(runStart, never()).recordRunStart(any(), any(), any(), org.mockito.ArgumentMatchers.eq("DESK"), any());
+    }
 }

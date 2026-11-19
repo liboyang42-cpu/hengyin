@@ -229,11 +229,40 @@ class ApiClubSettlementControllerTest {
         @SuppressWarnings("unchecked")
         Map<String, Object> data = (Map<String, Object>) summary.get(AjaxResult.DATA_TAG);
         assertEquals("¥148.00", data.get("settledAmountText"));
+        when(cashWithdrawService.availableBalance(OWNER)).thenReturn(new BigDecimal("500.00"));
 
         AjaxResult result = controller.withdraw(clubBody());
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
         verify(cashWithdrawService).withdraw(OWNER, new BigDecimal("148.00"));
+    }
+
+    /** MC-003:可用余额小于历史结算合计时,只按可用余额提,不再按历史累计提。 */
+    @Test
+    void withdrawIsCappedByAvailableBalance() {
+        ReflectionTestUtils.setField(controller, "fastWithdrawEnabled", true);
+        when(coopSettlementMapper.selectPersonalClubSummary(CLUB, OWNER))
+                .thenReturn(Arrays.asList(settledRow(1L, "100.00", "98.00"), settledRow(2L, "50.00", "50.00")));
+        when(cashWithdrawService.availableBalance(OWNER)).thenReturn(new BigDecimal("30.00"));
+
+        AjaxResult result = controller.withdraw(clubBody());
+
+        assertEquals(200, result.get(AjaxResult.CODE_TAG));
+        verify(cashWithdrawService).withdraw(OWNER, new BigDecimal("30.00"));
+    }
+
+    /** MC-003:可用余额为 0(已提过)或查询失败,整笔拒绝,不发起提现。 */
+    @Test
+    void withdrawRefusesWhenNothingAvailableOrBalanceUnreadable() {
+        ReflectionTestUtils.setField(controller, "fastWithdrawEnabled", true);
+        when(coopSettlementMapper.selectPersonalClubSummary(CLUB, OWNER))
+                .thenReturn(Arrays.asList(settledRow(1L, "100.00", "98.00")));
+        when(cashWithdrawService.availableBalance(OWNER)).thenReturn(BigDecimal.ZERO);
+        assertEquals(500, controller.withdraw(clubBody()).get(AjaxResult.CODE_TAG));
+
+        when(cashWithdrawService.availableBalance(OWNER)).thenThrow(new RuntimeException("frozen source down"));
+        assertEquals(500, controller.withdraw(clubBody()).get(AjaxResult.CODE_TAG));
+        verify(cashWithdrawService, never()).withdraw(any(), any());
     }
 
     /** P0-11:有一行实付未核验,整笔提现拒绝,不发起会员提现。 */

@@ -315,4 +315,30 @@
          order by checkin_time asc, id asc
     </select>
 
+    <!-- CG-ALL-11 本局开局方式与路线替代起点 -->
+    <select id="selectRunStartMode" resultType="java.lang.String">
+        select run_mode from play_run_start_mode
+        where member_id = #{memberId} and activity_id = #{activityId} and topic_id = #{topicId}
+        limit 1
+    </select>
+
+    <insert id="upsertRunStartMode">
+        insert into play_run_start_mode (member_id, activity_id, topic_id, run_mode, alt_station_id, create_time)
+        values (#{memberId}, #{activityId}, #{topicId}, #{runMode}, #{altStationId}, now())
+        on duplicate key update run_mode = values(run_mode), alt_station_id = values(alt_station_id),
+            create_time = values(create_time)
+    </insert>
+
+    <delete id="deleteRunStartMode">
+        delete from play_run_start_mode
+        where member_id = #{memberId} and activity_id = #{activityId} and topic_id = #{topicId}
+    </delete>
+
+    <select id="selectTopicAltStations" resultType="java.util.LinkedHashMap">
+        select id, name, longitude, latitude from cms_topic_alt_station
+        where topic_id = #{topicId} and status = 1
+        order by id
+        limit 20
+    </select>
+
 </mapper>

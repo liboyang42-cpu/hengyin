@@ -355,7 +355,7 @@ public final class AdvancedActionJudgement {
         if ("SKIP_SENSOR_STATION".equals(action) && skippedSensorSection(state) != null)
             return objectMapper.createObjectNode().put("outcome", "SKIPPED");
         // 拍照与另一个主玩法同开时只是证据步:结果(PASS/FAIL 与其结果规则)只由主玩法结算,拍照不结算。
-        if ("SUBMIT_PHOTO_CHECK".equals(action)
+        if (("SUBMIT_PHOTO_CHECK".equals(action) || "SUBMIT_PHOTO_RECORD".equals(action))
                 && com.chengyinhub.business.service.support.GameplayOutcomeRules.isEvidenceStep(config, "photoCheck")) return null;
         Boolean passed = judgedOutcome(action, state);
         if (passed == null) passed = passedFact(action, state);
@@ -373,6 +373,7 @@ public final class AdvancedActionJudgement {
         if("SUBMIT_CHECK".equals(action)){kit="check";passed=state.path("check").path("success").asBoolean();}
         if ("SUBMIT_ALBUM".equals(action)) passed=state.path("album").path("done").asBoolean()?Boolean.TRUE:null;
         if ("SUBMIT_PHOTO_CHECK".equals(action))passed="PASS".equals(state.path("photoCheck").path("verdict").asText())||degradedFallbackPass(state)?Boolean.TRUE:"REJECT".equals(state.path("photoCheck").path("verdict").asText())?Boolean.FALSE:null;
+        if ("SUBMIT_PHOTO_RECORD".equals(action)) passed="RECORDED".equals(state.path("photoCheck").path("verdict").asText())?Boolean.TRUE:null;
         if ("SUBMIT_PROFILE".equals(action)) passed=state.path("profile").path("done").asBoolean()?Boolean.TRUE:null;
         if ("SUBMIT_NOTE".equals(action)) passed=state.path("note").path("done").asBoolean()?Boolean.TRUE:null;
         if ("CLAIM_DAILY_SIGN".equals(action)) passed=state.path("dailySign").path("claimedDate").asText().isEmpty()?null:Boolean.TRUE;

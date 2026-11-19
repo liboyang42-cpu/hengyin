@@ -59,6 +59,9 @@ public class ClubSessionServiceImpl implements IClubSessionService {
     private final IContentSafetyGate contentSafetyGate;
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     private com.chengyinhub.business.service.IContentSafetyRecheckService recheckService;
+    /** FE-G11:商家自由探索按「承接完整」放行开场次(见 ExploreSaleSnapshotGate)。 */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.support.FreeExploreSlotProgress> freeExploreSlotProgress;
     private final ActivityReviewPolicy activityReviewPolicy;
     private final IAuditTaskService auditTaskService;
     private final IUmsMemberService umsMemberService;
@@ -169,7 +172,8 @@ public class ClubSessionServiceImpl implements IClubSessionService {
         requireTopicOpenForSessions(topic.getLifecycle(),
                 Integer.valueOf(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE).equals(topic.getProductType())
                         && (clubOwned || clubOrder));
-        com.chengyinhub.business.service.support.ExploreSaleSnapshotGate.assertSessionClub(topic, request.getClubId());
+        com.chengyinhub.business.service.support.ExploreSaleSnapshotGate.assertSessionClub(topic, request.getClubId(),
+                freeExploreSlotProgress == null ? null : freeExploreSlotProgress.getIfAvailable());
         if (!clubOwned && !clubOrder) {
             throw new IllegalArgumentException("该俱乐部对本主题没有生效的合作单");
         }

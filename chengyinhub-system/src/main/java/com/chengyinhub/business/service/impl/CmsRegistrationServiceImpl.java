@@ -93,11 +93,18 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Autowired
     private com.chengyinhub.business.service.support.CommittedBusinessNotice committedBusinessNotice;
 
+    /** MC-034:买票成功告诉主办方;未注入(单元装配)时跳过。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.OrganizerMoneyNotice organizerMoneyNotice;
+
     @Autowired
     private AlarmService alarmService;
     @Autowired private WechatVerifiedPaymentFactService verifiedPaymentFacts;
     @Autowired private CmsRegistrationPaymentFactMapper registrationPaymentFactMapper;
 
+    /** FE-G11:商家自由探索按「承接完整」放行场次售票(见 ExploreSaleSnapshotGate)。 */
+    @Autowired(required = false)
+    private org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.support.FreeExploreSlotProgress> freeExploreSlotProgress;
     @Autowired
     @org.springframework.beans.factory.annotation.Qualifier("wechatPaymentSdkGateway")
     private org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.WechatPaymentOperations> paymentAttemptGateway;
@@ -1086,6 +1093,26 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         return windowEnd.after(now) && windowEnd.before(ninety) ? windowEnd : ninety;
     }
 
+    /** 「可玩至」的日期:到期落在上海零点 = 能玩的最后一天是前一天(与小程序 passWindow 同口径)。 */
+    static String selfPlayLastDayText(Date validTo) {
+        if (validTo == null) return null;
+        java.time.ZoneId shanghai = java.time.ZoneId.of("Asia/Shanghai");
+        java.time.ZonedDateTime at = validTo.toInstant().atZone(shanghai);
+        java.time.LocalDate last = at.toLocalTime().equals(java.time.LocalTime.MIDNIGHT)
+                ? at.toLocalDate().minusDays(1) : at.toLocalDate();
+        return last.getMonthValue() + "月" + last.getDayOfMonth() + "日";
+    }
+
+    /** OR-028:自玩票报价的简短条款,只复述既有规则。 */
+    static List<String> selfPlayQuoteTerms(Date validTo, boolean paid) {
+        List<String> terms = new ArrayList<>();
+        String last = selfPlayLastDayText(validTo);
+        if (last != null) terms.add("可玩至" + last + "，购买后即可开玩");
+        terms.add("有效期最长 90 天，不超过主题结束日");
+        if (paid) terms.add("退款按下单时的退款规则办理");
+        return terms;
+    }
+
     /**
      * 会员级幂等判定。
      *
@@ -1395,6 +1422,16 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             result.setPlatformPassCovered(Boolean.TRUE);
             result.setPlatformPassValidTo(passCoverage.validTo());
         }
+        // OR-028:报价即给出与下单同一规则的有效期(购后 90 天与主题履约窗取早,通行证领取不越过本段),
+        // 前端不再自己推「可玩至」。只读展示,不参与金额与 quoteSign。
+        Date validFrom = new Date();
+        Date validTo = selfPlayPassExpiry(topic, validFrom);
+        if (passCoverage != null && passCoverage.validTo() != null && passCoverage.validTo().before(validTo)) {
+            validTo = passCoverage.validTo();
+        }
+        result.setValidFrom(validFrom);
+        result.setValidTo(validTo);
+        result.setTerms(selfPlayQuoteTerms(validTo, payAmount.signum() > 0));
         if (payAmount.signum() > 0) {
             RefundPolicy.Snapshot passPolicy = RefundPolicy.snapshotSelfPlayPass(topic);
             if (passPolicy != null && passPolicy.deadline != null) {
@@ -2532,7 +2569,8 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     }
 
     private void assertRegistrationSellable(CmsActivity activity, CmsTopic topic, OmsTicket ticket, Date now) {
-        if (activity != null) ExploreSaleSnapshotGate.assertSessionClub(topic, activity.getClubId());
+        if (activity != null) ExploreSaleSnapshotGate.assertSessionClub(topic, activity.getClubId(),
+                freeExploreSlotProgress == null ? null : freeExploreSlotProgress.getIfAvailable());
         if (activity == null || !isFreeUgcActivityTopic(activity, topic)) {
             assertCommercialSaleOpen(topic, ticket, now);
             return;
@@ -3371,7 +3409,42 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             registerPaymentAfterCommit(paidRegistrationIds, registration.getMemberId(),
                     registration.getActivityTitle(), freshPaymentClaimed);
         }
+        if (freshPaymentClaimed) {
+            notifyOrganizerOfPurchase(registration);
+        }
         return "SUCCESS";
+    }
+
+    /**
+     * MC-034:新付款(本次真正抢到支付成功 CAS)才告诉主办方「有新报名」。主办方 = 活动创建者 / 主题发布者;
+     * 买家自己就是主办方时不发。任何异常只记日志 —— 通知不能拖垮收款事务。
+     */
+    void notifyOrganizerOfPurchase(CmsRegistration registration) {
+        if (organizerMoneyNotice == null || registration == null || registration.getOwnerId() == null) return;
+        try {
+            Long organizer = null;
+            String title = registration.getActivityTitle();
+            String bizType;
+            if (Long.valueOf(2L).equals(registration.getOwnerType())) {
+                bizType = "ACTIVITY";
+                CmsActivity activity = cmsActivityMapper.selectCmsActivityById(registration.getOwnerId());
+                if (activity != null) {
+                    organizer = activity.getMemberId();
+                    if (activity.getName() != null) title = activity.getName();
+                }
+            } else {
+                bizType = "TOPIC";
+                CmsTopic topic = cmsTopicMapper.selectCmsTopicById(registration.getOwnerId());
+                if (topic != null) {
+                    organizer = topic.getMemberId();
+                    if (topic.getName() != null) title = topic.getName();
+                }
+            }
+            if (organizer == null || organizer.equals(registration.getMemberId())) return;
+            organizerMoneyNotice.ticketPurchased(organizer, bizType, registration.getOwnerId(), registration.getId(), title);
+        } catch (RuntimeException e) {
+            logger.warn("[支付回调] 主办方新报名站内信未登记 registrationId={}", registration.getId());
+        }
     }
 
     private CmsRegistration freezeTicketSourceOnPayment(CmsRegistration registration) {

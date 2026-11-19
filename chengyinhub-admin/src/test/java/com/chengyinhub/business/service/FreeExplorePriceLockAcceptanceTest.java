@@ -246,6 +246,22 @@ class FreeExplorePriceLockAcceptanceTest {
 
     // ------------------------------------------------------------------ (b) 缺条件原话拒绝 + 零写入
 
+    /** MC-034:锁价成功告诉主题主办方;被拒的锁价不发。 */
+    @Test
+    void confirm_notifiesTopicOwnerOnlyOnSuccess() {
+        com.chengyinhub.business.service.support.OrganizerMoneyNotice notice =
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.support.OrganizerMoneyNotice.class);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "organizerMoneyNotice", notice);
+        freeExploreTopic(3);
+        assertThrows(IllegalStateException.class,
+                () -> service.confirmPrice(TOPIC_ID, new BigDecimal("128.00"), null, 37, new BigDecimal("100"), 4));
+        verify(notice, never()).priceLocked(any(), any(), any());
+
+        CmsTopic topic = freeExploreTopic(2);
+        service.confirmPrice(TOPIC_ID, new BigDecimal("128.00"), null, 37, new BigDecimal("100"), 4);
+        verify(notice).priceLocked(OWNER_ID, TOPIC_ID, topic.getName());
+    }
+
     @Test
     void refuse_notInPricingLifecycle() {
         for (Integer lifecycle : new Integer[] {null, 1, 3}) {
@@ -303,7 +319,7 @@ class FreeExplorePriceLockAcceptanceTest {
         IllegalStateException e = assertThrows(IllegalStateException.class,
                 () -> service.confirmPrice(TOPIC_ID, null, new BigDecimal("66.60"), null, null, null));
         assertEquals("无人带票价 66.60 不高于计酬成本上界 70:玩家全部通关时,每个必选章节最贵的计酬商家都要付一次人头费,"
-                + "合计 70 ≥ 票价 ⇒ 每张票必亏。请提高票价、降低人头费、或把部分章节改成权益档/引流档。", e.getMessage());
+                + "合计 70，票价不高于成本，每张票都会亏损。请提高票价、降低人头费、或把部分章节改成权益档/引流档。", e.getMessage());
         assertNoWrite();
     }
 

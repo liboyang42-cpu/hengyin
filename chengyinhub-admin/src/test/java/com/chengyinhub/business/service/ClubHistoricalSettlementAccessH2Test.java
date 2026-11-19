@@ -201,7 +201,10 @@ class ClubHistoricalSettlementAccessH2Test {
         jdbc.execute("insert into ums_member_balance_detail (member_id, change_balance, change_type, del_flag, coop_settlement_payout_id)"
                 + " values (11, 12.00, 1, 0, 1), (22, 99.00, 1, 0, 2)");
         ReflectionTestUtils.setField(api, "fastWithdrawEnabled", true);
+        // MC-003:提现额再与可提现余额取小;余额充足时仍是本人已核验的 99.00。
+        when(withdrawals.availableBalance(22L)).thenReturn(new BigDecimal("500.00"));
         assertEquals(200, api.withdraw(new HashMap<>(Map.of("clubId", 7L, "memberId", 11L))).get("code"));
+        verify(withdrawals).availableBalance(22L);
         verify(withdrawals).withdraw(22L, new BigDecimal("99.00"));
         verifyNoMoreInteractions(withdrawals);
     }

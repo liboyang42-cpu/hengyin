@@ -217,4 +217,11 @@ class AnswerNormalizerTest {
             throw new IllegalStateException(e);
         }
     }
+
+    @org.junit.jupiter.api.Test
+    void curlyApostropheEqualsStraight() {
+        org.junit.jupiter.api.Assertions.assertTrue(AnswerNormalizer.equivalent("rock'n'roll", "Rock\u2019n\u2019Roll"));
+        org.junit.jupiter.api.Assertions.assertTrue(AnswerNormalizer.equivalentKeepCase("O'Neil", "O\u2019Neil"));
+        org.junit.jupiter.api.Assertions.assertFalse(AnswerNormalizer.equivalentKeepCase("O'Neil", "o\u2019neil"));
+    }
 }

@@ -155,7 +155,7 @@ class ApiMerchantOperatorReadScopeTest {
         ReflectionTestUtils.setField(controller, "cmsRegistrationService", todoRegistrations);
         AjaxResult todo = controller.todoSummary();
         org.mockito.Mockito.verifyNoInteractions(todoTopics, todoRegistrations);
-        AjaxResult events = controller.events();
+        AjaxResult events = controller.events(null, null);
 
         assertEquals(HttpStatus.SUCCESS, todo.get(AjaxResult.CODE_TAG));
         assertEquals(HttpStatus.SUCCESS, events.get(AjaxResult.CODE_TAG));

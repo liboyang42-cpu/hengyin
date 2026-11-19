@@ -7,6 +7,7 @@ import com.chengyinhub.common.annotation.Anonymous;
 import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
+import com.chengyinhub.common.utils.UserSafeMessage;
 import com.chengyinhub.common.core.page.TableDataInfo;
 import com.chengyinhub.common.core.text.Convert;
 import com.chengyinhub.common.exception.ServiceException;
@@ -117,7 +118,8 @@ public class ApiRegistrationController extends BaseController {
         } catch (RegistrationCheckoutException e) {
             return new AjaxResult(e.getCode(), e.getMessage());
         } catch (Exception e) {
-            return AjaxResult.error(checkoutRefusalMessage(e.getMessage()));
+            logger.warn("报名报价失败 member_id={}", member_id, e);
+            return AjaxResult.error(UserSafeMessage.of(checkoutRefusalMessage(e.getMessage())));
         }
     }
 
@@ -168,7 +170,7 @@ public class ApiRegistrationController extends BaseController {
                     member_id, param == null ? null : param.getOwnerType(),
                     param == null ? null : param.getOwnerId(), param == null ? null : param.getTicketId(),
                     param == null ? null : param.getRequestId(), e);
-            return AjaxResult.error(checkoutRefusalMessage(e.getMessage()));
+            return AjaxResult.error(UserSafeMessage.of(checkoutRefusalMessage(e.getMessage())));
         }
     }
 
@@ -198,10 +200,13 @@ public class ApiRegistrationController extends BaseController {
             if (!hasCurrentSignupDataSharingConsent(member_id)) {
                 return error("请先完成报名信息提供的单独同意");
             }
+            // OR-004：id 非法不再抛 NumberFormatException 原文
+            long registrationId = Convert.toLong(id, 0L);
+            if (registrationId <= 0) return error("参数错误");
 
             RegistrationCheckoutResult result = StringUtils.isEmpty(jsCode)
-                    ? registrationCheckoutService.retryPayment(member_id, Long.valueOf(id))
-                    : registrationCheckoutService.retryPayment(member_id, Long.valueOf(id), false, jsCode);
+                    ? registrationCheckoutService.retryPayment(member_id, registrationId)
+                    : registrationCheckoutService.retryPayment(member_id, registrationId, false, jsCode);
             return AjaxResult.success(result.getMessage(), result.getData());
         } catch (RegistrationOrderExpiredException e) {
             // 2026-09-17 拍板 #21:过期待支付单被 /pay 拒时,前端要能机器识别并自动换幂等键重建,
@@ -210,7 +215,8 @@ public class ApiRegistrationController extends BaseController {
         } catch (RegistrationCheckoutException e) {
             return checkoutError(e);
         } catch (Exception e) {
-            return AjaxResult.error(e.getMessage());
+            logger.warn("报名重新支付失败 id={}", id, e);
+            return AjaxResult.error(UserSafeMessage.of(e.getMessage()));
         }
     }
 
@@ -231,8 +237,10 @@ public class ApiRegistrationController extends BaseController {
         if (selfPlayXpay == null) {
             return AjaxResult.error("支付暂不可用");
         }
+        long registrationId = Convert.toLong(id, 0L);
+        if (registrationId <= 0) return error("参数错误");
         try {
-            return AjaxResult.success(selfPlayXpay.confirm(member_id, Long.valueOf(id)));
+            return AjaxResult.success(selfPlayXpay.confirm(member_id, registrationId));
         } catch (com.chengyinhub.business.platformpass.SelfPlayXpayException e) {
             return new AjaxResult(409, e.getMessage());
         } catch (Exception e) {
@@ -262,8 +270,10 @@ public class ApiRegistrationController extends BaseController {
                 return error("请先完成报名信息提供的单独同意");
             }
 
+            long registrationId = Convert.toLong(id, 0L);
+            if (registrationId <= 0) return error("参数错误");
             RegistrationCheckoutResult result = registrationCheckoutService.retryPayment(
-                    member_id, Long.valueOf(id), true);
+                    member_id, registrationId, true);
             return AjaxResult.success(result.getMessage(), result.getData());
         } catch (RegistrationOrderExpiredException e) {
             // 与 /pay 同一口径:过期单给机器可识别的 410,App 端同样能自动换键重建。
@@ -271,7 +281,8 @@ public class ApiRegistrationController extends BaseController {
         } catch (RegistrationCheckoutException e) {
             return checkoutError(e);
         } catch (Exception e) {
-            return AjaxResult.error(e.getMessage());
+            logger.warn("App 报名支付参数获取失败 id={}", id, e);
+            return AjaxResult.error(UserSafeMessage.of(e.getMessage()));
         }
     }
 
@@ -313,15 +324,17 @@ public class ApiRegistrationController extends BaseController {
                 return error("请先登录");
             }
 
-            String userName = getAppUserName();
-
             Long registrationId = Convert.toLong(id, 0L);
+            if (registrationId <= 0) return error("参数错误");
+
+            String userName = getAppUserName();
 
             // 支付中(关掉支付面板)的单先查单再关,见 IRegistrationCheckoutService#cancelUnpaid
             boolean result = registrationCheckoutService.cancelUnpaid(memberId, registrationId, userName);
             return result ? AjaxResult.success("报名已取消") : AjaxResult.error("取消失败");
         } catch (Exception e) {
-            return AjaxResult.error(e.getMessage());
+            logger.warn("取消报名失败 id={}", id, e);
+            return AjaxResult.error(UserSafeMessage.of(e.getMessage()));
         }
     }
 
@@ -350,7 +363,8 @@ public class ApiRegistrationController extends BaseController {
             }
             return cancellationFeedback(registrationId);
         } catch (Exception e) {
-            return AjaxResult.error(e.getMessage());
+            logger.warn("报名取消退款失败 id={}", registrationId, e);
+            return AjaxResult.error(UserSafeMessage.of(e.getMessage()));
         }
     }
 
@@ -374,7 +388,8 @@ public class ApiRegistrationController extends BaseController {
             }
             return cancellationFeedback(registrationId);
         } catch (Exception e) {
-            return AjaxResult.error(e.getMessage());
+            logger.warn("报名取消退款失败 id={}", registrationId, e);
+            return AjaxResult.error(UserSafeMessage.of(e.getMessage()));
         }
     }
 

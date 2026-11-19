@@ -106,6 +106,9 @@ public interface ICmsTopicService
      */
     public List<CmsTopic> selectCmsTopicList(CmsTopic cmsTopic);
 
+    /** MC-060:俱乐部未删主题数(与 selectCmsTopicList(clubId, delFlag=0).size() 同口径)。 */
+    public int countCmsTopicByClubId(Long clubId);
+
     /** 按俱乐部批量统计尚未结束的团，供发现页卡片展示。 */
     Map<Long, Integer> selectUpcomingTopicCounts(List<Long> clubIds);
 

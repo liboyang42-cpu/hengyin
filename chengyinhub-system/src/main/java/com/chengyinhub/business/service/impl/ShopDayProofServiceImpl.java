@@ -21,6 +21,8 @@ public class ShopDayProofServiceImpl implements IShopDayProofService {
     /** R16-ARRIVE:同地址无商家绑定时,两点间距 ≤ 该值才算同一地点。 */
     private static final double SAME_PLACE_METERS = 30d;
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ShopDayProofServiceImpl.class);
+
     @Autowired
     private PlayerNodeProgressMapper playerNodeProgressMapper;
 
@@ -296,5 +298,57 @@ public class ShopDayProofServiceImpl implements IShopDayProofService {
         p.setActivityId(activityId);
         p.setNodeId(nodeId);
         return p;
+    }
+
+    /* ---- CG-ALL-11 开局方式 ---- */
+
+    @Override
+    public String runStartMode(Long memberId, Long activityId, Long topicId) {
+        if (memberId == null || topicId == null) return null;
+        try {
+            return com.chengyinhub.business.service.support.RunStartMode.normalize(
+                    playerNodeProgressMapper.selectRunStartMode(memberId, activityId == null ? 0L : activityId, topicId));
+        } catch (RuntimeException unavailable) {
+            log.warn("开局方式读取失败 memberId={} topicId={}", memberId, topicId, unavailable);
+            return null;
+        }
+    }
+
+    @Override
+    public boolean deskRun(Long memberId, Long activityId, Long topicId) {
+        if (memberId == null || topicId == null) return false;
+        try {
+            return com.chengyinhub.business.service.support.RunStartMode.DESK.equals(
+                    com.chengyinhub.business.service.support.RunStartMode.normalize(
+                            playerNodeProgressMapper.selectRunStartMode(memberId, activityId == null ? 0L : activityId, topicId)));
+        } catch (RuntimeException unavailable) {
+            log.warn("开局方式读取失败，按桌面完成封顶奖励 memberId={} topicId={}", memberId, topicId, unavailable);
+            return true;
+        }
+    }
+
+    @Override
+    public void recordRunStart(Long memberId, Long activityId, Long topicId, String mode, Long altStationId) {
+        long act = activityId == null ? 0L : activityId;
+        if (mode == null) {
+            // 正常开局只是清旧行:清不掉也不拦开局(残留的 DESK 行只会让奖励封顶，不会放宽)。
+            try { playerNodeProgressMapper.deleteRunStartMode(memberId, act, topicId); }
+            catch (RuntimeException staleKept) { log.warn("开局方式旧行清理失败 memberId={} topicId={}", memberId, topicId, staleKept); }
+            return;
+        }
+        playerNodeProgressMapper.upsertRunStartMode(memberId, act, topicId, mode,
+                com.chengyinhub.business.service.support.RunStartMode.ALT.equals(mode) ? altStationId : null);
+    }
+
+    @Override
+    public java.util.List<java.util.Map<String, Object>> altStations(Long topicId) {
+        if (topicId == null) return java.util.Collections.emptyList();
+        try {
+            java.util.List<java.util.Map<String, Object>> rows = playerNodeProgressMapper.selectTopicAltStations(topicId);
+            return rows == null ? java.util.Collections.emptyList() : rows;
+        } catch (RuntimeException unavailable) {
+            log.warn("替代起点读取失败 topicId={}", topicId, unavailable);
+            return java.util.Collections.emptyList();
+        }
     }
 }

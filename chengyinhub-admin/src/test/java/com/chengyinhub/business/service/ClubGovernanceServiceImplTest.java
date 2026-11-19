@@ -244,6 +244,37 @@ class ClubGovernanceServiceImplTest {
         verify(audits, never()).insertBusinessAuditEvent(any());
     }
 
+    /** MC-001:副主理人封禁持岗成员(旧管理员 role=1 / 有运营岗位)被拒,零写入;普通成员照常可封。 */
+    @Test
+    void coOwnerCannotBanMemberHoldingAClubRole() {
+        ClubMember legacyAdmin = activeMember(CLUB, TARGET);
+        legacyAdmin.setRole(1);
+        when(members.selectByClubAndMember(CLUB, TARGET)).thenReturn(legacyAdmin);
+        ServiceException e1 = assertThrows(ServiceException.class,
+                () -> service.ban(CO_OWNER, CLUB, TARGET, "治理冲突", futureDays(7), "ban-co-admin"));
+        assertEquals(HttpStatus.FORBIDDEN, e1.getCode());
+
+        when(members.selectByClubAndMember(CLUB, TARGET)).thenReturn(activeMember(CLUB, TARGET));
+        when(access.resolveWithEventAccesses(TARGET, CLUB)).thenReturn(new ClubAccessContext(
+                TARGET, CLUB, OWNER, null, new java.util.LinkedHashSet<>(Collections.singletonList(ClubRoleCode.CLUB_OPERATOR))));
+        ServiceException e2 = assertThrows(ServiceException.class,
+                () -> service.ban(CO_OWNER, CLUB, TARGET, "治理冲突", futureDays(7), "ban-co-operator"));
+        assertEquals(HttpStatus.FORBIDDEN, e2.getCode());
+        verify(governance, never()).insertClubGovernanceBan(any());
+
+        when(access.resolveWithEventAccesses(TARGET, CLUB)).thenReturn(new ClubAccessContext(
+                TARGET, CLUB, OWNER, null, new java.util.LinkedHashSet<>(Collections.singletonList(ClubRoleCode.CLUB_MEMBER))));
+        assertEquals(81L, service.ban(CO_OWNER, CLUB, TARGET, "违规", futureDays(7), "ban-co-plain").getId());
+    }
+
+    @Test
+    void ownerCanStillBanLegacyAdmin() {
+        ClubMember legacyAdmin = activeMember(CLUB, TARGET);
+        legacyAdmin.setRole(1);
+        when(members.selectByClubAndMember(CLUB, TARGET)).thenReturn(legacyAdmin);
+        assertEquals(81L, service.ban(OWNER, CLUB, TARGET, "违规", futureDays(7), "ban-owner-admin").getId());
+    }
+
     @Test
     void compatibilityParticipationMethodsDelegateToTheSingleGuard() {
         doThrow(new ServiceException("你当前无法参与该俱乐部", HttpStatus.FORBIDDEN))

@@ -935,6 +935,24 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
           AND ra.refunded &lt; r.payable_amount
     </select>
 
+    <!-- MC-007:留存部分的平台费按报名冻结费率逐单计(谓词与 selectRetainedSalesAfterPartialRefundByActivityId 一致);
+         冻结费率为空的存量单回落调用方传入的当前规则费率。不取整,由调用方统一 2 位四舍五入。 -->
+    <select id="selectRetainedPlatformFeeAfterPartialRefundByActivityId" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM((r.payable_amount - ra.refunded) * COALESCE(r.fee_platform_rate, #{fallbackRate})), 0)
+        FROM cms_registration r
+        JOIN (
+            SELECT source_id, SUM(refund_amount) AS refunded
+            FROM refund_application
+            WHERE source_type = 'registration' AND status = 1 AND del_flag = 0
+            GROUP BY source_id
+        ) ra ON ra.source_id = r.id
+        WHERE r.owner_id = #{activityId}
+          AND r.owner_type = 2
+          AND r.payment_status = 4
+          AND r.registration_status = 3
+          AND ra.refunded &lt; r.payable_amount
+    </select>
+
     <!-- P0-10 弃单关单:过期未支付订单 id(限批,防单轮过大) -->
     <!-- P1-PT-7:多票从单(payable=0 停 0 态)的父单里还有 PAYING 主单时不关 —— 钱付没付只有主单查单说了算,
          先关从单会让主单查到 SUCCESS 时从单补记冲突、整单回滚。这类父单由 settlePayingOne 整单关。 -->

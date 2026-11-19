@@ -246,7 +246,8 @@ public class AdvancedGameConfigValidator {
      *  mode 为空 = 老的拍照审核,行为逐字不变;'CARD' = 判过之后把那张照片铸成藏品卡。
      *  ⚠️ 这两份名单与小程序 advanced-game-config.js 的 PHOTO_CHECK_MODES /
      *  PHOTO_CARD_STYLES 互为镜像,改动要同 PR(钉在 object-card-config-contract)。 */
-    private static final Set<String> PHOTO_CHECK_MODES = setOf("CARD");
+    /** 'RECORD' = 只记录(CG-ALL-12):不调模型、不需第三方处理同意，拒绝相机可文字确认继续。 */
+    private static final Set<String> PHOTO_CHECK_MODES = setOf("CARD", "RECORD");
     private static final Set<String> PHOTO_CARD_STYLES = setOf("foil", "plain");
     /** 卡名落 player_object_card.title(varchar 64),超长要在发布时就拦住 */
     private static final int MAX_CARD_TITLE = 64;
@@ -2019,7 +2020,7 @@ public class AdvancedGameConfigValidator {
            认不出的值要报错而不是回落默认:静默改写商家选的玩法比报错更糟。 */
         String cardMode = photoCheck.path("mode").asText("");
         if (!cardMode.isEmpty() && !PHOTO_CHECK_MODES.contains(cardMode)) {
-            throw new IllegalArgumentException("拍照审核的模式只认 CARD(拍物成卡)");
+            throw new IllegalArgumentException("拍照审核的模式只认 CARD(拍物成卡)或 RECORD(只记录)");
         }
         optionalText(photoCheck, "cardTitle", MAX_CARD_TITLE, "藏品卡名称不能超过 " + MAX_CARD_TITLE + " 字");
         String cardStyle = photoCheck.path("cardStyle").asText("");

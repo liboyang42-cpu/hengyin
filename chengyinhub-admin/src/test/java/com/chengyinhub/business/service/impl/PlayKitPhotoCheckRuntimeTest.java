@@ -454,6 +454,76 @@ class PlayKitPhotoCheckRuntimeTest {
         assertEquals(40, kit(act("photo-frame-4")).get("frameOpacity"));
     }
 
+    // ==================== CG-ALL-12:只记录(RECORD)模式 ====================
+
+    private static final String RECORD_CONFIG = CHECK_CONFIG.replace("\"xp\":5", "\"xp\":5,\"mode\":\"RECORD\"");
+
+    @Test
+    void 只记录_拒绝相机文字确认即完成且不调模型不走同意() {
+        session = running(RECORD_CONFIG);
+        arm();
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("textConfirmed", true);
+        when(attemptMapper.selectByIdempotencyKey("record-text-1")).thenReturn(null);
+        Map<String, Object> view = service.act(MEMBER_ID, SESSION_ID, session.getVersion(), "record-text-1",
+                "SUBMIT_PHOTO_RECORD", payload);
+        Map<?, ?> kit = kit(view);
+        assertEquals(true, kit.get("passed"), "文字确认即记为完成:" + view);
+        assertEquals("RECORDED", kit.get("verdict"));
+        assertEquals(true, kit.get("textConfirmed"));
+        assertEquals(false, kit.get("photoVerified"), "只记录不是核验，奖励口径不放宽");
+        verifyNoInteractions(quota);
+        verify(visionService, never()).review(anyLong(), anyString(), anyString());
+        verify(photoIntents, never()).prepare(any());
+    }
+
+    @Test
+    void 只记录_交本人照片即完成并核对上传归属() {
+        session = running(RECORD_CONFIG);
+        arm();
+        java.util.List<String> verified = new java.util.ArrayList<>();
+        ReflectionTestUtils.setField(service, "photoEvidenceVerifier",
+                (java.util.function.BiConsumer<String, Long>) (url, member) -> verified.add(member + ":" + url));
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("imageUrl", "/profile/upload/2026/10/12/0123456789abcdef0123456789abcdef.jpg");
+        when(attemptMapper.selectByIdempotencyKey("record-photo-1")).thenReturn(null);
+        Map<String, Object> view = service.act(MEMBER_ID, SESSION_ID, session.getVersion(), "record-photo-1",
+                "SUBMIT_PHOTO_RECORD", payload);
+        Map<?, ?> kit = kit(view);
+        assertEquals(true, kit.get("passed"));
+        assertEquals(false, kit.get("textConfirmed"));
+        assertEquals("/profile/upload/2026/10/12/0123456789abcdef0123456789abcdef.jpg", kit.get("lastUrl"));
+        assertEquals(java.util.List.of(MEMBER_ID + ":/profile/upload/2026/10/12/0123456789abcdef0123456789abcdef.jpg"), verified);
+        verifyNoInteractions(quota);
+    }
+
+    @Test
+    void 只记录_既没照片也没确认不能完成() {
+        session = running(RECORD_CONFIG);
+        arm();
+        when(attemptMapper.selectByIdempotencyKey("record-empty-1")).thenReturn(null);
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> service.act(MEMBER_ID,
+                SESSION_ID, session.getVersion(), "record-empty-1", "SUBMIT_PHOTO_RECORD", new HashMap<>()));
+        verify(sessionMapper, never()).updateStateCas(any());
+    }
+
+    @Test
+    void 只记录站拒绝走模型审核_审核站拒绝只记录() {
+        session = running(RECORD_CONFIG);
+        arm();
+        modelSays("{\"pass\":true,\"confidence\":99,\"reason\":\"ok\"}");
+        org.junit.jupiter.api.Assertions.assertThrows(RuntimeException.class, () -> act("record-model-1"));
+        assertNoNewPhotoEffects();
+
+        session = running(CHECK_CONFIG);
+        arm();
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("textConfirmed", true);
+        when(attemptMapper.selectByIdempotencyKey("check-record-1")).thenReturn(null);
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> service.act(MEMBER_ID,
+                SESSION_ID, session.getVersion(), "check-record-1", "SUBMIT_PHOTO_RECORD", payload));
+    }
+
     // ==================== 脚手架 ====================
 
     /** 往 CHECK_CONFIG 的 photoCheck 段里追加取景轮廓字段，其余真值不动。 */
