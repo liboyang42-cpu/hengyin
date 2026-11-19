@@ -143,6 +143,20 @@ public final class RegistrationDetailDisplay {
         }
     }
 
+    /** FE-G6:enrich 之后按章节覆盖权益行名为「店名 · 权益名」;没给或为空的保留章节名。只改展示。 */
+    public static void applyEntitlementRowNames(List<RegistrationEntitlement> entitlements,
+                                                java.util.Map<Long, String> rowNames) {
+        if (entitlements == null || rowNames == null || rowNames.isEmpty()) {
+            return;
+        }
+        for (RegistrationEntitlement e : entitlements) {
+            String rowName = e == null || e.getChapterId() == null ? null : rowNames.get(e.getChapterId());
+            if (rowName != null && !rowName.trim().isEmpty()) {
+                e.setChapterName(rowName);
+            }
+        }
+    }
+
     static String entitlementStatusLabel(Integer status, boolean sessionEnded, boolean afterSale) {
         if (Integer.valueOf(0).equals(status)) {
             if (afterSale) return "售后处理中";

@@ -478,15 +478,11 @@ public class ApiRegistrationController extends BaseController {
             @Parameter(name = "owner_type", description = "类型1、主题  2、活动  3、全部"),
             @Parameter(name = "status", description = "0全部 1待支付 2待使用 3已完成 4已取消"),
             @Parameter(name = "is_online", description = "0全部 1未结束"),
-            @Parameter(name = "pageNum", description = "页码；与 pageSize 都不传时整表返回（旧客户端）"),
-            @Parameter(name = "pageSize", description = "每页条数，上限 50"),
     })
-    public AjaxResult myRegistrationList(String owner_type, String status, Integer is_online,
-                                         Integer pageNum, Integer pageSize) {
+    public AjaxResult myRegistrationList(String owner_type,String status,Integer is_online ) {
         Long member_id;
         try { member_id = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
-        AjaxResult result = registrationQueryApplication.myRegistrationList(member_id, owner_type, status, is_online,
-                pageNum, pageSize);
+        AjaxResult result = registrationQueryApplication.myRegistrationList(member_id, owner_type, status, is_online);
         // Preserve the original HTTP-thread PageInfo/TableDataInfo boundary, without enabling startPage.
         if (Integer.valueOf(HttpStatus.SUCCESS).equals(result.get(AjaxResult.CODE_TAG))) {
             result.put(AjaxResult.DATA_TAG, getDataTable((List<?>) result.get(AjaxResult.DATA_TAG)));
@@ -495,11 +491,6 @@ public class ApiRegistrationController extends BaseController {
     }
 
 
-
-    /** 兼容既有单测/调用方的三参入口(不分页);HTTP 入口是上面带 pageNum/pageSize 的映射。 */
-    public AjaxResult myRegistrationList(String owner_type, String status, Integer is_online) {
-        return myRegistrationList(owner_type, status, is_online, null, null);
-    }
 
     /** FX-02:同单部分核销,本次未退款、已记人工退款工单;字段齐全,小程序才会原样展示这句 msg。 */
     private AjaxResult manualReviewFeedback(Long registrationId, String message) {

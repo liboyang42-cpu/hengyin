@@ -202,8 +202,10 @@ public class RegistrationQueryApplication {
             attachSoleTicketCancelAmounts(java.util.Collections.singletonList(registration));
             registration.setRefundApplication(latestRegistrationRefund(registration.getId(), memberId));
             // 订单详情展示 enrich:脱敏手机号 / 支付方式文案 / 退款截止文案 / 权益章节名
-            com.chengyinhub.business.util.RegistrationDetailDisplay.enrich(registration, topicChapterService,
-                    entitlementRowNames(registration.getEntitlements()), new Date());
+            com.chengyinhub.business.util.RegistrationDetailDisplay.enrich(registration, topicChapterService);
+            // FE-G6:权益行优先「店名 · 权益名」(读不到时保留上面的章节名)
+            com.chengyinhub.business.util.RegistrationDetailDisplay.applyEntitlementRowNames(
+                    registration.getEntitlements(), entitlementRowNames(registration.getEntitlements()));
             registration.setSettlementSummary(settlementSummary(registration, memberId));
             registrationService.attachPartySnapshots(java.util.Collections.singletonList(registration));
             long detailNow = System.currentTimeMillis();
@@ -382,20 +384,7 @@ public class RegistrationQueryApplication {
         }
     }
 
-    /** OR-029：单页上限，客户端传更大也按此截断。 */
-    public static final int LIST_PAGE_SIZE_MAX = 50;
-    static final int LIST_PAGE_SIZE_DEFAULT = 20;
-
     public AjaxResult myRegistrationList(Long member_id, String owner_type, String status, Integer is_online) {
-        return myRegistrationList(member_id, owner_type, status, is_online, null, null);
-    }
-
-    /**
-     * 我的报名。pageNum/pageSize 都不传时与旧客户端一致（整表一次返回，total 为条数）；
-     * 传了任一个即分页，pageSize 夹在 [1, 50]。需在内存里按完成态过滤的 Tab 先过滤后分页，保证 total 准确。
-     */
-    public AjaxResult myRegistrationList(Long member_id, String owner_type, String status, Integer is_online,
-                                         Integer pageNum, Integer pageSize) {
 
 
         if (member_id == null || member_id <= 0) {
@@ -429,20 +418,11 @@ public class RegistrationQueryApplication {
         }
         registration.setMemberId(member_id);
 
-        boolean paged = pageNum != null || pageSize != null;
-        int pn = pageNum == null || pageNum < 1 ? 1 : pageNum;
-        int ps = pageSize == null ? LIST_PAGE_SIZE_DEFAULT : Math.max(1, Math.min(pageSize, LIST_PAGE_SIZE_MAX));
         boolean completionFilter = ownerType >= 3 && ("2".equals(status) || "3".equals(status));
         List<CmsRegistration> list;
-        if (paged && !completionFilter) {
-            com.github.pagehelper.PageHelper.startPage(pn, ps);
-        }
-        try {
-            list = registrationService.selectCmsRegistrationList(registration);
-        } finally {
-            if (paged && !completionFilter) com.github.pagehelper.PageHelper.clearPage();
-        }
-        // OR-029：同一主题/活动在一页里只查一次（原来每行各查一次）。
+        //startPage();
+        list = registrationService.selectCmsRegistrationList(registration);
+        // OR-029：同一主题/活动在一次列表里只查一次（原来每行各查一次）。不分页，整表返回不变。
         Map<Long, Optional<CmsTopic>> topics = new HashMap<>();
         Map<Long, Optional<CmsActivity>> activities = new HashMap<>();
         if (!completionFilter) attachOwners(list, topics, activities);
@@ -454,7 +434,7 @@ public class RegistrationQueryApplication {
                 boolean completed = com.chengyinhub.business.service.support.ExploreTicketProgress.listCompleted(row);
                 if ("3".equals(status) == completed) filtered.add(row);
             }
-            list = paged ? pageInMemory(filtered, pn, ps) : filtered;
+            list = filtered;
             attachOwners(list, topics, activities);
         }
         Map<Long, RefundApplication> latestRefunds = latestRegistrationRefunds(member_id);
@@ -487,15 +467,6 @@ public class RegistrationQueryApplication {
         } catch (RuntimeException e) {
             return null;
         }
-    }
-
-    /** 按完成态过滤后的内存分页；用 PageHelper 的 Page 承载 total，控制器的 getDataTable 原样读出。 */
-    static List<CmsRegistration> pageInMemory(List<CmsRegistration> rows, int pageNum, int pageSize) {
-        com.github.pagehelper.Page<CmsRegistration> page = new com.github.pagehelper.Page<>(pageNum, pageSize);
-        page.setTotal(rows.size());
-        int from = (int) Math.min((long) (pageNum - 1) * pageSize, rows.size());
-        page.addAll(rows.subList(from, Math.min(from + pageSize, rows.size())));
-        return page;
     }
 
     private void attachOwners(List<CmsRegistration> list, Map<Long, Optional<CmsTopic>> topics,
