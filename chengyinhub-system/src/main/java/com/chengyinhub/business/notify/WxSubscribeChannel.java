@@ -58,6 +58,9 @@ public class WxSubscribeChannel implements NotifyChannel {
                 case AFTERCARE_PLATFORM_TAKEOVER:
                     // 售后转平台同样只走站内信,不占用微信订阅模板。
                     return false;
+                case CITY_TERRITORY:
+                    // 城市大富翁地产事件只走站内信,不占用微信订阅模板。
+                    return false;
                 default:
                     // 新增事件但本通道没接 —— 不是错误,但要能被发现,否则「加了事件却没人发」会静默。
                     log.warn("[通知] 微信通道未处理该事件 event={},本条不发", m.event());

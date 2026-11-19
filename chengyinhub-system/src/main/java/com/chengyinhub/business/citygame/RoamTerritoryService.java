@@ -223,11 +223,11 @@ public class RoamTerritoryService {
         List<Long> seenPoiIds = new ArrayList<>();
         if (resolvedBoardId != null) {
             List<Map<String, Object>> boardSpaces = jdbc.queryForList(
-                    "SELECT pt.board_id AS boardId, b.region_id AS regionId, b.season_id AS seasonId, pt.point_id AS pointId, pt.place_id AS poiId, "
+                    "SELECT pt.board_id AS boardId, b.region_id AS regionId, b.season_id AS seasonId, pt.point_id AS pointId, pt.place_id AS poiId, pt.district_id AS districtId, "
                             + "pt.title AS pointTitle, pt.latitude, pt.longitude, pt.availability, pr.property_id AS propertyId, pr.track_index AS trackIndex, "
                             + "pr.role, pr.status AS propStatus, pr.holder_team_id AS holderTeamId, pr.protected_until AS propProtectedUntil, "
                             + "poi.radius_m AS poiRadiusM, poi.cover_img AS coverImg, "
-                            + "t.territory_id AS territoryId, t.owner_member_id AS ownerMemberId, t.claim_photo_url AS claimPhotoUrl, "
+                            + "t.territory_id AS territoryId, t.deed_serial AS deedSerial, t.owner_member_id AS ownerMemberId, t.claim_photo_url AS claimPhotoUrl, "
                             + "t.checkin_toll_points AS checkinTollPoints, t.owner_revenue_points AS ownerRevenuePoints, "
                             + "t.checkin_count AS checkinCount, t.revenue_total_points AS revenueTotalPoints, t.status AS territoryStatus, "
                             + "t.protected_until AS territoryProtectedUntil, m.nickname AS ownerNickname "
@@ -249,8 +249,8 @@ public class RoamTerritoryService {
         List<Map<String, Object>> roamPois = jdbc.queryForList(
                 "SELECT poi.id AS poiId, poi.name AS pointTitle, poi.lat AS latitude, poi.lng AS longitude, poi.radius_m AS poiRadiusM, "
                         + "poi.cover_img AS coverImg, poi.city_code AS cityCode, "
-                        + "t.territory_id AS territoryId, t.board_id AS boardId, t.season_id AS seasonId, t.property_id AS propertyId, "
-                        + "t.point_id AS pointId, t.owner_member_id AS ownerMemberId, t.claim_photo_url AS claimPhotoUrl, "
+                        + "t.territory_id AS territoryId, t.deed_serial AS deedSerial, t.board_id AS boardId, t.season_id AS seasonId, t.property_id AS propertyId, "
+                        + "t.point_id AS pointId, t.district_id AS districtId, t.owner_member_id AS ownerMemberId, t.claim_photo_url AS claimPhotoUrl, "
                         + "t.checkin_toll_points AS checkinTollPoints, t.owner_revenue_points AS ownerRevenuePoints, "
                         + "t.checkin_count AS checkinCount, t.revenue_total_points AS revenueTotalPoints, t.status AS territoryStatus, "
                         + "t.protected_until AS territoryProtectedUntil, m.nickname AS ownerNickname "
@@ -266,6 +266,12 @@ public class RoamTerritoryService {
             items.add(wireSpaceItem(row, lat, lng, now));
         }
 
+        java.util.Set<String> boards = new java.util.TreeSet<>();
+        if (resolvedBoardId != null) boards.add(resolvedBoardId);
+        for (Map<String, Object> item : items) if (item.get("boardId") != null) boards.add(String.valueOf(item.get("boardId")));
+        Map<String, Map<String, Object>> districts = CityMonopolyService.districtsOf(jdbc, boards);
+        for (Map<String, Object> item : items) CityMonopolyService.putDistrict(item, districts, item.get("boardId"), item.get("districtId"));
+
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("boardId", resolvedBoardId);
         out.put("regionId", board == null ? regionId : board.get("regionId"));
@@ -273,6 +279,7 @@ public class RoamTerritoryService {
         out.put("revenueMode", "POINTS");
         out.put("items", items);
         out.put("territories", items);
+        out.put("districts", new ArrayList<>(districts.values()));
         return out;
     }
 
@@ -290,6 +297,8 @@ public class RoamTerritoryService {
         item.put("propertyId", r.get("propertyId"));
         item.put("pointId", r.get("pointId"));
         item.put("trackIndex", r.get("trackIndex"));
+        item.put("districtId", r.get("districtId"));
+        item.put("deedSerial", r.get("deedSerial") instanceof Number ? ((Number) r.get("deedSerial")).intValue() : null);
         item.put("title", r.get("pointTitle"));
         item.put("latitude", pLat);
         item.put("longitude", pLng);
@@ -958,6 +967,8 @@ public class RoamTerritoryService {
         out.put("version", ((Number) r.get("version")).longValue());
         out.put("claimedAtMillis", millis(r.get("claimed_at")));
         out.put("protectedUntilMillis", millis(r.get("protected_until")));
+        out.put("districtId", r.get("district_id"));
+        out.put("deedSerial", r.get("deed_serial") instanceof Number ? ((Number) r.get("deed_serial")).intValue() : null);
         return out;
     }
 

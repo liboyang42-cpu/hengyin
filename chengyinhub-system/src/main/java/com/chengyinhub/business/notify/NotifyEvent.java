@@ -31,4 +31,6 @@ public enum NotifyEvent {
     TEAM_STATUS,
     /** 售后商家超时自动转平台客服；仅站内信通道处理，不占用订阅消息模板。 */
     AFTERCARE_PLATFORM_TAKEOVER,
+    /** 城市大富翁地产事件（被抢、守住、收租）；仅站内信通道处理，不占用订阅消息模板，也不新增推送通道。 */
+    CITY_TERRITORY,
 }

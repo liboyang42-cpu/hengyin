@@ -27,6 +27,11 @@ public class ApiCityMonopolyController extends BaseController {
         this.locationConsent = locationConsent;
     }
 
+    private com.chengyinhub.business.citygame.CityOnSiteTaskService onSiteTasks;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setOnSiteTasks(com.chengyinhub.business.citygame.CityOnSiteTaskService onSiteTasks) { this.onSiteTasks = onSiteTasks; }
+
     /** 接收定位的写命令先过漫游定位授权闸（与 ApiRoamController 同一互斥锁顺序），未同意不落任何坐标。 */
     private Long consentedMember() {
         Long memberId = member();
@@ -89,6 +94,17 @@ public class ApiCityMonopolyController extends BaseController {
     @Transactional(rollbackFor = Exception.class)
     public AjaxResult challengeCommand(@RequestBody Map<String, Object> body) {
         return success(service.challengeCommand(consentedMember(), body));
+    }
+
+    /**
+     * On-site challenge task (N35): photo + GPS presence graded on the server. Not @Transactional on purpose: the location
+     * consent gate runs in the service's own short transaction, then the photo review runs with no transaction held.
+     */
+    @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 10, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
+    @PostMapping("/territory/challenge/task/submit")
+    public AjaxResult challengeTaskSubmit(@RequestBody Map<String, Object> body) {
+        if (onSiteTasks == null) throw new CityGameException(409, "TASK_VERIFIER_UNAVAILABLE", "任务核验未开放");
+        return success(onSiteTasks.submit(member(), body, locationConsent::requireCurrentAgreement));
     }
 
     @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 30, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)

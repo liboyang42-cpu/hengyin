@@ -61,6 +61,12 @@ public interface INotifyService {
     boolean notifyAftercarePlatformTakeover(Long memberId, String amount);
 
     /**
+     * 城市大富翁地产事件站内信（仅站内信通道）。kind = PLACE_LOST / DEFENDED / RENT / RENT_SETTLED；
+     * territoryId / title 可为空；points 为本事件涉及的积分（0 表示无）。
+     */
+    boolean notifyCityTerritory(Long memberId, String kind, String territoryId, String title, String text, long points);
+
+    /**
      * 漫游召回是否已就绪。未就绪时调度不得消耗重试次数。
      * ⚠️ **当前实现只问微信通道**,与旧的 IWxSubscribeMsgService#isRoamRecallReady 等价。
      * 加 App push(P0-2)时必须回来改成「任一通道就绪」,否则微信模板没配会让

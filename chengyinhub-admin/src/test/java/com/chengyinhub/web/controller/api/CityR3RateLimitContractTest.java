@@ -16,7 +16,7 @@ class CityR3RateLimitContractTest
 {
     private static final Map<Class<?>, List<String>> LIMITED = Map.of(
             ApiCityMonopolyController.class, List.of("claimCommand", "upgradeCommand", "challengeCommand",
-                    "scout", "shield", "chance", "purchase", "map", "property", "leaderboard"),
+                    "scout", "shield", "chance", "purchase", "map", "property", "leaderboard", "challengeTaskSubmit"),
             ApiRoamTerritoryController.class, List.of("nearby", "claim", "checkin", "leaderboard"),
             ApiCityGameController.class, List.of("unifiedDiceRoll", "action", "diceAudit"),
             ApiMemberAttributeController.class, List.of("equip"),
