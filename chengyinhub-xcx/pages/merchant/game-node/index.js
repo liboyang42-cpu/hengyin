@@ -226,10 +226,7 @@ Page({
     this._writeWorkflow = createWriteActionWorkflow({ deadlineMs: 15000 })
     if (!this._activityId) {
       this._errorReasonCode = 'GAME_ACTIVITY_ID_REQUIRED'
-      this.setData({
-        viewState: 'business-error',
-        errorMessage: '链接已失效',
-      })
+      this.setData({ viewState: 'missing-param' })
       return
     }
     this._restorePendingWrite()
@@ -250,6 +247,10 @@ Page({
   },
 
   retryLoad() { this.load() },
+  goBack() {
+    if (getCurrentPages().length > 1) wx.navigateBack({ delta: 1 })
+    else wx.reLaunch({ url: '/pages/merchant/index/index' })
+  },
 
   load() {
     const token = (this._loadToken || 0) + 1
