@@ -70,3 +70,10 @@ test('MC-020:核销记录超出首批 1000 条不静默截断,计数标「+」�
   page.onReachBottom()
   assert.equal(requests.length, 21, '读完不再续读')
 })
+
+test('MC-021:合作中心列表非空时刷新失败轻提示,不再无声', () => {
+  const js = read('pages/merchant/coop-center/index.js')
+  assert.match(js, /_toastRefreshFailed\(kind\) \{/)
+  assert.equal((js.match(/this\._toastRefreshFailed\('routes'\)/g) || []).length, 2)
+  assert.equal((js.match(/this\._toastRefreshFailed\('events'\)/g) || []).length, 2)
+})
