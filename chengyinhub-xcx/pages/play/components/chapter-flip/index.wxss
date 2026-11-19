@@ -80,3 +80,10 @@
 .cf__rays { position: absolute; width: 300px; height: 300px; border-radius: 50%; opacity: .5; background: repeating-conic-gradient(from 0deg, rgba(var(--lk-a-rgb, 233,196,124), .06) 0deg 8deg, rgba(var(--lk-a-rgb, 233,196,124), 0) 8deg 24deg); -webkit-mask-image: radial-gradient(circle, #000 20%, transparent 70%); mask-image: radial-gradient(circle, #000 20%, transparent 70%); transform: scale(2.2); } /* ds-ok 通关光芒,低不透明度 */
 .cf__spl { position: absolute; width: 6rpx; height: 6rpx; border-radius: 50%; opacity: 0; background: rgba(var(--lk-a-rgb, 233,196,124), 1); } /* ds-ok 外观色星尘 */
 .cf__sv, .cf__v { font-variant-numeric: tabular-nums; }
+/* 角色 Cast v1 · E2 书页式章首:与 .cf__copy 同位,随 is-in 升起(只用过渡);减弱动态直接落定 */
+.cf__book { position: absolute; left: 46rpx; right: 46rpx; top: 830rpx; display: flex; flex-direction: column; align-items: center; text-align: center; opacity: 0; transform: translateY(24rpx); transition: opacity var(--cy-motion-slow, .6s) var(--cy-ease-out, ease-out), transform var(--cy-motion-slow, .6s) var(--cy-ease-out, ease-out); }
+.cf__book.is-in, .cf--reduced .cf__book { opacity: 1; transform: none; }
+.cf--reduced .cf__book { transition: none; }
+.cf__book-k { font-size: 22rpx; letter-spacing: .6em; padding-left: .6em; color: var(--lk-mute, rgba(245,245,242,.56)); } /* ds-ok 同 .cf__k 回落值;padding 抵掉末字字距,居中不偏 */
+.cf__book-t { margin-top: 28rpx; font-size: 64rpx; font-weight: 600; line-height: 1.3; letter-spacing: .06em; font-family: var(--lk-fd, inherit); } /* ds-ok 契约 E2 章首大标题 */
+.cf__book-rule { margin-top: 40rpx; width: 56rpx; height: 1px; background: currentColor; opacity: .4; }
