@@ -692,7 +692,7 @@ Page({
       silentError: true,
       url: '/api/merchant/crm/customers/tags/batch',
       method: 'POST',
-      data: JSON.stringify({ customerMemberIds: this.data.selectedIds, tagName, tagColor: '#2E6D5A', requestId }),
+      data: JSON.stringify({ customerMemberIds: this.data.selectedIds, tagName, requestId }), // PG-032:不传 tagColor,交后端默认色
       header: { 'Content-Type': 'application/json' },
       success: (res) => {
         if (!isCurrent()) return;

@@ -205,3 +205,12 @@ test('PG-029/PG-036:商家口碑公开态深色、资料详情按身份切主题
   assert.match(read('subpackageA/pages/infomationdetail/infomationdetail.wxml'), /^<view class="\{\{isMerchantView \? 'theme-merchant' : 'theme-dark'\}\}">/);
   assert.match(read('subpackageA/pages/infomationdetail/infomationdetail.js'), /policy\.isMerchantView\(/);
 });
+
+test('PG-032/PG-033:批量标签不写死颜色;账户收益页删除 tx* 提现表单死代码', () => {
+  assert.doesNotMatch(read('pages/merchant/customer/index.js'), /tagColor: '#2E6D5A', requestId/);
+  const js = read('subpackageA/pages/assetcenter/earnings/index.js');
+  const wxml = read('subpackageA/pages/assetcenter/earnings/index.wxml');
+  assert.doesNotMatch(js, /\btx[A-Z]\w*|submitBankWithdrawal|withdrawalPreflight/);
+  assert.doesNotMatch(wxml, /\btx[A-Z]\w*|<cy-sheet/);
+  assert.match(js, /withdrawCs\.showWithdrawCsPopup\(\)/);
+});

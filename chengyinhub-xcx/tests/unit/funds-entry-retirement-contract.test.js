@@ -126,8 +126,9 @@ test('退役:三个原写入口的处理器里不得再出现建单/预检调用
   const standalone = sliceBetween(read(PAGES.standaloneWithdraw), 'saveData: function()', 'getUserData: function()')
   assert.doesNotMatch(standalone, /withdrawal\/create|submitBankWithdrawal/)
 
-  const earnings = sliceBetween(read(PAGES.earnings), 'openWithdrawSheet()', 'onTxAmountInput(')
-  assert.doesNotMatch(earnings, /withdrawal\/create|submitBankWithdrawal|txSheet\.show': true/)
+  // PG-033:账户收益页的 txSheet 表单与提交死代码已整块删除
+  const earnings = stripComments(read(PAGES.earnings))
+  assert.doesNotMatch(earnings, /withdrawal\/create|submitBankWithdrawal|txSheet|onTxAmountInput/)
 
   const sceneRoute = sliceBetween(read(PAGES.sceneRoute), 'submitForm()', 'const merchantIdentityPolicy')
   assert.doesNotMatch(sceneRoute, /withdrawal\/create|submitBankWithdrawal/)
