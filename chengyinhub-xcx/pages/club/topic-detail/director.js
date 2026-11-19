@@ -21,7 +21,6 @@ const GENERIC_OPS_AUTHORITY = { ONLINE: '线上判定', MANUAL: '人工接管' }
 function genericOpsStatusText(run) {
   const r = run || {}
   return (GENERIC_OPS_STATUS[r.operationStatus] || '状态待确认') + ' · ' + (GENERIC_OPS_AUTHORITY[r.authorityMode] || '判定方式待确认')
-    + (r.authorityEpoch == null ? '' : ' · 权威 ' + r.authorityEpoch)
 }
 let requestSequence = 0
 
@@ -831,7 +830,7 @@ const DIRECTOR_METHODS = {
         && (projection.currentChapterId == null || String(item.chapterId) !== String(projection.currentChapterId))
     }).map(function (item) {
       // 5-04(D4):行组件按 id 找行、回传 {id};缺 id 的章节行点哪一行都落回第 0 项。
-      const title = item.title || '章节 #' + item.chapterId
+      const title = item.title || '未命名'
       // C-04:路线局只给相邻下一章,并带上已完成本章、在等放行的队伍数。
       const waiting = numeric(item.waitingTeams)
       return { id: item.chapterId, chapterId: item.chapterId, title: title, waitingTeams: waiting,

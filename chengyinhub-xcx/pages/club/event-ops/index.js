@@ -60,7 +60,7 @@ function assemblyAlreadyPast(dates, startTime, now) {
 // 起止日期与「自有/合作」都能从 topics 回包里直接读到,不用改接口。
 function topicDropdownLabel(item, clubId) {
   const row = item || {}
-  const name = typeof row.name === 'string' && row.name.trim() ? row.name.trim() : ('主题 #' + row.id)
+  const name = typeof row.name === 'string' && row.name.trim() ? row.name.trim() : '未命名'
   const day = (value) => {
     const p = chinaParts(value)
     return p ? (p.month + '月' + p.day + '日') : ''
@@ -264,7 +264,7 @@ function decorateSeriesRow(row, topics) {
   const recurrence = RECURRENCES.find(item => item.value === row.recurrenceType)
   return Object.assign({}, row, {
     // 主题名还没到位时退回 `主题 #id`,不假装知道
-    titleText: (topic && topic.name) || ('主题 #' + row.topicId),
+    titleText: (topic && topic.name) || '未命名',
     recurrenceLabel: (recurrence && recurrence.label) || row.recurrenceType,
   })
 }
@@ -335,6 +335,7 @@ function normalizeSeries(value, clubId) {
   if (capacity !== null && (!Number.isInteger(capacity) || capacity < 1 || capacity > 10000)) return null
   return {
     id, clubId: rowClubId, topicId, leadMemberId, version, offerMinutes,
+    topicName: typeof value.topicName === 'string' ? value.topicName.trim() : '',
     recurrenceType, capacity, waitlistEnabled: value.waitlistEnabled,
     startTime: typeof value.startTime === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(value.startTime)
       ? value.startTime : '',
@@ -431,6 +432,7 @@ Page({
     occurrenceState: 'idle',   // idle | loading | ready | empty | error
     editingSeriesId: null,
     editingTopicId: null,
+    editingTopicName: '',
     seriesDetailLoading: false,
     rosterTabs: ROSTER_TABS,
     rosterTab: 'registered',
@@ -561,7 +563,7 @@ Page({
         }
         const topics = raw.filter(item => positiveId(item && item.id)).map(item => ({
           id: positiveId(item.id),
-          name: typeof item.name === 'string' && item.name.trim() ? item.name.trim() : ('主题 #' + item.id),
+          name: typeof item.name === 'string' && item.name.trim() ? item.name.trim() : '未命名',
           dropdownLabel: topicDropdownLabel(item, that.data.clubId),
           ticketCount: Number.isInteger(item.sessionTicketCount) ? item.sessionTicketCount : 1,
           // C-17:玩家结账页上的票价与集合点,开场前只读给主理人看
@@ -712,10 +714,15 @@ Page({
         const futureMinDate = shanghaiTomorrow()
         const futureDates = series.futureDates.filter(date => date >= futureMinDate)
         const dates = futureDates.length ? futureDates : [futureMinDate]
+        // MC-044:锁定的主题写名称不写编号;MC-058:默认带队人按 leadOptions 反查下拉位置。
+        const lockedTopic = that.data.topics.find(item => item.id === series.topicId)
+        const leadIndex = that.data.leadOptions.findIndex(item => item.memberId === series.leadMemberId)
         that.setData({
           futureMinDate,
           editingSeriesId: series.id,
           editingTopicId: series.topicId,
+          editingTopicName: (lockedTopic && lockedTopic.name) || series.topicName || '未命名',
+          leadIndex: Math.max(0, leadIndex),
           seriesWindowWarning: '',
           recurrenceType: series.recurrenceType,
           startDate: dates[0],
@@ -752,6 +759,7 @@ Page({
     this.setData({
       editingSeriesId: null,
       editingTopicId: null,
+    editingTopicName: '',
       recurrenceType: 'ONCE',
       topicIndex: Math.max(0, this.data.topics.findIndex(item => item.id === topicId)),
       seriesWindowWarning: '',

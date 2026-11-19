@@ -494,7 +494,7 @@
         <view wx:elif="{{shareEditions.length}}" class="manage-project-list">
           <view class="manage-project manage-project--edition" wx:for="{{shareEditions}}" wx:key="topicId">
             <view class="manage-project-main">
-              <view class="manage-project-name">{{item.topicName || ('期次 #' + item.topicId)}}</view>
+              <view class="manage-project-name">{{item.topicName || '未命名'}}</view>
               <view class="manage-project-meta">{{item.dateText || '时间待定'}} · 执行俱乐部期次</view>
             </view>
             <button class="manage-project-share" open-type="share" data-topic-id="{{item.topicId}}"

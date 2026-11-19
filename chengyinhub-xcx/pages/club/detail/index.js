@@ -279,7 +279,7 @@ function decorateInviteFeedback(item) {
     statusText: status.text,
     statusClass: status.key,
     partnerName: partner.name || '合作对象待补充',
-    topicText: item.topicName || (item.topicId ? '主题 #' + item.topicId : '活动待补充'),
+    topicText: item.topicName || (item.topicId ? '未命名' : '活动待补充'),
     timeText: item.createTime ? String(item.createTime).slice(5, 16) : '',
   });
 }

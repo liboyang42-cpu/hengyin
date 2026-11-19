@@ -707,7 +707,7 @@ test('场次角色页带出作用对象(活动名·日期)，取不到就退到�
     { id: 1, memberId: 900, nickname: '主理人', isOwner: true },
     { id: 2, memberId: 901, nickname: '小林', isOwner: false },
   ], { clubId: '9', activityId: '71' })
-  assert.equal(bare.page.data.activitySubtitle, '场次 #71',
+  assert.equal(bare.page.data.activitySubtitle, '未命名',
     '深链/旧入口没有活动名时，至少要让用户看出这是场次级页面')
 
   const clubScope = createHarness()

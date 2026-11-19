@@ -1,6 +1,6 @@
 <view class="review-page theme-merchant" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
   <view wx:if="{{mode === 'manage' && replyPending}}" class="review-recovery" aria-role="alert">
-    <text class="review-recovery__text">回复结果待确认：{{replyRequestId}}</text>
+    <text class="review-recovery__text">回复结果待确认</text>
     <cy-inline-error wx:if="{{replyError}}" kind="error" title="{{replyError}}" />
     <cy-btn disabled="{{replySubmitting}}" bindtap="recoverReply">读取原回复请求</cy-btn>
     <cy-btn wx:if="{{replyRequestId}}" variant="secondary" bindtap="copyReplyRequestId">复制原请求号</cy-btn>
@@ -237,7 +237,6 @@
 
         <view wx:if="{{reportReviewId === item.id}}" class="review-editor">
           <text class="review-editor-title">提交平台复核<text class="form-required" aria-hidden="true">*</text></text>
-          <text class="review-editor-sub">举报已提交审核</text>
           <textarea class="review-textarea review-textarea--compact" value="{{reportReason}}" maxlength="500"
                     placeholder="请说明不实、攻击、广告或其他违规事实" placeholder-class="review-placeholder" bindinput="inputReport" />
           <cy-inline-error wx:if="{{reportError}}" class="review-error" kind="error"

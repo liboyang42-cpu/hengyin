@@ -120,3 +120,32 @@ test('MC-038:俱乐部主办方视角 17 页根节点浅色并归商家域;申�
   assert.equal(lint.classifyPageDomain('pages/club/apply/index'), 'player')
   assert.equal(lint.topLevelThemeClasses(read('pages/club/apply/index.wxml')).has('theme-dark'), true)
 })
+
+test('MC-042 / MC-044 / MC-045:俱乐部页去重复说明、去原始编号与权威纪元', () => {
+  assert.doesNotMatch(read('pages/club/checkin-detail/index.wxml'), /class="ckd-note">已退款/)
+  assert.doesNotMatch(read('pages/club/event-ops/index.wxml'), /主题 #/)
+  assert.match(read('pages/club/event-ops/index.wxml'), /\{\{editingTopicName\}\}<text>已锁定<\/text>/)
+  assert.doesNotMatch(read('pages/club/roles/index.js'), /'场次 #'/)
+  assert.doesNotMatch(read('pages/club/topic-detail/director.js'), /'章节 #'|权威 '/)
+  assert.doesNotMatch(read('pages/club/detail/index.js'), /'主题 #' \+ item\.topicId/)
+  assert.doesNotMatch(read('pages/club/detail/index.wxml'), /期次 #/)
+  assert.doesNotMatch(read('pages/merchant/reviews/index.wxml'), /回复结果待确认：\{\{replyRequestId\}\}/)
+  assert.doesNotMatch(read('pages/merchant/customer/detail/index.wxml'), /备注 #\{\{correctsNoteId\}\}/)
+})
+
+test('MC-058:编辑系列时默认带队人按 leadOptions 反查下拉位置', () => {
+  const js = read('pages/club/event-ops/index.js')
+  assert.match(js, /const leadIndex = that\.data\.leadOptions\.findIndex\(item => item\.memberId === series\.leadMemberId\)/)
+  assert.match(js, /leadIndex: Math\.max\(0, leadIndex\),/)
+})
+
+test('MC-046:按清单删除辅助说明', () => {
+  assert.doesNotMatch(read('pages/club/components/cy/scene-club-edit/index.wxml'), /只能改展示信息/)
+  assert.doesNotMatch(read('pages/merchant/reviews/index.wxml'), /举报已提交审核/)
+  for (const f of ['pages/merchant/marketing/index.wxml', 'pages/merchant/marketing/index.js', 'pages/merchant/predict/index.wxml',
+    'pages/merchant/decor/index.js', 'subpackageMember/components/cy/scene-route-content/index.wxml',
+    'pages/merchant/verify-records/index.wxml', 'pages/merchant/crm-campaigns/index.wxml']) {
+    if (fs.existsSync(path.join(ROOT, f))) assert.doesNotMatch(read(f), /请联系店主开通/, f)
+  }
+  assert.doesNotMatch(read('pages/merchant/decor/perks/index.wxml'), /· 仅自己可见/)
+})
