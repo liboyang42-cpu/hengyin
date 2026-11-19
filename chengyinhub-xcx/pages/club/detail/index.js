@@ -526,7 +526,11 @@ function isDemoClubId(id) {
 }
 
 Page({
-  onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; },
+  onHide() {
+    this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
+    // MC-029:切后台可能被系统回收,等不到撤销条到期 —— 未撤销的移出成员此刻就提交。
+    this._flushPendingRemoval();
+  },
   // 第九轮 m1-9:路线节点地址一点开地图
   onAddressTap(e) { openAddress().openFromEvent(e); },
   _clubAccessState: 'idle',
@@ -870,7 +874,7 @@ Page({
   },
 
   // 页面销毁:作废在途 AI 生成的回调,避免 setData after unload(sendRequest 不可中断)
-  onUnload() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
+  onUnload() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; this._flushPendingRemoval();
     this._scanDisposed = true; this._scanGeneration = (this._scanGeneration || 0) + 1;
     if (this._scanWorkflow) { this._scanWorkflow.destroy(); this._scanWorkflow = null; }
     if (this._scanLoadingOwners) { this._scanLoadingOwners.forEach(() => loading.hide()); this._scanLoadingOwners.clear(); }
@@ -3414,10 +3418,24 @@ Page({
     const that = this;
     const before = this.data.members || [];
     this.setData({ members: before.filter((m) => String(m.memberId) !== String(memberId)) });
+    this._flushPendingRemoval();
+    let done = false;
+    const commit = () => {
+      if (done) return;
+      done = true;
+      if (that._pendingRemoval === commit) that._pendingRemoval = null;
+      that._doRemoveMember(memberId);
+    };
+    this._pendingRemoval = commit;
     cyToast.undo('已将「' + name + '」移出俱乐部', {
-      onUndo() { that.setData({ members: before }); },
-      onCommit() { that._doRemoveMember(memberId); },
+      onUndo() { done = true; if (that._pendingRemoval === commit) that._pendingRemoval = null; that.setData({ members: before }); },
+      onCommit: commit,
     });
+  },
+  _flushPendingRemoval() {
+    const commit = this._pendingRemoval;
+    this._pendingRemoval = null;
+    if (typeof commit === 'function') commit();
   },
   _doRemoveMember(memberId) {
     const that = this;

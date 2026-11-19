@@ -77,3 +77,16 @@ test('MC-021:合作中心列表非空时刷新失败轻提示,不再无声', () 
   assert.equal((js.match(/this\._toastRefreshFailed\('routes'\)/g) || []).length, 2)
   assert.equal((js.match(/this\._toastRefreshFailed\('events'\)/g) || []).length, 2)
 })
+
+test('MC-029:俱乐部详情切后台/卸载时冲刷待发的移出成员请求,且只发一次', () => {
+  const js = read('pages/club/detail/index.js')
+  assert.match(js, /onHide\(\) \{[\s\S]{0,200}this\._flushPendingRemoval\(\);/)
+  assert.match(js, /onUnload\(\) \{[^\n]*this\._flushPendingRemoval\(\);/)
+  const rm = js.slice(js.indexOf('  removeMember(e) {'), js.indexOf('  _doRemoveMember('))
+  assert.match(rm, /if \(done\) return;\s*done = true;/)
+  assert.match(rm, /onUndo\(\) \{ done = true;/)
+})
+
+test('MC-024:商家首页章节回退名不再拼原始编号', () => {
+  assert.doesNotMatch(read('pages/merchant/index/index.js'), /name: '章节 ' \+ id/)
+})

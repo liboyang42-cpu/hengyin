@@ -1439,7 +1439,7 @@ Page({
     // 那段窗口:宁可显示「章节 101」也不能给个空面板 —— 空面板商家会以为卡死。
     const items = (Array.isArray(d.chapters) && d.chapters.length)
       ? d.chapters
-      : (Array.isArray(d.chapterIds) ? d.chapterIds : []).map(function (id) { return { id: id, name: '章节 ' + id }; });
+      : (Array.isArray(d.chapterIds) ? d.chapterIds : []).map(function (id) { return { id: id, name: '章节' }; });
     if (!items.length) {
       cyToast('没有可核销的章节');
       return;
