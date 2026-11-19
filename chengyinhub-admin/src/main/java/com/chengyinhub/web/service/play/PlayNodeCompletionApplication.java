@@ -50,10 +50,6 @@ import static com.chengyinhub.common.core.domain.AjaxResult.error;
 public class PlayNodeCompletionApplication {
     private static final Logger logger = LoggerFactory.getLogger(PlayNodeCompletionApplication.class);
 
-    /** CG-ALL-11 开局方式(桌面完成封顶奖励);直接 new 的存量单测为 null。 */
-    @Autowired(required = false)
-    private com.chengyinhub.business.service.PlayRunStartModeService playRunStartModeService;
-
     @Autowired
     private IAdvancedGameRuntimeService advancedGameRuntimeService;
     @Autowired
@@ -309,8 +305,8 @@ public class PlayNodeCompletionApplication {
         // 静态节点码匹配都证明不了「真做到了」⇒ 本节点只发探索值与徽章,不发积分/券/掉落。
         // 碎片文不在这一刀里(仍按调用方原口径);主题通关奖在下面通关处按全部已完成节点再判一次(#478-3)。
         // CG-ALL-11:桌面完成的局没有任何到场事实 ⇒ 节点与通关奖励都只发探索值与徽章(读失败同样封顶)。
-        if (rewardPolicy == RewardPolicy.FULL && playRunStartModeService != null
-                && playRunStartModeService.deskRun(memberId, actId, node.getTopicId())) {
+        if (rewardPolicy == RewardPolicy.FULL && shopDayProofService != null
+                && shopDayProofService.deskRun(memberId, actId, node.getTopicId())) {
             rewardPolicy = RewardPolicy.XP_BADGE_ONLY;
         }
         RewardPolicy topicRewardPolicy = rewardPolicy;

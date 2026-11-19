@@ -76,4 +76,22 @@ public interface PlayerNodeProgressMapper
     /** 本人在本场/本主题到访过的节点(任意一局)。过期后只读剧情用(FE-STORY 7.4)。 */
     List<PlayerNodeProgress> selectOwnVisits(@Param("memberId") Long memberId, @Param("activityId") Long activityId,
                                              @Param("topicId") Long topicId);
+
+    /* CG-ALL-11 本局开局方式(play_run_start_mode)与路线替代起点(cms_topic_alt_station)。 */
+    String selectRunStartMode(@org.apache.ibatis.annotations.Param("memberId") Long memberId,
+            @org.apache.ibatis.annotations.Param("activityId") Long activityId,
+            @org.apache.ibatis.annotations.Param("topicId") Long topicId);
+
+    int upsertRunStartMode(@org.apache.ibatis.annotations.Param("memberId") Long memberId,
+            @org.apache.ibatis.annotations.Param("activityId") Long activityId,
+            @org.apache.ibatis.annotations.Param("topicId") Long topicId,
+            @org.apache.ibatis.annotations.Param("runMode") String runMode,
+            @org.apache.ibatis.annotations.Param("altStationId") Long altStationId);
+
+    int deleteRunStartMode(@org.apache.ibatis.annotations.Param("memberId") Long memberId,
+            @org.apache.ibatis.annotations.Param("activityId") Long activityId,
+            @org.apache.ibatis.annotations.Param("topicId") Long topicId);
+
+    java.util.List<java.util.Map<String, Object>> selectTopicAltStations(
+            @org.apache.ibatis.annotations.Param("topicId") Long topicId);
 }

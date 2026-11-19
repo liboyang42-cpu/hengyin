@@ -63,7 +63,7 @@ public class PlayerRunReportApplication {
     private com.chengyinhub.business.service.support.AppMediaReferenceGuard mediaReferences;
 
     @Autowired(required = false)
-    private com.chengyinhub.business.service.PlayRunStartModeService playRunStartModeService;
+    private com.chengyinhub.business.service.IShopDayProofService runStartFacts;
 
     @Autowired
     private ICmsTopicService cmsTopicService;
@@ -245,7 +245,7 @@ public class PlayerRunReportApplication {
         vo.setRunId(session == null ? null : session.getId());
         vo.setPlayInstanceId(boundRun ? session.getPlayInstanceId() : null);
         vo.setRunKind(actId > 0L ? "ACTIVITY" : "SELF_PLAY");
-        if (playRunStartModeService != null) vo.setRunStartMode(playRunStartModeService.runMode(memberId, actId, tId));
+        if (runStartFacts != null) vo.setRunStartMode(runStartFacts.runStartMode(memberId, actId, tId));
         vo.setCompletedNodes(completed);
         vo.setTotalNodes(total);
         vo.setNodes(nodeScores);

@@ -959,22 +959,20 @@ class ApiPlayGpsGeofenceValidationTest
         verifyNoProgressAndNoReward();
     }
 
-    // ---- CG-ALL-11 替代站 / 桌面完成 ----
+    // ---- CG-ALL-11 替代站 / 桌面完成(开局方式由开局闸原 owner IShopDayProofService 读写) ----
 
-    private com.chengyinhub.business.mapper.PlayRunStartModeMapper runModes;
+    private IShopDayProofService runStart;
 
     private void installRunModes()
     {
-        runModes = mock(com.chengyinhub.business.mapper.PlayRunStartModeMapper.class);
-        com.chengyinhub.business.service.PlayRunStartModeService service = new com.chengyinhub.business.service.PlayRunStartModeService();
-        org.springframework.test.util.ReflectionTestUtils.setField(service, "mapper", runModes);
-        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playRunStartModeService", service);
+        runStart = mock(IShopDayProofService.class);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "shopDayProofService", runStart);
         java.util.Map<String, Object> alt = new java.util.LinkedHashMap<>();
         alt.put("id", 7L);
         alt.put("name", "替代站");
         alt.put("longitude", "121.6");
         alt.put("latitude", "31.4");
-        when(runModes.selectAltStations(TOPIC)).thenReturn(Collections.singletonList(alt));
+        when(runStart.altStation(TOPIC, 7L)).thenReturn(alt);
     }
 
     private AjaxResult arriveWithStartMode(String longitude, String latitude, String startMode, String altStationId)
@@ -995,19 +993,26 @@ class ApiPlayGpsGeofenceValidationTest
     void deskStartNeedsNoLocationRecordsDeskAndCapsRewards()
     {
         installRunModes();
-        when(runModes.selectRunMode(PLAYER, ACTIVITY, TOPIC)).thenReturn("DESK");
+        when(runStart.deskRun(PLAYER, ACTIVITY, TOPIC)).thenReturn(true);
         AjaxResult result = arriveWithStartMode(null, null, "DESK", null);
 
         assertEquals(200, result.get("code"), String.valueOf(result));
-        verify(runModes).upsertRunMode(PLAYER, ACTIVITY, TOPIC, "DESK", null);
+        verify(runStart).recordRunStart(PLAYER, ACTIVITY, TOPIC, "DESK", null);
         verify(pointsAwardService, never()).award(anyLong(), anyLong(), anyLong(), any());
     }
 
     @Test
-    void deskStartFailsClosedWithoutRunModeStore()
+    void deskStartFailsClosedWhenModeCannotBeRecorded()
     {
-        AjaxResult result = arriveWithStartMode(null, null, "DESK", null);
-        assertEquals("开局方式暂时不可用", result.get("msg"));
+        installRunModes();
+        org.mockito.Mockito.doThrow(new IllegalStateException("开局方式暂时不可用"))
+                .when(runStart).recordRunStart(PLAYER, ACTIVITY, TOPIC, "DESK", null);
+        try {
+            AjaxResult result = arriveWithStartMode(null, null, "DESK", null);
+            assertNotEquals(200, result.get("code"));
+        } catch (RuntimeException refused) {
+            // 开局随之失败(异常外抛同样算拒绝)
+        }
         verifyNoProgressAndNoReward();
     }
 
@@ -1021,7 +1026,7 @@ class ApiPlayGpsGeofenceValidationTest
 
         AjaxResult result = arriveWithStartMode("121.6", "31.4", "ALT", "7");
         assertEquals(200, result.get("code"), String.valueOf(result));
-        verify(runModes).upsertRunMode(PLAYER, ACTIVITY, TOPIC, "ALT", 7L);
+        verify(runStart).recordRunStart(PLAYER, ACTIVITY, TOPIC, "ALT", 7L);
     }
 
     @Test
@@ -1031,7 +1036,7 @@ class ApiPlayGpsGeofenceValidationTest
         assertEquals("离起点太远，请到起点 300 米内再开始", arriveWithStartMode("121.6", "31.4", "TELEPORT", null).get("msg"));
         AjaxResult result = arriveWithStartMode(NODE_LNG, NODE_LAT, null, null);
         assertEquals(200, result.get("code"));
-        verify(runModes).deleteRunMode(PLAYER, ACTIVITY, TOPIC);
-        verify(runModes, never()).upsertRunMode(any(), any(), any(), any(), any());
+        verify(runStart).recordRunStart(PLAYER, ACTIVITY, TOPIC, null, null);
+        verify(runStart, never()).recordRunStart(any(), any(), any(), org.mockito.ArgumentMatchers.eq("DESK"), any());
     }
 }

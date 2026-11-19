@@ -53,9 +53,9 @@ public class PlayNodeQueryApplication {
     private static final com.fasterxml.jackson.databind.ObjectMapper JSON =
             new com.fasterxml.jackson.databind.ObjectMapper();
 
-    /** CG-ALL-11 替代起点与开局方式;直接 new 的存量单测为 null。 */
+    /** CG-ALL-11 开局方式与替代起点(开局闸原 owner);直接 new 的存量单测为 null。 */
     @Autowired(required = false)
-    private com.chengyinhub.business.service.PlayRunStartModeService playRunStartModeService;
+    private com.chengyinhub.business.service.IShopDayProofService runStartFacts;
 
     @Autowired(required = false)
     private com.chengyinhub.business.mapper.CmsTopicMapper cmsTopicMapper;
@@ -794,9 +794,9 @@ public class PlayNodeQueryApplication {
         if (cmsTopicMapper != null) data.put("look", cmsTopicMapper.selectLookJsonById(read.tId));
         data.put("mode", read.playMode); // 1经典定向(线性) 2自由定向(全开)
         // CG-ALL-11:城市定向下发路线替代起点与本局开局方式(DESK/ALT/null),客户端结算页据此区分显示。
-        if (read.playMode != PlayMode.FREE_COLLECT && playRunStartModeService != null) {
-            data.put("altStations", playRunStartModeService.altStations(read.tId));
-            data.put("runStartMode", playRunStartModeService.runMode(read.memberId, read.progActId, read.tId));
+        if (read.playMode != PlayMode.FREE_COLLECT && runStartFacts != null) {
+            data.put("altStations", runStartFacts.altStations(read.tId));
+            data.put("runStartMode", runStartFacts.runStartMode(read.memberId, read.progActId, read.tId));
         }
         data.put("productType", read.playMode);
         if (read.playMode == PlayMode.LINEAR_ORIENTEERING) {

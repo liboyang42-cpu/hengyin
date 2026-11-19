@@ -229,10 +229,10 @@ class PlayerRunReportApplicationTest {
         when(media.visibleUrl("media-asset:55", VIEWER)).thenReturn("https://cdn.example/own.jpg");
         when(media.visibleUrl("media-asset:56", VIEWER)).thenReturn("");
         org.springframework.test.util.ReflectionTestUtils.setField(application, "mediaReferences", media);
-        com.chengyinhub.business.service.PlayRunStartModeService modes =
-                org.mockito.Mockito.mock(com.chengyinhub.business.service.PlayRunStartModeService.class);
-        when(modes.runMode(VIEWER, 0L, TOPIC)).thenReturn("DESK");
-        org.springframework.test.util.ReflectionTestUtils.setField(application, "playRunStartModeService", modes);
+        com.chengyinhub.business.service.IShopDayProofService modes =
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.IShopDayProofService.class);
+        when(modes.runStartMode(VIEWER, 0L, TOPIC)).thenReturn("DESK");
+        org.springframework.test.util.ReflectionTestUtils.setField(application, "runStartFacts", modes);
 
         PlayerRunReportVO vo = (PlayerRunReportVO) application.report(VIEWER, null, TOPIC).get(AjaxResult.DATA_TAG);
 
