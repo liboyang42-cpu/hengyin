@@ -70,9 +70,14 @@ test('渲染器不支持时保留真实徽章图；贴图本身失败时退到�
 
 test('glow canvas 获取失败与坏 URL 编码都可恢复，不留黑屏或页面崩溃', () => {
   const page = loadPage()
-  assert.doesNotThrow(() => page.onLoad({ name: '%E0%A4%A', img: '%E0%A4%A', style: 'glow' }))
+  // PG-035:坏图片参数不再回落示例图,而是落缺参态且不崩
+  const bad = loadPage()
+  assert.doesNotThrow(() => bad.onLoad({ name: '%E0%A4%A', img: '%E0%A4%A', style: 'glow' }))
+  assert.equal(bad.data.missing, true)
+  assert.notEqual(bad.data.src, DEMO)
+  bad.onUnload()
+  assert.doesNotThrow(() => page.onLoad({ name: '%E0%A4%A', img: '/subpackageP3/assets/badge-demo.png', style: 'glow' }))
   assert.equal(page.data.name, '徽章')
-  assert.equal(page.data.src, DEMO)
   page._initGlow()
   assert.equal(page.data.unsupported, true)
   assert.equal(page.data.renderState, 'fallback')

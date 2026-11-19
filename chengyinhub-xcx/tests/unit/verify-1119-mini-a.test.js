@@ -223,3 +223,16 @@ test('PG-034/PG-040/PG-042:商家提现两页、建券页与独立提现页下�
   const { getScene } = require('../../utils/scene-registry.js');
   assert.equal(getScene('member-withdraw').route, '/subpackageA/pages/assetcenter/earnings/index');
 });
+
+test('PG-035/PG-037/PG-038/PG-043/PG-056:徽章缺图落缺参、收益子页身份兜底、分析与申诉识别登录态、顶距兜底', () => {
+  assert.doesNotMatch(read('subpackageP3/pages/badge-3d/index.js'), /return DEFAULT_BADGE_ASSET;\n\}/);
+  assert.match(read('subpackageP3/pages/badge-3d/index.wxml'), /wx:if="\{\{missing\}\}"><cy-empty kind="missing-param"/);
+  for (const f of ['subpackageA/pages/assetcenter/analysis/index.js', 'subpackageA/pages/assetcenter/income-detail/income-detail.js']) {
+    assert.match(read(f), /options\.theme === 'merchant'\) \|\| roleGuard\.isMerchantView\(\)/, f);
+  }
+  assert.match(read('subpackageA/pages/assetcenter/analysis/index.wxml'), /wx:elif="\{\{state === 'login'\}\}"[^>]*cta="登录" bind:cta="onLogin"/);
+  assert.match(read('subpackageMember/appeal-mine/index.js'), /isLoginRequired\(app, res, statusCode\)\) \{ that\.setData\(\{ state: 'login'/);
+  for (const f of ['points-history', 'report-mine', 'report-detail', 'appeal-mine']) {
+    assert.match(read(`subpackageMember/${f}/index.js`), /statusBarHeight: app\.globalData\.statusBarHeight \|\| 20/, f);
+  }
+});
