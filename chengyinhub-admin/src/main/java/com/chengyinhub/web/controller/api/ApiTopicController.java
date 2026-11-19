@@ -1138,6 +1138,9 @@ public class ApiTopicController extends BaseController {
         data.put("journeyRules", topic.getJourneyRulesJson());
         data.put("themeRuntimeConfig", topic.getThemeRuntimeConfigJson());
         data.put("look", cmsTopicMapper == null ? null : cmsTopicMapper.selectLookJsonById(topic.getId()));
+        // 角色(Cast)v1:对象;列为 NULL = null(功能关闭)。
+        data.put("castConfig", cmsTopicMapper == null ? null : com.chengyinhub.business.service.support.CastConfigSupport.parse(
+                cmsTopicMapper.selectCastConfigById(topic.getId())));
         // R8-STORY 同款回显:主题级剧情配置与保存入参同名
         data.put("journeyStory", topic.getJourneyStoryJson());
         data.put("openingChapterId", com.chengyinhub.business.domain.JourneyStory.openingChapterId(topic.getJourneyStoryJson()));
@@ -2226,6 +2229,9 @@ public class ApiTopicController extends BaseController {
             // R2-B10 玩家侧只读下发:归一化后的主题数值规则(保存时已归一化,这里原样透传)。
             // 未配置 = null(不下发);作者关了检定 = 下发 checkEnabled=false。新增字段,不改已有字段。
             topicInfoVO.setJourneyRules(com.chengyinhub.business.service.support.JourneyInitialState.publicRules(cmsTopic.getJourneyRulesJson()));
+            // 角色(Cast)v1:玩家侧同样下发角色表(无秘密字段);列为 NULL = null(功能关闭)。
+            topicInfoVO.setCastConfig(cmsTopicMapper == null ? null : com.chengyinhub.business.service.support.CastConfigSupport.parse(
+                    cmsTopicMapper.selectCastConfigById(topicId)));
             // R22-SEC S1:主题级剧情配置整段不下发 —— journey_story_json 含结局条件(when)、
             // optionalClues 与 relationKey,属于剧透;阶段结算 / 结局 / 尾声由 /api/play/journey 下的接口
             // 按本局状态专门给出。作者侧的编辑回显走 topicEditDetail 的显式字段,不受影响。

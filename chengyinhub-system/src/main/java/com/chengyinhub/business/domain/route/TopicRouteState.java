@@ -36,6 +36,11 @@ public class TopicRouteState {
     public Map<String, Object> getOpening() { return opening; }
     public void setOpening(Map<String, Object> opening) { this.opening = opening; }
     private Long sessionId;
+    /** 角色 Cast v1:本局玩家档案 {name, identityKey, identityTitle};没设过 = null。 */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Map<String, Object> playerProfile;
+    public Map<String, Object> getPlayerProfile() { return playerProfile; }
+    public void setPlayerProfile(Map<String, Object> playerProfile) { this.playerProfile = playerProfile; }
     private String status;
     private Long currentNodeId;
     private Long recommendedNodeId;

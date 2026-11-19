@@ -165,7 +165,10 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
                     throw new ServiceException("本局结局快照不可用");
                 }
                 Map<String,Object> result = JSON.convertValue(archived, new com.fasterxml.jackson.core.type.TypeReference<Map<String,Object>>(){});
-                result.put("code",result.get("endingId")); return result;
+                result.put("code",result.get("endingId"));
+                // 角色 Cast v1:结算页同样带本局信任(老局没有 = 空对象)。
+                if (!result.containsKey("trust")) result.put("trust", new LinkedHashMap<String, Integer>(frozenState.getTrust()));
+                return result;
             }
         }
         // 主题没配剧情 / 没配结局是合法状态(种子主题、纯路线主题),如实回空结果,客户端据此跳过结局页,不是 500。
@@ -211,6 +214,7 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
         view.put("found", found[0]);
         view.put("total", found[1]);
         if(includeArchive && session != null) view.put("archive", archive(memberId, topicId, session));
+        view.put("trust", new LinkedHashMap<String, Integer>(state.getTrust()));
         view.put("chapter", endingChapter(topicId, chosen, state, session));
         return view;
     }
@@ -475,6 +479,11 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
                                               TopicRouteEngine.State state) {
         if (endings == null) {
             return null;
+        }
+        // 角色 Cast v1(D2):配了 endingFor 的结局章,按本局信任唯一最高(>0)的角色挑;平局 / 没信任 / 没配走原规则。
+        JourneyStory.EndingCase byTrust = com.chengyinhub.business.service.support.CastRunRules.pickByTrust(endings, state.getTrust());
+        if (byTrust != null) {
+            return byTrust;
         }
         JourneyStory.EndingCase fallback = null;
         for (JourneyStory.EndingCase item : endings) {

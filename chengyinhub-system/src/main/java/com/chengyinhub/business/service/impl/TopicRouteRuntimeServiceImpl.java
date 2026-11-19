@@ -1726,6 +1726,8 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         view.setAttributes(JourneyInitialState.playerView(sessionRules(session), readEngineState(session.getStateJson())));
         appendOpening(view, session, readEngineState(session.getStateJson()));
         appendThoughts(view, session, readEngineState(session.getStateJson()));
+        view.setPlayerProfile(com.chengyinhub.business.service.support.CastRunRules.profileView(
+                readEngineState(session.getStateJson()).getPlayerProfile()));
         return view;
     }
 
@@ -1759,6 +1761,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         view.setAttributes(JourneyInitialState.playerView(sessionRules(session), state));
         appendOpening(view, session, state);
         appendThoughts(view, session, state);
+        view.setPlayerProfile(com.chengyinhub.business.service.support.CastRunRules.profileView(state.getPlayerProfile()));
         return view;
     }
 

@@ -283,6 +283,9 @@ public class JourneyStory {
                 String summary = chapter.summary == null ? "" : chapter.summary.trim();
                 if (!summary.isEmpty()) item.put("summary", summary.length() > 80 ? summary.substring(0, 80) : summary);
                 item.put("chapterId", chapter.chapterId);
+                // 角色 Cast v1:结局章可归属某个角色(信任最高的那位走这一章),格式与存在性在保存时已校验。
+                String endingFor = chapter.ending.path("endingFor").asText("");
+                if (!endingFor.isEmpty()) item.put("endingFor", endingFor);
                 if (chapter.ending.path("fallback").asBoolean(false)) {
                     item.put("fallback", true);
                     continue;
@@ -481,6 +484,11 @@ public class JourneyStory {
         /** 结局章(2026-09-24):命中这条就把这一章当故事流播;老数据没有它时只出标题 + 一句话。 */
         private Long chapterId;
 
+        /** 角色 Cast v1:这一章结局归属的角色 id(castConfig.cast[].id);缺省 = 不参与按信任挑结局。 */
+        private String endingFor;
+
+        public String getEndingFor() { return endingFor; }
+        public void setEndingFor(String endingFor) { this.endingFor = endingFor; }
         public Long getChapterId() { return chapterId; }
         public void setChapterId(Long chapterId) { this.chapterId = chapterId; }
         public String getCode() { return code; }

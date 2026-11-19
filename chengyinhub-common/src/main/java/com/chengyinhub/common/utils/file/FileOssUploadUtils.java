@@ -159,6 +159,40 @@ public class FileOssUploadUtils {
         }
     }
 
+    /**
+     * 服务端生成内容的确定性私有对象(角色 Cast v1 台词配音缓存):key 由调用方按内容哈希给定,
+     * 同一内容只写一次。只接受 {@code cast_voice/} 前缀,避免被当成任意 key 写入口。
+     */
+    public static boolean privateGeneratedObjectExists(String objectKey) {
+        requireGeneratedObjectKey(objectKey);
+        OSSClient client = createOssClient();
+        try {
+            return client.doesObjectExist(requiredEnv(OSS_BUCKET_NAME_ENV), objectKey);
+        } finally { client.shutdown(); }
+    }
+
+    public static void putPrivateGeneratedObject(String objectKey, byte[] bytes, String contentType) throws IOException {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+        requireGeneratedObjectKey(objectKey);
+        if (bytes == null || bytes.length == 0) throw new IOException("empty object");
+        OSSClient client = createOssClient();
+        try {
+            ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setObjectAcl(CannedAccessControlList.Private);
+            metadata.setContentLength(bytes.length);
+            if (StringUtils.isNotBlank(contentType)) metadata.setContentType(contentType);
+            PutObjectResult result = client.putObject(requiredEnv(OSS_BUCKET_NAME_ENV), objectKey,
+                    new java.io.ByteArrayInputStream(bytes), metadata);
+            if (result == null) throw new IOException("OSS未确认对象写入");
+        } finally { client.shutdown(); }
+    }
+
+    private static void requireGeneratedObjectKey(String objectKey) {
+        if (objectKey == null || !objectKey.matches("cast_voice/[a-f0-9]{64}\\.mp3")) {
+            throw new IllegalArgumentException("生成对象 key 无效");
+        }
+    }
+
     public static JSONObject uploadPendingWithOwner(MultipartFile file,String ownerMemberId,String bizType) throws IOException {
         com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (StringUtils.isBlank(ownerMemberId)) throw new IllegalArgumentException("待审媒体缺少作者归属");
