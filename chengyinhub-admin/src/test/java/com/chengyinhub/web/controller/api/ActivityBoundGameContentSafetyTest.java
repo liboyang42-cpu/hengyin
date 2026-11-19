@@ -134,7 +134,7 @@ class ActivityBoundGameContentSafetyTest {
         clearInvocations(templates, security);
         stored.setMemberId(202L);
         assertNotEquals(200, controller.update(request).get(AjaxResult.CODE_TAG));
-        assertNotEquals(200, controller.activityUpdatePublishStatus("9", null).get(AjaxResult.CODE_TAG));
+        assertNotEquals(200, controller.activityUpdatePublishStatus("9", null, null).get(AjaxResult.CODE_TAG));
         verifyNoInteractions(templates, security);
     }
 
@@ -153,15 +153,16 @@ class ActivityBoundGameContentSafetyTest {
     @Test
     void relistingRechecksPersistedGameAndCannotExposeRejectedOrHeldText() {
         game.setQuestionName("违禁旧题");
-        assertNotEquals(200, controller.activityUpdatePublishStatus("9", null).get(AjaxResult.CODE_TAG));
+        assertNotEquals(200, controller.activityUpdatePublishStatus("9", null, null).get(AjaxResult.CODE_TAG));
         game.setQuestionName("正常题目");
         when(security.checkText(anyString(), any())).thenReturn(IWxContentSecurityService.MSG_BUSY);
-        assertNotEquals(200, controller.activityUpdatePublishStatus("9", null).get(AjaxResult.CODE_TAG));
+        assertNotEquals(200, controller.activityUpdatePublishStatus("9", null, null).get(AjaxResult.CODE_TAG));
         assertEquals(0L, stored.getPublishStatus());
         verify(activities, never()).updateCmsActivity(any());
+        verify(activities, never()).updatePublishStatusIfExpected(any(), any(), any(), any());
         when(security.checkText(anyString(), any())).thenReturn(null);
-        when(activities.updateCmsActivity(any())).thenReturn(1);
-        assertEquals(200, controller.activityUpdatePublishStatus("9", null).get(AjaxResult.CODE_TAG));
+        when(activities.updatePublishStatusIfExpected(9L, 101L, 0L, 1L)).thenReturn(1);
+        assertEquals(200, controller.activityUpdatePublishStatus("9", null, null).get(AjaxResult.CODE_TAG));
         assertEquals(1L, stored.getPublishStatus());
     }
 }

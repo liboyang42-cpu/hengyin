@@ -40,6 +40,18 @@ class R11G3OrderTruthTest {
     }
 
     @Test
+    void quoteValidityTextUsesTheLastPlayableShanghaiDay() throws Exception {
+        // OR-028:到期落在零点 = 最后能玩的是前一天,与小程序 passWindow 同一个日期
+        assertEquals("12月4日", CmsRegistrationServiceImpl.selfPlayLastDayText(at("2026-12-05 00:00:00")));
+        assertEquals("2月1日", CmsRegistrationServiceImpl.selfPlayLastDayText(at("2027-02-01 23:10:00")));
+        java.util.List<String> paid = CmsRegistrationServiceImpl.selfPlayQuoteTerms(at("2026-12-05 00:00:00"), true);
+        assertEquals("可玩至12月4日，购买后即可开玩", paid.get(0));
+        org.junit.jupiter.api.Assertions.assertTrue(paid.stream().anyMatch(t -> t.contains("退款")));
+        org.junit.jupiter.api.Assertions.assertTrue(CmsRegistrationServiceImpl.selfPlayQuoteTerms(
+                at("2026-12-05 00:00:00"), false).stream().noneMatch(t -> t.contains("退款")));
+    }
+
+    @Test
     void topicTotalTimeIsStoredInSeconds() {
         // R11 j3 F7:节点 nodeTime 是分钟,cms_topic.total_time 是秒;27 站 × 10 分钟 = 16200 秒,不是 270
         java.util.List<com.chengyinhub.business.domain.dto.NodeDTO> nodes = new java.util.ArrayList<>();

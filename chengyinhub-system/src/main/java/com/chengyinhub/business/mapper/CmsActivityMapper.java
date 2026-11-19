@@ -95,6 +95,13 @@ public interface CmsActivityMapper
     public int updateCmsActivity(CmsActivity cmsActivity);
 
     /**
+     * MC-008/009:上下架 CAS —— 只写 publish_status,WHERE 钉 id + 主办主体 + 未删 + 未取消 + 当前状态等于 expected。
+     * expected=0 时把存量 NULL 视同下架。返回 0 = 状态已变化 / 不归属 / 已删或已取消。
+     */
+    public int updatePublishStatusIfExpected(@Param("id") Long id, @Param("ownerMemberId") Long ownerMemberId,
+                                             @Param("expected") Long expected, @Param("next") Long next);
+
+    /**
      * 小程序内容更新：只改可编辑字段，WHERE 必须同时钉 id 与 member_id。
      * member_id 只出现在 WHERE，不写进 SET。
      */

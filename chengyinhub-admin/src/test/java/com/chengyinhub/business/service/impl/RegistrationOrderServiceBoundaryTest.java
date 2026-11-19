@@ -186,6 +186,81 @@ class RegistrationOrderServiceBoundaryTest {
         verify(creation, never()).create(any(), any(), any(), any());
     }
 
+    // OR-003：旧客户端不带 quoteSign 的自玩票旧单重放，价格变了必须 409 重新报价，未变才容忍。
+    private CmsRegistration legacySelfPlay(String requestId, String payable) {
+        CmsRegistration persisted = new CmsRegistration();
+        persisted.setId(21L);
+        persisted.setMemberId(7L);
+        persisted.setOwnerType(1L);
+        persisted.setOwnerId(55L);
+        persisted.setTicketId(9L);
+        persisted.setRequestId(requestId);
+        persisted.setRegistrationStatus(1);
+        persisted.setPayableAmount(new java.math.BigDecimal(payable));
+        return persisted;
+    }
+
+    private com.chengyinhub.business.domain.dto.RegistrationQuoteResult quoteOf(String pay) {
+        com.chengyinhub.business.domain.dto.RegistrationQuoteResult quote =
+                mock(com.chengyinhub.business.domain.dto.RegistrationQuoteResult.class);
+        when(quote.getPayAmount()).thenReturn(new java.math.BigDecimal(pay));
+        return quote;
+    }
+
+    @Test
+    void legacySelfPlayReplayWithoutQuoteSignIsAConflictWhenThePriceChanged() {
+        ICmsRegistrationService registrations = mock(ICmsRegistrationService.class);
+        IRegistrationCreationTransaction creation = mock(IRegistrationCreationTransaction.class);
+        IRegistrationOrderCreateGate gate = mock(IRegistrationOrderCreateGate.class);
+        RegistrationOrderServiceImpl service = service(registrations, creation, gate);
+        RegistrationRequest request = request("legacy-self-play");
+        request.setOwnerType(1);
+        when(registrations.selectCmsRegistrationList(any(CmsRegistration.class)))
+                .thenReturn(Collections.singletonList(legacySelfPlay("legacy-self-play", "39.90")));
+        com.chengyinhub.business.domain.dto.RegistrationQuoteResult quote = quoteOf("49.90");
+        when(registrations.quoteRegistration(7L, request)).thenReturn(quote);
+
+        RegistrationRequestConflictException conflict = assertThrows(RegistrationRequestConflictException.class,
+                () -> service.createOrReplay(7L, request));
+        org.junit.jupiter.api.Assertions.assertEquals("价格已更新，请重新确认", conflict.getMessage());
+        verify(registrations, never()).bindLegacyRequestFingerprint(any(), any(), any());
+        verify(creation, never()).create(any(), any(), any(), any());
+    }
+
+    @Test
+    void legacySelfPlayReplayWithoutQuoteSignIsToleratedOnlyWhenThePriceIsUnchanged() {
+        ICmsRegistrationService registrations = mock(ICmsRegistrationService.class);
+        IRegistrationCreationTransaction creation = mock(IRegistrationCreationTransaction.class);
+        IRegistrationOrderCreateGate gate = mock(IRegistrationOrderCreateGate.class);
+        RegistrationOrderServiceImpl service = service(registrations, creation, gate);
+        RegistrationRequest request = request("legacy-self-play-same");
+        request.setOwnerType(1);
+        when(registrations.selectCmsRegistrationList(any(CmsRegistration.class)))
+                .thenReturn(Collections.singletonList(legacySelfPlay("legacy-self-play-same", "39.90")));
+        com.chengyinhub.business.domain.dto.RegistrationQuoteResult quote = quoteOf("39.9");
+        when(registrations.quoteRegistration(7L, request)).thenReturn(quote);
+        when(registrations.bindLegacyRequestFingerprint(any(), any(), any())).thenReturn(true);
+
+        assertTrue(service.createOrReplay(7L, request).isReplayed());
+    }
+
+    @Test
+    void legacySelfPlayReplayFailsClosedWhenTheQuoteCannotBeRecomputed() {
+        ICmsRegistrationService registrations = mock(ICmsRegistrationService.class);
+        IRegistrationCreationTransaction creation = mock(IRegistrationCreationTransaction.class);
+        IRegistrationOrderCreateGate gate = mock(IRegistrationOrderCreateGate.class);
+        RegistrationOrderServiceImpl service = service(registrations, creation, gate);
+        RegistrationRequest request = request("legacy-self-play-closed");
+        request.setOwnerType(1);
+        when(registrations.selectCmsRegistrationList(any(CmsRegistration.class)))
+                .thenReturn(Collections.singletonList(legacySelfPlay("legacy-self-play-closed", "39.90")));
+        when(registrations.quoteRegistration(7L, request)).thenThrow(new IllegalStateException("已停售"));
+        when(registrations.bindLegacyRequestFingerprint(any(), any(), any())).thenReturn(true);
+
+        assertThrows(RegistrationRequestConflictException.class, () -> service.createOrReplay(7L, request));
+        verify(registrations, never()).bindLegacyRequestFingerprint(any(), any(), any());
+    }
+
     private void assertTerminalOrderRejected(int registrationStatus, String expectedMessage) {
         ICmsRegistrationService registrations = mock(ICmsRegistrationService.class);
         IRegistrationCreationTransaction creation = mock(IRegistrationCreationTransaction.class);

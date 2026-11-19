@@ -304,6 +304,11 @@ public class PlayNodeCompletionApplication {
         // C1 传感器可信边界(选项 A):设备自报成绩(反应毫秒/撞击数/heldMs/停表/方位)、拍照兜底放行、
         // 静态节点码匹配都证明不了「真做到了」⇒ 本节点只发探索值与徽章,不发积分/券/掉落。
         // 碎片文不在这一刀里(仍按调用方原口径);主题通关奖在下面通关处按全部已完成节点再判一次(#478-3)。
+        // CG-ALL-11:桌面完成的局没有任何到场事实 ⇒ 节点与通关奖励都只发探索值与徽章(读失败同样封顶)。
+        if (rewardPolicy == RewardPolicy.FULL && shopDayProofService != null
+                && shopDayProofService.deskRun(memberId, actId, node.getTopicId())) {
+            rewardPolicy = RewardPolicy.XP_BADGE_ONLY;
+        }
         RewardPolicy topicRewardPolicy = rewardPolicy;
         boolean rewardCapped = rewardPolicy == RewardPolicy.FULL && advancedGameRuntimeService != null
                 && advancedGameRuntimeService.rewardCappedToXpBadge(memberId, actId, node.getTopicId(), node.getId());

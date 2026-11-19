@@ -57,6 +57,14 @@ public class PlayerRunReportApplication {
     static final String RANK_BASIS_NOTE = "COMPLETED_NODES_COUNT_NOT_NET_SCORE";
     static final String SCORE_BASIS_PERSISTED = "SERVER_PERSISTED_PUZZLE_SCORE";
 
+    /** CG-ALL-11 开局方式;直接 new 的存量单测为 null。 */
+    /** 结算页照片的可见地址;直接 new 的存量单测为 null。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.AppMediaReferenceGuard mediaReferences;
+
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IShopDayProofService runStartFacts;
+
     @Autowired
     private ICmsTopicService cmsTopicService;
     @Autowired
@@ -180,6 +188,15 @@ public class PlayerRunReportApplication {
             view.setScore(row.getPuzzleScore());
             view.setScored(row.getPuzzleScore() != null);
             view.setCheckinTime(row.getCheckinTime());
+            // CG-ALL-12 / CG-01-P2-6:结算页展示本站照片。只经媒体闸取本人可见地址，取不到就不给。
+            if (mediaReferences != null && org.apache.commons.lang3.StringUtils.isNotBlank(row.getPicUrl())) {
+                try {
+                    String shown = mediaReferences.visibleUrl(row.getPicUrl(), memberId);
+                    if (org.apache.commons.lang3.StringUtils.isNotBlank(shown)) view.setPhotoUrl(shown);
+                } catch (RuntimeException hidden) {
+                    // 照片读不到只少一张图，不影响成绩。
+                }
+            }
             nodeScores.add(view);
             String completionMode = row.getCompletionMode();
             if (PuzzleScorePolicy.COMPLETION_REVEALED.equals(completionMode)
@@ -228,6 +245,7 @@ public class PlayerRunReportApplication {
         vo.setRunId(session == null ? null : session.getId());
         vo.setPlayInstanceId(boundRun ? session.getPlayInstanceId() : null);
         vo.setRunKind(actId > 0L ? "ACTIVITY" : "SELF_PLAY");
+        if (runStartFacts != null) vo.setRunStartMode(runStartFacts.runStartMode(memberId, actId, tId));
         vo.setCompletedNodes(completed);
         vo.setTotalNodes(total);
         vo.setNodes(nodeScores);

@@ -1109,6 +1109,32 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         private AuditTask task;
     }
 
+    /** MC-035:通知里点名活动名 / 模板名;读失败按原「内容」兜底,不让通知措辞拖垮审核事务。 */
+    String reviewedItemName(AuditTask task, String fallback) {
+        if (task == null || task.getBizId() == null) return fallback;
+        try {
+            String bizType = task.getBizType();
+            if (AuditTask.BIZ_ACTIVITY.equals(bizType)) {
+                CmsActivity activity = cmsActivityMapper == null ? null : cmsActivityMapper.selectCmsActivityById(task.getBizId());
+                return activity == null ? fallback
+                        : com.chengyinhub.business.service.support.SystemNoticeCard.item("活动", activity.getName());
+            }
+            if (AuditTask.BIZ_TEMPLATE.equals(bizType)) {
+                CmsMemberTemplate template = templateMapper == null ? null : templateMapper.selectCmsMemberTemplateById(task.getBizId());
+                return template == null ? fallback
+                        : com.chengyinhub.business.service.support.SystemNoticeCard.item("玩法模板", template.getTitle());
+            }
+            if (AuditTask.BIZ_TEMPLATE_LIBRARY.equals(bizType)) {
+                CmsTemplateLibrary library = libraryMapper == null ? null : libraryMapper.selectCmsTemplateLibraryById(task.getBizId());
+                return library == null ? fallback
+                        : com.chengyinhub.business.service.support.SystemNoticeCard.item("玩法模板", library.getTitle());
+            }
+        } catch (RuntimeException e) {
+            logger.warn("审核通知取名称失败，按「内容」发送 taskId={}", task.getId(), e);
+        }
+        return fallback;
+    }
+
     /** 系统消息就是同库持久通知；与决定、处罚同事务，失败回滚，原 requestId 可安全重试。 */
     private void notifyReviewResult(AuditTask task, AuditReviewDTO request) {
         if (!isTerminalDecision(request.getStatus())) return;
@@ -1136,6 +1162,10 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             reviewedItem = com.chengyinhub.business.service.support.SystemNoticeCard.item("主题", topic.getName());
         } else if (task.getSubmitterId() != null && (SOURCE_REPORT.equals(task.getSourceType()) || !report)) {
             reporters.add(task.getSubmitterId());
+        }
+        // MC-035:活动 / 玩法模板的审核结果也点名是哪一条;取不到名字时仍写「内容」,不影响审核本身。
+        if (!report && "内容".equals(reviewedItem)) {
+            reviewedItem = reviewedItemName(task, reviewedItem);
         }
         boolean appeal = !report && SOURCE_APPEAL.equals(task.getSourceType());
         java.util.Map<Long, String> recipients = new java.util.LinkedHashMap<>();

@@ -38,7 +38,7 @@
     </select>
 
     <update id="deleteClubPostCommentById" parameterType="Long">
-        update club_post_comment set del_flag = 2 where id = #{id}
+        update club_post_comment set del_flag = 2 where id = #{id} and (del_flag is null or del_flag &lt;&gt; 2)
     </update>
 
     <!-- 软恢复(审核通过/举报无效时复原 del_flag=0);只更新非空字段 -->

@@ -276,7 +276,33 @@ public class ApiPlayProgressController extends BaseController {
             String routeActionId, Integer expectedRouteVersion, String accuracy, String locationTimestamp,
             Long routeSessionId, String runtimeInstance, Integer authorityEpoch)
     {
-        return playBasicCommandApplication.arrive(currentMemberId(), activityId, nodeId, longitude, latitude, topicId, routeActionId, expectedRouteVersion, accuracy, locationTimestamp, routeSessionId, runtimeInstance, authorityEpoch);
+        // CG-ALL-11:startMode / altStationId 从请求里按需读取(不改本方法签名，旧调用与旧客户端不受影响)。
+        return arriveWithStartMode(activityId, nodeId, longitude, latitude, topicId, routeActionId, expectedRouteVersion, accuracy, locationTimestamp, routeSessionId, runtimeInstance, authorityEpoch);
+    }
+
+    /** 没带开局方式时走原 13 参入口(逐字不变);带了才走 CG-ALL-11 的新入口。 */
+    private AjaxResult arriveWithStartMode(String activityId, String nodeId, String longitude, String latitude, String topicId,
+            String routeActionId, Integer expectedRouteVersion, String accuracy, String locationTimestamp,
+            Long routeSessionId, String runtimeInstance, Integer authorityEpoch)
+    {
+        String startMode = optionalRequestParam("startMode");
+        String altStationId = optionalRequestParam("altStationId");
+        if (startMode == null && altStationId == null)
+            return playBasicCommandApplication.arrive(currentMemberId(), activityId, nodeId, longitude, latitude, topicId, routeActionId, expectedRouteVersion, accuracy, locationTimestamp, routeSessionId, runtimeInstance, authorityEpoch);
+        return playBasicCommandApplication.arrive(currentMemberId(), activityId, nodeId, longitude, latitude, topicId, routeActionId, expectedRouteVersion, accuracy, locationTimestamp, routeSessionId, runtimeInstance, authorityEpoch,
+                startMode, altStationId);
+    }
+
+    private static String optionalRequestParam(String name)
+    {
+        try {
+            org.springframework.web.context.request.RequestAttributes attributes =
+                    org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
+            if (!(attributes instanceof org.springframework.web.context.request.ServletRequestAttributes servlet)) return null;
+            return servlet.getRequest().getParameter(name);
+        } catch (RuntimeException unavailable) {
+            return null;
+        }
     }
 
     /** 兼容旧调用（不带定位时间）：原样走既有 50m/80m 与旧请求指纹。 */
@@ -288,7 +314,7 @@ public class ApiPlayProgressController extends BaseController {
         long startedAt = System.nanoTime();
         GameSloResult sloResult = GameSloResult.FAULT;
         try {
-            AjaxResult response = playBasicCommandApplication.arrive(currentMemberId(), activityId, nodeId,
+            AjaxResult response = arriveWithStartMode(activityId, nodeId,
                     longitude, latitude, topicId, routeActionId, expectedRouteVersion, accuracy, null,
                     routeSessionId, runtimeInstance, authorityEpoch);
             // HTTP 200 + AjaxResult 业务拒绝不是成功：success 只认 code=200。

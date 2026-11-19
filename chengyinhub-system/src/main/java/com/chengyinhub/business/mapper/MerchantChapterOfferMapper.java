@@ -61,6 +61,12 @@ public interface MerchantChapterOfferMapper {
     /** F12:承接方本人设置是否接受亲子票与儿童份说明;where 带 merchant_id 与 status=1,0 行由调用方拒。 */
     public int updateFamilyAcceptance(MerchantChapterOffer o);
 
+    /** FE-G5:生效供给的玩家可见卡片(店名、权益名、含/另付、预约)。只读展示。 */
+    List<MerchantChapterOffer> selectLiveDisplayByChapterIds(@Param("chapterIds") List<Long> chapterIds);
+
+    /** FE-G5:承接方改自己生效供给的展示条款(where 带 merchant_id 与 status=1)。 */
+    int updateDisplayTerms(MerchantChapterOffer o);
+
     int approveReplacement(@Param("id") Long id, @Param("merchantId") Long merchantId);
 
     /** 某章节当前在供给的 offer(只返 status=1;失效的留在表里供流水追溯,不该进供给池) */

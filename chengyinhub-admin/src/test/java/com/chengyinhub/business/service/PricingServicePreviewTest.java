@@ -113,6 +113,28 @@ class PricingServicePreviewTest {
         assertEquals(0, new BigDecimal("41.18").compareTo(r.getPriceMin()), "底价随权益上升");
     }
 
+    /** MC-006:已锁价主题有冻结的平台费率快照,预览按快照算,不按当前 live 费率。 */
+    @Test
+    void priceLockedTopicPreviewUsesFrozenPlatformRate() {
+        CmsTopicMapper topics = mock(CmsTopicMapper.class);
+        ReflectionTestUtils.setField(svc, "cmsTopicMapper", topics);
+        CmsTopic locked = new CmsTopic();
+        locked.setId(100L);
+        locked.setFeePlatformRate(new BigDecimal("0.20"));
+        when(topics.selectCmsTopicById(100L)).thenReturn(locked);
+        // 只有 C=15 固定费,无被邀商家 ⇒ guaranteeRate=base 0.05?按规则算;只比较快照与 live 的差
+        when(coopOrderMapper.selectEffectiveOrdersByTopicId(any()))
+                .thenReturn(Collections.singletonList(fixed(new BigDecimal("15"))));
+
+        PricingResult frozen = svc.previewTopic(100L, null, null, "self");
+        locked.setFeePlatformRate(null);
+        PricingResult live = svc.previewTopic(100L, null, null, "self");
+
+        assertEquals(0, new BigDecimal("0.20").compareTo(frozen.getPlatformRate()));
+        assertEquals(0, svc.platformRate().compareTo(live.getPlatformRate()));
+        assertTrue(frozen.getPriceMin().compareTo(live.getPriceMin()) > 0, "快照费率更高 ⇒ 地板更高");
+    }
+
     // CU-M-32:预览回带 canConfirm,与 confirmPrice 的 lifecycle==2 闸同口径;未到定价阶段前端事先置灰。
     @Test
     void canConfirm_onlyInPricingLifecycle() {

@@ -1671,11 +1671,20 @@ public class ApiMerchantController extends BaseController {
 
     @Operation(summary = "商家实时动态(收入到账/核销等真实事件)")
     @PostMapping("/events")
-    public AjaxResult events() {
+    public AjaxResult events(@RequestParam(value = "pageNum", required = false) Integer pageNum,
+                             @RequestParam(value = "pageSize", required = false) Integer pageSize) {
         Long principalMemberId;
         try { principalMemberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
         MerchantAccessContext access = merchantAccessService.require(
                 principalMemberId, MerchantPermission.BASIC_READ);
+        // MC-023:不再整表读出后在内存里排序。每个来源只在 SQL 里按时间倒序取前 pageNum×pageSize 条,
+        // 合并后切出本页;默认 1×10 与原来「全量排序取前 10」结果一致。
+        int eventPageSize = pageSize == null || pageSize <= 0 ? EVENTS_DEFAULT_PAGE_SIZE : Math.min(pageSize, EVENTS_MAX_PAGE_SIZE);
+        int eventPageNum = pageNum == null || pageNum <= 0 ? 1 : pageNum;
+        if ((long) eventPageNum * eventPageSize > EVENTS_MAX_WINDOW) {
+            eventPageNum = Math.max(1, EVENTS_MAX_WINDOW / eventPageSize);
+        }
+        int window = eventPageNum * eventPageSize;
         Long memberId = access.getOwnerMemberId();
         java.text.SimpleDateFormat fmt = new java.text.SimpleDateFormat("MM-dd HH:mm");
         java.util.List<Map<String, Object>> events = new java.util.ArrayList<>();
@@ -1685,12 +1694,21 @@ public class ApiMerchantController extends BaseController {
             UmsMemberBalanceDetail bq = new UmsMemberBalanceDetail();
             bq.setMemberId(memberId);
             bq.setChangeType(1L);
-            for (UmsMemberBalanceDetail b : umsMemberBalanceDetailService.selectUmsMemberBalanceDetailList(bq)) {
+            List<UmsMemberBalanceDetail> incomes;
+            try {
+                PageHelper.startPage(1, window, "create_time desc, id desc").setCount(false);
+                incomes = umsMemberBalanceDetailService.selectUmsMemberBalanceDetailList(bq);
+            } finally {
+                PageHelper.clearPage();
+            }
+            for (UmsMemberBalanceDetail b : incomes) {
                 if (b.getCreateTime() == null) continue;
                 Map<String, Object> e = new HashMap<>();
                 e.put("type", "income");
                 e.put("label", "收入到账");
-                e.put("content", incomeLabel(b.getEventType()) + " +¥" + (b.getChangeBalance() == null ? "0" : b.getChangeBalance().toPlainString()));
+                // MC-014:金额缺失时不拼「+¥0」—— 那会被读成到账 0 元。
+                e.put("content", incomeLabel(b.getEventType())
+                        + (b.getChangeBalance() == null ? "" : " +¥" + b.getChangeBalance().toPlainString()));
                 // 项目归属:主题分润(1)/商家分润(5) 的 event_id 是 topic_id,活动分润(2) 是 activity_id
                 // (见 CmsTopicServiceImpl / CmsActivityServiceImpl 两处结算入口)。其余类型不属于任何项目。
                 Long incomeEvent = b.getEventType();
@@ -1715,7 +1733,14 @@ public class ApiMerchantController extends BaseController {
             // 核销台账的唯一写入口 writeScanLedger 落的是 registrationType=1、status=0;
             // registrationType=0 是报名时按节点模板插的行(member_id=玩家),不是本商家核销。
             sq.setRegistrationType(1);
-            for (CmsRegistrationScan s : cmsRegistrationScanService.selectCmsRegistrationScanList(sq)) {
+            List<CmsRegistrationScan> scans;
+            try {
+                PageHelper.startPage(1, window, "create_time desc, id desc").setCount(false);
+                scans = cmsRegistrationScanService.selectCmsRegistrationScanList(sq);
+            } finally {
+                PageHelper.clearPage();
+            }
+            for (CmsRegistrationScan s : scans) {
                 if (s.getCreateTime() == null) continue;
                 // 4-10 复看整改:原先按 scan.status==1 过滤,但 status 从没有过 1 —— 核销事件一条都不显示。
                 if (!Integer.valueOf(1).equals(s.getRegistrationType())) continue;
@@ -1753,7 +1778,9 @@ public class ApiMerchantController extends BaseController {
             }
         }
         events.sort((a, b) -> Long.compare((Long) b.get("_t"), (Long) a.get("_t")));
-        java.util.List<Map<String, Object>> top = events.size() > 10 ? new java.util.ArrayList<>(events.subList(0, 10)) : events;
+        int from = Math.min(events.size(), (eventPageNum - 1) * eventPageSize);
+        int to = Math.min(events.size(), from + eventPageSize);
+        java.util.List<Map<String, Object>> top = new java.util.ArrayList<>(events.subList(from, to));
         // 核销事件的项目归属得一条条回查 registration ⇒ 只查最终下发的这 10 条。
         // 排序前对全量核销记录查是 N+1(核销表是全历史的)。
         for (Map<String, Object> e : top) {
@@ -1794,21 +1821,37 @@ public class ApiMerchantController extends BaseController {
 
     @Operation(summary = "商家核销台账")
     @PostMapping("/verification-records")
-    public AjaxResult verificationRecords() {
+    public AjaxResult verificationRecords(@RequestParam(value = "pageNum", required = false) Integer pageNum,
+                                          @RequestParam(value = "pageSize", required = false) Integer pageSize) {
         Long principalMemberId;
         try { principalMemberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
         MerchantAccessContext access = merchantAccessService.require(
                 principalMemberId, MerchantPermission.VERIFY_RECORD_READ);
         CmsRegistrationScan sq = new CmsRegistrationScan();
         sq.setMemberId(access.getOwnerMemberId());
-        List<CmsRegistrationScan> list = cmsRegistrationScanService.selectCmsRegistrationScanList(sq);
-        list.sort((a, b) -> {
-            long ta = a.getCreateTime() == null ? 0L : a.getCreateTime().getTime();
-            long tb = b.getCreateTime() == null ? 0L : b.getCreateTime().getTime();
-            return Long.compare(tb, ta);
-        });
-        return success(list);
+        // MC-023:分页与排序下沉到 SQL(PageHelper),不再全量读出后内存排序。data 仍是数组;另带 total。
+        int num = pageNum == null || pageNum <= 0 ? 1 : pageNum;
+        int size = pageSize == null || pageSize <= 0 ? RECORDS_DEFAULT_PAGE_SIZE : Math.min(pageSize, RECORDS_MAX_PAGE_SIZE);
+        List<CmsRegistrationScan> list;
+        long total;
+        try {
+            PageHelper.startPage(num, size, "create_time desc, id desc");
+            list = cmsRegistrationScanService.selectCmsRegistrationScanList(sq);
+            total = new PageInfo<>(list).getTotal();
+        } finally {
+            PageHelper.clearPage();
+        }
+        AjaxResult result = success(new java.util.ArrayList<>(list));
+        result.put("total", total);
+        return result;
     }
+
+    /** MC-023:商家动态/核销台账分页上限。 */
+    static final int EVENTS_DEFAULT_PAGE_SIZE = 10;
+    static final int EVENTS_MAX_PAGE_SIZE = 50;
+    static final int EVENTS_MAX_WINDOW = 200;
+    static final int RECORDS_DEFAULT_PAGE_SIZE = 100;
+    static final int RECORDS_MAX_PAGE_SIZE = 100;
 
     @Operation(summary = "商家订单/异常列表(按状态/售后筛)")
     @PostMapping("/orders")

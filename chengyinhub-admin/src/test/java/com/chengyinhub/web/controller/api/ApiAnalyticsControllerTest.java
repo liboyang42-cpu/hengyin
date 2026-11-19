@@ -58,6 +58,31 @@ class ApiAnalyticsControllerTest {
     }
 
     @Test
+    void stageIssueReportRequiresKnownIssueKind() {
+        AnalyticsEventDTO bad = event("stage_issue_report", "issue-1");
+        bad.setPropertiesJson("{\"issueKind\":\"OTHER\"}");
+        AjaxResult result = controller.recordBatch(batch(bad));
+        assertEquals("问题分类不合法", result.get(AjaxResult.MSG_TAG));
+        AnalyticsEventDTO missing = event("stage_issue_report", "issue-2");
+        assertEquals("问题分类不合法", controller.recordBatch(batch(missing)).get(AjaxResult.MSG_TAG));
+        verifyNoInteractions(analyticsEventService);
+    }
+
+    @Test
+    void playFlowEventsPassWhitelistValidation() {
+        for (String name : new String[] { "stage_enter", "hint_open", "stage_skip", "assisted_complete",
+                "wrong_answer", "material_view" }) {
+            AnalyticsEventDTO item = event(name, "play-" + name);
+            item.setPropertiesJson("{\"level\":1}");
+            AjaxResult result = controller.recordBatch(batch(item));
+            org.junit.jupiter.api.Assertions.assertNotEquals("不支持的埋点事件：" + name, result.get(AjaxResult.MSG_TAG));
+        }
+        AnalyticsEventDTO ok = event("stage_issue_report", "issue-3");
+        ok.setPropertiesJson("{\"issueKind\":\"UNREADABLE\"}");
+        org.junit.jupiter.api.Assertions.assertNotEquals("问题分类不合法", controller.recordBatch(batch(ok)).get(AjaxResult.MSG_TAG));
+    }
+
+    @Test
     void recordBatchRejectsUnknownEventName() {
         AnalyticsBatchDTO batch = batch(event("unknown_event", "id-1"));
 

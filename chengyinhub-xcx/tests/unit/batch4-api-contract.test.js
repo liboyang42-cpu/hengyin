@@ -29,13 +29,19 @@ function fieldsOf(javaFile) {
   return new Set((readRepo(javaFile).match(/private\s+[\w<>, .]+\s+(\w+)(?:\s*=[^;]+)?;/g) || []).map((m) => m.match(/(\w+)(?:\s*=[^;]+)?;$/)[1]))
 }
 
-test('BL-76 POST /api/merchant/verification-records:无参,VERIFY_RECORD_READ,按 owner 取 CmsRegistrationScan 倒序全量', () => {
+test('BL-76 POST /api/merchant/verification-records:可选分页,无参=首页 100 条,VERIFY_RECORD_READ,按 owner 取 CmsRegistrationScan 倒序', () => {
   const src = assertMapping('ApiMerchantController.java', '/api/merchant', 'Post', '/verification-records')
-  const body = methodBody(src, 'public AjaxResult verificationRecords()')
+  // MC-023(#866):pageNum/pageSize 变为可选参数。无参调用行为不变,只多一道 100 条上限(首页、倒序),data 仍是数组。
+  const body = methodBody(src, 'public AjaxResult verificationRecords(@RequestParam(value = "pageNum", required = false) Integer pageNum,', 1600)
+  assert.match(body, /@RequestParam\(value = "pageSize", required = false\) Integer pageSize\)/, '分页参数必须可选,老客户端无参照旧可用')
   assert.match(body, /merchantAccessService\.require\(\s*principalMemberId, MerchantPermission\.VERIFY_RECORD_READ\)/)
   assert.match(body, /sq\.setMemberId\(access\.getOwnerMemberId\(\)\)/, '必须按店主归属取数，不能信前端参数')
-  assert.match(body, /return Long\.compare\(tb, ta\)/, '按 createTime 倒序')
-  assert.match(body, /return success\(list\)/, '返回数组，不分页')
+  assert.match(body, /int num = pageNum == null \|\| pageNum <= 0 \? 1 : pageNum;/, '无参取首页')
+  assert.match(body, /pageSize == null \|\| pageSize <= 0 \? RECORDS_DEFAULT_PAGE_SIZE : Math\.min\(pageSize, RECORDS_MAX_PAGE_SIZE\)/, '无参按默认页大小,传参也夹到上限')
+  assert.match(src, /static final int RECORDS_DEFAULT_PAGE_SIZE = 100;/, '无参默认 100 条')
+  assert.match(src, /static final int RECORDS_MAX_PAGE_SIZE = 100;/, '单页上限 100 条')
+  assert.match(body, /PageHelper\.startPage\(num, size, "create_time desc, id desc"\)/, '按 createTime 倒序(SQL 内)')
+  assert.match(body, /AjaxResult result = success\(new java\.util\.ArrayList<>\(list\)\);/, 'data 仍返回数组')
   const fields = fieldsOf(SYS + 'domain/CmsRegistrationScan.java')
   for (const f of ['id', 'registrationId', 'validationMethod', 'status', 'name']) assert.ok(fields.has(f), 'CmsRegistrationScan 缺字段 ' + f)
   const entity = readRepo(SYS + 'domain/CmsRegistrationScan.java')

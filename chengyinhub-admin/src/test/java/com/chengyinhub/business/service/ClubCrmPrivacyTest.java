@@ -35,6 +35,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -123,7 +124,7 @@ class ClubCrmPrivacyTest {
     /** 2026-11-02 用户:主理人 / 副主理人看完整号码并可拨打(游戏中要能联系玩家);运营等其余岗位仍是脱敏串。 */
     @Test
     void 主理人与副主理人看完整号码可拨打运营仍是脱敏串() throws Exception {
-        when(mapper.selectClubCustomers(eq(CLUB), anyString(), anyString(), anyInt()))
+        when(mapper.selectClubCustomers(eq(CLUB), anyString(), anyString(), any(), anyInt()))
                 .thenReturn(Collections.singletonList(rawCustomer()));
         when(mapper.selectProfiles(CLUB)).thenReturn(Collections.<ClubCustomerVO.Profile>emptyList());
         when(mapper.countClubCustomers(CLUB)).thenReturn(328);
@@ -295,11 +296,51 @@ class ClubCrmPrivacyTest {
             new XMLMapperBuilder(in, cfg, "mapper/business/ClubCrmMapper.xml", cfg.getSqlFragments()).parse();
         }
         String ns = "com.chengyinhub.business.mapper.ClubCrmMapper.";
-        for (String id : new String[]{"selectClubCustomers", "countClubCustomers", "countClubCustomersNewThisMonth",
+        for (String id : new String[]{"selectClubCustomers", "countClubCustomers", "countClubCustomersFiltered", "countClubCustomersNewThisMonth",
                 "selectClubCustomerSummary", "selectClubCustomerRecords", "selectTopicCustomers",
                 "selectProfile", "selectProfiles", "upsertProfile"}) {
             assertTrue(cfg.hasStatement(ns + id), "mapper 里缺少语句 " + id);
         }
+    }
+
+    /** MC-057:分页下沉到 SQL(offset/limit),filteredTotal 与筛选同口径;不传分页时与旧口径一致(第 1 页 200 条)。 */
+    @Test
+    void 客户列表分页与筛选总数同口径() {
+        when(mapper.selectClubCustomers(eq(CLUB), anyString(), anyString(), any(), anyInt()))
+                .thenReturn(Collections.singletonList(rawCustomer()));
+        when(mapper.selectProfiles(CLUB)).thenReturn(Collections.<ClubCustomerVO.Profile>emptyList());
+        when(mapper.countClubCustomers(CLUB)).thenReturn(328);
+        when(mapper.countClubCustomersFiltered(CLUB, "repeat", "林")).thenReturn(21);
+
+        ClubCustomerVO.ListPage page = service.listCustomers(OWNER, CLUB, "repeat", "林", 3, 10);
+
+        verify(mapper).selectClubCustomers(CLUB, "repeat", "林", 20, 10);
+        assertEquals(Integer.valueOf(328), page.getTotal());
+        assertEquals(Integer.valueOf(21), page.getFilteredTotal());
+        assertEquals(Integer.valueOf(3), page.getPageNum());
+        assertEquals(Boolean.FALSE, page.getHasMore());
+
+        service.listCustomers(OWNER, CLUB, "all", "");
+        verify(mapper).selectClubCustomers(CLUB, "all", "", 0, 200);
+        service.listCustomers(OWNER, CLUB, "all", "", 1, 9999);
+        verify(mapper, org.mockito.Mockito.times(2)).selectClubCustomers(CLUB, "all", "", 0, 200);
+    }
+
+    /** MC-056:岗位无客户查看权限时异常带 403,文案不变。 */
+    @Test
+    void 无客户权限回403() {
+        ServiceException e = assertThrows(ServiceException.class,
+                () -> service.listCustomers(CHECKIN, CLUB, "all", ""));
+        assertEquals("当前岗位没有客户查看权限", e.getMessage());
+        assertEquals(Integer.valueOf(403), e.getCode());
+    }
+
+    /** MC-063:详情金额带服务端格式化文案;无金额权限时两者都为 null。 */
+    @Test
+    void 详情金额文案() {
+        when(mapper.selectClubCustomerSummary(CLUB, CUSTOMER)).thenReturn(rawCustomer());
+        ClubCustomerVO.Detail detail = service.customerDetail(OWNER, CLUB, CUSTOMER);
+        assertEquals("¥486.00", detail.getSummary().getPaidAmountText());
     }
 
     @Test
@@ -336,7 +377,7 @@ class ClubCrmPrivacyTest {
         ClubCustomerVO.RawCustomer raw = rawCustomer();
         raw.setDisplayName("城瘾用户");
         raw.setParticipantName("周一鸣");
-        when(mapper.selectClubCustomers(eq(CLUB), anyString(), anyString(), anyInt()))
+        when(mapper.selectClubCustomers(eq(CLUB), anyString(), anyString(), any(), anyInt()))
                 .thenReturn(Collections.singletonList(raw));
         when(mapper.selectProfiles(CLUB)).thenReturn(Collections.<ClubCustomerVO.Profile>emptyList());
         assertEquals("周一鸣", service.listCustomers(OWNER, CLUB, "all", "").getItems().get(0).getDisplayName());
@@ -372,7 +413,7 @@ class ClubCrmPrivacyTest {
         // 第十二轮 k3(p3 N4):不再给「成员#id」,带最近一次时刻。
         raw.setLastInteractionTime(java.util.Date.from(java.time.ZonedDateTime.of(2026, 11, 5, 10, 21, 0, 0,
                 java.time.ZoneId.of("Asia/Shanghai")).toInstant()));
-        when(mapper.selectClubCustomers(eq(CLUB), anyString(), anyString(), anyInt()))
+        when(mapper.selectClubCustomers(eq(CLUB), anyString(), anyString(), any(), anyInt()))
                 .thenReturn(Collections.singletonList(raw));
         when(mapper.selectProfiles(CLUB)).thenReturn(Collections.<ClubCustomerVO.Profile>emptyList());
         assertEquals("城瘾用户 · 11月5日 10:21",

@@ -87,4 +87,17 @@ public interface IFeReferenceSettlementService {
 
     /** 同上,按章节(权益卡表单用;只对自由探索主题返回,否则 null)。 */
     String offlineSettlementNoteForChapter(Long chapterId);
+
+    /**
+     * FE-G23:权益卡表单加载载荷。text 维持原字段;perkNoCashReason 是这张权益卡核销后在商家账本里
+     * 会显示的零现金原因,与 MerchantFinanceQueryService 全权益核销行同一句(同一个线下结算说明来源)。
+     * 非自由探索章节两者都为 null。
+     */
+    default java.util.Map<String, Object> chapterFormSettlement(Long chapterId) {
+        String note = offlineSettlementNoteForChapter(chapterId);
+        java.util.Map<String, Object> out = new java.util.LinkedHashMap<>();
+        out.put("text", note);
+        out.put("perkNoCashReason", note);
+        return out;
+    }
 }

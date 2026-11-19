@@ -55,7 +55,8 @@ public class ApiPricingController extends BaseController {
     public AjaxResult preview(@RequestBody Map<String, Object> body) {
         Long memberId;
         try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
-        Long topicId = asLong(body.get("topicId"));
+        Long topicId;
+        try { topicId = asLong(body.get("topicId")); } catch (NumberFormatException e) { return error("缺少主题"); }
         if (topicId == null) return error("缺少主题");
         AjaxResult owns = requireOwner(topicId, memberId, asStr(body.get("scope")));
         if (owns != null) return owns;
@@ -69,6 +70,9 @@ public class ApiPricingController extends BaseController {
             return AjaxResult.success(r);
         } catch (com.chengyinhub.business.exception.TopicPricingRuleMissingException e) {
             return error("平台费率暂未配置，请联系平台后重试");
+        } catch (NumberFormatException e) {
+            // MC-027:成本 / 人数传了非数字,按人话退回,不抛 500。
+            return error("金额格式不正确");
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }
@@ -79,7 +83,8 @@ public class ApiPricingController extends BaseController {
     public AjaxResult confirm(@RequestBody Map<String, Object> body) {
         Long memberId;
         try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
-        Long topicId = asLong(body.get("topicId"));
+        Long topicId;
+        try { topicId = asLong(body.get("topicId")); } catch (NumberFormatException e) { return error("缺少主题"); }
         if (topicId == null) return error("缺少主题");
         AjaxResult owns = requireOwner(topicId, memberId, asStr(body.get("scope")));
         if (owns != null) return owns;
@@ -106,6 +111,11 @@ public class ApiPricingController extends BaseController {
                         asInt(body.get("teamSize")), ticketPrices);
             }
             return AjaxResult.success(afterConfirmMessage(topicId, memberId));
+        } catch (com.chengyinhub.business.exception.TopicPricingRuleMissingException e) {
+            // MC-026:与 preview 同一句,不把内部异常原文透给作者。
+            return error("平台费率暂未配置，请联系平台后重试");
+        } catch (NumberFormatException e) {
+            return error("金额格式不正确");
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }

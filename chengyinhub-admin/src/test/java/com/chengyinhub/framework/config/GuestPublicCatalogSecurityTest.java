@@ -151,6 +151,16 @@ class GuestPublicCatalogSecurityTest {
         mvc(new ApiPlatformPassController(passes)).perform(get("/api/platform-pass"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.code").value(200)).andExpect(jsonPath("$.data.holding").doesNotExist());
         verify(passes).overview(null);
+        // OR-002：游客读通行证主题库走本来就匿名的精确 GET /api/platform-pass?library=true，无个人覆盖字段；
+        // /api/platform-pass/library 不开匿名。
+        when(passes.publicLibrary(null, 50)).thenReturn(Map.of("enabled", true, "rows", List.of(Map.of("topicId", 5L))));
+        mvc(new ApiPlatformPassController(passes)).perform(get("/api/platform-pass").param("library", "true"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.holding").doesNotExist())
+                .andExpect(jsonPath("$.data.library.rows[0].topicId").value(5))
+                .andExpect(jsonPath("$.data.library.covered").doesNotExist());
+        verify(passes).publicLibrary(null, 50);
+        verify(passes, never()).library(any(), any(), anyInt());
         IOfficialEventService events = mock(IOfficialEventService.class);
         when(events.activeForRoam(null,0L)).thenReturn(List.of(Map.of("id",7L,"title","官方漫游")));
         ApiOfficialEventController official = new ApiOfficialEventController(); ReflectionTestUtils.setField(official,"officialEventService",events);
@@ -208,7 +218,7 @@ class GuestPublicCatalogSecurityTest {
                 security.perform(request(method,route)).andExpect(status().isUnauthorized());
             security.perform(get(route+"/extra")).andExpect(status().isUnauthorized());
         }
-        for (String route : List.of("/api/city/nodes/favorites","/api/marketing/product/orders","/api/platform-pass/orders",
+        for (String route : List.of("/api/city/nodes/favorites","/api/marketing/product/orders","/api/platform-pass/orders","/api/platform-pass/library",
                 "/api/official/my-events","/api/roam/summary","/api/media/asset/list","/api/ai/npc/event",
                 "/api/team/join","/api/roam/finish","/api/roam/reveal","/api/city/nodes/2/favorite",
                 "/api/marketing/product/quote","/api/marketing/product/order","/api/growth/mission/complete")) {

@@ -154,7 +154,7 @@ class ActivityPublishRoleGateTest
     {
         when(roleService.resolveRole(member)).thenReturn(IRoleService.ROLE_PLAYER);
 
-        AjaxResult result = controller.activityUpdatePublishStatus("9", null);
+        AjaxResult result = controller.activityUpdatePublishStatus("9", null, null);
 
         assertEquals(500, result.get(AjaxResult.CODE_TAG));
         assertEquals("仅俱乐部主理人或商家可上下架活动", result.get(AjaxResult.MSG_TAG));
@@ -528,7 +528,7 @@ class ActivityPublishRoleGateTest
         grantMerchantProjectManage();
         when(cmsActivityService.selectCmsActivityById(9L)).thenReturn(hostedRun());
 
-        AjaxResult result = controller.activityUpdatePublishStatus("9", "MERCHANT");
+        AjaxResult result = controller.activityUpdatePublishStatus("9", "MERCHANT", null);
 
         assertEquals(500, result.get(AjaxResult.CODE_TAG));
         assertEquals("这场是承办场次，需由主题主办方处理", result.get(AjaxResult.MSG_TAG));
@@ -564,7 +564,7 @@ class ActivityPublishRoleGateTest
         // 请求不带 clubId、存量活动无 topicId:不能把店主的俱乐部活动当成门店项目。
         AjaxResult[] results = {
                 controller.update(request),
-                controller.activityUpdatePublishStatus("9", "MERCHANT"),
+                controller.activityUpdatePublishStatus("9", "MERCHANT", null),
                 controller.activityDelete("9", "MERCHANT")
         };
         for (AjaxResult result : results) {
@@ -586,12 +586,51 @@ class ActivityPublishRoleGateTest
         exist.setDelFlag(0);
         exist.setPublishStatus(0L);
         when(cmsActivityService.selectCmsActivityById(9L)).thenReturn(exist);
-        when(cmsActivityService.updateCmsActivity(any())).thenReturn(1);
+        when(cmsActivityService.updatePublishStatusIfExpected(9L, MERCHANT_OWNER_ID, 0L, 1L)).thenReturn(1);
 
-        AjaxResult result = controller.activityUpdatePublishStatus("9", "MERCHANT");
+        AjaxResult result = controller.activityUpdatePublishStatus("9", "MERCHANT", null);
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
         assertEquals("上架成功", result.get(AjaxResult.MSG_TAG));
+        // MC-009:只写 publish_status 的 CAS,不再整行回写
+        verify(cmsActivityService, never()).updateCmsActivity(any());
+    }
+
+    /** MC-008:客户端带的期望状态与库里不一致 ⇒ 拒绝,不翻转。 */
+    @Test
+    void staleExpectedPublishStatusIsRefused()
+    {
+        grantMerchantProjectManage();
+        CmsActivity exist = new CmsActivity();
+        exist.setId(9L);
+        exist.setMemberId(MERCHANT_OWNER_ID);
+        exist.setDelFlag(0);
+        exist.setPublishStatus(1L);
+        when(cmsActivityService.selectCmsActivityById(9L)).thenReturn(exist);
+
+        AjaxResult result = controller.activityUpdatePublishStatus("9", "MERCHANT", "0");
+
+        assertEquals("状态已变化，请刷新后重试", result.get(AjaxResult.MSG_TAG));
+        verify(cmsActivityService, never()).updatePublishStatusIfExpected(any(), any(), any(), any());
+    }
+
+    /** MC-008/028:CAS 0 行(并发翻转 / 已取消)⇒ 拒绝;publishStatus 为 null 视同下架,不抛 NPE。 */
+    @Test
+    void casMissAndNullPublishStatusAreHandled()
+    {
+        grantMerchantProjectManage();
+        CmsActivity exist = new CmsActivity();
+        exist.setId(9L);
+        exist.setMemberId(MERCHANT_OWNER_ID);
+        exist.setDelFlag(0);
+        exist.setPublishStatus(null);
+        when(cmsActivityService.selectCmsActivityById(9L)).thenReturn(exist);
+        when(cmsActivityService.updatePublishStatusIfExpected(9L, MERCHANT_OWNER_ID, 0L, 1L)).thenReturn(0);
+
+        AjaxResult result = controller.activityUpdatePublishStatus("9", "MERCHANT", null);
+
+        assertEquals("状态已变化，请刷新后重试", result.get(AjaxResult.MSG_TAG));
+        verify(cmsActivityService).updatePublishStatusIfExpected(9L, MERCHANT_OWNER_ID, 0L, 1L);
     }
 
     @Test

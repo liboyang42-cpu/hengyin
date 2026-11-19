@@ -1,5 +1,8 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.business.access.club.ClubAccessContext;
+import com.chengyinhub.business.access.club.ClubRoleCode;
+import com.chengyinhub.business.access.club.IClubAccessService;
 import com.chengyinhub.business.domain.Club;
 import com.chengyinhub.business.domain.ClubMember;
 import com.chengyinhub.business.domain.ClubQualityDecision;
@@ -34,13 +37,16 @@ public class ApiClubCompensationController extends BaseController {
     private final IClubEditionCompensationService compensationService;
     private final IClubService clubService;
     private final IClubMemberService clubMemberService;
+    private final IClubAccessService clubAccessService;
 
     public ApiClubCompensationController(IClubEditionCompensationService compensationService,
                                          IClubService clubService,
-                                         IClubMemberService clubMemberService) {
+                                         IClubMemberService clubMemberService,
+                                         IClubAccessService clubAccessService) {
         this.compensationService = compensationService;
         this.clubService = clubService;
         this.clubMemberService = clubMemberService;
+        this.clubAccessService = clubAccessService;
     }
 
     /**
@@ -125,13 +131,31 @@ public class ApiClubCompensationController extends BaseController {
     // 原来这里是 /quality/evidence —— 俱乐部上传一个 SHA-256 摘要,再回读核对。
     // 平台在后台 business:clubquality:confirm 上照常人工判 Q,只是不再要这份附件。
 
+    /**
+     * MC-030:归属判据显式走俱乐部访问上下文(resolveReadOnly:俱乐部在营业、账号可用、在册成员才有上下文),
+     * 且只认 CLUB_OWNER 或旧管理员 CLUB_LEGACY_ADMIN 两个角色 —— 不因为新委派的岗位(联席/运营等)放宽。
+     * 原有「群主 或 role=1」判据仍保留,两道都过才算,只会更严。
+     */
     private boolean belongsToClub(Long clubId, Long memberId) {
         if (clubId == null || memberId == null) return false;
         Club club = clubService.selectClubById(clubId);
         if (club == null) return false;
-        if (memberId.equals(club.getMemberId())) return true;
-        ClubMember member = clubMemberService.selectByClubAndMember(clubId, memberId);
-        return member != null && Integer.valueOf(1).equals(member.getRole());
+        boolean legacy = memberId.equals(club.getMemberId());
+        if (!legacy) {
+            ClubMember member = clubMemberService.selectByClubAndMember(clubId, memberId);
+            legacy = member != null && Integer.valueOf(1).equals(member.getRole());
+        }
+        if (!legacy) return false;
+        ClubAccessContext access;
+        try {
+            access = clubAccessService.resolveReadOnly(memberId, clubId, null);
+        } catch (RuntimeException denied) {
+            return false;
+        }
+        return access != null && memberId.equals(access.getPrincipalMemberId())
+                && clubId.equals(access.getClubId())
+                && (access.getRoleCodes().contains(ClubRoleCode.CLUB_OWNER)
+                    || access.getRoleCodes().contains(ClubRoleCode.CLUB_LEGACY_ADMIN));
     }
 
     private static String text(Map<String, Object> body, String key) {

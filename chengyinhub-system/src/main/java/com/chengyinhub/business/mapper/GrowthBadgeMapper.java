@@ -17,6 +17,9 @@ public interface GrowthBadgeMapper {
     /** 某俱乐部自建的徽章列表。 */
     List<GrowthBadge> selectByClub(@Param("clubId") Long clubId);
 
+    /** 某俱乐部自建的徽章数(创建上限用)。 */
+    int countByClub(@Param("clubId") Long clubId);
+
     /** 按编码取徽章定义(颁发校验归属用)。 */
     GrowthBadge selectByCode(@Param("badgeCode") String badgeCode);
 

@@ -46,9 +46,11 @@ public class ApiClubCrmController extends BaseController {
             return AjaxResult.success(clubCrmAppService.listCustomers(principal,
                     Convert.toLong(req.get("clubId")),
                     Convert.toStr(req.get("filter")),
-                    Convert.toStr(req.get("keyword"))));
+                    Convert.toStr(req.get("keyword")),
+                    Convert.toInt(req.get("pageNum")),
+                    Convert.toInt(req.get("pageSize"))));
         } catch (ServiceException e) {
-            return error(e.getMessage());
+            return fail(e);
         }
     }
 
@@ -63,7 +65,7 @@ public class ApiClubCrmController extends BaseController {
             data.put("total", clubCrmAppService.customerCount(principal, Convert.toLong(req.get("clubId"))));
             return AjaxResult.success(data);
         } catch (ServiceException e) {
-            return error(e.getMessage());
+            return fail(e);
         }
     }
 
@@ -78,7 +80,7 @@ public class ApiClubCrmController extends BaseController {
                     Convert.toLong(req.get("clubId")),
                     Convert.toLong(req.get("memberId"))));
         } catch (ServiceException e) {
-            return error(e.getMessage());
+            return fail(e);
         }
     }
 
@@ -97,7 +99,7 @@ public class ApiClubCrmController extends BaseController {
                     Convert.toStr(req.get("requestId")));
             return AjaxResult.success("已保存");
         } catch (ServiceException e) {
-            return error(e.getMessage());
+            return fail(e);
         }
     }
 
@@ -112,7 +114,7 @@ public class ApiClubCrmController extends BaseController {
                     Convert.toLong(req.get("clubId")),
                     Convert.toLong(req.get("registrationId"))));
         } catch (ServiceException e) {
-            return error(e.getMessage());
+            return fail(e);
         }
     }
 
@@ -128,7 +130,7 @@ public class ApiClubCrmController extends BaseController {
                     Convert.toLong(req.get("topicId")),
                     Convert.toStr(req.get("filter"))));
         } catch (ServiceException e) {
-            return error(e.getMessage());
+            return fail(e);
         }
     }
 
@@ -144,8 +146,16 @@ public class ApiClubCrmController extends BaseController {
                     Convert.toLong(req.get("topicId")),
                     Convert.toLong(req.get("activityId"))));
         } catch (ServiceException e) {
-            return error(e.getMessage());
+            return fail(e);
         }
+    }
+
+    /** MC-056:岗位无权限(服务层 403)原样回 403,文案不变;其余业务错误仍按通用错误返回。 */
+    private AjaxResult fail(ServiceException e) {
+        if (Integer.valueOf(com.chengyinhub.common.constant.HttpStatus.FORBIDDEN).equals(e.getCode())) {
+            return new AjaxResult(com.chengyinhub.common.constant.HttpStatus.FORBIDDEN, e.getMessage());
+        }
+        return error(e.getMessage());
     }
 
     private Long principal() {

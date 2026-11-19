@@ -232,4 +232,18 @@ public class MerchantChapterOffer extends BaseEntity {
     public void setFamilyAccepted(Integer familyAccepted) { this.familyAccepted = familyAccepted; }
     public String getFamilyPerkText() { return familyPerkText; }
     public void setFamilyPerkText(String familyPerkText) { this.familyPerkText = familyPerkText; }
+
+    /** FE-G5:是否含在票内 1含 0不含(另付) null未声明。只做玩家可见展示。 */
+    private Integer included;
+    /** FE-G5:另付说明,如「饮品另付」。 */
+    private String extraSpendText;
+    /** FE-G5:是否需提前预约 1需要 0不需要。 */
+    private Integer reserveRequired;
+
+    public Integer getIncluded() { return included; }
+    public void setIncluded(Integer included) { this.included = included; }
+    public String getExtraSpendText() { return extraSpendText; }
+    public void setExtraSpendText(String extraSpendText) { this.extraSpendText = extraSpendText; }
+    public Integer getReserveRequired() { return reserveRequired; }
+    public void setReserveRequired(Integer reserveRequired) { this.reserveRequired = reserveRequired; }
 }

@@ -50,4 +50,27 @@ class ApiPricingPreviewRuleTest {
         assertEquals("仅主题发布者可定价", result.get("msg"));
         verifyNoInteractions(pricing);
     }
+
+    /** MC-026:confirm 撞上费率未配置,与 preview 同一句,不透出内部原文。 */
+    @Test
+    void confirmMissingRuleUsesSameActionableMessage() {
+        IPricingService pricing = mock(IPricingService.class);
+        when(pricing.confirmPrice(eq(81L), any(), any(), any(), any(), any()))
+                .thenThrow(new TopicPricingRuleMissingException("internal settlement_rule details"));
+        var result = controller(7L, pricing).confirm(new java.util.HashMap<>(Map.of("topicId", 81L)));
+        assertEquals("平台费率暂未配置，请联系平台后重试", result.get("msg"));
+    }
+
+    /** MC-027:金额 / 人数不是数字时给人话,不抛 500 异常。 */
+    @Test
+    void malformedNumbersAreRejectedWithPlainMessage() {
+        IPricingService pricing = mock(IPricingService.class);
+        var preview = controller(7L, pricing).preview(Map.of("topicId", 81L, "leadCost", "abc"));
+        assertEquals("金额格式不正确", preview.get("msg"));
+        var confirm = controller(7L, pricing).confirm(new java.util.HashMap<>(Map.of("topicId", 81L, "teamSize", "x")));
+        assertEquals("金额格式不正确", confirm.get("msg"));
+        var badTopic = controller(7L, pricing).preview(Map.of("topicId", "oops"));
+        assertEquals("缺少主题", badTopic.get("msg"));
+        verifyNoInteractions(pricing);
+    }
 }

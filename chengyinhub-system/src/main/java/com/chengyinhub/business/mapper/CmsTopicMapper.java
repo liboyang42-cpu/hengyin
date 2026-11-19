@@ -113,6 +113,9 @@ public interface CmsTopicMapper
      */
     public List<CmsTopic> selectCmsTopicList(CmsTopic cmsTopic);
 
+    /** MC-060:俱乐部未删主题数(club_id + del_flag=0)。 */
+    public int countCmsTopicByClubId(@Param("clubId") Long clubId);
+
     List<Map<String, Object>> selectUpcomingTopicCounts(@Param("clubIds") List<Long> clubIds,
                                                          @Param("now") Date now);
 
