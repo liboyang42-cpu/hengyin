@@ -102,7 +102,10 @@ Page({
       && typeof app.loadFeatureFlags === 'function' ? app.loadFeatureFlags() : Promise.resolve();
     Promise.resolve(gate).then(function () {
       if (!that._feedCurrent(ctx)) return null;
-      that._feedMerger = discoverFeed.createFeedMerger(that._feedSources(ctx.requestId));
+      const sources = that._feedSources(ctx.requestId);
+      // PG-001:游客只读社区帖文;俱乐部帖文流要登录,两路都没有时落登录入口。
+      if (!sources.length) return Promise.reject({ loginRequired: true });
+      that._feedMerger = discoverFeed.createFeedMerger(sources);
       return that._feedMerger.take(FEED_PAGE_SIZE);
     }).then(function (page) {
       if (!page || !that._feedCurrent(ctx)) return;
@@ -161,16 +164,23 @@ Page({
     if (ctx.loadMore) return;
     this.setData({
       feedState: ctx.hasSnapshot ? 'stale-error' : 'error',
-      feedLoginRequired: false,
-      feedError: requestError(res, '动态加载失败，请重试'),
+      feedLoginRequired: !!(res && res.loginRequired),
+      feedError: res && res.loginRequired ? '' : requestError(res, '动态加载失败，请重试'),
     });
   },
 
-  retryFeed() { return this.loadFeed(); },
+  retryFeed() {
+    if (!this.data.feedLoginRequired) return this.loadFeed();
+    const login = typeof app.firstLogin === 'function' ? app.firstLogin() : null;
+    return Promise.resolve(login).then(() => {
+      if (!this._unloaded && app.getUserID()) this.loadFeed();
+    }, () => {});
+  },
 
   _feedSources(requestId) {
     const that = this;
-    const sources = [{ fetch: function (beforeId) {
+    const sources = [];
+    if (app.getUserID() > 0) sources.push({ fetch: function (beforeId) {
       return new Promise(function (resolve, reject) {
         const data = { scope: 'all', limit: FEED_PAGE_SIZE };
         if (beforeId) data.beforeId = beforeId;
@@ -188,7 +198,7 @@ Page({
           fail(res) { if (requestId === that._feedRequestId) that._onFeedFail(that._feedCtx, res); reject(res); },
         });
       });
-    } }];
+    } });
     if (typeof app.canUseCommunity === 'function' && app.canUseCommunity(false)) {
       sources.push({ fetch: function (pageNum) {
         const page = pageNum || 1;

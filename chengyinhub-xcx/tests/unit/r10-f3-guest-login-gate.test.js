@@ -65,7 +65,7 @@ const LOGIN_ONLY_PAGES = [
   'subpackageMember/coupon/coupon', 'subpackageMember/report-mine/index', 'subpackageRoam/history/index',
   'pages/coop/invite-detail/index',
   'subpackageMember/mycanyu/mycanyu',   // 第十二轮 k2(j6 N3):我的参与游客空白页
-  'subpackageRoam/my-teams/index',     // 第十二轮 k2(p1 N-5):漫游「我的队伍」游客只剩「获取失败 · 重试」
+  // PG-004:漫游「我的队伍」改为只在「我的」页签内给登录入口,附近招募对游客放行(见 verify-1119-mini-a)
   // 第十二轮 k2(p1 N-5 深链清单):积分明细、时光胶囊、月度回顾、导出、探索目标、那年今日、自由探索权益
   'subpackageMember/points-history/index', 'subpackageTools/monthly-recap/index',  // 2026-11-09 V3-42 时光胶囊页先删
   'subpackageTools/exploration-export/index', 'subpackageTools/exploration-goals/index', 'subpackageTools/anniversary/index',
