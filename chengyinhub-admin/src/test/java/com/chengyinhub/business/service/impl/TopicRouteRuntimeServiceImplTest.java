@@ -2299,6 +2299,69 @@ class TopicRouteRuntimeServiceImplTest {
         return template;
     }
 
+    /** 跨章调过顺序的站:游玩顺序按章节 sort_id → 节点 sort_id → id,不能按 id 或只看节点 sort_id。 */
+    private void crossChapterStations() {
+        // 第 3 章(sort 3,id 较大)在第 4 章(sort 4,id 较小)之前;28 号站被作者挪到第 4 章最后(sort 12)。
+        CmsTopicChapter three = new CmsTopicChapter(); three.setId(504L); three.setTopicId(10L); three.setSortId(3L);
+        CmsTopicChapter four = new CmsTopicChapter(); four.setId(503L); four.setTopicId(10L); four.setSortId(4L);
+        when(cmsTopicChapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class))).thenReturn(Arrays.asList(four, three));
+        List<CmsTopicNode> nodes = new ArrayList<>();
+        long[][] rows = {{28L, 503L, 12L}, {32L, 503L, 11L}, {31L, 503L, 10L}, {30L, 504L, 22L}, {29L, 504L, 21L}, {27L, 504L, 20L}};
+        for (long[] row : rows) {
+            CmsTopicNode n = node(row[0], row[2]); n.setChapterId(row[1]); nodes.add(n);
+            when(nodeMapper.selectCmsTopicNodeById(row[0])).thenReturn(n);
+        }
+        when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class))).thenReturn(nodes);
+    }
+
+    private void completedStations(Long... ids) {
+        List<PlayerNodeProgress> facts = new ArrayList<>();
+        for (Long id : ids) { PlayerNodeProgress p = new PlayerNodeProgress(); p.setNodeId(id); p.setStatus(1); p.setMemberId(7L); facts.add(p); }
+        when(progressMapper.selectPlayerNodeProgressList(any(PlayerNodeProgress.class))).thenReturn(facts);
+    }
+
+    @Test
+    void linearRouteFollowsChapterThenStationOrderNotNodeId() {
+        CmsTopic topic = topicMapper.selectCmsTopicById(10L);
+        topic.setRouteMode("LINEAR"); topic.setRouteGraphJson(null); topic.setPublishedRouteGraphJson(null);
+        crossChapterStations();
+        completedStations();
+        assertEquals(27L, runtime.state(7L, 10L, 0L).getCurrentNodeId());
+        completedStations(27L);
+        assertEquals(29L, runtime.state(7L, 10L, 0L).getCurrentNodeId(), "第 3 章还有 29、30,不能跳到 id 最小的 28");
+        assertTrue(runtime.canPlay(7L, 10L, 0L, 29L));
+        assertFalse(runtime.canPlay(7L, 10L, 0L, 28L), "28 在第 4 章最后,须先走完 29-32");
+        completedStations(27L, 29L, 30L, 31L, 32L);
+        assertEquals(28L, runtime.state(7L, 10L, 0L).getCurrentNodeId());
+        assertTrue(runtime.canPlay(7L, 10L, 0L, 28L));
+    }
+
+    @Test
+    void publishedLinearRunFollowsChapterOrderAndRealignsAStaleCursor() throws Exception {
+        useLinearJourneyTopic();
+        CmsTopic topic = topicMapper.selectCmsTopicById(10L);
+        topic.setJourneyRulesJson(GenericRouteRuntimeServiceTest.rules());
+        crossChapterStations();
+        completedStations();
+        topic.setPublishedRouteGraphJson(runtime.freezePublication(topic, null));
+        java.util.List<Long> frozenOrder = new ArrayList<>();
+        for (JsonNode station : json.readTree(topic.getPublishedRouteGraphJson()).path("routeStations")) frozenOrder.add(station.path("nodeId").asLong());
+        assertEquals(Arrays.asList(27L, 29L, 30L, 31L, 32L, 28L), frozenOrder, "发布冻结的站点表按游玩顺序");
+        assertEquals(27L, runtime.state(7L, 10L, null).getCurrentNodeId());
+        // 模拟旧版本按 id 推进留下的游标:27 已完成,本局却把 id 最小的 28 存成当前站。
+        com.fasterxml.jackson.databind.node.ObjectNode state = (com.fasterxml.jackson.databind.node.ObjectNode) json.readTree(stored[0].getStateJson());
+        state.withArray("completedNodeIds").add(27L);
+        state.with("nodeStates").put("27", TopicRouteState.COMPLETED).put("28", TopicRouteState.PLAYABLE);
+        state.put("currentNodeId", 28L).put("recommendedNodeId", 28L);
+        stored[0].setStateJson(state.toString());
+        completedStations(27L);
+        TopicRouteState view = runtime.state(7L, 10L, null);
+        assertEquals(29L, view.getCurrentNodeId(), "读出时按游玩顺序纠正到第一个未完成站");
+        assertEquals(TopicRouteState.PLAYABLE, view.getNodeStates().get(29L));
+        assertTrue(runtime.canPlay(7L, 10L, null, 29L));
+        assertFalse(runtime.canPlay(7L, 10L, null, 28L));
+    }
+
     private CmsTopicNode node(Long id, Long sort) {
         CmsTopicNode node = new CmsTopicNode(); node.setId(id); node.setTopicId(10L); node.setSortId(sort); node.setStatus(1L);
         return node;

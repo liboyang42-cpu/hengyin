@@ -625,7 +625,8 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
                 int vm = snapshot.path("nodeAnswers").path(String.valueOf(original)).path("validationMethod").asInt(-1);
                 if (vm != 1 && vm != 3) throw error("GAME_BAD_REQUEST", "现场凭证或非答题节点不能直接跳过");
                 for (String section : Arrays.asList("scan", "photoCheck", "steps", "album", "predict"))
-                    if (config.path(section).path("enabled").asBoolean())
+                    if (config.path(section).path("enabled").asBoolean()
+                            && !("photoCheck".equals(section) && com.chengyinhub.business.service.support.GameplayOutcomeRules.isEvidenceStep(config, section)))
                         throw error("GAME_BAD_REQUEST", "该节点依赖现场凭证，不能跳过");
                 saveRouteOwner(session, owner, state);
                 completeCooperativePuzzle(session, player, nodeId, instance, null, true, memberId);

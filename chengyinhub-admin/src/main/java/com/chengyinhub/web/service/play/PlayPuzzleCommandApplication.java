@@ -74,7 +74,7 @@ public class PlayPuzzleCommandApplication {
         String leadErr = playNodeContext.leadGateError(ctx.actId, node);
         if (leadErr != null) return error(leadErr);
         String routeErr = playNodeContext.routeAccessError(memberId, ctx.actId, ctx.topicId, node, routeActionId);
-        if (routeErr != null) return error(routeErr);
+        if (routeErr != null) return PlayCommandErrorContract.routeLocked(routeErr);
 
         // R18-FREEZE:谜题判定/揭示配置按开局快照,老局快照没有该键时回退实时模板
         com.fasterxml.jackson.databind.JsonNode frozenAnswer = playNodeContext.frozenAnswer(memberId, ctx.topicId, ctx.actId, node.getId(), originalRun);
@@ -131,7 +131,7 @@ public class PlayPuzzleCommandApplication {
         String leadErr = playNodeContext.leadGateError(ctx.actId, node);
         if (leadErr != null) return error(leadErr);
         String routeErr = playNodeContext.routeAccessError(memberId, ctx.actId, ctx.topicId, node, null);
-        if (routeErr != null) return error(routeErr);
+        if (routeErr != null) return PlayCommandErrorContract.routeLocked(routeErr);
 
         com.chengyinhub.business.domain.vo.PuzzleHintResult hint;
         try {

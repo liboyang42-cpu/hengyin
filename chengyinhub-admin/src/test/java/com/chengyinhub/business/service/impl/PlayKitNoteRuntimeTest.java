@@ -27,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
@@ -143,11 +144,20 @@ class PlayKitNoteRuntimeTest {
 
     @Test
     void 负控_同一站同一个人不能留第二句() {
+        // 2026-11-18:上一局已留过的人不再报错卡住 —— 第二句仍然存不进去(唯一键),本局按原来那句「已留下」完成。
         GameRuntimeSession session = running(NOTE_CONFIG, "{}");
         arm(session);
         when(playNoteMapper.insert(any())).thenThrow(new DuplicateKeyException("uk_member_node"));
+        PlayNote original = new PlayNote();
+        original.setMemberId(MEMBER_ID); original.setNodeId(session.getNodeId()); original.setContent("原来那句");
+        when(playNoteMapper.selectRecentByNode(eq(session.getNodeId()), anyInt())).thenReturn(List.of(original));
 
-        assertThrows(IllegalStateException.class, () -> act(session, "note-dup", "又一句"));
+        act(session, "note-dup", "又一句");
+
+        ArgumentCaptor<GameRuntimeSession> saved = ArgumentCaptor.forClass(GameRuntimeSession.class);
+        verify(sessionMapper).updateStateCas(saved.capture());
+        assertTrue(saved.getValue().getStateJson().contains("\"done\":true"));
+        assertTrue(saved.getValue().getStateJson().contains("原来那句"), "记的是原来那句,第二句没有存下");
     }
 
     @Test

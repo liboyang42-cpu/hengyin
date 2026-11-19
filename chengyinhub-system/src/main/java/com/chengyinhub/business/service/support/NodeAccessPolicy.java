@@ -32,12 +32,12 @@ public class NodeAccessPolicy {
             return Decision.deny(TopicRouteState.HIDDEN.equals(state) ? "该地点尚未发现" : "该地点尚未解锁");
         }
 
-        long requestedSort = requested.getSortId() == null ? 0L : requested.getSortId();
+        // topicNodes 已按游玩顺序(章节 sort_id → 节点 sort_id → id)排好:排在本站之前的站都须已完成。
+        // 不单比节点 sort_id —— 跨章调过顺序的站会因此被前一章还没走到的站卡住。
         if (topicNodes != null) for (CmsTopicNode node : topicNodes) {
-            long sort = node.getSortId() == null ? 0L : node.getSortId();
-            if (sort < requestedSort && !completed.contains(node.getId())) {
-                return Decision.deny("请先完成上一站");
-            }
+            if (node == null || node.getId() == null) continue;
+            if (requested.getId().equals(node.getId())) break;
+            if (!completed.contains(node.getId())) return Decision.deny("请先完成上一站");
         }
         if (requested.getUnlockAfterNodeId() != null && requested.getUnlockAfterNodeId() > 0L
                 && !completed.contains(requested.getUnlockAfterNodeId())) {

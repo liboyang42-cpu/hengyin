@@ -808,7 +808,7 @@ function assertPreferenceGetContract(s) {
     'if (leadErr != null) { out.error = error(leadErr); return out; }',
     'playNodeContext.unlockGateError(memberId, out.playCtx.actId, out.node)',
     'playNodeContext.routeAccessError(memberId, out.playCtx.actId, out.playCtx.topicId, out.node, routeActionId)',
-    'if (unlockErr != null) { out.error = error(unlockErr); return out; }');
+    'if (unlockErr != null) { out.error = PlayCommandErrorContract.routeLocked(unlockErr); return out; }');
   assert.match(resolver, /playNodeContext\.frozenAnswer\(memberId, out\.playCtx\.topicId, out\.playCtx\.actId, out\.node\.getId\(\), originalRun\)/);
   const context = javaMethod(s.context, 'public PlayCtx resolveCtx(Long memberId, String activityId, String topicId, CmsTopicNode node)');
   assert.match(context, /playNodeAccessService\.resolveContext\(memberId, activityId, topicId, nodeScope\(node\)\)/);

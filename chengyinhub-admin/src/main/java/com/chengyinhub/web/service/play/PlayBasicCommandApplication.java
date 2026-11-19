@@ -192,7 +192,7 @@ public class PlayBasicCommandApplication {
 
         // 3.5) 线性解锁校验（仅 mode=1 经典定向，防扫后面的码跳关）
         String unlockErr = playNodeContext.routeAccessError(memberId, actId, ctx.topicId, node, routeActionId);
-        if (unlockErr != null) return PlayCommandErrorContract.rejected(unlockErr, PlayCommandErrorContract.ROUTE_LOCKED);
+        if (unlockErr != null) return PlayCommandErrorContract.routeLocked(unlockErr);
 
         com.fasterxml.jackson.databind.JsonNode sharedRoute = originalRun.runtimeInstance() == null || gameSessionRuntimeService == null ? null
                 : gameSessionRuntimeService.sharedRouteSnapshot(memberId, ctx.topicId, actId, node.getId());
@@ -352,7 +352,7 @@ public class PlayBasicCommandApplication {
 
         // 线性解锁校验（仅 mode=1 经典定向）
         String unlockErr = playNodeContext.routeAccessError(memberId, actId, ctx.topicId, node, routeActionId);
-        if (unlockErr != null) return PlayCommandErrorContract.rejected(unlockErr, PlayCommandErrorContract.ROUTE_LOCKED);
+        if (unlockErr != null) return PlayCommandErrorContract.routeLocked(unlockErr);
 
         // 城市定向「到站后作答」:本局按冻结到达配置有坐标的站,须先记过到达才能作答(到达本身不再要求定位,只有开局一次 300 米校验)。
         // 只管到达与任务分开记的本局路线(与 arrive 的 personalArrival 同一判据);老路径到达即完成,不受影响。
@@ -544,7 +544,7 @@ public class PlayBasicCommandApplication {
         String leadErr = playNodeContext.leadGateError(ctx.actId, node);
         if (leadErr != null) return PlayCommandErrorContract.rejected(leadErr, PlayCommandErrorContract.TEAM_LEAD_REQUIRED);
         String unlockErr = playNodeContext.routeAccessError(memberId, ctx.actId, ctx.topicId, node, request.getRouteActionId());
-        if (unlockErr != null) return PlayCommandErrorContract.rejected(unlockErr, PlayCommandErrorContract.ROUTE_LOCKED);
+        if (unlockErr != null) return PlayCommandErrorContract.routeLocked(unlockErr);
         int mode = playNodeContext.resolveMode(ctx.actId, ctx.topicId);
         if (mode == PlayMode.FREE_COLLECT && !playNodeContext.isPureOnlineNode(node)
                 && !shopDayProofService.hasArrived(memberId, ctx.actId, node.getId())) {
@@ -651,7 +651,7 @@ public class PlayBasicCommandApplication {
 
         // 线性解锁校验（仅 mode=1 经典定向；mode=2 自由定向跳过）
         String unlockErr = playNodeContext.routeAccessError(memberId, actId, ctx.topicId, node, routeActionId);
-        if (unlockErr != null) return PlayCommandErrorContract.rejected(unlockErr, PlayCommandErrorContract.ROUTE_LOCKED);
+        if (unlockErr != null) return PlayCommandErrorContract.routeLocked(unlockErr);
         // F08 / FE-STORY(业主 FE-G2):实体店到店 = 300 米内点「我已到店」(定位一次);配置为扫码的地点仍走 /checkin。
         // 写入的到店行记 arrival_source=GEO_TAP,排队计时 queue_joined_at / 店内负载只认 QR,
         // 所以原注释担心的「手机说它在附近被当成扫了码」不会再撑虚排队数据。
@@ -808,6 +808,8 @@ public class PlayBasicCommandApplication {
             try {
                 advancedGameRuntimeService.completeGate(memberId, actId, ctx.topicId, node.getId());
             } catch (ServiceException notPassed) {
+                // 不吞掉原因:记下真实拒绝原因,回 4xx 业务回执(completeGate 的拒绝不会把本事务标成 rollback-only)
+                logger.info("arrive 高级玩法未完成 memberId={} nodeId={} reason={}", memberId, nId, notPassed.getMessage());
                 return PlayCommandErrorContract.unresolvedEffect(notPassed.getMessage(), PlayCommandErrorContract.ADVANCED_FIRST);
             }
         }

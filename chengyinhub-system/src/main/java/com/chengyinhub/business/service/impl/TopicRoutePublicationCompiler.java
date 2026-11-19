@@ -1348,8 +1348,8 @@ final class TopicRoutePublicationCompiler {
             }
         } else result = nodeMapper.selectCmsTopicNodeList(probe);
         if (result == null) return Collections.emptyList();
-        result = new ArrayList<CmsTopicNode>(result);
-        result.sort(Comparator.comparingLong(n -> n.getSortId() == null ? 0L : n.getSortId())); return result;
+        // 游玩顺序 = 章节 sort_id → 节点 sort_id → id;单看节点 sort_id 会让跨章调过顺序的站排错位(路线卡死)。
+        return com.chengyinhub.business.service.support.RoutePlayOrder.sort(result, runtimeChapters(topicId));
     }
 
     private String write(Object value) { try { return JSON.writeValueAsString(value); }

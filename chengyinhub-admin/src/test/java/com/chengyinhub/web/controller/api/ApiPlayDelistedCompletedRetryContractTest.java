@@ -435,7 +435,7 @@ class ApiPlayDelistedCompletedRetryContractTest
 
         // ⚠️ 偏好提交的 ctx 解析(内含路线 seam)在下架闸之前,未完成的下架节点被路线 seam 拒成
         // 「该地点尚未解锁」;这是既有次序(不是本次修复引入),关键是回执没被放行、也没写进度。
-        assertEquals(500, result.get("code"));
+        assertEquals(423, result.get("code")); // 未解锁是业务拒绝:423 + errorCode=ROUTE_LOCKED,不是服务器错误
         assertEquals("该地点尚未解锁", result.get("msg"));
         verify(preferencePlayService, never()).submit(anyLong(), anyLong(), anyLong(), anyLong(), any(), any(), any(), any());
     }
@@ -508,7 +508,7 @@ class ApiPlayDelistedCompletedRetryContractTest
 
         AjaxResult result = checkin();
 
-        assertEquals(500, result.get("code"));
+        assertEquals(423, result.get("code")); // 未解锁是业务拒绝:423 + errorCode=ROUTE_LOCKED,不是服务器错误
         assertEquals("该地点尚未解锁", result.get("msg"));
         verify(progressService, never()).insertPlayerNodeProgress(any());
     }

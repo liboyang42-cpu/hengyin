@@ -194,5 +194,20 @@ class AdvancedActionJudgementTest {
                 ()->judge().evaluate(Action.SUBMIT_QA,new Input(open,picked.state(),Map.of("optionId","a"),0,7L)));
     }
 
+    // ==================== 拍照作证据步 ====================
+
+    @Test void photoBesideQaNeverSettlesTheOutcomeButPhotoAloneStillDoes() throws Exception {
+        String rules=",\"outcomeRules\":{\"version\":1,\"pass\":{\"reply\":\"继续\"},\"fail\":{\"reply\":\"再看看\"}}";
+        JsonNode both=json.readTree("{\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"answerText\":\"ABC\"},\"photoCheck\":{\"enabled\":true,\"fallback\":\"pass\"}"+rules+"}");
+        ObjectNode rejected=json.createObjectNode();rejected.putObject("photoCheck").put("verdict","REJECT");
+        assertNull(judge().serverGameplayDecision("SUBMIT_PHOTO_CHECK",both,rejected),"证据步拍照被拒也不结算 FAIL");
+        ObjectNode passedPhoto=json.createObjectNode();passedPhoto.putObject("photoCheck").put("verdict","PASS");
+        assertNull(judge().serverGameplayDecision("SUBMIT_PHOTO_CHECK",both,passedPhoto),"证据步拍照通过也不抢先结算 PASS");
+        Plan answered=judge().evaluate(Action.SUBMIT_QA,new Input(both,json.createObjectNode(),Map.of("input","abc"),0,7L));
+        assertEquals("PASS",judge().serverGameplayDecision("SUBMIT_QA",both,answered.state()).path("outcome").asText(),"主玩法答对才结算");
+        JsonNode photoOnly=json.readTree("{\"photoCheck\":{\"enabled\":true}"+rules+"}");
+        assertEquals("FAIL",judge().serverGameplayDecision("SUBMIT_PHOTO_CHECK",photoOnly,rejected).path("outcome").asText(),"单开拍照仍由拍照结算");
+    }
+
     private AdvancedActionJudgement judge() {return new AdvancedActionJudgement(json,()->new Date(100_000),bound->0,()->42);}
 }
