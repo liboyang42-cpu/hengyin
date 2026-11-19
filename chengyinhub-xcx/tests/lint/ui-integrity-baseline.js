@@ -433,7 +433,8 @@ module.exports = {
     // 2026-11-02 商家首页不再计算 revBars(页面细节优化):一条零消费债务出账,103 → 102,digest 复算。
     // 2026-11-04 第十一轮 g3 p1 F-10:结算页积分行按 userInfo.point 显示,baoming userInfo 零消费债务真消费出账,100 → 99。
     // 2026-11-19 verify-1119-mini-a:PG-091 citynode-code 改场景薄壳,poiId 真被 WXML 消费,零消费债务出账 98→97。
-    "u4Field": 97,
+    // 2026-11-19 OR-030:scene-member-order-history 的 verifyingPayment 改为实例状态(不走 setData),零消费债务出账,u4Field 97→96,u4Debt digest 按门禁 baselineKeyDigest 重算。
+    "u4Field": 96,
       // 2026-08-26 圈层主题接回主题货架:新增 circleTheme import,两条 _coverFail 动态 setData
       //   等量下移(269→270 / 281→282,行号取门禁实测)。调用点与强化理由不变,显式改 digest。
     // 2026-08-27 合并 #883:activity/list 三条 U4-DYNAMIC 登记行号 +2(129→131/151→153/231→233,
@@ -604,7 +605,7 @@ module.exports = {
       // 2026-09-19 批复1-a=2 还清:partner#toType/toId 两条随页复活短暂回账(151 键)后当场还债出账,
       //   key 集回到退役前那份 149,digest 按当前 key 集合实算。
 // 2026-11-03 第九轮 m1-9:merchant/apply 店铺地址预览与已提交申请的地址一点开地图,locationLat/locationLng 真被读取,两条零消费债务还清出账,u4Field 102→100,digest 按门禁 baselineKeyDigest 重算。
-"u4Debt": "00d84cbc80b34077092fd1457dad15eca45311be3c56041edf97eee31cc37e39",
+"u4Debt": "f28479adb9bdb901753aa359a456e369a90e94bfcd6448c50a3fade93dc7039f",
       // 2026-08-17 漫游 S1 施工:条数不变(65),只是 pages/roam/index.js 的两处
       //   `...this._calcArch()` 动态 setData 行号从 3263/3305 移到 3261/3303
       //   (删掉 _apiCheckin 与 /api/play/arrive 那段后整段上移)。
@@ -1284,7 +1285,6 @@ module.exports = {
     "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js#identityCard": "存量零消费债务：identityCard 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/subpackageMember/components/cy/scene-member-order-history/index.js#nodata": "存量零消费债务：nodata 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/subpackageMember/components/cy/scene-member-order-history/index.js#isPaying": "存量零消费债务：isPaying 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
-    "chengyinhub-xcx/subpackageMember/components/cy/scene-member-order-history/index.js#verifyingPayment": "存量零消费债务：verifyingPayment 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/subpackageA/components/scene-merchant-profit/index.js#myIncomeTotal": "存量零消费债务：myIncomeTotal 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/subpackageA/components/scene-merchant-profit/index.js#pendingCount": "存量零消费债务：pendingCount 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/subpackageMember/components/cy/scene-route-content/index.js#activeFilter": "存量零消费债务：activeFilter 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
