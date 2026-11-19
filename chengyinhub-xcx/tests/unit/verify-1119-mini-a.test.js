@@ -103,3 +103,15 @@ test('PG-013/PG-030:参与人编辑与四个商家页挂登录守卫', () => {
     assert.equal(JSON.parse(read(p + '.json')).usingComponents['cy-access-gate'], '/components/cy/access-gate/index', p);
   }
 });
+
+test('PG-015/PG-045:工具页游客文案「请先登录」且不给重试;探索目标只挂一个 modal-host', () => {
+  const rt = read('subpackageTools/lib/runtime.js');
+  assert.doesNotMatch(rt, /请通过现有登录流程/);
+  assert.match(rt, /this\.setData\(\{ error: '请先登录', guest: true \}\)/);
+  assert.match(read('subpackageTools/exploration-goals/index.wxml'), /class="tu-retry" wx:if="\{\{!guest\}\}" bindtap="loadList"/);
+  assert.match(read('subpackageTools/anniversary/index.wxml'), /class="tu-retry" wx:if="\{\{!guest\}\}" bindtap="loadMemories"/);
+  const exp = read('subpackageTools/exploration-export/index.wxml');
+  assert.match(exp, /wx:if="\{\{!guest && prepared\}\}" bindtap="readNext"/);
+  assert.match(exp, /wx:elif="\{\{!guest\}\}" bindtap="prepare"/);
+  assert.equal((read('subpackageTools/exploration-goals/index.wxml').match(/<cy-modal-host /g) || []).length, 1);
+});

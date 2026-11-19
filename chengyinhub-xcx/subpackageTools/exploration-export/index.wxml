@@ -4,7 +4,7 @@
   <cy-modal-host id="cy-modal-host" />
   <cy-nav-bar plain />
   <cy-page-title title="导出探索记录" />
-  <view class="tu-msg tu-msg--err tu-msg--row" wx:if="{{error}}" aria-role="alert"><text>{{error}}</text><view class="tu-retry" wx:if="{{prepared}}" bindtap="readNext" aria-role="button" aria-label="重试" hover-class="cy-pressed" hover-stay-time="80">重试</view><view class="tu-retry" wx:else bindtap="prepare" aria-role="button" aria-label="重试" hover-class="cy-pressed" hover-stay-time="80">重试</view></view>
+  <view class="tu-msg tu-msg--err tu-msg--row" wx:if="{{error}}" aria-role="alert"><text>{{error}}</text><view class="tu-retry" wx:if="{{!guest && prepared}}" bindtap="readNext" aria-role="button" aria-label="重试" hover-class="cy-pressed" hover-stay-time="80">重试</view><view class="tu-retry" wx:elif="{{!guest}}" bindtap="prepare" aria-role="button" aria-label="重试" hover-class="cy-pressed" hover-stay-time="80">重试</view></view>
   <view class="tu-btns" wx:if="{{pending}}"><view class="tu-btn tu-btn--w" bindtap="retryOriginal" aria-role="button" aria-label="以原操作重试" hover-class="cy-pressed" hover-stay-time="80">以原操作重试</view></view>
 
   <block wx:if="{{!prepared}}">
