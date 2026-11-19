@@ -6,7 +6,7 @@
   <!-- 顶栏:仅返回 + 更多药丸(对齐 Airbnb),标题留空——名字挪到下方 hero 区。
        CU-C-142:入口名必须和它打开的面板同名,原来写「详情」点开却是标题「更多」的举报/拉黑/清空面板。 -->
   <!-- M-01(owner 2026-10-27 m676):商家的系统通知把「系统通知」放进导航栏标题,去掉「更多」。 -->
-  <cy-nav-bar title="{{sysNotice ? '系统通知' : ''}}">
+  <cy-nav-bar title="{{sysNotice ? '城瘾小助手' : ''}}">
     <view wx:if="{{!sysNotice}}" slot="actions" class="hd-info-hit" hover-class="cy-pressed" hover-stay-time="80" bindtap="onMore" aria-role="button" aria-label="更多">
       <view class="hd-details">更多</view>
     </view>
@@ -45,11 +45,11 @@
     <block wx:for="{{msgs}}" wx:key="id">
       <!-- M-01:商家系统通知 = 整宽通知卡(图标 · 标题 · 正文 · 时间),不再是窄气泡。
            卡片消息(msgType 3)沿用下面同一张 cy-card(动作按钮只有一份),只换成整宽通知样式。 -->
-      <view wx:if="{{sysNotice && item.msgType != 3 && !item.activityNotice}}" class="notice" aria-label="系统通知">
+      <view wx:if="{{sysNotice && item.msgType != 3 && !item.activityNotice}}" class="notice" aria-label="城瘾小助手">
         <view class="notice__icon" aria-hidden="true"><cy-icon name="bell" size="36" /></view>
         <view class="notice__body">
           <view class="notice__top">
-            <text class="notice__title">系统通知</text>
+            <text class="notice__title">城瘾小助手</text>
             <text class="notice__time">{{item.noticeTime}}</text>
           </view>
           <image wx:if="{{item.msgType == 2}}" class="b-img notice__img" src="{{item.content}}" mode="widthFix" lazy-load="true" />

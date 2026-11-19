@@ -354,3 +354,11 @@ test('OR-015:注销进入冷静期后清本机会话(服务端已 revokeAll)', (
   assert.equal((js.match(/clearLocalSessionAfterPending\(\);/g) || []).length, 2)
   assert.match(js, /app\.getSession\(\)\.clearSession\(\)/)
 })
+
+test('OR-023:系统会话统一称「城瘾小助手」,只读提示「城瘾小助手不接收回复」', () => {
+  const chat = read('subpackageB/pages/im/chat/index.js') + read('subpackageB/pages/im/chat/index.wxml')
+  assert.doesNotMatch(chat, /'系统通知|>系统通知<|"系统通知"/)
+  assert.match(chat, /城瘾小助手不接收回复/)
+  assert.match(read('subpackageB/pages/im/list/index.js'), /c\.type == 2 \? '城瘾小助手'/)
+  assert.match(read('pages/merchant/utils/inbox-preview.js'), /type == 2 \? '城瘾小助手'/)
+})
