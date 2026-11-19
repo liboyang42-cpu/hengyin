@@ -1148,6 +1148,13 @@ public class CmsActivityServiceImpl implements ICmsActivityService
     }
 
     @Override
+    public int updatePublishStatusIfExpected(Long id, Long ownerMemberId, Long expected, Long next)
+    {
+        if (id == null || ownerMemberId == null || expected == null || next == null) return 0;
+        return cmsActivityMapper.updatePublishStatusIfExpected(id, ownerMemberId, expected, next);
+    }
+
+    @Override
     // 条件 UPDATE 的「未售出」子查询在 RR 下是加锁读(锁住在途下单/间隙);显式钉 RR,不随连接默认隔离级漂移。
     @Transactional(isolation = Isolation.REPEATABLE_READ, rollbackFor = Exception.class)
     public int updateLeadOpsUnlessSold(CmsActivity ops, boolean touchesTimeOrPlace)

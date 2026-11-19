@@ -134,6 +134,9 @@ public interface ICmsActivityService
      */
     public int updateCmsActivity(CmsActivity cmsActivity);
 
+    /** MC-008/009:上下架 CAS(只写 publish_status);0 行 = 状态已变化或不可操作。 */
+    public int updatePublishStatusIfExpected(Long id, Long ownerMemberId, Long expected, Long next);
+
     /**
      * 后台新增活动(Gap 12·03 P0-5):status/publish_status 只由 preReview 决定,请求体里的审核态、
      * 发布态、删除/取消/结算事实一律丢弃。preReview=true 时同事务建 BIZ_ACTIVITY 审核单(建不出来整单回滚);

@@ -418,6 +418,20 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id}
     </update>
 
+    <!-- MC-008/009:上下架只写 publish_status 一列的 CAS;WHERE 钉 id、主办主体、未删、未取消与期望旧状态。 -->
+    <update id="updatePublishStatusIfExpected">
+        update cms_activity
+        set publish_status = #{next}, update_time = sysdate()
+        where id = #{id}
+          and member_id = #{ownerMemberId}
+          and del_flag = 0
+          and cancel_time is null
+          <choose>
+            <when test="expected == 0">and (publish_status = 0 or publish_status is null)</when>
+            <otherwise>and publish_status = #{expected}</otherwise>
+          </choose>
+    </update>
+
     <!-- 小程序内容更新：可编辑字段对齐 CmsActivityController.toEditableActivity。
          WHERE 必须同时钉 id 与 member_id；member_id 不进 SET，防止把归属改到调用者。 -->
     <update id="updateCmsActivityByOwner" parameterType="CmsActivity">
