@@ -165,3 +165,13 @@ test('PG-022/PG-023:俱乐部主题详情缺 clubId 不跳结算;俱乐部详情
   const detail = read('pages/club/detail/index.js');
   assert.doesNotMatch(detail, /mockData|isDemoClubId/);
 });
+
+test('PG-024/PG-059/PG-081:商家报名缺参落 missing、门店标题随门店卡显隐、校验文案与字段名一致', () => {
+  const js = read('pages/topic/merchantapply/index.js');
+  assert.match(js, /if \(!registrationId && !\(topicId > 0 && nodeId > 0\)\) \{\n\s*this\.setData\(\{ loadState: 'missing'/);
+  assert.match(js, /'请输入承接说明'/);
+  assert.match(js, /'请上传承接图片'/);
+  const wxml = read('pages/topic/merchantapply/index.wxml');
+  assert.match(wxml, /wx:elif="\{\{loadState === 'missing'\}\}">\s*<cy-empty kind="missing-param"/);
+  assert.match(wxml, /<block wx:if="\{\{shop\.name \|\| shop\.address \|\| shop\.businessTime\}\}">\s*<view class="ma-shop-note">/);
+});

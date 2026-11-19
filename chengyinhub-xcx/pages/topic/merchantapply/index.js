@@ -155,9 +155,16 @@ Page({
 
   onLoad(options = {}) {
     const registrationId = parseInt(options.id) || 0;
+    const topicId = parseInt(options.topicId) || 0;
+    const nodeId = parseInt(options.nodeId) || 0;
+    // PG-024:新建报名必须带合法主题与节点;缺了落缺参态,不让表单提交 0
+    if (!registrationId && !(topicId > 0 && nodeId > 0)) {
+      this.setData({ loadState: 'missing', loadError: '' });
+      return;
+    }
     this.setData({
-      topicId: parseInt(options.topicId) || 0,
-      nodeId: parseInt(options.nodeId) || 0,
+      topicId,
+      nodeId,
       templateId: parseInt(options.templateId) || 0,
       topicName: decodeParam(options.topicName),
       chapterName: decodeParam(options.chapterName),
@@ -620,8 +627,8 @@ Page({
         { hour: parts[1], minute: parts[2] }, { hour: parts[3], minute: parts[4] }
       )) fail('cooperateDate', '请选择完整时段，结束时间必须晚于开始时间');
     }
-    if (!ruleInstructions.trim()) fail('ruleInstructions', '请输入节点接待说明');
-    if (picUrl === '') fail('picUrl', '请上传节点现场图片');
+    if (!ruleInstructions.trim()) fail('ruleInstructions', '请输入承接说明');
+    if (picUrl === '') fail('picUrl', '请上传承接图片');
 
     this.setData({ errors });
     return !order.length;

@@ -65,7 +65,7 @@ test('商家报名门店旧回包不能跨账号/隐藏/卸载写入，当前本
  const h=mount(APPLY);h.page.loadMyShop();h.requests[0].success({code:200,data:{name:'本人门店'}});assert.equal(h.page.data.shop.name,'本人门店');
 });
 test('商家报名登录恢复只初始化当前前台，真实403明确权限状态',async()=>{
- const h=mount(APPLY,'');h.page.onLoad({});h.page.retryLoadRegistration();h.owner('7');h.logins[0]({ok:true});await tick();assert.ok(h.requests.some(r=>r.url==='/api/merchant/info'));
+ const h=mount(APPLY,'');h.page.onLoad({topicId:'1',nodeId:'2'});h.page.retryLoadRegistration();h.owner('7');h.logins[0]({ok:true});await tick();assert.ok(h.requests.some(r=>r.url==='/api/merchant/info'));
  const p=mount(APPLY);p.page.loadMyShop();p.requests[0].successStatusAbnormal({code:403,msg:'无门店权限'},403);assert.equal(p.page.data.loadState,'permission');
 });
 test('2026-11-14 游客搜索全部六类公开目录，仍不请求私人资料或登录',()=>{
