@@ -22,6 +22,20 @@ public class ClubCustomerVO {
         private Integer monthNew;
         private Boolean canEdit;
         private List<Row> items = new ArrayList<>();
+        /** MC-057:分页字段(新增)。filteredTotal = 当前筛选/关键词下的人数,与 items 同口径;total 仍是全部客户数。 */
+        private Integer pageNum;
+        private Integer pageSize;
+        private Integer filteredTotal;
+        private Boolean hasMore;
+
+        public Integer getPageNum() { return pageNum; }
+        public void setPageNum(Integer pageNum) { this.pageNum = pageNum; }
+        public Integer getPageSize() { return pageSize; }
+        public void setPageSize(Integer pageSize) { this.pageSize = pageSize; }
+        public Integer getFilteredTotal() { return filteredTotal; }
+        public void setFilteredTotal(Integer filteredTotal) { this.filteredTotal = filteredTotal; }
+        public Boolean getHasMore() { return hasMore; }
+        public void setHasMore(Boolean hasMore) { this.hasMore = hasMore; }
 
         public Integer getTotal() { return total; }
         public void setTotal(Integer total) { this.total = total; }
@@ -123,6 +137,10 @@ public class ClubCustomerVO {
         public void setRefundedCount(Integer refundedCount) { this.refundedCount = refundedCount; }
         public BigDecimal getPaidAmount() { return paidAmount; }
         public void setPaidAmount(BigDecimal paidAmount) { this.paidAmount = paidAmount; }
+        /** MC-063:金额展示文案「¥12.50」;无金额权限时与 paidAmount 一样为 null。 */
+        private String paidAmountText;
+        public String getPaidAmountText() { return paidAmountText; }
+        public void setPaidAmountText(String paidAmountText) { this.paidAmountText = paidAmountText; }
     }
 
     /** 一条参与记录。statusCode ∈ VERIFIED / PENDING / REFUNDED / CANCELLED(免费报名取消)。 */
