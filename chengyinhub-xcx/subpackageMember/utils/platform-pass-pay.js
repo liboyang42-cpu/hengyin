@@ -20,7 +20,7 @@ function purchase(deps, planCode, channel, opts) {
   const request = deps.request
   const requestId = (opts && opts.requestId) || newRequestId()
   if (channel !== 'XPAY') return Promise.resolve({ state: 'failed', message: '当前设备暂不支持开通' })
-  return request({ url: '/api/platform-pass/orders', method: 'POST', data: { planCode, channel, requestId } })
+  return request({ url: '/api/platform-pass/orders', method: 'POST', write: true, data: { planCode, channel, requestId } })
     .then((res) => {
       if (!bizOk(res)) return { state: 'failed', message: res && res.msg }
       return proceed(deps, res.data)
@@ -73,7 +73,7 @@ function proceed(deps, order) {
   }
 
   return login()
-    .then((jsCode) => request({ url: '/api/platform-pass/orders/' + orderNo + '/pay', method: 'POST', data: jsCode ? { jsCode } : {} }))
+    .then((jsCode) => request({ url: '/api/platform-pass/orders/' + orderNo + '/pay', method: 'POST', write: true, data: jsCode ? { jsCode } : {} }))
     .then((payRes) => {
       if (!bizOk(payRes)) return { state: 'failed', orderNo, message: payRes && payRes.msg }
       const d = payRes.data
@@ -81,7 +81,7 @@ function proceed(deps, order) {
         // 取消支付只是这一次没付,订单与已有会员都不动
         if (r === 'cancel') return { state: 'cancelled', orderNo }
         // 失败也回查一次:SDK 失败不等于没扣款;成功也必须等服务端 PAID
-        return request({ url: '/api/platform-pass/orders/' + orderNo + '/confirm', method: 'POST' })
+        return request({ url: '/api/platform-pass/orders/' + orderNo + '/confirm', method: 'POST', write: true })
           .then((c) => (bizOk(c) && orderPaid(c.data) ? { state: 'paid', order: c.data, orderNo } : null), () => null)
           .then((done) => done || (r === 'ok' ? poll(pollTimes) : poll(1).then((x) => (x.state === 'paid' ? x : { state: 'failed', orderNo }))))
       })

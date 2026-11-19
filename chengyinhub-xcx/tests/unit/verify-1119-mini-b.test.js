@@ -362,3 +362,11 @@ test('OR-023:系统会话统一称「城瘾小助手」,只读提示「城瘾小
   assert.match(read('subpackageB/pages/im/list/index.js'), /c\.type == 2 \? '城瘾小助手'/)
   assert.match(read('pages/merchant/utils/inbox-preview.js'), /type == 2 \? '城瘾小助手'/)
 })
+
+test('OR-037:写判定词表补 confirm/orders/logout,通行证写接口显式 write:true', () => {
+  const src = read('utils/transport/request-client.js')
+  const m = src.match(/var WRITE_TOKENS = \[([\s\S]*?)\];/)
+  for (const t of ['confirm', 'orders', 'logout']) assert.match(m[1], new RegExp(`'${t}'`), t)
+  const pay = read('subpackageMember/utils/platform-pass-pay.js')
+  assert.equal((pay.match(/method: 'POST', write: true/g) || []).length, 3)
+})

@@ -73,7 +73,7 @@ Page({
       success: (r) => {
         if (!r || !r.confirm || this.data.busy || this._unloaded) return
         this.setData({ busy: true, notice: '' })
-        request({ url: '/api/platform-pass/orders/' + encodeURIComponent(this._orderNo) + '/cancel', method: 'POST' }).then((res) => {
+        request({ url: '/api/platform-pass/orders/' + encodeURIComponent(this._orderNo) + '/cancel', method: 'POST', write: true }).then((res) => {
           if (this._unloaded) return
           this.setData({ busy: false })
           if (!isBizOk(res)) { this.setData({ notice: (res && res.msg) || '取消失败，请稍后再试' }); return }
@@ -112,7 +112,7 @@ Page({
     // OR-007:点提交时顺手请求退款结果订阅(须在点击手势内);审批后的站内信由服务端发
     subscribe.request(['refund'])
     this.setData({ busy: true, notice: '' })
-    request({ url: '/api/platform-pass/orders/' + encodeURIComponent(this._orderNo) + '/refund-apply', method: 'POST', data: { reason } }).then((res) => {
+    request({ url: '/api/platform-pass/orders/' + encodeURIComponent(this._orderNo) + '/refund-apply', method: 'POST', write: true, data: { reason } }).then((res) => {
       if (this._unloaded) return
       this.setData({ busy: false })
       if (!isBizOk(res)) { this.setData({ notice: (res && res.msg) || '申请失败，请稍后再试' }); return }
