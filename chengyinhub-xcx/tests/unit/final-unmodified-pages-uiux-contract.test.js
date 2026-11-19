@@ -81,10 +81,8 @@ test('公开主页缺少用户 ID 时显示真实参数空态，并提供可执�
   assert.match(wxml, /<cy-empty\b[^>]*kind="missing-param"[^>]*cta="返回"[^>]*bind:cta="onBack"/)
   assert.match(wxml, /<cy-nav-bar\b[^>]*custom-back[^>]*bind:back="onBack"/)
 
-  page.goMemberHome.call(context)
-  assert.deepEqual(calls.map(([api, options]) => [api, options.url]), [
-    ['switchTab', '/pages/member/index/index'],
-  ])
+  page.onBack.call(context)
+  assert.deepEqual(calls.map(([api]) => api), ['navigateBack'])
 })
 
 function loadMerchantProfilePage(wx) {
