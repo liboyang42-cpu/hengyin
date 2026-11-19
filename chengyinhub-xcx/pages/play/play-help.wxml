@@ -66,3 +66,5 @@
   </scroll-view>
 </view>
 <cy-option-sheet immediate show="{{issueSheetShow}}" title="这一站有问题" items="{{issueSheetItems}}" bind:select="onIssueSheetSelect" bind:cancel="onIssueSheetCancel" />
+<!-- CG-ALL-11 开局方式:还没到起点时换替代站 / 桌面完成(run-start-mode.js) -->
+<cy-option-sheet immediate show="{{startModeSheetShow}}" title="换个方式开局" items="{{startModeSheetItems}}" bind:select="onStartModeSelect" bind:cancel="onStartModeCancel" />

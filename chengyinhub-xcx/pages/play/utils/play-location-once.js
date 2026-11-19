@@ -140,6 +140,8 @@ function methods() {
     _startGate(node, resume) {
       if (!node || node.done || !node.lat || !node.lng || Number(this.data.mode) !== 1 || this.data.isPreview || this.data.isMock
         || !this._startLocationNeeded() || this._isStoryGame(node) || this._advancedReadyNodeId === node.nodeId) return false;
+      // CG-ALL-11:选了替代站 / 桌面完成开局,距离与定位由到达请求带 startMode 交服务端判
+      if (typeof this._chosenStartMode === 'function' && this._chosenStartMode()) return false;
       if (!this.data.gpsOk) {
         if (this._locAsked) return false;   // 问过没开:走扫码到达
         this._locateThen(resume); return true;
@@ -159,6 +161,8 @@ function methods() {
     },
     /** 问过、没开定位时点「到达」:不再弹说明,只给一句轻提示;站点卡的主按钮此时已是「扫码到达」 */
     _locationDeclinedToast() {
+      // CG-ALL-11:本局还没开局时,给「换个方式开局」(替代站 / 桌面完成),而不只是一句提示
+      if (typeof this._offerStartModes === 'function' && this._offerStartModes()) return;
       cyToast('定位未开启，可扫码到达');
     },
     /** 取位置失败:系统拒绝时给「怎么打开」,去设置打开后回来静默开始定位 */

@@ -74,7 +74,8 @@ test('E-B4/B5 页面:提交失败走 submit 并保留地址,判分期间 photoJu
   assert.match(js, /onUploaded: \(url\) => \{ this\._kitPhotoUrl = url; \}/)
   assert.match(js, /case 'resubmit':\s*if \(evt\.type === 'photocheck'\) this\._resubmitKitPhoto\(\)/)
   assert.match(js, /'playKit\.kit\.photoJudging': on/)
-  assert.match(js, /game\.action\('SUBMIT_PHOTO_CHECK', \{ imageUrl: url \}\)/)
+  // CG-ALL-12(#866):重新提交按站别取动作名 —— 只记录站 SUBMIT_PHOTO_RECORD,判定站 SUBMIT_PHOTO_CHECK
+  assert.match(js, /game\.action\(photoSubmitAction\(kit\), \{ imageUrl: url \}\)/)
   assert.match(read('pages/play/components/playkit/index.wxml'), /photo-fail-kind="\{\{kit\.photoFailKind\}\}" judging="\{\{kit\.photoJudging\}\}"/)
 })
 

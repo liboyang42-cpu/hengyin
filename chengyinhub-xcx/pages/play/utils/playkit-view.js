@@ -19,6 +19,9 @@ const sensorContract = require('./sensor-contract.js');
 const questo = require('./playkit-questo.js');
 const { chinaParts } = require('../../../utils/datetime.js');
 const { tidyText } = require('./keep-numerals.js');
+/* 只记录的拍照站:后端 AdvancedGameRuntimeServiceImpl.recordPhotoMode 认 photoCheck.mode === 'RECORD',
+   取值与 advanced-game-config.js 的 PHOTO_CHECK_MODES(后端 AdvancedGameConfigValidator 镜像)同一份 */
+const PHOTO_RECORD_MODE = 'RECORD';
 
 const KIT_PRIORITY = [
   /* 节点玩法模板那批排在最前:它们是这个节点的**主玩法**,没做完就不该先弹别的。
@@ -331,9 +334,10 @@ function buildPhotoCheck(seg, receipt, placeName) {
     // 失败落在哪一步('submit' = 照片已传上去只差提交,可重新提交;空 = 上传失败)与「审核中」:同属页面本地态,这里给初值
     photoFailKind: '',
     photoJudging: false,
-    // CG-ALL-12:服务端 photoMode=RECORD 才是「只记录」;allowSkip 只认真的 true。缺省两项都 false,这一屏与今天相同
-    recordOnly: String(seg.photoMode || '').toUpperCase() === 'RECORD',
-    allowSkip: seg.allowSkip === true,
+    /* CG-ALL-12(#866):photoCheck.mode=RECORD 才是「只记录」—— 提交走 SUBMIT_PHOTO_RECORD,不审、不要模型处理同意;
+       相机被拒可文字确认继续(textConfirmed)。mode 空 / CARD 时为 false,这一屏与今天相同 */
+    recordOnly: String(seg.mode || '').toUpperCase() === PHOTO_RECORD_MODE,
+    textConfirmed: seg.textConfirmed === true,
   };
 }
 
@@ -1044,8 +1048,9 @@ const ACTION_OF = {
   'shout:skip': 'SKIP_SENSOR_STATION',
   'walk:readfail': 'REPORT_SENSOR_FAILURE',
   'walk:skip': 'SKIP_SENSOR_STATION',
-  /* CG-ALL-12:只记录的拍照站,玩家文字确认「不拍照，继续」后走同一条跳过(服务端按 allowSkip 收) */
-  'photocheck:skip': 'SKIP_SENSOR_STATION',
+  /* CG-ALL-12(#866):只记录的拍照站,相机被拒后玩家文字确认「不拍照，继续」= SUBMIT_PHOTO_RECORD {textConfirmed:true}。
+     拍了照的那条仍是先传图再提交(页面 _submitKitPhoto),不在这张表里。 */
+  'photocheck:textconfirm': 'SUBMIT_PHOTO_RECORD',
   'shout:submit': 'SUBMIT_SHOUT',
   'countdown:finish': 'SUBMIT_COUNTDOWN',
   'stopwatch:submit': 'SUBMIT_STOPWATCH',
@@ -1102,8 +1107,13 @@ const SENSOR_GAME_OF = {
   quiethold: 'quietHold',
   shout: 'shout',
   walk: 'steps',
-  photocheck: 'photoCheck',
 };
+
+/** 拍照站提交动作:只记录站(kit.recordOnly ← photoCheck.mode=RECORD)服务端只收 SUBMIT_PHOTO_RECORD,
+ *  判定站仍是 SUBMIT_PHOTO_CHECK(视觉模型 + 单独同意)。后端 AdvancedGameRuntimeServiceImpl #866 */
+function photoSubmitAction(kit) {
+  return kit && kit.recordOnly ? 'SUBMIT_PHOTO_RECORD' : 'SUBMIT_PHOTO_CHECK';
+}
 
 function serverAction(type, action) {
   return ACTION_OF[type + ':' + action] || '';
@@ -1126,6 +1136,7 @@ function serverPayload(type, action, detail) {
   if (SENSOR_GAME_OF[type] && (action === 'readfail' || action === 'skip')) return { game: SENSOR_GAME_OF[type] };
   if (SENSOR_GAME_OF[type] && action === 'micdenied') return { game: SENSOR_GAME_OF[type], denied: true };
   switch (type + ':' + action) {
+    case 'photocheck:textconfirm': return { textConfirmed: true };
     case 'estimate:submit': return { value: d.guess };
     case 'pricepair:submit': return { pickId: d.pickId };
     /* R3 三个新玩法:组件报的就是服务端要的形状(order 序列 / [左,右] 对列表 / itemId→binId)。
@@ -1181,4 +1192,4 @@ function serverPayload(type, action, detail) {
   }
 }
 
-module.exports = { TYPE_OF, pickPlayKit, pickJourneyCheck, checkReceiptView, serverAction, serverPayload, secondsUntilOpen, KIT_PRIORITY, presentOf, dailySignRevealState, applyStoryVars };
+module.exports = { PHOTO_RECORD_MODE, photoSubmitAction, TYPE_OF, pickPlayKit, pickJourneyCheck, checkReceiptView, serverAction, serverPayload, secondsUntilOpen, KIT_PRIORITY, presentOf, dailySignRevealState, applyStoryVars };

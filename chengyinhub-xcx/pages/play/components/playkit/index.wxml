@@ -235,8 +235,8 @@
   photo-verified="{{kit.photoVerified}}" reward-ceiling="{{kit.rewardCeiling}}"
   frame-url="{{kit.frameUrl}}" frame-opacity="{{kit.frameOpacity}}" inline="{{inline}}"
   photo-fail-seq="{{kit.photoFailSeq}}" photo-fail-kind="{{kit.photoFailKind}}" judging="{{kit.photoJudging}}"
-  record-only="{{kit.recordOnly}}" allow-skip="{{kit.allowSkip}}"
-  bind:shoot="onShoot" bind:resubmit="onResubmit" bind:skip="onSkip" bind:close="onClose" />
+  record-only="{{kit.recordOnly}}" text-confirmed="{{kit.textConfirmed}}"
+  bind:shoot="onShoot" bind:resubmit="onResubmit" bind:textconfirm="onTextConfirm" bind:close="onClose" />
 
 <cy-playkit-note wx:elif="{{kit.type === 'note'}}"
   show="{{show}}" title="{{kit.title}}" prompt="{{kit.prompt}}" max-length="{{kit.maxLength}}"

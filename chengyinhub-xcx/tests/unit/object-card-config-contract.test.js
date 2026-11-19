@@ -96,7 +96,6 @@ const NOT_CARRIED = {
   xp: '经验由通关结算那条链发，这一屏不显示',
   lastConfidence: '模型给的置信度不对玩家说话',
   verdict: 'C1:服务端原判定码(PASS/DEGRADED/FALLBACK_PASS/REJECT/RECORDED);玩家屏只认派生的 photoVerified,不按判定码另讲一套',
-  textConfirmed: 'CG-ALL-12 只记录模式：拒绝相机文字确认的记录位，只给结算页用；拍照这一屏不读，客户端接入时把这条账删掉',
 }
 
 /* 客户端 kit 里**不是**从 playKit.photoCheck 投影搬来的键。它们另有来源,所以不参与上面
@@ -110,10 +109,9 @@ const OUT_OF_PROJECTION = {
   preview: '不是配置投影，是编辑页预览标记:玩家侧恒 false,只有 advanced-game-preview 给 true',
   photoVerified: 'C1:服务端由 verdict 派生(只有视觉模型当场 PASS 才为真),不是配置/状态原字段；缺失即 false',
   rewardCeiling: 'C1:服务端按 passed + photoVerified 派生的奖励上限，没过之前不下发；缺失即空串',
-  // CG-ALL-12(2026-11-19):后端 photo_mode=record 由后端线(fix/verify-1119-backend)投影 photoMode / allowSkip;
-  // 投影落地前缺省即 false,这一屏与今天相同。后端合入后把这两条改记为「投影搬运」(recordOnly ← photoMode)。
-  recordOnly: 'CG-ALL-12:由服务端 photoMode=RECORD 派生的「只记录」;缺失即 false',
-  allowSkip: 'CG-ALL-12:服务端允许这一站不拍照继续;只认真的 true,缺失即 false',
+  // CG-ALL-12(#866):后端投影的是 photoCheck.mode(=RECORD,与 CARD 同一个键),不另起 photoMode;
+  // recordOnly 由 mode 派生,mode 本身照常搬运。缺失即 false,这一屏与今天相同
+  recordOnly: 'CG-ALL-12:由 photoCheck.mode === RECORD 派生的「只记录」;缺失即 false',
 }
 
 test('照片提交阶段与审核中来自页面本地状态，服务端段字段不能注入', () => {

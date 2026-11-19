@@ -51,10 +51,11 @@ Component({
     photoFailKind: { type: String, value: '' },
     // 页面正等服务端视觉判分
     judging: { type: Boolean, value: false },
-    // CG-ALL-12 只记录(photoMode=RECORD):不审、不判对错,拍了就记;服务端没下发时为 false,行为与今天相同
+    // CG-ALL-12 只记录(photoCheck.mode=RECORD):不审、不判对错,拍了就记(页面发 SUBMIT_PHOTO_RECORD);
+    // 服务端没下发 mode 时为 false,行为与今天相同。相机被拒时可文字确认「不拍照，继续」
     recordOnly: { type: Boolean, value: false },
-    // 服务端允许这一站不拍照继续(allowSkip):相机被拒 / 不想拍时给「不拍照，继续」,文字确认后走跳过
-    allowSkip: { type: Boolean, value: false },
+    // 只记录站上本局是文字确认继续的(服务端 state.photoCheck.textConfirmed),不是拍了照
+    textConfirmed: { type: Boolean, value: false },
   },
   data: {
     busy: false,
@@ -73,7 +74,7 @@ Component({
     outlineFailed: false,
     // CG-ALL-29:拍完先在框里预览,玩家点「提交这张」才交给页面上传;没提交就不上传
     pendingPath: '',
-    // 相机被拒后才亮出「不拍照，继续」(服务端允许跳过时)
+    // 只记录站上相机被拒后才亮出「不拍照，继续」
     skipOffer: false,
   },
   observers: {
@@ -107,8 +108,8 @@ Component({
         verdictKind = '';
         if (!passed) reason = tidyText(String(lastReason || '').trim());
       } else if (passed && this.data.recordOnly) {
-        // 只记录:没有对错,拍了就是记下了
-        verdict = '已记录';
+        // 只记录:没有对错,拍了就是记下了;没拍、文字确认继续的另说一句
+        verdict = this.data.textConfirmed ? '没拍照，已继续' : '已记录';
         verdictKind = 'ok';
       } else if (passed && flagged) {
         // 次数用尽兜底放行:服务端 passed 与 flagged 同时为真。这张是「先算过」,不是「过了」
@@ -179,8 +180,8 @@ Component({
         fail: (err) => {
           this.setData({ busy: false });
           const msg = String((err && err.errMsg) || '');
-          // 只记录 + 允许跳过:相机 / 相册被拒(不是主动取消)时亮出「不拍照，继续」,不再弹去设置的引导
-          if (this.data.allowSkip && !/cancel/i.test(msg)) { this.setData({ skipOffer: true }); return; }
+          // 只记录站:相机 / 相册被拒(不是主动取消)时亮出「不拍照，继续」,不再弹去设置的引导
+          if (this.data.recordOnly && !/cancel/i.test(msg)) { this.setData({ skipOffer: true }); return; }
           mediaDenied.guideIfDenied(err);
         },
       });
@@ -200,15 +201,15 @@ Component({
       this.setData({ pendingPath: '' });
       this.onShoot();
     },
-    /** 「不拍照，继续」:文字确认后才发跳过,服务端记这一站没拍。 */
-    onSkipPhoto() {
-      if (!this.data.allowSkip || this.data.busy || this.data.judging || this.data.passed) return;
+    /** 「不拍照，继续」:文字确认后页面发 SUBMIT_PHOTO_RECORD {textConfirmed:true},服务端记这一站没拍、照常完成。 */
+    onTextConfirm() {
+      if (!this.data.recordOnly || this.data.busy || this.data.judging || this.data.passed) return;
       cyModal.show({
         title: '不拍照，继续？',
         content: '这一站不留照片，直接往下走。',
         confirmText: '继续',
         cancelText: '再试试拍照',
-        success: (res) => { if (res && res.confirm) this.triggerEvent('skip'); },
+        success: (res) => { if (res && res.confirm) this.triggerEvent('textconfirm'); },
       });
     },
 

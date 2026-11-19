@@ -87,6 +87,13 @@ Page({
 
   // P9 / §23.4:榜单面板由 rank-board 组件承接(本关 队内/全体/队伍,其余在「更多」)。
   openRank() { this.setData({ rankOpen: true }); },
+  // CG-ALL-12 / CG-01-P2-6:点节点照片看大图,左右滑看本局其它站的照片
+  previewNodePhoto(e) {
+    const url = e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.url;
+    const urls = ((this.data.report || {}).photoUrls || []);
+    if (!url || urls.indexOf(url) < 0) return;
+    wx.previewImage({ current: url, urls });
+  },
   closeRank() { this.setData({ rankOpen: false }); },
 
   openSettle() {
