@@ -77,6 +77,18 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
     private com.chengyinhub.business.mapper.CashWithdrawTransferIntentMapper transferIntents;
 
     @Override
+    public BigDecimal availableBalance(Long memberId) {
+        if (memberId == null) throw new IllegalStateException("请先登录");
+        UmsMember m = umsMemberService.selectUmsMemberById(memberId);
+        if (m == null) throw new IllegalStateException("用户不存在");
+        // 与 withdraw() 预检同一解析点;刻意不 try/catch —— 冻结来源挂了就整单失败。
+        BigDecimal frozen = frozenAmountResolver.resolve(memberId).total();
+        BigDecimal balance = m.getBalance() == null ? BigDecimal.ZERO : m.getBalance();
+        BigDecimal available = balance.subtract(frozen == null ? BigDecimal.ZERO : frozen);
+        return available.signum() < 0 ? BigDecimal.ZERO : available;
+    }
+
+    @Override
     public boolean hasPendingWithdraw(Long memberId) {
         if (memberId == null) return false;
         return mapper.countPendingByMember(memberId) > 0;

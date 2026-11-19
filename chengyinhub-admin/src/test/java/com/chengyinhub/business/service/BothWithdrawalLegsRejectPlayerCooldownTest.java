@@ -132,6 +132,13 @@ class BothWithdrawalLegsRejectPlayerCooldownTest {
                 "微信零钱腿必须带同一个机器码,实际:" + wechat.getMessage());
     }
 
+    /** MC-003:availableBalance 与 withdraw 预检同口径:余额 100、冷静额 20 ⇒ 80。 */
+    @Test
+    void availableBalanceSubtractsTheSameFrozenAmountAsWithdraw() {
+        givenComplaintFrozen("20");
+        assertEquals(0, new BigDecimal("80").compareTo(wechatLeg.availableBalance(MEMBER)));
+    }
+
     /** 纯余额不足(零冷静额)时不得挂冷静期的码 —— 否则监控会把普通余额不足误报成冷静期拦截。 */
     @Test
     void aPlainInsufficientBalanceIsNotLabelledAsACooldownRejection() {
