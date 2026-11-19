@@ -213,6 +213,7 @@ public class PlayNodeQueryApplication {
                 // 权益取不到只让那一段不显示,不能把整个节点列表打挂
                 logger.warn("探店日本店权益读取失败 topic={}", read.tId, e);
             }
+            read.perkTermsByChapterMerchant = PerkDisplayTerms.load(merchantChapterOfferMapper, read.nodeList);
         }
         // 节点 NPC 按 nodeId 记一次(CR-927):节点级内容逐节点不同,且一章一商家、四到六家的量,
         // 逐节点 resolve 一条 selectEnabledByScope 是可接受的;同一节点在循环里只出一次。
@@ -350,6 +351,9 @@ public class PlayNodeQueryApplication {
                 pm.put("name", perk.getName());
                 pm.put("redeemRule", perk.getRedeemRule());
                 pm.put("validEnd", perk.getValidEnd());
+                // FE-G5:含在票内 / 另付说明 / 需预约(只做展示,读不到就不带)
+                PerkDisplayTerms.put(pm, read.perkTermsByChapterMerchant == null ? null
+                        : read.perkTermsByChapterMerchant.get(n.getChapterId() + ":" + n.getMerchantMemberId()));
                 m.put("perk", pm);      // 单价/成本(unitCost/retailValue)不下发:那是结算面的数
             }
         }
@@ -823,6 +827,8 @@ public class PlayNodeQueryApplication {
         }
         data.put("chapters", chapters);
         data.put("nodes", read.nodes);
+        // FE-G7:主题级「只有权益、没有游戏」(加字段;判据见 PerkDisplayTerms.perkOnly)
+        data.put("perkOnly", PerkDisplayTerms.perkOnly(read.playMode, read.nodes));
         // 规则16:当前可玩集合(nodes/total/doneCount)保持原样;本人已正式完成、但已普通下架的节点
         // 另放 historyNodes 供手记/剧情卡只读回看——不进入 total/完成率/解锁/推荐/地图,也不含任何
         // 可写字段(题面/答案/模板/checkinCode),历史卡没有重新挑战入口。
@@ -1028,6 +1034,7 @@ public class PlayNodeQueryApplication {
         boolean loadUnavailable;
         boolean capacityUnavailable;
         Map<String, com.chengyinhub.business.domain.CoopPerk> perkByChapterMerchant;
+        Map<String, com.chengyinhub.business.domain.MerchantChapterOffer> perkTermsByChapterMerchant;
         Map<Long, NpcProfileVO> nodeNpcCache;
         Map<Long, Boolean> merchantClosedCache;
         Map<Long, RegistrationEntitlement> entitlementByChapter;

@@ -296,6 +296,8 @@ public class MerchantOfferServiceImpl implements IMerchantOfferService {
             throw new IllegalStateException(invalid.getMessage());
         }
         if (offer.getFamilyAccepted() == null) offer.setFamilyAccepted(0);
+        // FE-G5:承接时一并声明玩家可见条款(含在票内 / 另付说明 / 需预约);只做展示,不参与容量与结算。
+        normalizeDisplayTerms(offer);
         offer.setQuotaUsed(0);
         offer.setStatus(original == null ? 1 : 0); // 补位供给经点位与条款重审后才生效。
         offer.setCreateTime(DateUtils.getNowDate());
@@ -1189,6 +1191,47 @@ public class MerchantOfferServiceImpl implements IMerchantOfferService {
         patch.setFamilyPerkText(text);
         patch.setUpdateBy(String.valueOf(merchantId));
         if (offerMapper.updateFamilyAcceptance(patch) != 1) {
+            throw new IllegalStateException("供给已变化，请刷新后重试");
+        }
+    }
+
+    static final int EXTRA_SPEND_TEXT_MAX = 100;
+
+    /** FE-G5:included/reserveRequired 只收 0/1(null 保持未声明 / 默认),另付说明去空白并限长。 */
+    static void normalizeDisplayTerms(MerchantChapterOffer offer) {
+        if (offer == null) return;
+        if (offer.getIncluded() != null && offer.getIncluded() != 0 && offer.getIncluded() != 1) {
+            throw new IllegalStateException("是否含在票内取值不正确");
+        }
+        if (offer.getReserveRequired() != null && offer.getReserveRequired() != 0 && offer.getReserveRequired() != 1) {
+            throw new IllegalStateException("是否需预约取值不正确");
+        }
+        String text = offer.getExtraSpendText() == null ? null : offer.getExtraSpendText().trim();
+        if (text != null && text.isEmpty()) text = null;
+        if (text != null && text.codePointCount(0, text.length()) > EXTRA_SPEND_TEXT_MAX) {
+            throw new IllegalStateException("另付说明不能超过" + EXTRA_SPEND_TEXT_MAX + "字");
+        }
+        offer.setExtraSpendText(text);
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
+    public void setDisplayTerms(Long offerId, Long merchantId, Integer included, String extraSpendText,
+                                Integer reserveRequired) {
+        if (offerId == null || merchantId == null) throw new IllegalStateException("缺少供给记录");
+        MerchantChapterOffer patch = new MerchantChapterOffer();
+        patch.setId(offerId);
+        patch.setMerchantId(merchantId);
+        patch.setIncluded(included);
+        patch.setExtraSpendText(extraSpendText);
+        patch.setReserveRequired(reserveRequired == null ? 0 : reserveRequired);
+        normalizeDisplayTerms(patch);
+        MerchantChapterOffer offer = offerMapper.selectByIdForUpdate(offerId);
+        if (offer == null || !merchantId.equals(offer.getMerchantId()) || !Integer.valueOf(1).equals(offer.getStatus())) {
+            throw new IllegalStateException("供给不存在或不属于当前商家");
+        }
+        patch.setUpdateBy(String.valueOf(merchantId));
+        if (offerMapper.updateDisplayTerms(patch) != 1) {
             throw new IllegalStateException("供给已变化，请刷新后重试");
         }
     }

@@ -39,6 +39,12 @@ public interface IMerchantOfferService {
     /** F12:承接方设置是否接受亲子票(1 大 1 小同享)与儿童份说明;只能改本商家自己的生效供给。 */
     void setFamilyAcceptance(Long offerId, Long merchantId, Integer familyAccepted, String familyPerkText);
 
+    /** FE-G5:承接方改自己生效供给的玩家可见条款(含在票内 / 另付说明 / 需预约)。只改本商家 status=1 的行。 */
+    default void setDisplayTerms(Long offerId, Long merchantId, Integer included, String extraSpendText,
+                                 Integer reserveRequired) {
+        throw new UnsupportedOperationException("setDisplayTerms");
+    }
+
     /** 商家重新确认自己的圈层供给事实；夜间供给需至少每7天调用一次。 */
     void reconfirmCircleSupply(Long offerId, MerchantCircleSupplyProfile profile, Long merchantId);
 

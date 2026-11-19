@@ -916,6 +916,40 @@ public class ApiCoopController extends BaseController {
         }
     }
 
+    /** FE-G5:承接方改自己生效供给的玩家可见条款;归属在 service/mapper 双层校验(同 /offer/family)。 */
+    @Operation(summary = "承接方设置供给的含/另付与预约说明")
+    @PostMapping("/offer/display-terms")
+    public AjaxResult offerDisplayTerms(@RequestBody(required = false) Map<String, Object> body) {
+        Long principalMemberId;
+        try { principalMemberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        if (principalMemberId == null || principalMemberId <= 0) return error("请先登录");
+        Long ownerMemberId;
+        try {
+            ownerMemberId = merchantAccessService.require(
+                    principalMemberId, MerchantPermission.COOP_MANAGE).getOwnerMemberId();
+        } catch (ServiceException e) {
+            return new AjaxResult(e.getCode(), e.getMessage());
+        }
+        if (ownerMemberId == null || ownerMemberId <= 0) return error("请先登录");
+        Long offerId = body == null ? null : toLong(body.get("offerId"));
+        if (offerId == null || offerId <= 0) return error("缺少供给记录");
+        Object rawText = body.get("extraSpendText");
+        if (rawText != null && !(rawText instanceof String)) return error("另付说明格式不正确");
+        try {
+            merchantOfferService.setDisplayTerms(offerId, ownerMemberId, flag(body.get("included")),
+                    (String) rawText, flag(body.get("reserveRequired")));
+            return AjaxResult.success("已保存");
+        } catch (IllegalStateException e) {
+            return error(e.getMessage());
+        }
+    }
+
+    private static Integer flag(Object raw) {
+        if (raw instanceof Boolean b) return b ? 1 : 0;
+        if (raw instanceof Number n) return n.intValue();
+        return null;
+    }
+
     @Operation(summary = "圈层供给重新确认：刷新商家声明快照")
     @PostMapping("/offer/circle-supply/reconfirm")
     public AjaxResult reconfirmCircleSupply(@RequestBody MerchantCircleSupplyProfile body) {
