@@ -140,6 +140,10 @@
         delete from city_claim_evidence where member_id = #{memberId}
     </delete>
 
+    <delete id="deleteOnsiteTaskSubmissions">
+        delete from city_onsite_task_submission where member_id = #{memberId}
+    </delete>
+
     <delete id="deleteDeviceAccounts">
         delete from city_device_account where member_id = #{memberId}
     </delete>

@@ -54,6 +54,7 @@ class AccountDeregistrationR3ErasureTest {
         verify(d).revokeTerritories(MEMBER);             // roam_territory → REVOKED + 清照片
         verify(d).scrubTerritoryAudits(MEMBER);          // roam_territory_audit 清坐标
         verify(d).deleteClaimEvidence(MEMBER);           // city_claim_evidence
+        verify(d).deleteOnsiteTaskSubmissions(MEMBER);   // city_onsite_task_submission
         verify(d).deleteDeviceAccounts(MEMBER);          // city_device_account
         verify(d).deleteMemberAttributes(MEMBER);        // member_attribute
         verify(d).deleteMemberTitles(MEMBER);            // member_title

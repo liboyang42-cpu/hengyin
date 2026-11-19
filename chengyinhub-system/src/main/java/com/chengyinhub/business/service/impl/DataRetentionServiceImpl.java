@@ -76,6 +76,8 @@ public class DataRetentionServiceImpl implements IDataRetentionService {
                 (c, l) -> cityLocationRetentionService.clearTerritoryAudits(c, l));
         total += loopDelete("city_claim_evidence_coordinates", cutoff, batchSize, maxBatches,
                 (c, l) -> cityLocationRetentionService.clearClaimEvidence(c, l));
+        total += loopDelete("city_onsite_task_submission_coordinates", cutoff, batchSize, maxBatches,
+                (c, l) -> cityLocationRetentionService.clearTaskSubmissions(c, l));
         return total + loopDelete("roam_share_snapshot_unbound", cutoff, batchSize, maxBatches,
                 (c, l) -> roamShareSnapshotMapper.deleteExpiredUnbound(c, l));
     }

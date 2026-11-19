@@ -33,6 +33,11 @@ public class CityLocationRetentionService {
             + "WHERE created_at < ? AND (lat IS NOT NULL OR lng IS NOT NULL OR h_acc IS NOT NULL) "
             + "LIMIT ?";
 
+    static final String CLEAR_TASK_SUBMISSIONS = "UPDATE city_onsite_task_submission "
+            + "SET lat = NULL, lng = NULL, h_acc = NULL "
+            + "WHERE create_time < ? AND (lat IS NOT NULL OR lng IS NOT NULL OR h_acc IS NOT NULL) "
+            + "LIMIT ?";
+
     private final JdbcTemplate jdbc;
 
     public CityLocationRetentionService(JdbcTemplate jdbc) {
@@ -49,5 +54,10 @@ public class CityLocationRetentionService {
 
     public int clearClaimEvidence(Date cutoff, int limit) {
         return jdbc.update(CLEAR_EVIDENCE, new Timestamp(cutoff.getTime()), limit);
+    }
+
+    /** On-site challenge task submissions (CITY-GAPS-R3 #5): same rule as claim evidence, keep distance and verdict. */
+    public int clearTaskSubmissions(Date cutoff, int limit) {
+        return jdbc.update(CLEAR_TASK_SUBMISSIONS, new Timestamp(cutoff.getTime()), limit);
     }
 }

@@ -157,6 +157,16 @@ public class NotifyServiceImpl implements INotifyService {
     }
 
     @Override
+    public boolean notifyCityTerritory(Long memberId, String kind, String territoryId, String title, String text, long points) {
+        return fanout(NotifyMessage.of(NotifyEvent.CITY_TERRITORY, memberId)
+                .with("kind", kind == null ? "" : kind)
+                .with("territoryId", territoryId == null ? "" : territoryId)
+                .with("title", title == null ? "" : title)
+                .with("text", text == null ? "" : text)
+                .with("points", (int) Math.max(Integer.MIN_VALUE, Math.min(Integer.MAX_VALUE, points))));
+    }
+
+    @Override
     public boolean isRoamRecallReady() {
         // ⚠️ 名不副实的地方要写在明处:这条**只问微信通道**,不是「问所有通道」。
         // 就绪查询没做成 NotifyChannel 的方法 —— 现在只有一条通道,加个接口方法是没人要的抽象。

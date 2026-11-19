@@ -59,6 +59,7 @@ public class CityMonopolyService {
     private CityAttestVerifier attest;
     private CityTaskVerifier tasks;
     private RoamTerritoryService territories;
+    private com.chengyinhub.business.service.INotifyService notify;
 
     @Autowired
     public CityMonopolyService(JdbcTemplate jdbc, CityGameMapper mapper, CityMonopolyConfigService configs,
@@ -86,6 +87,39 @@ public class CityMonopolyService {
     @Autowired(required = false) public void setAttest(CityAttestVerifier attest) { this.attest = attest; }
     @Autowired(required = false) public void setTasks(CityTaskVerifier tasks) { this.tasks = tasks; }
     void setTerritories(RoamTerritoryService territories) { this.territories = territories; }
+    @Autowired(required = false) public void setNotify(com.chengyinhub.business.service.INotifyService notify) { this.notify = notify; }
+
+    // =================================================================== in-app notifications (existing IM system channel)
+
+    /**
+     * Sends a City in-app notification after the surrounding transaction commits (never for a rolled-back write), or
+     * at once when there is none. Best-effort: a notification failure never fails or rolls back the game action.
+     */
+    void notifyMember(long memberId, String kind, String territoryId, String title, String text, long points) {
+        if (notify == null) return;
+        Runnable send = () -> {
+            try {
+                notify.notifyCityTerritory(memberId, kind, territoryId, title, text, points);
+            } catch (Throwable failure) {
+                // best-effort side channel (see INotifyService): logged, never propagated into the game action
+                org.slf4j.LoggerFactory.getLogger(CityMonopolyService.class).warn("[城市大富翁] 站内信未送达 memberId={} kind={} reason={}",
+                        memberId, kind, failure.getClass().getSimpleName());
+            }
+        };
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isSynchronizationActive()) {
+            org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                    new org.springframework.transaction.support.TransactionSynchronization() {
+                        @Override public void afterCommit() { send.run(); }
+                    });
+        } else {
+            send.run();
+        }
+    }
+
+    private static String placeName(Object title) {
+        String t = title == null ? "" : String.valueOf(title).trim();
+        return t.isEmpty() ? "你的地产" : "「" + (t.length() > 40 ? t.substring(0, 40) : t) + "」";
+    }
 
     public boolean enabled(String boardId) {
         return configs.forBoard(boardId).flag("city.monopoly.enabled");
@@ -342,7 +376,9 @@ public class CityMonopolyService {
                             + "FROM city_game_point p WHERE p.board_id = ? AND p.point_id = ? AND p.del_flag = 0", boardId, pointId);
             if (rows.isEmpty()) throw new CityGameException(404, "SPACE_NOT_FOUND", "地点不存在");
             Map<String, Object> r = rows.get(0);
-            Long place = r.get("place_id") instanceof Number ? ((Number) r.get("place_id")).longValue() : poiId;
+            // Boxed on both branches: a mixed long/Long ternary unboxes a null poiId and threw an NPE (HTTP 500) for
+            // board points without place_id (CITY-GAPS-R3 #1). Such a point is a board-only space: poiId stays null.
+            Long place = r.get("place_id") instanceof Number ? Long.valueOf(((Number) r.get("place_id")).longValue()) : poiId;
             return new Target("board:" + boardId + ":" + pointId, place, boardId, pointId, (String) r.get("property_id"),
                     (String) r.get("title"), dbl(r.get("latitude")), dbl(r.get("longitude")),
                     CityMonopolyRules.normalizeTier(r.get("tier") instanceof Number ? ((Number) r.get("tier")).intValue() : null),
@@ -613,7 +649,8 @@ public class CityMonopolyService {
         boolean review = CityMonopolyRules.needsHumanReview(c, v.riskScore(), requestId);
         long evidenceId = recordEvidence(t.boardId(), t.key(), null, memberId, "CLAIM", ev, v, review ? "REVIEW" : "PASS", photo);
         long protH = CityMonopolyRules.protectionHours(c, CityMonopolyRules.ProtectionEvent.CLAIM, finale(c, now));
-        String territoryId = insertTerritory(t, memberId, requestId, photo == null ? "" : photo, seasonId, 0, cost, now, protH, evidenceId);
+        Integer deedSerial = issueDeedSerial(t.boardId(), t.districtId());
+        String territoryId = insertTerritory(t, memberId, requestId, photo == null ? "" : photo, seasonId, 0, cost, now, protH, evidenceId, deedSerial);
         jdbc.update("UPDATE city_claim_evidence SET territory_id = ? WHERE id = ?", territoryId, evidenceId);
         if (territories != null && t.boardId() != null && t.propertyId() != null) {
             territories.syncBoardPropertyOnClaim(t.boardId(), t.propertyId(), t.pointId(), memberId, territoryId, photo,
@@ -631,18 +668,32 @@ public class CityMonopolyService {
         return receipt(memberId, requestId, "CLAIM", body, out);
     }
 
+    /**
+     * Next deed serial of a district ({@code 地契 · No. N}), or null for a space outside any board district.
+     * The upsert takes the counter row's exclusive lock until the caller's transaction ends, so concurrent first claims
+     * in one district serialize and each reads its own value; a rolled-back claim also rolls back its number. The
+     * {@code uk_roam_territory_deed} unique key on live deeds is the backstop.
+     */
+    Integer issueDeedSerial(String boardId, String districtId) {
+        if (boardId == null || districtId == null || districtId.isBlank()) return null;
+        jdbc.update("INSERT INTO city_deed_counter(board_id, district_id, last_serial) VALUES (?,?,1) "
+                + "ON DUPLICATE KEY UPDATE last_serial = last_serial + 1", boardId, districtId);
+        return jdbc.queryForObject("SELECT last_serial FROM city_deed_counter WHERE board_id = ? AND district_id = ? FOR UPDATE",
+                Integer.class, boardId, districtId);
+    }
+
     private String insertTerritory(Target t, long memberId, String requestId, String photo, String seasonId, int level,
-                                   long invested, long now, long protH, Long evidenceId) {
+                                   long invested, long now, long protH, Long evidenceId, Integer deedSerial) {
         String territoryId = UUID.randomUUID().toString();
         jdbc.update("INSERT INTO roam_territory(territory_id, geohash7, poi_id, board_id, season_id, property_id, point_id, title, city_code, "
                         + "latitude, longitude, radius_m, owner_member_id, claim_photo_url, claim_request_id, checkin_toll_points, owner_revenue_points, "
                         + "revenue_mode, checkin_count, revenue_total_points, status, version, claimed_at, protected_until, rules_kind, tier, upgrade_level, "
-                        + "invested, district_id, last_owner_visit_at, decay_state, claim_evidence_id) "
-                        + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,0,0,'POINTS',0,0,'ACTIVE',1,?,?,'MONOPOLY',?,?,?,?,?,'OK',?)",
+                        + "invested, district_id, last_owner_visit_at, decay_state, claim_evidence_id, deed_serial) "
+                        + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,0,0,'POINTS',0,0,'ACTIVE',1,?,?,'MONOPOLY',?,?,?,?,?,'OK',?,?)",
                 territoryId, RoamTerritoryService.encodeGeohash7(t.lat(), t.lng()), t.poiId(), t.boardId(), seasonId, t.propertyId(), t.pointId(),
                 t.title() == null ? "城市地产" : (t.title().length() > 160 ? t.title().substring(0, 160) : t.title()), t.cityCode(),
                 t.lat(), t.lng(), Math.round(configs.global().num("city.monopoly.yield.visit_radius_m")), memberId, photo, requestId,
-                new Timestamp(now), new Timestamp(now + protH * 3_600_000L), t.tier(), level, invested, t.districtId(), new Timestamp(now), evidenceId);
+                new Timestamp(now), new Timestamp(now + protH * 3_600_000L), t.tier(), level, invested, t.districtId(), new Timestamp(now), evidenceId, deedSerial);
         return territoryId;
     }
 
@@ -867,6 +918,13 @@ public class CityMonopolyService {
                 day, day, cap.granted(), new Timestamp(now), territoryId);
         if (device != null) jdbc.update("UPDATE city_device_account SET last_yield_at = ? WHERE device_key = ? AND member_id = ?", new Timestamp(now), device, visitorId);
         axp(visitorId, AttributeRules.Source.VISITOR_YIELD, "yield:" + eventId);
+        // One rent notification per holder per board day: only the first event that actually earned (after caps and
+        // every self-farming / pair / device rule above), so a busy place cannot flood its holder.
+        if (cap.granted() > 0 && n(jdbc.queryForObject("SELECT COUNT(*) FROM city_yield_event WHERE holder_member_id = ? AND board_day = ? "
+                + "AND state <> 'VOID' AND granted > 0", Integer.class, owner, day)) == 1) {
+            notifyMember(owner, "RENT", territoryId, String.valueOf(terr.get("title")),
+                    placeName(terr.get("title")) + "今天迎来第一位访客，待结算租金 +" + cap.granted() + " 积分，次日结算后到账。", cap.granted());
+        }
         out.put("yieldEventId", eventId);
         out.put("yield", cap.granted());
         out.put("raw", yq.raw());
@@ -905,6 +963,7 @@ public class CityMonopolyService {
         Date today = Date.valueOf(day(c, now));
         int settled = 0, voided = 0;
         long paid = 0;
+        Map<Long, Long> rentByHolder = new LinkedHashMap<>();
         List<Map<String, Object>> rows = jdbc.queryForList(
                 "SELECT * FROM city_yield_event WHERE state = 'PENDING' AND board_day < ? ORDER BY id LIMIT 5000 FOR UPDATE", today);
         for (Map<String, Object> e : rows) {
@@ -926,7 +985,11 @@ public class CityMonopolyService {
             paid += settleFlow(visitor, seasonId, "VISIT", id, reward, "城市大富翁访客奖励");
             seasonStat(holder, seasonId, "confirmed_rent", granted);
             jdbc.update("UPDATE city_yield_event SET state = 'AVAILABLE', settled_at = ? WHERE id = ?", new Timestamp(now), id);
+            if (granted > 0) rentByHolder.merge(holder, granted, Long::sum);
             settled++;
+        }
+        for (Map.Entry<Long, Long> r : rentByHolder.entrySet()) {
+            notifyMember(r.getKey(), "RENT_SETTLED", null, null, "城市大富翁租金 " + r.getValue() + " 积分已结算到账。", r.getValue());
         }
         return Map.of("settled", settled, "voided", voided, "creditedPoints", paid);
     }
@@ -1125,7 +1188,7 @@ public class CityMonopolyService {
         payload.put("fee", fee);
         payload.put("revengeDiscount", revenge);
         if (scouted(memberId, territoryId, now)) payload.put("dc", dc(c, terr, now));
-        payload.put("task", tasks == null ? null : Map.of("taskRef", "challenge:" + territoryId + ":" + UUID.randomUUID()));
+        payload.put("task", tasks == null ? null : tasks.issue(territoryId, terr.get("title")));
         return quote(memberId, "CHALLENGE", territoryId, fee, payload, c);
     }
 
@@ -1238,6 +1301,8 @@ public class CityMonopolyService {
             CityMonopolyRules.FeeSplit split = CityMonopolyRules.feeSplit(c, fee, false, true);
             creditNow(memberId, seasonId, split.refund(), "REFUND", "CHALLENGE", requestId, "城市大富翁挑战任务失败退款");
             insertChallenge(requestId, terr, seasonId, memberId, defender, fee, dc, 0, false, false, Map.of(), 0, "TASK_FAILED", split);
+            notifyMember(defender, "DEFENDED", territoryId, String.valueOf(terr.get("title")),
+                    mask(memberId) + "挑战了" + placeName(terr.get("title")) + "，但没有完成现场任务，地产仍归你。", 0);
             out.put("outcome", "TASK_FAILED");
             out.put("feeSplit", split);
             out.put("balance", balance(memberId));
@@ -1270,8 +1335,10 @@ public class CityMonopolyService {
             jdbc.update("UPDATE roam_territory SET status = 'REVOKED', released_at = ?, release_reason = 'TAKEOVER', version = version + 1 WHERE territory_id = ? AND owner_member_id = ?",
                     new Timestamp(now), territoryId, defender);
             long protH = CityMonopolyRules.protectionHours(c, CityMonopolyRules.ProtectionEvent.TAKEOVER, false);
+            // The deed changes hands; its serial does not (only a first claim issues one).
             String newId = insertTerritory(t, memberId, requestId, String.valueOf(terr.get("claim_photo_url")), seasonId, level,
-                    CityMonopolyRules.investedAt(c, t.tier(), level), now, protH, null);
+                    CityMonopolyRules.investedAt(c, t.tier(), level), now, protH, null,
+                    terr.get("deed_serial") instanceof Number ? Integer.valueOf(((Number) terr.get("deed_serial")).intValue()) : null);
             xp(memberId, c.integer("city.monopoly.xp.takeover_win"), "城市大富翁抢夺成功");
             seasonStat(memberId, seasonId, "takeovers", 1);
             property = wire(c, jdbc.queryForMap("SELECT * FROM roam_territory WHERE territory_id = ?", newId), memberId, true);
@@ -1288,6 +1355,12 @@ public class CityMonopolyService {
         }
         insertChallenge(requestId, terr, seasonId, memberId, defender, fee, dc, roll, roll == 20 || roll == 1, rerolled, mods.parts(),
                 roll + mods.total(), win ? "WIN" : "LOSS", split);
+        long comp = split.defenderComp();
+        notifyMember(defender, win ? "PLACE_LOST" : "DEFENDED", territoryId, String.valueOf(terr.get("title")), win
+                ? placeName(terr.get("title")) + "被" + mask(memberId) + "抢走了（" + (roll + mods.total()) + " ≥ DC " + dc + "）"
+                        + (comp > 0 ? "，补偿 +" + comp + " 积分。" : "。")
+                : "你守住了" + placeName(terr.get("title")) + "：挑战者 " + (roll + mods.total()) + " 未达 DC " + dc
+                        + (comp > 0 ? "，补偿 +" + comp + " 积分" : "") + "。", comp);
         out.put("roll", roll);
         out.put("nat", natural(roll));
         out.put("rerolled", rerolled);
@@ -1410,7 +1483,7 @@ public class CityMonopolyService {
             String poi = String.valueOf(num(body, "poiId"));
             return quote(memberId, "CHANCE", "poi:" + poi, Math.round(c.num("city.monopoly.chance.reward")), payload, c);
         }
-        if (tasks == null) throw new CityGameException(409, "TASK_VERIFIER_UNAVAILABLE", "任务核验未开放");
+        if (tasks == null || !tasks.supports("chance:")) throw new CityGameException(409, "TASK_VERIFIER_UNAVAILABLE", "任务核验未开放");
         Map<String, Object> q = consumeQuote(memberId, "CHANCE", body);
         requireSameRules(q, c);
         CityMonopolyRules.TaskResult r = tasks.verify(memberId, String.valueOf(q.get("taskRef")), str(body, "taskSubmissionId"));
@@ -1484,6 +1557,7 @@ public class CityMonopolyService {
         out.put("title", t.get("title"));
         out.put("tier", t.get("tier"));
         out.put("districtId", t.get("district_id"));
+        out.put("deedSerial", t.get("deed_serial") instanceof Number ? ((Number) t.get("deed_serial")).intValue() : null);
         out.put("status", t.get("status"));
         out.put("lvl", t.get("upgrade_level"));
         out.put("invested", t.get("invested"));
@@ -1500,6 +1574,46 @@ public class CityMonopolyService {
         return out;
     }
 
+    // =================================================================== districts (names + colour keys)
+
+    /**
+     * {@code city_district} rows for the given boards, keyed {@code boardId + "|" + districtId}. District names and
+     * colour keys are public board metadata (shown even under fog). Missing rows simply mean "no name yet".
+     */
+    static Map<String, Map<String, Object>> districtsOf(JdbcTemplate jdbc, java.util.Collection<String> boardIds) {
+        Map<String, Map<String, Object>> out = new LinkedHashMap<>();
+        List<String> boards = new ArrayList<>(new java.util.TreeSet<>(boardIds.stream().filter(java.util.Objects::nonNull).toList()));
+        if (boards.isEmpty()) return out;
+        String in = String.join(",", java.util.Collections.nCopies(boards.size(), "?"));
+        for (Map<String, Object> r : jdbc.queryForList("SELECT board_id, district_id, name, color_token, ownable_count, safety_blocked "
+                + "FROM city_district WHERE board_id IN (" + in + ") ORDER BY board_id, district_id", boards.toArray())) {
+            Map<String, Object> d = new LinkedHashMap<>();
+            d.put("boardId", r.get("board_id"));
+            d.put("districtId", r.get("district_id"));
+            d.put("name", r.get("name"));
+            d.put("colorToken", r.get("color_token"));
+            d.put("colorIndex", colorIndex((String) r.get("color_token")));
+            d.put("ownableCount", r.get("ownable_count") instanceof Number ? ((Number) r.get("ownable_count")).intValue() : 0);
+            d.put("safetyBlocked", r.get("safety_blocked") instanceof Number && ((Number) r.get("safety_blocked")).intValue() == 1);
+            out.put(r.get("board_id") + "|" + r.get("district_id"), d);
+        }
+        return out;
+    }
+
+    /** {@code district.c3} → 3; any other token → null (the client falls back to its own slot). */
+    static Integer colorIndex(String token) {
+        if (token == null) return null;
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("^district\\.c(\\d{1,2})$").matcher(token.trim());
+        return m.matches() ? Integer.valueOf(m.group(1)) : null;
+    }
+
+    /** Adds {@code districtName} / {@code districtColorToken} to an item that carries a district (additive fields). */
+    static void putDistrict(Map<String, Object> item, Map<String, Map<String, Object>> districts, Object boardId, Object districtId) {
+        Map<String, Object> d = boardId == null || districtId == null ? null : districts.get(boardId + "|" + districtId);
+        item.put("districtName", d == null ? null : d.get("name"));
+        item.put("districtColorToken", d == null ? null : d.get("colorToken"));
+    }
+
     /** Territory layer for a bbox; properties in tiles the viewer has not lit return only district and tier. */
     public Map<String, Object> map(Long memberId, Double minLat, Double minLng, Double maxLat, Double maxLng) {
         CityGameSupport.requireMember(memberId);
@@ -1509,20 +1623,30 @@ public class CityMonopolyService {
         CityMonopolyConfig c = configs.global();
         Set<String> lit = new HashSet<>(jdbc.queryForList("SELECT geohash7 FROM roam_fog_tile WHERE member_id = ?", String.class, memberId));
         List<Map<String, Object>> items = new ArrayList<>();
-        for (Map<String, Object> t : jdbc.queryForList("SELECT * FROM roam_territory WHERE status = 'ACTIVE' AND rules_kind = 'MONOPOLY' "
-                + "AND latitude BETWEEN ? AND ? AND longitude BETWEEN ? AND ? LIMIT 500", minLat, maxLat, minLng, maxLng)) {
+        List<Map<String, Object>> rows = jdbc.queryForList("SELECT * FROM roam_territory WHERE status = 'ACTIVE' AND rules_kind = 'MONOPOLY' "
+                + "AND latitude BETWEEN ? AND ? AND longitude BETWEEN ? AND ? LIMIT 500", minLat, maxLat, minLng, maxLng);
+        Set<String> boards = new java.util.TreeSet<>();
+        for (Map<String, Object> t : rows) if (t.get("board_id") != null) boards.add(String.valueOf(t.get("board_id")));
+        Map<String, Map<String, Object>> districts = districtsOf(jdbc, boards);
+        for (Map<String, Object> t : rows) {
             boolean visible = lit.contains(String.valueOf(t.get("geohash7"))) || ((Number) t.get("owner_member_id")).longValue() == memberId;
+            Map<String, Object> item;
             if (!visible) {
-                Map<String, Object> fogged = new LinkedHashMap<>();
-                fogged.put("districtId", t.get("district_id"));
-                fogged.put("tier", t.get("tier"));
-                fogged.put("geohash7", t.get("geohash7"));
-                items.add(fogged);
+                item = new LinkedHashMap<>();
+                item.put("districtId", t.get("district_id"));
+                item.put("tier", t.get("tier"));
+                item.put("geohash7", t.get("geohash7"));
             } else {
-                items.add(wire(c, t, memberId, false));
+                item = wire(c, t, memberId, false);
             }
+            putDistrict(item, districts, t.get("board_id"), t.get("district_id"));
+            items.add(item);
         }
-        return Map.of("items", items, "currency", "POINTS");
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("items", items);
+        out.put("currency", "POINTS");
+        out.put("districts", new ArrayList<>(districts.values()));
+        return out;
     }
 
     public Map<String, Object> property(Long memberId, String territoryId) {
@@ -1533,6 +1657,8 @@ public class CityMonopolyService {
         CityMonopolyConfig c = configs.forBoard((String) t.get("board_id"));
         long now = now();
         Map<String, Object> out = wire(c, t, memberId, true);
+        putDistrict(out, districtsOf(jdbc, t.get("board_id") == null ? List.of() : List.of(String.valueOf(t.get("board_id")))),
+                t.get("board_id"), t.get("district_id"));
         out.put("deedPhoto", t.get("claim_photo_url"));
         out.put("visitsThisWeek", n(jdbc.queryForObject("SELECT COUNT(*) FROM city_yield_event WHERE territory_id = ? AND created_at >= ?",
                 Integer.class, territoryId, new Timestamp(now - 7L * 86_400_000L))));

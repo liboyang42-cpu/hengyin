@@ -41,6 +41,9 @@ public class InAppNotifyChannel implements NotifyChannel {
         if (message.event() == NotifyEvent.REFUND) {
             return sendRefund(message);
         }
+        if (message.event() == NotifyEvent.CITY_TERRITORY) {
+            return sendCityTerritory(message);
+        }
         if (message.event() != NotifyEvent.TEAM_STATUS) return false;
         try {
             JSONObject extra = new JSONObject();
@@ -82,6 +85,29 @@ public class InAppNotifyChannel implements NotifyChannel {
             return id != null && id > 0;
         } catch (Throwable t) {
             log.error("[通知] 退款站内信异常 memberId={} reason={}",
+                    message.memberId(), t.getClass().getSimpleName(), t);
+            return false;
+        }
+    }
+
+    /**
+     * 城市大富翁地产事件:系统会话里的一张卡片(cardType=cityTerritory)。content 是完整一句,旧客户端按文本展示;
+     * extra 给新客户端跳转到地产(territoryId)与区分事件(kind)。
+     */
+    private boolean sendCityTerritory(NotifyMessage message) {
+        try {
+            JSONObject extra = new JSONObject();
+            extra.put("cardType", "cityTerritory");
+            extra.put("kind", message.get("kind"));
+            String territoryId = message.get("territoryId");
+            extra.put("territoryId", territoryId == null || territoryId.isEmpty() ? null : territoryId);
+            extra.put("title", message.get("title"));
+            extra.put("points", message.getInt("points", 0));
+            extra.put("currency", "POINTS");
+            Long id = imService.sendSystem(message.memberId(), ImMessage.MSG_CARD, message.get("text"), extra.toJSONString());
+            return id != null && id > 0;
+        } catch (Throwable t) {
+            log.error("[通知] 城市大富翁站内信异常 memberId={} reason={}",
                     message.memberId(), t.getClass().getSimpleName(), t);
             return false;
         }
