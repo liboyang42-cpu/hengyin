@@ -89,5 +89,6 @@
       </view>
     </view>
   </block>
+  <!-- MC-038:宿主放进浅色根容器内,确认弹窗跟着主办方浅色 -->
+  <cy-modal-host id="cy-modal-host" />
 </view>
-<cy-modal-host id="cy-modal-host" />

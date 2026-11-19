@@ -1432,7 +1432,7 @@ test('导演台宿主页随俱乐部主办方视角改浅色（2026-11-17 MC-038
 
   const broken = source.replace(/\btheme-merchant\b/, 'theme-dark')
   assert.notEqual(broken, source, '负控必须实际把导演台改回深色')
-  assert.equal(topLevelThemeClasses(broken).has('theme-merchant'), false)
+  assert.equal(topLevelThemeClasses(broken).has('theme-dark'), true, '根节点改回深色必须被识别出来')
 })
 
 test('角色接管入口只向已确认且已有角色的成员展示', () => {

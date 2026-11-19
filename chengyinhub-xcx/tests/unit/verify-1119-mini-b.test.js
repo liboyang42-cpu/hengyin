@@ -383,3 +383,18 @@ test('MC-044:台账退款行不露退款单号/编号', () => {
   assert.doesNotMatch(js, /'#' \+ row\.refundId/)
   assert.doesNotMatch(js, /row\.refundNoText \|\|/)
 })
+
+test('MC-038:主办方浅色页根容器外的弹层宿主也挂 theme-merchant(不在白页弹黑窗)', () => {
+  const pages = ['badges', 'checkin-detail', 'governance', 'roles', 'group-code', 'topic-detail']
+  for (const p of pages) {
+    const wxml = read(`pages/club/${p}/index.wxml`).replace(/<!--[\s\S]*?-->/g, '')
+    const re = /<\/?[a-zA-Z-]+\b[^>]*?\/?>/g
+    let m, depth = 0
+    while ((m = re.exec(wxml))) {
+      const r = m[0]
+      if (r.startsWith('</')) { depth -= 1; continue }
+      if (depth === 0 && /^<cy-/.test(r)) assert.match(r, /theme-merchant/, `${p}: ${r.slice(0, 60)}`)
+      if (!r.endsWith('/>')) depth += 1
+    }
+  }
+})

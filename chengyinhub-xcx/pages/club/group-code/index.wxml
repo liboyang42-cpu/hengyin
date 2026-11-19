@@ -50,4 +50,4 @@
 
 <!-- 保存游戏码到相册会触发隐私授权。gate 必须挂在宿主页:组件盖不住整页,
      没有它 app.js 只能回退到 /pages/privacy 路由页,把出码界面整个盖掉。 -->
-<cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
+<cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" class="theme-merchant" />

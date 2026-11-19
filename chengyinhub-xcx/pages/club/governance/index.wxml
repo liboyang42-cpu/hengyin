@@ -141,7 +141,7 @@
 </view>
 </view>
 
-<cy-sheet show="{{memberPickerVisible}}" title="选择成员" closable maskClosable bind:close="closeMemberPicker">
+<cy-sheet class="theme-merchant" show="{{memberPickerVisible}}" title="选择成员" closable maskClosable bind:close="closeMemberPicker">
   <view class="picker">
     <view class="picker-row {{memberPickerFor === 'ban' && selectedMemberId == item.memberId ? 'picker-row--on' : ''}}"
       wx:for="{{members}}" wx:key="memberId" data-member-id="{{item.memberId}}" bindtap="pickMember"
@@ -154,7 +154,7 @@
   </view>
 </cy-sheet>
 
-<cy-sheet show="{{durationPickerVisible}}" title="选择期限" closable maskClosable bind:close="closeDurationPicker">
+<cy-sheet class="theme-merchant" show="{{durationPickerVisible}}" title="选择期限" closable maskClosable bind:close="closeDurationPicker">
   <view class="picker">
     <view class="picker-row {{selectedDurationDays == item.days ? 'picker-row--on' : ''}}"
       wx:for="{{durationOptions}}" wx:key="days" data-days="{{item.days}}" bindtap="pickDuration"
