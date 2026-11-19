@@ -160,7 +160,8 @@ test('「状态不好时松一点」住在高级玩法卡,不在检定段', () =
   const checkStart = wxml.indexOf("gameSection === 'check'")
   const checkEnd = wxml.indexOf('<view class="cg-gcfg"', checkStart + 1)
   assert.ok(!(at > checkStart && at < checkEnd), '放宽又回到检定段里了')
-  assert.ok(at > wxml.indexOf('id="sec-advanced"'), '放宽应该在「高级玩法」卡里')
+  // 「高级玩法」卡 = 玩法设置里的 cg-advanced 段(2026-11-19 起页面另有「高级设置」折叠组 sec-advanced,那是选填项,不是这张卡)
+  assert.ok(at > wxml.indexOf('<view class="cg-advanced"'), '放宽应该在「高级玩法」卡里')
 })
 
 /* 2026-09-23 扩面:更多次数字段 + 判定误差。选项必须是后端会收的那种 —— 超上界的不给。 */

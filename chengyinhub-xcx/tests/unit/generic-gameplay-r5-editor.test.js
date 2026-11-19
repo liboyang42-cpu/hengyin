@@ -422,8 +422,10 @@ test('独立模板无上下文仍拦真实冲突，空主题上下文也不当�
 
 test('R5 输入挑战不显示旧的限时秒数输入；只有旧版配置保留该字段', () => {
   const wxml = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../pages/publish/temp/index.wxml'), 'utf8');
-  const grid = wxml.match(/<view class="cg-adv-grid" wx:if="\{\{advanced\.outcomeRules\.version !== 1\}\}">\n\s*<view><view class="cg-cfg-label">限时（3 至 120 秒）[\s\S]*?<\/view>\n\s*<block wx:else><view class="cg-cfg-label">次数上限/);
-  assert.ok(grid, '旧版配置：秒数与次数同在两列栅格；R5（outcomeRules v1）不显示秒数，次数整行显示，限时只由限时挑战附加项设置');
+  // 2026-11-19:次数上限(选填)收进「高级设置 · 作答规则」(editor-layout.js);这里只剩旧版配置才出现的限时秒数
+  const grid = wxml.match(/<block wx:if="\{\{advanced\.outcomeRules\.version !== 1\}\}">\n\s*<view class="cg-cfg-label">限时（3 至 120 秒）[^\n]*data-section="typeIn" data-field="seconds"[^\n]*\n\s*<\/block>/);
+  assert.ok(grid, '旧版配置才显示秒数；R5（outcomeRules v1）不显示秒数，限时只由限时挑战附加项设置');
+  assert.deepEqual(require('../../pages/publish/temp/editor-layout.js').answerRuleRows({}, 'typeIn', {}).map(r => r.field), ['tries', 'xp'], '输入挑战的次数上限在高级设置里');
 });
 
 // ===== 2026-10-11 选项问答：判断答案对错、选项反馈图文、设置内联（主人批准 HTML 原型） =====
@@ -494,7 +496,7 @@ test('玩法设置直接在玩法卡内（不再有玩法配置浮层）；选�
   assert.doesNotMatch(wxml, /wx:if="\{\{gameConfigOpen\}\}"/, '玩法配置不再是浮层');
   const card = wxml.slice(wxml.indexOf('id="game-cfg"'), wxml.indexOf('<!-- R5：互动工具'));
   assert.match(card, /gameSection === 'qa'/, '选项问答设置在玩法卡内');
-  for (const text of ['题目', '作答规则', '选项']) assert.match(card, new RegExp('<view class="cg-qa-sec[^"]*">' + text + '</view>'));
+  for (const text of ['题目', '作答规则', '选项']) assert.match(card, new RegExp('<view class="cg-qa-sec[^"]*"[^>]*>' + text + '</view>'));
   assert.match(card, /<cy-switch checked="\{\{advanced\.qa\.judge !== false\}\}" bindchange="toggleQaJudge" \/>/);
   assert.match(card, /bindtap="addQaFbImg"/); assert.match(card, /catchtap="removeQaFbImg"/); assert.match(card, /bindtap="tapQaFbImg"/);
   assert.match(card, /toggleOptionMemo/, '“记住这个选择”保留');

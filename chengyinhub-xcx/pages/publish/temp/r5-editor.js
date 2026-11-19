@@ -309,4 +309,6 @@ const methods = {
     config.interactionRules = Object.assign({}, config.interactionRules, { resourceSlots: slots }); this._setFormState({ advanced: config });
   },
 };
-module.exports = { data, methods, view, legacyRows, PARTICIPATION };
+// 玩法规则预填用的步骤:与结果反馈的 1-2-3 步同一份文字(2026-11-19 主人:作者不必写两遍)
+function ruleSteps(config, section) { return feedbackSteps(config || {}, section, after.once(config || {})); }
+module.exports = { data, methods, view, legacyRows, ruleSteps, PARTICIPATION };
