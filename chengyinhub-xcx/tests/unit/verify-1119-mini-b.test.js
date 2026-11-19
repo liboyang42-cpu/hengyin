@@ -267,3 +267,30 @@ test('OR-009:商品购买区分支付结果,取消直接提示,按单号回查',
   assert.match(js, /data: \{ limit: 20, orderNo \}/)
   assert.doesNotMatch(js, /complete: \(\) => this\._verify/)
 })
+
+test('OR-021 / OR-029~035 / OR-044 / OR-045:我的订单列表', () => {
+  const dir = 'subpackageMember/components/cy/scene-member-order-history/'
+  const js = read(dir + 'index.js')
+  const wxml = read(dir + 'index.wxml')
+  const wxss = read(dir + 'index.wxss')
+  assert.match(wxml, /money\.amount\(item\.registrationStatus==1 \? item\.pendingPayAmount : item\.actualPaidAmount\)/)
+  assert.match(wxml, /wx:if="\{\{item\.registrationStatus==1 \? item\.pendingPayAmount !== null : true\}\}"/)
+  assert.match(js, /hasMore: Number\.isFinite\(total\) && pageSize > 0 && rows\.length >= pageSize && that\._allRows\.length < total,/)
+  assert.match(js, /if \(that\.data\.isPaying \|\| that\.data\.verifyingPayment\) return/)
+  assert.match(js, /const list = filterOrderTab\(this\._allRows, key\)/)
+  const paid = js.slice(js.indexOf('    _updateOrderPaid(id, index) {'))
+  assert.match(paid, /this\.getList\(false, true\)/)
+  assert.match(js, /toast\(payFailText\(res\), \{ duration: 2000 \}\)/)
+  assert.match(wxml, /wx:elif="\{\{item\.cmsTopic!=null\}\}"/)
+  assert.match(wxml, />已下架</)
+  assert.doesNotMatch(wxml, /已支付订单不受影响/)
+  assert.doesNotMatch(js, /\.\.\.'\)/)
+  assert.equal((wxss.match(/\.orderbox_li_bot_left \.moh-amount\{/g) || []).length, 1)
+  assert.doesNotMatch(wxml, /<text class="order-mode-tag">活动<\/text>/)
+})
+
+test('OR-036:订单详情未登录时结果面板给「登录」并重读同一单', () => {
+  const dir = 'subpackageMember/components/cy/scene-member-order-detail/'
+  assert.match(read(dir + 'index.wxml'), /primary-text="\{\{loginRequired \? '登录' : ''\}\}" bind:primary="onLoginRetry"/)
+  assert.match(read(dir + 'index.js'), /retryLogin\(this, app, function \(\) \{ this\.setData\(\{ loginRequired: false \}\); this\.getData\(orderId\); \}\);/)
+})

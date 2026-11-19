@@ -26,6 +26,17 @@ const { createRegistrationPaymentVerifier } = require('../../../../utils/checkou
 // 6-12:退款确认弹窗的截止话术只读后端返回的 refundInfo(可退状态与截止点都由后端 RefundPolicy 判)。
 // 前端不自算、不写死规则 —— 原先那句「已核销/已过开始时间不可退」与集合前 24h 的真实规则不一致,
 // 会让还能退的单被劝退。后端没给字段时只给中性话术,绝不替后端断言不可退。
+// OR-033:支付失败提示的统一人话映射 —— SDK 原始英文(requestPayment:fail …)不直接上屏。
+function payFailText(res) {
+  const raw = String((res && res.errMsg) || '')
+  if (!raw || /^[\x00-\x7F]*$/.test(raw) || /:fail/.test(raw)) return '支付未完成，请重试'
+  return raw
+}
+
+function filterOrderTab(rows, tab) {
+  return tab === '0' ? rows : rows.filter((item) => item.orderStateKey === tab)
+}
+
 function refundDeadlineText(row) {
   const info = row && row.refundInfo
   if (!info) return '退款规则以提交后的平台判定为准'
@@ -179,6 +190,7 @@ Component({
       }
       if (dedupe && that._listFetchInFlight && that._listMemberId === memberId) return
       if (that._listMemberId !== undefined && that._listMemberId !== memberId) {
+        that._allRows = null
         that.setData({ list: [], hasOrders: false, page_no: 1 })
       }
       that._listMemberId = memberId
@@ -245,18 +257,21 @@ Component({
               item.refundStateText = summary.refundText
               // RUN-43:实付款只写现金(微信实付),积分抵扣不计入;存量无拆分行按回落链兜底
               item.actualPaidAmount = resolveActualPaidAmount(item)
+              item.pendingPayAmount = item.payableAmount === null || item.payableAmount === undefined || item.payableAmount === '' ? null : Number(item.payableAmount)
               item.isFreeOrder = isFreeOrder(item)
               item.canRequestRefund = canRequestOrderRefund(item)
               return item
             })
-            const list = activeTab === '0'
-              ? allRows
-              : allRows.filter((item) => item.orderStateKey === activeTab)
+            // OR-031:全量行缓存在实例上,切筛选只在本地过滤;OR-029:服务端给 total 且还有下一页才开 hasMore
+            const prior = replace || that.data.page_no <= 1 ? [] : (that._allRows || [])
+            that._allRows = prior.concat(allRows)
+            const total = Number(res.data.total)
+            const pageSize = Number(app.getPageSize()) || 0
+            const list = filterOrderTab(that._allRows, activeTab)
             if (replace) pageMotion.enter(that, 'pmList'); that.setData({
-              list: replace ? list : that.data.list.concat(list),
-              hasOrders: replace ? rows.length > 0 : (that.data.hasOrders || rows.length > 0),
-              // 后端 list 返回全量(total=全量),再上拉会重复,关闭分页追加一次性渲染
-              hasMore: false,
+              list,
+              hasOrders: that._allRows.length > 0,
+              hasMore: Number.isFinite(total) && pageSize > 0 && rows.length >= pageSize && that._allRows.length < total,
             })
             if (rows.length < 1) that.setData({ nodata: true })
           } else {
@@ -279,7 +294,14 @@ Component({
     },
 
     switchTab(e) {
-      this.setData({ activeTab: e.detail.key, page_no: 1, list: [], nodata: false, errorMsg: '' })
+      const key = e.detail.key
+      const memberId = app.getUserID && app.getUserID()
+      if (this._allRows && memberId && memberId === this._listMemberId && !this.data.errorMsg) {
+        const list = filterOrderTab(this._allRows, key)
+        this.setData({ activeTab: key, list, nodata: list.length < 1 })
+        return
+      }
+      this.setData({ activeTab: key, page_no: 1, list: [], nodata: false, errorMsg: '' })
       this.getList()
     },
 
@@ -346,6 +368,8 @@ Component({
       const index = e.currentTarget.dataset.index
       const id = e.currentTarget.dataset.id
       const status = Number(e.currentTarget.dataset.status || 0)
+      // OR-030:支付中/确认支付结果中不允许同时取消
+      if (that.data.isPaying || that.data.verifyingPayment) return
       if (that._cancelPromptOpen || that._cancelRequestInFlight || that.data.cancellingId) return
       if (!id) {
         toast('获取订单信息失败')
@@ -386,7 +410,7 @@ Component({
         && that._finishCancellation === finishCancellation
       if (!id || that._cancelRequestInFlight || that.data.cancellingId) return
       that._cancelRequestInFlight = true
-      cyLoading.show('处理中...')
+      cyLoading.show('处理中…')
       that.setData({ cancellingId: Number(id) })
       const finishCancellation = () => {
         if (that._finishCancellation !== finishCancellation) return
@@ -499,7 +523,7 @@ Component({
         return
       }
       that.setData({ isPaying: true })
-      cyLoading.show('支付中...')
+      cyLoading.show('支付中…')
       that.payOrderRequest(id, index)
     },
 
@@ -527,7 +551,7 @@ Component({
         onPayVerifying() {
           if (!current()) return
           that.setData({ verifyingPayment: true })
-          cyLoading.show('确认支付结果...')
+          cyLoading.show('确认支付结果…')
         },
         onPaySuccess() {
           if (!current()) return
@@ -544,7 +568,7 @@ Component({
           if (!current()) return
           cyLoading.hide()
           that.setData({ isPaying: false, verifyingPayment: false })
-          toast((res && res.errMsg) || '支付失败，请重试', { duration: 2000 })
+          toast(payFailText(res), { duration: 2000 })
         },
         onPayUnknown() {
           if (!current()) return
@@ -573,8 +597,9 @@ Component({
     },
 
     _updateOrderPaid(id, index) {
-      const currentIndex = this.data.list.findIndex(row => String(row.id) === String(id))
-      if (currentIndex >= 0) this.setData({ ['list[' + currentIndex + '].registrationStatus']: 2 })
+      // OR-032:付款成功后以服务端为准重读列表,状态键/文案/可退款一并重算,不只改 registrationStatus
+      this.setData({ page_no: 1 })
+      this.getList(false, true)
       modal.show({
         title: '支付成功',
         content: '票已放入票夹，可随时出示入场码',
