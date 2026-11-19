@@ -6,7 +6,7 @@
 <view class="page" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
   <cy-nav-bar custom-back bind:back="goBack" />
   <cy-page-title title="俱乐部结算" safe-top="{{false}}" />
-  <cy-club-direct-ledger class="section" wx:if="{{summary && !summary.personal && clubId}}" kind="club" club-id="{{clubId}}" />
+  <cy-club-direct-ledger class="section" wx:if="{{summary && summary.isOwner && clubId}}" kind="club" club-id="{{clubId}}" />
   <!-- F11:本人作为场次收款人的自由探索参考结算,可「标记已结清」;没有就不摆。 -->
   <cy-fe-reference-settlement class="section" wx:if="{{summary && clubId}}" kind="payer" />
   <!-- 9-16 晚拍板第 5 条 + 9-17 总控:余额三段只给主理人本人,管理员不显示(isOwner 由 summary 接口判定) -->
@@ -44,7 +44,7 @@
         aria-label="{{withdrawState === 'zero' ? '联系平台客服提现，当前可提现为 0' : (withdrawState === 'unknown' ? '联系平台客服提现，可提现余额待确认' : '联系平台客服提现')}}"
         bindtap="goWithdraw">联系平台客服提现</button>
       <text class="withdraw-hint" wx:if="{{withdrawState === 'zero' && complaintWaiting}}">客诉期结束后可提现</text>
-      <text class="withdraw-hint" wx:elif="{{withdrawState === 'unknown'}}">{{summary.isOwner === false && !summary.personal ? '仅主理人可发起提现' : '—'}}</text>
+      <text class="withdraw-hint" wx:elif="{{withdrawState === 'unknown' && summary.isOwner === false && !summary.personal}}">仅主理人可发起提现</text>
       <!-- 2026-09-04 截图走查改:原文案是「已入账金额待确认」,而它正上方那张卡
            写着「已入账分润 ¥12,480.00」—— 一个说已入账、一个说待确认,自相矛盾,
            而且是在动钱的页面上。

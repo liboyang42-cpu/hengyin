@@ -388,7 +388,7 @@ test('本人视角保留服务端自身金额、客服提现和明细范围，�
   assert.match(h.navigations[0], /&personal=1$/)
   const wxml = fs.readFileSync(path.join(root, 'pages/club/settlement/index.wxml'), 'utf8')
   assert.match(wxml, /kind="login"/)
-  assert.match(wxml, /summary && !summary.personal && clubId/)
+  assert.match(wxml, /summary && summary.isOwner && clubId/)
   assert.match(wxml, /summary.isOwner \|\| summary.personal/)
   const earnings = fs.readFileSync(path.join(root, 'subpackageA/components/scene-asset-earnings/index.js'), 'utf8')
   assert.match(earnings, /openClubSettlement\(\).*_hasCurrentBalance\(\).*mine=1/)
