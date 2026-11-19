@@ -98,6 +98,9 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Autowired private WechatVerifiedPaymentFactService verifiedPaymentFacts;
     @Autowired private CmsRegistrationPaymentFactMapper registrationPaymentFactMapper;
 
+    /** FE-G11:商家自由探索按「承接完整」放行场次售票(见 ExploreSaleSnapshotGate)。 */
+    @Autowired(required = false)
+    private org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.support.FreeExploreSlotProgress> freeExploreSlotProgress;
     @Autowired
     @org.springframework.beans.factory.annotation.Qualifier("wechatPaymentSdkGateway")
     private org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.WechatPaymentOperations> paymentAttemptGateway;
@@ -2562,7 +2565,8 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     }
 
     private void assertRegistrationSellable(CmsActivity activity, CmsTopic topic, OmsTicket ticket, Date now) {
-        if (activity != null) ExploreSaleSnapshotGate.assertSessionClub(topic, activity.getClubId());
+        if (activity != null) ExploreSaleSnapshotGate.assertSessionClub(topic, activity.getClubId(),
+                freeExploreSlotProgress == null ? null : freeExploreSlotProgress.getIfAvailable());
         if (activity == null || !isFreeUgcActivityTopic(activity, topic)) {
             assertCommercialSaleOpen(topic, ticket, now);
             return;
