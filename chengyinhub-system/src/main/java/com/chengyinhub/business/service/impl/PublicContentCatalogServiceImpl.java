@@ -366,7 +366,7 @@ public class PublicContentCatalogServiceImpl implements IPublicContentCatalogSer
         if (snapshot != null && snapshot.get("saleSnapshotId") != null) {
             revision.setState("SALE_FROZEN");
             revision.setSaleSnapshotId(toLong(snapshot.get("saleSnapshotId")));
-            revision.setFrozenAt((Date) snapshot.get("frozenAt"));
+            revision.setFrozenAt(toDate(snapshot.get("frozenAt")));
             return revision;
         }
         boolean publishedConfig = (row.getPublishedConfigVersion() != null && row.getPublishedConfigVersion() > 0)
@@ -571,6 +571,16 @@ public class PublicContentCatalogServiceImpl implements IPublicContentCatalogSer
 
     private static int intOf(Object value) {
         return value == null ? 0 : Integer.parseInt(String.valueOf(value));
+    }
+
+    /** Map 结果里 DATETIME 列由驱动给 LocalDateTime，统一转回 Date（JVM 默认时区，与写入一致）。 */
+    private static Date toDate(Object value) {
+        if (value == null) return null;
+        if (value instanceof Date) return (Date) value;
+        if (value instanceof java.time.LocalDateTime) {
+            return Date.from(((java.time.LocalDateTime) value).atZone(java.time.ZoneId.systemDefault()).toInstant());
+        }
+        throw new IllegalStateException("无法识别的时间类型: " + value.getClass().getName());
     }
 
     private static Long toLong(Object value) {

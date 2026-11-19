@@ -277,6 +277,25 @@ class PublicContentCatalogServiceTest {
     }
 
     @Test
+    void saleSnapshotFrozenAtFromDriverLocalDateTimeIsConverted() {
+        PublicContentCatalogRow row = row(1L, "A", null, null);
+        when(mapper.selectCatalogItems(any(PublicCatalogQuery.class)))
+                .thenReturn(Collections.singletonList(row));
+        java.time.LocalDateTime frozen = java.time.LocalDateTime.of(2026, 11, 18, 10, 30);
+        Map<String, Object> snapshot = new HashMap<String, Object>();
+        snapshot.put("topicId", 1L);
+        snapshot.put("saleSnapshotId", 78L);
+        snapshot.put("frozenAt", frozen);
+        when(mapper.selectSaleRevisions(anyList())).thenReturn(Collections.singletonList(snapshot));
+
+        PublicContentCatalogItemVO item = service.list(new PublicCatalogQuery()).get(0);
+
+        assertEquals("SALE_FROZEN", item.getRevision().getState());
+        assertEquals(Date.from(frozen.atZone(java.time.ZoneId.systemDefault()).toInstant()),
+                item.getRevision().getFrozenAt());
+    }
+
+    @Test
     void noSnapshotAndNoPublishedConfigIsNotClaimedAsSellableRevision() {
         PublicContentCatalogRow row = row(1L, "A", null, null);
         when(mapper.selectCatalogItems(any(PublicCatalogQuery.class)))
