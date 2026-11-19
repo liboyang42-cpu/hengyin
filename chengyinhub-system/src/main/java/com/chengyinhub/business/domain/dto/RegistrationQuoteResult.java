@@ -295,6 +295,20 @@ public class RegistrationQuoteResult {
     public java.util.Date getPlatformPassValidTo() { return platformPassValidTo; }
     public void setPlatformPassValidTo(java.util.Date v) { this.platformPassValidTo = v; }
 
+    /** OR-028:自玩票有效期起点(报价时刻;下单时以建单时刻重算)。 */
+    private java.util.Date validFrom;
+    /** OR-028:自玩票到期时刻,与下单写入的 expires_at 同一规则。 */
+    private java.util.Date validTo;
+    /** OR-028:报价页简短条款。 */
+    private java.util.List<String> terms;
+
+    public java.util.Date getValidFrom() { return validFrom; }
+    public void setValidFrom(java.util.Date v) { this.validFrom = v; }
+    public java.util.Date getValidTo() { return validTo; }
+    public void setValidTo(java.util.Date v) { this.validTo = v; }
+    public java.util.List<String> getTerms() { return terms; }
+    public void setTerms(java.util.List<String> v) { this.terms = v; }
+
     /**
      * 票面合计(促销前,元)。= Σ 票种现价 × 张数,由服务端读 {@code oms_ticket.price} 算出。
      * 它与 {@link #payAmount} 的差额里同时含会员价与促销减免;分项见下面三个字段。

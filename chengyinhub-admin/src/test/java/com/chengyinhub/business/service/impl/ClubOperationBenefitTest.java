@@ -227,6 +227,11 @@ class ClubOperationBenefitTest {
                 "报价 " + quote.getPayAmount() + " 必须等于下单实收 " + pass.getPayableAmount());
         assertEquals(0, new BigDecimal("29.99").compareTo(quote.getPayAmount()));
         assertEquals(Integer.valueOf(0), quote.getPointsUsed(), "自玩通行证下单不抵积分,报价也不抵");
+        // OR-028:报价给出的到期与下单写入的 expires_at 同一规则(两次取 now 相差毫秒级,按分钟比)
+        org.junit.jupiter.api.Assertions.assertNotNull(quote.getValidFrom());
+        org.junit.jupiter.api.Assertions.assertTrue(Math.abs(quote.getValidTo().getTime()
+                - pass.getExpiresAt().getTime()) < 60_000L, "报价可玩至必须与下单到期一致");
+        org.junit.jupiter.api.Assertions.assertFalse(quote.getTerms().isEmpty());
         // 下单冻结了通行证三档快照(钟 = 主题履约窗开始);报价说的截止点/比例取同一口钟
         if (pass.getRefundDeadline() != null) {
             assertEquals(com.chengyinhub.business.util.RefundPolicy.sessionRefundDeadline(pass.getRefundDeadline()),

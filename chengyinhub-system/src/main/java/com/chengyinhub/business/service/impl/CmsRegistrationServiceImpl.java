@@ -1086,6 +1086,26 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         return windowEnd.after(now) && windowEnd.before(ninety) ? windowEnd : ninety;
     }
 
+    /** 「可玩至」的日期:到期落在上海零点 = 能玩的最后一天是前一天(与小程序 passWindow 同口径)。 */
+    static String selfPlayLastDayText(Date validTo) {
+        if (validTo == null) return null;
+        java.time.ZoneId shanghai = java.time.ZoneId.of("Asia/Shanghai");
+        java.time.ZonedDateTime at = validTo.toInstant().atZone(shanghai);
+        java.time.LocalDate last = at.toLocalTime().equals(java.time.LocalTime.MIDNIGHT)
+                ? at.toLocalDate().minusDays(1) : at.toLocalDate();
+        return last.getMonthValue() + "月" + last.getDayOfMonth() + "日";
+    }
+
+    /** OR-028:自玩票报价的简短条款,只复述既有规则。 */
+    static List<String> selfPlayQuoteTerms(Date validTo, boolean paid) {
+        List<String> terms = new ArrayList<>();
+        String last = selfPlayLastDayText(validTo);
+        if (last != null) terms.add("可玩至" + last + "，购买后即可开玩");
+        terms.add("有效期最长 90 天，不超过主题结束日");
+        if (paid) terms.add("退款按下单时的退款规则办理");
+        return terms;
+    }
+
     /**
      * 会员级幂等判定。
      *
@@ -1395,6 +1415,16 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             result.setPlatformPassCovered(Boolean.TRUE);
             result.setPlatformPassValidTo(passCoverage.validTo());
         }
+        // OR-028:报价即给出与下单同一规则的有效期(购后 90 天与主题履约窗取早,通行证领取不越过本段),
+        // 前端不再自己推「可玩至」。只读展示,不参与金额与 quoteSign。
+        Date validFrom = new Date();
+        Date validTo = selfPlayPassExpiry(topic, validFrom);
+        if (passCoverage != null && passCoverage.validTo() != null && passCoverage.validTo().before(validTo)) {
+            validTo = passCoverage.validTo();
+        }
+        result.setValidFrom(validFrom);
+        result.setValidTo(validTo);
+        result.setTerms(selfPlayQuoteTerms(validTo, payAmount.signum() > 0));
         if (payAmount.signum() > 0) {
             RefundPolicy.Snapshot passPolicy = RefundPolicy.snapshotSelfPlayPass(topic);
             if (passPolicy != null && passPolicy.deadline != null) {
