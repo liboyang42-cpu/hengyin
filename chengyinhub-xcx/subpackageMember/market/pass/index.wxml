@@ -8,7 +8,7 @@
     <cy-skeleton wx:if="{{state === 'loading'}}" type="card" count="2" />
     <cy-error wx:elif="{{state === 'error'}}" fill size="lg" title="{{errorTitle}}" retry="重试" bind:retry="load" class="cy-fade-in" />
     <block wx:else>
-      <cy-page-title class="cy-fade-in" title="{{card.name}}" safe-top="{{false}}" />
+      <cy-page-title title="{{card.name}}" safe-top="{{false}}" class="cy-fade-in" />
       <view class="mp__body cy-fade-in">
         <!-- r3-pass:金色城市通票由碎片拼起(票面字 = 服务端城市 / 类型) -->
         <view class="mp-hero"><cy-pass-object state="{{heroState}}" face="{{heroFace}}" reduced-motion="{{reducedMotion}}" /></view>

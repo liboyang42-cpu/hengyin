@@ -1,5 +1,6 @@
 const toast = require('../../../utils/toast.js'); const pageMotion = require('../../../utils/page-motion.js');
 const roleGuard = require('../../../utils/roleGuard.js');
+const imgFade = require('../../../utils/img-fade.js'); // motion-1118 v2:封面在占位色上淡入
 function openAddress() { return require('../../../utils/open-address.js') }
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
@@ -79,6 +80,7 @@ function currentRead(page, sessionRecovery) {
 
 Page({
   data: {
+    imgOn: {},
     typeTabs: TYPE_TABS,
     operationScope: '',
     typeTab: 'topic',
@@ -392,6 +394,8 @@ Page({
   // ===== 项目卡交互(沿旧版) =====
   // 第九轮 m1-9:卡上地址点开地图(活动有选点坐标,主题只有文字走缓存的地址解析)
   onAddressTap(e) { openAddress().openFromEvent(e); },
+
+  onImgFadeLoad(e) { imgFade.onImgFadeLoad.call(this, e) },
 
   onCardTap(e) {
     const item = e.currentTarget.dataset.item;

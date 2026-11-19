@@ -10,7 +10,7 @@
       <cy-error wx:elif="{{state === 'error'}}" title="积分明细加载失败" retry="重试" bind:retry="load" class="cy-fade-in" />
       <cy-empty fill class="cy-fill-state cy-fade-in" size="lg" wx:elif="{{state === 'empty'}}" kind="empty" title="还没有积分记录" />
       <block wx:else>
-        <cy-tabs class="cy-fade-in" variant="chip" tabs="{{filters}}" active="{{filter}}" bind:change="onFilter" />
+        <cy-tabs variant="chip" tabs="{{filters}}" active="{{filter}}" bind:change="onFilter" class="cy-fade-in" />
         <cy-empty fill class="cy-fill-state cy-fade-in" size="lg" wx:if="{{filterEmpty}}" kind="empty" title="{{filter === 'income' ? '还没有获得积分的记录' : '还没有使用积分的记录'}}" />
         <view class="ph-group" wx:for="{{groups}}" wx:for-item="group" wx:key="key" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
           <text class="ph-group__title">{{group.label}}</text>

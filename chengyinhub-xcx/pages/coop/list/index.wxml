@@ -175,7 +175,7 @@
     </view>
     <!-- 邀约提醒订阅须在点击手势内请求;空列表时更需要,所以不挂列表条件 -->
     <!-- 走查 v2 IMG_0752(2026-10-30):邀约提醒开关挪到消息页「协作邀请」标题旁(协作统一进消息),本页不再放 -->
-    <cy-empty class="cy-fade-in" size="lg" style="flex:1;min-height:0;" kind="empty" wx:if="{{chapterState === 'ready' && !chapterReceived.length && receivedApplyState === 'ready' && !receivedApplyErrorText && !receivedRegErrorText && !officialErrorText && !listErrorText && !received.length && !receivedApplies.length && !receivedRegs.length && !officialInvites.length}}" fill title="还没有收到协作邀请" cta="去发起邀请" bindcta="goInvite" />
+    <cy-empty size="lg" style="flex:1;min-height:0;" kind="empty" wx:if="{{chapterState === 'ready' && !chapterReceived.length && receivedApplyState === 'ready' && !receivedApplyErrorText && !receivedRegErrorText && !officialErrorText && !listErrorText && !received.length && !receivedApplies.length && !receivedRegs.length && !officialInvites.length}}" fill title="还没有收到协作邀请" cta="去发起邀请" bindcta="goInvite" class="cy-fade-in" />
     </block>
   </block>
 
@@ -259,7 +259,7 @@
       </view>
     </view>
     <!-- 同理:发件箱这一路/邀请列表失败时不许落「还没有发出…」 -->
-    <cy-empty class="cy-fade-in" size="lg" style="flex:1;min-height:0;" kind="empty" wx:if="{{chapterState === 'ready' && !chapterSent.length && sentApplyState === 'ready' && !sentApplyErrorText && !listErrorText && !sent.length && !sentApplies.length}}" fill title="还没有发出协作邀请" cta="去发起邀请" bindcta="goInvite" />
+    <cy-empty size="lg" style="flex:1;min-height:0;" kind="empty" wx:if="{{chapterState === 'ready' && !chapterSent.length && sentApplyState === 'ready' && !sentApplyErrorText && !listErrorText && !sent.length && !sentApplies.length}}" fill title="还没有发出协作邀请" cta="去发起邀请" bindcta="goInvite" class="cy-fade-in" />
     </block>
   </block>
 

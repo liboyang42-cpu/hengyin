@@ -35,7 +35,7 @@
              左封面;右侧 顶行(档期 · 状态靠右)/ 标题 / 地址;分隔线下底行写报名·浏览或承接进度。
              管理动作(上下架 / 删除…)走右上角「···」或长按。 -->
         <view class="mp-main">
-          <image lazy-load="true" class="mp-cover" src="{{item.cover || '/images/route_free_cover.png'}}" mode="aspectFill" />
+          <view class="mp-cover cy-img-ph"><image lazy-load="true" class="mp-cover__im cy-img-fade {{imgOn['p' + item.id] ? 'cy-img-fade--on' : ''}}" src="{{item.cover || '/images/route_free_cover.png'}}" mode="aspectFill" data-fade-key="p{{item.id}}" bindload="onImgFadeLoad" /></view>
           <view class="mp-body">
             <view class="mp-head">
               <view class="mp-dot" wx:if="{{item._dot}}"></view>
@@ -69,7 +69,7 @@
     <view class="mp-list">
       <view class="mp-card" wx:for="{{topicTemplates}}" wx:key="id" data-item="{{item}}" bindtap="onCardTap" hover-class="cy-pressed" hover-stay-time="80">
         <view class="mp-main">
-          <image lazy-load="true" class="mp-cover" src="{{item.cover || '/images/route_city_cover.png'}}" mode="aspectFill" />
+          <view class="mp-cover cy-img-ph"><image lazy-load="true" class="mp-cover__im cy-img-fade {{imgOn['t' + item.id] ? 'cy-img-fade--on' : ''}}" src="{{item.cover || '/images/route_city_cover.png'}}" mode="aspectFill" data-fade-key="t{{item.id}}" bindload="onImgFadeLoad" /></view>
           <view class="mp-body">
             <view class="mp-tit">{{item.title}}</view>
             <view class="mp-tags"><text class="mp-type">主题模板</text></view>
@@ -80,7 +80,7 @@
         <!-- r2-create(a3-v3-39 业主「和我的订单一样」):顶行 类型标签 · 广场状态 / 个人审核状态靠右;标题;引用与时长;
              审核意见;分隔线下底行放操作(同订单卡的按钮位)。 -->
         <view class="mp-main">
-          <image lazy-load="true" class="mp-cover" src="{{item.imgUrl || '/images/route_city_cover.png'}}" mode="aspectFill" />
+          <view class="mp-cover cy-img-ph"><image lazy-load="true" class="mp-cover__im cy-img-fade {{imgOn['l' + item.id] ? 'cy-img-fade--on' : ''}}" src="{{item.imgUrl || '/images/route_city_cover.png'}}" mode="aspectFill" data-fade-key="l{{item.id}}" bindload="onImgFadeLoad" /></view>
           <view class="mp-body">
             <view class="mp-head">
               <text class="mp-type">节点玩法</text>

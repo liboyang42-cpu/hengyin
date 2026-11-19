@@ -27,7 +27,7 @@ function assertG4Contract(overrides = {}) {
   // 读 token 真值而不是钉字面量,理由同 std-g1(2026-08-10 改底色时踩到)
   const pageBg = /--cy-color-bg-page:\s*(#[0-9A-Fa-f]{6})/.exec(source('style/merchant-light.wxss'))[1]
   assert.equal(nearbyJson.backgroundColor.toLowerCase(), pageBg.toLowerCase())
-  assert.match(nearbyWxml, /class="merchant-result"[^>]*wx:if="\{\{item\.name\}\}"/, '缺商家名时不渲染半成品卡')
+  assert.match(nearbyWxml, /class="merchant-result(?: cy-fade-in)?"[^>]*wx:if="\{\{item\.name\}\}"/, '缺商家名时不渲染半成品卡')
   assert.match(nearbyJs, /res\.data\.every\(validNearbyRow\)/,
     '任一附近商家缺名称或关键信息时必须整批 fail-closed，不得悄悄过滤后冒充完整列表')
   assert.match(nearbyWxml,

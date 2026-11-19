@@ -97,7 +97,7 @@
       <!-- CU-M-134:标题与说明几乎重复(「暂无可对接的俱乐部／平台还没有开放合作的俱乐部」)。
            CU-M-151:这一屏是从协作邀请空态「去发起邀请」推进来的,不能是一个只能看着的死胡同 ——
            给一个真能点的恢复动作(重新拉取合作对象),而不是再解释一遍平台口径。 -->
-      <cy-empty class="cy-fade-in" wx:if="{{!clubs.length}}" title="还没有可邀请的俱乐部" cta="刷新合作对象" bind:cta="retryTargets" />
+      <cy-empty wx:if="{{!clubs.length}}" title="还没有可邀请的俱乐部" cta="刷新合作对象" bind:cta="retryTargets" class="cy-fade-in" />
     </block>
 
     <block wx:else>
@@ -107,7 +107,7 @@
         <view class="target-main"><view class="target-name ep1">{{item.name}}</view><view class="target-meta ep1">{{item.suitActivityTypes || item.address || '开放承接'}}</view></view>
         <view class="target-action {{selectedMap[item.memberId] ? 'target-action--selected' : ''}}">{{selectedMap[item.memberId] ? '已选' : '邀请'}}</view>
       </view>
-      <cy-empty class="cy-fade-in" wx:if="{{!merchants.length}}" title="还没有可合作的商家" cta="刷新合作对象" bind:cta="retryTargets" />
+      <cy-empty wx:if="{{!merchants.length}}" title="还没有可合作的商家" cta="刷新合作对象" bind:cta="retryTargets" class="cy-fade-in" />
     </block>
 
     </view>

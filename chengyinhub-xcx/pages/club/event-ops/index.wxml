@@ -88,7 +88,7 @@
       <cy-skeleton wx:if="{{rosterState === 'loading'}}" type="list" count="3" />
       <cy-error load-failure wx:elif="{{rosterState === 'error'}}" title="名册加载失败" sub="{{rosterError}}" retry="重试" bind:retry="loadRoster" class="cy-fade-in" />
       <block wx:elif="{{rosterState === 'ready'}}">
-        <cy-empty class="cy-fade-in" wx:if="{{activeRoster.length === 0}}" size="sm" title="这一段暂时没有成员" />
+        <cy-empty wx:if="{{activeRoster.length === 0}}" size="sm" title="这一段暂时没有成员" class="cy-fade-in" />
         <view class="member-card cy-fade-in" wx:for="{{activeRoster}}" wx:key="memberId">
           <view class="member-mark">{{item.displayName ? item.displayName[0] : item.nickname[0]}}</view>
           <view class="member-main">

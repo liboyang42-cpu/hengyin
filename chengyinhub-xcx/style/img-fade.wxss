@@ -1,0 +1,23 @@
+/* ============================================================
+ * 图片加载淡入(motion-1118 v2)
+ *
+ * 封面 / 卡片图 / 缩略图 / 头像:先给一块与成图同尺寸的主题色占位,图片 bindload 后在占位上淡入;
+ * 加载失败(binderror)不标记,占位留着,不出现破图或空黑块。对标 App Store / 相册:占位 → 成图交叉淡入。
+ *
+ *   <view class="xx-cover cy-img-ph">                      ← 占位色挂在定尺寸的外框上(外框管尺寸、圆角、overflow)
+ *     <image class="cy-img-fade {{imgOn[key] ? 'cy-img-fade--on' : ''}}"
+ *            data-fade-key="{{key}}" bindload="onImgFadeLoad" … />   ← 处理函数见 utils/img-fade.js
+ *   </view>
+ *
+ * 只动 opacity,用 transition 不用 @keyframes;时长读 --cy-motion-fade-swap(200ms,与骨架屏淡切同源)。
+ * 系统「减弱动态效果」:app.wxss 全局把 transition 压到 0.01ms,这里再兜一份给隔离组件;
+ * App 内减少动效开关(根节点 .cy-motion-reduced)同样直接落地。
+ * 隔离组件(styleIsolation: isolated)收不到全局样式,要 @import 这一份,别抄定义。
+ * ============================================================ */
+.cy-img-ph { background-color: var(--cy-color-skeleton-base); }
+.cy-img-fade { opacity: 0; transition: opacity var(--cy-motion-fade-swap) var(--cy-ease-out); }
+.cy-img-fade.cy-img-fade--on { opacity: 1; }
+.cy-motion-reduced .cy-img-fade { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  .cy-img-fade { transition: none; }
+}

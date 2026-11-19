@@ -34,7 +34,7 @@ test('BL-04 页面接线:cy-tabs 切换 + 分组渲染 + 筛选空态', () => {
   const js = fs.readFileSync(path.join(dir, 'index.js'), 'utf8')
   const json = JSON.parse(fs.readFileSync(path.join(dir, 'index.json'), 'utf8'))
   assert.equal(json.usingComponents['cy-tabs'], '/components/cy/tabs/index')
-  assert.match(wxml, /<cy-tabs variant="chip" tabs="\{\{filters\}\}" active="\{\{filter\}\}" bind:change="onFilter" \/>/)
+  assert.match(wxml, /<cy-tabs variant="chip" tabs="\{\{filters\}\}" active="\{\{filter\}\}" bind:change="onFilter"(?: class="cy-fade-in")? \/>/)
   assert.match(wxml, /wx:for="\{\{groups\}\}" wx:for-item="group" wx:key="key"/)
   assert.match(wxml, /wx:if="\{\{filterEmpty\}\}"/)
   assert.match(js, /groups: groupByMonth\(list\.slice\(0, this\._shown\)\)/)

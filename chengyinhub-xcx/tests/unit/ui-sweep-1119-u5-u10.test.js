@@ -179,7 +179,7 @@ test('U10 优惠券列表:玩家深色(theme-dark),商家口径才浅色;空态�
 
 test('U10 优惠券列表:非商家身份后端 403 → 原地无权限态「当前身份不能查看优惠券」,不再落空白加载失败态', () => {
   const wxml = read('subpackageMember/coupon/coupon.wxml')
-  assert.match(wxml, /<cy-empty wx:elif="\{\{loadState === 'denied'\}\}" kind="no-permission" fill size="lg" title="当前身份不能查看优惠券" cta="\{\{isMerchant \? '返回' : '申请入驻'\}\}" bind:cta="onDenyCta" \/>/)
+  assert.match(wxml, /<cy-empty wx:elif="\{\{loadState === 'denied'\}\}" kind="no-permission" fill size="lg" title="当前身份不能查看优惠券" cta="\{\{isMerchant \? '返回' : '申请入驻'\}\}" bind:cta="onDenyCta"(?: class="cy-fade-in")? \/>/)
   const requests = []
   const { page, navigations } = mountPage('subpackageMember/coupon/coupon.js', { sendRequest: (o) => requests.push(o) })
   page.onLoad({})

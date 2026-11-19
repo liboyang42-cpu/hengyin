@@ -72,7 +72,7 @@ module.exports = { valid: valid };
               data-id="{{item.id}}" aria-label="查看{{item.displayName}}俱乐部档案" bind:tap="goClub" bind:action="goClub"  hover-class="cy-pressed" hover-stay-time="80"/>
           </view>
         </view>
-        <cy-empty class="cy-fade-in" wx:elif="{{!clubError}}" kind="empty" title="暂无可合作俱乐部" />
+        <cy-empty wx:elif="{{!clubError}}" kind="empty" title="暂无可合作俱乐部" class="cy-fade-in" />
       </block>
     </block>
   </view>

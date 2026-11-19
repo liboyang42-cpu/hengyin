@@ -33,7 +33,7 @@ test('a3-v3-22 订单卡:查看类动作是次级小药丸;横图封面按实际
   global.wx = new Proxy({}, { get: () => () => ({}) })
   try { require(path.join(root, D + 'index.js')) } catch (e) { /* 只取配置 */ }
   assert.ok(cfg && cfg.methods.onCoverLoad)
-  const self = { data: { wideCover: {} }, setData(p) { Object.keys(p).forEach((k) => { this.data.wideCover[k.split('.')[1]] = p[k] }) } }
+  const self = { data: { wideCover: {}, imgOn: {} }, setData(p) { Object.keys(p).forEach((k) => { const [bucket, id] = k.split('.'); this.data[bucket][id] = p[k] }) } } // motion-1118 v2:同一次 setData 还会标记 imgOn
   cfg.methods.onCoverLoad.call(self, { currentTarget: { dataset: { id: 7 } }, detail: { width: 800, height: 800 } })
   assert.deepEqual(self.data.wideCover, {})
   cfg.methods.onCoverLoad.call(self, { currentTarget: { dataset: { id: 7 } }, detail: { width: 1600, height: 900 } })

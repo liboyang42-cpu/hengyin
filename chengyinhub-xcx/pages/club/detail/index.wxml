@@ -296,7 +296,7 @@
               </view>
               <view class="member-report" wx:if="{{canSeeMembers && item.memberId != myMemberId}}" catchtap="reportClubMember" data-member-id="{{item.memberId}}" data-nickname="{{item.nickname || ''}}" aria-role="button" aria-label="向平台举报 {{item.nickname || '该成员'}}" hover-class="cy-pressed" hover-stay-time="80">举报</view>
             </view>
-            <cy-empty class="cy-fade-in" wx:if="{{members.length === 0}}" size="sm" title="暂无成员" />
+            <cy-empty wx:if="{{members.length === 0}}" size="sm" title="暂无成员" class="cy-fade-in" />
           </block>
         </block>
         <cy-empty wx:else size="sm" title="加入俱乐部后可查看成员" />
@@ -442,7 +442,7 @@
               <text class="club-stats-topic-meta">{{item.completed}} / {{item.participants}} · {{item.completionRateText}}</text>
             </view>
           </view>
-          <cy-empty class="cy-fade-in" wx:else size="sm" title="还没有可统计的项目数据" />
+          <cy-empty wx:else size="sm" title="还没有可统计的项目数据" class="cy-fade-in" />
         </block>
       </view>
 
@@ -568,7 +568,7 @@
           <cy-error load-failure wx:elif="{{coopPoolState === 'error'}}" title="合作池加载失败" sub="{{coopPoolError}}"
                     retry="重试" bind:retry="retryCoopPool" class="cy-fade-in" />
           <block wx:elif="{{coopPoolState === 'ready'}}">
-            <cy-empty class="cy-fade-in" wx:if="{{!coopPool.length}}" size="sm" title="暂无开放承接的主题"
+            <cy-empty wx:if="{{!coopPool.length}}" size="sm" title="暂无开放承接的主题" class="cy-fade-in"
                       />
             <view class="pool-card {{item.state === 'taken' ? 'is-dim' : ''}} cy-fade-in" wx:for="{{coopPool}}" wx:key="topicId">
               <view class="pool-card-top">
@@ -679,7 +679,7 @@
           </view>
           <cy-icon class="post-ref-opt-arrow" name="slide-arrow" size="28" />
         </view>
-        <cy-empty class="cy-fade-in" wx:if="{{postRefOptions.length === 0}}" size="sm" title="还没有可以带的记录" />
+        <cy-empty wx:if="{{postRefOptions.length === 0}}" size="sm" title="还没有可以带的记录" class="cy-fade-in" />
       </block>
     </view>
   </cy-sheet>
@@ -777,7 +777,7 @@
               <view class="member-remove" wx:if="{{(club.isOwner || canManageMembers || (club.viewerIsAdmin && item.role != 1)) && item.memberId !== club.memberId}}" catchtap="removeMember" data-member-id="{{item.memberId}}" data-member-name="{{item.nickname || '这位成员'}}" aria-role="button" aria-label="移除 {{item.nickname || '该成员'}}" hover-class="cy-pressed" hover-stay-time="80">移除</view>
             </view>
           </view>
-          <cy-empty class="cy-fade-in" wx:if="{{members.length === 0}}" size="sm" title="暂无成员" />
+          <cy-empty wx:if="{{members.length === 0}}" size="sm" title="暂无成员" class="cy-fade-in" />
         </block>
       </view>
 

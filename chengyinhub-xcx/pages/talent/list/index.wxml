@@ -106,7 +106,7 @@
           </view>
           <view wx:if="{{!item.isOwner}}" class="club-member-remove" catchtap="removeClubMember" data-member-id="{{item.memberId}}" data-member-name="{{item.nickname || '这位成员'}}" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="移除{{item.nickname || '该成员'}}">移除</view>
         </view>
-        <cy-empty class="cy-fade-in" wx:if="{{clubMembersLoaded && clubMembersState === 'empty'}}" title="暂无成员" />
+        <cy-empty wx:if="{{clubMembersLoaded && clubMembersState === 'empty'}}" title="暂无成员" class="cy-fade-in" />
       </block>
     </scroll-view>
   </cy-sheet>

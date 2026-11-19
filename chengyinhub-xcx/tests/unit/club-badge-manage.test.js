@@ -133,7 +133,7 @@ test('身份读取失败时按非主理人处理(fail-closed)', () => {
 
 test('视图:管理控件全部挂在 isOwner 条件下', () => {
   const view = fs.readFileSync(VIEW_PATH, 'utf8');
-  assert.match(view, /wx:if="\{\{isOwner\}\}" class="section">\s*<cy-btn[^>]*bindtap="openCreate"/);
+  assert.match(view, /wx:if="\{\{isOwner\}\}" class="section(?: cy-fade-in)?">\s*<cy-btn[^>]*bindtap="openCreate"/);
   assert.match(view, /<view wx:if="\{\{isOwner\}\}" class="badge-grant[^"]*" bindtap="openGrant"/);
   assert.match(view, /<cy-state-shell wx:elif="\{\{state === 'error'\}\}"/);
   assert.match(view, /<cy-danger-confirm id="dc" bind:confirm="onConfirmGrant"/);

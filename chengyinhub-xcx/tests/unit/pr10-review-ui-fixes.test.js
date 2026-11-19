@@ -350,7 +350,7 @@ test('设置页:我的收藏不带副标题;发票入口只在 userInvoice 开�
 
 test('成长中心:头像兜底用全站默认头像,页内静态图片资源都真实存在(不留空位)', () => {
   const wxml = read('subpackageP3/pages/growthcenter/index/index.wxml')
-  assert.match(wxml, /<image class="gc-score-avatar" src="\{\{profile\.avatarUrl \|\| '\/images\/d_profile\.png'\}\}"/)
+  assert.match(wxml, /<image class="gc-score-avatar[^"]*" src="\{\{profile\.avatarUrl \|\| '\/images\/d_profile\.png'\}\}"/) // motion-1118 v2:头像在占位色上淡入,类名可追加
   const statics = wxml.replace(/<!--[\s\S]*?-->/g, '').match(/'?(\/images\/[^'"}\s]+\.(?:png|svg|jpg))/g) || []
   assert.ok(statics.length >= 1)
   for (const ref of statics) {

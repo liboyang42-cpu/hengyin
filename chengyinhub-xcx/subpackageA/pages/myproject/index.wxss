@@ -26,7 +26,8 @@
 .mp-list { padding:8rpx var(--cy-page-x) 0; }
 .mp-card { display: flex; flex-direction: column; background: var(--cy-bg-card); border: 0; border-radius: var(--cy-radius-xl); padding:var(--cy-space-4) var(--cy-space-4); margin-top:var(--cy-space-3); }
 .mp-main { display: flex; align-items: center; }
-.mp-cover { width: 176rpx; height: 176rpx; border-radius: var(--cy-radius-md); background: var(--cy-bg-card-2); flex-shrink: 0; }
+.mp-cover { width: 176rpx; height: 176rpx; border-radius: var(--cy-radius-md); background: var(--cy-bg-card-2); flex-shrink: 0; overflow: hidden; }
+.mp-cover__im { display: block; width: 100%; height: 100%; } /* motion-1118 v2:外框管尺寸与占位色,图在框里淡入 */
 .mp-body { flex: 1; margin-left:var(--cy-space-3); overflow: hidden; }
 .mp-tit-row { display: flex; align-items: center; gap:var(--cy-space-1-5); }
 .mp-dot { width: var(--cy-legacy-14); height: var(--cy-legacy-14); border-radius: var(--cy-radius-pill); background: var(--cy-danger); flex-shrink: 0; }

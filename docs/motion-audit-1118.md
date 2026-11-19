@@ -40,7 +40,7 @@ iOS 现有三个动效的取值有改动：
 | cy-skeleton 换下后的分支（全仓 92 个 wxml，约 270 个分支） | 加载完成后，空态、错误态和内容直接挂载 | 骨架屏消失后新内容「啪」地出现，只有约 67 处之前挂了 cy-fade-in | App Store / Mail：占位换成内容时交叉淡入 | 补 cy-fade-in（复用 fade-in.wxss 里已有的 keyframes，不新增）；用到它的隔离组件补 @import；新增契约，防止以后回退 | S ✅ |
 | cy-tabs icon 档 | 用字面值 .25s、.45s 加自定义过冲曲线、.3s 加默认 ease | 时长和曲线不在 token 梯子上；开了减少动效后，只有图标停，透明度和下划线还在动 | iOS 分段控件：220ms 标准曲线 | 改为 standard 加 ease-standard，图标用 slow 加 ease-spring；开了减少动效时三处一起停 | S ✅ |
 | cy-loading-mask 转圈 | 900ms 一圈 | 和 cy-btn、cy-empty 同样形制的转圈（700ms）转速不一样 | 系统转圈全 App 同速 | 改读 --cy-motion-spinner-cycle | S ✅ |
-| `<block wx:else>` 内容分支（85 处） | 内容直接出现 | block 不生成节点，挂不上 class | 同上 | 需要逐页把 block 换成 view，或给子节点逐个挂 class，会动版式结构 | L（留档） |
+| `<block wx:else>` 内容分支（85 处） | 内容直接出现 | block 不生成节点，挂不上 class | 同上 | v2：不换结构，给分支里每个直接子元素挂 cy-fade-in（嵌套 block 递归；原生组件、自带入场的子元素跳过），62 个 wxml 共 86 处、303 个子元素 | ✅ v2 |
 | 玩法与原型页（play / roam / pass-reveal / look-transition / ai-insight / ai-npc / signup / topic 首页等） | 字面时长和曲线是照业主定稿原型逐值写的 | 不读 token | 统一时长梯子 | 收回 token 就等于改业主已批准的设计，要业主逐屏拍板 | L（留档） |
 | page-motion 交错延迟（30ms 一级，最多 240ms） | 多个列表页各写一份 nth-child 延迟 | 字面值，但属于交错步长，不是时长 | — | 可以收成 `--cy-motion-stagger`，纯重构 | L（留档，收益低） |
 
@@ -279,7 +279,7 @@ iOS 字面动画清单：
 
 ## 5. L 项汇总（只留档，本轮不做）
 
-1. 小程序 85 处 `<block>` 内容分支补淡入：要动结构，得逐页核对版式。
+1. ~~小程序 85 处 `<block>` 内容分支补淡入~~：v2 已落地（见第 8 节）。
 2. 小程序玩法和原型页里的字面时长（play / roam / pass-reveal / look-transition / ai-insight / ai-npc / signup / topic 首页 / landing 等）：这些是业主定稿的原型值，收回 token 等于改设计。
 3. 小程序 page-motion 交错延迟收成 stagger token：纯重构，收益低。
 4. iOS 统一加载容器（`.redacted` 占位加淡切），覆盖首页、详情、搜索等页面里 352 个只有转圈的加载态：要新组件，也要定占位样式。
@@ -304,3 +304,22 @@ iOS 字面动画清单：
 - M / L 项都留在本文档（第 2、4、5 节）。
 
 STATUS: S 项全部落地；iOS 改动已在 CI 编译并跑单测/UI 用例（结果见 PR），小程序未在开发者工具截图自验，需负责人在开发者工具和真机上按 PR STATUS 评论逐页核对
+
+## 8. v2（2026-11-19）：页面打开时图片与数字不再「啪」地出现
+
+负责人在微信开发者工具里录了 master 2dc79dcf 的开页帧（测试后端，图片慢）。以下是录到的问题和处理：
+
+| 页面 | 录到的现象 | 处理 |
+|---|---|---|
+| `pages/topic/index`（路线详情） | 约 2.5 秒只有黑底加标题，之后封面照片突然出现 | 封面屏有图时先铺主题占位色，Ken Burns 图层（`.kb`）在第一张图 bindload 后淡入；单图封面同样处理。第二屏头图的 swiper 先铺占位色，照片在上面淡入。头图区本来就是定高（90vh，swiper 绝对定位），照片到了版式不动 |
+| `subpackageMember/signup`（票夹） | 卡片滑上来时是空的深色块，之后照片突然出现 | 封面框 `.wc__im` 挂占位色，随卡一起滑入；照片 bindload 后淡入 |
+| `subpackageA/pages/myproject` | 缩略图先空白再突然出现 | 缩略图改为「定尺寸外框（占位色）+ 框里的图淡入」，外框沿用原尺寸和圆角 |
+| `subpackageMember/order/order`（卡片组件 scene-member-order-history） | 同上 | 外框挂占位色，图淡入；宽图换框与淡入放在同一次 setData 里，图在最终的框里淡入 |
+| `subpackageP3/pages/growthcenter` | 积分先显示旧值 31，再跳到 50 | 新回包改写已经显示的积分时，从屏上的值数到新值（`page-motion.countFrom`）；起点和新值放在同一次 setData 里，不会先闪一帧。头像和徽章图标也用了占位色加淡入 |
+
+共用写法：
+- `style/img-fade.wxss`：`.cy-img-ph` 是占位色（`--cy-color-skeleton-base`，跟着主题变），`.cy-img-fade` / `.cy-img-fade--on` 只过渡 opacity，用 transition 不用 @keyframes，时长读 `--cy-motion-fade-swap`。系统减少动效设置和 `.cy-motion-reduced` 下都直接落地；用 App 内减少动效开关的页面（topic / signup）各补了一行。经 `components.wxss` 全局引入，隔离组件需要自己 @import。
+- `utils/img-fade.js`：`onImgFadeLoad` 只在 bindload 时标记 `imgOn[key]`；binderror 不标记，占位色留着。
+- L2 不动：业主定稿的字面时长（Ken Burns 1.2s/9s、票夹卡 .45s、模糊背景 .8s 等）原样保留，淡入加在外层或单独的图层上。
+
+契约：`tests/unit/motion-1118-contract.test.js` 新增 ④（block 分支子元素淡入及负控）、⑤（img-fade 的样式、处理函数、列出页面的远程图和占位外框）、⑥（countFrom 和成长中心的接线）。

@@ -11,7 +11,7 @@
     <cy-error wx:elif="{{errorText && !hasPreview}}" fill title="定价信息加载失败" sub="{{errorText}}"
               retry="重试" bind:retry="preview" class="cy-fade-in" />
     <block wx:else>
-      <cy-inline-error class="cy-fade-in" wx:if="{{errorText && hasPreview}}" title="最新定价暂未取回" sub="{{errorText}}" action="重试" bind:action="preview" />
+      <cy-inline-error wx:if="{{errorText && hasPreview}}" title="最新定价暂未取回" sub="{{errorText}}" action="重试" bind:action="preview" class="cy-fade-in" />
       <view wx:if="{{loading && hasPreview}}" class="pg-refreshing cy-fade-in" aria-role="status" aria-live="polite">正在确认最新定价…</view>
       <cy-tabs wx:if="{{!isFreeExplore}}" class="pg-tabs cy-fade-in" variant="chip" tabs="{{typeTabs}}" active="{{subType}}" bind:change="chooseType" />
 

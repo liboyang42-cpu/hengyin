@@ -23,6 +23,7 @@ function loadPage() {
       if (r.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
       if (r.endsWith('/utils/toast.js')) return () => {}
       if (r.endsWith('/utils/ticket-expiry.js')) return require('../../utils/ticket-expiry.js')
+      if (r.endsWith('/utils/img-fade.js')) return require('../../utils/img-fade.js') // motion-1118 v2:票卡封面加载淡入
       throw new Error('unexpected require: ' + r)
     },
   }

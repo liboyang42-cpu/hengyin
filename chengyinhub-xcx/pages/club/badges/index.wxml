@@ -12,13 +12,13 @@
                   primary="重新加载" bind:primary="retryLoad" fill size="lg" class="cy-fade-in" />
   <block wx:else>
     <text wx:if="{{refreshing}}" class="badge-refreshing cy-refresh-float" style="top: {{statusBarHeight + navBarHeight}}px;" aria-role="status">正在确认勋章列表…</text>
-    <cy-inline-error class="cy-fade-in" wx:if="{{refreshError}}" title="列表没刷新成功" sub="{{refreshError}}" action="重新加载" bind:action="retryLoad" />
+    <cy-inline-error wx:if="{{refreshError}}" title="列表没刷新成功" sub="{{refreshError}}" action="重新加载" bind:action="retryLoad" class="cy-fade-in" />
 
     <view wx:if="{{isOwner}}" class="section cy-fade-in">
       <cy-btn variant="primary" bindtap="openCreate">创建勋章</cy-btn>
     </view>
 
-    <cy-state-shell class="cy-fade-in" wx:if="{{state === 'empty'}}" kind="empty" title="还没有俱乐部勋章"
+    <cy-state-shell wx:if="{{state === 'empty'}}" kind="empty" title="还没有俱乐部勋章" class="cy-fade-in"
                     />
 
     <view wx:if="{{state === 'ready'}}" class="section cy-fade-in">

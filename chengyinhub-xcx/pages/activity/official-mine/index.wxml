@@ -12,7 +12,7 @@
     <block wx:else>
       <view wx:if="{{refreshing}}" class="om-sync cy-fade-in" aria-role="status" aria-live="polite">正在更新发布记录…</view>
       <view class="om-sec cy-fade-in">我发起的活动 · {{events.length}}</view>
-      <cy-empty class="cy-fade-in" wx:if="{{!events.length}}" title="还没发过活动" />
+      <cy-empty wx:if="{{!events.length}}" title="还没发过活动" class="cy-fade-in" />
       <view wx:for="{{events}}" wx:key="id" class="om-card cy-fade-in" data-id="{{item.id}}" bindtap="openEvent" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="查看{{item._title}}详情，{{item._st}}">
         <view class="om-row"><text class="om-t">{{item._title}}</text><cy-badge type="status" variant="neutral" label="{{item._st}}" /></view>
         <text class="om-sub">{{item._city}}{{item._category ? ' · ' + item._category : ''}}</text>
@@ -20,7 +20,7 @@
       </view>
 
       <view class="om-sec cy-fade-in">我发的通知 · {{broadcasts.length}}</view>
-      <cy-empty class="cy-fade-in" wx:if="{{!broadcasts.length}}" title="还没发过通知" />
+      <cy-empty wx:if="{{!broadcasts.length}}" title="还没发过通知" class="cy-fade-in" />
       <!-- BL-80:点通知卡读 GET /api/official/broadcast/{id}/stats(仅发布者本人),复盘就地显示在原触达行 -->
       <view wx:for="{{broadcasts}}" wx:key="id" class="om-card cy-fade-in" data-index="{{index}}" bindtap="openBroadcastStats"
             hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="查看{{item._title}}的触达与点击复盘">

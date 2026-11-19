@@ -179,7 +179,7 @@ test('详情页承接搬来的合作动作,底部动作条不塞这些按钮', (
   for (const handler of ['contactPartner', 'openPerkPick', 'reviewCoop', 'cancelAccepted']) {
     assert.match(wxml, new RegExp('bindtap="' + handler + '"'), handler + ' 必须落在协作详情页');
   }
-  const acts = region(wxml, '<view class="acts">', '\n    </view>');
+  const acts = region(wxml, '<view class="acts', '\n    </view>');
   assert.doesNotMatch(acts, /contactPartner|openPerkPick|reviewCoop|cancelAccepted/,
     '底部动作条不允许再堆这些动作');
   // 动作条里各状态分支互斥:逐分支验证并排按钮 ≤2(整块总数会把互斥分支加在一起,没有意义)

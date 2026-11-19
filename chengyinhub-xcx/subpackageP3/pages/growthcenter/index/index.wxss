@@ -15,7 +15,8 @@ page { background: var(--cy-bg-page); }
 .gc-score-card { margin: 0 var(--gc-page-x); }
 .gc-profile-row { display: flex; align-items: center; justify-content: space-between; gap: var(--gc-space-3); min-height: 48px; }
 .gc-score-person { display: flex; align-items: center; gap: var(--gc-space-3); flex: 1; min-width: 0; }
-.gc-score-avatar { width: var(--gc-space-8); height: var(--gc-space-8); border-radius: var(--cy-radius-pill); flex: none; }
+.gc-score-avatar { width: var(--gc-space-8); height: var(--gc-space-8); border-radius: var(--cy-radius-pill); flex: none; overflow: hidden; }
+.gc-score-avatar__im { display: block; width: 100%; height: 100%; } /* motion-1118 v2:外框管尺寸与占位色,头像在框里淡入 */
 .gc-profile-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--gc-font-subtitle); line-height: 38px; font-weight: 700; }
 .gc-score-line { display: flex; align-items: center; justify-content: flex-end; gap: var(--gc-space-2); flex: none; }
 .gc-score-value { font-size: var(--gc-type-data-xl); line-height: 48px; font-weight: 600; font-variant-numeric: tabular-nums; }

@@ -64,7 +64,7 @@
         data-poiid="{{item.id}}" bind:action="retryCancel" />
     </view>
 
-    <cy-empty class="cy-fade-in" size="lg" style="flex:1;min-height:0;" kind="empty"
+    <cy-empty size="lg" style="flex:1;min-height:0;" kind="empty" class="cy-fade-in"
       wx:if="{{nodes.length === 0 && applications.length === 0}}" fill
       title="还没有节点" sub="申请上漫游地图"
       cta="{{merchantAccess.canManageProjects && quotaState === 'ready' && used < max ? '投放节点' : ''}}" bind:cta="goCreate" />

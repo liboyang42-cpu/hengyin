@@ -20,7 +20,7 @@
                    sub="{{staleError}}" action="重试更新" bind:action="retryLoadTeams" />
 
   <!-- 加载中 -->
-  <cy-skeleton class="cy-fade-in" wx:if="{{teamsState === 'loading'}}" type="card" count="3" loading-label="正在加载报名名册" />
+  <cy-skeleton wx:if="{{teamsState === 'loading'}}" type="card" count="3" loading-label="正在加载报名名册" class="cy-fade-in" />
 
   <!-- 业务失败 / 网络失败:都不能落入空态 -->
   <cy-error load-failure class="cy-fade-in" wx:elif="{{teamsState === 'business-error'}}" title="报名名册加载失败" retry="重新加载" bind:retry="retryLoadTeams" />

@@ -35,7 +35,7 @@
   <block wx:else>
     <view class="inline-state cy-fade-in" wx:if="{{actionReceipt}}" aria-role="status" aria-live="polite">{{actionReceipt}}</view>
     <!-- 行内错误走统一组件承接(U6:裸错误文案必须带恢复出口;这里是说明态,没有可重试的动作) -->
-    <cy-inline-error class="cy-fade-in" wx:if="{{actionError}}" kind="data" title="这个操作没完成" sub="{{actionError}}" />
+    <cy-inline-error wx:if="{{actionError}}" kind="data" title="这个操作没完成" sub="{{actionError}}" class="cy-fade-in" />
 
     <!-- 走查 v2(业主 2026-10-30「协作详情还是很乱」):上面一张主题卡把「谁、哪个主题、邀你接什么、什么状态」说完,
          下面条款 / 留言 / 操作各一张卡。联系方式并进条款卡,不再单独一行挂在标题下。 -->

@@ -75,7 +75,7 @@
 
     <block wx:if="{{applicantsState}}">
       <view class="team-section-title cy-fade-in">入队申请{{applicants.length ? ' · ' + applicants.length : ''}}</view>
-      <cy-skeleton class="cy-fade-in" wx:if="{{applicantsState === 'loading'}}" type="list" count="1" loading-label="正在读取入队申请" />
+      <cy-skeleton wx:if="{{applicantsState === 'loading'}}" type="list" count="1" loading-label="正在读取入队申请" class="cy-fade-in" />
       <cy-inline-error wx:elif="{{applicantsState === 'error'}}" title="入队申请没读到" action="重试" bind:action="retryApplicants" class="cy-fade-in" />
       <view wx:else class="team-card cy-fade-in">
         <view wx:if="{{!applicants.length}}" class="team-member"><view class="team-member-main"><view class="team-member-role">暂无申请</view></view></view>
@@ -113,8 +113,8 @@
     <!-- 定向开关关闭 / 普通队伍 / 非成员(无法确认是否定向队)不适用看板:整段不渲染,不给普通队伍挂定向提示。
          原型 B T-32:成员 × 节点矩阵(横滑),最后一行写全队是否完成;排名名次按服务端顺排。 -->
     <view wx:if="{{boardState === 'loading' || boardState === 'error' || boardState === 'login' || boardState === 'ready'}}" class="team-section-title cy-fade-in">队伍进度</view>
-    <cy-skeleton class="cy-fade-in" wx:if="{{boardState === 'loading'}}" type="list" count="2" loading-label="正在加载队伍进度" />
-    <cy-inline-error class="cy-fade-in" wx:if="{{boardState === 'error' || boardState === 'login'}}"
+    <cy-skeleton wx:if="{{boardState === 'loading'}}" type="list" count="2" loading-label="正在加载队伍进度" class="cy-fade-in" />
+    <cy-inline-error wx:if="{{boardState === 'error' || boardState === 'login'}}" class="cy-fade-in"
       title="{{boardState === 'login' ? boardMessage : '队伍进度加载失败'}}" action="{{boardState === 'login' ? '登录' : '重试'}}" bind:action="retryBoard" />
     <block wx:if="{{boardState === 'ready' && board}}">
       <view class="team-card cy-fade-in">
@@ -132,8 +132,8 @@
         </scroll-view>
       </view>
       <view class="team-section-title cy-fade-in">本场队伍排名</view>
-      <cy-skeleton class="cy-fade-in" wx:if="{{rankingState === 'loading'}}" type="list" count="2" loading-label="正在加载队伍排名" />
-      <cy-inline-error class="cy-fade-in" wx:if="{{rankingState === 'error'}}" title="队伍排名加载失败" action="重试" bind:action="retryBoard" />
+      <cy-skeleton wx:if="{{rankingState === 'loading'}}" type="list" count="2" loading-label="正在加载队伍排名" class="cy-fade-in" />
+      <cy-inline-error wx:if="{{rankingState === 'error'}}" title="队伍排名加载失败" action="重试" bind:action="retryBoard" class="cy-fade-in" />
       <view wx:if="{{rankingState === 'ready'}}" class="team-card cy-fade-in">
         <cy-empty wx:if="{{!boardRanks.length}}" title="暂无队伍排名" />
         <view class="team-member" wx:for="{{boardRanks}}" wx:key="teamId">

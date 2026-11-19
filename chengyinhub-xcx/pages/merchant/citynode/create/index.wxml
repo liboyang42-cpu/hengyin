@@ -63,11 +63,11 @@
             <cy-btn class="cnc-addr-action" variant="secondary" size="sm" bind:tap="repick">重新选择</cy-btn>
           </view>
         </block>
-        <cy-btn class="cy-fade-in" wx:if="{{!pickedFromProfile || addressConfirmed}}" variant="secondary" size="sm" bind:tap="repick">重新选择店址</cy-btn>
+        <cy-btn wx:if="{{!pickedFromProfile || addressConfirmed}}" variant="secondary" size="sm" bind:tap="repick" class="cy-fade-in">重新选择店址</cy-btn>
       </block>
       <block wx:else>
         <view class="cnc-hint cy-fade-in">请在地图上选择店门口</view>
-        <cy-btn class="cy-fade-in" variant="secondary" bind:tap="repick">在地图上标店址</cy-btn>
+        <cy-btn variant="secondary" bind:tap="repick" class="cy-fade-in">在地图上标店址</cy-btn>
       </block>
     </view>
 

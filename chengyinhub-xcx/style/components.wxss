@@ -10,6 +10,8 @@
 @import './fade-in.wxss';
 @import './motion-entry.wxss';
 @import './addr-tap.wxss';
+/* 图片加载淡入:占位色 + bindload 后淡入(motion-1118 v2,定义在 style/img-fade.wxss) */
+@import './img-fade.wxss';
 
 /* —— 按钮 —— */
 .cy-btn {

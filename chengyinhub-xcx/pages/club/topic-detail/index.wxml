@@ -514,7 +514,7 @@
         <cy-switch checked="{{setting.coopOpen}}" disabled="{{!setting.canManage || settingSaving}}"
           accessibility-label="开放商家承接" bind:change="onSettingToggle" data-key="coopOpen" />
       </view>
-      <cy-club-director-row-list class="cy-fade-in" rows="{{setting.chapterRows}}" surface="raised" />
+      <cy-club-director-row-list rows="{{setting.chapterRows}}" surface="raised" class="cy-fade-in" />
 
       <text class="tset-label">在俱乐部页的展示</text>
       <view class="tset-row cy-fade-in">
@@ -553,7 +553,7 @@
     <cy-empty wx:elif="{{merchantState === 'denied'}}" title="{{merchantDeniedReason || '商家信息获取失败'}}" class="cy-fade-in" />
     <cy-error load-failure wx:elif="{{merchantState !== 'ready'}}" title="商家信息获取失败" retry="重试" bind:retry="loadMerchants" class="cy-fade-in" />
     <block wx:else>
-      <cy-empty class="cy-fade-in" wx:if="{{!merchantRows.length}}" title="这个主题还没有承接商家" />
+      <cy-empty wx:if="{{!merchantRows.length}}" title="这个主题还没有承接商家" class="cy-fade-in" />
       <view wx:for="{{merchantRows}}" wx:key="nodeId" class="cli-row {{index === 0 ? 'cli-row--first' : ''}} cy-fade-in">
         <view class="cli-ava">{{item.initial}}</view>
         <view class="cli-main">
@@ -592,7 +592,7 @@
           data-value="{{item.value}}" bindtap="onCustomerFilter"
           aria-role="button" aria-label="只看{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
       </view>
-      <cy-empty class="cy-fade-in" wx:if="{{!customerRows.length}}" title="{{customerFilter ? '这一档还没有人' : '还没有人报名'}}" sub="{{customerFilter ? '换个筛选试试' : ''}}" />
+      <cy-empty wx:if="{{!customerRows.length}}" title="{{customerFilter ? '这一档还没有人' : '还没有人报名'}}" sub="{{customerFilter ? '换个筛选试试' : ''}}" class="cy-fade-in" />
       <view wx:for="{{customerRows}}" wx:key="key" class="cli-row {{index === 0 ? 'cli-row--first' : ''}} cy-fade-in">
         <view class="cli-ava">{{item.initial}}</view>
         <view class="cli-main">

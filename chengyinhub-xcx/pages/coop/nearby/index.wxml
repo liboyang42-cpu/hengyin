@@ -39,7 +39,7 @@
       </view>
     </view>
     </block>
-    <cy-empty class="cy-fade-in" size="lg" style="flex:1;min-height:0;" kind="empty" wx:else fill title="附近暂无商家" cta="刷新附近商家" bind:cta="retry"></cy-empty>
+    <cy-empty size="lg" style="flex:1;min-height:0;" kind="empty" wx:else fill title="附近暂无商家" cta="刷新附近商家" bind:cta="retry" class="cy-fade-in"></cy-empty>
   </block>
 
   <!-- aaa 标准:未定位/空态统一垂直居中 + 放大文字图片(cy-error 原生 fill 变体,不再自己包一层) -->

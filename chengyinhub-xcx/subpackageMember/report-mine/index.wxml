@@ -12,8 +12,8 @@
                       primary="重试" bind:primary="retry" class="cy-fade-in" />
       <cy-state-shell wx:elif="{{state === 'empty'}}" kind="empty" title="还没有举报记录" class="cy-fade-in" />
       <block wx:else>
-        <cy-tabs class="cy-fade-in" variant="chip" tabs="{{tabs}}" active="{{tab}}" bind:change="onTab" />
-        <cy-state-shell class="cy-fade-in" wx:if="{{!rows.length}}" kind="empty"
+        <cy-tabs variant="chip" tabs="{{tabs}}" active="{{tab}}" bind:change="onTab" class="cy-fade-in" />
+        <cy-state-shell wx:if="{{!rows.length}}" kind="empty" class="cy-fade-in"
                         title="{{tab === 'decided' ? '还没有已出结论的举报' : '没有处理中的举报'}}" />
         <view class="rp-row cy-fade-in" wx:for="{{rows}}" wx:key="id" data-id="{{item.id}}" bindtap="openDetail"
               aria-role="button" aria-label="{{item.targetText}}，{{item.reasonText}}，{{item.stageText}}，查看进度"

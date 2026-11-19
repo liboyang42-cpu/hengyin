@@ -97,6 +97,7 @@ Component({
   data: {
     // r2 a3-v3-22:主题图是横图时封面改横版(按图片实际宽高判断,只在本机生效,不改数据)
     wideCover: {},
+    imgOn: {}, // motion-1118 v2:封面 bindload 后在占位色上淡入(style/img-fade.wxss)
     activeTab: '0',
     orderTabs: [
       { key: '0', label: '全部' },
@@ -325,8 +326,10 @@ Component({
       const id = e.currentTarget.dataset.id
       const w = e.detail && e.detail.width
       const h = e.detail && e.detail.height
-      if (!id || !w || !h || this.data.wideCover[id]) return
-      if (w >= h * 1.25) this.setData({ ['wideCover.' + id]: true })
+      if (!id) return
+      // 宽图换框与淡入同一次 setData:图在最终框里淡入,不先在方框里闪一下
+      if (w && h && !this.data.wideCover[id] && w >= h * 1.25) this.setData({ ['imgOn.' + id]: true, ['wideCover.' + id]: true })
+      else if (!this.data.imgOn[id]) this.setData({ ['imgOn.' + id]: true })
     },
 
     // 唯一与宿主形态相关的分支:场景里推 H10 子层,页面壳里由壳自己 navigateTo。

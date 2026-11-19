@@ -41,7 +41,7 @@
         </view>
       </view>
     </block>
-    <cy-empty class="cy-fade-in" size="lg" style="flex:1;min-height:0;" kind="empty" wx:else fill title="还没有合作结算" />
+    <cy-empty size="lg" style="flex:1;min-height:0;" kind="empty" wx:else fill title="还没有合作结算" class="cy-fade-in" />
   </block>
 
   <view wx:else class="err-wrap cy-fade-in" aria-role="alert">

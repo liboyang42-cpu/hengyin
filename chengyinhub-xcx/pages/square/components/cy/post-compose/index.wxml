@@ -126,11 +126,11 @@
       <cy-skeleton wx:if="{{activityLoading}}" type="list" count="3" />
       <cy-error load-failure wx:elif="{{activityError}}" title="活动列表加载失败" sub="只显示你参加过或主办的活动" retry="重试" bind:retry="loadActivityOptions" class="cy-fade-in" />
       <block wx:else>
-        <cy-cell class="cy-fade-in" wx:for="{{activityList}}" wx:key="activityId"
+        <cy-cell wx:for="{{activityList}}" wx:key="activityId" class="cy-fade-in"
                  title="{{item.name}}" description="{{item.sourceLabel}}"
                  data-index="{{index}}" data-activity-id="{{item.activityId}}"
                  bind:tap="onPickActivity" />
-        <cy-empty class="cy-fade-in" wx:if="{{!activityList.length}}" size="sm" title="还没有可关联的活动" />
+        <cy-empty wx:if="{{!activityList.length}}" size="sm" title="还没有可关联的活动" class="cy-fade-in" />
       </block>
     </view>
   </cy-sheet>

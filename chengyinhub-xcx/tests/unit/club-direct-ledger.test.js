@@ -154,7 +154,7 @@ test('合法内部记录编号原样展示，缺失或非法编号不伪造也�
   // owner 选项 B：内部 SettlementClaim id 只作“记录编号”供联系客服，不称结算单/收据/平台单号。
   assert.match(wxml, /wx:if="\{\{item\.claimNo\}\}"[^>]*>记录编号 \{\{item\.claimNo\}\}/);
   assert.doesNotMatch(wxml, /结算单|收据|平台单号/);
-  assert.match(wxml, /class="direct-support"[^>]*wx:if="\{\{ledger\.rows\.length\}\}"[\s\S]*open-type="contact"[^>]*>联系客服</);
+  assert.match(wxml, /class="direct-support(?: cy-fade-in)?"[^>]*wx:if="\{\{ledger\.rows\.length\}\}"[\s\S]*open-type="contact"[^>]*>联系客服</);
   assert.doesNotMatch(wxml, /bindtap=.*pay|仲裁/);
 });
 

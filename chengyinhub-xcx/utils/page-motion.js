@@ -54,6 +54,25 @@ function countIn(page, key, options) {
   stops[key] = () => { clearTimeout(hold); if (stopCount) stopCount(); };
 }
 
+/* 已在屏上的数被新回包改写(motion-1118 v2,成长中心积分「31 → 50」):不「啪」地跳,从屏上正显示的值数到新值。
+ * 返回起点比例,调用方把它和新值放进同一次 setData({ 新值, [key]: 返回值 }) —— 分两次 setData 会先闪一帧新值。
+ * 模板照旧用 count.wxs 的 f(真实值, key):k 从 旧/新 走到 1,数完置 null。正在数(countIn 未完)时从当前显示值接着数。
+ * 减少动态效果、没有计时器、旧值或新值不是正数、两值相同:返回 null,新值一帧落地。 */
+function countFrom(page, key, fromValue, toValue, options) {
+  const num = (v) => { const n = Number(String(v === null || v === undefined ? '' : v).replace(/,/g, '')); return String(v).trim() !== '' && isFinite(n) ? n : NaN; };
+  const stops = (page && (page._pmCounters || (page._pmCounters = {}))) || {};
+  const shownK = page && page.data && typeof page.data[key] === 'number' ? page.data[key] : 1;
+  if (stops[key]) { stops[key](); stops[key] = null; }
+  const from = num(fromValue) * shownK;
+  const to = num(toValue);
+  if (!page || typeof page.setData !== 'function' || !hasTimers() || reduced(page) || !(from >= 0) || !(to > 0) || from === to) return null;
+  const alive = () => !page._unloaded && !page._detached;
+  const start = from / to;
+  stops[key] = countUp(start, 1, (v) => { if (alive()) page.setData({ [key]: v }); },
+    Object.assign({ duration: 600, decimals: 3, onDone: () => { if (alive()) page.setData({ [key]: null }); } }, options || {}));
+  return start;
+}
+
 /* 钱数落地:慢-快-慢,时长与商家首页累计收入一致。模板用 count.wxs 的 money(文字, key)。 */
 function countMoney(page, key) {
   countIn(page, key, { duration: 1300, ease: easeInOutCubic });
@@ -96,4 +115,4 @@ function beats(page, key, frames, options) {
   return stop;
 }
 
-module.exports = { enter, countIn, countMoney, beats };
+module.exports = { enter, countIn, countFrom, countMoney, beats };
