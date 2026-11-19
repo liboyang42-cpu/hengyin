@@ -296,3 +296,19 @@ test('PG-049/PG-061:发票抬头明确失败保留税号;漫游演示种子点�
   const { demoPois } = require('../../subpackageRoam/data/roam-demo-pois.js');
   assert.ok(demoPois((x, y) => ({ lat: y, lng: x }), '/img.png').length > 0);
 });
+
+test('PG-062/PG-086/PG-092:设置页删未绑定函数;编号不上屏;协议页按身份切主题、工作台壳商家浅色', () => {
+  const settings = read('pages/shezhi/shezhi.js');
+  assert.doesNotMatch(settings, /goPinpai\(|goRuzhu\(|\n  goEdit\(\)/);
+  assert.doesNotMatch(read('pages/privacy/index.wxml'), /#\{\{item\.assetId\}\}/);
+  assert.doesNotMatch(read('subpackageB/pages/im/chat/index.wxml'), /审核任务 #|业务 #/);
+  for (const p of ['pages/activity/official-detail/index', 'pages/activity/official-organizer/index']) {
+    assert.doesNotMatch(read(p + '.wxml'), /原请求号：/, p);
+    assert.match(read(p + '.js'), /copyCommandRequestId\(\) \{/, p);
+  }
+  assert.match(read('pages/agreement/index.wxml'), /<view class="\{\{isMerchantView \? 'theme-merchant' : 'theme-dark'\}\}">/);
+  assert.match(read('pages/club/workbench/index.wxml'), /class="cw-shell theme-merchant"/);
+  const lint = require('../../scripts/ui-theme-unit-lint.js');
+  assert.equal(lint.classifyPageDomain('pages/agreement/index'), 'shared');
+  assert.equal(lint.classifyPageDomain('pages/club/workbench/index'), 'merchant');
+});

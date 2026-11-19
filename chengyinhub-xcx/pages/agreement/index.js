@@ -2,6 +2,9 @@
 // 文本本身已抽到 utils/agreement-docs.js 作为单一真源 —— 同一份法律文本还被
 // components/cy/agreement-sheet(全屏弹窗)消费,存两份必然改一处漏一处。
 const { DEFAULT_TYPE, getDoc, resolveKey } = require('../../utils/agreement-docs.js');
+// PG-092/OR-043:协议页按身份切主题(商家浅色 / 玩家深色),与关于页同源判断
+const policy = require('../../utils/identity/identity-policy.js');
+const merchantTheme = require('../../utils/merchant-theme.js');
 
 // 栈首页(深链 / 直达 / 分享)时 navigateBack 会失败,必须落回**该 type 真实 caller 所在页**。
 // caller 矩阵(全仓 grep,只有这两个;新增 caller 必须回来补一行,契约测试会盯):
@@ -15,7 +18,22 @@ const ORIGIN_BY_TYPE = {
 };
 
 Page({
-  data: { doc: null, docType: DEFAULT_TYPE },
+  data: { doc: null, docType: DEFAULT_TYPE, isMerchantView: false },
+
+  onShow() { this.syncViewTheme(); },
+  onHide() { merchantTheme.merchantPageRestore(); },
+  onUnload() { merchantTheme.merchantPageRestore(); },
+
+  syncViewTheme() {
+    const isMerchantView = policy.isMerchantView({
+      role: wx.getStorageSync('role'),
+      userType: wx.getStorageSync('user_type'),
+      debugView: wx.getStorageSync('debug_user_view'),
+    });
+    if (isMerchantView !== this.data.isMerchantView) this.setData({ isMerchantView });
+    if (isMerchantView) merchantTheme.merchantPageShow();
+    else merchantTheme.merchantPageRestore();
+  },
 
   onLoad(query) {
     const type = (query && query.type) || DEFAULT_TYPE;
