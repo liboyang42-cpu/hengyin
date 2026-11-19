@@ -72,6 +72,15 @@ Page({
     this.setData({ showAgreementSheet: true });
   },
 
+  // OR-040:关于页直达微信官方《用户隐私保护指引》
+  openPrivacyContract() {
+    wx.openPrivacyContract({
+      fail() {
+        toast('隐私保护指引暂不可用');
+      },
+    });
+  },
+
   closeAgreement() {
     this.setData({ showAgreementSheet: false });
   },

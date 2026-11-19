@@ -370,3 +370,10 @@ test('OR-037:写判定词表补 confirm/orders/logout,通行证写接口显式 w
   const pay = read('subpackageMember/utils/platform-pass-pay.js')
   assert.equal((pay.match(/method: 'POST', write: true/g) || []).length, 3)
 })
+
+test('OR-040:关于页有「隐私保护指引」入口,协议页显示版本号', () => {
+  const about = read('pages/shezhi/about/index.wxml')
+  assert.match(about, /title="隐私保护指引" description="" bind:tap="openPrivacyContract"/)
+  assert.match(read('pages/shezhi/about/index.js'), /wx\.openPrivacyContract\(/)
+  assert.match(read('pages/agreement/index.wxml'), /版本 \{\{doc\.version\}\} · 生效日期：\{\{doc\.updatedAt\}\}/)
+})

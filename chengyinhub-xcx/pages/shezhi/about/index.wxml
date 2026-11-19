@@ -31,6 +31,7 @@
 
     <view class="about-section about-section--menu">
       <cy-cell tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_agreement.svg" title="用户服务协议" description="" bind:tap="openAgreement" />
+      <cy-cell tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_agreement.svg" title="隐私保护指引" description="" bind:tap="openPrivacyContract" />
       <cy-cell tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_headset.svg" title="联系我们" open-type="contact" hairline="{{false}}" />
     </view>
 
