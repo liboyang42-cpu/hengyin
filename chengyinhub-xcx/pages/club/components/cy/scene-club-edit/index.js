@@ -253,16 +253,19 @@ Component({
         clubType: d.clubType,
         activityPrefs: d.activityPrefs.join(','),
         city: d.city,
-        address: d.city,
+        // MC-059:地址不随城市写回 —— 不提交 address,服务端按 null 不改保留原值。
         keywords: d.keywords,
-        style: d.style,
-        operationConfigUpdated: true,
-        prioritySignupEnabled: d.prioritySignupEnabled ? 1 : 0,
+        style: d.style
+      };
+      // MC-050:运营配置(优先报名/成员预留/入会方式)只有主理人能改;管理员只提交展示信息。
+      if (d.isOwner) {
+        payload.operationConfigUpdated = true;
+        payload.prioritySignupEnabled = d.prioritySignupEnabled ? 1 : 0;
         // [2026-08-12 拍板] 成员优惠价停用后**不再提交这个字段** —— 提 null 会把库里存量抹平,
         // 而 club.member_discount_price 是有意保留的恢复退路(服务端改回一行即生效)。不读、也不动。
-        memberReservedQuota: d.memberReservedQuota === '' ? 0 : Number(d.memberReservedQuota)
-      };
-      if (d.joinPolicySupported) payload.joinPolicy = d.joinPolicy;
+        payload.memberReservedQuota = d.memberReservedQuota === '' ? 0 : Number(d.memberReservedQuota);
+        if (d.joinPolicySupported) payload.joinPolicy = d.joinPolicy;
+      }
       app.sendRequest({
         url: '/api/club/update-mine', method: 'POST',
         data: JSON.stringify(payload),

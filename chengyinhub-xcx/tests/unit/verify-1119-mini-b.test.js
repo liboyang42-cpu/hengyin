@@ -158,3 +158,11 @@ test('MC-047 / MC-048 / MC-049:删审核时效句与退款截止句,占位括号
   assert.match(detail, /时长（分钟）/)
   assert.doesNotMatch(detail, /\(选填\)|\(分钟\)/)
 })
+
+test('MC-050 / MC-059:管理员保存不发运营配置,地址不随城市写回', () => {
+  const edit = read('pages/club/components/cy/scene-club-edit/index.js')
+  assert.doesNotMatch(edit, /address: d\.city/)
+  assert.doesNotMatch(read('pages/club/create/index.js'), /address: d\.city/)
+  assert.match(edit, /if \(d\.isOwner\) \{\s*payload\.operationConfigUpdated = true;/)
+  assert.match(edit, /if \(d\.joinPolicySupported\) payload\.joinPolicy = d\.joinPolicy;\s*\}/)
+})
