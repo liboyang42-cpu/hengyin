@@ -86,6 +86,13 @@ public class ApiAnalyticsController extends BaseController {
             "become_leader_cta",
             "play_rec_swap",
             "play_rec_accept",
+            // CG-01-P2-9 / CG-09-P2-6 玩法站过程埋点(小程序同名白名单)
+            "stage_enter",
+            "hint_open",
+            "skip",
+            "assisted_complete",
+            "wrong_answer",
+            "stage_issue",
             "finish_route_recommendation_shown",
             "finish_route_recommendation_click",
             "roam_start",

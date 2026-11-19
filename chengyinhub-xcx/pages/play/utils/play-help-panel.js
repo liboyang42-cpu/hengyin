@@ -160,6 +160,7 @@ function methods(send) {
       this._helpSet({ show: true, notice: '' });
       const pending = this._helpPendingAll() || {};
       const c = this._helpCapture();
+      if (typeof this._stageEvent === 'function') this._stageEvent('hint_open', c.nodeId);   // CG-01-P2-9
       // 重进后仍有未核对的原请求:行上直接标「结果待确认」,只给「继续核对」。
       const rows = this.data.helpPanel.rows.map(row => Object.assign({}, row,
         { pending: !!pending[this._helpPendingKey(c, 'use', row.level)] }));

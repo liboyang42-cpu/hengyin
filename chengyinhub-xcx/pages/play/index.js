@@ -442,7 +442,7 @@ const themeTrade = require('./utils/theme-trade.js');
 const themePlans = require('./utils/theme-plans.js');
 const playerOps = require('./utils/theme-player-ops.js');
 const { loadStoryFont } = require('./utils/story-font.js'); const { storyFontUrl: STORY_FONT_URL } = require('../../utils/config.js');
-const playOverlays = require('./utils/play-hud-overlays.js'); const playTopbar = require('./utils/play-topbar.js'); const locOnce = require('./utils/play-location-once.js'); const { connectionFailure } = require('./utils/play-net-fail.js'); const playLook = require('./utils/play-look.js'); /* 故事流顶栏:罗盘⇄地图、背包、案件册、各站奖励 */
+const playOverlays = require('./utils/play-hud-overlays.js'); const playTopbar = require('./utils/play-topbar.js'); const locOnce = require('./utils/play-location-once.js'); const { connectionFailure } = require('./utils/play-net-fail.js'); const playLook = require('./utils/play-look.js'); const stageEvents = require('./utils/stage-events.js'); /* 故事流顶栏:罗盘⇄地图、背包、案件册、各站奖励 */
 const feStoryGate = require('./utils/fe-story-gate.js'); const feVisit = require('./utils/fe-story-visit.js'); // 自由探索:只读已到访地点的章节
 const chapterVideo = require('./chapter-video.js'); const packDetail = require('./utils/pack-detail.js'); const menuOpen = require('./utils/menu-open.js');
 Page({
@@ -482,6 +482,7 @@ Page({
   }),
   /** UG-08:跳过已由服务端结算(0 分 + 辅助完成)。不放庆祝、不走 onComplete,收起任务页后重读服务端进度。 */
   onHelpSkipped(nodeId) {
+    this._stageEvent('skip', nodeId); this._stageEvent('assisted_complete', nodeId, { via: 'skip' });   // CG-01-P2-9
     if (String((this.data.game || {}).nodeId) !== String(nodeId)) return;
     this.setData({ screen: '', 'helpPanel.show': false });
     this.loadData();
@@ -491,7 +492,7 @@ Page({
   ...themeTrade.methods(req),
   ...themePlans.methods(req),
   ...playerOps.methods(req),
-  ...playOverlays.methods(req, uuid4), ...playTopbar.methods(req), ...playLook.methods(), ...locOnce.methods(), ...feStoryGate.methods(req),
+  ...playOverlays.methods(req, uuid4), ...playTopbar.methods(req), ...playLook.methods(), ...stageEvents.methods(), ...locOnce.methods(), ...feStoryGate.methods(req),
   _routeState: normalizeRouteState(null),
 
   data: {
@@ -6548,6 +6549,7 @@ Page({
     this.stopAudio();
     const node = this.data.sheet.node;
     if (!node) return;
+    this._stageEvent('stage_enter', node.nodeId);   // CG-01-P2-9
     if (this._startGate(node, () => this.startGame())) return;   // 开局定位 / 300 米在打开首站玩法之前判,不让玩家答完才被拒
     if (Number(this.data.mode) === 2 && !this.data.isPreview && !this.data.isMock
         && node.merchantId && !node.arrived) {
@@ -7079,6 +7081,7 @@ Page({
           //   等于系统替玩家答错两次。业务拒绝只提示,不计数、不解锁。
           const answerWrong = !!(r.data && r.data.answerWrong);
           const wc = answerWrong ? that.data.wrongCount + 1 : that.data.wrongCount;
+          if (answerWrong) that._stageEvent('wrong_answer', g.nodeId);   // CG-01-P2-9
           that.setData({ gWrong: true, gNetErr: '', gNetRetryable: false, wrongCount: wc, 'game.feedback': r.msg || g.feedback, canReveal: wc >= 2 && (!!g.reveal || !!g.puzzleScoring) });
           if (that._hasGenericProofFlow()) return that._readGenericProof(g.nodeId);
         }
@@ -7175,6 +7178,7 @@ Page({
     if (this.data.hintUnlocking) return;
     const intent = this._beginLegacyHint();
     if (!intent) return;
+    this._stageEvent('hint_open', g.nodeId);   // CG-01-P2-9
     const payload = Object.assign({ nodeId: g.nodeId }, this._sessionParams());
     let confirmed = false;
     this.setData({ hintUnlocking: true }); // 弹窗期间即占位:连点不再叠出第二个弹窗
@@ -7242,6 +7246,7 @@ Page({
           this._resolveRouteAction('puzzleReveal', g.nodeId);
           this.clearGameNetworkError();
           const answer = (r.data && r.data.answerReveal) || '答案已揭示';
+          this._stageEvent('assisted_complete', g.nodeId, { via: 'reveal' });   // CG-01-P2-9
           this.setData({ revealed: true, canReveal: false, puzzleScoreCap: 0, 'game.reveal': answer });
           cyModal.show({
             title: '答案', content: answer, showCancel: false, confirmText: '继续',

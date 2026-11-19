@@ -371,7 +371,8 @@ Page({
       this.setData({ feeText: '', takeHomeText: '', tickets: tickets.map(function (r) { return Object.assign({}, r, ticketFee(r.price, rate)); }) });
       return;
     }
-    this.setData(ticketFee(value, rate));
+    const fee = ticketFee(value, rate);
+    this.setData({ feeText: fee.feeText, takeHomeText: fee.takeHomeText });
   },
 
   // 灰按钮被点时给一句为什么(cy-btn 在禁用态吞 tap、补发 disabledtap)。

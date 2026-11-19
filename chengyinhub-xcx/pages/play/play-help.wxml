@@ -42,6 +42,12 @@
         <text class="ptb__r">{{helpPanel.skipPending ? '继续核对' : ''}}</text>
       </view>
     </view>
+    <!-- CG-09-P2-6:这一站有问题(换了材料 / 找不到 / 看不清 / 逻辑有误),选一类记一条 -->
+    <view class="tb-group">
+      <view class="tb-row phl__row" bindtap="reportStageIssue" aria-role="button" aria-label="这一站有问题" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="tb-copy"><text class="tb-name">这一站有问题</text></view>
+      </view>
+    </view>
   </view>
   </scroll-view>
 </view>

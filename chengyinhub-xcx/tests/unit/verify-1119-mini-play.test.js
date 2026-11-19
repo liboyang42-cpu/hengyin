@@ -108,3 +108,45 @@ test('CG-ALL-23 逐字打出过的段落本局记住,再进故事流(完成第 1
   assert.match(src, /if \(chapterFull && ln\.typedKey\) that\._markTyped\(ln\.typedKey\);/)
   delete global.wx
 })
+
+test('CG-01-P2-9 / CG-09-P2-6 玩法站过程埋点:只记站 id 与枚举码,六个事件两端白名单都有', () => {
+  const tracked = []
+  const analyticsPath = require.resolve(path.join(ROOT, 'utils/analytics.js'))
+  const toastPath = require.resolve(path.join(ROOT, 'utils/toast.js'))
+  const saved = [require.cache[analyticsPath], require.cache[toastPath]]
+  require.cache[analyticsPath] = { id: analyticsPath, filename: analyticsPath, loaded: true, exports: { track: (n, p) => { tracked.push([n, p]); return true } } }
+  require.cache[toastPath] = { id: toastPath, filename: toastPath, loaded: true, exports: () => {} }
+  const modPath = path.join(ROOT, 'pages/play/utils/stage-events.js')
+  delete require.cache[modPath]
+  const { methods, ISSUE_CATEGORIES } = require(modPath)
+  let sheet = null
+  global.wx = { showActionSheet: (o) => { sheet = o } }
+  const page = Object.assign({ data: { topicId: 9, isPreview: false, game: { nodeId: 5 }, helpPanel: { nodeId: '6' } } }, methods())
+  page._stageEvent('stage_enter', 5)
+  page.reportStageIssue()
+  assert.deepEqual(sheet.itemList, ISSUE_CATEGORIES.map((c) => c.label))
+  sheet.success({ tapIndex: 2 })
+  assert.deepEqual(tracked, [
+    ['stage_enter', { bizType: 'topic', bizId: 9, properties: { nodeId: '5' } }],
+    ['stage_issue', { bizType: 'topic', bizId: 9, properties: { nodeId: '6', category: 'UNCLEAR' } }],
+  ])
+  page.data.isPreview = true
+  assert.equal(page._stageEvent('stage_enter', 5), false, '预览不记')
+  delete global.wx
+  if (saved[0]) require.cache[analyticsPath] = saved[0]; else delete require.cache[analyticsPath]
+  if (saved[1]) require.cache[toastPath] = saved[1]; else delete require.cache[toastPath]
+
+  const client = read('utils/analytics.js')
+  const server = fs.readFileSync(path.join(ROOT, '../chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAnalyticsController.java'), 'utf8')
+  for (const ev of ['stage_enter', 'hint_open', 'skip', 'assisted_complete', 'wrong_answer', 'stage_issue']) {
+    assert.match(client, new RegExp('\\n  ' + ev + ': true,'), ev)
+    assert.match(server, new RegExp('"' + ev + '"'), ev)
+  }
+  const js = read('pages/play/index.js')
+  assert.match(js, /this\._stageEvent\('stage_enter', node\.nodeId\);/)
+  assert.match(js, /if \(answerWrong\) that\._stageEvent\('wrong_answer', g\.nodeId\);/)
+  assert.match(js, /this\._stageEvent\('assisted_complete', g\.nodeId, \{ via: 'reveal' \}\);/)
+  assert.match(js, /this\._stageEvent\('skip', nodeId\); this\._stageEvent\('assisted_complete', nodeId, \{ via: 'skip' \}\);/)
+  assert.match(read('pages/play/utils/play-help-panel.js'), /this\._stageEvent\('hint_open', c\.nodeId\)/)
+  assert.match(read('pages/play/play-help.wxml'), /bindtap="reportStageIssue"[^>]*aria-label="这一站有问题"/)
+})

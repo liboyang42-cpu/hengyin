@@ -60,6 +60,7 @@ const coopMethods = {
         }
         if (operation === 'SKIP') {
           // 跳过:0 分 + 辅助完成;不放成功动画,刷新权威状态
+          if (typeof this._stageEvent === 'function') { this._stageEvent('skip', null, { scope: 'coop' }); this._stageEvent('assisted_complete', null, { via: 'skip', scope: 'coop' }); }   // CG-01-P2-9
           patch['coopHelp.skipConfirm'] = false;
           this.setData(patch);
           this.setData({ coopHelp: null });
