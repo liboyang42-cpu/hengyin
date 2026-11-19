@@ -36,3 +36,47 @@ test('CG-ALL-25 章节门开着时弹窗压在门(130)之上并用近乎不透�
   for (const sel of ['.gp2mask', '.finmask', '.chpick-mask']) assert.ok(mask[0].includes('.play--gate ' + sel), sel)
   for (const sel of ['.gp2', '.finsheet', '.chpick']) assert.ok(sheet[0].includes('.play--gate ' + sel), sel)
 })
+
+// 从页面源码里按花括号配平取出一个方法,包成对象方法真调(不加载整页)
+function methodFrom(rel, name) {
+  const src = read(rel)
+  const start = src.indexOf('\n  ' + name + '(')
+  assert.ok(start > 0, name + ' 存在')
+  let i = src.indexOf('{', start), depth = 0
+  for (; i < src.length; i++) {
+    if (src[i] === '{') depth++
+    else if (src[i] === '}' && --depth === 0) break
+  }
+  return new Function('return ({' + src.slice(start, i + 1) + '})')()[name]
+}
+
+test('FE-G3 自由探索(mode 2)工具抽屉「我的权益」关抽屉回格子层,不跳卡包页', () => {
+  const fn = methodFrom('pages/play/index.js', 'openRightsFromTools')
+  const calls = []
+  const page = (mode, heroShow) => ({
+    data: { mode, hero: { show: heroShow } },
+    setData(patch, cb) { Object.assign(this.data, patch); if (cb) cb() },
+    goCouponWallet() { calls.push('wallet') },
+    closeChapStory() { calls.push('story') },
+    closeHero() { calls.push('hero') },
+  })
+  const p2 = page(2, true)
+  fn.call(p2)
+  assert.equal(p2.data.sessionToolsOpen, false)
+  assert.deepEqual(calls, ['story', 'hero'])
+  calls.length = 0
+  const p1 = page(1, false)
+  fn.call(p1)
+  assert.deepEqual(calls, ['wallet'], '城市定向仍去卡包')
+})
+
+test('FE-G1 无玩法店的店卡标 perkOnly,故事流底栏同口径', () => {
+  const js = read('pages/play/index.js')
+  assert.match(js, /perkOnly: Number\(this\.data\.mode\) === 2 && Number\(node\.merchantId\) > 0 && !node\.hasGame && !node\.hasAdvanced,/)
+  const wxml = read('pages/play/index.wxml')
+  const bar = wxml.match(/<cy-btn variant="primary" style="flex:1" bindtap="heroEnter">\{\{([^}]+)\}\}<\/cy-btn>/)
+  const vm = require('node:vm')
+  assert.equal(vm.runInNewContext(bar[1], { hero: { node: { perkOnly: true, done: false, playName: '' } } }), '我已到店')
+  assert.equal(vm.runInNewContext(bar[1], { hero: { node: { perkOnly: true, done: true, playName: '' } } }), '查看权益')
+  assert.equal(vm.runInNewContext(bar[1], { hero: { node: { perkOnly: false, done: false, playName: 'X' } } }), '开始 · X')
+})

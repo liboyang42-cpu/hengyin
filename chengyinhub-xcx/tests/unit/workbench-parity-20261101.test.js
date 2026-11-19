@@ -14,7 +14,8 @@ test('主办底部主键按 lifecycle 变,售票 / 进行中是去核销', () =>
   assert.deepEqual(hostPrimary({ lifecycle: 7 }), { text: '等待审核中', act: '', key: '', disabled: true });
   assert.equal(hostPrimary({ lifecycle: 0 }).act, 'goAddStations');
   assert.deepEqual(hostPrimary({ lifecycle: 1 }), { text: '去招商', act: 'onQuickAction', key: 'merchant', disabled: false });
-  assert.deepEqual(hostPrimary({ lifecycle: 1, needExecutorClub: true }), { text: '去邀请承办', act: 'onQuickAction', key: 'club', disabled: false });
+  // FE-G12:不再有「去邀请承办」门,旧字段传进来也只去招商
+  assert.deepEqual(hostPrimary({ lifecycle: 1, needExecutorClub: true }), { text: '去招商', act: 'onQuickAction', key: 'merchant', disabled: false });
   assert.equal(hostPrimary({ lifecycle: 2 }).text, '配置票务');
   for (const lc of [3, 4]) assert.deepEqual(hostPrimary({ lifecycle: lc }), { text: '去核销', act: 'goVerify', key: '', disabled: false });
   for (const lc of [5, 6]) assert.equal(hostPrimary({ lifecycle: lc }).act, 'goFinance');

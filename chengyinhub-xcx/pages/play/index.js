@@ -2566,6 +2566,8 @@ Page({
     return {
       nodeId: node.nodeId,
       chapterId: node.chapterId, isMerchant: Number(node.merchantId) > 0,
+      // FE-G1:没有玩法的店(heroEnter 直进权益页)主按钮写「我已到店 / 查看权益」,不写「到店打卡 / 继续互动」
+      perkOnly: Number(this.data.mode) === 2 && Number(node.merchantId) > 0 && !node.hasGame && !node.hasAdvanced,
       name: node.name, imgUrl: String(node.imgUrl || '').split(',')[0], imgHidden: !!node.imgHidden, done: !!node.done,
       entryDisabled: this._heroEntryDisabled(node),
       // ① 章节
@@ -7747,7 +7749,14 @@ Page({
   openJournalFromTools() { this.setData({ sessionToolsOpen: false }, () => this.openJournal()); },
   /* 自由探索抽屉两行(原型 x-tools):我的权益 = 这趟已领到的券;
      这个主题是什么 = 主题正文那一屏(mode2 没有章节,openChapterFull 铺的就是主题介绍)。 */
-  openRightsFromTools() { this.setData({ sessionToolsOpen: false }, () => this.goCouponWallet()); },
+  openRightsFromTools() {
+    // FE-G3:自由探索的权益就在卡包格子里 —— 关抽屉回到格子层,不跳卡包页
+    if (Number(this.data.mode) === 2) {
+      this.setData({ sessionToolsOpen: false }, () => { this.closeChapStory(); if (this.data.hero && this.data.hero.show) this.closeHero(); });
+      return;
+    }
+    this.setData({ sessionToolsOpen: false }, () => this.goCouponWallet());
+  },
   openThemeFromTools() { this.setData({ sessionToolsOpen: false }, () => this.openChapterFull()); },
 
   /* 自由探索的地图模式(原型 x-run):把卡包让开,露出本页本来就有的地图台、读数卡与底栏 ——

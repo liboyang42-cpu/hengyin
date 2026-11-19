@@ -45,6 +45,10 @@ function assertHeroCtaContract(markup) {
     [{ done: true, entryDisabled: false }, '继续互动', 'primary'],
     [{ done: true, entryDisabled: true }, '已核销', 'disabled'],
     [{ done: false, entryDisabled: false }, '到店打卡', 'primary'],
+    // FE-G1:无玩法的店写「我已到店 / 查看权益」
+    [{ done: false, entryDisabled: false, perkOnly: true }, '我已到店', 'primary'],
+    [{ done: true, entryDisabled: false, perkOnly: true }, '查看权益', 'primary'],
+    [{ done: true, entryDisabled: true, perkOnly: true }, '已核销', 'disabled'],
   ]) {
     assert.equal(vm.runInNewContext(button[2], { hero: { node } }), label)
     assert.equal(vm.runInNewContext(button[1], { hero: { node } }), variant)
@@ -57,7 +61,8 @@ test('CTA 按 entryDisabled 展示已核销,未完成玩法可继续互动,未�
 
 test('mutation 负控:旧核销文案或 done 禁用条件必须变红', () => {
   for (const mutated of [
-    wxml.replace("hero.node.entryDisabled ? '已核销' : (hero.node.done ? '继续互动' : '到店打卡')", "hero.node.done ? '已核销' : '到店打卡'"),
+    wxml.replace("hero.node.entryDisabled ? '已核销' : (hero.node.perkOnly ?", "hero.node.done ? '已核销' : (hero.node.perkOnly ?"),
+    wxml.replace("(hero.node.perkOnly ? (hero.node.done ? '查看权益' : '我已到店') : (hero.node.done ? '继续互动' : '到店打卡'))}}</cy-btn>", "(hero.node.done ? '继续互动' : '到店打卡')}}</cy-btn>"),
     wxml.replace("hero.node.entryDisabled ? 'disabled' : 'primary'", "hero.node.done ? 'disabled' : 'primary'"),
   ]) assert.throws(() => assertHeroCtaContract(mutated), assert.AssertionError)
 })
