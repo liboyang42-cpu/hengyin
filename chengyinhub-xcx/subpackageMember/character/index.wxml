@@ -61,8 +61,7 @@
       <view class="character-section"><cy-btn variant="secondary" bindtap="loadCharacter">刷新角色卡</cy-btn></view>
     </block>
     <block wx:else>
-      <cy-empty kind="{{status.kind}}" title="{{status.title}}" sub="{{status.sub}}" />
-      <cy-btn wx:if="{{status.action}}" variant="secondary" bindtap="onStateAction">{{status.action}}</cy-btn>
+      <cy-empty kind="{{status.kind}}" title="{{status.title}}" sub="{{status.sub}}" cta="{{status.action}}" bind:cta="onStateAction" />
     </block>
   </view>
 </view>
