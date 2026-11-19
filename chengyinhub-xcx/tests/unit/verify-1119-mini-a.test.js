@@ -159,3 +159,9 @@ test('PG-020/PG-021:topicadd 与 simple 页删除并摘出 app.json 与主题 li
   assert.doesNotMatch(app, /topicadd|"simple\/index"/);
   assert.doesNotMatch(read('scripts/ui-theme-unit-lint.js'), /'pages\/publish\/topicadd/);
 });
+
+test('PG-022/PG-023:俱乐部主题详情缺 clubId 不跳结算;俱乐部详情不再引 mockData 演示分支', () => {
+  assert.match(read('pages/club/topic-detail/index.js'), /goSettlement\(\) \{\n\s*if \(!this\._clubId\) return;/);
+  const detail = read('pages/club/detail/index.js');
+  assert.doesNotMatch(detail, /mockData|isDemoClubId/);
+});

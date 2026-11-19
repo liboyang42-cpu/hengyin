@@ -155,7 +155,7 @@ test('接入:俱乐部详情 / 俱乐部 tab 能转发,商家发现页只在本�
   assert.match(detail, /slot="moderation" class="post-moderation" wx:if="\{\{!item\.isRepostItem\}\}"/)
   const detailJs = read('pages/club/detail/index.js')
   assert.match(detailJs, /onRepostPost\(e\)[\s\S]*clubPostRepost\.toggleRepost\(\{ page: this, listKey: 'posts', postId: postId, app: app/)
-  assert.equal((detailJs.match(/clubPostRepost\.mapClubFeedRows\(/g) || []).length, 3, '首屏 / 演示 / 续页三处同一映射')
+  assert.equal((detailJs.match(/clubPostRepost\.mapClubFeedRows\(/g) || []).length, 2, '首屏 / 续页两处同一映射(PG-023 演示分支已删)')
 
   const talent = read('pages/talent/list/index.wxml')
   assert.match(talent, /<cy-post-card[^>]*wx:key="feedKey"[^>]*show-repost[^>]*bind:repost="onRepostPost"/)
