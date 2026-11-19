@@ -22,6 +22,8 @@
         <result property="withdrawReason" column="withdraw_reason" />
         <result property="withdrawRequired" column="withdraw_required" />
         <result property="replacementOfOfferId" column="replacement_of_offer_id" />
+        <result property="supplierKind" column="supplier_kind" />
+        <result property="supplierMemberId" column="supplier_member_id" />
         <result property="familyAccepted" column="family_accepted" />
         <result property="familyPerkText" column="family_perk_text" />
         <result property="createBy"    column="create_by"    />
@@ -33,6 +35,7 @@
     <sql id="selectMerchantChapterOfferVo">
         select id, topic_id, chapter_id, merchant_id, perk_id, terms_mode, payer_club_id, per_head_fee,
                quota_total, quota_used, valid_end, allowed_validation_methods, max_node_xp, status, withdraw_reason, withdraw_required, replacement_of_offer_id,
+               supplier_kind, supplier_member_id,
                family_accepted, family_perk_text,
                create_by, create_time, update_by, update_time
         from merchant_chapter_offer
@@ -55,6 +58,8 @@
             <if test="maxNodeXp != null">max_node_xp,</if>
             <if test="status != null">status,</if>
             <if test="replacementOfOfferId != null">replacement_of_offer_id,</if>
+            <if test="supplierKind != null">supplier_kind,</if>
+            <if test="supplierMemberId != null">supplier_member_id,</if>
             <if test="familyAccepted != null">family_accepted,</if>
             <if test="familyPerkText != null">family_perk_text,</if>
             <if test="createBy != null">create_by,</if>
@@ -77,6 +82,8 @@
             <if test="maxNodeXp != null">#{maxNodeXp},</if>
             <if test="status != null">#{status},</if>
             <if test="replacementOfOfferId != null">#{replacementOfOfferId},</if>
+            <if test="supplierKind != null">#{supplierKind},</if>
+            <if test="supplierMemberId != null">#{supplierMemberId},</if>
             <if test="familyAccepted != null">#{familyAccepted},</if>
             <if test="familyPerkText != null">#{familyPerkText},</if>
             <if test="createBy != null">#{createBy},</if>
@@ -250,6 +257,14 @@
                   and o.status = 1
                   and (o.valid_end is null or o.valid_end &gt; now())
            )
+    </select>
+
+    <!-- F10:必选章总数,与上面 countRequiredChaptersWithoutLiveOffer 同口径(分母) -->
+    <select id="countRequiredChapters" resultType="int">
+        select count(*)
+          from cms_topic_chapter c
+         where c.topic_id = #{topicId}
+           and c.required = 1
     </select>
 
     <!-- ============ 后台三档审核台(§4.2)============ -->

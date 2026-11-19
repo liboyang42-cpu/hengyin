@@ -262,4 +262,10 @@ public interface IPerkLedgerService {
      *         非 ③ 的票压根没有 entitlement ⇒ 恒 false ⇒ 它们的出码判据不受影响
      */
     boolean hasPendingEntitlements(Long registrationId);
+
+    /**
+     * F10:该会员在该主题上是否有生效的「作者自己承接」供给(supplier_kind=AUTHOR)。
+     * 用于核销授权的 AUTHOR 分支:作者本人没有商家身份也能核销自己承接的权益,别人不能。
+     */
+    boolean hasLiveAuthorSupply(Long topicId, Long memberId);
 }

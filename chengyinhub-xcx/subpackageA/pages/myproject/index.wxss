@@ -49,13 +49,8 @@
 .mp-tags-gap { flex: 1; }
 /* 稿 260:277:标题下面的地址,次要灰字,单行截断 */
 .mp-addr { margin-top:var(--cy-space-1); font-size: var(--cy-font-caption); color: var(--cy-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* 长按提示:次要说明,不抢卡片的位置 */
-/* CU-M-174:.mp-page 自己不带横向内距,页面每一档内容条各自加 --cy-page-x
-   (.tabs/.filter/.toolbar/.list 都有)。这两条漏了,于是从屏幕左缘 x=0 开始排,
-   「长按卡片可上下架 / 删除」首字被安全区裁掉 —— 与下面的卡片左边界也对不齐。 */
-.mp-longtip { margin-top:var(--cy-space-2); padding:0 var(--cy-page-x); box-sizing: border-box; font-size: var(--cy-font-caption); color: var(--cy-text-muted); }
 .mp-create-row { min-height: var(--cy-btn-h); margin-top: var(--cy-space-2); padding:0 var(--cy-page-x); box-sizing: border-box; display: flex; align-items: center; gap: var(--cy-space-1); font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-text-title); }
-/* 长按面板:一行一个动作,标题 + 一句后果 */
+/* 操作面板:一行一个动作,标题 + 一句后果 */
 .mp-ops-sheet { padding-bottom:var(--cy-space-2); }
 .mp-ops-row { min-height: var(--cy-btn-h); display: flex; flex-direction: column; justify-content: center; gap:var(--cy-space-1); padding:var(--cy-space-3) 0; border-bottom: 1rpx solid var(--cy-border-card); }
 .mp-ops-row:last-child { border-bottom: 0; }
@@ -103,6 +98,8 @@
 .mp-head { display: flex; align-items: center; gap: var(--cy-space-2); min-height: 40rpx; }
 .mp-head .mp-when { flex: 1; min-width: 0; margin: 0; }
 .mp-head .mp-type { flex: none; padding: 0 var(--cy-space-1-5); line-height: 34rpx; }
+/* PG-084:卡片右上角「···」。视觉小,热区 ≥ 44×44(--cy-btn-h = 88rpx);负外边距把热区伸出去而不撑高顶行 */
+.mp-card-more { flex: none; min-width: var(--cy-btn-h); min-height: var(--cy-btn-h); margin: calc(var(--cy-btn-h) / -2 + 20rpx) calc(var(--cy-space-2) * -1) calc(var(--cy-btn-h) / -2 + 20rpx) 0; display: flex; align-items: center; justify-content: center; font-size: var(--cy-font-body); font-weight: 700; letter-spacing: 2rpx; color: var(--cy-text-secondary); }
 .mp-st { flex: none; margin-left: auto; font-size: var(--cy-font-caption); font-weight: 600; white-space: nowrap; color: var(--cy-text-secondary); }
 .mp-st--success { color: var(--cy-success); }
 .mp-st--warning { color: var(--cy-gold); }

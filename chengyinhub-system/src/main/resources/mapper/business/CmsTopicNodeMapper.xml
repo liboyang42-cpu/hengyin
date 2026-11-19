@@ -226,6 +226,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{id}
         </foreach>
     </delete>
+    <!-- F10 撤回自己承接:点位回到未归属占位(merchant_member_id 为空即占位,见 adoptablePlaceholder) -->
+    <update id="releaseAuthorSelfSupplyBinding">
+        update cms_topic_node
+           set merchant_member_id = null, node_audit_status = null, node_audit_reason = null,
+               node_audit_member_id = null, node_audit_time = null, update_time = now()
+         where id = #{id} and merchant_member_id = #{authorMemberId}
+    </update>
     <select id="selectVisitConfigById" resultType="com.chengyinhub.business.domain.FreeExploreVisitConfig">
         select id as nodeId, visit_check as visitCheck, visit_radius_m as visitRadiusM
           from cms_topic_node where id = #{nodeId}

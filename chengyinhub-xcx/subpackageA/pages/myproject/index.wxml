@@ -25,24 +25,15 @@
     <view wx:if="{{loading && loaded}}" class="mp-refreshing cy-refresh-float" aria-role="status" aria-live="polite">正在同步最新项目…</view>
 
     <!-- 2026-10-28 业主 m693:列表上方不放发布活动的按钮(没有活动时空态里仍可发起) -->
-    <!-- 上下架 / 删除按稿撤出卡面后,长按是它们唯一的入口 —— 藏起来的入口要写出来,
-         否则一条已下架的路线就再也回不到上架。列表里一张卡都不可操作时不出这行。 -->
-    <view class="mp-longtip" wx:if="{{projectState === 'ready' && list.length > 0 && hasRowOps}}">长按卡片管理</view>
     <view class="mp-list" wx:if="{{projectState === 'ready'}}" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
-      <!-- 稿 260:277 的裁决(节点 260:369):「单列列表的行**整行可点,不放按钮**(连箭头都不放)。
-           每张卡的下一步动作不同(去核销 / 承接进度 / 去管理),进项目页再做」。
-           所以卡面上原来那排 候选池 / 上下架 / 删除 / 「继续编辑」药丸全部撤掉:
-           · 候选池已下线 → 申请与报名统一进协作列表「收到的」处理(本面板入口同指那里);
-           · 下一步动作 → 就是点这一行本身(onCardTap 按状态分流:草稿进编辑器、其余进项目页);
-           · 上下架 / 删除 → 长按这张卡打开操作面板。这两个是列表管理动作,不是「下一步」,
-             把它们留在卡面上就是稿里明确不要的那排按钮;但也不能删掉 —— 已下架的路线
-             除了这里没有别的路能重新上架。长按是它们唯一的入口,所以列表上方那行提示要写出来。
-           卡内顺序也按稿改:tag 行在最上面(整行,状态 tag 靠右),再是「封面 | 档期/标题」,
-           最后是底行统计。稿里标题下面那行地址后端没有下发,按稿自己的规矩缺就不出。 -->
+      <!-- 2026-11-17 PG-084 = A:卡片右上角放可见的「···」更多按钮,打开与长按同一个操作面板
+           (_openOps)。长按保留作快捷方式,但不再是任何动作的唯一入口(Apple HIG:上下文菜单
+           必须有可见替代入口)。点这一行本身仍是「下一步」(onCardTap 按状态分流)。
+           卡内顺序按稿:tag 行在最上面,再是「封面 | 档期/标题」,最后是底行统计。 -->
       <view class="mp-card" wx:for="{{list}}" wx:key="id" data-item="{{item}}" bindtap="onCardTap" bindlongpress="onCardLong" hover-class="cy-pressed" hover-stay-time="80">
         <!-- r2-create(a3-v3-38 业主「和我的订单一样」):卡片结构照「我的订单」——
              左封面;右侧 顶行(档期 · 状态靠右)/ 标题 / 地址;分隔线下底行写报名·浏览或承接进度。
-             卡面仍不放按钮(上下架 / 删除走长按)。 -->
+             管理动作(上下架 / 删除…)走右上角「···」或长按。 -->
         <view class="mp-main">
           <image lazy-load="true" class="mp-cover" src="{{item.cover || '/images/route_free_cover.png'}}" mode="aspectFill" />
           <view class="mp-body">
@@ -50,6 +41,7 @@
               <view class="mp-dot" wx:if="{{item._dot}}"></view>
               <text class="mp-when ep1">{{item._whenText}}</text>
               <text class="mp-st mp-st--{{item._stateVariant}}">{{item.stateText}}</text>
+              <view class="mp-card-more" wx:if="{{item._hasOps}}" catchtap="onCardMore" data-item="{{item}}" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="更多">···</view>
             </view>
             <view class="mp-tit">{{item.title}}</view>
             <view class="cy-addr-tap" wx:if="{{item._address}}" catchtap="onAddressTap" data-lat="{{item.latitude}}" data-lng="{{item.longitude}}" data-name="{{item.title}}" data-address="{{item._address}}" data-geo="1" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation aria-role="button" aria-label="在地图中打开 {{item._address}}"><view class="mp-addr">{{item._address}}</view></view>
@@ -123,7 +115,7 @@
 
 </view>
 
-<!-- 长按卡片打开的操作面板:装稿里不许放在卡面上的那几个列表管理动作。
+<!-- 卡片「···」与长按打开的同一个操作面板(_openOps):列表管理动作。
      2026-10-28 业主 m694:统一成 Threads 式分组菜单(style/threads-menu.wxss)—— 文字左、图标右,不写说明;
      删除单独一组标红。行是按这张卡的 _canEdit / _canToggle / _canDelete… 现算的,不可用的动作整行不出。 -->
 <cy-sheet show="{{opsSheet.show}}" inset bind:close="closeOpsSheet">

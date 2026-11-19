@@ -519,4 +519,43 @@ public class ChapterMerchantNodeServiceImpl implements IChapterMerchantNodeServi
     private static boolean blank(String s) {
         return s == null || s.trim().isEmpty();
     }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public CmsTopicNode bindAuthorSelfSupplyNode(Long authorMemberId, Long topicId, Long chapterId) {
+        if (authorMemberId == null || authorMemberId <= 0 || topicId == null || chapterId == null) {
+            throw new IllegalStateException("缺少作者、主题或章节");
+        }
+        CmsTopicNode node = findMine(topicId, chapterId, authorMemberId);
+        if (node == null) node = adoptablePlaceholder(topicId, chapterId);
+        if (node == null) {
+            throw new IllegalStateException("本章节没有可自己承接的站点：请先在编辑器给这一章添加站点");
+        }
+        if (blank(node.getAddress()) || node.getLongitude() == null || node.getLatitude() == null) {
+            throw new IllegalStateException("本章节站点缺少地址或坐标，请先在编辑器补全后再自己承接");
+        }
+        CmsTopicNode patch = new CmsTopicNode();
+        patch.setId(node.getId());
+        patch.setMerchantMemberId(authorMemberId);
+        patch.setNodeAuditStatus(AUDIT_APPROVED);
+        patch.setNodeAuditReason("");
+        patch.setNodeAuditMemberId(authorMemberId);
+        patch.setNodeAuditTime(new Date());
+        patch.setUpdateTime(new Date());
+        nodeService.updateCmsTopicNode(patch);
+        node.setMerchantMemberId(authorMemberId);
+        node.setNodeAuditStatus(AUDIT_APPROVED);
+        return node;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void releaseAuthorSelfSupplyNode(Long authorMemberId, Long topicId, Long chapterId) {
+        if (authorMemberId == null || topicId == null || chapterId == null) return;
+        CmsTopicNode node = findMine(topicId, chapterId, authorMemberId);
+        if (node == null || nodeMapper == null) return;
+        if (nodeMapper.releaseAuthorSelfSupplyBinding(node.getId(), authorMemberId) != 1) {
+            throw new IllegalStateException("站点归属刚发生变化，请刷新后重试");
+        }
+    }
 }

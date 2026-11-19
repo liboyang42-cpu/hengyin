@@ -84,7 +84,6 @@ Page({
     typeTab: 'topic',
     list: [],
     capped: false,
-    hasRowOps: false,
     /* 稿 260:277 把上下架 / 删除赶出了卡面,这个面板是它们的新家(长按卡片打开)。
        只存这张卡自己的判定结果,不存整条 item —— 面板开着的时候列表可能已经刷新了。 */
     opsSheet: { show: false, title: '', id: '', biz: '', online: false,
@@ -193,7 +192,7 @@ Page({
     this._all = [];
     this.setData({ authRequired: !!authRequired, list: [], loaded: false, loading: false,
       projectState: 'loading', projectErrorMsg: '', projectAccessDenied: false,
-      capped: false, hasRowOps: false, topicTemplates: [], tplList: [], tplLoaded: false, tplLoading: false,
+      capped: false, topicTemplates: [], tplList: [], tplLoaded: false, tplLoading: false,
       tplErrorMsg: '', tplAccessDenied: false, canPublishActivity: false, 'opsSheet.show': false,
       auditSheet: { show: false, loading: false, error: '', title: '', bizType: '', bizId: '',
         rows: [], appealText: '', canAppeal: false } });
@@ -224,7 +223,7 @@ Page({
     if (kind === 'project') {
       if (denied) {
         this._all = [];
-        this.setData({ list: [], topicTemplates: [], loaded: false, hasRowOps: false, capped: false, 'opsSheet.show': false });
+        this.setData({ list: [], topicTemplates: [], loaded: false, capped: false, 'opsSheet.show': false });
       }
       this.setData({ loading: false, projectAccessDenied: denied,
         projectState: this.data.loaded ? 'ready' : 'error',
@@ -376,6 +375,8 @@ Page({
 
     // 待处理置顶:未通过 > 草稿 > 审核中 > 其余保持接口倒序(sort 稳定)
     rows = rows.slice().sort(function (a, b) { return rankOf(a) - rankOf(b); });
+    // PG-084:「···」按钮与 _openOps 同一个判据 —— 一个动作都没有的卡不出按钮,也不弹空面板。
+    rows = rows.map(function (p) { return Object.assign({}, p, { _hasOps: hasOps(p) }); });
 
     // 发布提示只对能发的人说;别人看到「主理人可以在这里发布」却没有按钮,是空头承诺(CU-C-22)
     const empty = tab === 'activity' && this.data.canPublishActivity
@@ -383,8 +384,6 @@ Page({
       : (TYPE_EMPTY[tab] || TYPE_EMPTY.topic);
     pageMotion.enter(this, 'pmList'); this.setData({
       list: rows,
-      // 长按提示只在真有卡能操作时出 —— 全是「进行中且不可删」的列表写这句是骗人
-      hasRowOps: rows.some(function (p) { return p._canToggle || p._canDelete || p._canViewApplies; }),
       emptyTit: empty.tit,
       emptySub: empty.sub
     });
@@ -428,13 +427,25 @@ Page({
       + (this.data.operationScope ? '&scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
   },
 
-  /* 长按 = 列表管理动作的唯一入口(稿裁决:卡面不放按钮)。
-     一个动作都没有的卡不弹空面板 —— 弹一个没有行的抽屉比不弹更糟。 */
+  /* PG-084:卡片右上角「···」与长按打开同一个操作面板。
+     catchtap 挡住冒泡,点「···」不会同时触发 onCardTap 跳页。 */
+  onCardMore(e) {
+    this._openOps(e.currentTarget.dataset.item);
+  },
+
+  /** 长按保留作快捷方式,与「···」走同一个 _openOps。 */
   onCardLong(e) {
-    const item = e.currentTarget.dataset.item;
-    if (!item) return;
-    if (!item._canToggle && !item._canDelete && !item._canViewApplies && !item._canEdit && !item._canCancel
-      && !item._canAudit && !item._canSaveAsTemplate) return;
+    this._openOps(e.currentTarget.dataset.item);
+  },
+
+  /** 「···」是否出、面板是否弹:与 _openOps 同一判据(模块级 hasOps)。 */
+  _hasOps(item) {
+    return hasOps(item);
+  },
+
+  /* 一个动作都没有的卡不弹空面板 —— 弹一个没有行的抽屉比不弹更糟。 */
+  _openOps(item) {
+    if (!this._hasOps(item)) return;
     const opsSeq = this._opsSeq = (this._opsSeq || 0) + 1;
     this.setData({
       opsSheet: {
@@ -1117,6 +1128,13 @@ function paidPlayersOrToast(res) {
   return null;
 }
 
+/** PG-084:卡片有没有可操作的管理动作。「···」显隐、长按和 _openOps 共用这一个判据。 */
+function hasOps(item) {
+  if (!item) return false;
+  return !!(item._canToggle || item._canDelete || item._canViewApplies || item._canEdit || item._canCancel
+    || item._canAudit || item._canSaveAsTemplate);
+}
+
 function rankOf(p) {
   return PENDING_RANK[p.state] != null ? PENDING_RANK[p.state] : 9;
 }
@@ -1149,7 +1167,11 @@ function decorate(p) {
       || p.state === 'pending' || p.state === 'rejected');
   // 2026-10-27 业主 M-26:长按面板要有「编辑」。主题草稿/未通过/已下架回专业编辑器(与点卡进编辑器同一路由);
   // 在售中的主题不在这里改(改票种/站点会影响已买票的人),仍走项目主页。
-  const editableTopic = p.bizType === 'topic' && (p.state === 'draft' || p.state === 'rejected' || p.state === 'offline');
+  // F10(FE-G13/14):自由探索主题在招募中(1)/待定价(2)也给「编辑」—— 作者从「更多 → 编辑」回到编辑器票价区填价发布。
+  const freeExplorePricing = p.bizType === 'topic' && p.freeExplore === true
+    && (Number(p.lifecycle) === 1 || Number(p.lifecycle) === 2);
+  const editableTopic = p.bizType === 'topic'
+    && (p.state === 'draft' || p.state === 'rejected' || p.state === 'offline' || freeExplorePricing);
   const canEdit = (!merchantActivity && publishedActivity) || editableTopic;
   // [C8-05] 主题:个人/商家主办可「取消并退款」;俱乐部主题有岗位权限,走俱乐部「结束主题」。
   const canCancel = p.bizType === 'topic'

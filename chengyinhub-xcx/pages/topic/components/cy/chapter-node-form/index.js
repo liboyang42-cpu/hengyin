@@ -75,6 +75,8 @@ Component({
     perkTemplatesLoading: false,
     perkMinText: '',
     perkBelowMin: false,
+    // F11:自由探索权益卡的线下结算说明(服务端下发,含场次主办方名);取不到就不显示。
+    settlementNote: '',
     canSubmit: false,
     locationReady: false,
     supplyKinds: [
@@ -132,7 +134,11 @@ Component({
         editing: editing,
       });
       if (this.data.formMode === 'offer') {
-        if (this.data.termsMode === 'PERK') this.loadMyPerkTemplates();
+        this.setData({ settlementNote: '' });
+        if (this.data.termsMode === 'PERK') {
+          this.loadMyPerkTemplates();
+          this.loadSettlementNote();
+        }
         this.refreshSubmitState();
         return;
       }
@@ -205,6 +211,28 @@ Component({
         complete() {
           that.setData({ templatesLoading: false });
         },
+      });
+    },
+
+    loadSettlementNote() {
+      const chapterId = Number(this.data.chapterId);
+      if (!Number.isSafeInteger(chapterId) || chapterId <= 0) return;
+      const version = this._formVersion;
+      app.sendRequest({
+        hideLoading: true,
+        silentError: true,
+        url: '/api/fe/reference-settlement/note',
+        method: 'GET',
+        data: { chapterId },
+        success: (res) => {
+          if (version !== this._formVersion || !this.data.show) return;
+          const note = res && (res.code === 200 || res.code === '200') && res.data
+            && typeof res.data.text === 'string' ? res.data.text.trim() : '';
+          this.setData({ settlementNote: note });
+        },
+        // 说明取不到就整行不显示,不影响填写与提交。
+        fail: () => { if (version === this._formVersion) this.setData({ settlementNote: '' }); },
+        successStatusAbnormal: () => { if (version === this._formVersion) this.setData({ settlementNote: '' }); },
       });
     },
 

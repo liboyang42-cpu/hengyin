@@ -90,6 +90,7 @@
         </view>
         <view class="cnf-note cnf-note--field" wx:if="{{perkMinText && !perkBelowMin}}">零售价不少于 {{money.amount(perkMinText)}}</view>
         <cy-inline-error wx:if="{{perkBelowMin}}" kind="error" title="本章节要求权益零售价不少于 {{money.amount(perkMinText)}}" />
+        <view class="cnf-note cnf-note--field" wx:if="{{settlementNote}}">{{settlementNote}}</view>
       </view>
     </block>
     <view class="cnf-field" wx:if="{{termsMode === 'REVSHARE'}}">

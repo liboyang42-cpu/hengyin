@@ -428,6 +428,10 @@ public class ApiProjectController extends BaseController {
            缺就不下发，前端按稿自己的规矩「缺就整行不出」。 */
         m.put("addressName", t.getAddressName());
         m.put("createTime", t.getCreateTime());
+        // F10(FE-G13/14):我的项目「更多 → 编辑」对自由探索招募中/待定价的主题也放行,前端需要这两个原值。
+        m.put("freeExplore", Integer.valueOf(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE)
+                .equals(t.getProductType()));
+        m.put("lifecycle", t.getLifecycle());
         putAcceptStatus(m, t, acceptedChapterTopics, acceptedTypes);
         return m;
     }

@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.FeReferenceSettlementMapper">
+    <resultMap id="Row" type="com.chengyinhub.business.domain.FeReferenceSettlement">
+        <id property="id" column="id" />
+        <result property="topicId" column="topic_id" />
+        <result property="activityId" column="activity_id" />
+        <result property="chapterId" column="chapter_id" />
+        <result property="offerId" column="offer_id" />
+        <result property="supplierKind" column="supplier_kind" />
+        <result property="merchantId" column="merchant_id" />
+        <result property="payerKind" column="payer_kind" />
+        <result property="payerId" column="payer_id" />
+        <result property="basis" column="basis" />
+        <result property="quantity" column="quantity" />
+        <result property="unitAmount" column="unit_amount" />
+        <result property="amount" column="amount" />
+        <result property="status" column="status" />
+        <result property="settledAt" column="settled_at" />
+        <result property="settledBy" column="settled_by" />
+        <result property="voucherNo" column="voucher_no" />
+        <result property="note" column="note" />
+        <result property="registrationId" column="registration_id" />
+        <result property="redemptionId" column="redemption_id" />
+        <result property="idempotencyKey" column="idempotency_key" />
+        <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time" />
+        <result property="activityTitle" column="activity_title" />
+        <result property="chapterName" column="chapter_name" />
+        <result property="merchantName" column="merchant_name" />
+    </resultMap>
+
+    <sql id="columns">r.id, r.topic_id, r.activity_id, r.chapter_id, r.offer_id, r.supplier_kind, r.merchant_id,
+        r.payer_kind, r.payer_id, r.basis, r.quantity, r.unit_amount, r.amount, r.status, r.settled_at, r.settled_by,
+        r.voucher_no, r.note, r.registration_id, r.redemption_id, r.idempotency_key, r.create_time, r.update_time</sql>
+
+    <!-- 展示用联表:场次标题(无场次取主题名)、章节名、店铺名(mms_merchant 优先,否则会员昵称) -->
+    <sql id="viewColumns"><include refid="columns"/>,
+        coalesce(a.name, t.name) as activity_title, c.name as chapter_name,
+        coalesce(mm.name, m.nickname) as merchant_name</sql>
+    <sql id="viewJoins">
+        left join cms_activity a on a.id = r.activity_id
+        left join cms_topic t on t.id = r.topic_id
+        left join cms_topic_chapter c on c.id = r.chapter_id
+        left join ums_member m on m.id = r.merchant_id
+        left join mms_merchant mm on mm.id = (select max(m3.id) from mms_merchant m3
+               where m3.member_id = r.merchant_id and m3.del_flag = 0)
+    </sql>
+
+    <!-- 当前场次收款人 = memberId,与 CmsActivityServiceImpl.activityPayee 同一规则:
+         MEMBER 行 = payer_id 本人;CLUB 行 = 冻结的个人收款人(有则以它为准),否则俱乐部当前主理人。 -->
+    <sql id="payerJoins">
+        left join club pc on r.payer_kind = 'CLUB' and pc.id = r.payer_id and pc.del_flag = 0
+        left join club_personal_payout_beneficiary pb on r.payer_kind = 'CLUB'
+               and ((r.activity_id is not null and pb.scope_type = 'ACTIVITY' and pb.scope_id = r.activity_id)
+                 or (r.activity_id is null and pb.scope_type = 'TOPIC' and pb.scope_id = r.topic_id))
+    </sql>
+    <sql id="payerIsMember">
+        ((r.payer_kind = 'MEMBER' and r.payer_id = #{memberId})
+          or (r.payer_kind = 'CLUB' and ((pb.member_id is not null and pb.member_id = #{memberId})
+                                      or (pb.member_id is null and pc.member_id = #{memberId}))))
+    </sql>
+
+    <insert id="insertReference" useGeneratedKeys="true" keyProperty="id">
+        insert into fe_reference_settlement
+            (topic_id, activity_id, chapter_id, offer_id, supplier_kind, merchant_id, payer_kind, payer_id, basis,
+             quantity, unit_amount, amount, status, settled_at, settled_by, voucher_no, note, registration_id,
+             redemption_id, idempotency_key, create_time)
+        values (#{topicId}, #{activityId}, #{chapterId}, #{offerId}, #{supplierKind}, #{merchantId}, #{payerKind},
+             #{payerId}, #{basis}, #{quantity}, #{unitAmount}, #{amount}, #{status}, #{settledAt}, #{settledBy},
+             #{voucherNo}, #{note}, #{registrationId}, #{redemptionId}, #{idempotencyKey}, now())
+    </insert>
+
+    <select id="selectByIdempotencyKey" resultMap="Row">
+        select <include refid="columns"/> from fe_reference_settlement r where r.idempotency_key = #{key}
+    </select>
+
+    <update id="voidByRedemption">
+        update fe_reference_settlement set status = 'VOID', update_time = now()
+        where redemption_id = #{redemptionId}
+          and (status in ('OPEN', 'DISPUTED') or (supplier_kind = 'AUTHOR' and status = 'SETTLED_OFFLINE'))
+    </update>
+
+    <update id="voidUnredeemedByRegistration">
+        update fe_reference_settlement f set f.status = 'VOID', f.update_time = now()
+        where f.registration_id = #{registrationId} and f.status = 'OPEN'
+          and (f.redemption_id is null
+               or not exists (select 1 from redemption d where d.id = f.redemption_id and d.status = 'ACTIVE'))
+    </update>
+
+    <select id="selectForMerchant" resultMap="Row">
+        select <include refid="viewColumns"/> from fe_reference_settlement r <include refid="viewJoins"/>
+        where r.merchant_id = #{merchantId}
+        <choose>
+            <when test="status != null and status != ''">and r.status = #{status}</when>
+            <otherwise>and r.status != 'VOID'</otherwise>
+        </choose>
+        order by r.activity_id desc, r.id desc
+    </select>
+
+    <select id="selectForPayer" resultMap="Row">
+        select <include refid="viewColumns"/> from fe_reference_settlement r <include refid="viewJoins"/>
+        <include refid="payerJoins"/>
+        where <include refid="payerIsMember"/> and r.status != 'VOID'
+        <if test="activityId != null">and r.activity_id = #{activityId}</if>
+        order by r.activity_id desc, r.id desc
+    </select>
+
+    <select id="selectOwnedByPayerForUpdate" resultMap="Row">
+        select <include refid="columns"/> from fe_reference_settlement r <include refid="payerJoins"/>
+        where <include refid="payerIsMember"/>
+          and r.id in <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+        order by r.id
+        for update
+    </select>
+
+    <update id="markSettledOffline">
+        update fe_reference_settlement
+        set status = 'SETTLED_OFFLINE', settled_at = now(), settled_by = #{memberId},
+            voucher_no = #{voucherNo}, note = coalesce(#{note}, note), update_time = now()
+        where id = #{id} and status in ('OPEN', 'DISPUTED')
+    </update>
+
+    <select id="selectOwnedByMerchantForUpdate" resultMap="Row">
+        select <include refid="columns"/> from fe_reference_settlement r
+        where r.id = #{id} and r.merchant_id = #{merchantId}
+        for update
+    </select>
+
+    <update id="markDisputed">
+        update fe_reference_settlement set status = 'DISPUTED', note = #{note}, update_time = now()
+        where id = #{id} and merchant_id = #{merchantId} and supplier_kind = 'MERCHANT'
+          and status in ('OPEN', 'SETTLED_OFFLINE')
+    </update>
+</mapper>

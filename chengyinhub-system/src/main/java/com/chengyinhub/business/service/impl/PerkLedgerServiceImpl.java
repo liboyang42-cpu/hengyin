@@ -95,6 +95,13 @@ public class PerkLedgerServiceImpl implements IPerkLedgerService {
     @Autowired
     private com.chengyinhub.business.service.IFreeExploreBundleService freeExploreBundleService;
 
+    /**
+     * F11:自由探索权益核销的店铺参考结算(不入余额,线下结款)。与套票服务同一装配口径:
+     * Spring 下必装配;只有手工装配本类的真库 IT 不涉参考账时为空。
+     */
+    @Autowired
+    private com.chengyinhub.business.service.IFeReferenceSettlementService feReferenceSettlementService;
+
     // ------------------------------------------------------------ 容量
 
     /**
@@ -291,6 +298,10 @@ public class PerkLedgerServiceImpl implements IPerkLedgerService {
         if (freeExploreBundleService != null) {
             freeExploreBundleService.onRegistrationRefunded(registrationId);
         }
+        // F11:整单退款时,这一单还 OPEN 且未核销的参考行作废;已核销的行保持 OPEN(店铺确实提供了服务)。
+        if (feReferenceSettlementService != null) {
+            feReferenceSettlementService.voidUnredeemedOnRefund(registrationId);
+        }
         return released;
     }
 
@@ -475,6 +486,10 @@ public class PerkLedgerServiceImpl implements IPerkLedgerService {
         if (freeExploreBundleService != null) {
             freeExploreBundleService.onChapterRedeemed(registrationId, chapterId, merchantId, r.getId());
         }
+        // ⑤ F11:自由探索权益核销写一行店铺参考结算(同一事务;AUTHOR 供给 = 0 元、作者自营、直接已结清)。
+        if (feReferenceSettlementService != null) {
+            feReferenceSettlementService.recordPerkRedemption(r, offer);
+        }
         return r.getId();
     }
 
@@ -606,6 +621,10 @@ public class PerkLedgerServiceImpl implements IPerkLedgerService {
         // DOC2 F3 套票:与上面 restoreToPending 成对,单位退回(票已退款则置 REFUNDED)。
         if (freeExploreBundleService != null) {
             freeExploreBundleService.onRedemptionReversed(redemptionId);
+        }
+        // F11:撤销核销 ⇒ 该核销的参考结算行作废(与撤销同事务)。
+        if (feReferenceSettlementService != null) {
+            feReferenceSettlementService.voidForReversedRedemption(redemptionId);
         }
 
         // ★ 与「首次核销就置 verification_status」成对:撤销到**一笔 ACTIVE 核销都不剩**时,清回未核销态。
@@ -1030,5 +1049,22 @@ public class PerkLedgerServiceImpl implements IPerkLedgerService {
 
     private int nz(Integer v) {
         return v == null ? 0 : v;
+    }
+
+    @Override
+    public boolean hasLiveAuthorSupply(Long topicId, Long memberId) {
+        if (topicId == null || memberId == null || memberId <= 0) return false;
+        List<MerchantChapterOffer> offers = offerMapper.selectByTopic(topicId);
+        if (offers == null) return false;
+        Date now = new Date();
+        for (MerchantChapterOffer offer : offers) {
+            if (offer != null && offer.isAuthorSupplied() && memberId.equals(offer.getMerchantId())
+                    && memberId.equals(offer.getSupplierMemberId())
+                    && Integer.valueOf(1).equals(offer.getStatus())
+                    && (offer.getValidEnd() == null || offer.getValidEnd().after(now))) {
+                return true;
+            }
+        }
+        return false;
     }
 }
