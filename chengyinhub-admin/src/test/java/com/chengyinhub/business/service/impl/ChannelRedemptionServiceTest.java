@@ -280,6 +280,30 @@ class ChannelRedemptionServiceTest {
     }
 
     @Test
+    void reconciliationIssueOccurredAtAcceptsDateAndMysqlLocalDateTime() {
+        // selectReconciliationIssues 是 Map 结果;Connector/J 8 把 DATETIME 回成 LocalDateTime,旧代码只认 Date → occurredAt 为空。
+        java.time.LocalDateTime local = java.time.LocalDateTime.of(2026, 11, 19, 8, 0, 0);
+        java.util.Date date = new java.util.Date(1_700_000_000_000L);
+        Map<String, Object> localIssue = new HashMap<>();
+        localIssue.put("issueType", "VERIFIED_WITHOUT_VOUCHER");
+        localIssue.put("occurredAt", local);
+        Map<String, Object> dateIssue = new HashMap<>();
+        dateIssue.put("issueType", "VOUCHER_WITHOUT_VERIFICATION");
+        dateIssue.put("occurredAt", date);
+        when(verifications.selectReconciliationSummary(ACCOUNT_ID, null, null)).thenReturn(new HashMap<>());
+        when(vouchers.selectReconciliationSummary(ACCOUNT_ID, null, null)).thenReturn(new HashMap<>());
+        when(vouchers.selectReconciliationIssues(ACCOUNT_ID, null, null, 200))
+                .thenReturn(java.util.Arrays.asList(localIssue, dateIssue));
+
+        com.chengyinhub.business.domain.dto.ChannelReconciliationView view =
+                service.reconcile(ACCOUNT_ID, null, null);
+
+        assertEquals(java.util.Date.from(local.atZone(java.time.ZoneId.systemDefault()).toInstant()),
+                view.getIssues().get(0).getOccurredAt());
+        assertEquals(date, view.getIssues().get(1).getOccurredAt());
+    }
+
+    @Test
     void reconciliationExposesCountsAndLocatableIssues() {
         Map<String, Object> verified = new HashMap<>();
         verified.put("verifiedOrderCount", 2);

@@ -5062,16 +5062,16 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         String recentOutcome = upper(team.remove("recentEventOutcome"));
         String recentReasonCode = upper(team.remove("recentEventReasonCode"));
         Object recentRevision = team.remove("recentEventRevision");
-        Object recentAt = team.remove("recentEventAt");
+        Date recentAt = DateUtils.asDate(team.remove("recentEventAt"));
         if (StringUtils.isNotBlank(recentRequestId) && StringUtils.isNotBlank(recentAction)
-                && StringUtils.isNotBlank(recentOutcome) && recentAt instanceof Date) {
+                && StringUtils.isNotBlank(recentOutcome) && recentAt != null) {
             Map<String, Object> recent = new LinkedHashMap<>();
             recent.put("requestId", recentRequestId);
             recent.put("action", recentAction);
             recent.put("outcome", recentOutcome);
             recent.put("reasonCode", StringUtils.isBlank(recentReasonCode) ? null : recentReasonCode);
             recent.put("revision", recentRevision instanceof Number ? ((Number) recentRevision).intValue() : null);
-            recent.put("occurredAt", formatDate((Date) recentAt));
+            recent.put("occurredAt", formatDate(recentAt));
             team.put("recentEvent", recent);
         }
 

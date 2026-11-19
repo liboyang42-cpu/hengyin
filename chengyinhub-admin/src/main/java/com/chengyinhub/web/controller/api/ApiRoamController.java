@@ -226,9 +226,11 @@ public class ApiRoamController extends BaseController {
         if (dist > radius + ROAM_GPS_TOLERANCE_M) return error("还没到该地点附近");
         // R6 反作弊:与上一次到点做瞬移速度校验,挡"读 /pois 拿坐标秒发全城 POI"的伪造定位刷取
         java.util.Map<String, Object> last = roamMapper.selectLastPoiFoundLoc(memberId);
-        if (last != null && last.get("foundAt") instanceof java.util.Date
+        // Connector/J 8 对 Map 结果的 DATETIME 回 LocalDateTime，不能用 instanceof Date 守卫(会让校验静默失效)
+        java.util.Date lastFoundAt = last == null ? null : com.chengyinhub.common.utils.DateUtils.asDate(last.get("foundAt"));
+        if (lastFoundAt != null
                 && last.get("lat") instanceof Number && last.get("lng") instanceof Number) {
-            long dtSec = Math.max(1L, (System.currentTimeMillis() - ((java.util.Date) last.get("foundAt")).getTime()) / 1000L);
+            long dtSec = Math.max(1L, (System.currentTimeMillis() - lastFoundAt.getTime()) / 1000L);
             double prevDist = GeoDistanceUtils.haversineMeters(((Number) last.get("lat")).doubleValue(), ((Number) last.get("lng")).doubleValue(),
                     poi.getLat().doubleValue(), poi.getLng().doubleValue());
             if (prevDist > MIN_MOVE_DIST_M && prevDist / dtSec > MAX_MOVE_SPEED_MPS) {
