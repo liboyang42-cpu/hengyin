@@ -5227,7 +5227,7 @@ Page({
       if (last && last.lat && last.lng) dm = this.haversine(last.lat, last.lng, node.lat, node.lng);
     }
     if (dm == null) return '';
-    return dm >= 1000 ? (dm / 1000).toFixed(1) + 'km' : Math.round(dm) + 'm';
+    return geo.distanceText(dm);
   },
   // 章节色:现有 buildJournal 里没有独立的按 chapterId 取色表(labelCol/bodyCol 走的是完成度沉降色阶),
   // 故卡堆左条统一按 chapterId 哈希一个稳定色;chapterId 缺失时同一套哈希兜底,保证同章节颜色一致。
