@@ -243,4 +243,51 @@ Controller: `CityR3RateLimitContractTest` (now lists `challengeTaskSubmit`). Pri
 
 ## Verification
 
-<!-- TOTALS -->
+Run on 2026-11-19 in the cloud sandbox: JDK 21, no MySQL, no deploy.
+
+**New and changed tests, all passing:**
+
+| Class | Tests |
+|---|---|
+| `CityGapsR3Test` | 15 |
+| `CityOnSiteTaskServiceTest` | 11 |
+| `CityDeedSerialConcurrencyTest` | 3 |
+| `CityTerritoryNotifyChannelTest` | 3 |
+| `CityLocationRetentionServiceTest` | 4 |
+| `DataRetentionServiceImplTest` | 12 |
+| `AccountDeregistrationR3ErasureTest` | 2 |
+| `CityR3RateLimitContractTest` | 1 |
+| `CityLocationConsentGateTest` | 2 |
+| `CityMonopolyServiceUnitTest` | 7 |
+| `NotifyFanoutContractTest` | 18 |
+
+**Affected modules:** `LANG=C.UTF-8 LC_ALL=C.UTF-8 mvn -B -pl chengyinhub-admin -am test -Dmaven.test.failure.ignore=true`.
+The `-am` covers common, system, framework, quartz, generator and admin; the tests live in admin.
+- Result: 12,741 tests run, **0 failures**, 34 errors, 563 skipped.
+- The forked JVM then died with `OutOfMemoryError: Java heap space` in `TopicUpdateByOwnerTest`, so the admin module
+  was cut short and reported `BUILD FAILURE`.
+
+**Full suite:** `LANG=C.UTF-8 LC_ALL=C.UTF-8 mvn -B test -Dmaven.test.failure.ignore=true`.
+- Result: 12,742 run, **0 failures**, 34 errors, 563 skipped.
+- The same OOM hit at the same test and the build ended in `BUILD FAILURE`.
+- **The OOM is not caused by this change.** Clean `origin/integration/backend-app-r3` (d43976db8), run the same way,
+  OOMs at the same test (12,752 run, 0 failures, 34 errors), and its set of failing classes is identical to this
+  branch's.
+- Cause: the root pom caps the test fork at `-Xmx512m`.
+
+**Full suite, complete run:** the same command with only the heap raised:
+`"-DargLine=-Xmx2g -Dspring.test.context.cache.maxSize=4"`.
+- Result: **19,980 tests run, 0 failures, 34 errors, 713 skipped, `BUILD SUCCESS`**, no OOM.
+
+**The 34 errors:** in every run they are the same 14 `*MyBatisTest` classes, all failing with
+`Communications link failure` because they need the test VPS MySQL. None of them touches this change.
+
+**Not run here (needs MySQL on the test VPS):**
+- the migration itself;
+- the `CHENGYIN_CITY_GAME_MYSQL_IT` suites;
+- `AccountDeregistrationR3ErasureMyBatisTest`.
+
+**Gates run locally:** `ci/migration-safety-check.sh`, `ci/migration-layout-check.sh`, `ci/dup_create_table_gate.py`
+and `ci/forbidden_hosts_gate.py` all pass.
+
+Scope: 积分 only. No ledger, gitleaks, secret or deploy changes.
