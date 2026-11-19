@@ -1666,14 +1666,17 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     }
 
     /**
-     * 本局冻结的是节点集合(建局后新增的站不进本局);顺序跟随游玩顺序(章节 sort_id → 节点 sort_id → id),
-     * 即 liveNodes 的顺序。早先按冻结插入顺序走,作者跨章调过顺序的路线会把下一站算错并卡死。
+     * Existing linear state already records the initial node universe and insertion order(OWN-C06-21/23:
+     * 进行中的局不因作者中途调序而改顺序)。建局时的初始顺序由 nodes() / inPlayOrder 按游玩顺序
+     * (章节 sort_id → 节点 sort_id → id)给出。
      */
     private List<CmsTopicNode> linearSessionNodes(TopicRouteSession session, List<CmsTopicNode> liveNodes) {
         Map<Long, String> frozen = readEngineState(session.getStateJson()).getNodeStates();
         if (frozen == null || frozen.isEmpty()) return liveNodes; // Pre-snapshot compatibility.
+        Map<Long, CmsTopicNode> available = new LinkedHashMap<Long, CmsTopicNode>();
+        for (CmsTopicNode node : liveNodes) available.put(node.getId(), node);
         List<CmsTopicNode> ordered = new ArrayList<CmsTopicNode>();
-        for (CmsTopicNode node : liveNodes) if (frozen.containsKey(node.getId())) ordered.add(node);
+        for (Long id : frozen.keySet()) if (available.containsKey(id)) ordered.add(available.get(id));
         return ordered;
     }
 
@@ -1727,8 +1730,8 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     }
 
     /**
-     * 早先按冻结插入顺序推进的局可能把当前站存成了「顺序靠后但 id 最小」的站(路线卡死)。
-     * 进行中的线性局读出时,当前站一律按游玩顺序取第一个未完成站,PLAYABLE 只给它。
+     * 存下的当前站与本局冻结顺序不一致时(老局游标停在顺序靠后的站上 → 路线卡死),
+     * 读出时按本局冻结顺序取第一个未完成站,PLAYABLE 只给它;不改本局顺序本身。
      */
     private void realignLinearCursor(TopicRouteState view, List<CmsTopicNode> ordered, TopicRouteEngine.State stored) {
         if (!"ACTIVE".equals(view.getStatus()) || stored.getCurrentNodeId() == null || ordered.isEmpty()) return;
