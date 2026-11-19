@@ -57,6 +57,10 @@ public class PlayerRunReportApplication {
     static final String RANK_BASIS_NOTE = "COMPLETED_NODES_COUNT_NOT_NET_SCORE";
     static final String SCORE_BASIS_PERSISTED = "SERVER_PERSISTED_PUZZLE_SCORE";
 
+    /** CG-ALL-11 开局方式;直接 new 的存量单测为 null。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.PlayRunStartModeService playRunStartModeService;
+
     @Autowired
     private ICmsTopicService cmsTopicService;
     @Autowired
@@ -228,6 +232,7 @@ public class PlayerRunReportApplication {
         vo.setRunId(session == null ? null : session.getId());
         vo.setPlayInstanceId(boundRun ? session.getPlayInstanceId() : null);
         vo.setRunKind(actId > 0L ? "ACTIVITY" : "SELF_PLAY");
+        if (playRunStartModeService != null) vo.setRunStartMode(playRunStartModeService.runMode(memberId, actId, tId));
         vo.setCompletedNodes(completed);
         vo.setTotalNodes(total);
         vo.setNodes(nodeScores);
