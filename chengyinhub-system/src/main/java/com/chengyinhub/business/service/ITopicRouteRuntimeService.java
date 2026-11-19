@@ -270,6 +270,45 @@ public interface ITopicRouteRuntimeService {
     }
     java.util.Set<String> tags(Long memberId, Long topicId, Long activityId);
 
+    /**
+     * 角色(Cast)v1 · POST /api/play/run/profile:写本局玩家档案(名字 / 身份)到 state_json.playerProfile。
+     * 只有本局主人、本局进行中;名字 1–12 字并过内容安全;identityKey 可缺省,给了必须是 castConfig.identities 里的。
+     *
+     * @return {playerProfile:{name,identityKey,identityTitle}}
+     */
+    Map<String, Object> saveRunProfile(Long memberId, Long runId, String name, String identityKey);
+
+    /**
+     * 角色(Cast)v1 · POST /api/play/run/branch:记录本局在某个章节剧情 branch 块上的选择,
+     * 按服务端存的选项 trust 结算 state_json.trust。同一 chapterId:blockKey 只记第一次(重复返回 duplicate=true)。
+     *
+     * @return {chapterId,blockKey,optionIndex,to,duplicate}
+     */
+    Map<String, Object> recordStoryBranch(Long memberId, Long runId, Long chapterId, String blockKey, Integer optionIndex);
+
+    /**
+     * 角色(Cast)v1 · GET /api/topic/cast/voice:台词配音地址。块自带 audioUrl 直接回;否则按说话角色预设声音合成,
+     * 按 sha256(preset + text) 缓存。已发布主题登录即可听;草稿只有主题主人。
+     *
+     * @return {url}
+     */
+    Map<String, Object> castLineVoice(Long memberId, Long topicId, Long chapterId, String blockKey, Long runId);
+
+    /**
+     * 角色(Cast)v1 · 编辑器「试听」:按预设声音念服务端固定的一句示例(不接受客户端文本),同一缓存 / 同一 TTS。
+     * 任何登录用户可调(只有 5 个预设 × 1 句,首次合成后全部命中缓存)。
+     *
+     * @return {url}
+     */
+    Map<String, Object> castPresetSample(Long memberId, String preset);
+
+    /**
+     * 角色(Cast)v1 · 玩家侧下发的 castConfig(契约 E4):未解锁线索不下发正文,只给 cast[].lockedCount。
+     * 解锁 = 线索 chapterId 为 null,或调用者在该主题的当前局已到过那一章(按主题章节顺序,到过的最远一章及之前)。
+     * 游客 / 没有本局:只解锁 chapterId 为 null 的线索。stored 为 null 时回 null(功能关闭)。
+     */
+    JsonNode castConfigForPlayer(Long memberId, Long topicId, String stored);
+
     static String sessionKey(Long memberId, Long topicId, Long activityId) {
         return String.valueOf(memberId) + ':' + String.valueOf(topicId) + ':'
                 + String.valueOf(activityId == null ? 0L : activityId);

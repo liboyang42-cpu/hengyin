@@ -22,6 +22,8 @@ const MAX_ENDINGS = 6;
 const THOUGHT_TAG = /^thought\.([a-z][a-z0-9_]{0,47})\.done$/;
 const OPTION_TAG = /^tag\.[a-z][a-z0-9_]{0,47}$/;
 const CODE = /^[a-z][a-z0-9_]{0,31}$/;
+// D2 结局归属(角色契约 1119):endingFor = 角色 id。服务端在信任最高的那位的结局章里挑;平局 / 没有信任走默认结局。
+const CAST_ID = /^c_[a-z0-9]{6,12}$/;
 
 function parse(input) {
   let root = {};
@@ -50,6 +52,9 @@ function toDraft(row) {
   if (base.fallback) return Object.assign(base, { kind: 'fallback' });
 
   const when = Array.isArray(row.when) ? row.when : [];
+  if (row.endingFor != null && String(row.endingFor).trim()) {
+    return Object.assign(base, { kind: 'cast', endingFor: String(row.endingFor).trim() }, when.length ? { _when: when } : {});
+  }
   if (when.length === 1 && when[0] && when[0].op === 'HAS_TAG') {
     const hit = THOUGHT_TAG.exec(String(when[0].value || ''));
     if (hit) return Object.assign(base, { kind: 'thought', thoughtKey: hit[1] });
@@ -89,6 +94,7 @@ function serialize(draft) {
       out.fallback = true;
       return out;
     }
+    if (item.kind === 'cast') return Object.assign(out, castEndingOf(item, title));
     out.when = conditionOf(item, title);
     return out;
   });
@@ -101,6 +107,15 @@ function serialize(draft) {
   const next = Object.assign({}, root, { ending: ending });
   if (!next.schemaVersion) next.schemaVersion = 1;
   return JSON.stringify(next);
+}
+
+/** 归属角色的结局:{endingFor}(+ 原样带回的 when)。没选角色就抛。 */
+function castEndingOf(item, title) {
+  const castId = String(item.endingFor || '').trim();
+  if (!CAST_ID.test(castId)) throw new Error('「' + title + '」要选归属角色');
+  const out = { endingFor: castId };
+  if (Array.isArray(item._when) && item._when.length) out.when = item._when;
+  return out;
 }
 
 /** 界面的一条条件 → 服务端 when。缺选择就抛一句作者看得懂的话。 */
@@ -133,6 +148,7 @@ function conditionOf(item, title) {
 function chapterEndingPayload(ending, name) {
   if (!ending || typeof ending !== 'object') return null;
   if (ending.fallback === true) return { fallback: true };
+  if (ending.kind === 'cast') return castEndingOf(ending, name || '这个结局章');
   return { when: conditionOf(ending, name || '这个结局章') };
 }
 
@@ -144,7 +160,7 @@ function chapterEndingIssue(chapter) {
   if ((chapter.nodes || []).length) return '结局章里不能放节点或玩法';
   if (Number(chapter.recruitEnabled) === 1) return '结局章不能开放商家承接';
   if (ending.fallback === true) return '';
-  try { conditionOf(ending, chapter.name || '这个结局章'); } catch (e) { return e.message; }
+  try { chapterEndingPayload(ending, chapter.name || '这个结局章'); } catch (e) { return e.message; }
   return '';
 }
 
@@ -172,6 +188,7 @@ function attachEndingsToChapters(chapters, journeyStory) {
     const ending = draft.fallback ? { fallback: true, kind: 'fallback' }
       : { fallback: false, kind: draft.kind, thoughtKey: draft.thoughtKey || '', tag: draft.tag || '',
         nodeId: draft.nodeId == null ? null : draft.nodeId, _when: draft._when };
+    if (draft.endingFor) ending.endingFor = draft.endingFor;
     if (row.chapterId != null) {
       const hit = out.find(c => c.id != null && String(c.id) === String(row.chapterId));
       if (hit) { hit.ending = ending; return; }

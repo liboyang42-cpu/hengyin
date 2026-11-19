@@ -1,0 +1,47 @@
+<!-- 角色 Cast v1 玩家侧(契约 docs/design/cast-contract-1119.md):C 起名 → E1 登场人物 → 正文;E4 角色卡。方法在 utils/cast-play.js。
+     只在主题开了角色(cast.on)时出现;没开角色的主题这里一个节点都不渲染。 -->
+<!-- C 起名:整屏深色,一屏一个问题 -->
+<view class="cstart {{cast.start.in ? 'is-in' : ''}}" wx:if="{{cast.start.show}}" catchtouchmove="noop" aria-role="dialog" aria-label="{{cast.start.step === 'name' ? '你叫什么？' : '今晚你以什么身份到场'}}">
+  <view class="cstart__body" wx:if="{{cast.start.step === 'name'}}">
+    <view class="cstart__q">你叫什么？</view>
+    <input class="cstart__in cy-story-hand" value="{{cast.start.name}}" maxlength="12" placeholder="你" placeholder-class="cstart__ph" confirm-type="go" bindinput="onCastName" bindconfirm="submitCastStart" aria-label="名字" />
+  </view>
+  <view class="cstart__body" wx:else>
+    <view class="cstart__q">今晚你以什么身份到场</view>
+    <view class="cstart__ids" aria-role="radiogroup" aria-label="身份">
+      <view wx:for="{{cast.start.identities}}" wx:key="key" class="cstart__id {{cast.start.pick === item.key ? 'is-on' : ''}}" data-key="{{item.key}}" bindtap="pickCastIdentity"
+            aria-role="radio" aria-checked="{{cast.start.pick === item.key}}" aria-label="{{item.title}}" hover-class="cy-pressed" hover-stay-time="80"><text class="cstart__id-t">{{item.title}}</text><text class="cstart__id-s" wx:if="{{item.sub}}">{{item.sub}}</text></view>
+    </view>
+  </view>
+  <view class="cstart__go {{cast.start.busy ? 'is-busy' : ''}}" bindtap="submitCastStart" aria-role="button" aria-label="{{cast.start.more ? '下一步' : '出发'}}" aria-disabled="{{cast.start.busy}}" hover-class="cy-pressed" hover-stay-time="80">{{cast.start.more ? '下一步' : '出发'}}</view>
+</view>
+<!-- E1 登场人物:路线名 · 标题 · 每位一行(名字 … 身份),玩家在细线之后 -->
+<view class="cbill {{cast.bill.in ? 'is-in' : ''}}" wx:if="{{cast.bill.show}}" catchtouchmove="noop" aria-role="dialog" aria-label="登场人物">
+  <view class="cbill__body">
+    <view class="cbill__route" wx:if="{{cast.bill.route}}">{{cast.bill.route}}</view>
+    <view class="cbill__t">登场人物</view>
+    <view class="cbill__row" wx:for="{{cast.bill.rows}}" wx:key="id"><text class="cbill__n">{{item.name}}</text><view class="cbill__dots"></view><text class="cbill__i">{{item.identity}}</text></view>
+    <view class="cbill__rule"></view>
+    <view class="cbill__row"><text class="cbill__n">{{cast.bill.player.name}}</text><view class="cbill__dots"></view><text class="cbill__i">{{cast.bill.player.identity}}</text></view>
+  </view>
+  <view class="cstart__go" bindtap="closeCastBill" aria-role="button" aria-label="{{cast.bill.menu ? '收起' : '开场'}}" hover-class="cy-pressed" hover-stay-time="80">{{cast.bill.menu ? '收起' : '开场'}}</view>
+</view>
+<!-- E4 角色卡:点页边名字打开的半屏(深色面) -->
+<block wx:if="{{cast.card.show}}">
+  <view class="ccard-mask {{cast.card.in ? 'is-in' : ''}}" catchtouchmove="noop" bindtap="closeCastCard" aria-role="button" aria-label="收起" hover-class="none"></view>
+  <view class="ccard {{cast.card.in ? 'is-in' : ''}}" catchtouchmove="noop" aria-role="dialog" aria-label="{{cast.card.name}}">
+    <view class="ccard__head">
+      <image wx:if="{{cast.card.face.url}}" class="ccard__face" src="{{img.first(cast.card.face.url)}}" mode="aspectFill" aria-hidden="true" />
+      <view wx:else class="ccard__face ccard__face--i" style="background:{{cast.card.face.color}}" aria-hidden="true">{{cast.card.face.initial}}</view>
+      <view class="ccard__copy"><text class="ccard__name">{{cast.card.name}}</text><text class="ccard__id" wx:if="{{cast.card.identity}}">{{cast.card.identity}}</text></view>
+      <view wx:if="{{cast.card.voice}}" class="ccard__play" bindtap="playCastCardVoice" aria-role="button" aria-label="听{{cast.card.name}}说这一句" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="play" size="28" /></view>
+    </view>
+    <view class="ccard__k">{{cast.card.trustLabel}}</view>
+    <view class="ccard__ticks" aria-role="img" aria-label="{{cast.card.trustLabel}}"><view wx:for="{{cast.card.ticks}}" wx:key="i" class="castend__tick {{item.on ? 'is-on' : ''}}" style="{{item.on ? 'background:' + cast.card.color : ''}}"></view></view>
+    <block wx:if="{{cast.card.clues.open.length || cast.card.clues.locked}}">
+      <view class="ccard__k">你知道的</view>
+      <view class="ccard__clue cy-story-hand" wx:for="{{cast.card.clues.open}}" wx:key="*this">{{item}}</view>
+      <view class="ccard__lock" wx:if="{{cast.card.clues.locked}}">{{cast.card.clues.lockedText}}</view>
+    </block>
+  </view>
+</block>

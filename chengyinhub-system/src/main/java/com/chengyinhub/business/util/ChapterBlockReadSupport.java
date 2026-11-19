@@ -142,6 +142,12 @@ public final class ChapterBlockReadSupport
                 Object tag = ((Map<?, ?>) ((Map<?, ?>) item).get("when")).get("value");
                 if (tags == null || tag == null || !tags.contains(String.valueOf(tag))) continue;
             }
+            // 台词块(type=line)的条件叫 cond,口径同 when。
+            if (item instanceof Map && "line".equals(((Map<?, ?>) item).get(KEY_TYPE)) && ((Map<?, ?>) item).get("cond") instanceof Map)
+            {
+                Object tag = ((Map<?, ?>) ((Map<?, ?>) item).get("cond")).get("value");
+                if (tags == null || tag == null || !tags.contains(String.valueOf(tag))) continue;
+            }
             projected.add(item);
             if (!(item instanceof Map))
             {

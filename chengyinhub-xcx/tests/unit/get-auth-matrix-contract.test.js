@@ -197,6 +197,9 @@ const MATRIX = [
   /* 2026-10-22 L21 BL-186 章节阶段结算:ApiPlayJourneyController.stageEnd 同一控制器,currentMemberId()<=0 直接拒,
      读本人本局 session 的本章结算 —— 与 /journey/ending 同档。 */
   ['pages/play/index.js', "req('/api/play/journey/stage-end'", 'required', 'member', 'current-session'],
+  /* 2026-11-19 角色 Cast v1:台词配音地址 ApiTopicController.castVoice(GET /api/topic/cast/voice),memberId<=0 直接拒;
+     已发布主题登录即可听、草稿只有主题主人,按 runId 只读本人本局的名字代入 {玩家} —— 点了才读,不写。 */
+  ['pages/play/utils/cast-play.js', "req('/api/topic/cast/voice', 'GET'", 'required', 'member', 'public-detail+viewer-personalization'],
   /* 2026-10-22 L21 BL-185 主题发布前试检查:ApiTopicStateKeyController.publishCheck 走 editableDenial ——
      登录 →(scope=MERCHANT 时 PROJECT_MANAGE 取 Owner 主体)→ 主题本人;只读不改状态。 */
   ['pages/publish/fabu/index.js', "url: '/api/topic/publish-check'", 'required', 'publisher', 'self-publisher'],
@@ -235,6 +238,8 @@ const MATRIX = [
   ['pages/publish/components/topic-state-keys/index.js', "url: '/api/topic/state-keys', method: 'GET'", 'required', 'publisher', 'self-publisher'],
   // 文档二 L3：下一站条件与效果读同一个注册表补名字（主题本人或商家代管 scope）。
   ['pages/publish/fabu/theme-route-names.js', "url: '/api/topic/state-keys', method: 'GET'", 'required', 'publisher', 'self-publisher'],
+  // 2026-11-19 cast-contract-1119:编辑角色弹窗「试听」预设声音。同一 GET /api/topic/cast/voice 的试听模式(只给 preset):登录即可,念服务端固定示例句(ApiTopicController.castVoice,MEMBER 限流)。
+  ['pages/publish/fabu/theme-cast.js', "url: '/api/topic/cast/voice', method: 'GET'", 'required', 'publisher', 'self-publisher'],
   ['pages/publish/fabu/theme-d20-page.js', "url: '/api/topic/play-setup', method: 'GET'", 'required', 'publisher', 'self-publisher'],
   // 2026-11-04 第九轮 m4(owner 批准):官方路线列表与详情游客可读,只回已上架路线,游客走 PresetRouteGuestProjection。
   // f-pages P0-79:漫游护照探一次官方路线目录决定是否摆「官方路线」大卡;同一公开只读端点(permitAll,只回已上架路线)。
@@ -531,7 +536,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-11-19 合流:FE-G4 +1 与 OR-024 +1 叠加,140 → 142。
   // 2026-11-19 PG-021:简易发布页删除,其 AI 草稿 request / recovery 两处直接 GET 随页删除,140 → 138。
   // 2026-11-19 三线合流:142 − 2 = 140。
-  assert.equal(directCount, 140, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-11-19 cast-contract-1119:角色弹窗试听 GET /api/topic/cast/voice 一处(已入 MATRIX),140 → 141。
+  assert.equal(directCount, 141, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。
@@ -550,7 +556,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-11-10 staging 合流:再叠加 qx-a4 +1,49 → 50。
   // 2026-11-11 f-pages:漫游护照「官方路线」大卡探一次公开路线目录(已入 MATRIX),50 → 51。
   // 2026-11-18 FE-STORY 7.4:自由探索票过期后读只读历史一处(同 /api/play/history 权限档,已入 MATRIX),51 → 52。
-  assert.equal(wrapperCount, 52, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-11-19 角色 Cast v1:游玩页点台词才读一次配音地址 /api/topic/cast/voice(已入 MATRIX),52 → 53。
+  assert.equal(wrapperCount, 53, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
   assert.equal(ownMediaWrapperCount, 5, '作者媒体实际GET调用点变化需显式复核');
   assert.equal(MATRIX.length, directCount + wrapperCount + ownMediaWrapperCount);
 

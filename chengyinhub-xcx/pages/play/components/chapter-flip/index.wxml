@@ -26,7 +26,13 @@
     <view class="cf__foot"><view class="cf__btn" catchtap="onTap" aria-role="button" aria-label="{{endCard.next ? '下一站：' + endCard.next : '继续'}}" hover-class="cf-pressed" hover-stay-time="80">{{endCard.next ? '下一站：' + endCard.next : '继续'}}</view></view>
   </view>
   <!-- 章节开始 / 通关的文字:方块章节号(开场)或三棱锥 → 城瘾标志(通关)在画布上,这里只有逐字解码的章眉 / 章名 / 说明 / 数据 -->
-  <view class="cf__copy {{startIn ? 'is-in' : ''}} {{quiet ? 'is-quiet' : ''}}" wx:if="{{copy}}" aria-hidden="true">
+  <!-- 角色 Cast v1 · E2 书页式章首(只在开了角色的主题,info.book = 「第N章」):小字疏排章序 + 大标题 + 28px 发丝线,取代逐字解码那组字 -->
+  <view class="cf__book {{startIn ? 'is-in' : ''}}" wx:if="{{info.book && start && !endCard}}" aria-hidden="true">
+    <view class="cf__book-k">{{info.book}}</view>
+    <view class="cf__book-t">{{info.title}}</view>
+    <view class="cf__book-rule"></view>
+  </view>
+  <view class="cf__copy {{startIn ? 'is-in' : ''}} {{quiet ? 'is-quiet' : ''}}" wx:if="{{copy && !info.book}}" aria-hidden="true">
     <view class="cf__k"><text wx:for="{{copy.k}}" wx:key="index" class="cf__c {{item.n ? 'is-n' : ''}}">{{item.c}}</text></view>
     <view class="cf__t"><text wx:for="{{copy.t}}" wx:key="index" class="cf__c {{item.n ? 'is-n' : ''}}">{{item.c}}</text></view>
     <view class="cf__d" wx:if="{{copy.d.length}}"><text wx:for="{{copy.d}}" wx:key="index" class="cf__c {{item.n ? 'is-n' : ''}}">{{item.c}}</text></view>

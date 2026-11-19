@@ -258,8 +258,9 @@ const zeroHpEditor = require('./theme-runtime-zero-hp.js'); // R5 HP 归零面�
 const feVisitConfig = require('./theme-fe-visit.js'); // FE-STORY 7.10 地点到访方式
 const ownership = require('./theme-ownership.js'); const d20Page = require('./theme-d20-page.js'); const keysItems = require('./theme-keys-items.js'); const initialCarry = require('./theme-initial-carry.js'); // 文档二 L1;L2 线索与物品 · 物品一组;初始状态 · 开局带着
 const themeMedia = require('./theme-media.js');
+const themeCast = require('./theme-cast.js'); const storyCast = require('../utils/publish/story-cast.js'); // 角色(cast-contract-1119)
 Page({
-  ...themeMedia.methods,
+  ...themeMedia.methods, ...themeCast.methods,
   ...runtimeEditor.methods, ...routeNames.methods,
   ...structure.methods, // structure
   ...survivalEditor.methods, // survival
@@ -277,6 +278,7 @@ Page({
     ...structure.data, // structure
     ...survivalEditor.data, /* survival */ ...lookEditor.data, /* 画面风格 */
     ...ownership.data, ...feVisitConfig.data, ...d20Page.data, ...keysItems.data, ...initialCarry.data,
+    ...themeCast.data,
     // 氛围块的选择器:cy-dropdown 吃 {value,label} 数组(全仓禁原生 picker),块上回显要 key→中文的映射。
     moodOptions: CHAPTER_ATMOSPHERES,
     storyWhenOptions: [], storyWhenLabelOf: {},
@@ -524,6 +526,8 @@ Page({
       journeyRules: '',
       themeRuntimeConfig: '', look: '', /* 主题画面风格(theme-look.js);空 = 默认星尘 */
       journeyStory: '',
+      castConfig: null, // 角色(story-cast.js 界面形状);null = 没开过,老主题原样
+
       // 主题级路线真源。旧数据/空值保持 LINEAR；BRANCH_GRAPH 才序列化 routeGraphJson。
       routeMode: 'LINEAR',
       routeGraphJson: '',
@@ -1367,6 +1371,7 @@ Page({
   },
 
   closeStoryEditor() {
+    if (this.data.storyLineRec) this._stopCastRecording(true);
     const current = (this.data.formData.chapters || [])[this.data.storyEditor.chapterIndex];
     if ((current && current.blocks || []).some(b => b.type === 'dream' && b.title != null && !b.images.length)) {
       cyToast('相册至少添加 1 张照片');
@@ -2099,6 +2104,10 @@ Page({
     } else if (kind === 'divider' || kind === 'audio') {
       this._pushUndo();
       if (this._insertStoryMedia(kind, anchor.index, kind === 'audio' ? { url: '' } : {})) this._storyUndoBar(kind === 'audio' ? '已添加音频' : '已添加分割线');
+    } else if (kind === 'line') {
+      // 对白:先问「谁在说话」,选完才落块(旁白 = 普通段落)
+      this._storyAddAt = anchor.index;
+      this._openSpeakerSheet('');
     } else if (kind === 'gallery') {
       this._storyAddAt = anchor.index;
       this.setData({ storySheet: 'gallery' });
@@ -2159,14 +2168,20 @@ Page({
     const blockKey = e.currentTarget.dataset.blockkey;
     const block = (((this._storyChapter() || {}).blocks) || []).find((b) => b && b.key === blockKey && b.type === 'branch');
     if (!block) return;
-    this.setData({ storySheet: 'branch', storyBranchTos: this._storyBranchTos(), storyBranch: { blockKey, content: String(block.content || ''), options: proEditorStory.normalizeBranchOptions(block.options) } });
+    const options = proEditorStory.normalizeBranchOptions(block.options);
+    this.setData({ storySheet: 'branch', storyBranchTos: this._storyBranchTos(), storyBranch: { blockKey, content: String(block.content || ''), options } });
+    this._refreshBranchTrust(options);
   },
   _storyBranchCommand(patch) {
     const blockKey = this.data.storyBranch.blockKey;
     try {
       this._storyCommand(Object.assign({ type: 'updateBranch', blockKey }, patch));
       const block = (((this._storyChapter() || {}).blocks) || []).find((b) => b && b.key === blockKey);
-      if (block) this.setData({ storyBranch: { blockKey, content: String(block.content || ''), options: proEditorStory.normalizeBranchOptions(block.options) } });
+      if (block) {
+        const options = proEditorStory.normalizeBranchOptions(block.options);
+        this.setData({ storyBranch: { blockKey, content: String(block.content || ''), options } });
+        this._refreshBranchTrust(options);
+      }
     } catch (error) {
       cyToast(app.getRequestErrorMessage(error, '修改分支失败'));
     }
@@ -3543,6 +3558,7 @@ Page({
       'formData.themeRuntimeConfig': detail.themeRuntimeConfig || topic.themeRuntimeConfigJson || '', 'formData.look': detail.look || '',
       'formData.journeyRules': detail.journeyRules || topic.journeyRulesJson || '',
       'formData.journeyStory': detail.journeyStory || topic.journeyStoryJson || '',
+      'formData.castConfig': storyCast.parseCastConfig(detail.castConfig || topic.castConfig),
       // 思维阁入口卡的副标题要跟着回填 —— 不然编辑已有主题时明明配过念头,卡上却写「还没配」
       'thoughtsEditor.count': thoughtCountOf(detail.journeyRules || topic.journeyRulesJson),
       thoughtOptions: thoughtPatch.thoughtOptions, thoughtNameOf: thoughtPatch.thoughtNameOf,
@@ -3867,6 +3883,7 @@ Page({
     this._destroyChapterDurationAudio();
     this._destroyStoryDurationProbes();
     this.destroyPreviewAudio();
+    this._castCleanup();
     if (this._pendingUndoTimer) clearTimeout(this._pendingUndoTimer);
     this._pendingUndoTimer = null;
     this._pendingUndoSnapshot = null;
@@ -4350,6 +4367,7 @@ Page({
       'formData.journeyRules': sourceData.journeyRules || '',
       'formData.themeRuntimeConfig': sourceData.themeRuntimeConfig || '', 'formData.look': sourceData.look || '',
       'formData.journeyStory': sourceData.journeyStory || '',
+      'formData.castConfig': storyCast.parseCastConfig(sourceData.castConfig),
       'formData.completeRuleJson': sourceData.completeRuleJson || '',
 
       'formData.tickets': sourceData.tickets || [{
@@ -8124,6 +8142,7 @@ Page({
       endingTagOptions: tags, endingNodeOptions: nodes, 'chapterForm.ending': named,
       chapterEndingKindIndex: Math.max(0, kinds.findIndex((k) => k.key === kind)), chapterEndingPickIndex: pick,
     });
+    this._syncChapterEndingCast(named);
   },
 
   onChapterEndingToggle(e) {
@@ -8391,7 +8410,7 @@ Page({
     }
     const draft = !!(options && options.draft);
     const productType = Number(this.data.formData.productType) === 2 ? 2 : 1;
-    let chapters, journeyRules;
+    let chapters, journeyRules, castConfig;
     try {
       const currentRules = this.data.formData.journeyRules || '';
       if (this.data.editScope !== 'WHITELIST' && attributeBinding.parse(currentRules).attributeBinding && !this._attributeRegistryWriteReady) {
@@ -8400,6 +8419,7 @@ Page({
       journeyRules = this.data.editScope === 'WHITELIST' ? currentRules
         : attributeBinding.requestRules(currentRules, this._loadedAttributeRules || '', this.data.attributeRegistrySnapshot);
       chapters = this._buildSubmitChapters(productType);
+      castConfig = themeCast.payloadOf(this, draft || !!(options && options.quiet));
     } catch (error) {
       // 组装章节 payload 抛错(节点引用失效等)时点「确认发布」原来是静默无反应 —— 兜住给提示。
       // quiet:自动保存不弹提示(未完成的输入每 2 秒弹一次是骚扰),等用户明确保存/发布时再说
@@ -8479,6 +8499,8 @@ Page({
       themeRuntimeConfig: this._runtimePayload(), look: this._lookPayload(),
       // 结局都在章节上(结局章):剧情里的结局清单交给服务端按章重建
       journeyStory: storyEnding.withoutEndingList(this.data.formData.journeyStory) || null,
+      // 角色(cast-contract-1119):没开过就不带这个键,老主题的请求一字不变
+      ...(castConfig ? { castConfig } : {}),
       publishMode: this.data.aiSimple ? 'ai_simple' : 'pro',
       routeMode: productType === 1 && this.data.formData.routeMode === 'BRANCH_GRAPH'
         ? 'BRANCH_GRAPH' : 'LINEAR',
@@ -10060,6 +10082,7 @@ Page({
   },
   // 更新所有统计信息
   updateAllStatistics() {
+    this._refreshCastViews();
     const chapters = this.data.formData.chapters || [];
     const chapterStats = [];
 

@@ -1726,6 +1726,8 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         view.setAttributes(JourneyInitialState.playerView(sessionRules(session), readEngineState(session.getStateJson())));
         appendOpening(view, session, readEngineState(session.getStateJson()));
         appendThoughts(view, session, readEngineState(session.getStateJson()));
+        view.setPlayerProfile(com.chengyinhub.business.service.support.CastRunRules.profileView(
+                readEngineState(session.getStateJson()).getPlayerProfile()));
         return view;
     }
 
@@ -1759,6 +1761,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         view.setAttributes(JourneyInitialState.playerView(sessionRules(session), state));
         appendOpening(view, session, state);
         appendThoughts(view, session, state);
+        view.setPlayerProfile(com.chengyinhub.business.service.support.CastRunRules.profileView(state.getPlayerProfile()));
         return view;
     }
 
@@ -4134,6 +4137,297 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             this.memberId = memberId; this.activityId = activityId; this.topic = topic;
             this.registrations = registrations;
         }
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // 角色(Cast)v1 玩家侧运行时:本局玩家档案、剧情分支选择 + 信任结算、台词配音(TTS)。
+    // 本局状态只写 topic_route_session.state_json(与路线运行时同一份 State、同一条 CAS 更新),不另建表。
+    // 纯规则(信任累加、按信任挑结局、变量替换、错误码)在 CastRunRules / CastConfigSupport。
+    // ---------------------------------------------------------------------------------------------
+
+    private static final org.slf4j.Logger CAST_LOG = org.slf4j.LoggerFactory.getLogger(TopicRouteRuntimeServiceImpl.class);
+
+    @Autowired
+    @Lazy
+    private com.chengyinhub.business.service.IWxContentSecurityService castContentSecurity;
+
+    @Autowired
+    @Lazy
+    private com.chengyinhub.business.service.IUmsMemberService castMemberService;
+
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.ai.VoiceCloneClient castVoiceClient;
+
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.CastVoiceAudioCache castVoiceCache;
+
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.AppMediaReferenceGuard castMediaReferences;
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> saveRunProfile(Long memberId, Long runId, String rawName, String rawIdentityKey) {
+        castRequireLogin(memberId);
+        TopicRouteSession session = castLockOwnedRunningRun(memberId, runId);
+        JsonNode cfg = com.chengyinhub.business.service.support.CastConfigSupport.parse(topicMapper.selectCastConfigById(session.getTopicId()));
+        if (cfg == null || !cfg.path("enabled").asBoolean(false))
+            throw castCoded("本主题没有开启角色", 409, com.chengyinhub.business.service.support.CastRunRules.ERR_CAST_DISABLED);
+
+        String name = rawName == null ? "" : rawName.trim();
+        int length = name.codePointCount(0, name.length());
+        int max = com.chengyinhub.business.service.support.CastRunRules.MAX_PLAYER_NAME;
+        if (length < 1 || length > max) throw new ServiceException("名字要 1 至 " + max + " 个字", 400);
+        String unsafe = com.chengyinhub.business.service.IWxContentSecurityService.checkTextAsMember(
+                castContentSecurity, castMemberService, memberId, name);
+        if (unsafe != null) throw new ServiceException(unsafe, 400);
+
+        String identityKey = rawIdentityKey == null || rawIdentityKey.trim().isEmpty() ? null : rawIdentityKey.trim();
+        String identityTitle = null;
+        if (identityKey != null) {
+            JsonNode identity = cfg.path("playerIdentity").asBoolean(false)
+                    ? com.chengyinhub.business.service.support.CastConfigSupport.findIdentity(cfg, identityKey) : null;
+            if (identity == null) throw new ServiceException("身份选项不存在", 400);
+            identityTitle = identity.path("title").asText(null);
+        }
+
+        TopicRouteEngine.State state = castReadState(session);
+        Map<String, String> profile = new LinkedHashMap<String, String>();
+        profile.put("name", name);
+        if (identityKey != null) profile.put("identityKey", identityKey);
+        if (identityTitle != null) profile.put("identityTitle", identityTitle);
+        state.setPlayerProfile(profile);
+        castWriteState(session, state);
+        return Collections.<String, Object>singletonMap("playerProfile",
+                com.chengyinhub.business.service.support.CastRunRules.profileView(profile));
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> recordStoryBranch(Long memberId, Long runId, Long chapterId, String blockKey, Integer optionIndex) {
+        castRequireLogin(memberId);
+        if (chapterId == null || chapterId <= 0 || blockKey == null || blockKey.trim().isEmpty() || optionIndex == null)
+            throw new ServiceException("参数有误", 400);
+        TopicRouteSession session = castLockOwnedRunningRun(memberId, runId);
+        String key = blockKey.trim();
+        JsonNode block = castRequireBlock(session.getTopicId(), chapterId, key, "branch");
+        JsonNode options = block.path("options");
+        if (!options.isArray() || optionIndex < 0 || optionIndex >= options.size())
+            throw new ServiceException("分支选项不存在", 400);
+
+        TopicRouteEngine.State state = castReadState(session);
+        String choiceKey = chapterId + ":" + key;
+        Integer existing = state.getStoryChoices().get(choiceKey);
+        Map<String, Object> out = new LinkedHashMap<String, Object>();
+        out.put("chapterId", chapterId);
+        out.put("blockKey", key);
+        if (existing != null) {
+            out.put("optionIndex", existing);
+            out.put("to", options.path(existing).path("to").asText(null));
+            out.put("duplicate", true);
+            return out;
+        }
+        state.getStoryChoices().put(choiceKey, optionIndex);
+        JsonNode cfg = com.chengyinhub.business.service.support.CastConfigSupport.parse(topicMapper.selectCastConfigById(session.getTopicId()));
+        com.chengyinhub.business.service.support.CastRunRules.applyTrust(state.getTrust(),
+                options.path(optionIndex).path("trust"), com.chengyinhub.business.service.support.CastConfigSupport.castIds(cfg));
+        castWriteState(session, state);
+        out.put("optionIndex", optionIndex);
+        out.put("to", options.path(optionIndex).path("to").asText(null));
+        out.put("duplicate", false);
+        return out;
+    }
+
+    @Override
+    public Map<String, Object> castLineVoice(Long memberId, Long topicId, Long chapterId, String blockKey, Long runId) {
+        castRequireLogin(memberId);
+        if (topicId == null || topicId <= 0 || chapterId == null || chapterId <= 0 || blockKey == null || blockKey.trim().isEmpty())
+            throw new ServiceException("参数有误", 400);
+        CmsTopic topic = topicMapper.selectCmsTopicById(topicId);
+        if (topic == null) throw new ServiceException("主题不存在", 404);
+        boolean published = Integer.valueOf(1).equals(topic.getStatus())
+                && !Integer.valueOf(1).equals(topicMapper.selectTopicIsDraft(topicId));
+        if (!published && !memberId.equals(topic.getMemberId())) throw new ServiceException("无权访问", 403);
+
+        JsonNode block = castRequireBlock(topicId, chapterId, blockKey.trim(), "line");
+        String own = block.path("audioUrl").asText("");
+        if (!own.isEmpty()) return Collections.<String, Object>singletonMap("url", castPlayableUrl(own, memberId, published));
+
+        JsonNode cfg = com.chengyinhub.business.service.support.CastConfigSupport.parse(topicMapper.selectCastConfigById(topicId));
+        if (cfg == null || !cfg.path("enabled").asBoolean(false))
+            throw castCoded("本主题没有开启角色", 409, com.chengyinhub.business.service.support.CastRunRules.ERR_CAST_DISABLED);
+        JsonNode speaker = com.chengyinhub.business.service.support.CastConfigSupport.findCast(cfg, block.path("speaker").asText(null));
+        String preset = speaker == null ? null : speaker.path("voice").path("preset").asText(null);
+        String voiceId = speaker != null && "preset".equals(speaker.path("voice").path("mode").asText())
+                ? com.chengyinhub.business.service.support.CastVoicePresets.voiceId(preset) : null;
+        if (voiceId == null)
+            throw castCoded("这句台词没有配音", 409, com.chengyinhub.business.service.support.CastRunRules.ERR_VOICE_NONE);
+
+        String text = com.chengyinhub.business.service.support.CastRunRules.resolveVars(
+                block.path("content").asText(""), castCallerName(memberId, topicId, runId));
+        return Collections.<String, Object>singletonMap("url",
+                castSynthesize(voiceId, preset, text, "topicId=" + topicId + " chapterId=" + chapterId + " blockKey=" + blockKey));
+    }
+
+    @Override
+    public Map<String, Object> castPresetSample(Long memberId, String preset) {
+        castRequireLogin(memberId);
+        String voiceId = com.chengyinhub.business.service.support.CastVoicePresets.voiceId(preset);
+        if (voiceId == null) throw new ServiceException("预设声音无效", 400);
+        return Collections.<String, Object>singletonMap("url",
+                castSynthesize(voiceId, preset, com.chengyinhub.business.service.support.CastVoicePresets.SAMPLE_LINE, "sample"));
+    }
+
+    /** sha256(preset + text) 命中缓存直接回;没命中才合成一次并落 OSS。TTS 没配齐 = 503 CAST_TTS_NOT_CONFIGURED。 */
+    private String castSynthesize(String voiceId, String preset, String text, String what) {
+        String sha = com.chengyinhub.business.service.support.CastRunRules.sha256Hex(preset + text);
+        if (castVoiceCache == null || castVoiceClient == null || !castVoiceClient.usable()) {
+            // 没配 TTS:如实回一个客户端可识别的错误码,不 500。
+            throw castCoded("配音服务未开通", 503, com.chengyinhub.business.service.support.CastRunRules.ERR_TTS_NOT_CONFIGURED);
+        }
+        String hit = castVoiceCache.find(sha);
+        if (hit != null) return hit;
+        String vendorUrl;
+        try {
+            vendorUrl = castVoiceClient.synthesize(voiceId, text);
+        } catch (com.chengyinhub.business.service.ai.AiServiceException e) {
+            CAST_LOG.warn("角色配音合成失败 {}: {}", what, e.getMessage());
+            throw castCoded("配音暂时生成不了，请稍后再试", 502, com.chengyinhub.business.service.support.CastRunRules.ERR_TTS_FAILED);
+        }
+        return castVoiceCache.store(sha, vendorUrl);
+    }
+
+    @Override
+    public JsonNode castConfigForPlayer(Long memberId, Long topicId, String stored) {
+        JsonNode cfg = com.chengyinhub.business.service.support.CastConfigSupport.parse(stored);
+        if (cfg == null) return null;
+        java.util.Set<Long> reached = java.util.Collections.emptySet();
+        if (memberId != null && memberId > 0 && topicId != null && topicId > 0 && castHasChapterClues(cfg)) {
+            TopicRouteSession session;
+            try {
+                session = TopicRouteSessionScope.findCurrent(routeMapper, memberId, topicId, null);
+            } catch (RuntimeException e) {
+                session = null;   // 读不到本局 = 按没有本局处理:只露开局线索,不因此让主题信息读失败
+            }
+            if (session != null) reached = castReachedChapters(topicId, session);
+        }
+        return com.chengyinhub.business.service.support.CastConfigSupport.playerView(cfg, reached);
+    }
+
+    private static boolean castHasChapterClues(JsonNode cfg) {
+        for (JsonNode member : cfg.path("cast"))
+            for (JsonNode clue : member.path("clues"))
+                if (clue.hasNonNull("chapterId")) return true;
+        return false;
+    }
+
+    /** 本局到过的章节:按主题章节顺序,到过 / 完成 / 当前所在节点所属的最远一章及之前全部;有本局但还没到任何站 = 第一章。 */
+    private java.util.Set<Long> castReachedChapters(Long topicId, TopicRouteSession session) {
+        java.util.Set<Long> out = new LinkedHashSet<Long>();
+        if (cmsTopicChapterMapper == null) return out;
+        com.chengyinhub.business.domain.CmsTopicChapter query = new com.chengyinhub.business.domain.CmsTopicChapter();
+        query.setTopicId(topicId);
+        List<com.chengyinhub.business.domain.CmsTopicChapter> chapters = cmsTopicChapterMapper.selectCmsTopicChapterList(query);
+        if (chapters == null || chapters.isEmpty()) return out;
+        TopicRouteEngine.State state;
+        try {
+            state = castReadState(session);
+        } catch (ServiceException e) {
+            state = new TopicRouteEngine.State();
+        }
+        java.util.Set<Long> nodeIds = new LinkedHashSet<Long>();
+        if (state.getVisitedNodeIds() != null) nodeIds.addAll(state.getVisitedNodeIds());
+        if (state.getCompletedNodeIds() != null) nodeIds.addAll(state.getCompletedNodeIds());
+        if (state.getCurrentNodeId() != null) nodeIds.add(state.getCurrentNodeId());
+        java.util.Set<Long> touched = new java.util.HashSet<Long>();
+        if (!nodeIds.isEmpty() && nodeMapper != null) {
+            CmsTopicNode nodeQuery = new CmsTopicNode();
+            nodeQuery.setTopicId(topicId);
+            List<CmsTopicNode> nodes = nodeMapper.selectCmsTopicNodeList(nodeQuery);
+            if (nodes != null) for (CmsTopicNode node : nodes)
+                if (node != null && nodeIds.contains(node.getId()) && node.getChapterId() != null) touched.add(node.getChapterId());
+        }
+        int furthest = 0;
+        for (int i = 0; i < chapters.size(); i++)
+            if (chapters.get(i) != null && touched.contains(chapters.get(i).getId())) furthest = i;
+        for (int i = 0; i <= furthest; i++)
+            if (chapters.get(i) != null && chapters.get(i).getId() != null) out.add(chapters.get(i).getId());
+        return out;
+    }
+
+    private String castCallerName(Long memberId, Long topicId, Long runId) {
+        TopicRouteSession session;
+        if (runId != null && runId > 0) {
+            session = routeMapper.selectAccessibleById(runId, memberId);
+            if (session == null || !topicId.equals(session.getTopicId())) throw new ServiceException("本局不存在", 404);
+        } else {
+            session = TopicRouteSessionScope.findCurrent(routeMapper, memberId, topicId, null);
+        }
+        if (session == null) return null;
+        return castReadState(session).getPlayerProfile().get("name");
+    }
+
+    private String castPlayableUrl(String ref, Long memberId, boolean published) {
+        if (!com.chengyinhub.business.service.support.CastConfigSupport.MEDIA_ASSET.matcher(ref).matches()
+                || castMediaReferences == null) return ref;
+        String url = published ? castMediaReferences.publishedPlayUrl(ref, memberId) : castMediaReferences.visibleUrl(ref, memberId);
+        if (url == null || url.isEmpty()) throw new ServiceException("配音素材暂不可用", 404);
+        return url;
+    }
+
+    private JsonNode castRequireBlock(Long topicId, Long chapterId, String blockKey, String type) {
+        com.chengyinhub.business.domain.CmsTopicChapter chapter = cmsTopicChapterMapper == null ? null
+                : cmsTopicChapterMapper.selectCmsTopicChapterById(chapterId);
+        if (chapter == null || !topicId.equals(chapter.getTopicId())) throw new ServiceException("章节不存在", 404);
+        String raw = chapter.getBlocksJson();
+        if (raw != null && !raw.trim().isEmpty()) {
+            try {
+                for (JsonNode block : JSON.readTree(raw)) {
+                    if (blockKey.equals(block.path("key").asText()) && type.equals(block.path("type").asText())) return block;
+                }
+            } catch (java.io.IOException e) {
+                throw new ServiceException("章节内容不可用", 409);
+            }
+        }
+        throw new ServiceException("内容块不存在", 404);
+    }
+
+    /** 只有本局主人能写:按 (runId, memberId) 加行锁读,查不到与「不是你的」同一回包。 */
+    private TopicRouteSession castLockOwnedRunningRun(Long memberId, Long runId) {
+        if (runId == null || runId <= 0) throw new ServiceException("参数有误", 400);
+        TopicRouteSession session = routeMapper.selectAccessibleByIdForUpdate(runId, memberId);
+        if (session == null || !memberId.equals(session.getMemberId())) throw new ServiceException("本局不存在", 404);
+        if (session.getStatus() == null || session.getStatus() != TopicRouteSession.STATUS_RUNNING)
+            throw new ServiceException("本局已结束", 409);
+        return session;
+    }
+
+    private TopicRouteEngine.State castReadState(TopicRouteSession session) {
+        String raw = session.getStateJson();
+        if (raw == null || raw.trim().isEmpty()) return new TopicRouteEngine.State();
+        try {
+            TopicRouteEngine.State state = JSON.readValue(raw, TopicRouteEngine.State.class);
+            return state == null ? new TopicRouteEngine.State() : state;
+        } catch (java.io.IOException e) {
+            throw new ServiceException("本局状态不可用", 409);
+        }
+    }
+
+    private void castWriteState(TopicRouteSession session, TopicRouteEngine.State state) {
+        try {
+            session.setStateJson(JSON.writeValueAsString(state));
+        } catch (java.io.IOException e) {
+            throw new IllegalStateException("本局状态序列化失败", e);
+        }
+        session.setUpdateTime(new Date());
+        if (routeMapper.updateStateCas(session) != 1) throw new ServiceException("本局状态已变化，请刷新后重试", 409);
+    }
+
+    private static void castRequireLogin(Long memberId) {
+        if (memberId == null || memberId <= 0) throw new ServiceException("请先登录", 401);
+    }
+
+    private static ServiceException castCoded(String message, int code, String errorCode) {
+        return new ServiceException(message, code).setDetailMessage(errorCode);
     }
 
 }

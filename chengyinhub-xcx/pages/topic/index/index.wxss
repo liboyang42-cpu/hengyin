@@ -2222,3 +2222,13 @@ button::after {
 /* 浮动购票按钮下仍能滚到最后一个站点。 */
 .topic-list--docked { padding-bottom: calc(2 * var(--cy-btn-h) + env(safe-area-inset-bottom)); }
 .topic--reduced .cy-img-fade { transition: none; } /* motion-1118 v2:App 内减少动效时封面/头图直接落地 */
+
+/* 角色 Cast v1 · E5 人物:横排,头像 54px、名字、身份第一小句 */
+.castrow-sec{ margin-top:var(--cy-space-5); }
+.castrow{ white-space:nowrap; }
+.castrow__i{ display:inline-flex; flex-direction:column; align-items:center; width:160rpx; margin-right:var(--cy-space-3); vertical-align:top; }
+.castrow__i:first-child{ margin-left:var(--cy-space-5); }
+.castrow__face{ width:108rpx; height:108rpx; border-radius:50%; overflow:hidden; }
+.castrow__face--i{ display:flex; align-items:center; justify-content:center; font-size:40rpx; font-weight:600; color:#FFFFFF; } /* ds-ok 角色色底上的白字首字 */
+.castrow__n{ margin-top:var(--cy-space-2); max-width:100%; font-size:var(--cy-type-body); font-weight:600; color:var(--cy-color-text-primary); overflow:hidden; text-overflow:ellipsis; }
+.castrow__s{ margin-top:4rpx; max-width:100%; font-size:var(--cy-type-caption); color:var(--cy-color-text-tertiary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }

@@ -172,6 +172,20 @@
       </view>
     </view>
 
+    <!-- 角色(cast-contract-1119 · A):开关 + 叠起来的脸 +「N 位」;点卡打开角色列表。关掉只是不露面,角色都留着。 -->
+    <cy-card class="pd-entry-card" wx:if="{{editorPage === 1 && formData.productType === 1 && editScope !== 'WHITELIST'}}">
+      <view class="pd-entry-card__row">
+        <view class="pd-entry-card__main" bindtap="openCastSheet" aria-role="button" aria-label="打开角色" hover-class="cy-pressed" hover-stay-time="80">
+          <text class="pd-entry-card__title">角色</text>
+          <view class="cast-faces" wx:if="{{castCard.count}}">
+            <view wx:for="{{castCard.faces}}" wx:key="id" class="cast-face cast-face--sm" style="background: {{item.color}}"><image wx:if="{{item.img}}" class="cast-face__img" src="{{item.img}}" mode="aspectFill" /><text wx:else>{{item.initial}}</text></view>
+            <text class="cast-faces__n">{{castCard.count || 0}} 位</text>
+          </view>
+        </view>
+        <view class="cast-card__switch"><cy-switch checked="{{castCard.on}}" bindchange="onCastSwitch" accessibility-label="角色" /></view>
+      </view>
+    </cy-card>
+
     <!-- 第 1 页 · 创作:章节与节点。剧情已移入章节弹窗(§4.5),这里只留状态标记。 -->
     <block wx:if="{{editorPage === 1}}">
       <!-- qx-b4 U02-03:模板采用来的主题才有地点合同;没有合同组件自己不渲染 -->
@@ -543,6 +557,16 @@
             <view class="story-block-x" wx:if="{{storyEditor.selectedBlockKey === block.key}}" data-blockkey="{{block.key}}" catchtap="removeStoryText" aria-role="button" aria-label="删除文字块" hover-class="cy-pressed" hover-stay-time="80"><view class="story-block-x__glyph"><cy-icon name="trash-2" size="28" /></view></view>
           </view>
 
+          <!-- 对白(cast-contract-1119 · B):就是一段正文,说话的人小字灰色挂在段首(不是标题,不写「某某说」);
+               点名字换人,右侧可录这一句。角色开关关掉时名字和录音收起,内容照常可写。 -->
+          <view class="story-text-block sx-para sx-line {{storyEditor.selectedBlockKey === block.key ? 'is-selected' : ''}}" wx:elif="{{block.type === 'line'}}" data-blockkey="{{block.key}}">
+            <text class="sx-line__who" wx:if="{{castOn && storySpeakerNameOf[block.speaker]}}" data-blockkey="{{block.key}}" catchtap="onStoryLineSpeakerTap" aria-role="button" aria-label="换说话的人：{{storySpeakerNameOf[block.speaker]}}" hover-class="cy-pressed" hover-stay-time="80">{{storySpeakerNameOf[block.speaker]}}</text>
+            <textarea wx:if="{{!storyEditor.preview}}" class="story-text-block__input" value="{{block.content}}" data-blockkey="{{block.key}}" bindinput="onStoryLineInput" maxlength="300" auto-height show-confirm-bar="{{false}}" disable-default-padding="{{true}}" placeholder="说了什么" placeholder-class="ed-cap__ph" />
+            <text wx:else class="story-text-block__input">{{block.content}}</text>
+            <view class="sx-line__rec {{storyLineRec === block.key ? 'is-on' : ''}}" wx:if="{{castOn && !storyEditor.preview}}" data-blockkey="{{block.key}}" catchtap="toggleStoryLineRecord" aria-role="button" aria-label="{{storyLineRec === block.key ? '停止录音' : (block.audioUrl ? '重录这一句' : '录这一句')}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="{{block.audioUrl && storyLineRec !== block.key ? 'play-filled' : 'comment'}}" size="24" /><text>{{storyLineRec === block.key ? '停止' : (block.audioUrl ? '已录' : '录音')}}</text></view>
+            <view class="story-block-x" wx:if="{{storyEditor.selectedBlockKey === block.key}}" data-blockkey="{{block.key}}" catchtap="removeStoryMedia" aria-role="button" aria-label="删除对白" hover-class="cy-pressed" hover-stay-time="80"><view class="story-block-x__glyph"><cy-icon name="close" size="36" /></view></view>
+          </view>
+
           <view class="story-media-block story-media-block--image"
                 wx:elif="{{block.type === 'image'}}"
                 data-blockkey="{{block.key}}">
@@ -825,6 +849,15 @@
     </view>
     <cy-option-sheet show="{{storyOptions.show}}" title="{{storyOptions.title}}" items="{{storyOptions.items}}" immediate bind:select="onStoryOptionPick" bind:cancel="closeStoryOptions" />
     <view class="sx-sheet-mask" wx:if="{{storySheet}}" catchtap="closeStorySheet" catchtouchmove="noop" hover-class="none"></view>
+    <!-- 谁在说话(cast-contract-1119 · B):角色 / 旁白(= 普通段落)/ 玩家;换人也走这里 -->
+    <view class="sx-sheet" wx:if="{{storySheet === 'speaker'}}">
+      <view class="sx-sheet__head"><text class="sx-sheet__tit">谁在说话</text><view class="sx-sheet__close" catchtap="closeStorySheet" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="32" /></view></view>
+      <view class="sx-menu__row" wx:for="{{storySpeakers}}" wx:key="value" data-value="{{item.value}}" catchtap="onStorySpeakerPick" aria-role="button" aria-label="{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">
+        <view wx:if="{{item.color}}" class="cast-face cast-face--sm" style="background: {{item.color}}"><image wx:if="{{item.img}}" class="cast-face__img" src="{{item.img}}" mode="aspectFill" /><text wx:else>{{item.initial}}</text></view>
+        <view wx:else class="cast-face cast-face--sm cast-face--plain"><cy-icon name="{{item.value === 'player' ? 'tab-me' : 'list'}}" size="24" /></view>
+        <text>{{item.label}}</text>
+      </view>
+    </view>
     <!-- 图片组版式(编辑器原型 v2 · 4c):单图 / 双图 / 三图 / 四图,选完落一组空格再逐格选图 -->
     <view class="sx-sheet" wx:if="{{storySheet === 'gallery'}}">
       <view class="sx-sheet__head"><text class="sx-sheet__tit">图片</text><view class="sx-sheet__close" catchtap="closeStorySheet" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="32" /></view></view>
@@ -851,6 +884,14 @@
           <view class="sx-br__tos">
             <text class="sx-br__tok">去向</text>
             <view class="ed-chip {{opt.to === item.value ? 'is-on' : ''}}" wx:for="{{storyBranchTos}}" wx:key="value" data-i="{{optIndex}}" data-to="{{item.value}}" catchtap="onStoryBranchTo" aria-role="button" aria-label="{{item.label}}" aria-selected="{{opt.to === item.value}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
+          </view>
+          <!-- 信任(D2):每个角色一个 ±,0 收起成一颗名字药丸,点了 +1 才展开成步进器 -->
+          <view class="sx-br__tos" wx:if="{{castOn && storyBranchTrust[optIndex].length}}">
+            <text class="sx-br__tok">信任</text>
+            <block wx:for="{{storyBranchTrust[optIndex]}}" wx:key="castId" wx:for-item="t">
+              <view wx:if="{{t.on}}" class="sx-trust"><text class="sx-trust__n">{{t.name}}</text><cy-stepper value="{{t.delta}}" min="-2" max="2" label="{{t.name}}信任" data-i="{{optIndex}}" data-cast="{{t.castId}}" bind:change="onStoryBranchTrust" /></view>
+              <view wx:else class="ed-chip" data-i="{{optIndex}}" data-cast="{{t.castId}}" data-v="1" catchtap="onStoryBranchTrust" aria-role="button" aria-label="{{t.name}}信任加一" hover-class="cy-pressed" hover-stay-time="80">{{t.name}}</view>
+            </block>
           </view>
         </view>
         <view class="sx-br__add" wx:if="{{storyBranch.options.length < 3}}" catchtap="addStoryBranchOption" aria-role="button" aria-label="添加分支" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="32" /><text>添加分支</text></view>
@@ -1410,8 +1451,21 @@
                缺默认结局或超过 6 个时在这里说清楚,提交也会被同一口径拦住。 -->
           <cy-inline-error wx:if="{{chapterEndingError}}" class="node-binding__error" kind="error" title="{{chapterEndingError}}" />
           <block wx:if="{{chapterForm.ending}}">
-            <view class="node-card__hr"></view>
-            <cy-dropdown range="{{chapterEndingKinds}}" range-key="label" value="{{chapterEndingKindIndex}}" bind:change="onChapterEndingKind">
+            <!-- 归属角色(D2):选了就由「谁最信任你」决定,不再另配触发条件;默认结局不归属任何人 -->
+            <block wx:if="{{(castOn && !chapterForm.ending.fallback) || chapterForm.ending.kind === 'cast'}}">
+              <view class="node-card__hr"></view>
+              <cy-dropdown range="{{chapterEndingCastOptions}}" range-key="label" value="{{chapterEndingCastIndex}}" bind:change="onChapterEndingCast">
+                <view class="node-card__row">
+                  <view class="node-card__main">
+                    <text class="node-card__title">归属角色</text>
+                    <text class="node-card__value">{{chapterEndingCastOptions[chapterEndingCastIndex].label}}</text>
+                  </view>
+                  <view class="node-pill"><text>选择</text><cy-icon name="chevron-right" size="24" /></view>
+                </view>
+              </cy-dropdown>
+            </block>
+            <view class="node-card__hr" wx:if="{{chapterForm.ending.kind !== 'cast'}}"></view>
+            <cy-dropdown wx:if="{{chapterForm.ending.kind !== 'cast'}}" range="{{chapterEndingKinds}}" range-key="label" value="{{chapterEndingKindIndex}}" bind:change="onChapterEndingKind">
               <view class="node-card__row">
                 <view class="node-card__main">
                   <text class="node-card__title">什么时候播</text>
@@ -2052,6 +2106,7 @@
 <include src="survival-editor.wxml" /> <!-- survival -->
 <include src="zero-hp-editor.wxml" /> <!-- R5 HP 归零 -->
 <include src="look-sheet.wxml" /> <!-- 画面风格 -->
+<include src="cast-sheet.wxml" /> <!-- 角色(cast-contract-1119) -->
   </block>
 </view>
 <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />

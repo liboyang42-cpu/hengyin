@@ -47,9 +47,9 @@ test('V-02 组件版式:标题 + 码 + logo，到期行有才出，没有倒计�
 
 test('V-02 组件到期行与票夹同一规则', () => {
   const pad = n => String(n).padStart(2, '0')
-  // 按自然日加(夏令时切换那天 +48 小时会落到前一天)
-  const d = new Date(); d.setDate(d.getDate() + 2)
-  const soon = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' 23:59:00'
+  // 按中国时区的自然日加(业务日期规则见 utils/ticket-expiry.js),测试主机在 UTC 16:00 后跑也不差一天
+  const d = new Date(Date.now() + 8 * 3600000); d.setUTCDate(d.getUTCDate() + 2)
+  const soon = d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate()) + ' 23:59:00'
   assert.equal(mount({ until: soon }).page.data.expiry, '2 天内过期')
   assert.equal(mount({ until: '' }).page.data.expiry, '')
   assert.equal(mount({ until: Date.now() + 60 * 86400000 }).page.data.expiry, '')

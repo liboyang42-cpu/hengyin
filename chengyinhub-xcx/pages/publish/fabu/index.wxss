@@ -5518,3 +5518,4 @@ page { background: var(--cy-btn-solid-bg); }
 .fe-pricing__unit { font-size: var(--cy-font-body); color: var(--cy-text-secondary); }
 .fe-pricing__input { width: 200rpx; min-height: var(--cy-btn-h); text-align: right; font-size: var(--cy-font-body); color: var(--cy-text-title); font-variant-numeric: tabular-nums; }
 .fe-pricing__cta { display: block; margin-top: var(--cy-space-2); }
+@import "./cast.wxss"; /* 角色(cast-contract-1119) */

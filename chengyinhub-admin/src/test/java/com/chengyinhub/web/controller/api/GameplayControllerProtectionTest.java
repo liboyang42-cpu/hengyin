@@ -61,7 +61,7 @@ class GameplayControllerProtectionTest {
                 protectedMethods++;
             }
         }
-        assertEquals(22, protectedMethods);
+        assertEquals(24, protectedMethods); // +2:角色 Cast v1 的 /run/profile、/run/branch
     }
 
     @Test

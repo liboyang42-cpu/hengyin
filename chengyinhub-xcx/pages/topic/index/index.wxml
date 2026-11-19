@@ -362,6 +362,18 @@
         <cy-story-fan wx:if="{{storyCards.length}}" noun="{{isExplore ? '这一页' : '这一章'}}" items="{{storyCards}}" nav-height="{{statusBarHeight + navBarHeight + 45}}" reduced-motion="{{reducedMotion}}" bind:dock="onStoryDock" />
         <view class="story-head" wx:if="{{storyCards.length}}"><text class="story-head__t">{{info.name}}</text><text class="story-head__s">{{storyMeta}}</text></view>
         <view class="story-lead" wx:if="{{storyCards.length && info.subtitle}}">{{info.subtitle}}</view>
+        <!-- 角色 Cast v1 · E5 人物:开了角色的主题,在故事正文前排一行头像(54px)· 名字 · 身份的第一小句 -->
+        <view class="castrow-sec" wx:if="{{castRow.length}}">
+          <view class="det-type">人物</view>
+          <scroll-view class="castrow" scroll-x enhanced show-scrollbar="{{false}}">
+            <view class="castrow__i" wx:for="{{castRow}}" wx:key="id">
+              <image wx:if="{{item.face.url}}" class="castrow__face" src="{{item.face.url}}" mode="aspectFill" lazy-load="true" />
+              <view wx:else class="castrow__face castrow__face--i" style="background:{{item.face.color}}">{{item.face.initial}}</view>
+              <text class="castrow__n">{{item.name}}</text>
+              <text class="castrow__s" wx:if="{{item.identity}}">{{item.identity}}</text>
+            </view>
+          </scroll-view>
+        </view>
         <view class="det-type story-sec" wx:if="{{storyCards.length}}">{{isExplore ? '护照' : '章节'}}</view>
         <view class="story-cards {{docked ? 'is-docked' : ''}}" wx:if="{{storyCards.length}}">
           <view class="story-cc {{openChapter === index || item.locked ? 'is-open' : ''}}{{item.locked ? ' is-locked' : ''}}" style="{{tabRun ? 'transition-delay: 0s, ' + (300 + index * 80) + 'ms, ' + (300 + index * 80) + 'ms;' : ''}}" wx:for="{{storyCards}}" wx:key="index" data-i="{{index}}" bindtap="onChapterCard"
