@@ -135,7 +135,8 @@ Page({
 
   onShow() {
     this._hidden = false;
-    merchantTheme.merchantPageShow();
+    if (this.data.mode === 'public') merchantTheme.merchantPageRestore(); // PG-029:公开态保持玩家深色
+    else merchantTheme.merchantPageShow();
     this.syncReplyRecovery();
     if (this._replyRecovery) this._replyRecovery.resume();
     if (this._resumeReviewRead || (this._reviewOwner !== undefined && this._reviewOwner !== String(app.getUserID() || ''))) {
@@ -260,7 +261,7 @@ Page({
             loadingMore: false,
             filterLoading: false,
             errorMessage: failedState === 'no-permission'
-              ? '当前账号没有口碑管理权限'
+              ? '当前身份不能管理口碑'
               : app.getRequestErrorMessage(res, '评价加载失败'),
           });
           return;

@@ -54,10 +54,6 @@ Page({
     });
   },
 
-  explainQrPending() {
-    toast('身份码开通后会自动出现');
-  },
-
   copyAttributionLink(e) {
     const link = (e.currentTarget.dataset || {}).link;
     if (!link) return;
@@ -70,6 +66,15 @@ Page({
 
   openAgreement() {
     this.setData({ showAgreementSheet: true });
+  },
+
+  // OR-040:关于页直达微信官方《用户隐私保护指引》
+  openPrivacyContract() {
+    wx.openPrivacyContract({
+      fail() {
+        toast('隐私保护指引暂不可用');
+      },
+    });
   },
 
   closeAgreement() {

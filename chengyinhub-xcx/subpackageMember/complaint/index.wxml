@@ -13,14 +13,14 @@
   <!-- R3-C04:副标题原文 25 字,而这一行只放得下 24 字(内宽 750−2×32 = 686rpx ÷ 28rpx),
        刚好吃满/溢出 ⇒ 视觉上顶到右边缘。收敛到 19 字;更完整的那句本来就在下面空态副文案里,
        两处原先是重复的,所以缩短不丢信息。 -->
-  <cy-page-title title="投诉与建议" subtitle="仅限已报名并支付的活动，平台会介入处理" />
+  <cy-page-title title="投诉与建议" />
 
   <view class="cp-content">
     <cy-empty wx:if="{{readAccess === 'login'}}" fill class="cy-fill-state" size="lg" kind="no-permission"
       title="登录后发起投诉与查看进展" sub="{{readAccessMessage}}"
       cta="{{readLoginPending ? '正在登录…' : '登录'}}" bind:cta="loginToRead" />
     <cy-empty wx:elif="{{readAccess === 'denied'}}" fill class="cy-fill-state" size="lg" kind="no-permission"
-      title="当前账号无法发起投诉" sub="{{readAccessMessage}}" cta="重试" bind:cta="onRetry" />
+      title="当前身份不能发起投诉" sub="{{readAccessMessage}}" cta="重试" bind:cta="onRetry" />
     <block wx:else>
     <!-- 三态互斥。首载沿用真实表单结构，避免空态插画切换成四字段表单时整页跳位。 -->
     <cy-skeleton wx:if="{{loading}}" type="form-section" count="4"

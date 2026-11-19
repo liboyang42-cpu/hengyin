@@ -689,9 +689,10 @@ public class ApiActivityController extends BaseController {
     @PostMapping("/update_publish_status")
     @Parameters({
             @Parameter(name = "id", description = "活动id"),
-            @Parameter(name = "scope", description = "MERCHANT=以商家主办身份上下架(店主或持项目管理权限的员工);空=俱乐部主理人")
+            @Parameter(name = "scope", description = "MERCHANT=以商家主办身份上下架(店主或持项目管理权限的员工);空=俱乐部主理人"),
+            @Parameter(name = "expectedPublishStatus", description = "可选:客户端看到的当前上下架状态(0/1);与库里不一致则拒绝,防止重复点击来回翻转")
     })
-    public AjaxResult activityUpdatePublishStatus(String id, String scope) {
+    public AjaxResult activityUpdatePublishStatus(String id, String scope, String expectedPublishStatus) {
         Long cid = Convert.toLong(id, 0L);
         if (cid < 1) {
             return error("参数不合规");
@@ -747,13 +748,23 @@ public class ApiActivityController extends BaseController {
                     return error("系统繁忙，请稍后重试");
                 }
             }
-            cmsActivity.setPublishStatus(cmsActivity.getPublishStatus() == 1L ? 0L : 1L);
-            int rows = cmsActivityService.updateCmsActivity(cmsActivity);
+            // MC-008/009/028:不再「读出来取反 + 整行回写」。按读到的状态(或客户端带来的期望状态)做
+            // 只写 publish_status 的 CAS,WHERE 钉主办主体/未删/未取消/期望旧状态;0 行 = 期间被改过。
+            long current = Long.valueOf(1L).equals(cmsActivity.getPublishStatus()) ? 1L : 0L;
+            if (StringUtils.isNotEmpty(expectedPublishStatus)) {
+                Long expected = Convert.toLong(expectedPublishStatus, null);
+                if (expected == null || (expected != 0L && expected != 1L)) return error("参数不合规");
+                if (expected != current) return error("状态已变化，请刷新后重试");
+            }
+            Long next = current == 1L ? 0L : 1L;
+            int rows = cmsActivityService.updatePublishStatusIfExpected(
+                    cid, publisher.ownerMemberId(), current, next);
             if (rows > 0) {
+                cmsActivity.setPublishStatus(next);
                 //发布状态：0下架中  1已上架
-                return success(cmsActivity.getPublishStatus() == 1L ? "上架成功" : "下架成功");
+                return success(Long.valueOf(1L).equals(next) ? "上架成功" : "下架成功");
             } else {
-                return error(cmsActivity.getPublishStatus() == 1L ? "上架失败" : "下架失败");
+                return error("状态已变化，请刷新后重试");
             }
         } else {
             return error("活动不存在");

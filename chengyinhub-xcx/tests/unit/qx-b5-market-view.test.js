@@ -80,5 +80,6 @@ test('页面接线:通行证三页已注册;详情页下单只回传报价,网�
   assert.match(js, /mv\.orderRequest\(/);
   assert.doesNotMatch(js, /totalCashAmount\s*\*/, '不在端上乘价');
   assert.match(js, /fail: \(\) => this\.setData\(\{ buying: false, buyError: '结果待确认/);
-  assert.match(js, /complete: \(\) => this\._verify\(order\.orderNo, 0\)/, 'SDK 返回后只查服务端订单');
+  assert.match(js, /success: \(\) => this\._verify\(order\.orderNo, 0\)/, 'SDK 返回后只查服务端订单');
+  assert.match(js, /if \(\/cancel\/\.test\(String\(\(e && e\.errMsg\) \|\| ''\)\)\) \{ this\.setData\(\{ buying: false \}\); cyToast\(WORDS\.PAY_CANCELLED\); return \}/, 'OR-009:取消直接提示');
 });

@@ -12,8 +12,7 @@
   <block wx:else>
     <cy-error load-failure wx:if="{{state === 'network-error'}}" title="资料加载失败" sub="{{message}}"
               bind:retry="retryLoad" fill="{{true}}" size="lg" auto-back />
-    <cy-empty wx:elif="{{state === 'invalid'}}" title="链接已失效"
-              cta="回首页" bind:cta="goHome" fill="{{true}}" size="lg" kind="missing-param" />
+    <cy-empty wx:elif="{{state === 'invalid'}}" cta="返回" bind:cta="onBack" fill="{{true}}" size="lg" kind="missing-param" />
     <cy-empty wx:else title="商家不存在或未开放"
               sub=""
               cta="回首页" bind:cta="goHome" fill="{{true}}" size="lg" kind="empty" />

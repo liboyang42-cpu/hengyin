@@ -493,7 +493,7 @@ Page({
   _denyAccess(kind, message) {
     this._marketingEpoch = (this._marketingEpoch || 0) + 1;
     this._merchantEpoch = (this._merchantEpoch || 0) + 1;
-    this._clearScopedState('denied', message || '请联系店主开通');
+    this._clearScopedState('denied', message || '');
   },
 
   // 清掉不可信的旧指标,但**不动 accessState** —— 这不是拒权,是这次请求身份没过。

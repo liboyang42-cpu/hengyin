@@ -57,6 +57,27 @@ public class ClubPrincipalPayee {
         return principalOf(topic.getClubId());
     }
 
+    /**
+     * 只读:场次当前收款人,不冻结、不要求事务。已冻结个人收款人则以它为准,否则俱乐部当前主理人。
+     * 与 {@link #forActivity} 同一口径,供查询与归属校验用(F11 参考结算)。
+     */
+    public Long peekActivity(CmsActivity activity) {
+        if (activity == null) return null;
+        if (activity.getClubId() == null || activity.getClubId() <= 0) return activity.getMemberId();
+        ClubPayoutBeneficiary frozen = beneficiaries == null || activity.getId() == null
+                ? null : beneficiaries.selectFrozenClubBeneficiary("ACTIVITY", activity.getId());
+        return frozen != null ? frozen.getMemberId() : principalOf(activity.getClubId());
+    }
+
+    /** 只读:主题级购票的当前收款人,口径同 {@link #forTopic},不冻结。 */
+    public Long peekTopic(CmsTopic topic) {
+        if (topic == null) return null;
+        if (topic.getClubId() == null || topic.getClubId() <= 0) return topic.getMemberId();
+        ClubPayoutBeneficiary frozen = beneficiaries == null || topic.getId() == null
+                ? null : beneficiaries.selectFrozenClubBeneficiary("TOPIC", topic.getId());
+        return frozen != null ? frozen.getMemberId() : principalOf(topic.getClubId());
+    }
+
     public ClubPayoutBeneficiary frozenActivity(CmsActivity activity) {
         return personalActivity(activity)
                 ? freeze("ACTIVITY", activity.getId(), activity.getClubId(), null) : null;

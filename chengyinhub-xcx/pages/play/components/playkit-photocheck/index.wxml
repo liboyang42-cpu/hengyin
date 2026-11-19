@@ -5,7 +5,10 @@
     <view class="g-kicker pe pe--blur" style="--pe-d:.05s">{{title || '拍一张'}}</view>
     <view class="pc__note pe pe--blur" style="--pe-d:.15s" wx:if="{{shotNote}}">{{shotNote}}</view>
 
-    <view class="pc__frame {{lastUrl ? 'is-filled' : ''}} pe pe--zoom" style="--pe-d:.2s;--pe-dur:.9s" wx:if="{{lastUrl}}">
+    <view class="pc__frame is-filled pe pe--zoom" style="--pe-d:.2s;--pe-dur:.9s" wx:if="{{pendingPath}}">
+      <image class="pc__shot" src="{{pendingPath}}" mode="aspectFill" aria-role="img" aria-label="刚拍的照片，还没提交" />
+    </view>
+    <view class="pc__frame {{lastUrl ? 'is-filled' : ''}} pe pe--zoom" style="--pe-d:.2s;--pe-dur:.9s" wx:elif="{{lastUrl}}">
       <image class="pc__shot" src="{{lastUrl}}" mode="aspectFill" aria-role="img" aria-label="上一张提交的照片" />
     </view>
     <view class="pc__frame pe pe--zoom" style="--pe-d:.2s;--pe-dur:.9s" wx:else>
@@ -32,9 +35,13 @@
   </view>
 
   <view class="g-btn {{busy || judging || passed ? 'g-btn--disabled' : ''}} pe pe--up" style="--pe-d:.9s" bindtap="onShoot"
-        aria-role="button" aria-label="{{judging ? '正在审核' : (busy ? '正在处理照片' : '拍一张')}}" hover-class="g-btn--press" hover-stay-time="80">
-    {{judging ? '审核中…' : (busy ? '看一眼…' : (passed ? '这一张已定' : (resubmit ? '重新提交' : (lastUrl ? '再拍一张' : '拍一张'))))}}
+        aria-role="button" aria-label="{{judging ? (recordOnly ? '正在保存' : '正在审核') : (busy ? '正在处理照片' : (pendingPath ? '提交这张' : '拍一张'))}}" hover-class="g-btn--press" hover-stay-time="80">
+    {{judging ? (recordOnly ? '保存中…' : '审核中…') : (busy ? '看一眼…' : (passed ? '这一张已定' : (pendingPath ? '提交这张' : (resubmit ? '重新提交' : (lastUrl ? '再拍一张' : '拍一张')))))}}
   </view>
+  <view class="pc__alt" wx:if="{{pendingPath && !judging && !passed}}" bindtap="onRetake"
+        aria-role="button" aria-label="重拍" hover-class="g-btn--press" hover-stay-time="80">重拍</view>
+  <view class="pc__alt" wx:elif="{{recordOnly && skipOffer && !passed && !judging}}" bindtap="onTextConfirm"
+        aria-role="button" aria-label="不拍照，继续" hover-class="g-btn--press" hover-stay-time="80">不拍照，继续</view>
 </cy-play-stage>
 
 <!-- 取景层(现场感 S1):作者配了轮廓才进得来 —— 镜头里浮着一条轮廓，把实物套进去再按快门。

@@ -1,7 +1,7 @@
 <!-- 俱乐部 · 活动详情(Figma ★俱乐部·全流程 H1–H6)
      六态共用一套骨架,差异只在:状态胶囊 / 是否出未通过原因 / 是否出核销 / 是否出接下来 / 主键文案与可点性。
      ⚠️ 这是俱乐部视角的「主题」,不是商家承接视角 —— 别和 pages/topic/merchantinfo 混。 -->
-<view class="theme-dark">
+<view class="theme-merchant">
   <cy-toast id="cy-toast" />
   <cy-access-gate kind="login" />
   <cy-loading-mask id="cy-loading" />
@@ -430,7 +430,7 @@
 <!-- Figma J9「更多」:原 J4 主题设置 + 这一页其它次要入口 + 结束主题。
      ⚠️ 这里的「结束主题」只做下架(停售),不动已售出的票 —— 主题这一层没有退款接口,
      商家侧也没有(商家的 /api/activity/cancel 是按单个活动退的)。退款走场次管理逐场取消。 -->
-<cy-scene-sheet show="{{settingSheetVisible}}" variant="half" title="更多" closable maskClosable bind:close="closeTopicSetting">
+<cy-scene-sheet show="{{settingSheetVisible}}" variant="half" title="更多" closable maskClosable bind:close="closeTopicSetting" class="theme-merchant">
   <view class="tset">
       <view class="tset-row" bindtap="goStory" aria-role="button" aria-label="剧情与玩法"
         hover-class="cy-pressed" hover-stay-time="80">
@@ -547,7 +547,7 @@
 
 <!-- Figma J7「商家(弹窗)」。商家与成员是两个圆钮、两个独立弹层。
      联系方式由服务端按「商家已确认」裁剪:未确认的商家回包里没有 phone 这个键,不是前端藏起来。 -->
-<cy-scene-sheet show="{{merchantSheetVisible}}" variant="half" title="商家" closable maskClosable bind:close="closeMerchants">
+<cy-scene-sheet show="{{merchantSheetVisible}}" variant="half" title="商家" closable maskClosable bind:close="closeMerchants" class="theme-merchant">
   <view class="tset">
     <cy-skeleton wx:if="{{merchantState === 'loading'}}" type="list" count="2" />
     <cy-empty wx:elif="{{merchantState === 'denied'}}" title="{{merchantDeniedReason || '商家信息获取失败'}}" class="cy-fade-in" />
@@ -577,7 +577,7 @@
      报名/购票参与者(cms_registration),不是俱乐部成员名单(club_member),所以入口与
      弹层都按购票口径命名。按场次分组;手机号那一格由后端按权限决定
      给号码还是给替代说明,前端原样显示,不自己拼。 -->
-<cy-scene-sheet show="{{customerSheetVisible}}" variant="half" title="报名参与者" closable maskClosable bind:close="closeCustomers">
+<cy-scene-sheet show="{{customerSheetVisible}}" variant="half" title="报名参与者" closable maskClosable bind:close="closeCustomers" class="theme-merchant">
   <view class="tset">
     <cy-skeleton wx:if="{{customerState === 'loading'}}" type="list" count="2" />
     <cy-error load-failure wx:elif="{{customerState !== 'ready'}}" title="报名名单获取失败" sub="{{customerErrorReason}}" retry="重试" bind:retry="loadCustomers" class="cy-fade-in" />
@@ -648,10 +648,10 @@
      cy-modal 控制台实拍的 action=null 同型。同类现场与写法先例见 pages/agreement/index.wxml:11。 -->
 <cy-club-topic-end-confirm show="{{endConfirmVisible}}" topic-name="{{setting ? setting.topicName : ''}}"
   loading="{{endSubmitting}}" error-text="{{endErrorText}}"
-  bind:confirm="confirmEndTopic" bind:cancel="closeEndTopic" />
+  bind:confirm="confirmEndTopic" bind:cancel="closeEndTopic" class="theme-merchant" />
 
 <!-- HO-26 改集合时间:日期 + 时间各一格,底部两颗小按钮并排。已售锁定由后端判(CR-63),这里先把规则说在前面。 -->
-<cy-scene-sheet show="{{opsTimeSheetVisible}}" variant="half" title="修改集合时间" closable bind:close="closeOpsTimeSheet">
+<cy-scene-sheet show="{{opsTimeSheetVisible}}" variant="half" title="修改集合时间" closable bind:close="closeOpsTimeSheet" class="theme-merchant">
   <view class="ctd-director-field">
     <text class="ctd-director-field__label">集合日期</text>
     <cy-date-field mode="date" value="{{opsTimeDraft.date}}" bind:change="onOpsDateChange">
@@ -661,7 +661,6 @@
     <cy-date-field mode="time" value="{{opsTimeDraft.time}}" bind:change="onOpsTimeChange">
       <view class="ctd-director-field__picker">{{opsTimeDraft.time || '选择时间'}}</view>
     </cy-date-field>
-    <text class="ctd-opstime__hint">退款截止为集合前 24 小时</text>
     <view class="ctd-director-field__acts">
       <view class="ctd-director-field__act" bindtap="closeOpsTimeSheet" aria-role="button" aria-label="取消修改集合时间" hover-class="cy-pressed" hover-stay-time="80">取消</view>
       <view class="ctd-director-field__act ctd-director-field__act--primary {{opsTimeSubmitting ? 'is-disabled' : ''}}"
@@ -673,9 +672,9 @@
 <!-- 集合时间改没改成都由结果半屏说,自愈不等点击。 -->
 <cy-result-sheet show="{{resultSheet.show}}" kind="{{resultSheet.kind}}" title="{{resultSheet.title}}"
   sub="{{resultSheet.sub}}" why="{{resultSheet.why}}" duration="{{resultSheet.duration}}"
-  bind:close="onOpsResultClose" />
+  bind:close="onOpsResultClose" class="theme-merchant" />
 
-<cy-scene-sheet show="{{rulesSheetVisible}}" variant="half" title="退出与暂停规则" closable maskClosable bind:close="closeRules">
+<cy-scene-sheet show="{{rulesSheetVisible}}" variant="half" title="退出与暂停规则" closable maskClosable bind:close="closeRules" class="theme-merchant">
   <view class="tset tset-rules-article">
     <block wx:for="{{rulesSections}}" wx:key="key">
       <text class="tset-rules-heading">{{item.label}}</text>
@@ -686,7 +685,7 @@
 
 <!-- CU-C-79(用户裁决 B):「去选一场」先弹这张半屏,选中后带 activityId 进活动运营 ——
      主键文案承诺的就是选场,不再直接跳到系列编辑页。 -->
-<cy-scene-sheet show="{{sessionPickVisible}}" variant="half" title="选择场次" closable maskClosable bind:close="closeSessionPick">
+<cy-scene-sheet show="{{sessionPickVisible}}" variant="half" title="选择场次" closable maskClosable bind:close="closeSessionPick" class="theme-merchant">
   <view class="tset">
     <view class="tset-row" wx:for="{{sessionPickRows}}" wx:key="id"
       data-id="{{item.id}}" bindtap="onSessionPick" aria-role="button"
@@ -700,7 +699,7 @@
   </view>
 </cy-scene-sheet>
 
-<cy-club-director-chapter-sheet show="{{planFallbackSheet}}" title="默认结局收尾" chapters="{{[]}}" confirm-text="确认收尾" confirm-disabled="{{writeLocked || !planFallbackAvailable}}" caption="{{planFallbackError || (writeLocked ? writeMessage : '确认收尾后继续')}}" bind:close="closePlanFallback" bind:confirm="confirmPlanFallback">
+<cy-club-director-chapter-sheet show="{{planFallbackSheet}}" title="默认结局收尾" chapters="{{[]}}" confirm-text="确认收尾" confirm-disabled="{{writeLocked || !planFallbackAvailable}}" caption="{{planFallbackError || (writeLocked ? writeMessage : '确认收尾后继续')}}" bind:close="closePlanFallback" bind:confirm="confirmPlanFallback" class="theme-merchant">
   <view class="ctd-director-field"><text class="ctd-director-field__label">收尾原因</text><textarea class="ctd-plan-fallback__input" value="{{planFallbackDraft}}" maxlength="500" bindinput="inputPlanFallbackReason" disabled="{{writeLocked}}" aria-label="必填的默认结局收尾原因" placeholder="说明本场无法继续执行方案的原因" /></view>
   <view wx:if="{{writeLocked && writeState === 'unknown-write'}}" class="ctd-director-export" bindtap="onReconcileUnknownWrite" aria-role="button" aria-label="确认原收尾请求的结果" hover-class="cy-pressed" hover-stay-time="80">查看上次操作结果</view>
 </cy-club-director-chapter-sheet>

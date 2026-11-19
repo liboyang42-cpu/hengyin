@@ -30,7 +30,8 @@ public final class AnswerNormalizer {
 
     public static String normalize(String raw) {
         if (raw == null) return "";
-        String text = Normalizer.normalize(raw, Normalizer.Form.NFKC);
+        // CG-08-P2-5:NFKC 不动弯撇号，这里补一层折叠成半角 '
+        String text = AnswerPolicy.foldApostrophes(Normalizer.normalize(raw, Normalizer.Form.NFKC));
         text = STRIP_ALL.matcher(text).replaceAll("");
         int start = 0;
         int end = text.length();
@@ -63,7 +64,7 @@ public final class AnswerNormalizer {
 
     private static String fold(String raw) {
         if (raw == null) return "";
-        return STRIP_ALL.matcher(Normalizer.normalize(raw, Normalizer.Form.NFKC)).replaceAll("");
+        return STRIP_ALL.matcher(AnswerPolicy.foldApostrophes(Normalizer.normalize(raw, Normalizer.Form.NFKC))).replaceAll("");
     }
 
     /** 按共享分隔符拆开(不去重、不含整串)。 */

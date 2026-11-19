@@ -64,31 +64,28 @@ function mount(source, kind, relativePath) {
   return { instance, requests, timers, vibrations }
 }
 
+// PG-091:citynode-code 页已改为本场景组件的薄壳(页面不再自己出码),错误态口径只在场景一份,对固定文案断言。
 function assertCityFailureParity(sceneSource) {
-  const page = mount(read(CITY_PAGE), 'page', CITY_PAGE)
+  const ISSUE_ERROR_MESSAGE = '暂时无法生成核销码，请稍后重试'
+  assert.doesNotMatch(read(CITY_PAGE), /\/api\/verify\/citynode\/issue|issue\(/, 'citynode-code 页是薄壳,不再自带出码')
   const scene = mount(sceneSource, 'component', CITY_SCENE)
-  page.instance.data.poiId = 'poi-1'
 
-  page.instance.issue()
   scene.instance.issue('poi-1')
   const businessFailure = { code: 500, msg: 'permission denied: /api/verify/citynode/issue' }
-  page.requests[0].success(businessFailure)
   scene.requests[0].success(businessFailure)
 
-  assert.equal(scene.instance.data.state, page.instance.data.state)
-  assert.equal(scene.instance.data.errorText, page.instance.data.errMsg)
+  assert.equal(scene.instance.data.state, 'error')
+  assert.equal(scene.instance.data.errorText, ISSUE_ERROR_MESSAGE)
 
-  page.instance.issue()
   scene.instance.issue('poi-1')
   const transportFailure = { statusCode: 502, msg: '/api/verify/citynode/issue upstream timeout' }
-  page.requests[1].successStatusAbnormal(transportFailure)
   scene.requests[1].successStatusAbnormal(transportFailure)
 
-  assert.equal(scene.instance.data.state, page.instance.data.state)
-  assert.equal(scene.instance.data.errorText, page.instance.data.errMsg)
+  assert.equal(scene.instance.data.state, 'error')
+  assert.equal(scene.instance.data.errorText, ISSUE_ERROR_MESSAGE)
 }
 
-test('qr-citynode 场景与页面同样把业务/HTTP 异常收敛为稳定错误态', () => {
+test('qr-citynode 场景把业务/HTTP 异常收敛为稳定错误态(页面为薄壳)', () => {
   assertCityFailureParity(read(CITY_SCENE))
 })
 

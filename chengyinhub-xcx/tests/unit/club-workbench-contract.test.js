@@ -13,7 +13,8 @@ test('三个主理人入口统一到俱乐部详情，旧 workbench 路由仅保
   assert.ok(clubPackage.pages.includes('workbench/index'), '旧外部深链路由不得删除')
 
   const settings = read('pages/shezhi/shezhi.js')
-  assert.equal((settings.match(/\/pages\/club\/detail\/index\?owner=1/g) || []).length, 2)
+  // PG-062:未绑定的 goEdit 删除后,设置页只剩 pickClub 一处入口
+  assert.equal((settings.match(/\/pages\/club\/detail\/index\?owner=1/g) || []).length, 1)
   assert.doesNotMatch(settings, /\/pages\/club\/workbench\/index/)
 
   const shell = read('pages/club/workbench/index.js')

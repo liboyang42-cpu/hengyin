@@ -19,6 +19,9 @@ REPO = pathlib.Path(__file__).resolve().parent.parent
 SQL_DIR = REPO / "chengyinhub-admin/sql"
 MIGRATION = SQL_DIR / "migration_20261003_merchant_offer_withdrawal_columns.sql"
 ROUND_MIGRATION = SQL_DIR / "migration_20261024_d_chapter_application_round.sql"
+# 2026-11-18 F10:已发布的 offer 投影同时读 supplier_kind / supplier_member_id(作者自己承接),
+# 投影断言前须一并落这份独立迁移;本文件被测的退出列迁移本身不变。
+AUTHOR_SUPPLY_MIGRATION = SQL_DIR / "migration_20261118_chapter_offer_author_self_supply.sql"
 # F12:当前 selectMerchantChapterOfferVo 也读 family_accepted/family_perk_text;投影前叠上这份后续迁移。
 FAMILY_MIGRATION = SQL_DIR / "migration_20261118_family_ticket.sql"
 PREFIX = "cy_offer_withdraw_columns_it_"
@@ -160,6 +163,7 @@ class MerchantOfferWithdrawalColumnsMysqlIntegrationTest(unittest.TestCase):
                 if mapper == "MerchantChapterApplicationMapper":
                     self.assertIn("replacement_of_offer_id", str(raised.exception))
         self.migrate()
+        self.migrate(AUTHOR_SUPPLY_MIGRATION)
         self.assertEqual(self.before, self.snapshot(self.before))
         self.assertEqual((
             (TABLES[1], "replacement_of_offer_id", "bigint", "YES", None),
@@ -179,6 +183,7 @@ class MerchantOfferWithdrawalColumnsMysqlIntegrationTest(unittest.TestCase):
 
     def test_explicit_snapshots_and_replacement_survive_replay(self):
         self.migrate()
+        self.migrate(AUTHOR_SUPPLY_MIGRATION)
         reason = "退出" * 250
         with self.connect() as connection, connection.cursor() as cursor:
             cursor.execute("UPDATE merchant_chapter_offer SET status=0,withdraw_reason=%s,"

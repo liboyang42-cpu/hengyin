@@ -172,7 +172,8 @@ class PlatformPassServiceTest {
         when(mapper.selectActiveMembership(eq(MEMBER), any())).thenReturn(activeMembership(now));
         published.add(6L);
         when(mapper.selectLibrary(null, 20)).thenReturn(List.of(libraryTopic(5L), libraryTopic(6L), libraryTopic(8L)));
-        when(mapper.selectLibrary(null, 500)).thenReturn(List.of(libraryTopic(5L), libraryTopic(6L), libraryTopic(8L)));
+        // OR-016：数量由计数 SQL 给出（条件见 PlatformPassMySqlIT），服务把同一覆盖范围与时刻传下去
+        when(mapper.countIncludedLibrary(eq(Set.of(6L, 8L)), any())).thenReturn(2);
 
         assertFalse(props.coversTopic(5L));
         assertTrue(props.coversTopic(6L));
@@ -958,6 +959,7 @@ class PlatformPassServiceTest {
         Map<String, Object> afterApply = order("XPAY", 1);
         afterApply.put("review_status", 1); afterApply.put("review_apply_reason", "想退");
         when(mapper.selectOrderByNo(anyString())).thenReturn(paid, afterApply);
+        when(mapper.requestReview(eq(10L), anyString(), anyString())).thenReturn(1);
         Map<String, Object> view = service.applyRefund(MEMBER, "PPO1", "想退");
         verify(mapper).requestReview(eq(10L), eq("想退"), eq("已领取主题数=1；主题=5"));
         assertEquals("PENDING", ((Map<?, ?>) view.get("refund")).get("reviewStatus"));
@@ -1039,7 +1041,7 @@ class PlatformPassServiceTest {
         noSelfPlay.put("self_play", Boolean.FALSE);
         List<Map<String, Object>> rows = List.of(libraryTopic(1L), closed, noSelfPlay);
         when(mapper.selectLibrary(null, 20)).thenReturn(rows);
-        when(mapper.selectLibrary(null, 500)).thenReturn(rows);
+        when(mapper.countIncludedLibrary(eq(Set.of()), any())).thenReturn(1);
         Map<String, Object> catalog = service.library(MEMBER, null, 20);
         assertEquals(List.of(true, false, false), libraryRows(catalog).stream().map(r -> r.get("passIncluded")).toList());
         assertEquals(List.of(false, false, false), libraryRows(catalog).stream().map(r -> r.get("passCovered")).toList(),
@@ -1157,6 +1159,123 @@ class PlatformPassServiceTest {
         assertEquals(true, catalog.get("covered"));
         when(mapper.selectLibrary(null, 20)).thenReturn(List.of());
         assertEquals(false, service.library(MEMBER, null, 20).get("covered"));
+    }
+
+    // ---- OR-006 / OR-008 / OR-007 / OR-002 / OR-024
+
+    @Test
+    void duplicateRefundApplicationIsAConflictNotASilentSuccess() {
+        enableAll();
+        when(mapper.selectOrderByNo("PPO1")).thenReturn(order("XPAY", 1));
+        when(mapper.requestReview(eq(10L), anyString(), anyString())).thenReturn(0);
+        PlatformPassException e = assertThrows(PlatformPassException.class,
+                () -> service.applyRefund(MEMBER, "PPO1", "想退"));
+        assertEquals(409, e.getHttpStatus());
+        assertEquals("REFUND_REVIEW_PENDING", e.getReasonCode());
+        assertEquals("退款申请已在处理中", e.getMessage());
+    }
+
+    @Test
+    void cancelOnlyPendingOrdersAndRejectsLostRace() {
+        enableAll();
+        when(mapper.selectOrderByNo("PPO1")).thenReturn(order("XPAY", 1));
+        PlatformPassException paid = assertThrows(PlatformPassException.class, () -> service.cancel(MEMBER, "PPO1"));
+        assertEquals("ORDER_NOT_CANCELLABLE", paid.getReasonCode());
+        assertEquals(409, paid.getHttpStatus());
+        verify(mapper, never()).markCancelled(anyLong(), anyLong(), any());
+
+        when(mapper.selectOrderByNo("PPO2")).thenReturn(order("XPAY", 0));
+        when(mapper.markCancelled(eq(10L), eq(MEMBER), any())).thenReturn(0);
+        assertEquals("ORDER_NOT_CANCELLABLE", assertThrows(PlatformPassException.class,
+                () -> service.cancel(MEMBER, "PPO2")).getReasonCode());
+
+        Map<String, Object> pending = order("XPAY", 0);
+        pending.put("order_no", "PPO3");
+        when(mapper.selectOrderByNo("PPO3")).thenReturn(pending, order("XPAY", 2));
+        when(mapper.markCancelled(eq(10L), eq(MEMBER), any())).thenReturn(1);
+        assertEquals("CANCELLED", service.cancel(MEMBER, "PPO3").get("status"));
+    }
+
+    @SuppressWarnings("unchecked")
+    private com.chengyinhub.business.service.IImService wireIm() {
+        com.chengyinhub.business.service.IImService im = mock(com.chengyinhub.business.service.IImService.class);
+        org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.IImService> provider =
+                mock(org.springframework.beans.factory.ObjectProvider.class);
+        when(provider.getIfAvailable()).thenReturn(im);
+        ReflectionTestUtils.setField(service, "imServiceProvider", provider);
+        return im;
+    }
+
+    @Test
+    void rejectedReviewNotifiesThePlayerThroughTheSystemConversation() {
+        enableAll();
+        com.chengyinhub.business.service.IImService im = wireIm();
+        Map<String, Object> paid = order("XPAY", 1);
+        when(mapper.selectOrderByNoForUpdate("PPO1")).thenReturn(paid);
+        when(mapper.selectOrderByNo("PPO1")).thenReturn(paid);
+        when(mapper.decideReview(eq(10L), eq(3), eq("ops"), eq("已多次游玩"), any())).thenReturn(1);
+        service.reviewRefund("PPO1", "ops", false, "已多次游玩");
+        org.mockito.ArgumentCaptor<String> extra = org.mockito.ArgumentCaptor.forClass(String.class);
+        verify(im).sendSystem(eq(MEMBER), eq(com.chengyinhub.business.domain.ImMessage.MSG_CARD),
+                eq("通行证退款申请未通过"), extra.capture());
+        assertTrue(extra.getValue().contains("已多次游玩"));
+    }
+
+    @Test
+    void approvedReviewNotifiesAfterTheRefundIsSubmitted() {
+        enableAll();
+        com.chengyinhub.business.service.IImService im = wireIm();
+        Map<String, Object> paid = order("XPAY", 1);
+        paid.put("review_status", 2); paid.put("review_apply_reason", "不想要了");
+        when(mapper.selectOrderByNoForUpdate(NO)).thenReturn(paid);
+        when(mapper.selectOrderByNo(NO)).thenReturn(paid);
+        when(mapper.decideReview(eq(10L), eq(2), eq("ops"), anyString(), any())).thenReturn(1);
+        when(mapper.markRefundRequested(eq(10L), anyString(), anyString(), eq("ops"), any())).thenReturn(1);
+        when(xpay.refundOrder(anyString(), eq(NO), anyString(), eq(29900L), eq(29900L), anyString(), eq(1)))
+                .thenReturn(JSONObject.of("errcode", 0));
+        service.reviewRefund(NO, "ops", true, "");
+        verify(im).sendSystem(eq(MEMBER), eq(com.chengyinhub.business.domain.ImMessage.MSG_CARD),
+                eq("通行证退款已受理"), anyString());
+    }
+
+    @Test
+    void notifyFailureNeverBreaksTheReviewDecision() {
+        enableAll();
+        com.chengyinhub.business.service.IImService im = wireIm();
+        when(im.sendSystem(anyLong(), anyInt(), anyString(), anyString())).thenThrow(new RuntimeException("im down"));
+        Map<String, Object> paid = order("XPAY", 1);
+        when(mapper.selectOrderByNoForUpdate("PPO1")).thenReturn(paid);
+        when(mapper.selectOrderByNo("PPO1")).thenReturn(paid);
+        when(mapper.decideReview(eq(10L), eq(3), eq("ops"), anyString(), any())).thenReturn(1);
+        assertNotNull(service.reviewRefund("PPO1", "ops", false, ""));
+        verify(mapper).decideReview(eq(10L), eq(3), eq("ops"), anyString(), any());
+    }
+
+    @Test
+    void guestLibraryHasNoPersonalCoverageFields() {
+        enableAll();
+        when(mapper.selectLibrary(null, 20)).thenReturn(List.of(libraryTopic(5L), libraryTopic(6L)));
+        Map<String, Object> catalog = service.publicLibrary(null, 20);
+        assertFalse(catalog.containsKey("covered"));
+        assertEquals(2, libraryRows(catalog).size());
+        assertTrue(libraryRows(catalog).stream().noneMatch(r -> r.containsKey("passCovered")));
+        assertTrue(libraryRows(catalog).stream().allMatch(r -> r.containsKey("passIncluded")));
+        verify(mapper, never()).selectActiveMembership(anyLong(), any());
+    }
+
+    @Test
+    void overviewListsShortTermsWithoutChangingSaleState() {
+        enableAll();
+        Map<String, Object> year = plan("YEAR", 1, "prod_year");
+        when(mapper.selectOnSalePlans()).thenReturn(List.of(year));
+        @SuppressWarnings("unchecked")
+        List<String> terms = (List<String>) service.overview(null).get("terms");
+        assertTrue(terms.contains("不自动续费"));
+        assertTrue(terms.stream().anyMatch(t -> t.contains("整单")));
+        assertTrue(terms.stream().anyMatch(t -> t.contains("年卡365天")));
+        Map<String, Object> disabled = new PlatformPassService(mapper, new PlatformPassProperties(),
+                mock(PlatformTransactionManager.class)).overview(null);
+        assertFalse(disabled.containsKey("terms"), "关闭时不出售，也不展示条款");
     }
 
     @Test

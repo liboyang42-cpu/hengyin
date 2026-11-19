@@ -130,14 +130,18 @@ test('① 但数值命名 + 有效副标题必须保留,不许笼统过滤数字
   assert.equal(row.usable, true)
 })
 
-test('① 不可用行在 WXML 上不可点且无 chevron,并带显式状态说明', () => {
-  const wxml = read(INFO_WXML)
-  assert.match(wxml, /item\.usable/, 'WXML 必须消费 usable 分流两种渲染')
-  const unusable = wxml.split('item.usable').slice(1).join('')
-  assert.match(unusable, /disabled/, '不可用行必须 disabled(不可点)')
-  assert.match(unusable, /arrow="\{\{\s*false\s*\}\}"/, '不可用行不得留 chevron(暗示可点)')
-  // R3 起文案统一为「内容待完善，暂不可查看」(原「内容未配置」)
-  assert.match(unusable, /即将上线/, '必须给显式状态说明，不能只是空着')
+// PG-085(2026-11-17 业主批准):不可用条目直接不显示,不再渲染灰行占位;全部不可用时落空态
+test('① 不可用行在 WXML 上直接不渲染,只列 usable 条目', () => {
+  const wxml = stripComments(read(INFO_WXML))
+  assert.match(wxml, /<cy-cell wx:if="\{\{item\.usable\}\}"/)
+  assert.doesNotMatch(wxml, /<cy-cell\s+wx:else/)
+  assert.doesNotMatch(wxml, /即将上线|未命名条目/)
+  const vm = loadPage(INFO_JS)
+  vm.getList()
+  const req = sandbox.requests.find((r) => r.url === '/api/common/infomation_list')
+  req.success({ code: '200', data: [{ id: 4, title: '', subtitle: '摘要', contents: '<p>x</p>' }] })
+  assert.equal(vm.data.docsState, 'empty')
+  assert.equal(vm.data.nodata, true)
 })
 
 test('① 空列表仍然走 cy-empty 且 nodata 真被消费(R1 已修,别回退)', () => {

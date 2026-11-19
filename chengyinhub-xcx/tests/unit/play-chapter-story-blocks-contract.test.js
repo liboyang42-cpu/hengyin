@@ -929,8 +929,6 @@ test('序章:顶栏眉标与标题同名时不出,开场门不把序数标签再
 
 // 显示层兜住旧数据,发布端也不该再制造英文占位(只影响新发布,不动存量)。
 test('发布端不再把英文占位 Chapter N 写进新章节', () => {
-  assert.doesNotMatch(read('pages/publish/simple/index.js'), /name:\s*'Chapter/,
-    'simple 发布默认章节名必须是中文')
   assert.doesNotMatch(read('pages/publish/fabu/index.js'), /name:\s*(ch\.name\s*\|\|\s*)?'Chapter/,
     'fabu 发布/AI 草稿默认章节名必须是中文')
 })

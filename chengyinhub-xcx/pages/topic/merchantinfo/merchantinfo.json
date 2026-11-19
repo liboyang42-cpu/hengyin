@@ -20,7 +20,8 @@
     "cy-modal-host": "/components/cy/modal-host/index",
     "cy-option-sheet": "/components/cy/option-sheet/index",
     "cy-inline-error": "/components/cy/inline-error/index",
-    "cy-sheet": "/components/cy/sheet/index"
+    "cy-sheet": "/components/cy/sheet/index",
+    "cy-date-field": "/components/cy/date-field/index"
   },
   "navigationStyle": "custom",
   "navigationBarTextStyle": "black",

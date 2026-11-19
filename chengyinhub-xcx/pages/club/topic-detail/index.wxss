@@ -221,7 +221,6 @@
 .ctd-opstime__label { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
 .ctd-opstime__value { font-size: var(--cy-type-body); font-weight: 500; color: var(--cy-color-text-primary); }
 .ctd-opstime__edit { flex: none; min-height: var(--cy-btn-h-sm); display: flex; align-items: center; padding: 0 var(--cy-space-4); border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-raised); color: var(--cy-color-text-primary); font-size: var(--cy-type-label); }
-.ctd-opstime__hint { font-size: var(--cy-type-caption); line-height: 1.5; color: var(--cy-color-text-tertiary); }
 
 /* 错误态/骨架态给 overlay 导航让位 —— 见 index.wxml 里那段注释。 */
 .ctd-chrome-clear { padding-top: var(--cy-safe-top); }

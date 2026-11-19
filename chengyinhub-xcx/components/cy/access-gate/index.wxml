@@ -1,6 +1,11 @@
-<!-- deny:整屏底色盖住页面(fail-closed 不变),上面弹零按钮 fail 半屏讲原因,2s 后自动 onExit(稿 356-5220) -->
-<view wx:if="{{state === 'deny'}}" class="gate" style="padding-top: {{top}}px;" aria-role="alert" aria-live="assertive">
-  <cy-result-sheet show="{{_sheet}}" kind="fail" title="暂时不能查看" why="{{reason || '当前账号没有查看权限'}}" bind:close="onExit" />
+<!-- 商家 deny(UI-sweep 1119 U3):从导航栏下方盖住页面内容(fail-closed 不变),原地讲清 + 一个动作,不自动退出 -->
+<view wx:if="{{state === 'deny' && kind === 'merchant'}}" class="gate" style="top: {{top}}px;" aria-role="alert" aria-live="assertive">
+  <cy-empty kind="no-permission" fill size="lg" title="{{reason || '当前身份不能查看这项内容'}}" cta="{{denyCta}}" bind:cta="onDenyCta" />
+</view>
+
+<!-- 俱乐部 deny:整屏底色盖住页面(fail-closed 不变),上面弹零按钮 fail 半屏讲原因,2s 后自动 onExit(稿 356-5220) -->
+<view wx:elif="{{state === 'deny'}}" class="gate" style="padding-top: {{top}}px;" aria-role="alert" aria-live="assertive">
+  <cy-result-sheet show="{{_sheet}}" kind="fail" title="暂时不能查看" why="{{reason || '当前身份不能查看这项内容'}}" bind:close="onExit" />
 </view>
 
 <!-- 第十二轮 k9(p2 N-9):登录门从导航栏下方开始盖,页面自己的返回键露在上面;原来整屏盖住,游客只能按系统手势离开 -->

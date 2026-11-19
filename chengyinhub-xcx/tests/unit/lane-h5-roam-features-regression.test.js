@@ -40,14 +40,14 @@ test('C9: 恢复记录键与 roam-player-memory 一致（按玩家分桶）', ()
 
 test('C5: 官方路线整形——单位、缺字段、坏坐标', () => {
   const route = require('../../subpackageRoam/utils/official-route.js');
-  assert.equal(route.distanceText(3.5), '3.5 km');
+  assert.equal(route.distanceText(3.5), '3.5 公里'); // PG-074
   assert.equal(route.distanceText(0), '');
   assert.equal(route.durationText(45), '45 分钟');
   assert.equal(route.durationText(150), '2 小时 30 分');
   assert.equal(route.normalizeRoute({ id: 1 }), null);
   assert.equal(route.normalizeRouteList({}), null);
   const list = route.normalizeRouteList([{ id: 7, name: '老城', city: '上海', totalDistance: 4, totalTime: 90 }]);
-  assert.equal(list[0].metaText, '上海 · 4 km · 1 小时 30 分');
+  assert.equal(list[0].metaText, '上海 · 4 公里 · 1 小时 30 分');
   const detail = route.normalizeRouteDetail({ id: 7, name: '老城', nodes: [
     { name: 'A', latitude: '31.2', longitude: '121.4', nodeTime: 20 },
     { name: 'B', latitude: '', longitude: '' },

@@ -1,0 +1,43 @@
+<!-- F11:自由探索结算（参考）。收款人视角没有任何一场时整块不摆；店铺视角空时照常显示 ¥0.00(MC-011=B)。 -->
+<view class="fe-ref" wx:if="{{!(kind === 'payer' && state === 'ready' && view && !view.groups.length)}}">
+  <view class="fe-ref-head">
+    <text class="fe-ref-title">自由探索结算（参考）</text>
+  </view>
+  <text class="fe-ref-sub">参考金额，平台不代收代付，由主办方与店铺线下结款</text>
+  <cy-skeleton wx:if="{{state === 'loading'}}" type="amount" count="{{1}}" />
+  <cy-inline-error load-failure wx:elif="{{state === 'error'}}" title="参考结算暂未取回" action="重试" bind:action="load" />
+  <block wx:else>
+    <view class="fe-ref-stats">
+      <view class="fe-ref-stat" wx:for="{{view.stats}}" wx:key="key">
+        <text class="fe-ref-stat-label">{{item.label}}</text>
+        <text class="fe-ref-stat-value">{{item.value}}</text>
+      </view>
+    </view>
+    <view class="fe-ref-group" wx:for="{{view.groups}}" wx:for-item="group" wx:key="key">
+      <view class="fe-ref-group-head">
+        <view class="fe-ref-group-main">
+          <text class="fe-ref-group-title">{{group.title}}</text>
+          <text class="fe-ref-meta">{{group.metaText}}</text>
+        </view>
+        <button wx:if="{{kind === 'payer' && group.openIds.length}}" class="fe-ref-btn" disabled="{{busy}}"
+          data-key="{{group.key}}" bindtap="onSettle" hover-class="cy-pressed" aria-label="本场标记已线下结清">标记已结清</button>
+      </view>
+      <view class="fe-ref-row" wx:for="{{group.rows}}" wx:for-item="row" wx:key="id">
+        <view class="fe-ref-row-main">
+          <text class="fe-ref-row-title">{{row.title}}</text>
+          <text class="fe-ref-meta">{{row.metaText}}</text>
+          <view class="fe-ref-row-state">
+            <cy-badge type="status" variant="{{row.statusVariant}}" label="{{row.statusText}}" />
+            <text class="fe-ref-meta" wx:if="{{row.voucherNo}}">凭证 {{row.voucherNo}}</text>
+          </view>
+        </view>
+        <view class="fe-ref-row-side">
+          <text class="fe-ref-amount {{row.status === 'VOID' ? 'fe-ref-amount--void' : ''}}">{{row.amountText}}</text>
+          <text wx:if="{{row.canDispute}}" class="fe-ref-link" data-id="{{row.id}}" bindtap="onDispute" hover-class="cy-pressed"
+            aria-role="button" aria-label="对这笔结算提出异议">有异议</text>
+        </view>
+      </view>
+    </view>
+    <text class="fe-ref-empty" wx:if="{{!view.groups.length}}">还没有自由探索核销</text>
+  </block>
+</view>

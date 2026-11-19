@@ -60,7 +60,7 @@ function arriveRefusal(response) {
 
 Page({
   data: {
-    node: null, notFound: false, statusBarHeight: 20, regId: 0,
+    node: null, notFound: false, canReloadNode: false, statusBarHeight: 20, regId: 0,
     safetyRatingShow: false,
     // sheetTop 兜底 69px(常规机胶囊底+5):.mp-sheet 的 max-height 用它,不能让 calc 引用空值
     chrome: { actionTop: 28, actionRight: 12, contentTop: 76, sheetTop: 69 },
@@ -93,7 +93,25 @@ Page({
 
 
   goBackOrHome() { wx.navigateBack({ fail: () => wx.switchTab({ url: '/pages/index/index' }) }) },   // 第十二轮 k2(p1 N-4)
+  // PG-017:从游玩页进来却没取到节点时,让游玩页按 nodeId 所在场次重读 /api/play/nodes,读完再找一次;
+  // 链接直达(没有游玩页)只给返回。
+  onUnload() { this._unloaded = true; if (this._reloadTimer) clearTimeout(this._reloadTimer); this._reloadTimer = null },
+  onReloadNode() {
+    const prev = this._prev
+    if (!prev || typeof prev.reloadPlay !== 'function') { this.goBackOrHome(); return }
+    if (this._reloadTimer) return
+    prev.reloadPlay()
+    const start = Date.now()
+    const tick = () => {
+      this._reloadTimer = null
+      if (this._unloaded) return
+      if (prev.data && prev.data.loading && Date.now() - start < 10000) { this._reloadTimer = setTimeout(tick, 300); return }
+      this.onLoad(this._query)
+    }
+    this._reloadTimer = setTimeout(tick, 300)
+  },
   onLoad(query) {
+    this._query = query || {}
     const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()
     // 顶边复查(2026-09-18):.mp-sheet 长题面会顶进胶囊行,高度上限须从胶囊实测反算
     try { this.setData({ chrome: resolveMenuChrome(info, wx.getMenuButtonBoundingClientRect()) }) } catch (e) {}
@@ -102,13 +120,13 @@ Page({
     const nodes = (this._prev && this._prev.data && this._prev.data.nodes) || []
     const node = nodes.find((item) => String(item.nodeId) === String(query && query.nodeId))
     if (!node) {
-      this.setData({ statusBarHeight: info.statusBarHeight || 20, notFound: true })
+      this.setData({ statusBarHeight: info.statusBarHeight || 20, notFound: true, canReloadNode: !!(this._prev && typeof this._prev.reloadPlay === 'function') })
       return
     }
     this._session = this._prev && typeof this._prev._sessionParams === 'function'
       ? this._prev._sessionParams() : {}
     this.setData({
-      statusBarHeight: info.statusBarHeight || 20,
+      statusBarHeight: info.statusBarHeight || 20, notFound: false,
       node: Object.assign({}, node, { openText: resolveOpenState(node).openText }),
       regId: (this._prev && this._prev.data && this._prev.data.regId) || 0,
       heroImg: String(node.imgUrl || '').split(',')[0],

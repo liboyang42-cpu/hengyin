@@ -5,10 +5,10 @@
   <cy-modal-host id="cy-modal-host" />
 <view class="gc-page">
   <cy-nav-bar plain />
-  <cy-page-title title="成长中心" style="--cy-space-5: 0px; --cy-space-2: 16px; --cy-page-title-leading: 38px; --cy-page-title-weight: 700;" />
+  <cy-page-title class="gc-title" title="成长中心" />
 
   <cy-empty wx:if="{{growthAuthRequired || growthAccessDenied}}" kind="no-permission" fill size="lg"
-    title="{{growthAuthRequired ? '登录后查看成长记录' : '当前账号无法查看成长记录'}}"
+    title="{{growthAuthRequired ? '登录后查看成长记录' : '当前身份不能查看成长记录'}}"
     sub=""
     cta="{{growthAuthRequired ? '登录' : '刷新'}}" bind:cta="onLoginGrowth" />
   <block wx:else>

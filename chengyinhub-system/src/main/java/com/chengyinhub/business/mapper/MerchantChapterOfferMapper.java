@@ -31,6 +31,9 @@ public interface MerchantChapterOfferMapper {
     /** ③ 锁价前检查:没有任何生效供给的必选章数量;大于 0 即禁止开卖。 */
     int countRequiredChaptersWithoutLiveOffer(@Param("topicId") Long topicId);
 
+    /** F10:主题必选章(商家位置)总数,与 countRequiredChaptersWithoutLiveOffer 同口径。 */
+    int countRequiredChapters(@Param("topicId") Long topicId);
+
     public int insertMerchantChapterOffer(MerchantChapterOffer o);
 
     public MerchantChapterOffer selectById(@Param("id") Long id);
@@ -57,6 +60,12 @@ public interface MerchantChapterOfferMapper {
 
     /** F12:承接方本人设置是否接受亲子票与儿童份说明;where 带 merchant_id 与 status=1,0 行由调用方拒。 */
     public int updateFamilyAcceptance(MerchantChapterOffer o);
+
+    /** FE-G5:生效供给的玩家可见卡片(店名、权益名、含/另付、预约)。只读展示。 */
+    List<MerchantChapterOffer> selectLiveDisplayByChapterIds(@Param("chapterIds") List<Long> chapterIds);
+
+    /** FE-G5:承接方改自己生效供给的展示条款(where 带 merchant_id 与 status=1)。 */
+    int updateDisplayTerms(MerchantChapterOffer o);
 
     int approveReplacement(@Param("id") Long id, @Param("merchantId") Long merchantId);
 

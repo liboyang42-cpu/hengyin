@@ -22,6 +22,8 @@
         <result property="withdrawReason" column="withdraw_reason" />
         <result property="withdrawRequired" column="withdraw_required" />
         <result property="replacementOfOfferId" column="replacement_of_offer_id" />
+        <result property="supplierKind" column="supplier_kind" />
+        <result property="supplierMemberId" column="supplier_member_id" />
         <result property="familyAccepted" column="family_accepted" />
         <result property="familyPerkText" column="family_perk_text" />
         <result property="createBy"    column="create_by"    />
@@ -33,6 +35,7 @@
     <sql id="selectMerchantChapterOfferVo">
         select id, topic_id, chapter_id, merchant_id, perk_id, terms_mode, payer_club_id, per_head_fee,
                quota_total, quota_used, valid_end, allowed_validation_methods, max_node_xp, status, withdraw_reason, withdraw_required, replacement_of_offer_id,
+               supplier_kind, supplier_member_id,
                family_accepted, family_perk_text,
                create_by, create_time, update_by, update_time
         from merchant_chapter_offer
@@ -55,8 +58,13 @@
             <if test="maxNodeXp != null">max_node_xp,</if>
             <if test="status != null">status,</if>
             <if test="replacementOfOfferId != null">replacement_of_offer_id,</if>
+            <if test="supplierKind != null">supplier_kind,</if>
+            <if test="supplierMemberId != null">supplier_member_id,</if>
             <if test="familyAccepted != null">family_accepted,</if>
             <if test="familyPerkText != null">family_perk_text,</if>
+            <if test="included != null">included,</if>
+            <if test="extraSpendText != null">extra_spend_text,</if>
+            <if test="reserveRequired != null">reserve_required,</if>
             <if test="createBy != null">create_by,</if>
             <if test="createTime != null">create_time,</if>
             <if test="updateBy != null">update_by,</if>
@@ -77,8 +85,13 @@
             <if test="maxNodeXp != null">#{maxNodeXp},</if>
             <if test="status != null">#{status},</if>
             <if test="replacementOfOfferId != null">#{replacementOfOfferId},</if>
+            <if test="supplierKind != null">#{supplierKind},</if>
+            <if test="supplierMemberId != null">#{supplierMemberId},</if>
             <if test="familyAccepted != null">#{familyAccepted},</if>
             <if test="familyPerkText != null">#{familyPerkText},</if>
+            <if test="included != null">#{included},</if>
+            <if test="extraSpendText != null">#{extraSpendText},</if>
+            <if test="reserveRequired != null">#{reserveRequired},</if>
             <if test="createBy != null">#{createBy},</if>
             <if test="createTime != null">#{createTime},</if>
             <if test="updateBy != null">#{updateBy},</if>
@@ -252,6 +265,14 @@
            )
     </select>
 
+    <!-- F10:必选章总数,与上面 countRequiredChaptersWithoutLiveOffer 同口径(分母) -->
+    <select id="countRequiredChapters" resultType="int">
+        select count(*)
+          from cms_topic_chapter c
+         where c.topic_id = #{topicId}
+           and c.required = 1
+    </select>
+
     <!-- ============ 后台三档审核台(§4.2)============ -->
 
     <!-- 队列展示:基础列 + 连表展示字段(非本表列,只读) -->
@@ -329,6 +350,47 @@
          where id = #{id}
            and status = 1
            and quota_used &lt;= #{quotaTotal}
+    </update>
+
+    <!-- FE-G5:玩家可见的供给卡片(店名 + 权益名 + 含/另付 + 预约)。只读、只用于展示;
+         新列不进通用 selectMerchantChapterOfferVo,未落 migration_20261119_chapter_offer_display_terms 的库
+         只让调用方的展示字段缺席,不影响核销 / 容量 / 结算的既有查询。 -->
+    <resultMap type="MerchantChapterOffer" id="MerchantChapterOfferDisplayResult" extends="MerchantChapterOfferResult">
+        <result property="merchantName"    column="merchant_name"    />
+        <result property="perkName"    column="perk_name"    />
+        <result property="included"    column="included"    />
+        <result property="extraSpendText"    column="extra_spend_text"    />
+        <result property="reserveRequired"    column="reserve_required"    />
+    </resultMap>
+
+    <select id="selectLiveDisplayByChapterIds" resultMap="MerchantChapterOfferDisplayResult">
+        select o.id, o.topic_id, o.chapter_id, o.merchant_id, o.perk_id, o.terms_mode, o.valid_end, o.status,
+               o.supplier_kind, o.supplier_member_id,
+               o.included, o.extra_spend_text, o.reserve_required,
+               coalesce(nullif(mm.name, ''), m.nickname) as merchant_name,
+               p.name as perk_name
+          from merchant_chapter_offer o
+          left join ums_member m on m.id = o.merchant_id
+          left join coop_perk p on p.id = o.perk_id
+          left join mms_merchant mm on mm.id = (select max(m3.id) from mms_merchant m3
+                 where m3.member_id = o.merchant_id and m3.del_flag = 0)
+         where o.status = 1 and (o.valid_end is null or o.valid_end &gt; now())
+           and o.chapter_id in
+           <foreach collection="chapterIds" item="chapterId" open="(" separator="," close=")">#{chapterId}</foreach>
+         order by o.chapter_id asc, o.id asc
+    </select>
+
+    <!-- FE-G5:承接方改自己生效供给的展示条款。归属在 where 里(同 updateFamilyAcceptance)。 -->
+    <update id="updateDisplayTerms">
+        update merchant_chapter_offer
+           set included = #{included},
+               extra_spend_text = #{extraSpendText},
+               reserve_required = #{reserveRequired},
+               update_by = #{updateBy},
+               update_time = now()
+         where id = #{id}
+           and merchant_id = #{merchantId}
+           and status = 1
     </update>
 
     <!-- F12:承接方设置是否接受亲子票。归属在 where 里:只改本商家自己的生效供给(status=1)。 -->

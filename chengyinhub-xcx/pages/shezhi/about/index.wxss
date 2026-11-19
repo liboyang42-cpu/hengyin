@@ -59,19 +59,6 @@ page {
   background: var(--cy-color-bg-page);
 }
 
-.about-section__title {
-  font-size: var(--cy-type-section-title);
-  font-weight: 700;
-  line-height: var(--cy-leading-tight);
-}
-
-.about-section__intro {
-  margin-top: var(--cy-space-2);
-  color: var(--cy-color-text-secondary);
-  font-size: var(--cy-type-body);
-  line-height: var(--cy-leading-normal);
-}
-
 .about-section--menu {
   padding: 0;
   overflow: hidden;

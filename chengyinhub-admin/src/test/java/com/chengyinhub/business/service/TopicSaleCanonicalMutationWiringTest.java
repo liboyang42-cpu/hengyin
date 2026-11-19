@@ -20,7 +20,8 @@ class TopicSaleCanonicalMutationWiringTest {
         assertWired("CmsTopicChapterServiceImpl.java", 10);
         assertWired("CmsTopicNodeServiceImpl.java", 6);
         // 普通章节供给退出新增失效入口，计入原有精确删除检测。
-        assertWired("MerchantOfferServiceImpl.java", 7);
+        // 2026-11-18 F10:作者自己承接 / 撤回自己承接是两个新的真实写入口,7→9。
+        assertWired("MerchantOfferServiceImpl.java", 9);
         assertWired("CoopInviteServiceImpl.java", 5);
         assertWired("CmsTopicServiceImpl.java", 4);
 

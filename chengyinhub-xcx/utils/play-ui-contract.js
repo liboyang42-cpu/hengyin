@@ -5,11 +5,11 @@ function formatElapsed(seconds) {
   return String(minutes).padStart(2, '0') + ':' + String(remain).padStart(2, '0')
 }
 
-// 一整局的用时:满 1 小时写 h:mm:ss,不出 118:41(玩法里的短计时仍用 formatElapsed 累加分钟)
+// 一整局的用时:满 1 小时写「1 小时 58 分」,不出 118:41(玩法里的短计时仍用 formatElapsed 累加分钟)
 function formatRunElapsed(seconds) {
   const safeSeconds = Math.max(0, Math.floor(Number(seconds) || 0))
   if (safeSeconds < 3600) return formatElapsed(safeSeconds)
-  return Math.floor(safeSeconds / 3600) + ':' + String(Math.floor(safeSeconds % 3600 / 60)).padStart(2, '0') + ':' + String(safeSeconds % 60).padStart(2, '0')
+  return Math.floor(safeSeconds / 3600) + ' 小时 ' + Math.floor(safeSeconds % 3600 / 60) + ' 分'
 }
 
 function buildPlayHeader(input) {

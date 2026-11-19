@@ -2,7 +2,7 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
-  <cy-access-gate id="cy-access-gate" kind="merchant" need="canManageCoop" />
+  <cy-access-gate id="cy-access-gate" kind="merchant" need="canManageCoop" back-url="/pages/merchant/decor/index" />
   <cy-nav-bar title="" custom-back bind:back="onNavBack" />
   <view style="height: {{statusBarHeight + navBarHeight}}px; flex-shrink: 0;"></view>
   <cy-skeleton type="list" count="{{3}}" wx:if="{{loadState === 'loading'}}" />
@@ -12,8 +12,7 @@
       style="display: flex; flex-direction: column; flex: 1; min-height: 0"
       kind="no-permission"
       fill
-      title="当前账号不能编辑承接设置"
-      sub="请切换到已审核的商家账号"
+      title="当前身份不能编辑承接设置"
       cta="返回"
       bind:cta="onNavBack"
     />

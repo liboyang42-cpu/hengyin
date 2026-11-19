@@ -61,6 +61,22 @@ function publishIdentity(scope, patch) {
   return epoch;
 }
 
+/**
+ * OR-014:退出账号/注销进入冷静期后重置身份广播 —— 丢掉上一个账号的过渡值,epoch +1,
+ * 并向监听方派发 scope='session-cleared'(按 scope 过滤的监听方会忽略它,按 epoch 判新旧的会重拉)。
+ */
+function resetIdentity() {
+  latest = { merchant: null, member: null };
+  epoch += 1;
+  const app = safeApp();
+  if (app && app.globalData) app.globalData.identityEpoch = epoch;
+  const event = { epoch: epoch, scope: 'session-cleared', patch: {} };
+  listeners.slice().forEach(function (fn) {
+    try { fn(event); } catch (e) { /* 一个监听方出错不影响其他页面 */ }
+  });
+  return epoch;
+}
+
 /** 订阅身份变化;返回取消订阅函数(组件 detached / 页面 onUnload 里调)。 */
 function onIdentityChange(fn) {
   if (typeof fn !== 'function') return function () {};
@@ -129,4 +145,5 @@ module.exports = {
   isLocalFile: isLocalFile,
   avatarSrc: avatarSrc,
   _resetForTest: _resetForTest,
+  resetIdentity: resetIdentity,
 };

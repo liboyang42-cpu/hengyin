@@ -22,7 +22,7 @@
     <view class="inline-retry" bindtap="discoverOriginalInvites" aria-role="button" aria-label="查找当前账号原邀请请求" hover-class="cy-pressed" hover-stay-time="80">{{receiptLoading ? '查询中…' : '查找原邀请请求（含其他设备）'}}</view>
     <view wx:for="{{selected}}" wx:key="toId" class="inline-retry" data-toid="{{item.toId}}" bindtap="queryOriginalInvite" aria-role="button" aria-label="查询所选对象的原邀请请求" hover-class="cy-pressed" hover-stay-time="80">查询 {{item.name}} 的本机原请求</view>
     <cy-empty wx:if="{{receiptError}}" kind="error" title="原请求仍待确认" sub="{{receiptError}}" />
-    <view wx:for="{{receiptRows}}" wx:key="requestId"><text>请求 {{item.requestId}} · {{item.state === 'CREATED' ? ('已创建邀请 #' + item.inviteId + ' · 主题 #' + item.topicId + ' · 对象 #' + item.toId) : '结果仍待确认，请勿重复发送'}}</text></view>
+    <view wx:for="{{receiptRows}}" wx:key="requestId"><text>{{item.state === 'CREATED' ? '邀请已创建' : '结果仍待确认，请勿重复发送'}}</text></view>
     <view wx:if="{{receiptHasMore}}" class="inline-retry" bindtap="moreOriginalInvites" aria-role="button" aria-label="加载更多原邀请请求" hover-class="cy-pressed" hover-stay-time="80">加载更多原请求</view>
   </view>
 
@@ -38,12 +38,12 @@
       <view class="topic-fixed">{{topicName || '本主题'}}</view>
     </block>
     <cy-skeleton wx:elif="{{topicsState === 'loading'}}" type="list" count="1" />
-    <cy-error class="error-kind--{{topicsErrorKind}}" wx:elif="{{topicsState === 'permission'}}" title="当前账号不能读取主题" sub="{{topicsErrorText}}" bind:retry="retryTopics" />
+    <cy-error class="error-kind--{{topicsErrorKind}}" wx:elif="{{topicsState === 'permission'}}" title="当前身份不能读取主题" sub="{{topicsErrorText}}" bind:retry="retryTopics" />
     <cy-error load-failure class="error-kind--{{topicsErrorKind}}" wx:elif="{{topicsState === 'error'}}" title="主题加载失败" bind:retry="retryTopics" />
     <cy-dropdown merchant="{{true}}" wx:elif="{{myTopics.length}}" mode="selector" range="{{myTopics}}" range-key="label" value="{{topicIndex}}" bind:change="onTopicChange" aria-label="选择关联主题">
       <view class="picker-row"><text class="{{topicId ? '' : 'placeholder'}}">{{topicId ? (topicPick || topicName) : '选择我发布的主题'}}</text><cy-icon class="picker-arrow" name="arrow-right" size="28" /></view>
     </cy-dropdown>
-    <cy-empty wx:else title="还没有可关联的主题" sub="先发布主题后再发起协作邀请" cta="先发布主题" bind:cta="goCreateTopic" />
+    <cy-empty wx:else title="还没有可关联的主题" cta="先发布主题" bind:cta="goCreateTopic" />
     <!-- CU-M-29:不在招商期的主题选了也发不出去(写闸拒),选的时候就说清楚。
          ⚠️ 必须放在上面整条 wx:if/elif/else 链之后,插在中间会把 cy-empty 接到这条上 ⇒ 空态到处冒。 -->
     <view class="card-hint card-hint--warn" wx:if="{{topicClosed}}">该主题不在招商期</view>
@@ -76,7 +76,7 @@
       {{targetsErrorText}}<text class="inline-retry" bindtap="retryTargets" aria-role="button" aria-label="重试刷新合作对象" hover-class="cy-pressed" hover-stay-time="80">重试</text>
     </view>
     <cy-skeleton wx:if="{{targetsState === 'loading'}}" type="list" count="3" />
-    <cy-error class="error-kind--{{targetsErrorKind}} cy-fade-in" wx:elif="{{targetsState === 'permission'}}" title="当前账号无权查看合作对象" bind:retry="retryTargets" />
+    <cy-error class="error-kind--{{targetsErrorKind}} cy-fade-in" wx:elif="{{targetsState === 'permission'}}" title="当前身份不能查看合作对象" bind:retry="retryTargets" />
     <cy-error load-failure class="error-kind--{{targetsErrorKind}} cy-fade-in" wx:elif="{{targetsState === 'error'}}" title="合作对象加载失败" bind:retry="retryTargets" />
 
     <block wx:elif="{{presetTarget}}">

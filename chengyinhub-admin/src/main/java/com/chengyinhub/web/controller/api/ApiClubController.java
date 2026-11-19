@@ -269,6 +269,25 @@ public class ApiClubController extends BaseController {
         }
     }
 
+    /**
+     * MC-055:详情页「治理入口」显隐的服务端判据,来自新俱乐部访问上下文:
+     * 访问上下文与本人、本团对得上,且持有 club:write / member:manage / content:manage 任一。
+     * 只用于下发展示布尔,不替代任何写接口上的闸;游客、解析失败一律 false。
+     */
+    private boolean viewerCanGovern(Long clubId, Long memberId) {
+        if (clubId == null || memberId == null) return false;
+        try {
+            ClubAccessContext access = clubAccessService.resolve(memberId, clubId, null);
+            return access != null && memberId.equals(access.getPrincipalMemberId())
+                    && clubId.equals(access.getClubId())
+                    && (access.hasPermission(ClubPermission.CLUB_WRITE)
+                        || access.hasPermission(ClubPermission.MEMBER_MANAGE)
+                        || access.hasPermission(ClubPermission.CONTENT_MANAGE));
+        } catch (RuntimeException e) {
+            return false;
+        }
+    }
+
     /** 成员管理统一走 Service 判据：owner / 在册 legacy role=1 / 当前 club 作用域 member:manage。 */
     private boolean canManageMembers(Club club, Long memberId) {
         if (club == null || club.getId() == null || club.getMemberId() == null || memberId == null) {
@@ -317,6 +336,8 @@ public class ApiClubController extends BaseController {
 
     private static final int MAX_CLUBS_PER_LEADER = 2;
     private static final int PLAYER_BADGE_SOURCE_CLUB = 6;
+    /** MC-032:单个俱乐部可自建的勋章数上限。 */
+    static final int MAX_BADGES_PER_CLUB = 50;
 
     /** 旧 apply 入口兜底:从 club 表单种子化最小主理人档案(完整能力档案走 /become-leader) */
     private ClubLeader leaderSeedFromClub(Club body) {
@@ -661,10 +682,8 @@ public class ApiClubController extends BaseController {
         attachClubDisplay(club); // 带出主理人等级/标签
         club.setMemberCount(effectiveMemberCount(club)); // 口径统一(含主理人)
         // 该俱乐部办的经典定向团数(按 club_id)
-        CmsTopic tProbe = new CmsTopic();
-        tProbe.setClubId(club.getId());
-        tProbe.setDelFlag(0);
-        club.setTopicCount(cmsTopicService.selectCmsTopicList(tProbe).size());
+        // MC-060:只数不取整行(口径同 clubId + delFlag=0 的列表)。
+        club.setTopicCount(cmsTopicService.countCmsTopicByClubId(club.getId()));
         club.setPendingJoinRequestCount(0);
         int nonOwnerMemberCount = clubMemberService.countByClub(club.getId());
         ClubMember ownerMembership = clubMemberService.selectMembershipRecord(club.getId(), club.getMemberId());
@@ -703,7 +722,9 @@ public class ApiClubController extends BaseController {
         } catch (Exception ignore) { }
         // 2026-10-22 业主:入会欢迎语(主理人自定),新成员加入后的欢迎弹层最上面显示。单独读,读不到当没写。
         club.setWelcomeNote(clubService.selectWelcomeNote(club.getId()));
-        return AjaxResult.success(PublicClubVO.from(club));
+        PublicClubVO vo = PublicClubVO.from(club);
+        vo.setViewerCanGovern(viewerCanGovern(club.getId(), viewerOrGuest()));
+        return AjaxResult.success(vo);
     }
 
     @Operation(summary = "俱乐部成员列表")
@@ -1453,14 +1474,17 @@ public class ApiClubController extends BaseController {
         String badgeDesc = badgeStr(body.get("badgeDesc"));
         String risk = wxContentSecurityService.checkText(name + "\n" + (badgeDesc == null ? "" : badgeDesc), openidOf(memberId));
         if (risk != null) return error(risk);
+        // MC-032:编码带随机后缀,同毫秒并发创建也不会撞码;单个俱乐部自建勋章数有上限(写入前判)。
         GrowthBadge gb = new GrowthBadge();
         gb.setClubId(clubId);
-        gb.setBadgeCode("CLUB" + clubId + "_" + System.currentTimeMillis());
+        gb.setBadgeCode("CLUB" + clubId + "_" + System.currentTimeMillis() + "_"
+                + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 8));
         gb.setBadgeName(name.length() > 120 ? name.substring(0, 120) : name);
         gb.setIconUrl(reviewedMedia(memberId, badgeStr(body.get("iconUrl")), false));
         gb.setBadgeDesc(badgeStr(body.get("badgeDesc")));
         gb.setStatus("0");
         gb.setSortNo(0);
+        if (growthBadgeMapper.countByClub(clubId) >= MAX_BADGES_PER_CLUB) return error("本俱乐部勋章数量已达上限");
         growthBadgeMapper.insertGrowthBadge(gb);
         Map<String, Object> d = new HashMap<>();
         d.put("id", gb.getId());
@@ -1473,7 +1497,10 @@ public class ApiClubController extends BaseController {
     public AjaxResult badgeList(@RequestBody Club body) {
         try { currentMemberId(); } catch (Exception e) { return error("请先登录"); }
         if (body.getId() == null) return error("缺少俱乐部ID");
-        if (clubService.selectClubById(body.getId()) == null) return error("俱乐部不存在");
+        Club badgeClub = clubService.selectClubById(body.getId());
+        if (badgeClub == null) return error("俱乐部不存在");
+        // MC-054:不对外可见的俱乐部,勋章列表与详情同一道可见性闸。
+        if (!canViewClub(badgeClub)) return error("这个俱乐部只对成员开放");
         return AjaxResult.success(growthBadgeMapper.selectByClub(body.getId()));
     }
 
@@ -2348,6 +2375,14 @@ public class ApiClubController extends BaseController {
                 // cap 闸必须先于 assign:两步各自独立提交,若先 assign 再撞上限,会留下
                 // 「报错但 assignment 已生效」的持久半态;反过来 role=1 而 assign 失败,
                 // 落在 legacy 分支上治理权完整,重试即可补齐 assignment。
+                // MC-033:先确认对方是本团在册普通成员(不是主理人),再过管理员上限闸 ——
+                // 上限闸对「不在册」直接放行,不能让它替这一步兜底。
+                Club roleClub = clubService.selectClubById(body.getClubId());
+                if (roleClub == null) return error("俱乐部不存在");
+                if (OwnershipUtils.isOwner(roleClub.getMemberId(), body.getMemberId())
+                        || clubMemberService.selectByClubAndMember(body.getClubId(), body.getMemberId()) == null) {
+                    return error("对方不是本俱乐部成员");
+                }
                 if (!clubMemberService.setMemberRoleWithAdminCap(
                         body.getClubId(), body.getMemberId(), 1)) {
                     return error("管理员最多 2 个，请先取消其他管理员");
@@ -2507,7 +2542,8 @@ public class ApiClubController extends BaseController {
     public AjaxResult commentList(@RequestBody ClubPostComment body) {
         if (body.getPostId() == null) return error("缺少动态ID");
         ClubPost post = clubPostService.selectClubPostById(body.getPostId());
-        if (post == null) return error("动态不存在");
+        // MC-053:已删 / 已下架的动态不再出评论。
+        if (post == null || !Integer.valueOf(0).equals(post.getDelFlag())) return error("动态不存在");
         Club commentClub = clubService.selectClubById(post.getClubId());
         if (commentClub == null) return error("动态不存在");
         if (!canViewClub(commentClub)) return error("这个俱乐部只对成员开放");
@@ -2575,8 +2611,10 @@ public class ApiClubController extends BaseController {
         ClubPost post = clubPostService.selectClubPostById(c.getPostId());
         Long clubId = post == null ? null : post.getClubId();
         if (!canModerate(clubId, c.getMemberId(), memberId)) return error("无权删除");
-        clubPostCommentService.deleteClubPostCommentById(c.getId());
-        clubPostService.incrementCommentCount(c.getPostId(), -1);
+        // MC-061:只有本次真把评论删掉(1 行)才扣评论数;并发重复删除不再把计数扣成负的。
+        if (clubPostCommentService.deleteClubPostCommentById(c.getId()) == 1) {
+            clubPostService.incrementCommentCount(c.getPostId(), -1);
+        }
         return AjaxResult.success("已删除");
     }
 
@@ -2588,6 +2626,9 @@ public class ApiClubController extends BaseController {
         if (body.getId() == null) return error("缺少动态ID");
         ClubPost post = clubPostService.selectClubPostById(body.getId());
         if (post == null || (post.getDelFlag() != null && post.getDelFlag() == 2)) return error("动态不存在");
+        // MC-031:看不到的俱乐部帖不收举报;作者本人不给自己开审核单。
+        if (!canViewClub(clubService.selectClubById(post.getClubId()))) return error("这个俱乐部只对成员开放");
+        if (memberId != null && memberId.equals(post.getAuthorMemberId())) return error("不能举报自己的动态");
         // 举报统一走 reportContent 进审核队列(与 comment/square 同法);同内容多次举报的幂等汇聚由服务层 reportContent 负责
         try {
             auditTaskService.reportContent("CLUB_POST", post.getId(), memberId, "用户举报");

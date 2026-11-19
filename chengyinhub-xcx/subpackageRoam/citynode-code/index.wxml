@@ -1,38 +1,23 @@
-<!-- C2 玩家据点核销码:出示给商家扫码领券
-     用 cy-qr-voucher(DS §5.9,收编据点核销码) -->
-<!-- 底层只留返回钮:标题语义在 cy-qr-voucher 卡内,再画一层大标题会被弹层压成低对比灰 -->
+<!-- C2 玩家据点核销码:出示给商家扫码领券。
+     PG-091 薄壳:出码/倒计时/重试只有 components/cy/scene-qr-citynode 一份(漫游、玩法页同用),本页只透传 poiId/name。
+     PG-005 进页先判登录:游客由 cy-access-gate 盖住并给登录,不发出码请求。 -->
 <view class="theme-dark">
+  <cy-access-gate kind="login" />
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
-<!-- 2026-09-18 ✕统一裁决:出码/错误/加载态的出口是 cy-qr-voucher 右上角✕(同一 onClose),
-     页面返回钮只在缺参态出现 —— 不与✕同屏,也不压在弹层遮罩上。 -->
-<cy-nav-bar custom-back bind:back="onClose" wx:if="{{state === 'missing'}}" />
-<!-- 缺参 ≠ 出码失败:缺参不把 state 交给 cy-qr-voucher(组件内错误态硬编码「点此重试」,
-     对缺参是假按钮;且组件内四个定位角有非法 -var() 偏移会坍缩到占位框中央压住文案)。
-     ⇒ 这一态由页面自己渲染:真插画 + 真实原因 + 唯一一个走得通的出口,零重试。 -->
+<!-- 出码/错误/加载态的出口是 cy-qr-voucher 右上角✕(同一 onClose);页面返回钮只在缺参态与游客态出现。 -->
+<cy-nav-bar custom-back bind:back="onClose" wx:if="{{state === 'missing' || guest}}" />
 <view wx:if="{{state === 'missing'}}" class="cc-missing">
   <cy-empty
     kind="missing-param"
     fill="{{true}}"
     size="lg"
-    title="这个核销码无法打开"
     cta="返回"
     bind:cta="onMissingBack"
   />
 </view>
-<cy-qr-voucher
-  wx:else
-  show="{{true}}"
-  state="{{state}}"
-  qr="{{qrcodeUrl}}"
-  code="{{code}}"
-  title="{{name}}"
-  desc="出示给商家扫码领券"
-  countdown="{{state === 'ready' ? countdown + 's 后自动刷新' : ''}}"
-  errorText="{{errMsg || '出码失败'}}"
-  maskClosable="{{false}}"
-  bind:close="onClose"
-  bind:retry="onRetry"
-/>
+<view wx:elif="{{!guest}}" class="cc-scene">
+  <cy-scene-qr-citynode poi-id="{{poiId}}" name="{{name}}" bind:close="onClose" />
+</view>
 </view>

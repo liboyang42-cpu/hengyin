@@ -104,23 +104,8 @@
         <result property="remark" column="remark"/>
     </resultMap>
 
-    <select id="selectClubCustomers" resultMap="RawCustomer">
-        select agg.*, (
-            select coalesce(t2.name, a2.name)
-            from cms_registration r2
-            left join cms_topic t2 on t2.id = r2.owner_id and r2.owner_type = 1
-            left join cms_activity a2 on a2.id = r2.owner_id and r2.owner_type = 2
-            where r2.member_id = agg.member_id
-              and r2.payment_status = 2
-              and (
-                (r2.owner_type = 1 and t2.club_id = #{clubId} and t2.del_flag = 0)
-                or (r2.owner_type = 2 and a2.club_id = #{clubId} and a2.del_flag = 0))
-            order by r2.create_time desc
-            limit 1
-        ) as last_topic_name,
-        <include refid="ClubCustomerSignupName"/>
-        from (
-            select <include refid="ClubCustomerAggregate"/>
+    <!-- 客户列表与其筛选计数共用的 from/where/group/having(MC-057 抽出,语义不变)。 -->
+    <sql id="ClubCustomerFilteredGroup">
             from cms_registration r
             join ums_member u on u.id = r.member_id and u.del_flag = 0
             left join club_customer_profile p on p.club_id = #{clubId} and p.member_id = r.member_id
@@ -151,9 +136,37 @@
             <if test="filter == 'new'">
                 having sum(case when r.payment_status = 2 and r.verification_status = 1 then 1 else 0 end) &lt;= 1
             </if>
+    </sql>
+
+    <select id="selectClubCustomers" resultMap="RawCustomer">
+        select agg.*, (
+            select coalesce(t2.name, a2.name)
+            from cms_registration r2
+            left join cms_topic t2 on t2.id = r2.owner_id and r2.owner_type = 1
+            left join cms_activity a2 on a2.id = r2.owner_id and r2.owner_type = 2
+            where r2.member_id = agg.member_id
+              and r2.payment_status = 2
+              and (
+                (r2.owner_type = 1 and t2.club_id = #{clubId} and t2.del_flag = 0)
+                or (r2.owner_type = 2 and a2.club_id = #{clubId} and a2.del_flag = 0))
+            order by r2.create_time desc
+            limit 1
+        ) as last_topic_name,
+        <include refid="ClubCustomerSignupName"/>
+        from (
+            select <include refid="ClubCustomerAggregate"/>
+            <include refid="ClubCustomerFilteredGroup"/>
             order by last_interaction_time desc
-            limit #{limit}
+            limit <if test="offset != null and offset &gt; 0">#{offset}, </if>#{limit}
         ) agg
+    </select>
+
+    <!-- MC-057:按与列表同一筛选(关键词 / 有备注 / 复购 / 新客)的人数,供分页 total 用。 -->
+    <select id="countClubCustomersFiltered" resultType="int">
+        select count(*) from (
+            select r.member_id
+            <include refid="ClubCustomerFilteredGroup"/>
+        ) filtered
     </select>
 
     <select id="countClubCustomers" resultType="int">

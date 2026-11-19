@@ -673,7 +673,7 @@ const methods = {
     catch (error) { toast(error.message); }
   },
   addRuntimeContent(e) {
-    if (e.currentTarget.dataset.kind === 'MEDAL' && !this.data.medalEditable) { toast('当前账号无法添加勋章'); return; }
+    if (e.currentTarget.dataset.kind === 'MEDAL' && !this.data.medalEditable) { toast('当前身份不能添加勋章'); return; }
     const c = this._runtimeConfig();
     c.items.push({ id: 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), kind: e.currentTarget.dataset.kind, name: '', image: '' });
     this._saveRuntime(c); this._refreshRuntimeEditor(c);

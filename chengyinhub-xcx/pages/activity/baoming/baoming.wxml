@@ -17,8 +17,7 @@
 <cy-nav-spacer />
 
 <cy-empty class="page-terminal" wx:if="{{pageState === 'missing-param'}}" fill size="lg" kind="missing-param"
-  title="无法打开报名页"
-  cta="去发现活动" bind:cta="goDiscoverActivities" />
+  cta="返回" bind:cta="onNavBack" />
 
 <!-- 你已经报过名了。
      这条以前只在「再点一次报名被拒」时才以 toast 出现 —— 系统一直知道,只是不肯说。
@@ -214,19 +213,11 @@
 
 <!-- 2026-11-02 退款档位(全平台,与后端 RefundPolicy 同一口径):收费票在结算页列出三档。
      2026-11-03:③ 自由探索票(mode=2)同三档,钟是票的开始时间,故写「开始前」。 -->
-<view wx:if="{{pageState === 'ready' && selectedTicket && selectedTicket.price > 0}}" class="sec-title">退款规则</view>
-<view wx:if="{{pageState === 'ready' && selectedTicket && selectedTicket.price > 0}}" class="setly">
-  <view class="setly_li">
-    <view class="setly_li_left">{{selectedTicket.mode == 2 ? '开始前' : '集合前'}} 24 小时以上</view>
-    <view class="setly_li_right"><text>全额退</text></view>
-  </view>
-  <view class="setly_li">
-    <view class="setly_li_left">{{selectedTicket.mode == 2 ? '开始前' : '集合前'}} 24 小时内</view>
-    <view class="setly_li_right"><text>退 50%</text></view>
-  </view>
-  <view class="setly_li">
-    <view class="setly_li_left">开始后</view>
-    <view class="setly_li_right"><text>不退</text></view>
+<view wx:if="{{pageState === 'ready' && refundTiers.length}}" class="sec-title">退款规则</view>
+<view wx:if="{{pageState === 'ready' && refundTiers.length}}" class="setly">
+  <view class="setly_li" wx:for="{{refundTiers}}" wx:key="key">
+    <view class="setly_li_left">{{item.when}}</view>
+    <view class="setly_li_right"><text>{{item.result}}</text></view>
   </view>
 </view>
 

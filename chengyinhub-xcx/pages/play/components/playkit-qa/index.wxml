@@ -14,8 +14,13 @@
     <view class="qa__body">
       <!-- 题干附件:商家没配就整块不出。没内容就不要显示提示语 -->
       <view class="qa__media" wx:if="{{imageUrl}}">
-        <image class="qa__img" src="{{imageUrl}}" mode="widthFix" bindtap="onPreviewQuestion" aria-role="button" aria-label="查看题目大图" hover-class="qa__press" hover-stay-time="80" />
+        <image wx:if="{{!imgFailed}}" class="qa__img" src="{{imageUrl}}" mode="widthFix" bindtap="onPreviewQuestion" binderror="onQuestionImgError" aria-role="button" aria-label="{{imageAlt || '查看题目大图'}}" hover-class="qa__press" hover-stay-time="80" />
+        <view wx:else class="qa__img-fail" aria-role="alert">
+          <text class="qa__img-alt">{{imageAlt || '图片没加载出来'}}</text>
+          <view class="qa__img-retry" bindtap="onRetryQuestionImg" aria-role="button" aria-label="重新加载图片" hover-class="qa__press" hover-stay-time="80">重试</view>
+        </view>
       </view>
+      <view class="qa__ref" wx:if="{{referenceUrl}}" bindtap="onOpenReference" aria-role="button" aria-label="看不清？查看资料图" hover-class="qa__press" hover-stay-time="80">看不清？查看资料图</view>
       <view class="qa__audio" wx:if="{{audioUrl}}" bindtap="onToggleAudio"
             aria-role="button" aria-label="{{playing ? '暂停题目音频' : '播放题目音频'}}"
             hover-class="qa__press" hover-stay-time="80">{{playing ? '暂停' : '播放这段'}}</view>

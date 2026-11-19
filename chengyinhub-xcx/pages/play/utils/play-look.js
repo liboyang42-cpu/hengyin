@@ -2,6 +2,16 @@
 // 那个文件的 UI 门禁基线按行号登记,新方法放这里,index.js 只留单行挂钩,行号不动。
 const themeLook = require('./theme-look.js');
 const mapStyle = require('../../../utils/map-style.js');
+const storyResume = require('./story-resume.js');
+const TYPED_MAX = 400;
+
+/** CG-ALL-23:一段正文的「打字身份」= 章 id + 段序 + 文字摘要。文字改了就是另一段,会重新逐字打一遍。 */
+function typedKey(chapterId, i, text) {
+  let h = 0;
+  const str = String(text || '');
+  for (let k = 0; k < str.length; k += 1) h = (h * 31 + str.charCodeAt(k)) | 0;
+  return String(chapterId == null ? '' : chapterId) + ':' + i + ':' + str.length + ':' + (h >>> 0).toString(36);
+}
 const PUNCT = /^[,.!?;:，。！？；：、」』）)…—]$/;
 const GLYPH = 'ｱｲｳｴｵｶｷｸｹｺ01#%&*<>/=+';
 
@@ -56,10 +66,34 @@ function methods() {
       if (!look || look.legacy || !item || item.kind !== 'text' || !item.text) return {};
       this._textSeq = (this._textSeq == null ? -1 : this._textSeq) + 1;
       const fx = themeLook.textFxFor(look, this._textSeq);
-      if (!themeLook.textFxChars(fx)) return { fx };
+      // CG-ALL-23:这一局里已经逐字打出过的段,再进故事流(如完成第 1 站后)直接显示全文
+      const tk = typedKey((this.data && this.data.chapter || {}).id, i, item.text);
+      if (this._isTyped(tk)) return {};
+      if (!themeLook.textFxChars(fx)) return { fx, typedKey: tk };
       const parts = Array.from(item.text).reduce((acc, ch) => { if (acc.length && PUNCT.test(ch)) acc[acc.length - 1] += ch; else acc.push(ch); return acc; }, []);
-      return { fx, chars: parts.map((ch, k) => { const a = Math.random() * 6.283, d = 30 + Math.random() * 50;
+      return { fx, typedKey: tk, chars: parts.map((ch, k) => { const a = Math.random() * 6.283, d = 30 + Math.random() * 50;
         return { i: k, ch, r: Math.random().toFixed(3), dx: (Math.cos(a) * d).toFixed(1), dy: (Math.sin(a) * d).toFixed(1) }; }) };
+    },
+    /** 本局读过(打完)的段:内存一份 + 续玩存储一份(按账号 + 局号隔离,预览不存)。 */
+    _typedSet() {
+      const scope = this._runSessionScope ? this._runSessionScope() : null;
+      const owner = scope ? [scope.memberId, scope.topicId, scope.routeSessionId].join('|') : '';
+      if (!this._typed || this._typedOwner !== owner) {   // 换了一局 / 换了账号:不带上一局的已读
+        const saved = this.data && this.data.isPreview ? [] : (storyResume.read(scope).typed || []);
+        this._typed = new Set(Array.isArray(saved) ? saved : []);
+        this._typedOwner = owner;
+      }
+      return this._typed;
+    },
+    _isTyped(key) { return !!key && this._typedSet().has(key); },
+    _markTyped(key) {
+      if (!key) return;
+      const set = this._typedSet();
+      if (set.has(key)) return;
+      set.add(key);
+      if (this.data && this.data.isPreview) return;
+      const list = Array.from(set).slice(-TYPED_MAX);
+      storyResume.patch(this._runSessionScope ? this._runSessionScope() : null, { typed: list });
     },
     /** 解码:这一段刚滑进屏幕时,单字先显示成乱码,分几拍逐字还原(只发这一段的 chars)。 */
     _decodeLine(i) {
@@ -88,4 +122,4 @@ function methods() {
   return api;
 }
 
-module.exports = { methods };
+module.exports = { methods, typedKey };

@@ -104,7 +104,7 @@ function shapeRoleData(raw, clubId, activityId) {
     if (row.scopeType !== expectedScope || typeof row.name !== 'string' || !Array.isArray(row.permissions)) return null
     roles.push(Object.assign({}, row, {
       summary: ROLE_SUMMARY[row.roleCode],
-      scopeText: activityId ? ('场次 #' + activityId) : '本俱乐部',
+      scopeText: activityId ? '本场次' : '本俱乐部',
     }))
   }
   if (!roles.length) return null
@@ -194,9 +194,9 @@ Page({
     }
     this._requestedMemberId = positiveId(options && options.memberId)
     // CU-C-57:场次角色页必须说清作用对象。从本场工具进来时入口已经把
-    // 「活动名 · 开始时间」编进 query;取不到(深链/旧入口)就退到「场次 #id」。
+    // 「活动名 · 开始时间」编进 query;取不到(深链/旧入口)就写「未命名」,不露编号(MC-044)。
     const activityLabel = activityId ? entryLabel(options && options.activityLabel) : ''
-    const activitySubtitle = activityId ? (activityLabel || ('场次 #' + activityId)) : ''
+    const activitySubtitle = activityId ? (activityLabel || '未命名') : ''
     this.setData({ clubId, activityId, activitySubtitle })
     this.loadAccess()
   },

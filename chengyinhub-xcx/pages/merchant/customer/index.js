@@ -220,6 +220,9 @@ Page({
     });
   },
 
+  // 原地无权限态的唯一动作:非成员申请入驻,在营成员返回
+  onDenyCta() { require('../../../utils/merchant-no-permission.js').followDenyCta(this, this.data.notMerchant !== true, '/pages/merchant/index/index'); },
+
   onKeywordInput(e) {
     const keyword = (e.detail && e.detail.value) || '';
     this.setData({ keyword });
@@ -689,7 +692,7 @@ Page({
       silentError: true,
       url: '/api/merchant/crm/customers/tags/batch',
       method: 'POST',
-      data: JSON.stringify({ customerMemberIds: this.data.selectedIds, tagName, tagColor: '#2E6D5A', requestId }),
+      data: JSON.stringify({ customerMemberIds: this.data.selectedIds, tagName, requestId }), // PG-032:不传 tagColor,交后端默认色
       header: { 'Content-Type': 'application/json' },
       success: (res) => {
         if (!isCurrent()) return;

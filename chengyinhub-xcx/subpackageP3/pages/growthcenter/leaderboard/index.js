@@ -4,6 +4,7 @@ const { readReducedMotion } = require('../../../../utils/motion-preference.js');
 const app = getApp()
 const { identity } = require('../../../../utils/session/login-reload.js')
 const { isRecord, isRecordList } = require('../../../../utils/response-shape.js')
+const { sameMember, shouldPinMe } = require('./view-model.js')
 
 /* 头像优先级(手册 Utilities §5「优先照片 / Memoji，落回字母」):
  *   ① 用户自己的 avatar → ② Memoji 占位(按名次轮换) → ③ 字母 + 渐变底
@@ -173,14 +174,20 @@ Page({
       return
     }
     const unit = (metric || this.data.metric) === 'exp' ? 'EXP' : '积分'
-    const list = data.list.map((it, i) => this.toRow(it, i))
+    const myId = data.me && data.me.memberId
+    const list = data.list.map((it, i) => {
+      const row = this.toRow(it, i)
+      // 我已在榜内:原位高亮,底部不再重复钉一条
+      if (sameMember(it.memberId, myId)) row.isMe = true
+      return row
+    })
     const top3 = [0, 1, 2].map((i) => {
       const r = list[i]
       if (!r) return null
       return Object.assign({}, r, { ringBg: RING_BG[i + 1] })
     })
     let me = null
-    if (data.me && data.me.rank !== null && data.me.rank !== undefined) {
+    if (shouldPinMe(data.list, data.me)) {
       me = this.toRow(data.me, -1)
       me.bg = ME_GRAD
       me.name = data.me.nickname || '我'

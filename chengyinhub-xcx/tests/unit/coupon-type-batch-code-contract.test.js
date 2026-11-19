@@ -50,21 +50,8 @@ test('C-38 券类型真源含体验卡,下标 = 后端 couponType + 1', () => {
   assert.deepEqual(COUPON_TYPE_LABELS, ['请选择', '礼品券', '9折券', '8折券', '体验卡'])
 })
 
-test('C-38 独立新建页与发布流 sheet 的类型选项都来自同一真源', () => {
-  const { Page, getApp } = global
-  let definition
-  global.Page = (config) => { definition = config }
-  const pagePath = path.join(ROOT, 'subpackageMember/couponInfo/couponInfo.js')
-  try {
-    global.getApp = () => ({})
-    delete require.cache[require.resolve(pagePath)]
-    require(pagePath)
-  } finally {
-    if (Page === undefined) delete global.Page; else global.Page = Page
-    if (getApp === undefined) delete global.getApp; else global.getApp = getApp
-    delete require.cache[require.resolve(pagePath)]
-  }
-  assert.deepEqual(definition.data.array2, COUPON_TYPE_LABELS)
+// PG-040:独立新建页 couponInfo 下线,只剩发布流 sheet 一处消费真源。
+test('C-38 发布流 sheet 的类型选项来自同一真源', () => {
   assert.match(read('pages/publish/components/reward-selector/index.js'),
     /const COUPON_TYPE_LABELS = couponForm\.COUPON_TYPE_LABELS;/)
 })

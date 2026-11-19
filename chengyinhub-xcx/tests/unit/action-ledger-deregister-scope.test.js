@@ -45,7 +45,8 @@ test('注销申请保留原同意→写入→异常原状态查询，并登记�
 })
 
 test('据点出码重试只写issue，TTL常量不带入核销scanner和其他人的写入', () => {
-  const actual=targetsForHandler(path.join(ROOT,'subpackageRoam/citynode-code/index.js'),'onRetry')
+  // PG-091:citynode-code 页改为场景薄壳,出码重试只在 cy-scene-qr-citynode.retry
+  const actual=targetsForHandler(path.join(ROOT,'components/cy/scene-qr-citynode/index.js'),'retry')
   assert.ok(actual.apiContracts.some(row=>row.url==='/api/verify/citynode/issue'&&row.method==='POST'))
   for(const forbidden of ['/api/verify/groupcode/redeem','/api/coupon/verification','/api/registration/scan_dynamic_code','/api/registration/scan_qr_code'])
     assert.ok(!actual.apis.includes(forbidden),forbidden)

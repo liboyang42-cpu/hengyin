@@ -160,6 +160,12 @@ public interface IPerkLedgerService {
     default String livePerkName(Long chapterId, Long merchantId) { return null; }
 
     /**
+     * FE-G6:订单详情权益行的名字 = 承接店名 + 权益名(章节恰好一家生效供给时才给)。
+     * 只读、只供展示;读不到的章节不在返回里,调用方退回原章节名。
+     */
+    default Map<Long, String> entitlementRowNames(List<Long> chapterIds) { return java.util.Collections.emptyMap(); }
+
+    /**
      * F12:亲子票核销回执的人数构成 {adultCount, childCount, childAge, familyPerkText, label};
      * 非亲子票或读不到返回 null。只读,只供店员核销结果页展示。
      */
@@ -262,4 +268,10 @@ public interface IPerkLedgerService {
      *         非 ③ 的票压根没有 entitlement ⇒ 恒 false ⇒ 它们的出码判据不受影响
      */
     boolean hasPendingEntitlements(Long registrationId);
+
+    /**
+     * F10:该会员在该主题上是否有生效的「作者自己承接」供给(supplier_kind=AUTHOR)。
+     * 用于核销授权的 AUTHOR 分支:作者本人没有商家身份也能核销自己承接的权益,别人不能。
+     */
+    boolean hasLiveAuthorSupply(Long topicId, Long memberId);
 }

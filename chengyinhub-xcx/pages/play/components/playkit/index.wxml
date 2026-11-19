@@ -127,7 +127,7 @@
 <cy-playkit-qa wx:elif="{{kit.type === 'qa'}}" inline="{{inline}}"
   session-id="{{kit.sessionId}}" node-id="{{kit.nodeId}}"
   show="{{show}}" mode="{{kit.mode}}" theme="{{kit.theme}}" title="{{kit.title}}"
-  image-url="{{kit.imageUrl}}" audio-url="{{kit.audioUrl}}" lead="{{kit.lead}}"
+  image-url="{{kit.imageUrl}}" image-alt="{{kit.imageAlt}}" reference-url="{{kit.referenceUrl}}" audio-url="{{kit.audioUrl}}" lead="{{kit.lead}}"
   options="{{kit.options}}" letter-pool="{{kit.letterPool}}" shot-lead="{{kit.shotLead}}" shot-note="{{kit.shotNote}}"
   limit-seconds="{{kit.limitSeconds}}" max-tries="{{kit.maxTries}}" reveal="{{kit.reveal}}"
   accepted-input="{{kit.acceptedInput}}" answer-text="{{kit.answerText}}" answer-id="{{kit.answerId}}" answer-ids="{{kit.answerIds}}" judge="{{kit.judge !== false}}"
@@ -137,12 +137,12 @@
   passed="{{kit.passed}}" finished="{{kit.finished}}"
   bind:submit="onSubmit" bind:shoot="onShoot" bind:audio="onAudio"
   bind:continue="onContinue"
-  bind:verdict="onVerdict" bind:close="onClose" />
+  bind:verdict="onVerdict" bind:close="onClose" bind:reference="onReference" />
 
 <cy-playkit-hangman wx:elif="{{kit.type === 'hangman'}}" inline="{{inline}}"
   show="{{show}}" title="{{kit.title}}" slots="{{kit.slots}}" solved="{{kit.solved}}" display="{{kit.display}}" feedback="{{kit.feedback}}" wrong-feedback="{{kit.wrongFeedback}}"
-  input-mode="{{kit.inputMode}}" pool="{{kit.pool}}"
-  bind:submit="onSubmit" bind:close="onClose" bind:continue="onContinue" />
+  input-mode="{{kit.inputMode}}" pool="{{kit.pool}}" howto="{{kit.howto}}" reference-url="{{kit.referenceUrl}}"
+  bind:submit="onSubmit" bind:close="onClose" bind:continue="onContinue" bind:reference="onReference" />
 
 <cy-playkit-accusation wx:elif="{{kit.type === 'accusation'}}" inline="{{inline}}"
   show="{{show}}" title="{{kit.title}}" board-img="{{kit.boardImg}}" board-alt="{{kit.boardAlt}}" intro="{{kit.intro}}"
@@ -235,7 +235,8 @@
   photo-verified="{{kit.photoVerified}}" reward-ceiling="{{kit.rewardCeiling}}"
   frame-url="{{kit.frameUrl}}" frame-opacity="{{kit.frameOpacity}}" inline="{{inline}}"
   photo-fail-seq="{{kit.photoFailSeq}}" photo-fail-kind="{{kit.photoFailKind}}" judging="{{kit.photoJudging}}"
-  bind:shoot="onShoot" bind:resubmit="onResubmit" bind:close="onClose" />
+  record-only="{{kit.recordOnly}}" text-confirmed="{{kit.textConfirmed}}"
+  bind:shoot="onShoot" bind:resubmit="onResubmit" bind:textconfirm="onTextConfirm" bind:close="onClose" />
 
 <cy-playkit-note wx:elif="{{kit.type === 'note'}}"
   show="{{show}}" title="{{kit.title}}" prompt="{{kit.prompt}}" max-length="{{kit.maxLength}}"

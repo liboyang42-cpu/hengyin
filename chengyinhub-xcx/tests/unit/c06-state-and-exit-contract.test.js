@@ -364,7 +364,7 @@ function openSystemNoticeChat(transform) {
 test('CU-M-125 行为:系统通知会话按只读渲染,文字/图片/卡片三条出口都不发请求', () => {
   const ctx = openSystemNoticeChat()
   assert.equal(ctx.page.data.disabled, true, '系统通知必须置只读')
-  assert.match(ctx.page.data.disabledText, /系统通知/, '只读必须说出原因，不能只留一条灰掉的输入栏')
+  assert.match(ctx.page.data.disabledText, /城瘾小助手不接收回复/, '只读必须说出原因，不能只留一条灰掉的输入栏(OR-023)')
 
   ctx.page.setData({ text: '在吗' })
   ctx.page.onSend()
@@ -387,7 +387,7 @@ test('CU-M-125 行为:只读闸不许顺手把普通私信也关掉', () => {
 test('negative control CU-M-125: 去掉按会话类型的只读判定 / 发送闸不看只读,各自照样发出失败请求', () => {
   // M125 的 disabled 与 C120 的 readOnly 共同保护系统通知,回到病灶需同时撤掉两处类型判定。
   const noReadOnly = openSystemNoticeChat((src) => src.replace(
-    "    if (type == 2) this.setData({ disabled: true, disabledText: '系统通知，不能回复' });\n",
+    "    if (type == 2) this.setData({ disabled: true, disabledText: '城瘾小助手不接收回复' });\n",
     '',
   ).replace('const readOnly = type === 2;', 'const readOnly = false;'))
   assert.equal(noReadOnly.page.data.disabled, false)
@@ -420,7 +420,7 @@ test('C06-2 行为:名字缺失时按会话类型兜底,不留无名会话', () 
 
   const sys = loadPage(CHAT_JS)
   sys.page.onLoad({ conversationId: '11', type: '2' })
-  assert.equal(sys.page.data.heroName, '系统通知')
+  assert.equal(sys.page.data.heroName, '城瘾小助手')
 
   const named = loadPage(CHAT_JS)
   named.page.onLoad({ conversationId: '11', name: encodeURIComponent('阿岚') })
@@ -598,13 +598,13 @@ function assertShutterDiscoverable(wxml) {
   const hint = wxml.match(/<view class="sc-hint"[\s\S]*?<\/view>/)
   assert.ok(hint, 'sc-hint 提示必须存在')
   assert.match(hint[0], /\{\{cropScaleLabel\}\}/, '缩放倍率必须留着:双指裁切是看不出来的操作')
-  assert.match(hint[0], /缩放|裁切/, '提示必须说清这一屏能做什么:' + hint[0])
+  // PG-070(2026-11-17 业主批准):「双指缩放裁切」说明小字撤掉,只留倍率读数
   // 快门本身要可见 —— 不可见就又回到「主动作靠猜」那个病灶
   assert.match(wxml, /class="sc-shutter"[\s\S]{0,300}?bindtap="onShutter"/, '快门必须是看得见且可点的那一枚')
   assert.doesNotMatch(wxml, /sc-shutter-hit/, '不许退回透明热区')
 }
 
-test('C06-6 集邮相机:快门看得见,缩放裁切有文字说明', () => {
+test('C06-6 集邮相机:快门看得见,缩放倍率读数在位', () => {
   assertShutterDiscoverable(read(CAMERA_WXML))
 })
 

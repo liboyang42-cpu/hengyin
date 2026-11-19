@@ -47,6 +47,8 @@ public class PlayerRunReportVO {
     private String playInstanceId;
     private String progressScope;
     private String runKind;
+    /** CG-ALL-11 开局方式:DESK 桌面完成 / ALT 替代站开局 / null 正常在起点开局。 */
+    private String runStartMode;
     private String completionKind;
     private Boolean legitimate;
     private Date completedAt;
@@ -70,6 +72,8 @@ public class PlayerRunReportVO {
     public void setRunId(Long runId) { this.runId = runId; }
     public String getRunKind() { return runKind; }
     public void setRunKind(String runKind) { this.runKind = runKind; }
+    public String getRunStartMode() { return runStartMode; }
+    public void setRunStartMode(String runStartMode) { this.runStartMode = runStartMode; }
     public String getPlayInstanceId() { return playInstanceId; }
     public void setPlayInstanceId(String playInstanceId) { this.playInstanceId = playInstanceId; }
     public Long getTopicId() { return topicId; }
@@ -114,7 +118,11 @@ public class PlayerRunReportVO {
         private Integer score;
         private Boolean scored;
         private Date checkinTime;
+        /** 本站玩家自己拍的照片(结算页展示用);只给本人看得见的地址，没有则为 null。 */
+        private String photoUrl;
 
+        public String getPhotoUrl() { return photoUrl; }
+        public void setPhotoUrl(String photoUrl) { this.photoUrl = photoUrl; }
         public Long getNodeId() { return nodeId; }
         public void setNodeId(Long nodeId) { this.nodeId = nodeId; }
         public String getName() { return name; }

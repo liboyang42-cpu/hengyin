@@ -575,6 +575,19 @@ const DANGER_ACTIONS = {
     alt: null,
     done: { title: '订单已取消', text: '' },
   },
+  // OR-008:通行证待付款单取消(POST /api/platform-pass/orders/{orderNo}/cancel)
+  'pass.order.cancel': {
+    irreversible: true,
+    title: '取消这个待付款订单？',
+    content: '',
+    consequences: [
+      { icon: 'close', text: '订单关闭，不会再扣款' },
+      { icon: 'warning', text: '此操作不可撤销，需要时请重新开通' },
+    ],
+    confirmText: '取消订单',
+    alt: null,
+    done: { title: '订单已取消', text: '' },
+  },
   'waitlist.quit': {
     irreversible: false,
     title: '退出候补队列？',

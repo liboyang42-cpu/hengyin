@@ -144,6 +144,11 @@ Page({
         this.load();
       } });
   },
+  // PG-086:请求号不直接上屏,只给复制(客服核对用)
+  copyCommandRequestId() {
+    const id = this.data.commandRecovery && this.data.commandRecovery.requestId;
+    if (id) wx.setClipboardData({ data: String(id) });
+  },
   queryCommand() { if (this._recovery) this._recovery.query(); },
   retryCommand() { if (this._recovery) this._recovery.retry(); },
   cancelCommand() { if (this._recovery) this._recovery.cancel(); },
@@ -192,7 +197,7 @@ Page({
           this._readBackDone(false);
           this.setData({
             phase: 'denied', refreshing: false, view: null,
-            deniedReason: app.getRequestErrorMessage(res, '当前账号不是这场活动的主办方'),
+            deniedReason: app.getRequestErrorMessage(res, '当前身份不能管理这场活动'),
           });
           return;
         }

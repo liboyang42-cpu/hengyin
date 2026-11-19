@@ -4,14 +4,14 @@ const { INVOICE_METHODS, baseData, invoice, view, go } = require('../invoice/bas
 
 Page({
   ...INVOICE_METHODS,
-  data: Object.assign(baseData(), { detail: null, cancelPending: false }),
+  data: Object.assign(baseData(), { detail: null, cancelPending: false, missing: false }),
   invoiceReset() {
-    return { detail: null, cancelPending: false };
+    return { detail: null, cancelPending: false, missing: !invoice.exactId(this._options && this._options.id) };
   },
   invoiceLoad() { this.refresh(); },
   refresh() {
     const id = invoice.exactId(this._options.id);
-    if (!id) { this.setData({ error: 'read' }); return; }
+    if (!id) { this.setData({ missing: true }); return; }
     this.setData({ error: '' });
     this.read('detail', { id }, invoice.application, row => {
       if (row.id !== id) throw Error('申请详情与请求不匹配');

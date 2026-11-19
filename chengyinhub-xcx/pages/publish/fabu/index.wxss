@@ -1160,7 +1160,7 @@ page { background: var(--cy-btn-solid-bg); }
   width: var(--cy-legacy-72);
   height: var(--cy-space-1);
   border-radius: var(--cy-radius-pill);
-  background: #3a3a3c;
+  background: var(--cy-color-bg-surface-strong);
   margin: 16rpx auto 8rpx;
 }
 
@@ -5506,3 +5506,15 @@ page { background: var(--cy-btn-solid-bg); }
 .chapter-recruit__num { font-variant-numeric: tabular-nums; }
 .sp-card,
 .sp-card__route { box-shadow: var(--cy-depth-rest); }
+
+/* F10 自由探索开售票价区:沿用编辑器卡片 token */
+.fe-pricing { margin: var(--cy-space-2) var(--cy-page-x) 0; padding: var(--cy-space-3); border-radius: var(--cy-radius-lg); background: var(--cy-bg-card); border: 1rpx solid var(--cy-border-card); }
+.fe-pricing__head { display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-2); margin-bottom: var(--cy-space-2); }
+.fe-pricing__title { font-size: var(--cy-font-body); font-weight: 700; color: var(--cy-text-title); }
+.fe-pricing__hint { font-size: var(--cy-font-caption); color: var(--cy-gold); }
+.fe-pricing__row { display: flex; align-items: center; gap: var(--cy-space-1); min-height: var(--cy-btn-h); border-top: 1rpx solid var(--cy-border-card); }
+.fe-pricing__row.is-disabled { opacity: .5; }
+.fe-pricing__name { flex: 1; min-width: 0; font-size: var(--cy-font-body); color: var(--cy-text-body); }
+.fe-pricing__unit { font-size: var(--cy-font-body); color: var(--cy-text-secondary); }
+.fe-pricing__input { width: 200rpx; min-height: var(--cy-btn-h); text-align: right; font-size: var(--cy-font-body); color: var(--cy-text-title); font-variant-numeric: tabular-nums; }
+.fe-pricing__cta { display: block; margin-top: var(--cy-space-2); }

@@ -32,7 +32,7 @@ Page({
     this.setData({ registrationId: view.isId(o.registrationId) ? o.registrationId : '',
       cityCode: this._cityCode, countryCode: this._countryCode, clubId: this._clubId });
     if (!this._query.activityId && !this._query.topicId) {
-      this.setData({ state: 'missing', stateIcon: 'route', stateTitle: '链接已失效', stateCta: '' });
+      this.setData({ state: 'missing', stateIcon: 'route', stateTitle: '链接已失效', stateCta: '返回' });
       return;
     }
     this.reload();
@@ -65,6 +65,7 @@ Page({
   },
 
   onStateCta() {
+    if (this.data.state === 'missing') { if (getCurrentPages().length > 1) wx.navigateBack({ delta: 1 }); else wx.switchTab({ url: '/pages/index/index' }); return; }
     if (this.data.state === 'auth') {
       app.requireLogin({ reason: '登录后查看战报' }).then(ok => { if (ok) this.reload(); });
       return;
@@ -86,6 +87,13 @@ Page({
 
   // P9 / §23.4:榜单面板由 rank-board 组件承接(本关 队内/全体/队伍,其余在「更多」)。
   openRank() { this.setData({ rankOpen: true }); },
+  // CG-ALL-12 / CG-01-P2-6:点节点照片看大图,左右滑看本局其它站的照片
+  previewNodePhoto(e) {
+    const url = e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.url;
+    const urls = ((this.data.report || {}).photoUrls || []);
+    if (!url || urls.indexOf(url) < 0) return;
+    wx.previewImage({ current: url, urls });
+  },
   closeRank() { this.setData({ rankOpen: false }); },
 
   openSettle() {

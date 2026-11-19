@@ -91,8 +91,8 @@
     </block>
 
     <block wx:elif="{{entrySheet=='roam' && entrySheetView=='main'}}">
-      <view class="entry-roam-group"><view class="entry-roam-line"><view class="entry-roam-line__icon"><cy-icon name="route" size="32" /></view><view><text>点亮城市</text><text>边走边揭开地图迷雾</text></view></view>
-      <view class="entry-roam-line"><view class="entry-roam-line__icon"><cy-icon name="gps" size="32" /></view><view><text>使用定位</text><text>用于到点打卡与轨迹记录，可随时停止</text></view></view></view>
+      <view class="entry-roam-group"><view class="entry-roam-line"><view class="entry-roam-line__icon"><cy-icon name="route" size="32" /></view><view><text>点亮城市</text></view></view>
+      <view class="entry-roam-line"><view class="entry-roam-line__icon"><cy-icon name="gps" size="32" /></view><view><text>使用定位</text></view></view></view>
       <view class="entry-sheet__primary" bindtap="goStart" aria-role="button" aria-label="开始漫游" hover-class="cy-pressed" hover-stay-time="80">开始漫游</view>
       <view class="entry-sheet__secondary" bindtap="openEntryRoamRules" aria-role="button" aria-label="查看漫游规则" hover-class="cy-pressed" hover-stay-time="80">漫游规则</view>
     </block>

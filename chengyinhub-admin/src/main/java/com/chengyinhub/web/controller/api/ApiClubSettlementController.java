@@ -235,11 +235,27 @@ public class ApiClubSettlementController extends BaseController {
         if (settled.compareTo(BigDecimal.ZERO) <= 0) return error("暂无可提现的已结算分润");
 
         try {
+            // MC-003:已结算合计是历史累计,提过一次之后再按它提就会超出(或挪用钱包里别的钱)。
+            // 实际提现额 = min(已核验结算合计, 当前可提现余额),只会比原来更小,不会放宽。
+            // 可用余额与 withdraw() 预检同一口径;查询失败抛出即整笔拒绝(fail closed)。
+            BigDecimal available;
+            try {
+                available = cashWithdrawService.availableBalance(memberId);
+            } catch (RuntimeException e) {
+                return error("可提现余额暂不可用，请稍后重试");
+            }
+            if (available == null || available.signum() <= 0) return error("暂无可提现的已结算分润");
+            BigDecimal amount = withdrawAmount(settled, available);
             // 走既有的会员提现链路：它自己带幂等、状态机与对账，这里不重复实现一套。
-            return AjaxResult.success("提现申请已受理", cashWithdrawService.withdraw(memberId, settled));
+            return AjaxResult.success("提现申请已受理", cashWithdrawService.withdraw(memberId, amount));
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }
+    }
+
+    /** MC-003:本次提现额 = min(已核验结算合计, 当前可提现余额)。 */
+    static BigDecimal withdrawAmount(BigDecimal settled, BigDecimal available) {
+        return settled.compareTo(available) <= 0 ? settled : available;
     }
 
     /**

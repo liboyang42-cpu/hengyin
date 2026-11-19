@@ -363,7 +363,7 @@ test('只读岗位在平台审核中看到的是岗位提示，不是「审核�
     },
   });
   assert.equal(mounted.page.data.canRespond, false);
-  assert.match(mounted.page.data.respondBlockedText, /只有查看权限/);
+  assert.match(mounted.page.data.respondBlockedText, /当前身份不能回应售后/);
 });
 
 test('回应接口 200 但结果不完整时不得提示已提交或刷新成假成功', () => {

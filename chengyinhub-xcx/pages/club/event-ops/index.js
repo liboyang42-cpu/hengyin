@@ -60,7 +60,7 @@ function assemblyAlreadyPast(dates, startTime, now) {
 // 起止日期与「自有/合作」都能从 topics 回包里直接读到,不用改接口。
 function topicDropdownLabel(item, clubId) {
   const row = item || {}
-  const name = typeof row.name === 'string' && row.name.trim() ? row.name.trim() : ('主题 #' + row.id)
+  const name = typeof row.name === 'string' && row.name.trim() ? row.name.trim() : '未命名'
   const day = (value) => {
     const p = chinaParts(value)
     return p ? (p.month + '月' + p.day + '日') : ''
@@ -264,7 +264,7 @@ function decorateSeriesRow(row, topics) {
   const recurrence = RECURRENCES.find(item => item.value === row.recurrenceType)
   return Object.assign({}, row, {
     // 主题名还没到位时退回 `主题 #id`,不假装知道
-    titleText: (topic && topic.name) || ('主题 #' + row.topicId),
+    titleText: (topic && topic.name) || '未命名',
     recurrenceLabel: (recurrence && recurrence.label) || row.recurrenceType,
   })
 }
@@ -335,6 +335,7 @@ function normalizeSeries(value, clubId) {
   if (capacity !== null && (!Number.isInteger(capacity) || capacity < 1 || capacity > 10000)) return null
   return {
     id, clubId: rowClubId, topicId, leadMemberId, version, offerMinutes,
+    topicName: typeof value.topicName === 'string' ? value.topicName.trim() : '',
     recurrenceType, capacity, waitlistEnabled: value.waitlistEnabled,
     startTime: typeof value.startTime === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(value.startTime)
       ? value.startTime : '',
@@ -430,7 +431,7 @@ Page({
     occurrenceRows: [],
     occurrenceState: 'idle',   // idle | loading | ready | empty | error
     editingSeriesId: null,
-    editingTopicId: null,
+    editingTopicName: '',
     seriesDetailLoading: false,
     rosterTabs: ROSTER_TABS,
     rosterTab: 'registered',
@@ -464,7 +465,7 @@ Page({
     this._focusTopicId = positiveId(options && options.topicId)
     const recurrenceType = options && options.recurrence === 'ONCE' ? 'ONCE' : this.data.recurrenceType
     if (!clubId) {
-      this.setData({ state: 'error', errorText: '缺少俱乐部信息' })
+      this.setData({ state: 'missing-param' })
       return
     }
     const slot = defaultSlot()
@@ -496,7 +497,7 @@ Page({
       const code = Number(statusCode) || Number(res && res.code)
       const isAuth = code === 401 || code === 2
       const isNetwork = !code && transportFailed === true
-      const fallback = code === 403 ? '当前账号无权管理该俱乐部'
+      const fallback = code === 403 ? '当前身份不能管理该俱乐部'
         : isNetwork ? '网络没有连上' : '活动权限暂时不可用，请稍后重试'
       that.setData({
         state: code === 403 ? 'no-permission' : isNetwork ? 'network-error' : 'error',
@@ -520,7 +521,7 @@ Page({
         }
         const permissions = Array.isArray(access.permissions) ? access.permissions : []
         if (access.active !== true || String(access.club && access.club.id) !== String(that.data.clubId)) {
-          that.setData({ state: 'no-permission', errorText: bizFailureMessage(res, '当前账号无权管理该俱乐部') })
+          that.setData({ state: 'no-permission', errorText: bizFailureMessage(res, '当前身份不能管理该俱乐部') })
           return
         }
         const canManage = permissions.indexOf('club:activity:manage') >= 0
@@ -561,7 +562,7 @@ Page({
         }
         const topics = raw.filter(item => positiveId(item && item.id)).map(item => ({
           id: positiveId(item.id),
-          name: typeof item.name === 'string' && item.name.trim() ? item.name.trim() : ('主题 #' + item.id),
+          name: typeof item.name === 'string' && item.name.trim() ? item.name.trim() : '未命名',
           dropdownLabel: topicDropdownLabel(item, that.data.clubId),
           ticketCount: Number.isInteger(item.sessionTicketCount) ? item.sessionTicketCount : 1,
           // C-17:玩家结账页上的票价与集合点,开场前只读给主理人看
@@ -712,10 +713,15 @@ Page({
         const futureMinDate = shanghaiTomorrow()
         const futureDates = series.futureDates.filter(date => date >= futureMinDate)
         const dates = futureDates.length ? futureDates : [futureMinDate]
+        // MC-044:锁定的主题写名称不写编号;MC-058:默认带队人按 leadOptions 反查下拉位置。
+        const lockedTopic = that.data.topics.find(item => item.id === series.topicId)
+        const leadIndex = that.data.leadOptions.findIndex(item => item.memberId === series.leadMemberId)
+        that._editingTopicId = series.topicId;   // 只当内部状态,不进 setData(U4)
         that.setData({
           futureMinDate,
           editingSeriesId: series.id,
-          editingTopicId: series.topicId,
+          editingTopicName: (lockedTopic && lockedTopic.name) || series.topicName || '未命名',
+          leadIndex: Math.max(0, leadIndex),
           seriesWindowWarning: '',
           recurrenceType: series.recurrenceType,
           startDate: dates[0],
@@ -748,10 +754,11 @@ Page({
     const slot = defaultSlot()
     const today = slot.date < this.data.minDate ? this.data.minDate : slot.date
     const selectedTopic = this.data.topics[this.data.topicIndex]
-    const topicId = positiveId(this.data.editingTopicId) || positiveId(selectedTopic && selectedTopic.id)
+    const topicId = positiveId(this._editingTopicId) || positiveId(selectedTopic && selectedTopic.id)
+    this._editingTopicId = null
     this.setData({
       editingSeriesId: null,
-      editingTopicId: null,
+    editingTopicName: '',
       recurrenceType: 'ONCE',
       topicIndex: Math.max(0, this.data.topics.findIndex(item => item.id === topicId)),
       seriesWindowWarning: '',
@@ -817,7 +824,7 @@ Page({
     if (!this.data.canManage || this.data.submitting) return
     const editingSeriesId = positiveId(this.data.editingSeriesId)
     const topic = this.data.topics[this.data.topicIndex]
-    const topicId = editingSeriesId ? positiveId(this.data.editingTopicId) : positiveId(topic && topic.id)
+    const topicId = editingSeriesId ? positiveId(this._editingTopicId) : positiveId(topic && topic.id)
     if (!topicId) {
       toast('暂无可开场的主题')
       return

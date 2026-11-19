@@ -12,7 +12,7 @@
   <block wx:if="{{!accessDenied}}">
   <cy-state-shell class="fill-slot" wx:if="{{routeError}}" kind="missing-param" fill size="lg"
                   title="链接已失效"
-                  primary="返回工作台" bind:primary="onNavBack" />
+                  primary="返回" bind:primary="onNavBack" />
   <block wx:elif="{{view === 'redemptions'}}">
     <view wx:if="{{merchantAccess.canReadFinance}}" class="ledger-action" bindtap="goCoopSettlements" aria-role="button" aria-label="查看合作分润" hover-class="cy-pressed">
       <text class="ledger-action-title">合作分润</text><cy-icon name="arrow-right" size="24" />
@@ -58,6 +58,7 @@
         </block>
         <cy-empty wx:elif="{{!loading && !error && !redemptionGroups.length}}" fill size="lg" kind="empty" title="还没有记录" />
       </block>
+      <text class="ledger-sync" wx:if="{{loadingMore}}" aria-role="status">正在加载更多…</text>
     </view>
   </block>
 
@@ -123,6 +124,9 @@
         accessibility-label="结算到账提醒{{settleAlertsHint ? '，' + settleAlertsHint : ''}}" bind:change="enableCoopSettleAlerts" />
     </view>
 
+    <!-- F11:自由探索结算（参考）—— 本店作为合作店铺的参考账;本人若是场次收款人另起一块(没有就不摆)。 -->
+    <cy-fe-reference-settlement wx:if="{{merchantAccess.canReadFinance}}" kind="merchant" />
+    <cy-fe-reference-settlement kind="payer" />
     <view class="fin-group">
       <view class="fin-group__title">收入明细</view>
       <text class="ledger-sync" wx:if="{{settlementLoading.entries && entries.length}}" aria-role="status">正在更新收入明细…</text>
@@ -168,6 +172,7 @@
       <cy-empty wx:elif="{{!settlementLoading.batches && !settlementErrors.batches}}" kind="empty"
                 title="还没有对公结算批次" />
     </view>
+    <text class="ledger-sync" wx:if="{{loadingMore}}" aria-role="status">正在加载更多…</text>
   </block>
 
   <block wx:else>

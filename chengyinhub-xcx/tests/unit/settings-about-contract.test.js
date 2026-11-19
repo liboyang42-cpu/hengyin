@@ -35,16 +35,12 @@ function assertAboutEntry(source) {
   assert.ok(registeredRoutes(source.app).has('/pages/shezhi/about/index'), '关于页必须注册到 app.json')
 }
 
-function assertQrVoucherReuse(source) {
+// PG-011(2026-11-17 业主批准):「我的二维码」块与 explainQrPending 整块删除;关于页不再挂任何码卡,也不得自绘。
+function assertNoPlayerQr(source) {
   const pageConfig = JSON.parse(source.aboutJson || '{}')
-  assert.equal(pageConfig.usingComponents && pageConfig.usingComponents['cy-qr-voucher'], '/components/cy/qr-voucher/index',
-    '关于页必须注册共享 cy-qr-voucher')
-  const voucher = source.aboutWxml.match(/<cy-qr-voucher\b[\s\S]*?\/>/)
-  assert.ok(voucher, '玩家个人码必须由 cy-qr-voucher 承载')
-  assert.match(voucher[0], /\bembedded="\{\{true\}\}"/, '关于页内二维码必须使用 embedded 模式')
-  assert.match(voucher[0], /\bstate="error"/, '真实小程序码接口接入前必须如实落错误态')
-  assert.doesNotMatch(voucher[0], /\bqr=/, '没有真实小程序码时不得传入联系码或占位图')
-  assert.doesNotMatch(source.aboutJs, /data\.wechat|\/api\/user\/info/, '微信联系码不得冒充城瘾玩家个人码')
+  assert.equal(pageConfig.usingComponents && pageConfig.usingComponents['cy-qr-voucher'], undefined, '关于页不再注册 cy-qr-voucher')
+  assert.doesNotMatch(source.aboutWxml, /<cy-qr-voucher\b|我的二维码|玩家个人码待生成/, '「我的二维码」块已删除')
+  assert.doesNotMatch(source.aboutJs, /explainQrPending/, 'explainQrPending 已删除')
   assert.doesNotMatch(source.aboutWxml, /<canvas\b|class="[^"]*(?:qr-code|qrcode|qr-card)[^"]*"/,
     '关于页不得自绘二维码或另造码卡')
 }
@@ -88,8 +84,8 @@ test('关于页从运行时账号信息读取版本，并展示应用图标', ()
   assert.match(SOURCE.aboutWxml, /class="about-app__version"[^>]*>[^<]*\{\{version\}\}/, '版本展示必须绑定运行时值')
 })
 
-test('玩家个人码复用共享 cy-qr-voucher，不自绘码卡', () => {
-  assertQrVoucherReuse(SOURCE)
+test('PG-011:关于页不再有「我的二维码」块,也不自绘码卡', () => {
+  assertNoPlayerQr(SOURCE)
 })
 
 test('negative control：摘掉设置页入口必须判红', () => {
@@ -101,11 +97,11 @@ test('negative control：摘掉设置页入口必须判红', () => {
   assert.throws(() => assertAboutEntry(mutated), assert.AssertionError)
 })
 
-test('negative control：把玩家码改成自绘卡必须判红', () => {
+test('negative control：关于页把码卡加回来必须判红', () => {
   const mutated = {
     ...SOURCE,
-    aboutWxml: SOURCE.aboutWxml.replace(/<cy-qr-voucher\b[\s\S]*?\/>/, '<view class="qr-card"><canvas /></view>'),
+    aboutWxml: SOURCE.aboutWxml.replace('<view class="about-content">', '<view class="about-content"><view class="qr-card"><canvas /></view>'),
   }
-  assert.notEqual(mutated.aboutWxml, SOURCE.aboutWxml, '负控必须真的移除 cy-qr-voucher')
-  assert.throws(() => assertQrVoucherReuse(mutated), assert.AssertionError)
+  assert.notEqual(mutated.aboutWxml, SOURCE.aboutWxml, '负控必须真的加回码卡')
+  assert.throws(() => assertNoPlayerQr(mutated), assert.AssertionError)
 })

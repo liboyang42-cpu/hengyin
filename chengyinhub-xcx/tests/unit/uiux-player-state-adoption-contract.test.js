@@ -267,19 +267,7 @@ test('地图列表在已有内容翻页失败时显示局部重试', () => {
   assert.match(wxml, /<cy-skeleton[^>]*type="map-card"/);
 });
 
-test('AI 起草只陈述不透明任务，不伪造阶段或百分比', () => {
-  const wxml = source('pages/publish/simple/index.wxml');
-  const progress = wxml.match(/<cy-progress-status[^>]*>/);
-  assert.ok(progress, '生成请求需要紧凑任务态');
-  assert.match(progress[0], /density="compact"/);
-  assert.match(progress[0], /title="正在生成主题草稿"/);
-  assert.match(progress[0], /sub="完成后仍需你确认地点"/);
-  assert.doesNotMatch(progress[0], /\b(?:steps|current|percent)=/);
-  assert.match(wxml,
-    /<cy-progress-status\b[^>]*wx:if="\{\{aiGenerating\}\}"[\s\S]*?<cy-inline-error\b[^>]*wx:elif="\{\{aiError\}\}"/,
-    'AI 失败必须与生成中互斥，不能在请求 complete 前短暂同屏');
-  assert.doesNotMatch(wxml, /class="simple-ai__error"/);
-});
+// PG-021:AI 起草所在的 publish/simple 整页删除,对应用例随页移除。
 
 test('主题详情只接受具备可渲染名称的数据', () => {
   const malformed = loadTopicPage();
@@ -424,8 +412,9 @@ function assertOfficialDetailMediaContrast(wxml, wxss, pageConfig) {
       `${selector} 压在图片/黑色蒙层上，必须使用固定浅色 on-image token`,
     );
   }
-  assert.equal(pageConfig.navigationBarTextStyle, 'black', '商家态原生导航文字必须按浅色底配置');
-  assert.equal(pageConfig.backgroundColor, '#F3F4F4', '商家态首帧不得先闪出玩家黑色背景');
+  // PG-053(2026-11-17 业主批准):官方活动详情按玩家深色页配首帧(多数入口是玩家);商家态由 merchantPageShow 在 onShow 切浅色原生底。
+  assert.equal(pageConfig.navigationBarTextStyle, 'white', '玩家首帧原生导航文字必须按深色底配置');
+  assert.equal(pageConfig.backgroundColor, '#000000', '玩家首帧不得先闪出浅色背景');
 }
 
 test('官方活动详情的封面蒙层与商家浅色滚动导航始终可读', () => {
@@ -436,7 +425,7 @@ test('官方活动详情的封面蒙层与商家浅色滚动导航始终可读',
   );
 });
 
-test('负控:图片蒙层退回主题反色字或商家首帧改暗时必须判红', () => {
+test('负控:图片蒙层退回主题反色字或玩家首帧改浅时必须判红', () => {
   const wxml = source('pages/activity/official-detail/index.wxml');
   const wxss = source('pages/activity/official-detail/index.wxss');
   const pageConfig = JSON.parse(source('pages/activity/official-detail/index.json'));
@@ -450,8 +439,8 @@ test('负控:图片蒙层退回主题反色字或商家首帧改暗时必须判�
     /固定浅色 on-image token/,
   );
   assert.throws(
-    () => assertOfficialDetailMediaContrast(wxml, wxss, { ...pageConfig, backgroundColor: '#000000' }),
-    /不得先闪出玩家黑色背景/,
+    () => assertOfficialDetailMediaContrast(wxml, wxss, { ...pageConfig, backgroundColor: '#F3F4F4' }),
+    /玩家首帧不得先闪出浅色背景/,
   );
 });
 

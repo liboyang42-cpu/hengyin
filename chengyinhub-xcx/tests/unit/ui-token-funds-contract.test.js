@@ -38,7 +38,6 @@ const FILES = {
   profitJs: 'subpackageA/components/scene-merchant-profit/index.js',
   activityWxml: 'pages/publish/activity/index.wxml',
   activityWxss: 'pages/publish/activity/index.wxss',
-  withdrawWxss: 'subpackageMember/tixian/tixian.wxss',
 }
 
 function blockAfter(source, matcher, label) {
@@ -651,14 +650,6 @@ function assertActivityDateLayout(wxml, wxss) {
   assert.match(rule(media, '.fabu .form .date-type-fields .li'), /width:\s*100%/)
 }
 
-function assertWithdrawTextAction(wxss) {
-  const action = rule(wxss, '.txyr_right')
-  assert.match(action, /min-height:\s*var\(--cy-btn-h\)/)
-  assert.match(action, /background:\s*var\(--cy-color-action-secondary-bg\)/)
-  assert.match(action, /border-radius:\s*var\(--cy-radius-pill\)/)
-  assert.doesNotMatch(action, /text-decoration:\s*underline/)
-}
-
 test('暗域骨架保持原明度档、去色相并与纯黑可辨', () => {
   assertSkeletonContract(read(FILES.tokens))
 })
@@ -804,25 +795,7 @@ test('negative control: 日期退回数字中间可断行时合同必须判红',
   assert.throws(() => assertActivityDateLayout(read(FILES.activityWxml), mutated), assert.AssertionError)
 })
 
-test('D19 全部提现是有 88rpx 热区的 secondary chip，不使用下划线', () => {
-  assertWithdrawTextAction(read(FILES.withdrawWxss))
-})
-
-test('negative control: 全部提现退回下划线文字链接时合同必须判红', () => {
-  const wxss = read(FILES.withdrawWxss)
-  const action = rule(wxss, '.txyr_right')
-  const mutatedAction = action.replace(
-    'background: var(--cy-color-action-secondary-bg);',
-    'text-decoration: underline;',
-  )
-  const mutated = wxss.replace(action, mutatedAction)
-  assert.notEqual(mutated, wxss, '负控未命中 secondary action 背景')
-  assert.throws(() => assertWithdrawTextAction(mutated), assert.AssertionError)
-
-  const renamed = wxss.replace('.txyr_right {', '.txyr_right-old {')
-  assert.notEqual(renamed, wxss, '负控未命中全部提现 selector')
-  assert.throws(() => assertWithdrawTextAction(renamed), assert.AssertionError)
-})
+// PG-042:独立提现页 subpackageMember/tixian 下线,D19「全部提现」chip 契约随页移除。
 
 test('商家浅端卡投影达到组件边界 3:1，卡内线/填充保持 1.2:1 且前景 AA', () => {
   assertMerchantLightLayers(read(FILES.tokens), read(FILES.merchantLight))

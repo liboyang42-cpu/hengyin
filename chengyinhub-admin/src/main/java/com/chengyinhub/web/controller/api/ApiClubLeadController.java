@@ -588,16 +588,20 @@ public class ApiClubLeadController extends BaseController {
             return AjaxResult.success("全团已结算");
         }
 
-        // 结转名单(D-9 已核名单):已付款(status=2)∩ 集合签到到场;无人签到则回落全部已付
+        // 结转名单(D-9 已核名单):已付款(status=2)∩ 集合签到到场。
+        // MC-002:无人签到时拒绝结算(fail closed),不再回落「全部已付」—— 没到场的人不能被结给收款方。
+        Set<Long> arrived = new HashSet<>();
+        List<ClubLeadCheckin> checkins = clubLeadMapper.selectCheckins(actId);
+        if (checkins != null) for (ClubLeadCheckin c : checkins) {
+            if (c != null && c.getMemberId() != null) arrived.add(c.getMemberId());
+        }
+        if (arrived.isEmpty()) return error("还没有人签到，暂不能结算");
         CmsRegistration probe = new CmsRegistration();
         probe.setOwnerType(2L);
         probe.setOwnerId(actId);
         probe.setRegistrationStatus(2);
         List<CmsRegistration> paid = cmsRegistrationService.selectCmsRegistrationList(probe);
         if (paid == null) paid = new ArrayList<>();
-        Set<Long> arrived = new HashSet<>();
-        List<ClubLeadCheckin> checkins = clubLeadMapper.selectCheckins(actId);
-        if (checkins != null) for (ClubLeadCheckin c : checkins) arrived.add(c.getMemberId());
 
         Long merchantId = act.getMemberId(); // 收款方 = 活动创建者(俱乐部主理人),与单张商家核销口径一致
         int settled = 0;
@@ -618,8 +622,8 @@ public class ApiClubLeadController extends BaseController {
                     && reg.getPurchaseKind() == com.chengyinhub.common.constant.PurchaseKind.EXPLORE_PASS) {
                 continue;
             }
-            // 到场 ∩ 已付;checkins 为空则不设到场门槛(全部已付)
-            if (!arrived.isEmpty() && !arrived.contains(reg.getMemberId())) continue;
+            // 到场 ∩ 已付(checkins 为空已在上面拒绝)
+            if (!arrived.contains(reg.getMemberId())) continue;
             // [P0-21] 核销收口:条件置位 + 入账 + 台账,同一事务(verifyAndSettle)。
             //
             // 这里原本是自己手写的三步,和单张商家核销那条路一模一样地踩了三个洞:

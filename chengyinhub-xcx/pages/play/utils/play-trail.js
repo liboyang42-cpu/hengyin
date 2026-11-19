@@ -5,6 +5,14 @@ const { createRouteLine } = require('../../../utils/my-route-line.js');
 const { simplifyTrack } = require('../../../utils/roam-track-simplify.js');
 
 const STORE_KEY = 'cy_play_trail';
+// OR-014:轨迹副本按账号分键(cy_play_trail:<账号>),换号不串;取不到账号沿用旧键。
+function storeKey() {
+  try {
+    const app = typeof getApp === 'function' ? getApp() : null;
+    const id = app && typeof app.getUserID === 'function' ? String(app.getUserID() || '') : '';
+    return /^[1-9]\d*$/.test(id) ? STORE_KEY + ':' + id : STORE_KEY;
+  } catch (e) { return STORE_KEY; }
+}
 const MIN_STEP_M = 8;        // 小于这个位移不记,原地抖动不画毛刺
 const MAX_ACCURACY_M = 60;   // 精度太差的点不画
 const MAX_POINTS = 4000;     // 内存上限,超出先抽稀
@@ -22,8 +30,9 @@ function createPlayTrail(storage, sessionKey, now) {
   const line = createRouteLine();
   let points = [];
   let startedAt = 0, savedAt = 0, dirty = false;
+  const key = storeKey();
   try {
-    const saved = storage && storage.getStorageSync ? storage.getStorageSync(STORE_KEY) : null;
+    const saved = storage && storage.getStorageSync ? storage.getStorageSync(key) : null;
     if (saved && saved.key === sessionKey && Array.isArray(saved.points)) {
       points = saved.points.filter((q) => q && Number.isFinite(q.lat) && Number.isFinite(q.lng));
       startedAt = Number(saved.startedAt) || 0;
@@ -35,7 +44,7 @@ function createPlayTrail(storage, sessionKey, now) {
     const t = clock();
     if (!force && t - savedAt < SAVE_MS) return;
     savedAt = t; dirty = false;
-    try { storage.setStorageSync(STORE_KEY, { key: sessionKey, startedAt, points: simplifyTrack(points, { maxPoints: 600, epsilonMeters: 3 }) }); } catch (e) { /* 存不下不影响画线 */ }
+    try { storage.setStorageSync(key, { key: sessionKey, startedAt, points: simplifyTrack(points, { maxPoints: 600, epsilonMeters: 3 }) }); } catch (e) { /* 存不下不影响画线 */ }
   }
 
   return {
@@ -62,7 +71,7 @@ function createPlayTrail(storage, sessionKey, now) {
     persist() { persist(true); },
     clear() {
       points = []; startedAt = 0; dirty = false; line.reset();
-      try { if (storage && storage.removeStorageSync) storage.removeStorageSync(STORE_KEY); } catch (e) { /* noop */ }
+      try { if (storage && storage.removeStorageSync) storage.removeStorageSync(key); } catch (e) { /* noop */ }
     },
   };
 }

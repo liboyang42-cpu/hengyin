@@ -48,6 +48,10 @@ const RESULT_LABEL = {
   NOT_STARTED: '未开始'
 };
 
+const NODE_MODE_LABEL = { SKIPPED: '已跳过', REVEALED: '看过答案' };
+// CG-ALL-11(#866):开局方式是整局一条(PlayerRunReportVO.runStartMode:DESK / ALT / null 正常开局),不是逐站的
+const RUN_START_MODE_LABEL = { DESK: '桌面完成', ALT: '替代站开局' };
+
 function reportView(data) {
   if (!record(data)) return null;
   const completed = isNum(data.completedNodes) ? data.completedNodes : null;
@@ -78,11 +82,18 @@ function reportView(data) {
     nodes: list(data.nodes).filter(record).map(node => ({
       key: String(node.nodeId),
       name: node.name || '节点',
-      mode: node.completionMode === 'SKIPPED' ? '已跳过' : node.completionMode === 'REVEALED' ? '看过答案' : '',
+      mode: NODE_MODE_LABEL[node.completionMode] || '',
+      // CG-ALL-12 / CG-01-P2-6(#866):本站玩家自己拍的照片,后端只给本人可见地址;没有就不出
+      photoUrl: typeof node.photoUrl === 'string' ? node.photoUrl : '',
       scoreText: node.scored === true && isNum(node.score) ? String(node.score) : '不计分'
     })),
     rewardsText: data.rewardsState === 'AVAILABLE' ? rewardsSummary(data.rewards) : ''
   };
+  // CG-07-P2-2:结算总览把辅助完成(跳过 / 看过答案)的节点单独数出来,与自己解出的区分开
+  view.assistedCount = list(data.nodes).filter(record).filter(node => node.completionMode === 'SKIPPED' || node.completionMode === 'REVEALED').length;
+  // CG-ALL-11:桌面完成 / 替代站开局的局,结算总览标出来;正常开局(null)不出
+  view.startModeText = RUN_START_MODE_LABEL[data.runStartMode] || '';
+  view.photoUrls = view.nodes.map(node => node.photoUrl).filter(Boolean);
   view.shareTitle = view.win ? '我通关了，一起来玩' : '一起来玩';
   return view;
 }

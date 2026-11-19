@@ -660,7 +660,7 @@ test('order:re-pay 支付成功后 verifyPayment 确认终态', () => {
   verifyReqs[0].success(httpOk({ paymentStatus: 2, registrationStatus: 2 }));
 
   assert.equal(vm.data.isPaying, false);
-  assert.equal(vm.data.verifyingPayment, false);
+  assert.ok(!vm._verifyingPayment, 'verifying 态是实例状态(不走 setData),确认后复位');
 });
 
 test('R2 order:re-pay 畸形200缺任一必需支付字段都明确失败', () => {

@@ -15,5 +15,9 @@
     "cy-icon": "/components/cy/icon/index",
     "cy-access-gate": "/components/cy/access-gate/index"
   },
-  "enablePullDownRefresh": true
+  "enablePullDownRefresh": true,
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#F3F4F4",
+  "backgroundColorTop": "#F3F4F4",
+  "backgroundColorBottom": "#F3F4F4"
 }

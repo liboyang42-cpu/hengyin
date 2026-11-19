@@ -1,6 +1,6 @@
 const templateAdoption = require('../utils/publish/template-adoption.js'); const checkContext = require('../utils/publish/check-context.js');
 const { readReducedMotion } = require('../../../utils/motion-preference.js'); const morph = require('../../../utils/morph-success.js');
-const modal = require('../../../utils/modal.js');
+const modal = require('../../../utils/modal.js'); const feAuthorSale = require('../../../utils/fe-author-sale.js');
 const cyLoading = require('../../../utils/loading.js');
 const cyToast = require('../../../utils/toast.js');
 const familyTicket = require('../../../utils/family-ticket.js'); // F12 亲子票
@@ -71,6 +71,7 @@ function emptyChapterForm(name = '', opening = false) {
 const proEditorMaterials = require('../utils/publish/pro-editor-materials.js');
 const proEditorStory = require('../utils/publish/pro-editor-story.js');
 const storyInline = require('../utils/publish/story-inline.js');
+const { safeDecode } = require('../../../utils/safe-decode.js');
 // 段首哨兵:非首段的 textarea 前面垫一个零宽空格。微信 textarea 在段首按退格不发任何事件,
 // 垫了它之后退格会删掉这个字符 → 收到一次 input、值里没了哨兵 → 当成「并入上一段」。
 const STORY_SENTINEL = '​';
@@ -294,6 +295,8 @@ Page({
     operationScope: '',
     // 后端下发的编辑窗口档位:FULL=全字段可改 / WHITELIST=已过审开卖,只能改文案与图
     editScope: 'FULL',
+    fePricing: { show: false },
+    fePublishing: false,
     // 正在编辑的是服务端草稿(is_draft=1):底栏给「保存草稿」,发布走「先存后发」publish-draft
     editIsDraft: false,
     draftSaving: false,
@@ -3308,7 +3311,7 @@ Page({
       editLoading: !!editingTopicId,
       editLoadError: '',
       operationScope: options.scope === 'MERCHANT' ? 'MERCHANT' : '',
-      'formData.name': options.templateName ? decodeURIComponent(options.templateName) : '',
+      'formData.name': options.templateName ? safeDecode(options.templateName) : '',
       'formData.clubId': options.clubId || '',   // 从俱乐部入口发团:预选并锁定归属
       'editingTicket.mode': entryMode,
       chrome: resolveMenuChrome(windowInfo, menuButtonInfo),
@@ -3494,6 +3497,8 @@ Page({
     const thoughtPatch = thoughtPatchOf(detail.journeyRules || topic.journeyRulesJson);
     this._routeGraph = topicRoute.graph;
 
+    // F10:已发布的自由探索主题在招募中 / 待定价时,编辑器顶部出「开售票价」区(位置全部承接后填价直接发布)
+    this._loadFePricing(topic, tickets);
     this.setData({
       editScope: detail.editScope || 'FULL',
       editIsDraft: detail.isDraft === true,
@@ -4179,7 +4184,7 @@ Page({
     const fmt = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
     const startDate = `${fmt(start)} 10:00`;
     const endDate = `${fmt(end)} 18:00`;
-    const name = this.data.formData.name || (hasTemplateName ? decodeURIComponent(options.templateName) : '城市街角探索');
+    const name = this.data.formData.name || (hasTemplateName ? safeDecode(options.templateName) : '城市街角探索');
 
     this.setData({
       // 分类必须经标签页选真实分类(留空让 validateForm 拦截,避免发出 mock 分类id)
@@ -5681,6 +5686,56 @@ Page({
 
   // 两页切换。两页都可直达 —— 没有「必须填完第 1 页」的门控,
   // 因为三种创作起点想先做的事不同,强加顺序总会别扭其中一种。
+  // ===== F10(FE-G13/14)自由探索:位置全部承接后在编辑器填价直接发布 =====
+  _loadFePricing(topic, tickets) {
+    const topicId = topic && topic.id;
+    const base = feAuthorSale.pricingPanel(topic, null, tickets);
+    if (!topicId || !base.show) { this.setData({ fePricing: { show: false } }); return; }
+    const seq = this._fePricingSeq = (this._fePricingSeq || 0) + 1;
+    this._fePricingTopic = topic;
+    feAuthorSale.loadReadiness(app, topicId).then(readiness => {
+      if (this._fePricingSeq !== seq) return;
+      this.setData({ fePricing: feAuthorSale.pricingPanel(topic, readiness, tickets) });
+    }).catch(err => {
+      if (this._fePricingSeq !== seq) return;
+      // 读不到承接进度就按未就绪处理:票价区置灰,不放行发布
+      this.setData({ fePricing: Object.assign(base, { disabled: true, hint: err.message || '承接进度加载失败' }) });
+    });
+  },
+
+  onFePriceInput(e) {
+    const index = Number(e.currentTarget.dataset.index);
+    if (!(index >= 0) || this.data.fePricing.disabled) return;
+    this.setData({ ['fePricing.rows[' + index + '].price']: String(e.detail.value == null ? '' : e.detail.value) });
+  },
+
+  onFePublish() {
+    const panel = this.data.fePricing;
+    if (!panel || !panel.show || panel.disabled || this.data.fePublishing) return;
+    let body;
+    try { body = feAuthorSale.publishBody(this.data.editingTopicId, panel.rows); }
+    catch (err) { cyToast(err.message); return; }
+    modal.show({
+      title: '发布开售',
+      content: '票价发布后锁定，玩家即可购票。确认发布？',
+      confirmText: '发布',
+      cancelText: '再看看',
+      success: (res) => {
+        if (!res.confirm) return;
+        this.setData({ fePublishing: true });
+        feAuthorSale.publishForSale(app, body.topicId, panel.rows).then(() => {
+          this.setData({ fePublishing: false, 'fePricing.show': false });
+          cyToast('已发布开售');
+          this._exitEditor();
+        }).catch(err => {
+          this.setData({ fePublishing: false });
+          if (!err.shown) cyToast(err.message || '发布失败，请重试');
+          if (this._fePricingTopic) this._loadFePricing(this._fePricingTopic, this.data.formData.tickets);
+        });
+      }
+    });
+  },
+
   switchEditorPage(e) {
     const page = Number(e.currentTarget.dataset.page) === 2 ? 2 : 1;
     if (page === this.data.editorPage) return;
@@ -6186,28 +6241,6 @@ Page({
       showCategoryModal: false
     });
   },
-  // 切换分类选择
-  toggleCategorySelect(e) {
-    let categoryId = e.currentTarget.dataset.id;
-    let categoryName = e.currentTarget.dataset.name;
-    let selectedIds = [...this.data.selectedCategoryIds];
-    let selectedNames = [...this.data.selectedCategoryNames];
-
-    let index = selectedIds.indexOf(categoryId);
-    if (index > -1) {
-      selectedIds.splice(index, 1);
-      selectedNames.splice(index, 1);
-    } else {
-      selectedIds.push(categoryId);
-      selectedNames.push(categoryName);
-    }
-
-    this.setData({
-      selectedCategoryIds: selectedIds,
-      selectedCategoryNames: selectedNames
-    });
-  },
-
   // 确认分类选择
   confirmCategorySelect() {
     this.setData({
@@ -7406,8 +7439,6 @@ Page({
     const switches = [];
     if (!fd.clubId && !freeExplore) switches.push({ key: 'club', icon: 'tab-club', label: '俱乐部承接',
       on: !!fd.openClubPool, locked: merchantScope, reason: lockReason });
-    if (!fd.clubId && freeExplore && merchantScope) switches.push({ key: 'club', icon: 'tab-club', label: '俱乐部承接',
-      fixed: true, note: '必须先邀 1 家俱乐部承办才能开售' });
     if (freeExplore && (this.data.merchantPoolEditable || merchantScope)) switches.push({ key: 'merchant', icon: 'discover-shop', label: '商家承接',
       on: recruitOn, note: '每一站按档位邀商家（' + (fd.clubId ? '权益 / 计酬 / 引流' : '权益 / 引流') + '）' });
     else if (!freeExplore && merchantScope) switches.push({ key: 'merchant', icon: 'discover-shop', label: '商家承接', locked: true, reason: lockReason });

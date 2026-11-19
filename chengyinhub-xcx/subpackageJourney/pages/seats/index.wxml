@@ -2,7 +2,7 @@
   <cy-modal-host id="cy-modal-host" />
   <cy-nav-bar plain />
   <cy-page-title title="开局大厅" />
-  <cy-empty wx:if="{{state !== 'ready'}}" kind="{{stateKind}}" title="{{stateTitle}}" cta="{{stateCta}}" bind:cta="load" fill size="lg" />
+  <cy-empty wx:if="{{state !== 'ready'}}" kind="{{stateKind}}" title="{{stateTitle}}" cta="{{stateCta}}" bind:cta="onStateCta" fill size="lg" />
   <block wx:else>
     <!-- 1 主题头 + 以谁身份游玩 -->
     <view class="lb-head" wx:if="{{head}}">

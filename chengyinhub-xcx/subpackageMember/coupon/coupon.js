@@ -1,10 +1,11 @@
 const app = getApp();
 const { currentOwnerId } = require('../utils/coupon-credential.js');
 const merchantTheme = require('../../utils/merchant-theme.js');
+const policy = require('../../utils/identity/identity-policy.js');
 const datetime = require('../../utils/datetime.js');
 const modal = require('../../utils/modal.js');
 const cyToast = require('../../utils/toast.js');
-const { COUPON_TYPE_LABELS, CREATION_ENABLED } = require('../../utils/coupon-form.js');
+const { COUPON_TYPE_LABELS } = require('../../utils/coupon-form.js');
 const { shapeCouponSummary } = require('./coupon-summary.js');
 
 function scalarText(value) {
@@ -85,6 +86,7 @@ Page({
     loadState: 'loading',
     errorMsg: '',
     operationScope: '',
+    isMerchant: false, // U10:商家口径(scope=MERCHANT 或商家视角)走浅色;玩家「我发布的券」随玩家域深色
     summaryItems: [], // BL-77 商家券领取/核销统计,无数据为空数组即不展示
     tpShow: false, // 弹窗显示状态
     currentCoupon: {} // 当前选中的优惠券
@@ -104,10 +106,19 @@ Page({
    */
   onShow() {
     this._visible = true;
-    merchantTheme.merchantPageShow(); this._navigating = false;
+    this.syncViewTheme(); this._navigating = false;
     var that = this
     that.getList()
     that.loadSummary()
+  },
+
+  // 与 subpackageMember/mytemplate 同一判据:scope=MERCHANT 或商家视角 ⇒ 浅色商家工作台,否则玩家深色
+  syncViewTheme() {
+    const isMerchant = this.data.operationScope === 'MERCHANT'
+      || policy.isMerchantView({ role: app.getUserRole && app.getUserRole(), userType: app.getUserType && app.getUserType() });
+    if (isMerchant !== this.data.isMerchant) this.setData({ isMerchant });
+    if (isMerchant) merchantTheme.merchantPageShow();
+    else merchantTheme.merchantPageRestore();
   },
 
   onHide() {
@@ -162,6 +173,11 @@ Page({
       },
       success: function (res) {
         if (seq !== that._listSeq || !that._isCouponContextCurrent(owner, scope, epoch)) return;
+        // 非商家身份读「我发布的优惠券」后端回 403:原地无权限态,不当加载失败(加载失败态无内容,整页只剩标题)
+        if (res.code == 403) {
+          that.setData({ list: [], loadState: 'denied' });
+          return;
+        }
         if ((res.code == "200" || res.code === 200) && Array.isArray(res.data)) {
           const list = res.data.map(normalizeCoupon).filter(Boolean);
           that.setData({
@@ -183,6 +199,7 @@ Page({
   },
 
   retryLoad() { this.getList(); this.loadSummary(); },
+  onDenyCta() { require('../../utils/merchant-no-permission.js').followDenyCta(this, this.data.isMerchant === true, '/pages/merchant/index/index') },
 
   // BL-77:只在商家口径下读统计;失败或没有券就不展示,不阻塞列表。
   loadSummary() {
@@ -262,11 +279,4 @@ Page({
       },
     });
   },
-  GoAdd: function () {
-    if (!CREATION_ENABLED) return;
-    if (this._navigating) return; this._navigating = true; wx.navigateTo({ complete: () => { this._navigating = false; },
-      url: '/subpackageMember/couponInfo/couponInfo'
-        + (this.data.operationScope === 'MERCHANT' ? '?scope=MERCHANT' : '')
-    });
-  }
 })

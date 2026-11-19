@@ -160,4 +160,40 @@ public class ClubAdminGovernanceGuardTest
 
         verify(clubMapper).updateJoinPolicy(CLUB_ID, 1);
     }
+
+    /** MC-051:锁外读出的整行里的 status / memberCount / level 不得被资料编辑写回。 */
+    @Test
+    void 资料编辑只写白名单列不回写锁外旧状态()
+    {
+        when(clubMapper.countJoinPolicyColumn()).thenReturn(1);
+        when(clubMapper.updateClub(any(Club.class))).thenReturn(1);
+        Club stale = club();
+        stale.setStatus(1L);
+        stale.setMemberCount(3);
+        stale.setLevel(2);
+        stale.setDescription("新简介");
+
+        clubService.updateOwnedClubProfile(stale, OWNER_ID, null);
+
+        org.mockito.ArgumentCaptor<Club> written = org.mockito.ArgumentCaptor.forClass(Club.class);
+        verify(clubMapper).updateClub(written.capture());
+        assertEquals(CLUB_ID, written.getValue().getId());
+        assertEquals("新简介", written.getValue().getDescription());
+        assertEquals(null, written.getValue().getStatus());
+        assertEquals(null, written.getValue().getMemberCount());
+        assertEquals(null, written.getValue().getLevel());
+        assertEquals(null, written.getValue().getMemberId());
+    }
+
+    @Test
+    void 负控_管理员在锁内也改不了经营配置()
+    {
+        Club c = club();
+        c.setOperationConfigUpdated(true);
+        when(clubMapper.countJoinPolicyColumn()).thenReturn(1);
+        IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
+                () -> clubService.updateOwnedClubProfile(c, ADMIN_ID, null));
+        assertEquals("只有主理人可以修改会员经营配置", e.getMessage());
+        verify(clubMapper, never()).updateClub(any(Club.class));
+    }
 }

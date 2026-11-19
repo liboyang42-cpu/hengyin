@@ -1,5 +1,5 @@
 <!-- §17.1/§17.3/§17.4/P6 通行证详情:内容、期限、受益人只读服务端;购买按钮只在报价给出可用支付方式时出现 -->
-<view class="theme-dark mp"><cy-access-gate kind="login" />
+<view class="theme-dark mp">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />

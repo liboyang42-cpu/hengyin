@@ -29,11 +29,9 @@ const CUSTOM_BACK = [
   ['pages/coop/settlement-detail/index.wxml', '结算详情加载失败', 'onNavBack'],
 ];
 
-// fill 整页但明确豁免 auto-back 的三条(各有页面级出口,不是「加载失败甩手不管」)
+// fill 整页但明确豁免 auto-back 的两条(缺参态已改用 cy-empty missing-param)(各有页面级出口,不是「加载失败甩手不管」)
 const FILL_ALLOW = [
-  ['pages/coop/invite-detail/index.wxml', /state === 'missing'/, '缺参终态:给了显式 CTA「回协作邀请」,不是加载失败'],
   ['pages/coop/invite-detail/index.wxml', /state === 'notfound'/, '业务不可见终态:同上，回列表是唯一下一步'],
-  ['pages/coop/withdraw/records/index.wxml', /state === 'error'/, '重定向壳:重试=重新发起跳转，是真动作'],
 ];
 
 // 局部失败面:必须留在行内(带自己的重试出口),且信号不许出现在任何 cy-error 整页分支里
@@ -77,7 +75,8 @@ test('pages/coop/** 每个 fill 整页失败都接 auto-back,豁免三条各自�
   assert.deepEqual(violations, [], '整页失败退回老写法(只剩短重试按钮):\n  ' + violations.join('\n  '));
   // 正控件:扫描面不许悄悄塌成 0,否则上面那句恒真
   // 2026-09-16 −2:候选池页整页删除(它自带 permission/error 两个 fill 整页失败)⇒ 实测 11
-  assert.ok(fillTotal >= 11, 'pages/coop 的 fill 整页失败面应 >= 11，实际 ' + fillTotal);
+  // 2026-11-19 PG-034 −?:商家提现两页壳下线
+  assert.ok(fillTotal >= 9, 'pages/coop 的 fill 整页失败面应 >= 9，实际 ' + fillTotal);
   for (const [file, re, why] of FILL_ALLOW) {
     assert.match(read(file), re, '豁免锚点失效(' + why + '): ' + file);
   }

@@ -17,10 +17,8 @@
   <cy-error load-failure wx:elif="{{pageState === 'error'}}" fill size="lg"
             title="售后列表加载失败" sub="{{errorMessage}}"
             retry="重新加载" bind:retry="retry" auto-back class="cy-fade-in" />
-  <cy-error wx:elif="{{pageState === 'no-permission'}}" fill size="lg"
-            title="当前岗位没有售后查看权限"
-            sub="请联系店主开通"
-            retry="" bind:back="onNavBack" auto-back custom-back class="cy-fade-in" />
+  <cy-empty wx:elif="{{pageState === 'no-permission'}}" kind="no-permission" fill size="lg"
+            title="当前身份不能查看退款售后" cta="{{accessMember ? '返回' : '申请入驻'}}" bind:cta="onDenyCta" class="cy-fade-in" />
 
   <view wx:elif="{{pageState === 'empty'}}" class="acl-shell cy-fade-in">
     <!-- CU-M-152:三个分段共用同一句「退款申请会按平台审核与款项真实状态显示在这里」——

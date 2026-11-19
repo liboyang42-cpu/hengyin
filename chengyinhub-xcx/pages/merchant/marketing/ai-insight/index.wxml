@@ -2,14 +2,14 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
-  <cy-access-gate id="cy-access-gate" kind="merchant" need="canReadMarketing" bind:state="onGateState" />
+  <cy-access-gate id="cy-access-gate" kind="merchant" need="canReadMarketing" bind:state="onGateState" back-url="/pages/merchant/marketing/index" />
   <!-- 2026-08-20 并 master:商家侧标题统一移入 cy-nav-bar 居中,不再用 cy-page-title -->
   <cy-nav-bar custom-back title="店铺参谋" bind:back="onNavBack" />
   <view class="nav-spacer" style="height: {{statusBarHeight + navBarHeight}}px;"></view>
 
   <block wx:if="{{!facts}}">
     <cy-skeleton wx:if="{{loading && !facts}}" type="merchant-insight" />
-    <cy-error load-failure="{{!errorIsDenied}}" class="cy-fade-in" wx:elif="{{error && !facts}}" size="lg" fill title="{{errorNeedsLogin ? '请先登录' : errorIsDenied ? '当前账号没有查看权限' : '店铺数据加载失败'}}" sub="{{error}}" retry="{{errorNeedsLogin ? '重新登录' : '重新加载'}}" bind:retry="retry" auto-back="{{!errorIsDenied}}" />
+    <cy-error load-failure="{{!errorIsDenied}}" class="cy-fade-in" wx:elif="{{error && !facts}}" size="lg" fill title="{{errorNeedsLogin ? '请先登录' : errorIsDenied ? '当前身份不能查看店铺数据' : '店铺数据加载失败'}}" sub="{{error}}" retry="{{errorNeedsLogin ? '重新登录' : '重新加载'}}" bind:retry="retry" auto-back="{{!errorIsDenied}}" />
   </block>
 
   <view class="body" wx:else>

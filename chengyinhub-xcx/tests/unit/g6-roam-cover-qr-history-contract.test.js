@@ -92,22 +92,12 @@ test('CU-C-59 官方活动缺封面:样式为空走占位块,有封面才拼 url
 
 // ───────────────── CU-M-53 缺二维码图的据点核销码 ─────────────────
 
-test('CU-M-53 据点核销码页:缺二维码图即失败态,有图才 ready', () => {
+// PG-091:citynode-code 页已改为 cy-scene-qr-citynode 薄壳,缺图失败态由下面的组件用例覆盖。
+test('CU-M-53 据点核销码页是场景组件薄壳,不再自带出码', () => {
   const page = boot('subpackageRoam/citynode-code/index.js')
   page.instance.onLoad({ poiId: 'poi-1' })
-  assert.equal(page.requests.length, 1)
-
-  page.requests[0].success({ code: 200, data: { code: 'LONGSIGNATURE', qrcodeUrl: '', ttlMs: 60000 } })
-  assert.equal(page.instance.data.state, 'error', '有 code 没图 = 没出成码')
-  assert.match(page.instance.data.errMsg, /二维码/)
-  assert.equal(page.instance.data.qrcodeUrl, '')
-  assert.equal(page.instance.data.code, '')
-
-  const good = boot('subpackageRoam/citynode-code/index.js')
-  good.instance.onLoad({ poiId: 'poi-1' })
-  good.requests[0].success({ code: 200, data: { code: 'OK', qrcodeUrl: 'https://cdn/qr.png', ttlMs: 60000 } })
-  assert.equal(good.instance.data.state, 'ready')
-  assert.equal(good.instance.data.qrcodeUrl, 'https://cdn/qr.png')
+  assert.equal(page.requests.length, 0)
+  assert.equal(page.instance.data.poiId, 'poi-1')
 })
 
 test('CU-M-53 据点核销码组件:缺二维码图即失败态,不再落「ready + code 文本」', () => {

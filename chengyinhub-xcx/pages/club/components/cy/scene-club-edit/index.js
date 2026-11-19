@@ -108,7 +108,8 @@ Component({
             var c = res.data; if (c.id != null && String(c.id) !== scope.clubId) { that.setData({ loadState: 'business-error', loadErrorText: '资料加载失败，请重试' }); return; }
             // 2026-08-26:管理员(viewerIsAdmin)也能改**展示信息**;经营配置与解散仍只给主理人。
             // 后端 canGovernClub 是真闸,这里只是别把表单藏起来。
-            if (c.isOwner !== true && c.viewerIsAdmin !== true) {
+            // MC-055:服务端统一权限位 viewerCanGovern 优先;缺省沿用 isOwner/viewerIsAdmin。
+            if (typeof c.viewerCanGovern === 'boolean' ? !c.viewerCanGovern : (c.isOwner !== true && c.viewerIsAdmin !== true)) {
               that.setData({
                 isOwner: false,
                 loadState: 'permission',
@@ -253,16 +254,19 @@ Component({
         clubType: d.clubType,
         activityPrefs: d.activityPrefs.join(','),
         city: d.city,
-        address: d.city,
+        // MC-059:地址不随城市写回 —— 不提交 address,服务端按 null 不改保留原值。
         keywords: d.keywords,
-        style: d.style,
-        operationConfigUpdated: true,
-        prioritySignupEnabled: d.prioritySignupEnabled ? 1 : 0,
+        style: d.style
+      };
+      // MC-050:运营配置(优先报名/成员预留/入会方式)只有主理人能改;管理员只提交展示信息。
+      if (d.isOwner) {
+        payload.operationConfigUpdated = true;
+        payload.prioritySignupEnabled = d.prioritySignupEnabled ? 1 : 0;
         // [2026-08-12 拍板] 成员优惠价停用后**不再提交这个字段** —— 提 null 会把库里存量抹平,
         // 而 club.member_discount_price 是有意保留的恢复退路(服务端改回一行即生效)。不读、也不动。
-        memberReservedQuota: d.memberReservedQuota === '' ? 0 : Number(d.memberReservedQuota)
-      };
-      if (d.joinPolicySupported) payload.joinPolicy = d.joinPolicy;
+        payload.memberReservedQuota = d.memberReservedQuota === '' ? 0 : Number(d.memberReservedQuota);
+        if (d.joinPolicySupported) payload.joinPolicy = d.joinPolicy;
+      }
       app.sendRequest({
         url: '/api/club/update-mine', method: 'POST',
         data: JSON.stringify(payload),

@@ -7,7 +7,7 @@
   <cy-page-title title="确认终价" safe-top="{{false}}" />
   <scroll-view scroll-y class="pg-scroll" enhanced show-scrollbar="{{false}}">
     <cy-skeleton wx:if="{{loading && !hasPreview}}" type="card" count="{{2}}" />
-    <cy-empty wx:elif="{{errorText === '缺少主题信息'}}" fill kind="missing-param" title="缺少主题信息" cta="返回上一页" bind:cta="goBack" class="cy-fade-in" />
+    <cy-empty class="cy-fade-in" wx:elif="{{errorText === '缺少主题信息'}}" fill size="lg" kind="missing-param" cta="返回" bind:cta="goBack" />
     <cy-error wx:elif="{{errorText && !hasPreview}}" fill title="定价信息加载失败" sub="{{errorText}}"
               retry="重试" bind:retry="preview" class="cy-fade-in" />
     <block wx:else>
@@ -49,6 +49,10 @@
           <input class="pg-input" type="digit" value="{{item.price}}" placeholder="0" data-idx="{{index}}"
                  aria-label="{{item.name || '票种 ' + (index + 1)}}终价" bindinput="onTicketPriceInput" />
           <text class="pg-field-err" wx:if="{{item.error}}" aria-role="alert">{{item.error}}</text>
+          <view class="pg-fee" wx:if="{{item.feeText}}">
+            <view class="pg-fee-row"><text>平台服务费</text><text>{{item.feeText}}</text></view>
+            <view class="pg-fee-row pg-fee-row--net"><text>预计到手</text><text>{{item.takeHomeText}}</text></view>
+          </view>
         </view>
         <view class="pg-reference" wx:if="{{referenceText}}"><text>{{referenceText}}</text></view>
       </view>
@@ -61,7 +65,7 @@
         <slider min="{{sliderMin}}" max="{{sliderMax}}" value="{{finalPrice}}" step="1"
                 activeColor="var(--cy-color-action-primary-bg)" backgroundColor="var(--cy-color-border-subtle)"
                 block-size="24" bindchange="onSliderChange" />
-        <view class="pg-range" wx:if="{{!isFreeExplore}}"><text>地板 {{money.amount2(floorText)}}</text><text>最高 {{money.amount2(sliderMax)}}</text></view>
+        <view class="pg-range" wx:if="{{!isFreeExplore || floorPositive}}"><text>地板 {{money.amount2(floorText)}}</text><text>最高 {{money.amount2(sliderMax)}}</text></view>
         <cy-inline-error class="pg-field-err" wx:if="{{selfPriceError}}" kind="field" title="{{selfPriceError}}" />
         <view class="pg-fee" wx:if="{{feeText}}">
           <view class="pg-fee-row"><text>平台服务费</text><text>{{feeText}}</text></view>

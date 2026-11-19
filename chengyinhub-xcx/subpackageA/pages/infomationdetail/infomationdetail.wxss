@@ -1,4 +1,5 @@
 @charset "UTF-8";
+@import '../../../style/merchant-light-scope.wxss';
 page{ background: var(--cy-bg-page);}
 /* 顶距交还给 cy-page-title(自带 safeTop):容器再补 padding-top = 让位两次,标题会比同批其它页低一档。
    左右统一 --cy-page-x,与页标题对齐。 */

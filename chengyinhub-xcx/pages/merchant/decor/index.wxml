@@ -19,8 +19,9 @@
       style="display: flex; flex-direction: column; flex: 1; min-height: 0"
       kind="no-permission"
       fill
-      title="暂无装修权限"
-      sub="请切换到已审核的商家账号"
+      title="当前身份不能装修店铺"
+      cta="返回"
+      bind:cta="onDenyBack"
     />
   </view>
 

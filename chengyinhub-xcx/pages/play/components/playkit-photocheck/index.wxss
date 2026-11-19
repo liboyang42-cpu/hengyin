@@ -123,3 +123,6 @@
   font-size: var(--cy-type-label);
   color: var(--sub);
 }
+
+/* CG-ALL-29 / CG-ALL-12:主按钮下的第二个动作(重拍 / 不拍照继续),文字按钮,热区 44px */
+.pc__alt { position: relative; z-index: 1; min-height: 88rpx; margin-top: var(--cy-space-2); display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-body); color: var(--cy-color-text-secondary); text-decoration: underline; }

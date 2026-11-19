@@ -2859,6 +2859,17 @@ class GameSessionRuntimeServiceImplTest {
 
     @Test
     void clubTeamProgressPreservesAuthoritativeStuckNodeHintAndRecentReceiptWithoutZeroFallback() {
+        assertClubTeamProgressRecentReceipt(DateUtils.parseDate("2026-08-23 11:59:00"));
+    }
+
+    @Test
+    void clubTeamProgressKeepsRecentReceiptWhenMysqlDriverReturnsLocalDateTime() {
+        // selectClubTeamProgressProjection 是 resultType=map;Connector/J 8 把 DATETIME 回成 LocalDateTime,
+        // 旧代码 instanceof Date 守卫会把真库下的 recentEvent 整个丢掉。
+        assertClubTeamProgressRecentReceipt(java.time.LocalDateTime.of(2026, 8, 23, 11, 59, 0));
+    }
+
+    private void assertClubTeamProgressRecentReceipt(Object recentEventAt) {
         GameSession session = runningSession(4);
         session.setModuleConfigSnapshotJson(runtimeConfigJson());
         when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(session);
@@ -2886,7 +2897,7 @@ class GameSessionRuntimeServiceImplTest {
         blocked.put("recentEventAction", "PLAYER_HINT");
         blocked.put("recentEventOutcome", "APPLIED");
         blocked.put("recentEventRevision", 8);
-        blocked.put("recentEventAt", DateUtils.parseDate("2026-08-23 11:59:00"));
+        blocked.put("recentEventAt", recentEventAt);
         when(runtimeMapper.selectClubTeamProgressProjection(SESSION)).thenReturn(Arrays.asList(normal, blocked));
 
         GameSessionView view = service.view(GameActorContext.club(DIRECTOR), ACTIVITY);
@@ -2903,6 +2914,7 @@ class GameSessionRuntimeServiceImplTest {
         assertTrue(String.valueOf(blockedView.get("blockedReason")).contains("旧钟楼"));
         assertEquals("PLAYER_HINT", recent.get("action"));
         assertEquals("APPLIED", recent.get("outcome"));
+        assertEquals("2026-08-23 11:59:00", recent.get("occurredAt"));
         assertNull(normalView.get("currentStuckNode"));
         assertNull(normalView.get("hintLevel"));
         assertFalse(String.valueOf(normalView).contains("hintLevel=0"));

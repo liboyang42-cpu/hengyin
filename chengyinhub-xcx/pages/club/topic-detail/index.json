@@ -29,6 +29,9 @@
     "cy-access-gate": "/components/cy/access-gate/index"
   },
   "navigationBarTitleText": "活动详情",
-  "navigationBarBackgroundColor": "#000000",
-  "navigationBarTextStyle": "white"
+  "navigationBarBackgroundColor": "#F3F4F4",
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#F3F4F4",
+  "backgroundColorTop": "#F3F4F4",
+  "backgroundColorBottom": "#F3F4F4"
 }

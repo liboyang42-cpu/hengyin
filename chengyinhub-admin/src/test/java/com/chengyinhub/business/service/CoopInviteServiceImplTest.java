@@ -2500,4 +2500,29 @@ class CoopInviteServiceImplTest {
         assertThrows(com.chengyinhub.business.service.NotActiveMerchantException.class,
                 () -> svc.listOfficialMerchantInvites(424242L));
     }
+
+    @org.junit.jupiter.api.Test
+    void selectReadTimes_同时认Date与MySQL驱动回的LocalDateTime() {
+        // Connector/J 8 对 resultType=map 的 DATETIME 返回 LocalDateTime;旧代码只认 Date,真库下已读时间全部丢失。
+        java.time.LocalDateTime readLocal = java.time.LocalDateTime.of(2026, 11, 19, 9, 15, 0);
+        Date readDate = new Date(1_700_000_000_000L);
+        Map<String, Object> dateRow = new java.util.HashMap<>();
+        dateRow.put("id", 1L);
+        dateRow.put("readTime", readDate);
+        Map<String, Object> localRow = new java.util.HashMap<>();
+        localRow.put("id", 2L);
+        localRow.put("readTime", readLocal);
+        Map<String, Object> unreadRow = new java.util.HashMap<>();
+        unreadRow.put("id", 3L);
+        unreadRow.put("readTime", null);
+        when(coopInviteMapper.selectReadTimes(java.util.Arrays.asList(1L, 2L, 3L)))
+                .thenReturn(java.util.Arrays.asList(dateRow, localRow, unreadRow));
+
+        Map<Long, Date> out = svc.selectReadTimes(java.util.Arrays.asList(1L, 2L, 3L));
+
+        assertEquals(readDate, out.get(1L));
+        assertEquals(Date.from(readLocal.atZone(java.time.ZoneId.systemDefault()).toInstant()), out.get(2L));
+        assertTrue(!out.containsKey(3L));
+        assertEquals(2, out.size());
+    }
 }

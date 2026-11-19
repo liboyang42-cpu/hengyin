@@ -66,10 +66,8 @@
       "name": "subpackagePublish",
       "pages": [
         "fabu/index",
-        "simple/index",
         "temp/index",
         "activity/index",
-        "topicadd/topicadd",
         "template-intro/index"
       ]
     },
@@ -155,9 +153,7 @@
         "invite/index",
         "nearby/index",
         "finance/index",
-        "settlement-detail/index",
-        "withdraw/index",
-        "withdraw/records/index"
+        "settlement-detail/index"
       ]
     },
     {
@@ -258,7 +254,6 @@
         "coupon-wallet/index",
         "coupon-qr/index",
         "coupon/coupon",
-        "couponInfo/couponInfo",
         "mycanyu/mycanyu",
         "mycanyuinfo/mycanyuinfo",
         "myinvite/myinvite",
@@ -270,7 +265,6 @@
         "report-detail/index",
         "appeal-mine/index",
         "signup/index",
-        "tixian/tixian",
         "tixianjilu/tixianjilu",
         "market/passes/index",
         "market/pass/index",

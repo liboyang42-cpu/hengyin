@@ -8,13 +8,7 @@ const KNOWN_SCENE_TWINS = {
     exitIntent: '路由页改为渲染 cy-scene-roam-task-list 后删除此项。',
   },
   // 2026-11-14 roam-session 退出:分享足迹卡改为真实 map 快照,页面不再有轨迹 wx:for,孪生门禁自然通过。
-  'asset-earnings': {
-    // 2026-09-16:组件从 subpackageA 搬进主包后,门禁才第一次看见这条孪生 ——
-    // 页面确实委托了 cy-scene-asset-earnings,但自身还有账户读取与资金写入表单
-    // (index.js `url: '/api/user/info'`),不满足「自己不实现内容」的薄壳判据。
-    reason: '正文已收进 cy-scene-asset-earnings,路由页是宿主;页面自身还承担账户读取与资金表单请求,不满足薄壳判据。',
-    exitIntent: '账户与资金表单也收进组件(或挪到别处),页面不再自取数后,删除此项。',
-  },
+  // 2026-11-19 PG-033:账户收益页删掉 tx* 资金表单与账户读取后成为薄壳,asset-earnings 退出白名单。
   'qr-ticket': {
     // 2026-09-16:同上,组件从 pages/play 搬进主包后进入门禁视野。
     // 宿主是玩法主页面 pages/play,整页自取数 + 38 处 wx:for,薄壳判据天然不成立,
@@ -30,10 +24,7 @@ const KNOWN_SCENE_TWINS = {
     reason: '团核销码路由页仍自出码自绘，scene-qr-group-code 另有一份嵌入实现。',
     exitIntent: '路由页改为渲染 cy-scene-qr-group-code 后删除此项。',
   },
-  'qr-citynode': {
-    reason: '据点核销码路由页仍自出码自绘，scene-qr-citynode 另有一份嵌入实现。',
-    exitIntent: '路由页改为渲染 cy-scene-qr-citynode 后删除此项。',
-  },
+  // 2026-11-19 PG-091:据点核销码页改为 cy-scene-qr-citynode 薄壳,qr-citynode 退出白名单。
   'roam-stamp-album': {
     reason: '集邮册路由页仍自取数自绘，scene-roam-stamp-album 另有一份嵌入实现。',
     exitIntent: '路由页改为渲染 cy-scene-roam-stamp-album 后删除此项。',

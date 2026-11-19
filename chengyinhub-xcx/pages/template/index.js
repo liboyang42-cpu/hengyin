@@ -117,8 +117,13 @@ Page({
     });
   },
   // ===== 发布广场:发布能力卡 =====
-  getPublishHome() {
+  getPublishHome(fromUser) {
     const that = this;
+    // MC-036:失败不再吞掉 —— 数字保持 0,记 capabilityError;用户点发布时补拉仍失败就提示。
+    const failed = () => {
+      that._capabilityError = true; // 页面上已无能力数字可标注,失败记在实例上,由用户点发布时提示
+      if (fromUser === true) cyToast('发布信息加载失败，请重试');
+    };
     const ROLE_TEXT = { player: '玩家', club: '俱乐部主理人', merchant: '商家' };
     app.sendRequest({
       hideLoading: true,
@@ -126,7 +131,8 @@ Page({
       method: 'POST',
       data: {},
       success(res) {
-        if (res.code == '200' && res.data) {
+        if (!(res && res.code == '200' && res.data)) { failed(); return; }
+        {
           const d = res.data;
           const q = d.quota || {};
           const merchantScoped = that.data.operationScope === 'MERCHANT';
@@ -138,6 +144,7 @@ Page({
             })
             : (d.permission || {});
           that._pubLoaded = true;
+          that._capabilityError = false;
           that.setData({
             pub: {
               role: merchantScoped ? 'merchant' : (d.role || 'player'),
@@ -154,7 +161,7 @@ Page({
           });
         }
       },
-      fail() { /* 能力卡失败不阻断页面 */ }
+      fail() { failed(); }
     });
   },
 
@@ -167,11 +174,11 @@ Page({
   // ===== 发布弹窗(cy-publish-sheet,唯一发布触发) =====
   openPublishSheet() {
     if (this.data.operationScope && !this.data.canManageMerchantProjects) {
-      cyToast('当前岗位没有项目发布权限');
+      cyToast('当前身份不能发布项目');
       return;
     }
     // 能力卡上次没拉成：弹窗打开时补拉一次，不让弹窗锁在默认玩家态
-    if (!this._pubLoaded) this.getPublishHome();
+    if (!this._pubLoaded) this.getPublishHome(true);
     this.setData({ publishSheetShow: true });
   },
   closePublishSheet() { this.setData({ publishSheetShow: false }); },

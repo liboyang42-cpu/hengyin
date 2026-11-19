@@ -64,7 +64,7 @@ function eventTimestamp(text, now) {
 function conversationItem(c, now) {
   const cp = c.counterparty || {};
   const type = parseInt(c.type) || 1;
-  const name = cp.nickname || (type == 2 ? '系统通知' : '城瘾消息');
+  const name = type == 2 ? '城瘾小助手' : (cp.nickname || '城瘾消息');
   return {
     key: 'conv-' + c.conversationId,
     kind: 'conversation',

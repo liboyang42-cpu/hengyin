@@ -235,4 +235,39 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils
         calendar.set(Calendar.MILLISECOND, 999);
         return calendar.getTime();
     }
+    /**
+     * 把 MyBatis Map 结果里的时间值统一成 {@link Date}。
+     * MySQL Connector/J 8 对 resultType=map 的 DATETIME 列返回 {@link LocalDateTime} 而非 java.util.Date，
+     * 直接 (Date) 强转会 ClassCastException，instanceof Date 守卫会静默失效。
+     * null → null；Date(含 java.sql.Timestamp) → 原样；LocalDateTime/LocalDate/OffsetDateTime/Instant → 按 JVM 默认时区换算；
+     * 其它类型 → IllegalStateException。
+     */
+    public static Date asDate(Object value)
+    {
+        if (value == null)
+        {
+            return null;
+        }
+        if (value instanceof Date)
+        {
+            return (Date) value;
+        }
+        if (value instanceof LocalDateTime)
+        {
+            return Date.from(((LocalDateTime) value).atZone(ZoneId.systemDefault()).toInstant());
+        }
+        if (value instanceof LocalDate)
+        {
+            return Date.from(((LocalDate) value).atStartOfDay(ZoneId.systemDefault()).toInstant());
+        }
+        if (value instanceof java.time.OffsetDateTime)
+        {
+            return Date.from(((java.time.OffsetDateTime) value).toInstant());
+        }
+        if (value instanceof java.time.Instant)
+        {
+            return Date.from((java.time.Instant) value);
+        }
+        throw new IllegalStateException("无法转换为日期的时间值类型: " + value.getClass().getName());
+    }
 }

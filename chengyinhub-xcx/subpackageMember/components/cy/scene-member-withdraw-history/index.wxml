@@ -16,7 +16,7 @@
     <cy-error load-failure="{{!authRequired && !accessDenied}}" wx:if="{{loadErr}}" title="更多提现记录加载失败" retry="重试" bind:retry="onPageRetry" />
   </view>
   <view wx:elif="{{loadErr}}" class="txjl-state cy-fade-in" aria-role="alert">
-    <cy-error load-failure="{{!authRequired && !accessDenied}}" fill="{{true}}" size="lg" title="{{authRequired ? '登录后查看提现记录' : accessDenied ? '当前账号无法查看提现记录' : '提现记录加载失败'}}" retry="{{authRequired ? '登录' : '重试'}}" bind:retry="onRetry" />
+    <cy-error load-failure="{{!authRequired && !accessDenied}}" fill="{{true}}" size="lg" title="{{authRequired ? '登录后查看提现记录' : accessDenied ? '当前身份不能查看提现记录' : '提现记录加载失败'}}" retry="{{authRequired ? '登录' : '重试'}}" bind:retry="onRetry" />
   </view>
   <cy-empty fill class="txjl-state" wx:if="{{nodata && !loadErr && !loading}}" size="lg" kind="empty" title="还没有发起提现" />
 </view>

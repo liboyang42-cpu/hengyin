@@ -137,14 +137,7 @@ test('C04 coupon: 空态有出路，导航文字动作与弹层 token 化', () =
   assert.doesNotMatch(rule(wxss, '.david_tkb_li_con_top'), /border-(?:top|bottom)\s*:/)
 })
 
-test('C04 couponInfo: 按钮恢复组件 88rpx，底栏与内容对齐 token 化', () => {
-  const wxml = read('subpackageMember/couponInfo/couponInfo.wxml')
-  const wxss = read('subpackageMember/couponInfo/couponInfo.wxss')
-  assert.doesNotMatch(wxml, /--cy-btn-h:\s*80rpx/)
-  assert.match(rule(wxss, '.fabu'), /padding-bottom:\s*calc\(var\(--cy-comp-footer-h\) \+ var\(--cy-space-4\)\)/)
-  assert.match(rule(wxss, '.fabu.theme-topic-editor .wp'), /padding:\s*0\s+var\(--cy-page-x\)\s+0/) // aaa v2:标题下间距由 cy-page-title space-5 独家供给
-  assert.match(rule(wxss, '.fabu .form .li .item-tit text'), /margin-left:\s*var\(--cy-legacy-4\)/)
-})
+// PG-040:couponInfo 建券页下线。
 
 test('C04 complaint: 使用统一导航并区分 loading、error、empty 三态', () => {
   const json = read('subpackageMember/complaint/index.json')

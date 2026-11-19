@@ -35,6 +35,7 @@ class ApiClubCompensationControllerTest {
     private IClubEditionCompensationService compensationService;
     private IClubService clubService;
     private IClubMemberService clubMemberService;
+    private com.chengyinhub.business.access.club.IClubAccessService access;
     private ApiClubCompensationController controller;
     private Long loggedInMember;
 
@@ -44,7 +45,11 @@ class ApiClubCompensationControllerTest {
         clubService = mock(IClubService.class);
         clubMemberService = mock(IClubMemberService.class);
         loggedInMember = OWNER;
-        controller = new ApiClubCompensationController(compensationService, clubService, clubMemberService) {
+        access = mock(com.chengyinhub.business.access.club.IClubAccessService.class);
+        when(access.resolveReadOnly(OWNER, CLUB, null)).thenReturn(new com.chengyinhub.business.access.club.ClubAccessContext(
+                OWNER, CLUB, OWNER, null, java.util.Collections.singleton(
+                        com.chengyinhub.business.access.club.ClubRoleCode.CLUB_OWNER)));
+        controller = new ApiClubCompensationController(compensationService, clubService, clubMemberService, access) {
             @Override
             public Long getAppUserId() {
                 if (loggedInMember == null) throw new IllegalStateException("未登录");
@@ -133,6 +138,10 @@ class ApiClubCompensationControllerTest {
         ClubMember admin = new ClubMember();
         admin.setRole(1);
         when(clubMemberService.selectByClubAndMember(CLUB, OUTSIDER)).thenReturn(admin);
+        when(access.resolveReadOnly(OUTSIDER, CLUB, null)).thenReturn(new com.chengyinhub.business.access.club.ClubAccessContext(
+                OUTSIDER, CLUB, OWNER, null, new java.util.LinkedHashSet<>(java.util.Arrays.asList(
+                        com.chengyinhub.business.access.club.ClubRoleCode.CLUB_MEMBER,
+                        com.chengyinhub.business.access.club.ClubRoleCode.CLUB_LEGACY_ADMIN))));
         when(compensationService.editionsEmptyReason(CLUB))
                 .thenReturn(IClubEditionCompensationService.EDITIONS_REASON_NOT_UNDERTAKEN);
 
@@ -140,6 +149,21 @@ class ApiClubCompensationControllerTest {
 
         assertEquals(IClubEditionCompensationService.EDITIONS_REASON_NOT_UNDERTAKEN,
                 ((Map<?, ?>) result.get(AjaxResult.DATA_TAG)).get("reasonCode"));
+    }
+
+    /** MC-030:访问上下文拒绝(账号停用 / 已退出等)或只有委派岗位时,一律不算归属;不比原口径更宽。 */
+    @Test
+    void accessContextDenialOrDelegatedRoleIsNotEnough() {
+        when(access.resolveReadOnly(OWNER, CLUB, null)).thenThrow(new com.chengyinhub.common.exception.ServiceException("禁止", 403));
+        assertEquals(500, controller.editions(clubBody(CLUB)).get(AjaxResult.CODE_TAG));
+
+        loggedInMember = OUTSIDER;
+        when(access.resolveReadOnly(OUTSIDER, CLUB, null)).thenReturn(new com.chengyinhub.business.access.club.ClubAccessContext(
+                OUTSIDER, CLUB, OWNER, null, new java.util.LinkedHashSet<>(java.util.Arrays.asList(
+                        com.chengyinhub.business.access.club.ClubRoleCode.CLUB_MEMBER,
+                        com.chengyinhub.business.access.club.ClubRoleCode.CLUB_CO_OWNER))));
+        assertEquals(500, controller.editions(clubBody(CLUB)).get(AjaxResult.CODE_TAG));
+        verifyNoInteractions(compensationService);
     }
 
     private static Map<String, Object> clubBody(long clubId) {

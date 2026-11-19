@@ -269,6 +269,8 @@ swiper{ margin: 0 var(--cy-space-4) var(--cy-space-3) var(--cy-space-4); height:
 .location-btn__label{ color:var(--cy-color-text-primary); font-size:var(--cy-type-caption); }
 
 .date-picker-view { height: 560rpx; }
+/* PG-044:滚轮指示条走 token,随玩家深色 / 商家浅色切换 */
+.date-picker-ind { height: 88rpx; border-top: 1rpx solid var(--cy-color-border-strong); border-bottom: 1rpx solid var(--cy-color-border-strong); }
 .date-picker-item {
   height: 88rpx;
   display: flex;

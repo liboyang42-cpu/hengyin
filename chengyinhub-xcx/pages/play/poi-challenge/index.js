@@ -10,6 +10,7 @@ const geo = require('../../../utils/geo.js');
 const loading = require('../../../utils/loading.js');
 
 const placeMap = require('../../../utils/roam-place-map.js');
+const { safeDecode } = require('../../../utils/safe-decode.js');
 
 const KEYS = ['A', 'B', 'C', 'D'];
 /* 服务端在写入前拒绝的那几句(与据点详情 PREWRITE_REJECTIONS 同源):这些回来就是「这次没过」,可以再答 */
@@ -33,7 +34,7 @@ Page({
 
   onLoad(q) {
     this._poiId = positiveId(q && q.poiId);
-    this._photoUrl = (q && q.photo) ? decodeURIComponent(q.photo) : ''; // 地图上取景卡拍的那张,已上传
+    this._photoUrl = (q && q.photo) ? safeDecode(q.photo) : ''; // 地图上取景卡拍的那张,已上传
     let backTop = 48;
     try {
       const menu = wx.getMenuButtonBoundingClientRect && wx.getMenuButtonBoundingClientRect();

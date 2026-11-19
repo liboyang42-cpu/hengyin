@@ -24,3 +24,4 @@
 
 /* 细节打磨二期 L1/L5/L7 */
 .b3__back { transition: var(--cy-tr-press); }
+.b3__missing { flex: 1; display: flex; flex-direction: column; }

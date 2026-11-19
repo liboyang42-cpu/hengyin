@@ -4,7 +4,7 @@
   <cy-modal-host id="cy-modal-host" />
   <cy-nav-bar plain />
   <cy-page-title title="导出探索记录" />
-  <view class="tu-msg tu-msg--err tu-msg--row" wx:if="{{error}}" aria-role="alert"><text>{{error}}</text><view class="tu-retry" wx:if="{{prepared}}" bindtap="readNext" aria-role="button" aria-label="重试" hover-class="cy-pressed" hover-stay-time="80">重试</view><view class="tu-retry" wx:else bindtap="prepare" aria-role="button" aria-label="重试" hover-class="cy-pressed" hover-stay-time="80">重试</view></view>
+  <view class="tu-msg tu-msg--err tu-msg--row" wx:if="{{error}}" aria-role="alert"><text>{{error}}</text><view class="tu-retry" wx:if="{{!guest && prepared}}" bindtap="readNext" aria-role="button" aria-label="重试" hover-class="cy-pressed" hover-stay-time="80">重试</view><view class="tu-retry" wx:elif="{{!guest}}" bindtap="prepare" aria-role="button" aria-label="重试" hover-class="cy-pressed" hover-stay-time="80">重试</view></view>
   <view class="tu-btns" wx:if="{{pending}}"><view class="tu-btn tu-btn--w" bindtap="retryOriginal" aria-role="button" aria-label="以原操作重试" hover-class="cy-pressed" hover-stay-time="80">以原操作重试</view></view>
 
   <block wx:if="{{!prepared}}">
@@ -30,8 +30,8 @@
     <!-- 0 条:不给一个空文件去分享/保存,直接说这个范围没有记录 -->
     <view class="tu-note" wx:if="{{fileReady && !expected}}"><text>这个范围内没有记录</text></view>
     <view class="tu-card ex-file" wx:if="{{fileReady && expected}}">
-      <view class="ex-file__ic">JSONL</view>
-      <view class="tu-row__body"><text class="tu-row__t">{{fileName}}</text><text class="tu-row__s">{{expected || 0}} 条</text></view>
+      <view class="ex-file__ic">探索记录</view>
+      <view class="tu-row__body"><text class="tu-row__t">探索记录 · {{ranges[rangeIndex].label}}</text><text class="tu-row__s">{{expected || 0}} 条</text></view>
     </view>
     <view class="tu-btns">
       <block wx:if="{{fileReady && expected}}">

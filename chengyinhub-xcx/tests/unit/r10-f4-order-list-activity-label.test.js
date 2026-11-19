@@ -19,7 +19,8 @@ function activityBlock() {
 test('普通活动(productType 为空)不再标成城市定向', () => {
   const block = activityBlock()
   assert.match(block, /wx:elif="\{\{item\.cmsActivity\.productType == 1\}\}">\s*<text class="order-mode-tag">城市定向<\/text>/)
-  assert.match(block, /wx:else>\s*<text class="order-mode-tag">活动<\/text>/)
+  // OR-045:主题与活动无类别时统一都不标(活动不再兜底标「活动」)
+  assert.doesNotMatch(block, /<text class="order-mode-tag">活动<\/text>/)
   assert.doesNotMatch(block, /wx:else>\s*<text class="order-mode-tag">城市定向<\/text>/)
 })
 

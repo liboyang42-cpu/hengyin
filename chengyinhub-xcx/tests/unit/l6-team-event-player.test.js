@@ -23,7 +23,7 @@ function load(rel, app, wxExtra = {}, stubs = {}) {
 
 test('本场招募:带场次进来读 lobby,不要定位;满员不列出;已在队里的进入队伍,其余申请走原请求协议', () => {
   const requests = [];
-  const app = { globalData: {}, getUserID: () => '7', getAuthorization: () => 't', sendRequest: r => requests.push(r) };
+  const app = { globalData: {}, getUserID: () => '7', getAuthorization: () => 't', sendRequest: r => requests.push(r), ensureLoginFor: () => true };
   const h = load('subpackageRoam/my-teams/index.js', app, { getLocation() { throw new Error('lobby must not ask for location'); } });
   h.page.onLoad({ tab: 'open', ownerType: '2', ownerId: '31', scope: encodeURIComponent('城南旧事 · 10月25日 19:30 场') });
   assert.deepEqual(clone(h.page.data.lobby), { ownerType: 2, ownerId: '31', scope: '城南旧事 · 10月25日 19:30 场' });

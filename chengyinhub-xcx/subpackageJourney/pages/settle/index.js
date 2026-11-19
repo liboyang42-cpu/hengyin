@@ -47,7 +47,7 @@ Page({
     };
     this.setData({ topicName: o.topicName ? decodeURIComponent(o.topicName) : '', navTop: navTopPx(), reduced: !!readReducedMotion() });
     if (!this._query.activityId && !this._query.topicId) {
-      this.setData({ state: 'missing', stateKind: 'missing-param', stateTitle: '链接已失效' });
+      this.setData({ state: 'missing', stateKind: 'missing-param', stateTitle: '链接已失效', stateCta: '返回' });
       return;
     }
     this.reload();
@@ -108,6 +108,7 @@ Page({
   },
 
   onStateCta() {
+    if (this.data.state === 'missing') { this._leave(); return; }
     if (this.data.state === 'auth') { app.requireLogin({ reason: '登录后查看结算' }).then(ok => { if (ok) this.reload(); }); return; }
     this.reload();
   },

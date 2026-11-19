@@ -22,6 +22,15 @@ public class MerchantChapterOffer extends BaseEntity {
     private Long replacementOfOfferId;
     /** ⚠️ 商家memberId,不是 mms_merchant.id —— 库里「商家」一词被三个东西共用,语义超载曾致一次资损 */
     private Long merchantId;
+
+    /** F10:供给方类型 MERCHANT(商家承接) | AUTHOR(作者自己承接)。AUTHOR 行的 merchantId = 作者 member_id。 */
+    public static final String SUPPLIER_MERCHANT = "MERCHANT";
+    public static final String SUPPLIER_AUTHOR = "AUTHOR";
+
+    private String supplierKind;
+
+    /** F10:AUTHOR 行 = 作者 member_id;MERCHANT 行为 null。 */
+    private Long supplierMemberId;
     /** 引用 coop_perk.id(申报层)。⚠️ 仅 PERK 档非空 —— TRAFFIC/REVSHARE 没有权益可引用 */
     private Long perkId;
     /**
@@ -207,6 +216,13 @@ public class MerchantChapterOffer extends BaseEntity {
     public Integer getMerchantRevshareCount() { return merchantRevshareCount; }
     public void setMerchantRevshareCount(Integer merchantRevshareCount) { this.merchantRevshareCount = merchantRevshareCount; }
 
+    public String getSupplierKind() { return supplierKind; }
+    public void setSupplierKind(String supplierKind) { this.supplierKind = supplierKind; }
+    public Long getSupplierMemberId() { return supplierMemberId; }
+    public void setSupplierMemberId(Long supplierMemberId) { this.supplierMemberId = supplierMemberId; }
+
+    /** AUTHOR 行(作者自己承接)。存量与商家行 supplier_kind=MERCHANT/null。 */
+    public boolean isAuthorSupplied() { return SUPPLIER_AUTHOR.equals(supplierKind); }
     /** F12:是否接受亲子票(1 大 1 小同享一份权益),0/1。 */
     private Integer familyAccepted;
     /** F12:儿童份说明,如「儿童份小杯」。 */
@@ -216,4 +232,18 @@ public class MerchantChapterOffer extends BaseEntity {
     public void setFamilyAccepted(Integer familyAccepted) { this.familyAccepted = familyAccepted; }
     public String getFamilyPerkText() { return familyPerkText; }
     public void setFamilyPerkText(String familyPerkText) { this.familyPerkText = familyPerkText; }
+
+    /** FE-G5:是否含在票内 1含 0不含(另付) null未声明。只做玩家可见展示。 */
+    private Integer included;
+    /** FE-G5:另付说明,如「饮品另付」。 */
+    private String extraSpendText;
+    /** FE-G5:是否需提前预约 1需要 0不需要。 */
+    private Integer reserveRequired;
+
+    public Integer getIncluded() { return included; }
+    public void setIncluded(Integer included) { this.included = included; }
+    public String getExtraSpendText() { return extraSpendText; }
+    public void setExtraSpendText(String extraSpendText) { this.extraSpendText = extraSpendText; }
+    public Integer getReserveRequired() { return reserveRequired; }
+    public void setReserveRequired(Integer reserveRequired) { this.reserveRequired = reserveRequired; }
 }

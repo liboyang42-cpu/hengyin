@@ -405,7 +405,7 @@ test('用这个模板：先过写前登录闸，只读岗位拦下，在途不�
   const ro = mountDetail({ id: '7', scope: 'MERCHANT', readonly: '1' });
   ro.page.useTemplate();
   assert.equal(ro.requests.length, 1);
-  assert.deepEqual(ro.toasts, ['当前岗位仅可浏览模板']);
+  assert.deepEqual(ro.toasts, ['当前身份不能编辑模板']);
 
   const m = mountDetail({ id: '7', scope: 'MERCHANT' });
   m.page.useTemplate();

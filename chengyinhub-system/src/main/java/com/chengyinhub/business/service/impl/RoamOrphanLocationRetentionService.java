@@ -51,7 +51,7 @@ public class RoamOrphanLocationRetentionService {
     // Anonymous aggregate row locks follow the same shop order in every cleanup transaction.
     if("shop".equals(kind) && (!java.util.Objects.equals(String.valueOf(candidate.get("sourceType")),String.valueOf(row.get("sourceType")))
       || !java.util.Objects.equals(String.valueOf(candidate.get("sourceId")),String.valueOf(row.get("sourceId")))))continue;
-    Date collectedAt=(Date)row.get("collectedAt");
+    Date collectedAt=com.chengyinhub.common.utils.DateUtils.asDate(row.get("collectedAt"));
     if(collectedAt==null) {
      if(session!=null && Integer.valueOf(0).equals(session.getStatus()))continue;
     } else if(collectedAt.after(cutoff) || session!=null)continue;

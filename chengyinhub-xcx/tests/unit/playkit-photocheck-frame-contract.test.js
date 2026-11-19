@@ -113,6 +113,7 @@ test('★没配 frameUrl 时点快门还是走 wx.chooseMedia，一条没变', (
   const wx = fakeWx()
   try {
     inst.onShoot()
+    inst.onShoot()   // CG-ALL-29:预览后点「提交这张」才抛 shoot
   } finally {
     wx.restore()
   }
@@ -141,6 +142,8 @@ test('★取景层按快门 → takePhoto → 抛给页面的仍是 tempFilePath
   const wx = fakeWx()
   try {
     inst.onFrameShutter()
+    assert.equal(inst.emitted, undefined, 'CG-ALL-29:拍完先预览,不上传')
+    inst.onShoot()
   } finally {
     wx.restore()
   }
@@ -156,6 +159,7 @@ test('★取景器起不来（相机被拒 / 设备不支持）：立刻回落 c
   const wx = fakeWx()
   try {
     inst.onFrameError()
+    inst.onShoot()
   } finally {
     wx.restore()
   }
@@ -186,6 +190,7 @@ test('★轮廓图自己加载失败：只藏掉那条线，取景与快门照�
   const wx = fakeWx()
   try {
     inst.onFrameShutter()
+    inst.onShoot()
   } finally {
     wx.restore()
   }

@@ -2,7 +2,6 @@
      数据:/api/team/my + /api/team/my-applications + /api/team/nearby;没有队伍的人也能直接看到附近在招募的队伍。 -->
 <wxs src="../../utils/wxs/num.wxs" module="num" />
 <view class="mt theme-dark {{reducedMotion ? 'cy-motion-reduced' : ''}}">
-  <cy-access-gate kind="login" />
   <cy-modal-host id="cy-modal-host" />
   <cy-toast id="cy-toast" />
   <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
@@ -16,7 +15,7 @@
   <cy-page-title title="我的队伍" />
   <include src="../utils/team-recovery-panel.wxml" />
   <!-- R11 p1 F-5:四格全是 0 时不摆一排 0,下面的空态已经说了「还没有队伍」 -->
-  <view class="mt-stats cy-rise-in" wx:if="{{!(stats[0].v === 0 && stats[1].v === 0 && stats[2].v === 0 && stats[3].v === 0)}}">
+  <view class="mt-stats cy-rise-in" wx:if="{{!guest && !(stats[0].v === 0 && stats[1].v === 0 && stats[2].v === 0 && stats[3].v === 0)}}">
     <view class="mt-stat" wx:for="{{stats}}" wx:key="k"><text class="mt-stat__v">{{num.n(item.v)}}</text><text class="mt-stat__k">{{item.k}}</text></view>
   </view>
   <view class="mt-seg">
@@ -24,9 +23,13 @@
     <view class="mt-seg__i {{tab === 'open' ? 'is-on' : ''}}" data-tab="open" bindtap="switchTab" aria-role="tab" aria-selected="{{tab === 'open'}}" aria-label="{{lobby ? '本场招募' : '附近招募'}}" hover-class="cy-pressed" hover-stay-time="80">{{lobby ? '本场招募' : '附近招募'}}{{openRows.length ? ' · ' + openRows.length : ''}}</view>
   </view>
 
-  <block wx:if="{{tab === 'mine'}}">
+  <!-- PG-004:登录门只包「我的」;附近招募对游客放行,申请加入时再登录 -->
+  <block wx:if="{{tab === 'mine' && guest}}">
+    <cy-empty kind="no-permission" title="登录后查看" cta="登录" bind:cta="onLoginMine" />
+  </block>
+  <block wx:elif="{{tab === 'mine'}}">
     <cy-skeleton wx:if="{{loading && !groups.length}}" type="list" count="2" />
-    <view class="mt-err cy-fade-in" wx:elif="{{mineError}}" bindtap="reload" aria-role="button" aria-label="队伍获取失败，点按重试" hover-class="cy-pressed" hover-stay-time="80">队伍获取失败 · 点按重试</view>
+    <view class="mt-err cy-fade-in" wx:elif="{{mineError}}" bindtap="retryReload" aria-role="button" aria-label="队伍获取失败，点按重试" hover-class="cy-pressed" hover-stay-time="80">队伍获取失败 · 点按重试</view>
     <block wx:elif="{{groups.length}}">
       <block wx:for="{{groups}}" wx:for-item="g" wx:key="key">
         <view class="mt-sec">{{g.title}}</view>
@@ -53,7 +56,7 @@
   </block>
 
   <!-- 本场招募(原型 B T-31):带场次进来时读本场队伍,满员不列出 -->
-  <block wx:if="{{lobby && (tab === 'open' || (!loading && !groups.length && !mineError))}}">
+  <block wx:if="{{lobby && (tab === 'open' || (!guest && !loading && !groups.length && !mineError))}}">
     <view class="mt-sec" wx:if="{{lobby.scope}}">{{lobby.scope}}</view>
     <view class="mt-state" wx:if="{{openLoading}}">正在加载…</view>
     <view class="mt-err" wx:elif="{{openError}}" bindtap="loadOpen" aria-role="button" aria-label="加载失败，轻点重试" hover-class="cy-pressed" hover-stay-time="80">加载失败 · 轻点重试</view>
@@ -68,7 +71,7 @@
     </view>
     <view class="mt-state" wx:if="{{!openLoading && !openError && openLoaded && !openRows.length}}">本场暂无招募中的队伍</view>
   </block>
-  <block wx:elif="{{tab === 'open' || (!loading && !groups.length && !mineError)}}">
+  <block wx:elif="{{tab === 'open' || (!guest && !loading && !groups.length && !mineError)}}">
     <view class="mt-sec" wx:if="{{tab === 'mine'}}">附近在招募</view>
     <view class="mt-state" wx:if="{{openLoading}}">正在找附近的队伍…</view>
     <view class="mt-err" wx:elif="{{openError}}" bindtap="loadOpen" aria-role="button" aria-label="{{openError}}，点按重试" hover-class="cy-pressed" hover-stay-time="80">{{openError}} · 点按重试</view>

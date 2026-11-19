@@ -117,4 +117,7 @@
   text-align: center;
   word-break: break-all;
 }
-.hm__q, .hm__board, .hm__in, .hm__err, .hm__fb, .hm__pass { flex-shrink: 0; }
+.hm__how { display: flex; flex-direction: column; align-items: center; gap: var(--cy-space-2); }
+.hm__how-link { min-height: 88rpx; display: flex; align-items: center; padding: 0 var(--cy-space-3); font-size: var(--cy-type-body); color: var(--cy-color-play-accent); text-decoration: underline; }
+.hm__how-body { max-width: 100%; padding: var(--cy-space-3) var(--cy-space-4); box-sizing: border-box; border-radius: var(--cy-radius-md); border: 1rpx solid var(--cy-color-border-subtle); font-size: var(--cy-type-body); line-height: 1.5; color: var(--cy-color-text-secondary); }
+.hm__q, .hm__how, .hm__board, .hm__in, .hm__err, .hm__fb, .hm__pass { flex-shrink: 0; }

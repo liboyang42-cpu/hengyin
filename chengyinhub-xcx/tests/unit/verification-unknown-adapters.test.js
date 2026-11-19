@@ -86,9 +86,9 @@ function harness(file, method, transport, request, sharedStorage, sourceOverride
 test('club lifecycle extraction keeps the real inline or block onHide without evaluating Page.data', () => {
   const file = 'pages/club/detail/index.js';
   const source = fs.readFileSync(path.resolve(__dirname, '../..', file), 'utf8');
-  const inline = '  onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; },';
+  const inline = "  onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; const pending = this._pendingRemoval; this._pendingRemoval = null; if (typeof pending === 'function') pending(); },";
   const multiline = source.replace(inline,
-    '  onHide() {\n    this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;\n  },');
+    "  onHide() {\n    this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;\n    const pending = this._pendingRemoval; this._pendingRemoval = null; if (typeof pending === 'function') pending();\n  },");
   assert.notEqual(multiline, source, 'real club lifecycle anchor must remain explicit');
   for (const original of [source, multiline]) {
     const h = harness(file, 'submitClubScan', false, undefined, undefined, original);

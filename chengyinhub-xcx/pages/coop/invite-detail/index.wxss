@@ -1,4 +1,6 @@
-/* 协作邀约详情(Figma 02d-1~5)。用俱乐部端的暗色阶,不挂 theme-merchant。 */
+@import '../../../style/merchant-light.wxss';
+/* 协作邀约详情(Figma 02d-1~5)。根节点挂 theme-merchant,与 coop 域其它页同为商家浅色(PG-058 更正原注释)。 */
+page { background: var(--cy-bg-page); } /* PG-053:页面底与卡片同一底色,滚动越界不露异色 */
 .coop-detail {
   min-height: 100vh;
   box-sizing: border-box;

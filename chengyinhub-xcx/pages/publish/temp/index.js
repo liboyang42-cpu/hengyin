@@ -42,6 +42,7 @@ const { resolveCategoryIcon } = require('../../../utils/category-icon.js');
 const { loadStoryFont } = require('../utils/publish/story-font.js'); const { storyFontUrl: STORY_FONT_URL } = require('../../../utils/config.js');
 const { splitRuleSteps } = require('../../../utils/rule-steps.js');
 const { rejectionNamesCover } = require('../utils/publish/cover-rejection.js');
+const { safeDecode } = require('../../../utils/safe-decode.js');
 
 /* 发布全量校验的报错顺序 —— validateForm 与「查看预览」置灰点击必须读同一份。
    2026-09-19 审查 F-PU-1:这里曾各自维护一份,发布那份漏了 interactionType,
@@ -56,9 +57,6 @@ function durationWithUnit(value) {
   return formatDurationMinutes(raw);
 }
 
-function safeDecode(value) {
-  try { return decodeURIComponent(String(value || '')); } catch (error) { return String(value || ''); }
-}
 
 function editorMemberId() {
   return String((typeof app.getUserID === 'function' ? app.getUserID() : (app.globalData || {}).user_id) || '');
@@ -3321,7 +3319,7 @@ Page({
     const original = this._pendingTemplateWrite();
     if (original) return this.sendData(original.body, original.endpoint, original.action);
     if (this.data.from === 'citynode' && !this.data.merchantAccess.canManageProjects) {
-      toast('当前岗位没有节点管理权限');
+      toast('当前身份不能管理节点');
       return;
     }
     const formData = this.prepareFormData();
@@ -3436,7 +3434,7 @@ Page({
     const that = this;
     if (url === '/api/merchant/city-node/template/submit'
         && !that.data.merchantAccess.canManageProjects) {
-      toast('当前岗位没有节点管理权限');
+      toast('当前身份不能管理节点');
       return;
     }
     if (that._submitting) return;

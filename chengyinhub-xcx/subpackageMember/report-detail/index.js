@@ -12,8 +12,8 @@ const view = require('../report-common/view.js')
 
 Page({
   data: {
-    statusBarHeight: app.globalData.statusBarHeight,
-    navBarHeight: app.globalData.navBarHeight,
+    statusBarHeight: app.globalData.statusBarHeight || 20, // PG-056:全局值缺失时兜底,不让顶距算成 NaN
+    navBarHeight: app.globalData.navBarHeight || 44,
     state: 'loading', // loading | ready | error | no-permission | missing-param
     errorSub: '',
     report: null,

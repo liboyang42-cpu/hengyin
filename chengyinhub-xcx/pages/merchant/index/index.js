@@ -91,8 +91,10 @@ Page({
     merchantAccess: inactiveAccess(),
     // 身份/加载没能确认时的页内错误(cy-inline-error 承接),不再是整屏身份闸。
     consoleError: '', consoleLogin: false,
+    // 已确认没有商家身份(access/me inactive 且无入驻申请):原地「当前身份不能查看经营台」+ 申请入驻,不再静默 switchTab 回我的。
+    consoleDenied: false,
     // 入驻申请审核中/未通过/停用时的页内状态卡(来源 /api/merchant/info + decorateApplication)。
-    // 无商家身份的普通玩家仍走静默 switchTab,不在这里渲染。
+    // 无商家身份的普通玩家落 consoleDenied 原地无权限态。
     consoleStatus: null,
     // 参与项目真实总数(卡片只铺前几条,空态文案不能拿截断列表报数)
     joinTotal: 0,
@@ -778,7 +780,7 @@ Page({
       this.closeScene();
       // owner 2026-10-24(app.js:142-144):游客不在打开页面时静默建号(j6 F1)。落「登录后查看」,
       // 点「登录」才走 retryLogin;冷启动还在恢复缓存会话时,恢复完自动重进。
-      this.setData({ consoleError: '', consoleStatus: null, merchantAccess: inactiveAccess(), consoleLogin: true });
+      this.setData({ consoleError: '', consoleStatus: null, merchantAccess: inactiveAccess(), consoleLogin: true, consoleDenied: false });
       waitForInitialSession(this, app, this.enterConsole);
       return;
     }
@@ -792,7 +794,7 @@ Page({
       this.setData({ consoleError: '' });
     } else {
       this._accessMemberId = '';
-      this.setData({ consoleError: '', consoleStatus: null, merchantAccess: inactiveAccess() });
+      this.setData({ consoleError: '', consoleStatus: null, merchantAccess: inactiveAccess(), consoleDenied: false });
     }
     this.loadConsoleAccess(dataEpoch, version, identityMemberId, authRetryUsed === true);
   },
@@ -858,7 +860,7 @@ Page({
           this._merchantScopeKey = '';
           this._accessMemberId = identityMemberId;
           const keepStatus = !!(this.data.consoleStatus && access.applicationState && access.applicationState !== 'NONE');
-          this.setData({ consoleError: '', consoleStatus: keepStatus ? this.data.consoleStatus : null, merchantAccess: access });
+          this.setData({ consoleError: '', consoleStatus: keepStatus ? this.data.consoleStatus : null, merchantAccess: access, consoleDenied: false });
           // 入驻申请审核中/未通过/停用:页内显示当前状态 + 查看申请进度,不把人静默丢回会员中心
           // (2026-09-17 拍板 #24)。access/me 只给状态枚举、不给驳回/停用原因,所以原因另行回读
           // /api/merchant/info —— 与入驻申请页同一真源、同一投影(decorateApplication)。
@@ -866,8 +868,8 @@ Page({
             this.loadApplicationStatus(dataEpoch);
             return;
           }
-          // 玩家/无商家身份账号本来进不到商家页;深链误入就静默回会员中心,不摆整屏闸。
-          wx.switchTab({ url: '/pages/member/index/index' });
+          // 玩家/无商家身份账号深链误入:原地说明「当前身份不能查看经营台」+ 申请入驻,不再静默退回我的。
+          this.setData({ consoleDenied: true });
           return;
         }
         this.syncMerchantScope(access);
@@ -878,7 +880,7 @@ Page({
           if (access.merchant[key] !== '' && access.merchant[key] != null) accessMerchant[key] = access.merchant[key];
         });
         const merchantInfo = Object.assign({}, this.data.merchantInfo, accessMerchant);
-        this.setData({ consoleError: '', consoleStatus: null, merchantAccess: access, merchantInfo });
+        this.setData({ consoleError: '', consoleStatus: null, merchantAccess: access, merchantInfo, consoleDenied: false });
         this.refreshProfileHeader(merchantInfo, this._userInfo);
         this.loadMerchantConsole(access, dataEpoch);
       },
@@ -912,8 +914,8 @@ Page({
           return;
         }
         if (resolved && resolved.kind === 'none') {
-          // 身份链路刚说在审核、回读却说没有申请行:不摆状态,按「没有商家身份」的原行为走。
-          wx.switchTab({ url: '/pages/member/index/index' });
+          // 身份链路刚说在审核、回读却说没有申请行:不摆状态,按「没有商家身份」落原地无权限态。
+          that.setData({ consoleError: '', consoleStatus: null, consoleDenied: true });
           return;
         }
         that.setData({ consoleError: app.getRequestErrorMessage(res, '入驻申请状态没能确认') });
@@ -1437,7 +1439,7 @@ Page({
     // 那段窗口:宁可显示「章节 101」也不能给个空面板 —— 空面板商家会以为卡死。
     const items = (Array.isArray(d.chapters) && d.chapters.length)
       ? d.chapters
-      : (Array.isArray(d.chapterIds) ? d.chapterIds : []).map(function (id) { return { id: id, name: '章节 ' + id }; });
+      : (Array.isArray(d.chapterIds) ? d.chapterIds : []).map(function (id) { return { id: id, name: '章节' }; });
     if (!items.length) {
       cyToast('没有可核销的章节');
       return;

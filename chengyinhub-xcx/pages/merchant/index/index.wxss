@@ -752,3 +752,6 @@ page {
 .rv-more-item { transition: var(--cy-tr-press); }
 .chpick__item { transition: var(--cy-tr-press); }
 .rv-revenue-amount { font-variant-numeric: tabular-nums; }
+
+/* 无权限态:让出导航高度后撑满剩余高度,与 cy-empty fill 居中一致 */
+.rv-denied { height: 100vh; box-sizing: border-box; display: flex; flex-direction: column; }

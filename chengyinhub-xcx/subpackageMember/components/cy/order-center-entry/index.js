@@ -73,7 +73,7 @@ Component({
       if (!this._initialized || this._unloaded || this._hidden) return;
       this._clearEntry();
       if (typeof this._outTradeNo !== 'string' || !/^[0-9A-Za-z_|*\-]{6,32}$/.test(this._outTradeNo)) {
-        this._entryError('missing-param', '订单链接无效', '返回');
+        this._entryError('missing-param', '链接已失效', '返回');
         return;
       }
       if (!this._entryReady || app.isAppReady === false) {
@@ -108,9 +108,9 @@ Component({
         const status = failureStatus(res, statusCode);
         if (res && res.reason === 'sessionChanged') { this.reloadEntry(); return; }
         if (status === 401 || status === 2) this._entryError('no-permission', '登录后查看订单', '登录');
-        else if (status === 403) this._entryError('forbidden', '当前账号无权查看此订单', '返回');
+        else if (status === 403) this._entryError('forbidden', '当前身份不能查看此订单', '返回');
         else if (status === 404) this._entryError('not-found', '未找到订单', '重试');
-        else if (status === 400) this._entryError('missing-param', '订单链接无效', '返回');
+        else if (status === 400) this._entryError('missing-param', '链接已失效', '返回');
         else this._entryError('network', '订单暂未加载成功', '重试');
       };
       app.sendRequest({

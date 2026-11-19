@@ -83,4 +83,15 @@ public final class TopicEditWindow {
         }
         return Scope.WHITELIST;
     }
+
+    /**
+     * F10(FE-G13/14):自由探索主题在「待定价」(lifecycle 2)时,作者本人回到编辑器票价区填价。
+     * WHITELIST 档额外只放行 {@code tickets[].price} 这一个字段(票种、数量等其余票字段仍冻结);
+     * 价格本身由 {@code TopicAuthorSaleService.publishForSale} 在发布事务里写入,不经编辑保存落库。
+     */
+    public static boolean allowsFreeExplorePriceFill(CmsTopic topic, Long memberId) {
+        return topic != null && memberId != null && memberId.equals(topic.getMemberId())
+                && Integer.valueOf(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE).equals(topic.getProductType())
+                && Integer.valueOf(TopicLifecycleState.PRICING.getCode()).equals(topic.getLifecycle());
+    }
 }

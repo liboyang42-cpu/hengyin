@@ -10,6 +10,15 @@ const SEG = 96;        // 圆周段数(铣齿边要够密)
 const R = 1.0;         // 半径
 const D = 0.09;        // 半厚
 const TEX = 512;       // 贴图边长
+// U8(2026-11-19):首帧正面朝向相机(uRot=0 ⇒ 正面圆盘法线 +z 正对相机)。
+// 原先 _rot 起点 -0.5 且贴图加载期间(画布 opacity:0)就开始自转,贴图 ready 那一刻的角度
+// 取决于加载耗时 —— 约 2.3s 时正好转到 π/2,首个可见帧是一条侧边。现在:起点 0,贴图到之前不转。
+const INITIAL_ROT = 0;
+const SPIN_RATE = 0.9; // rad/s,~7s/圈,对齐参考视频慢速
+function advanceRot(rot, dtMs, s) {
+  if (!s || s.dragging || s.reduced || !s.faceReady) return rot;
+  return rot + (dtMs / 1000) * SPIN_RATE;
+}
 
 const VS = [
   'attribute vec3 aP; attribute vec3 aN; attribute vec2 aUV;',
@@ -213,6 +222,7 @@ Component({
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        that._faceReady = true;   // 自转从这一刻(正面)起步
         that.triggerEvent('loaded');
       };
       img.onerror = () => {
@@ -223,13 +233,14 @@ Component({
       gl.enable(gl.DEPTH_TEST);
       gl.clearColor(0.039, 0.039, 0.043, 1);
 
-      this._rot = -0.5;
+      this._rot = INITIAL_ROT;
+      this._faceReady = false;
       this._dragging = false;
       let last = 0;
       const frame = (ts) => {
         if (!alive()) return;
         const dt = last ? Math.min(50, ts - last) : 16; last = ts;
-        if (!that._dragging && !that.data.reduced) that._rot += (dt / 1000) * 0.9;  // ~14s/圈,对齐参考视频慢速
+        that._rot = advanceRot(that._rot, dt, { dragging: that._dragging, reduced: that.data.reduced, faceReady: that._faceReady });
         gl.viewport(0, 0, canvas.width, canvas.height);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         gl.uniform1f(uRot, that._rot);
@@ -256,3 +267,6 @@ Component({
     onTouchEnd() { this._dragging = false; },
   },
 });
+
+// 单测直读(tests 里也有在无 module 的 vm 沙箱跑本文件的,故判一下)
+if (typeof module !== 'undefined' && module.exports) module.exports = { INITIAL_ROT, SPIN_RATE, advanceRot };

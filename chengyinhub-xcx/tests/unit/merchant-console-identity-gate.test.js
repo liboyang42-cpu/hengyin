@@ -259,7 +259,8 @@ test('重新加载会清掉页内错误并重走身份链路', () => {
   assert.ok(requested('/api/merchant/access/me').length, '重试必须真的再发一次请求')
 })
 
-test('无商家身份静默 switchTab 回会员中心,不摆整屏闸', () => {
+// UI-sweep 1119 U3:无商家身份不再静默 switchTab 回「我的」,原地「当前身份不能查看经营台」+ 申请入驻。
+test('无商家身份留在页内显示无权限态,不 switchTab', () => {
   userId = 9
   requests = []
   switched = []
@@ -270,7 +271,8 @@ test('无商家身份静默 switchTab 回会员中心,不摆整屏闸', () => {
     data: { active: false, merchant: null, roleCode: '', applicationState: 'NONE', permissions: [] },
   })
 
-  assert.deepEqual(switched, ['/pages/member/index/index'], 'NONE 必须静默回会员中心')
+  assert.deepEqual(switched, [], 'NONE 不再静默回会员中心')
+  assert.equal(page.data.consoleDenied, true, 'NONE 落原地无权限态')
   assert.equal(page.data.consoleError, '')
   assert.equal(requests.length, 1, 'NONE 不得加载任何经营接口')
 })
@@ -321,7 +323,7 @@ test('状态卡在 wxml 里真的渲染了状态与「查看申请进度」入�
   assert.match(wxml, /statusText/, '原因必须来自状态投影,不能只写一个枚举名')
 })
 
-test('负控:拿掉申请状态分支后,停用商家会被静默踢回会员中心必须判红', () => {
+test('负控:拿掉申请状态分支后,停用商家会被当成无身份落无权限态必须判红', () => {
   const source = fs.readFileSync(PAGE_PATH, 'utf8')
   const anchor = "          if (access.applicationState && access.applicationState !== 'NONE') {"
   assert.ok(source.includes(anchor), '负控锚点失效')
@@ -343,8 +345,8 @@ test('负控:拿掉申请状态分支后,停用商家会被静默踢回会员中
         applicationState: 'DISABLED', permissions: [],
       },
     })
-    assert.deepEqual(switched, ['/pages/member/index/index'], '变异体必须回到旧的静默跳走')
-    assert.throws(() => assert.deepEqual(switched, []), assert.AssertionError)
+    assert.equal(page.data.consoleDenied, true, '变异体必须把停用商家当成无身份')
+    assert.throws(() => assert.equal(page.data.consoleDenied, false), assert.AssertionError)
   } finally {
     fs.unlinkSync(tmp)
   }
@@ -579,7 +581,7 @@ function assertNoConsoleGate(wxml) {
     '登录/身份失败必须落页内内联错误并可重试')
   assert.doesNotMatch(wxml, /wx:if="\{\{consoleError\}\}"[\s\S]{0,120}<cy-empty/, '错误态不得退回整屏空态')
   // 游客(只有游客)看到的是全站同款「登录后查看 · 登录」,点了才登录。
-  assert.match(wxml, /<cy-empty wx:if="\{\{consoleLogin\}\}"[^>]*title="登录后查看经营台" cta="登录" bind:cta="onConsoleLogin"/)
+  assert.match(wxml, /<view wx:if="\{\{consoleLogin\}\}" class="rv-denied" style="padding-top: \{\{statusBarHeight \+ navBarHeight\}\}px;">\s*<cy-empty kind="no-permission"[^>]*title="登录后查看经营台" cta="登录" bind:cta="onConsoleLogin"/)
 }
 
 test('wxml 不再有整屏身份闸,未登录的出路是页内错误 + 重试', () => {

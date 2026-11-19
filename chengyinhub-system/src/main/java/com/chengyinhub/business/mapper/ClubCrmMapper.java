@@ -17,9 +17,15 @@ public interface ClubCrmMapper {
     List<ClubCustomerVO.RawCustomer> selectClubCustomers(@Param("clubId") Long clubId,
                                                          @Param("filter") String filter,
                                                          @Param("keyword") String keyword,
+                                                         @Param("offset") Integer offset,
                                                          @Param("limit") Integer limit);
 
     int countClubCustomers(@Param("clubId") Long clubId);
+
+    /** MC-057:与 selectClubCustomers 同筛选条件的人数。 */
+    int countClubCustomersFiltered(@Param("clubId") Long clubId,
+                                   @Param("filter") String filter,
+                                   @Param("keyword") String keyword);
 
     /** 本月新增:首次在本俱乐部下单落在本月的人数。 */
     int countClubCustomersNewThisMonth(@Param("clubId") Long clubId);

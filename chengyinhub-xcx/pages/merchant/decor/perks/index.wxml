@@ -2,7 +2,7 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
-  <cy-access-gate id="cy-access-gate" kind="merchant" need="canManageCoop" />
+  <cy-access-gate id="cy-access-gate" kind="merchant" need="canManageCoop" back-url="/pages/merchant/decor/index" />
   <cy-nav-bar title="{{formVisible ? '添加常备权益' : '常备权益'}}" custom-back bind:back="onNavBack" />
   <view style="height: {{statusBarHeight + navBarHeight}}px; flex-shrink: 0;"></view>
   <!-- 危险动作三段式确认:文案来自 utils/danger-actions.js,页面只给 key -->
@@ -14,8 +14,9 @@
     fill
     wx:elif="{{loadState === 'permission'}}"
     kind="no-permission"
-    title="暂无编辑权限"
-    sub="请切换到已审核的商家账号"
+    title="当前身份不能编辑权益"
+    cta="返回"
+    bind:cta="onNavBack"
   />
   <cy-error load-failure
     class="dp-retry cy-fade-in"
@@ -153,9 +154,7 @@
           <cy-inline-error class="dp-field-err" wx:if="{{fieldErrors.retailValue}}" kind="field" title="{{fieldErrors.retailValue}}" />
         </view>
         <view class="dp-field">
-          <view class="dp-field-label" aria-label="成本价（可选，仅自己可见）">
-            成本价
-            <text class="dp-field-optional">· 仅自己可见</text></view>
+          <view class="dp-field-label" aria-label="成本价（可选）">成本价</view>
           <input
             class="dp-input"
             type="digit"

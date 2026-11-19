@@ -71,7 +71,8 @@ class CityStationOrderAcceptanceTest {
         NodeAccessPolicy policy = new NodeAccessPolicy();
         CmsTopicNode gated = node(4L, 0L);
         gated.setUnlockAfterNodeId(3L);
-        List<CmsTopicNode> nodes = Arrays.asList(first, second, third, gated);
+        // topicNodes 按游玩顺序传入:sort 0 的 gated 排第一,顺序闸放行,只剩前置关卡闸。
+        List<CmsTopicNode> nodes = Arrays.asList(gated, first, second, third);
 
         NodeAccessPolicy.Decision d = policy.evaluate("LINEAR", gated, nodes, new HashSet<>(List.of(1L, 2L)), null);
         assertFalse(d.isAllowed());

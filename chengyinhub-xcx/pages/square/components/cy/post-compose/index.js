@@ -579,7 +579,7 @@ Component({
       // Club creation keeps its separate authorization; community writes keep the original square gate.
       if ((!that.data.clubId || that.data.editMode)
           && (typeof app.canUseCommunity !== 'function' || !app.canUseCommunity(true))) {
-        cyToast('当前账号未开放广场发布');
+        cyToast('当前身份不能发布到广场');
         return;
       }
       const content = String(that.data.content || '').trim();

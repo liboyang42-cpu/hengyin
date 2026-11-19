@@ -52,9 +52,9 @@ test('专业发布编辑器以真实图标表达箭头、关闭、勾选、删�
   ])
 })
 
-test('简单发布与官方活动入口使用真实图标并注册统一图标组件', () => {
+test('官方活动入口使用真实图标并注册统一图标组件', () => {
   const pages = [
-    'pages/publish/simple/index',
+    // PG-021:publish/simple 整页删除
     'pages/activity/list/index',
   ]
   assertNoTextPseudoIcons(pages.map((base) => `${base}.wxml`))
@@ -70,7 +70,6 @@ test('简单发布与官方活动入口使用真实图标并注册统一图标�
 test('本批次新增与替换的可点图标具备可读名称和 88rpx 命中区', () => {
   const fabuWxml = visibleSource(read('pages/publish/fabu/index.wxml'))
   const topicWxml = visibleSource(read('pages/publish/fabu/topic-detail-sheet.wxml'))
-  const simpleWxml = visibleSource(read('pages/publish/simple/index.wxml'))
   const activityWxml = visibleSource(read('pages/activity/list/index.wxml'))
 
   for (const marker of [
@@ -80,8 +79,6 @@ test('本批次新增与替换的可点图标具备可读名称和 88rpx 命中�
     /class="sp-x"[\s\S]{0,120}aria-role="button"[\s\S]{0,120}aria-label=/,
   ]) assert.match(fabuWxml, marker, `专业编辑器缺少可点图标语义：${marker}`)
   assert.match(topicWxml, /class="pd-gdel"[\s\S]{0,180}aria-role="button"[\s\S]{0,120}aria-label=/)
-  assert.match(simpleWxml, /class="simple-ai__chip"[\s\S]{0,220}aria-role="button"[\s\S]{0,120}aria-label=/)
-  assert.match(simpleWxml, /class="simple-ai__send[^\"]*"[\s\S]{0,220}aria-role="button"[\s\S]{0,120}aria-label=/)
   assert.match(activityWxml, /class="oe-inbox-link"[\s\S]{0,180}aria-role="button"[\s\S]{0,120}aria-label=/)
   // 2026-09-03:.op-chk 是「发起官方活动」面板里的通知对象复选,面板整块删了 ——
   //   这条断言的锚点不存在了,留着会因为 match 找不到而恒红。同页仍在的可点图标
@@ -98,14 +95,6 @@ test('本批次新增与替换的可点图标具备可读名称和 88rpx 命中�
     assertRpxAtLeast(cssRule(fabuCss, selector), 'min-height', 88, selector)
   }
 
-  const simpleCss = 'pages/publish/simple/index.wxss'
-  for (const selector of ['.simple-ai__chip', '.simple-ai__poi']) {
-    assertRpxAtLeast(cssRule(simpleCss, selector), 'min-height', 88, selector)
-  }
-  const sendRule = cssRule(simpleCss, '.simple-ai__send')
-  assertRpxAtLeast(sendRule, 'min-width', 88, '.simple-ai__send')
-  assertRpxAtLeast(sendRule, 'height', 88, '.simple-ai__send')
-
   const activityCss = 'pages/activity/list/index.wxss'
   const inboxRule = cssRule(activityCss, '.oe-inbox-link')
   assertRpxAtLeast(inboxRule, 'min-width', 88, '.oe-inbox-link')
@@ -114,9 +103,10 @@ test('本批次新增与替换的可点图标具备可读名称和 88rpx 命中�
 })
 
 test('负控：把真实箭头退回文字 chevron 时图标契约必须判红', () => {
-  const source = read('pages/publish/simple/index.wxml')
+  // PG-021:原锚点 publish/simple 已删除,改用最小合成片段
+  const source = '<view class="row"><cy-icon name="arrow-right" size="28" /></view>'
   const mutated = source.replace('<cy-icon name="arrow-right" size="28" />', '<text>›</text>')
-  assert.notEqual(mutated, source, '变异锚点失效，未能替换简单发布页真实箭头')
+  assert.notEqual(mutated, source, '变异锚点失效，未能替换真实箭头')
   assert.throws(
     () => assertSourceHasNoTextPseudoIcons(mutated, 'mutated simple editor'),
     /仍以文字字符充当/,

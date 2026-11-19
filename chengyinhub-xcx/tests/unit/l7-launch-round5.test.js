@@ -110,8 +110,9 @@ test('#1 club/apply 游客:登录引导(no-permission + 登录),登录后重查�
 
 // ---------- #2 游客进发现页帖文流 ----------
 
-test('2026-11-14 talent/list 游客公开帖文失败可重试，不触发登录', async () => {
-  for (const [userId, expectLogin] of [['', false], ['7', false]]) {
+// PG-001(2026-11-17 业主批准):游客且没有社区帖可读时落「登录后查看帖文」,重试走登录;已登录失败照旧重试不登录。
+test('2026-11-14 talent/list 已登录帖文失败可重试不触发登录;游客无社区帖时给登录', async () => {
+  for (const [userId, expectLogin] of [['', true], ['7', false]]) {
     let user = userId
     const loginCalls = []
     const m = mount('pages/talent/list/index.js', { app: {
@@ -129,7 +130,7 @@ test('2026-11-14 talent/list 游客公开帖文失败可重试，不触发登录
       assert.equal(m.host.data.feedLoginRequired, expectLogin)
       m.host.retryFeed()
       await flush()
-      assert.deepEqual(loginCalls, [], '公开读取重试不得登录')
+      assert.deepEqual(loginCalls, expectLogin ? ['first'] : [], '已登录重试不得登录')
       assert.equal(m.requests.filter(r => r.url === '/api/club/post/feed').length, 2)
     } finally { m.restore() }
   }
@@ -204,7 +205,7 @@ test('#4 JS 兜底不再回显原始代码:官方收件箱角色/状态、主题
   const director = read('pages/club/topic-detail/director.js')
   const fnSrc = director.match(/const GENERIC_OPS_STATUS[\s\S]*?\n}\n/)[0]
   const genericOpsStatusText = vm.runInNewContext(fnSrc + ';genericOpsStatusText')
-  assert.equal(genericOpsStatusText({ operationStatus: 'PAUSED', authorityMode: 'MANUAL', authorityEpoch: 3 }), '已暂停 · 人工接管 · 权威 3')
+  assert.equal(genericOpsStatusText({ operationStatus: 'PAUSED', authorityMode: 'MANUAL', authorityEpoch: 3 }), '已暂停 · 人工接管')
   assert.doesNotMatch(genericOpsStatusText({ operationStatus: 'NEW_STATE', authorityMode: 'X' }), /[A-Z_]{2,}/)
   assert.match(director, /genericOpsStatus: this\._genericControl \? genericOpsStatusText\(this\._genericControl\.run\) : ''/)
 })

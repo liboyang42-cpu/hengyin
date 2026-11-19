@@ -50,4 +50,36 @@ public interface IShopDayProofService {
     default java.util.Map<Long, com.chengyinhub.business.domain.FreeExploreVisitConfig> visitConfigs(Long topicId) {
         return java.util.Collections.emptyMap();
     }
+
+    /* ---- CG-ALL-11 开局方式(DESK 桌面完成 / ALT 替代站开局);默认实现失败关闭 ---- */
+
+    /** 本局开局方式;读不到 / 正常开局为 null。 */
+    default String runStartMode(Long memberId, Long activityId, Long topicId) {
+        return null;
+    }
+
+    /** 本局是否桌面完成(读失败按桌面完成，奖励只封顶不放宽)。 */
+    default boolean deskRun(Long memberId, Long activityId, Long topicId) {
+        return false;
+    }
+
+    /** 开局时记录方式:DESK/ALT 写行(写失败抛出，开局随之失败);正常开局清旧行(清理失败不拦开局)。 */
+    default void recordRunStart(Long memberId, Long activityId, Long topicId, String mode, Long altStationId) {
+        if (mode != null) throw new IllegalStateException("开局方式暂时不可用");
+    }
+
+    /** 本主题启用中的替代起点:id/name/longitude/latitude。 */
+    default java.util.List<java.util.Map<String, Object>> altStations(Long topicId) {
+        return java.util.Collections.emptyList();
+    }
+
+    /** 本主题启用中的某个替代起点;不存在 / 不属于本主题返回 null。 */
+    default java.util.Map<String, Object> altStation(Long topicId, Long altStationId) {
+        if (altStationId == null) return null;
+        for (java.util.Map<String, Object> row : altStations(topicId)) {
+            Object id = row.get("id");
+            if (id != null && altStationId.toString().equals(String.valueOf(id))) return row;
+        }
+        return null;
+    }
 }

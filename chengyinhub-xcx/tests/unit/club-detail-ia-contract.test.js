@@ -242,11 +242,8 @@ test('设置管理入口与旧 workbench 壳显式传递 manage 意图', () => {
   assert.equal(manageEntry.path, '/pages/club/detail/index')
   assert.deepEqual(manageEntry.query, { owner: '1', tab: 'manage' })
 
-  settings.page.data.isClubView = true
-  settings.page.goEdit()
-  const editEntry = parseMiniRoute(settings.navigations[1])
-  assert.equal(editEntry.path, '/pages/club/detail/index')
-  assert.deepEqual(editEntry.query, { owner: '1', tab: 'manage' })
+  // PG-062:设置页未绑定的 goEdit 已删除
+  assert.equal(typeof settings.page.goEdit, 'undefined')
 
   const withId = parseMiniRoute(loadWorkbench({ id: 'club/7' }))
   assert.equal(withId.path, '/pages/club/detail/index')

@@ -341,6 +341,42 @@ public class FreeExploreBundleServiceImpl implements IFreeExploreBundleService {
     }
 
     @Override
+    public List<Map<String, Object>> merchantCards(Long topicId) {
+        if (topicId == null) return Collections.emptyList();
+        List<CmsTopicChapter> chapters = chapterMapper.selectRequiredByTopic(topicId);
+        if (chapters == null || chapters.isEmpty()) return Collections.emptyList();
+        List<Long> chapterIds = new ArrayList<>();
+        Map<Long, String> chapterNames = new java.util.HashMap<>();
+        for (CmsTopicChapter chapter : chapters) {
+            if (chapter == null || chapter.getId() == null) continue;
+            chapterIds.add(chapter.getId());
+            chapterNames.put(chapter.getId(), chapter.getName());
+        }
+        if (chapterIds.isEmpty()) return Collections.emptyList();
+        return merchantCards(offerMapper.selectLiveDisplayByChapterIds(chapterIds), chapterNames);
+    }
+
+    /** 卡片只放玩家可见字段;商家 memberId、单价、配额等结算面数据不下发。 */
+    static List<Map<String, Object>> merchantCards(List<MerchantChapterOffer> offers, Map<Long, String> chapterNames) {
+        List<Map<String, Object>> cards = new ArrayList<>();
+        for (MerchantChapterOffer offer : offers == null ? Collections.<MerchantChapterOffer>emptyList() : offers) {
+            if (offer == null || offer.getChapterId() == null || !chapterNames.containsKey(offer.getChapterId())) continue;
+            Map<String, Object> card = new LinkedHashMap<>();
+            card.put("offerId", offer.getId());
+            card.put("chapterId", offer.getChapterId());
+            card.put("chapterName", chapterNames.get(offer.getChapterId()));
+            card.put("storeName", offer.getMerchantName());
+            card.put("perkName", offer.getPerkName());
+            card.put("included", offer.getIncluded() == null ? null : offer.getIncluded() == 1);
+            card.put("extraSpendText", offer.getExtraSpendText());
+            card.put("reserveRequired", offer.getReserveRequired() != null && offer.getReserveRequired() == 1);
+            card.put("validEnd", offer.getValidEnd());
+            cards.add(card);
+        }
+        return cards;
+    }
+
+    @Override
     public Map<String, Object> orderView(Long memberId, Long registrationId) {
         requireLedger();
         CmsRegistration registration = requireOwnRegistration(memberId, registrationId);

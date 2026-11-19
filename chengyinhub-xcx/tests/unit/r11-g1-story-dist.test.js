@@ -56,13 +56,13 @@ test('下一站距离随定位更新;文字没变不重复 setData', () => {
   h.starts[0].success();
   h.page.data.nextNode = { nodeId: 9, lat: 31.0, lng: 121.0 };
   h.page._playLocationHandler({ latitude: 31.0014, longitude: 121.0, accuracy: 10 });
-  assert.equal(h.page.data.storyDistText, '156m');
+  assert.equal(h.page.data.storyDistText, '156 米');   // CG-ALL-26:距离统一「米 / 公里」
   let writes = 0; const set = h.page.setData;
   h.page.setData = function (patch, cb) { if ('storyDistText' in patch) writes++; return set.call(this, patch, cb); };
   h.page._playLocationHandler({ latitude: 31.0014, longitude: 121.0, accuracy: 10 });
   assert.equal(writes, 0, '距离没变不写');
   h.page._playLocationHandler({ latitude: 31.0001, longitude: 121.0, accuracy: 10 });
-  assert.equal(h.page.data.storyDistText, '11m');
+  assert.equal(h.page.data.storyDistText, '11 米');
   assert.equal(writes, 1);
   h.page.onUnload();
 });

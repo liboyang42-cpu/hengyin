@@ -53,6 +53,10 @@ public class PlayNodeQueryApplication {
     private static final com.fasterxml.jackson.databind.ObjectMapper JSON =
             new com.fasterxml.jackson.databind.ObjectMapper();
 
+    /** CG-ALL-11 开局方式与替代起点(开局闸原 owner);直接 new 的存量单测为 null。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IShopDayProofService runStartFacts;
+
     @Autowired(required = false)
     private com.chengyinhub.business.mapper.CmsTopicMapper cmsTopicMapper;
     @Autowired
@@ -209,6 +213,7 @@ public class PlayNodeQueryApplication {
                 // 权益取不到只让那一段不显示,不能把整个节点列表打挂
                 logger.warn("探店日本店权益读取失败 topic={}", read.tId, e);
             }
+            read.perkTermsByChapterMerchant = PerkDisplayTerms.load(merchantChapterOfferMapper, read.nodeList);
         }
         // 节点 NPC 按 nodeId 记一次(CR-927):节点级内容逐节点不同,且一章一商家、四到六家的量,
         // 逐节点 resolve 一条 selectEnabledByScope 是可接受的;同一节点在循环里只出一次。
@@ -305,8 +310,15 @@ public class PlayNodeQueryApplication {
         m.put("chapterId", n.getChapterId());
         // 节点级前置解锁提示位:前置未完成 → locked=true(硬闸在 checkin/answer/arrive/photo 服务端)
         m.put("unlockAfterNodeId", n.getUnlockAfterNodeId());
-        m.put("locked", n.getUnlockAfterNodeId() != null && n.getUnlockAfterNodeId() > 0
-                && !read.completedNodeIds.contains(n.getUnlockAfterNodeId()));
+        boolean lockedByPredecessor = n.getUnlockAfterNodeId() != null && n.getUnlockAfterNodeId() > 0
+                && !read.completedNodeIds.contains(n.getUnlockAfterNodeId());
+        m.put("locked", lockedByPredecessor);
+        // CG-SH04-P1-3:前置关解出前不下发这一站的地址文字(地址本身可能就是上一题的答案)。
+        // 只收这一个字段;坐标与到达判定仍按原口径，自由探索门店不受影响。
+        if (lockedByPredecessor && read.playMode != PlayMode.FREE_COLLECT) {
+            m.put("address", null);
+            m.put("addressHidden", true);
+        }
         if (read.playMode == PlayMode.FREE_COLLECT) {
             // 玩家只对当前门店逐店授权；这是对面 scope id，不是玩家身份或玩法字段。
             m.put("merchantId", n.getMerchantMemberId());
@@ -339,6 +351,9 @@ public class PlayNodeQueryApplication {
                 pm.put("name", perk.getName());
                 pm.put("redeemRule", perk.getRedeemRule());
                 pm.put("validEnd", perk.getValidEnd());
+                // FE-G5:含在票内 / 另付说明 / 需预约(只做展示,读不到就不带)
+                PerkDisplayTerms.put(pm, read.perkTermsByChapterMerchant == null ? null
+                        : read.perkTermsByChapterMerchant.get(n.getChapterId() + ":" + n.getMerchantMemberId()));
                 m.put("perk", pm);      // 单价/成本(unitCost/retailValue)不下发:那是结算面的数
             }
         }
@@ -778,6 +793,11 @@ public class PlayNodeQueryApplication {
         // 主题画面风格:风格 / 参数 / 转场 / 故事字体,前端 theme-look.js 读不懂就回落默认
         if (cmsTopicMapper != null) data.put("look", cmsTopicMapper.selectLookJsonById(read.tId));
         data.put("mode", read.playMode); // 1经典定向(线性) 2自由定向(全开)
+        // CG-ALL-11:城市定向下发路线替代起点与本局开局方式(DESK/ALT/null),客户端结算页据此区分显示。
+        if (read.playMode != PlayMode.FREE_COLLECT && runStartFacts != null) {
+            data.put("altStations", runStartFacts.altStations(read.tId));
+            data.put("runStartMode", runStartFacts.runStartMode(read.memberId, read.progActId, read.tId));
+        }
         data.put("productType", read.playMode);
         if (read.playMode == PlayMode.LINEAR_ORIENTEERING) {
             Integer personalBest = playerNodeProgressService.selectPuzzlePersonalBest(read.memberId, read.tId);
@@ -807,6 +827,9 @@ public class PlayNodeQueryApplication {
         }
         data.put("chapters", chapters);
         data.put("nodes", read.nodes);
+        // FE-G7:主题级「只有权益、没有游戏」(判据见 PerkDisplayTerms.perkOnly)。只在为 true 时加字段,
+        // 其余情况不下发,城市定向等既有 /nodes 响应保持与改动前快照逐字一致(CityRouteNodesSnapshotTest)。
+        if (Boolean.TRUE.equals(PerkDisplayTerms.perkOnly(read.playMode, read.nodes))) data.put("perkOnly", true);
         // 规则16:当前可玩集合(nodes/total/doneCount)保持原样;本人已正式完成、但已普通下架的节点
         // 另放 historyNodes 供手记/剧情卡只读回看——不进入 total/完成率/解锁/推荐/地图,也不含任何
         // 可写字段(题面/答案/模板/checkinCode),历史卡没有重新挑战入口。
@@ -1012,6 +1035,7 @@ public class PlayNodeQueryApplication {
         boolean loadUnavailable;
         boolean capacityUnavailable;
         Map<String, com.chengyinhub.business.domain.CoopPerk> perkByChapterMerchant;
+        Map<String, com.chengyinhub.business.domain.MerchantChapterOffer> perkTermsByChapterMerchant;
         Map<Long, NpcProfileVO> nodeNpcCache;
         Map<Long, Boolean> merchantClosedCache;
         Map<Long, RegistrationEntitlement> entitlementByChapter;

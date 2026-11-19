@@ -35,6 +35,10 @@ public class PricingServiceImpl implements IPricingService {
 
     @Autowired private com.chengyinhub.business.service.support.PureContentExploreService pureContentExploreService;
 
+    /** MC-034:主办方钱相关站内信;单元装配未注入时为 null。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.OrganizerMoneyNotice organizerMoneyNotice;
+
     /** [P0-50] 计酬成本上界:算「全通关必亏」硬闸用。 */
     @Autowired
     private com.chengyinhub.business.mapper.MerchantChapterOfferMapper offerMapper;
@@ -149,7 +153,7 @@ public class PricingServiceImpl implements IPricingService {
     private String revshareRefusal(String which, BigDecimal price, BigDecimal cost) {
         return which + " " + price + " 不高于计酬成本上界 " + cost
                 + ":玩家全部通关时,每个必选章节最贵的计酬商家都要付一次人头费,合计 " + cost
-                + " ≥ 票价 ⇒ 每张票必亏。请提高票价、降低人头费、或把部分章节改成权益档/引流档。";
+                + "，票价不高于成本，每张票都会亏损。请提高票价、降低人头费、或把部分章节改成权益档/引流档。";
     }
 
     /** 规则行与四个费率字段必须齐全;缺任何一个都拒绝,不回落任何默认值。 */
@@ -278,9 +282,11 @@ public class PricingServiceImpl implements IPricingService {
         }
         // T10:权益成本从服务端已申报权益汇总(单人成本合计),不信任前端传值
         BigDecimal perkCost = nz(coopPerkMapper.sumUnitCostByTopicId(topicId));
-        // 定价预览用 **live** 费率:此刻还没锁价、没有快照,「按现在的费率该定多少」正是这里要答的。
-        // 锁价(confirmPrice)会把这一刻的 live 值冻进主题,之后结算只认那份快照。
-        PricingResult r = compute(sumShareRate, guaranteeRate, sumFixedFee, leadPerHead, perkCost, platformRate());
+        // 定价预览:未锁价(无快照)用 **live** 费率 ——「按现在的费率该定多少」正是这里要答的。
+        // MC-006:已锁价的主题有冻结快照,结算只认那份快照,预览也必须按快照算(platformRateOf),
+        // 否则调一次平台费率,已开售主题的预览就和实际结算对不上。
+        CmsTopic rateTopic = cmsTopicMapper == null ? null : cmsTopicMapper.selectCmsTopicById(topicId);
+        PricingResult r = compute(sumShareRate, guaranteeRate, sumFixedFee, leadPerHead, perkCost, platformRateOf(rateTopic));
         r.setSubType(subType);
         r.setProductType(productType);
         r.setLineup(lineup);
@@ -474,9 +480,13 @@ public class PricingServiceImpl implements IPricingService {
             q.setSubType("guided");
             List<OmsTicket> existing = omsTicketMapper.selectOmsTicketList(q);
             int inv = guidedInventory != null && guidedInventory > 0 ? guidedInventory : 100;
+            boolean freeExplore = Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType());
             List<OmsTicket> authored = (existing == null || existing.isEmpty())
                     && Integer.valueOf(ProductType.ORIENTEERING).equals(topic.getProductType())
                     ? authoredCityTickets(topicId) : java.util.Collections.<OmsTicket>emptyList();
+            // F10:自由探索作者在编辑器逐张填价发布 —— 作者发布时建的票就是要卖的票,逐张写各自的终价,
+            // 不再另插/覆盖成一张「门票」(那会把多张不同价的票压成最低价)。
+            if (perTicket && freeExplore) authored = activeTopicTickets(topicId);
             if (perTicket) assertCoversAuthored(authored, ticketPrices);
             if (!authored.isEmpty()) {
                 // P-01:编辑器发的城市定向票不带 sub_type,它们本身就是有人带的场次票(带时间、集合点、库存)。
@@ -487,10 +497,19 @@ public class PricingServiceImpl implements IPricingService {
                 // 第四轮:作者发了几张不同价的票时,每张写自己的终价(逐张已按地板校验),库存不动。
                 for (OmsTicket a : authored) {
                     BigDecimal price = perTicket ? ticketPrices.get(a.getId()) : guidedPrice;
-                    if (a.getPrice() != null && a.getPrice().compareTo(price) == 0) continue;
+                    boolean fillFreeExploreDefaults = freeExplore && (a.getStartTime() == null
+                            || a.getEndTime() == null || a.getRefundRule() == null || a.getRefundRule().trim().isEmpty());
+                    if (a.getPrice() != null && a.getPrice().compareTo(price) == 0 && !fillFreeExploreDefaults) continue;
                     OmsTicket t = new OmsTicket();
                     t.setId(a.getId());
                     t.setPrice(price);
+                    if (freeExplore) {
+                        // 与下方「已有门票」分支同口径补齐开售终审必需的时间与退款规则。
+                        if (a.getStartTime() == null) t.setStartTime(topic.getStartDate());
+                        if (a.getEndTime() == null) t.setEndTime(topic.getEndDate());
+                        if (a.getSignupDeadline() == null) t.setSignupDeadline(topic.getSaleEndAt());
+                        if (a.getRefundRule() == null || a.getRefundRule().trim().isEmpty()) t.setRefundRule(freeExploreRefundRule());
+                    }
                     t.setUpdateTime(DateUtils.getNowDate());
                     if (omsTicketMapper.updateOmsTicket(t) != 1) {
                         throw new IllegalStateException("票种「" + a.getName() + "」已变化，无法确认终价");
@@ -564,7 +583,21 @@ public class PricingServiceImpl implements IPricingService {
         }
         // canonical15 含人工责任/授权事实，锁价流程无权替运营补值或自动提审。
         // 本事务最多推进到 PRICING；运营保存 canonical 草稿后显式提交开售审。
+        // MC-034:锁价成功告诉主题主办方(提交后独立投递;失败只记日志,不影响锁价)。
+        if (organizerMoneyNotice != null) {
+            organizerMoneyNotice.priceLocked(topic.getMemberId(), topicId, topic.getName());
+        }
         return 1;
+    }
+
+    /** F10:自由探索主题当前全部未删除的票(作者发布时建的票)。 */
+    private List<OmsTicket> activeTopicTickets(Long topicId) {
+        OmsTicket q = new OmsTicket();
+        q.setOwnerType(1L);
+        q.setOwnerId(topicId);
+        q.setDelFlag(0);
+        List<OmsTicket> rows = omsTicketMapper.selectOmsTicketList(q);
+        return rows == null ? java.util.Collections.<OmsTicket>emptyList() : rows;
     }
 
     /** 逐张定价必须恰好覆盖作者的全部票:多一张(别的主题/已删)、少一张(页面过期)都拒。 */

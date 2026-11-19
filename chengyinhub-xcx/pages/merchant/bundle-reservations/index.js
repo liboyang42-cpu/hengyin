@@ -53,6 +53,8 @@ Page({
   onHide() { merchantTheme.merchantPageRestore(); },
   onUnload() { this._unloaded = true; merchantTheme.merchantPageRestore(); },
 
+  // 原地无权限态的唯一动作:非成员申请入驻,在营成员返回
+  onDenyCta() { require('../../../utils/merchant-no-permission.js').followDenyCta(this, this.data.accessMember === true, '/pages/merchant/index/index'); },
   onNavBack() {
     if (getCurrentPages().length > 1) wx.navigateBack();
     else wx.reLaunch({ url: '/pages/merchant/index/index' });
@@ -66,7 +68,7 @@ Page({
         if (!isOk(res) || !res.data || typeof res.data !== 'object') { this.setData({ pageState: 'error', errorMessage: errorText(res, '经营身份加载失败') }); return; }
         const access = normalizeMerchantAccess(res.data);
         this._merchantAccess = access;
-        if (!access.active || !access.canVerify) { this.setData({ pageState: 'no-permission', rows: [] }); return; }
+        if (!access.active || !access.canVerify) { this.setData({ pageState: 'no-permission', accessMember: access.active === true, rows: [] }); return; }
         this.loadList();
       },
       fail: () => this.setData({ pageState: 'error', errorMessage: '网络异常，请重试' })

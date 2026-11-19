@@ -75,7 +75,9 @@ test('application leaf calls remain the exact existing read ports without QR/ini
     // 第十轮 f1(j1 F7):取消确认退回额只对单票单成立,整页一次按父单号数张数(只读)
     'countByParentOrderNos',
     // 2026-11-18 F12 亲子票:订单行挂 party(只读 id + party_snapshot_json)
-    'attachPartySnapshots']);
+    'attachPartySnapshots',
+    // 2026-11-19 FE-G6(#866):订单详情权益行「店名 · 权益名」,按章节只读生效供给(selectLiveDisplayByChapterIds)
+    'entitlementRowNames']);
   const calls = [...application.matchAll(/\b\w+(?:Service|Mapper)\.(\w+)\(/g)].map(match => match[1]);
   assert.ok(calls.length >= 20); for (const call of calls) assert.ok(permitted.has(call), call);
 });

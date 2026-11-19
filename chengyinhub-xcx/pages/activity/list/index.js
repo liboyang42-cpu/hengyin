@@ -64,7 +64,7 @@ Page({
     tabs: ['进行中', '即将上线', '已结束', '我的'],
     // cy-tabs(variant=chip,ccc 标准)要的 [{key,label}] 形状;key 用字符串化下标,
     // 不改 tab 本身的 number 语义,避免牵动 applyFilter 里一串 d.tab===N 的比较
-    tabsCy: [{ key: '0', label: '进行中' }, { key: '1', label: '即将' }, { key: '2', label: '已结束' }, { key: '3', label: '我的' }],
+    tabsCy: [{ key: '0', label: '进行中' }, { key: '1', label: '即将上线' }, { key: '2', label: '已结束' }, { key: '3', label: '我的' }],
     keyword: '',
     events: [],
     loading: true,

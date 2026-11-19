@@ -66,20 +66,7 @@ function buildHostSteps(input) {
     };
   });
   if (ordinaryPublished) return mapped.slice(0, 2);
-  if (!freeExplore) return mapped;
-  /* 走查 v2 R14(业主 2026-10-30):自由探索要先有 1 家俱乐部承办才能开售(后端开售闸
-     SALE_EXECUTING_CLUB_UNRESOLVED)。发布之后插一步「邀请俱乐部承办」;没人接受时它是当前步,后面全部等着。 */
-  const published = stage >= 2;
-  const clubStep = {
-    key: 'executor', label: clubs ? '俱乐部承办' : '邀请俱乐部承办',
-    state: clubs ? 'done' : (published ? 'run' : 'todo'),
-    status: !clubs && published ? '待邀约' : '', lock: '',
-    subs: !clubs && published ? [{ text: '有 1 家俱乐部接受承办，才能开始售票', act: 'onQuickAction', actKey: 'club', actText: '去邀请' }] : [],
-  };
-  if (!clubs && published) {
-    mapped.slice(2).forEach(function (step) { step.state = 'todo'; step.status = ''; step.subs = []; });
-  }
-  mapped.splice(2, 0, clubStep);
+  // FE-G12(业主 2026-11-17):自由探索不再要求俱乐部承办才能开售,不插「邀请俱乐部承办」步
   return mapped;
 }
 
@@ -91,11 +78,7 @@ function hostPrimary(input) {
   const lifecycle = Number(src.lifecycle);
   if (lifecycle === 7) return { text: '等待审核中', act: '', key: '', disabled: true };
   if (lifecycle === 0) return { text: '继续编辑', act: 'goAddStations', key: '', disabled: false };
-  if (lifecycle === 1) {
-    return src.needExecutorClub
-      ? { text: '去邀请承办', act: 'onQuickAction', key: 'club', disabled: false }
-      : { text: '去招商', act: 'onQuickAction', key: 'merchant', disabled: false };
-  }
+  if (lifecycle === 1) return { text: '去招商', act: 'onQuickAction', key: 'merchant', disabled: false };
   if (lifecycle === 2) return { text: '配置票务', act: 'goAddStations', key: '', disabled: false };
   if (lifecycle === 3 || lifecycle === 4) return { text: '去核销', act: 'goVerify', key: '', disabled: false };
   if (lifecycle === 5 || lifecycle === 6) return { text: '查看结算', act: 'goFinance', key: '', disabled: false };

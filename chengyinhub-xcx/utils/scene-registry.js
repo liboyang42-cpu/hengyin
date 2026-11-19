@@ -62,7 +62,8 @@ const SCENES = {
   // H01-H12 收益、明细、订单与历史
   'asset-earnings': { route: '/subpackageA/pages/assetcenter/earnings/index', title: '账户收益', theme: 'player', variant: 'full' },
   'asset-income-detail': { route: '/subpackageA/pages/assetcenter/income-detail/income-detail', title: '收益明细', theme: 'player', variant: 'half' },
-  'member-withdraw': { route: '/subpackageMember/tixian/tixian', title: '提现', theme: 'player', variant: 'full', form: true, maskClosable: false, footer: true },
+  // PG-042:独立提现页 subpackageMember/tixian 下线;提现入口落在账户收益页(点「提现」弹平台客服微信)。
+  'member-withdraw': { route: '/subpackageA/pages/assetcenter/earnings/index', title: '提现', theme: 'player', variant: 'full', form: true, maskClosable: false, footer: true },
   'member-withdraw-history': { route: '/subpackageMember/tixianjilu/tixianjilu', title: '提现记录', theme: 'player', variant: 'half' },
   'member-invite-history': { route: '/subpackageMember/myinvite/myinvite', title: '邀请记录', theme: 'player', variant: 'half' },
   'member-order-history': { route: '/subpackageMember/order/order', title: '我的订单', theme: 'player', variant: 'half' },

@@ -1,7 +1,9 @@
 @import "../../../style/merchant-light-scope.wxss";
 
-.pg { min-height: 100vh; background: var(--cy-color-bg-page); color: var(--cy-color-text-primary); }
-.pg-scroll { height: calc(100vh - 180rpx); padding: 0 32rpx; box-sizing: border-box; }
+/* PG-055:整页 flex 列,滚动区吃剩余高度(min-height:0),不再用 100vh 减常量猜标题高度 */
+page { height: 100%; }
+.pg { height: 100%; box-sizing: border-box; display: flex; flex-direction: column; background: var(--cy-color-bg-page); color: var(--cy-color-text-primary); }
+.pg-scroll { flex: 1; min-height: 0; padding: 0 32rpx; box-sizing: border-box; }
 .pg-tabs { display: block; margin: -14rpx 0 6rpx; } /* ds-ok: 抵消 chip 上下 14rpx 热区留白:标题→胶囊约 9px、胶囊→首卡与卡间同为 20rpx(热区保留) */
 .pg-card { padding: var(--cy-space-3-5); margin-bottom: 20rpx; border-radius: var(--cy-radius-lg); background: var(--cy-color-bg-surface); }
 .pg-floor { display: flex; flex-direction: column; gap: var(--cy-space-1); }

@@ -36,7 +36,7 @@ public final class BasicTextAnswer {
         for (char c : t.toCharArray()) {
             if (c >= '！' && c <= '～') sb.append((char) (c - 0xFEE0));
             else if (c == '　') sb.append(' ');
-            else sb.append(c);
+            else sb.append(AnswerPolicy.foldApostrophe(c));
         }
         return sb.toString();
     }

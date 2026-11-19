@@ -137,7 +137,7 @@ class ApiPlaySensorResultTest {
 
         AjaxResult result = BasicPlayCommandFixtures.sensorResult(controller, request("still", payload("heldSec", 12)));
 
-        assertEquals(500, result.get("code"));
+        assertEquals(423, result.get("code")); // 未解锁是业务拒绝:423 + errorCode=ROUTE_LOCKED,不是服务器错误
         assertEquals("本关尚未解锁,先完成前置关卡", result.get("msg"));
         verify(progressService, never()).insertPlayerNodeProgress(any());
         verify(growth, never()).addExp(anyLong(), anyInt(), anyString());
@@ -286,7 +286,7 @@ class ApiPlaySensorResultTest {
         AjaxResult result = BasicPlayCommandFixtures.photo(controller,
                 String.valueOf(ACTIVITY), String.valueOf(NODE), "filter-shot.png", null);
 
-        assertEquals(500, result.get("code"));
+        assertEquals(423, result.get("code")); // 未解锁是业务拒绝:423 + errorCode=ROUTE_LOCKED,不是服务器错误
         assertEquals("本关尚未解锁,先完成前置关卡", result.get("msg"));
         verify(proof, never()).submitPhoto(anyLong(), anyLong(), anyLong(), anyString());
         verify(progressService, never()).insertPlayerNodeProgress(any());
@@ -608,7 +608,7 @@ class ApiPlaySensorResultTest {
         node.setSortId(2L);
         when(nodeService.selectCmsTopicNodeList(any())).thenReturn(java.util.Arrays.asList(previous, node));
         doReturn(Collections.emptyList()).when(progressService).selectPlayerNodeProgressList(any());
-        assertEquals(500, BasicPlayCommandFixtures.sensorResult(controller, request("still", payload("heldSec", 12))).get("code"));
+        assertEquals(423, BasicPlayCommandFixtures.sensorResult(controller, request("still", payload("heldSec", 12))).get("code")); // 未解锁是业务拒绝:423 + errorCode=ROUTE_LOCKED,不是服务器错误
 
         verify(progressService, never()).insertPlayerNodeProgress(any());
     }

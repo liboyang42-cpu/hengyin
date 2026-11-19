@@ -1,5 +1,6 @@
 package com.chengyinhub.web.service.play;
 
+
 import com.chengyinhub.common.utils.GeoDistanceUtils;
 
 import java.util.Arrays;
@@ -192,7 +193,7 @@ public class PlayBasicCommandApplication {
 
         // 3.5) 线性解锁校验（仅 mode=1 经典定向，防扫后面的码跳关）
         String unlockErr = playNodeContext.routeAccessError(memberId, actId, ctx.topicId, node, routeActionId);
-        if (unlockErr != null) return PlayCommandErrorContract.rejected(unlockErr, PlayCommandErrorContract.ROUTE_LOCKED);
+        if (unlockErr != null) return PlayCommandErrorContract.routeLocked(unlockErr);
 
         com.fasterxml.jackson.databind.JsonNode sharedRoute = originalRun.runtimeInstance() == null || gameSessionRuntimeService == null ? null
                 : gameSessionRuntimeService.sharedRouteSnapshot(memberId, ctx.topicId, actId, node.getId());
@@ -352,7 +353,7 @@ public class PlayBasicCommandApplication {
 
         // 线性解锁校验（仅 mode=1 经典定向）
         String unlockErr = playNodeContext.routeAccessError(memberId, actId, ctx.topicId, node, routeActionId);
-        if (unlockErr != null) return PlayCommandErrorContract.rejected(unlockErr, PlayCommandErrorContract.ROUTE_LOCKED);
+        if (unlockErr != null) return PlayCommandErrorContract.routeLocked(unlockErr);
 
         // 城市定向「到站后作答」:本局按冻结到达配置有坐标的站,须先记过到达才能作答(到达本身不再要求定位,只有开局一次 300 米校验)。
         // 只管到达与任务分开记的本局路线(与 arrive 的 personalArrival 同一判据);老路径到达即完成,不受影响。
@@ -544,7 +545,7 @@ public class PlayBasicCommandApplication {
         String leadErr = playNodeContext.leadGateError(ctx.actId, node);
         if (leadErr != null) return PlayCommandErrorContract.rejected(leadErr, PlayCommandErrorContract.TEAM_LEAD_REQUIRED);
         String unlockErr = playNodeContext.routeAccessError(memberId, ctx.actId, ctx.topicId, node, request.getRouteActionId());
-        if (unlockErr != null) return PlayCommandErrorContract.rejected(unlockErr, PlayCommandErrorContract.ROUTE_LOCKED);
+        if (unlockErr != null) return PlayCommandErrorContract.routeLocked(unlockErr);
         int mode = playNodeContext.resolveMode(ctx.actId, ctx.topicId);
         if (mode == PlayMode.FREE_COLLECT && !playNodeContext.isPureOnlineNode(node)
                 && !shopDayProofService.hasArrived(memberId, ctx.actId, node.getId())) {
@@ -577,12 +578,24 @@ public class PlayBasicCommandApplication {
             String routeActionId, Integer expectedRouteVersion, String accuracy, String locationTimestamp, Long routeSessionId,
             String runtimeInstance, Integer authorityEpoch)
     {
+        return arrive(actorMemberId, activityId, nodeId, longitude, latitude, topicId, routeActionId, expectedRouteVersion,
+                accuracy, locationTimestamp, routeSessionId, runtimeInstance, authorityEpoch, null, null);
+    }
+
+    /** CG-ALL-11:startMode=DESK(桌面完成)/ALT(替代站开局，配 altStationId);缺省 = 原路径逐字不变。 */
+    public AjaxResult arrive(Long actorMemberId, String activityId, String nodeId, String longitude, String latitude, String topicId,
+            String routeActionId, Integer expectedRouteVersion, String accuracy, String locationTimestamp, Long routeSessionId,
+            String runtimeInstance, Integer authorityEpoch, String startMode, String altStationId)
+    {
         java.util.List<String> intentInput = new java.util.ArrayList<>(java.util.Arrays.asList(longitude, latitude, accuracy));
         // 只有端上真的带定位时间才进请求指纹:旧客户端原样重发的指纹与改造前一致,同号重放不受影响。
         if (StringUtils.isNotBlank(locationTimestamp)) intentInput.add(locationTimestamp);
+        String normalizedStartMode = com.chengyinhub.business.service.support.RunStartMode.normalize(startMode);
+        // 开局方式同样只在真的带了才进指纹，老客户端指纹不变。
+        if (normalizedStartMode != null) intentInput.add("startMode:" + normalizedStartMode + ":" + StringUtils.defaultString(altStationId));
         return playBasicIntentApplication.executeBasicIntent(actorMemberId, "GPS", activityId, topicId, nodeId, routeActionId, expectedRouteVersion,
                 null, routeSessionId, runtimeInstance, authorityEpoch, intentInput,
-                originalRun -> arriveOnce(actorMemberId, activityId, nodeId, longitude, latitude, topicId, routeActionId, expectedRouteVersion, accuracy, locationTimestamp, runtimeInstance, authorityEpoch, originalRun));
+                originalRun -> arriveOnce(actorMemberId, activityId, nodeId, longitude, latitude, topicId, routeActionId, expectedRouteVersion, accuracy, locationTimestamp, runtimeInstance, authorityEpoch, originalRun, normalizedStartMode, altStationId));
     }
 
     /** 兼容旧调用:不带定位时间的旧客户端请求指纹与改造前逐字一致。 */
@@ -601,6 +614,14 @@ public class PlayBasicCommandApplication {
 
     public AjaxResult arriveOnce(Long actorMemberId, String activityId, String nodeId, String longitude, String latitude, String topicId,
             String routeActionId, Integer expectedRouteVersion, String accuracy, String locationTimestamp, String runtimeInstance, Integer authorityEpoch, PlayOriginalRun originalRun)
+    {
+        return arriveOnce(actorMemberId, activityId, nodeId, longitude, latitude, topicId, routeActionId, expectedRouteVersion,
+                accuracy, locationTimestamp, runtimeInstance, authorityEpoch, originalRun, null, null);
+    }
+
+    public AjaxResult arriveOnce(Long actorMemberId, String activityId, String nodeId, String longitude, String latitude, String topicId,
+            String routeActionId, Integer expectedRouteVersion, String accuracy, String locationTimestamp, String runtimeInstance, Integer authorityEpoch, PlayOriginalRun originalRun,
+            String startModeRaw, String altStationIdRaw)
     {
         Long memberId = actorMemberId;
         if (memberId <= 0) return PlayCommandErrorContract.rejected("请先登录", PlayCommandErrorContract.LOGIN_REQUIRED);
@@ -651,7 +672,7 @@ public class PlayBasicCommandApplication {
 
         // 线性解锁校验（仅 mode=1 经典定向；mode=2 自由定向跳过）
         String unlockErr = playNodeContext.routeAccessError(memberId, actId, ctx.topicId, node, routeActionId);
-        if (unlockErr != null) return PlayCommandErrorContract.rejected(unlockErr, PlayCommandErrorContract.ROUTE_LOCKED);
+        if (unlockErr != null) return PlayCommandErrorContract.routeLocked(unlockErr);
         // F08 / FE-STORY(业主 FE-G2):实体店到店 = 300 米内点「我已到店」(定位一次);配置为扫码的地点仍走 /checkin。
         // 写入的到店行记 arrival_source=GEO_TAP,排队计时 queue_joined_at / 店内负载只认 QR,
         // 所以原注释担心的「手机说它在附近被当成扫了码」不会再撑虚排队数据。
@@ -725,7 +746,23 @@ public class PlayBasicCommandApplication {
         // 唯一豁免:实体免费收集的店内扫码/拍照已核验凭证(进店本身就是现场证明,不走线路开局闸)。
         // 本局已有进度 = 开局校验已过,之后各站到点不再要求定位。没开局又不带定位的到达一律拒绝。
         boolean runStarted = shopDayProofService.runStarted(memberId, actId, ctx.topicId);
-        if (hasNodeCoord && !(freeCollectStore && stationGameProof) && !runStarted) {
+        // CG-ALL-11:开局方式只在本局第一次到达时生效;自由探索不适用。
+        String startMode = runStarted || mode == PlayMode.FREE_COLLECT ? null : com.chengyinhub.business.service.support.RunStartMode.normalize(startModeRaw);
+        Long altStationId = null;
+        if (com.chengyinhub.business.service.support.RunStartMode.ALT.equals(startMode) && hasNodeCoord) {
+            Long requestedAlt;
+            try { requestedAlt = StringUtils.isBlank(altStationIdRaw) ? null : Long.valueOf(altStationIdRaw.trim()); }
+            catch (NumberFormatException badId) { requestedAlt = null; }
+            Map<String, Object> alt = shopDayProofService.altStation(ctx.topicId, requestedAlt);
+            if (alt == null || alt.get("longitude") == null || alt.get("latitude") == null)
+                return arriveRejected(PlayCommandErrorContract.rejected("替代站不可用", PlayCommandErrorContract.CONFIG_INVALID), frozenStation);
+            // 替代站只替换开局闸的目标坐标;半径、精度、守卫等原规则逐条照旧。
+            altStationId = requestedAlt;
+            targetLongitude = String.valueOf(alt.get("longitude"));
+            targetLatitude = String.valueOf(alt.get("latitude"));
+        }
+        boolean deskStart = com.chengyinhub.business.service.support.RunStartMode.DESK.equals(startMode);
+        if (hasNodeCoord && !(freeCollectStore && stationGameProof) && !runStarted && !deskStart) {
             if (StringUtils.isBlank(longitude) || StringUtils.isBlank(latitude)) return arriveRejected(PlayCommandErrorContract.retryable("请开启定位", PlayCommandErrorContract.ARRIVE_LOCATION_MISSING), frozenStation);
             // R10-10:Double.parseDouble 接受 "NaN"/"Infinity",而 NaN 与任何数比较恒 false,
             // 旧写法让无效坐标绕过围栏直接落入 advanceProgress 拿进度和奖励。玩家输入与站点配置
@@ -787,6 +824,10 @@ public class PlayBasicCommandApplication {
             }
         }
 
+        // 开局方式落库:DESK/ALT 写行，正常开局清掉同主题旧行;写失败抛出 = 本次开局失败(不留免定位却没记 DESK 的局)。
+        if (!runStarted && mode != PlayMode.FREE_COLLECT) {
+            shopDayProofService.recordRunStart(memberId, actId, ctx.topicId, startMode, altStationId);
+        }
         JsonNode arrivalReading = frozenStation != null ? ArrivalReading.project(frozenStation)
                 : originalRun.session() == null ? null
                 : ArrivalReading.projectFrozen(originalRun.session().getConfigSnapshotJson(), nId);
@@ -808,6 +849,8 @@ public class PlayBasicCommandApplication {
             try {
                 advancedGameRuntimeService.completeGate(memberId, actId, ctx.topicId, node.getId());
             } catch (ServiceException notPassed) {
+                // 不吞掉原因:记下真实拒绝原因,回 4xx 业务回执(completeGate 的拒绝不会把本事务标成 rollback-only)
+                logger.info("arrive 高级玩法未完成 memberId={} nodeId={} reason={}", memberId, nId, notPassed.getMessage());
                 return PlayCommandErrorContract.unresolvedEffect(notPassed.getMessage(), PlayCommandErrorContract.ADVANCED_FIRST);
             }
         }

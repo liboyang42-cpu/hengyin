@@ -8,6 +8,12 @@ const motion = require('../../../../utils/motion.js');
 const { readReducedMotion } = require('../../../../utils/motion-preference.js'); const { merchantHomeUrl } = require('../../../../utils/merchant-home-link.js');
 const { toTimestamp } = require('../../../../utils/datetime');
 const app = getApp();
+
+// OR-014:主页背景按账号分键(member_hero_bg:<账号>),换号不串;取不到账号沿用旧键。
+function heroBgKey() {
+  const id = String((app && typeof app.getUserID === 'function' && app.getUserID()) || '');
+  return /^[1-9]\d*$/.test(id) ? 'member_hero_bg:' + id : 'member_hero_bg';
+}
 const session = require('../../../../utils/session/login-reload.js');
 function profileAuthorization() {
   const value = typeof app.getAuthorization === 'function' ? app.getAuthorization()
@@ -1248,7 +1254,7 @@ Component({
       if (cover) this.setData({ heroImg: cover });
       return;
     }
-    var local = this.data.isSelf ? wx.getStorageSync('member_hero_bg') : '';
+    var local = this.data.isSelf ? wx.getStorageSync(heroBgKey()) : '';
     if (local) {
       that.setData({ heroImg: local });
       return;
@@ -2101,7 +2107,7 @@ Component({
     app.chooseImage(function (urls) {
       if (!urls || !urls.length) return;
       var url = urls[0];
-      wx.setStorageSync('member_hero_bg', url);
+      wx.setStorageSync(heroBgKey(), url);
       that.setData({ heroImg: url });
       cyToast.success('背景已更新');
     }, 1, { crop: true, cropScale: '16:9' });

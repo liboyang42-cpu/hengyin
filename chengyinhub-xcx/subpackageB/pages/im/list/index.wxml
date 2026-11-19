@@ -67,9 +67,8 @@
           <text class="invite-card__msg" wx:if="{{item.message}}">{{item.message}}</text>
           <text class="invite-card__terms" wx:elif="{{item.termsText}}">{{item.termsText}}</text>
           <view class="invite-card__acts" wx:if="{{activeTab === 'in' && item.status === 0}}">
-            <view class="invite-card__btn" aria-role="button" aria-label="回复" hover-class="cy-pressed" hover-stay-time="80">回复</view>
-            <view class="invite-card__btn" aria-role="button" aria-label="拒绝" hover-class="cy-pressed" hover-stay-time="80">拒绝</view>
-            <view class="invite-card__btn invite-card__btn--primary" aria-role="button" aria-label="接受合作" hover-class="cy-pressed" hover-stay-time="80">接受合作</view>
+            <!-- PG-018:原「回复/拒绝/接受合作」三钮无绑定,改为单个「去处理」进邀请详情(同卡片 openInvite) -->
+            <view class="invite-card__btn invite-card__btn--primary" data-id="{{item.inviteId}}" data-box="received" catchtap="openInvite" aria-role="button" aria-label="去处理" hover-class="cy-pressed" hover-stay-time="80">去处理</view>
           </view>
           <text wx:else class="invite-card__time">{{item.timeText}}</text>
         </view>

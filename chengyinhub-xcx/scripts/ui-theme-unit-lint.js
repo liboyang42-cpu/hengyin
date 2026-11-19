@@ -37,11 +37,17 @@ const DOMAIN_RULES = [
     // 搜索地图也按 roleGuard.isMerchantView 选择根主题与地图样式。
     // 2026-11-11 f-merchant(M-35):商家工作台的搜索(search2)与「发现」点进的帖文详情(square/detail)进共享域,
     // 同样按 roleGuard.isMerchantView 在根节点二选一。商家可达页的暗根清单由 tests/unit/f-merchant-light-reach.test.js 守。
-    route: /^(?:pages\/coop\/finance\/index$|pages\/topic\/pricing\/index$|pages\/(?:template|templatedetail|talent|shezhi|mylike|crop|searchmap|search2)\/|pages\/square\/detail\/|pages\/club\/(?:topic-story|detail)\/|pages\/activity\/(?:detail|official-(?:inbox|mine|detail|organizer))\/|subpackageMember\/(?:mytemplate|tixianjilu)\/|subpackageA\/pages\/(?:infomation|myproject|assetcenter\/(?:earnings|analysis|income-detail))\/|subpackageB\/pages\/im\/)/
+    // 2026-11-19 ui-sweep U10:我发布的优惠券(coupon)与建券页(couponInfo)进共享域 —— 商家(scope=MERCHANT/商家视角)浅色,玩家深色。
+    // 2026-11-19 PG-029:商家口碑页(merchant/reviews)进共享域 —— 公开态(玩家看商家)深色,管理态商家浅色。
+    // 2026-11-19 PG-036:资料详情(infomationdetail)随资料列表进共享域,按 policy.isMerchantView 二选一。
+    // 2026-11-19 PG-092:用户协议页(agreement)进共享域 —— 商家浅色,玩家深色,按 policy.isMerchantView 二选一。
+    route: /^(?:pages\/agreement\/|pages\/merchant\/reviews\/|subpackageA\/pages\/infomationdetail\/|pages\/coop\/finance\/index$|pages\/topic\/pricing\/index$|pages\/(?:template|templatedetail|talent|shezhi|mylike|crop|searchmap|search2)\/|pages\/square\/detail\/|pages\/club\/(?:topic-story|detail)\/|pages\/activity\/(?:detail|official-(?:inbox|mine|detail|organizer))\/|subpackageMember\/(?:mytemplate|tixianjilu|coupon)\/|subpackageA\/pages\/(?:infomation|myproject|assetcenter\/(?:earnings|analysis|income-detail))\/|subpackageB\/pages\/im\/)/
   },
   {
     domain: 'merchant',
-    route: /^(?:pages\/(?:merchant\/(?!discover\/)|coop\/|publish\/|activity\/official-(?:detail|organizer)\/|topic\/(?:merchantinfo|merchantapply|pricing)\/)|subpackageMember\/(?:coupon\/|couponInfo\/))/
+    // 2026-11-17 业主批准 MC-038:俱乐部主办方视角页(名册/角色/治理/客户/结算/工作台/编辑/活动详情等)改商家浅色;
+    // 俱乐部申请(club/apply)仍是玩家视角深色,俱乐部详情与剧情页仍在共享域按视角二选一。
+    route: /^(?:pages\/club\/(?:badges|checkin-detail|create|customer-detail|customers|edit|enroll|event-ops|governance|group-code|join-requests|notify|payout-receiver|roles|settlement|topic-detail|workbench)\/|pages\/(?:merchant\/(?!discover\/)|coop\/|publish\/|activity\/official-(?:detail|organizer)\/|topic\/(?:merchantinfo|merchantapply|pricing)\/)|subpackageMember\/(?:coupon\/|couponInfo\/))/
   }
 ];
 
@@ -62,7 +68,8 @@ const EXCLUDED_DESIGN_DOMAINS = [
   }
 ];
 const EXCLUSION_PATH_CONTRACT = /^pages\/(?:play|roam)\/$/;
-const THEMELESS_REDIRECT_SHELLS = new Set(['pages/publish/topicadd/topicadd']);
+// PG-020:topicadd 兼容壳已删除;无主题重定向壳登记保留为空集,新增须显式登记。
+const THEMELESS_REDIRECT_SHELLS = new Set();
 
 const UNIT_WORDS = [
   '公里', '千米', '小时', '分钟', '米', '家', '%', '次', '张', '人', '元',
@@ -180,10 +187,8 @@ function pageRoutes(appJson) {
 function findThemeErrors(root = XCX_ROOT) {
   const appJson = JSON.parse(fs.readFileSync(path.join(root, 'app.json'), 'utf8'));
   const routes = pageRoutes(appJson);
-  if (THEMELESS_REDIRECT_SHELLS.size !== 1
-    || !THEMELESS_REDIRECT_SHELLS.has('pages/publish/topicadd/topicadd')
-    || !routes.includes('pages/publish/topicadd/topicadd')) {
-    throw new Error('无主题重定向壳必须保持唯一，且只能是已注册的 topicadd 兼容页');
+  for (const shell of THEMELESS_REDIRECT_SHELLS) {
+    if (!routes.includes(shell)) throw new Error('无主题重定向壳必须是已注册页面: ' + shell);
   }
   return routes.filter((route) => !isExcludedDesignPath(`${route}/`)).flatMap((route) => {
     const file = path.join(root, `${route}.wxml`);
@@ -276,7 +281,7 @@ function runSelfTest() {
     console.error('主题与孤立单位门禁:自证失败');
     process.exit(1);
   }
-  console.log('主题与孤立单位门禁:自证通过(能判红也能判绿，排除项锁死为 3 个设计域 + 1 个无实体重定向壳)');
+  console.log('主题与孤立单位门禁:自证通过(能判红也能判绿，排除项锁死为设计域 + 已登记的无实体重定向壳(当前 0 个))');
 }
 
 function printThemeErrors(errors) {

@@ -33,4 +33,13 @@ class BasicTextAnswerTest {
         assertFalse(BasicTextAnswer.matches(null, "外滩"));
         assertFalse(BasicTextAnswer.matches("、、", "、"));
     }
+
+    @Test
+    void curlyAndFullWidthApostrophesMatchStraightOne() {
+        assertTrue(BasicTextAnswer.matches("Rock'n'roll", "Rock\u2019n\u2019roll"));
+        assertTrue(BasicTextAnswer.matches("Rock\u2019n\u2019roll", "rock'n'roll"));
+        assertTrue(BasicTextAnswer.matches("O'Neil", "O\uFF07Neil"));
+        assertTrue(BasicTextAnswer.matches("O'Neil", "O\u02BCNeil"));
+        assertFalse(BasicTextAnswer.matches("O'Neil", "ONeil"), "撇号折叠不能变成删撇号");
+    }
 }

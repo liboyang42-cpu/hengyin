@@ -43,6 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
@@ -135,6 +136,23 @@ class AdvancedGameRuntimeServiceImplTest {
         assertEquals("start", ((Map<?, ?>) state.get("branch")).get("currentStepId"));
         assertEquals(NOW + 60_000, inserted.get().getDeadlineAt().getTime());
         assertEquals(0, inserted.get().getVersion());
+    }
+
+    /** 回归(2026-11-18 实测 P0):已发布的逐字猜词站带 outcomeRules.fail 时能正常开局,不再报「须且仅须一个主玩法」。 */
+    @Test
+    void hangmanStationWithOutcomeRulesStarts() {
+        when(templateMapper.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(template(
+                "{\"schemaVersion\":1,\"hangman\":{\"enabled\":true,\"answer\":\"ABC\"},"
+                        + "\"outcomeRules\":{\"version\":1,\"pass\":{\"reply\":\"继续\"},\"fail\":{\"reply\":\"还不对，再看看题面\"}}}"));
+        when(sessionMapper.insert(any())).thenAnswer(call -> {
+            GameRuntimeSession row = call.getArgument(0);
+            row.setId(52L);
+            return 1;
+        });
+
+        Map<String, Object> state = service.start(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID, null);
+
+        assertEquals("RUNNING", state.get("status"));
     }
 
     @Test
@@ -622,6 +640,85 @@ class AdvancedGameRuntimeServiceImplTest {
 
         assertEquals("当前步骤没有这个选项", error.getMessage());
         verify(sessionMapper, never()).updateStateCas(any());
+    }
+
+    // ── 留言站(2026-11-18 实测 P0:路线 12 末站只有留言,提交后到站 500) ──
+
+    private static final String NOTE_ONLY = "{\"schemaVersion\":1,\"note\":{\"enabled\":true,\"title\":\"示例站点\","
+            + "\"maxLength\":40,\"presets\":[\"一路平安\"]},\"outcomeRules\":{\"version\":1,\"pass\":{\"reply\":\"路线完成\"}}}";
+
+    private com.chengyinhub.business.mapper.PlayNoteMapper noteMapper() {
+        com.chengyinhub.business.mapper.PlayNoteMapper notes = mock(com.chengyinhub.business.mapper.PlayNoteMapper.class);
+        ReflectionTestUtils.setField(service, "playNoteMapper", notes);
+        return notes;
+    }
+
+    private static com.chengyinhub.business.domain.PlayNote ownNote() {
+        com.chengyinhub.business.domain.PlayNote note = new com.chengyinhub.business.domain.PlayNote();
+        note.setMemberId(MEMBER_ID); note.setNodeId(NODE_ID); note.setContent("一路平安"); note.setCreateTime(new Date(NOW - 1000));
+        return note;
+    }
+
+    /** 回归:线性路线末站只有留言 —— 留下一句后这一站就算走完,到站收尾能完成。 */
+    @Test
+    void noteOnlyLastStationCompletesAfterTheNoteIsLeft() throws Exception {
+        com.chengyinhub.business.mapper.PlayNoteMapper notes = noteMapper();
+        when(notes.insert(any())).thenReturn(1);
+        GameRuntimeSession session = runningSession(NOTE_ONLY, "{}");
+        com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
+        com.fasterxml.jackson.databind.node.ObjectNode state = json.createObjectNode();
+        ReflectionTestUtils.invokeMethod(service, "submitNote", json.readTree(NOTE_ONLY), state, Map.of("text", "一路平安"), session, MEMBER_ID);
+        assertTrue(state.path("note").path("done").asBoolean());
+        assertEquals(Boolean.TRUE, ReflectionTestUtils.invokeMethod(service, "readyForBase", session, json.readTree(NOTE_ONLY), state),
+                "完成型主玩法配了结果规则也按玩法本身判走完");
+        session.setStateJson(state.toString());
+        when(sessionMapper.selectPlayerByOwner(ACTIVITY_ID, TOPIC_ID, NODE_ID, MEMBER_ID)).thenReturn(session);
+        when(sessionMapper.updateStateCas(any())).thenReturn(1);
+
+        service.completeGate(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID);
+
+        verify(sessionMapper).updateStateCas(any());
+    }
+
+    /** 上一局已在这一站留过一句:本局提交撞唯一键时按「已留下」完成,不再报错卡住。 */
+    @Test
+    void noteLeftInAnEarlierRunIsAdoptedOnSubmit() throws Exception {
+        com.chengyinhub.business.mapper.PlayNoteMapper notes = noteMapper();
+        when(notes.insert(any())).thenThrow(new DuplicateKeyException("uk_member_node"));
+        when(notes.selectRecentByNode(eq(NODE_ID), anyInt())).thenReturn(List.of(ownNote()));
+        com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
+        com.fasterxml.jackson.databind.node.ObjectNode state = json.createObjectNode();
+        ReflectionTestUtils.invokeMethod(service, "submitNote", json.readTree(NOTE_ONLY), state, Map.of("text", "换一句"),
+                runningSession(NOTE_ONLY, "{}"), MEMBER_ID);
+        assertTrue(state.path("note").path("done").asBoolean());
+        assertEquals("一路平安", state.path("note").path("text").asText(), "记的是本人原来那句");
+    }
+
+    /** 已卡住的旧局:到站收尾时发现本人已留过,直接按已留下收尾并写回状态。 */
+    @Test
+    void completeGateAdoptsTheNoteLeftInAnEarlierRun() {
+        com.chengyinhub.business.mapper.PlayNoteMapper notes = noteMapper();
+        when(notes.selectRecentByNode(eq(NODE_ID), anyInt())).thenReturn(List.of(ownNote()));
+        GameRuntimeSession session = runningSession(NOTE_ONLY, "{}");
+        when(sessionMapper.selectPlayerByOwner(ACTIVITY_ID, TOPIC_ID, NODE_ID, MEMBER_ID)).thenReturn(session);
+        AtomicReference<String> written = new AtomicReference<>();
+        when(sessionMapper.updateStateCas(any())).thenAnswer(call -> {
+            written.set(((GameRuntimeSession) call.getArgument(0)).getStateJson());
+            return 1;
+        });
+
+        service.completeGate(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID);
+
+        assertTrue(written.get().contains("\"done\":true"));
+    }
+
+    /** completeGate 的拒绝不能把调用方(到站)的事务标成 rollback-only。 */
+    @Test
+    void completeGateRefusalDoesNotMarkTheCallerTransactionRollbackOnly() throws Exception {
+        org.springframework.transaction.annotation.Transactional tx = AdvancedGameRuntimeServiceImpl.class
+                .getMethod("completeGate", Long.class, Long.class, Long.class, Long.class)
+                .getAnnotation(org.springframework.transaction.annotation.Transactional.class);
+        assertTrue(java.util.Arrays.asList(tx.noRollbackFor()).contains(ServiceException.class));
     }
 
     @Test

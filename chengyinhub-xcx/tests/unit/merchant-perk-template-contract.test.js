@@ -115,7 +115,8 @@ test('表单和列表明确区分玩家看到的零售价与商家成本', () =>
   const wxml = fs.readFileSync(WXML_PATH, 'utf8');
   assert.match(wxml, /权益零售价（必填）/);
   assert.match(wxml, /可接待份数（必填）/);
-  assert.match(wxml, /成本价（可选，仅自己可见）/);
+  assert.match(wxml, /成本价（可选）/);
+  assert.doesNotMatch(wxml, /· 仅自己可见/, 'MC-046:删除辅助说明');
   assert.match(wxml, /item\.retailValue/);
 });
 

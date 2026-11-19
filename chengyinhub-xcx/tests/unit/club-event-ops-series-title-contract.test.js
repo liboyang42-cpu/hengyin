@@ -95,7 +95,7 @@ test('topics 还没到位时退回裸 id,而不是显示空字符串', () => {
   const decorate = loadDecorator()
   // 这正是截图里那个孤零零「·」的成因:一旦兜底失效,行标题就整个空掉
   const row = decorate({ topicId: 7, recurrenceType: 'WEEKLY' }, [])
-  assert.equal(row.titleText, '主题 #7', '没有保底的话行标题会是空的')
+  assert.equal(row.titleText, '未命名', '没有保底的话行标题会是空的;保底不露编号(MC-044)')
   assert.ok(row.titleText.length > 0)
 })
 

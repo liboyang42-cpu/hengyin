@@ -1,5 +1,5 @@
 <!-- 返回钮在条件容器之外:出码态(cy-club-game-code-sheet)同样要有退出口,不能只有选场次态才有 -->
-<view class="theme-dark">
+<view class="theme-merchant">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
@@ -28,7 +28,7 @@
 <view wx:elif="{{state === 'no-permission'}}" class="session-invalid">
   <view class="session-picker__nav-spacer" style="height: {{statusBarHeight + navBarHeight}}px;"></view>
   <cy-page-title title="团核销码" safe-top="{{false}}" />
-  <cy-error title="当前账号没有出码权限" sub="{{errMsg || '仅主理人、管理员或本场领队可出码'}}" retry="" />
+  <cy-error title="当前身份不能出码" sub="{{errMsg || '仅主理人、管理员或本场领队可出码'}}" retry="" />
   <view class="session-invalid__manage" bindtap="goManage" aria-role="button" aria-label="进入俱乐部管理" hover-class="cy-pressed" hover-stay-time="80">
     <text>进入俱乐部管理</text><cy-icon name="arrow-right" size="32" />
   </view>
@@ -50,4 +50,4 @@
 
 <!-- 保存游戏码到相册会触发隐私授权。gate 必须挂在宿主页:组件盖不住整页,
      没有它 app.js 只能回退到 /pages/privacy 路由页,把出码界面整个盖掉。 -->
-<cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
+<cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" class="theme-merchant" />

@@ -494,7 +494,7 @@
         <view wx:elif="{{shareEditions.length}}" class="manage-project-list cy-fade-in">
           <view class="manage-project manage-project--edition" wx:for="{{shareEditions}}" wx:key="topicId">
             <view class="manage-project-main">
-              <view class="manage-project-name">{{item.topicName || ('期次 #' + item.topicId)}}</view>
+              <view class="manage-project-name">{{item.topicName || '未命名'}}</view>
               <view class="manage-project-meta">{{item.dateText || '时间待定'}} · 执行俱乐部期次</view>
             </view>
             <button class="manage-project-share" open-type="share" data-topic-id="{{item.topicId}}"
@@ -924,10 +924,10 @@
       <view class="ai-plan-row">
         <input class="ai-plan-input" value="{{aiClubStyle}}" bindinput="onClubAiStyle" maxlength="20"
                disabled="{{aiState === 'generating'}}"
-               placeholder="俱乐部风格(选填)" placeholder-class="ai-plan-ph" />
+               placeholder="俱乐部风格（选填）" placeholder-class="ai-plan-ph" />
         <input class="ai-plan-input ai-plan-input--sm" value="{{aiDurationMin}}" bindinput="onClubAiDuration" type="number" maxlength="4"
                disabled="{{aiState === 'generating'}}"
-               placeholder="时长(分钟)" placeholder-class="ai-plan-ph" />
+               placeholder="时长（分钟）" placeholder-class="ai-plan-ph" />
       </view>
 
       <!-- 动作区 -->

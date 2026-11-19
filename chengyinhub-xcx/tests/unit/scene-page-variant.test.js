@@ -54,7 +54,7 @@ test('P-55:设置里的营销消息与优惠券是独立页面,不再挂弹层',
   assert.ok(pkg.pages.includes('marketing/index'))
   const page = read('pages/shezhi/marketing/index.wxml')
   assert.match(page, /<cy-page-title title="营销消息与优惠券"/)
-  assert.match(page, /<cy-marketing-consent show="\{\{ready\}\}" layout="page" \/>/)
+  assert.match(page, /<cy-marketing-consent\b[^>]*\bshow="\{\{ready\}\}" layout="page" \/>/)
   assert.match(read('pages/shezhi/components/marketing-consent/index.wxml'), /class="mc mc--\{\{layout\}\}"/)
 })
 

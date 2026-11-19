@@ -86,6 +86,21 @@
     <view id="sheetTop" class="slopes-sheet-anchor"></view>
     <view class="slopes-grabber"></view>
 
+    <!-- F10(FE-G13/14):已发布的自由探索主题,商家位置全部有人承接(商家或自己承接)后在这里填票价并直接发布开售;
+         招募中置灰并写出还差几个位置。入口:我的项目 →「···」→ 编辑。 -->
+    <view class="fe-pricing" wx:if="{{fePricing.show}}" id="fePricing">
+      <view class="fe-pricing__head">
+        <text class="fe-pricing__title">开售票价</text>
+        <text class="fe-pricing__hint" wx:if="{{fePricing.hint}}">{{fePricing.hint}}</text>
+      </view>
+      <view class="fe-pricing__row {{fePricing.disabled ? 'is-disabled' : ''}}" wx:for="{{fePricing.rows}}" wx:key="id">
+        <text class="fe-pricing__name ep1">{{item.name}}</text>
+        <text class="fe-pricing__unit">¥</text>
+        <input class="fe-pricing__input" type="digit" value="{{item.price}}" placeholder="0.00" disabled="{{fePricing.disabled}}" data-index="{{index}}" bindinput="onFePriceInput" aria-label="{{item.name}} 票价" />
+      </view>
+      <cy-btn variant="primary" class="fe-pricing__cta" loading="{{fePublishing}}" disabled="{{fePricing.disabled || fePublishing}}" bindtap="onFePublish" aria-label="发布开售">发布</cy-btn>
+    </view>
+
     <!-- 命名放在第一屏第一位:名称是必填,原先却埋在第三步,第一步顶上只显示一个改不了的
          「未命名主题」—— 走到最后才被必填打回来。 -->
     <view class="pd-title-field" id="fieldName" wx:if="{{editorPage === 1}}">
@@ -1862,7 +1877,6 @@
           <view class="node-card__ico mode-opt__ico"><cy-icon name="flag" size="32" /></view>
           <view class="node-card__main">
             <text class="node-card__title mode-opt__name">城市定向</text>
-            <text class="mode-opt__desc">固定集合时间与地点</text>
           </view>
           <view class="mode-opt__mark {{modePickerMode === 1 ? 'is-on' : ''}}" aria-hidden="true" />
         </view>
@@ -1873,13 +1887,11 @@
           <view class="node-card__ico mode-opt__ico"><cy-icon name="tab-explore" size="32" /></view>
           <view class="node-card__main">
             <text class="node-card__title mode-opt__name">自由探索</text>
-            <text class="mode-opt__desc">有效期内自由前往</text>
           </view>
           <view class="mode-opt__mark {{modePickerMode === 2 ? 'is-on' : ''}}" aria-hidden="true" />
         </view>
       </view>
 
-      <view class="tk-note">切换后另存为新草稿，原稿保留</view>
     </view>
   </cy-sheet>
 

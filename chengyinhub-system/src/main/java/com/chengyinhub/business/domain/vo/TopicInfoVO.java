@@ -276,4 +276,9 @@ public class TopicInfoVO {
     public void setPerkCoverageStatus(Integer perkCoverageStatus) { this.perkCoverageStatus = perkCoverageStatus; }
     public String getJourneyRules() { return journeyRules; }
     public void setJourneyRules(String journeyRules) { this.journeyRules = journeyRules; }
+
+    /** FE-G4:自由探索逐店卡片(店名、权益名、含/另付、需预约、有效期);非自由探索为 null。 */
+    private java.util.List<java.util.Map<String, Object>> exploreMerchantCards;
+    public java.util.List<java.util.Map<String, Object>> getExploreMerchantCards() { return exploreMerchantCards; }
+    public void setExploreMerchantCards(java.util.List<java.util.Map<String, Object>> v) { this.exploreMerchantCards = v; }
 }

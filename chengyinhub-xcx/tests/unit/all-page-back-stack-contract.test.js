@@ -123,7 +123,6 @@ const CASES = [
   { file: 'pages/topic/pricing/index.js', handler: 'goBack', methods: ['goBack'], data: { topicId: 9 }, fallbackApi: 'redirectTo', fallbackUrl: '/pages/topic/index/index?id=9', requiresCustomNav: true },
   { file: 'pages/topic/merchantapply/index.js', handler: 'onSheetClose', methods: ['onSheetClose', 'goHome'], fallbackApi: 'reLaunch', fallbackUrl: '/pages/merchant/index/index' },
   { file: 'pages/merchant/apply/index.js', handler: 'onHeaderBack', methods: ['onHeaderBack', 'onBack', 'onExit', 'exitPage'], data: { introMode: true }, fallbackApi: 'reLaunch', fallbackUrl: '/pages/merchant/index/index' },
-  { file: 'subpackageMember/couponInfo/couponInfo.js', handler: 'onCancel', methods: ['onCancel', 'exitPage'], fallbackApi: 'redirectTo', fallbackUrl: '/subpackageMember/coupon/coupon' },
 ]
 
 // 2026-09-06 三条向导加了「四步之前的开场屏」后,第一步的返回是退到开场屏、不再离场;

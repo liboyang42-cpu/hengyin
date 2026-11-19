@@ -431,7 +431,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             handled++;
             // 订阅消息:通知发布者招募结果(best-effort)
             try {
-                String tip = accepted == 0 ? "招募未成,已回草稿,可延期重招" : "招募结束,已进入定价阶段";
+                String tip = accepted == 0 ? recruitFailedTip(topic) : "招募结束,已进入定价阶段";
                 String atime = topic.getStartDate() != null
                         ? DateUtils.parseDateToStr("yyyy-MM-dd HH:mm", topic.getStartDate())
                         : DateUtils.parseDateToStr("yyyy-MM-dd HH:mm", now);
@@ -447,6 +447,19 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             logger.warn("双死线-有 {} 个主题连续处理失败,它们会在每轮扫描重复出现,需人工介入", poisoned);
         }
         return handled;
+    }
+
+    /**
+     * F10 §3.1:自由探索招募到期仍有空位 ⇒ 回草稿(现状不变),提示作者可以自己承接空位后再发布。
+     * 其余主题保持原文案。读失败不影响已完成的状态迁移(调用方 best-effort)。
+     */
+    private String recruitFailedTip(CmsTopic topic) {
+        if (Integer.valueOf(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE).equals(topic.getProductType())
+                && merchantChapterOfferMapper != null) {
+            int open = merchantChapterOfferMapper.countRequiredChaptersWithoutLiveOffer(topic.getId());
+            if (open > 0) return "还有 " + open + " 个位置没人承接，可以自己承接后再发布";
+        }
+        return "招募未成,已回草稿,可延期重招";
     }
 
     private boolean transitionRecruitingToDraft(Long topicId) {
@@ -1732,6 +1745,11 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     @Override
     public List<CmsTopic> selectCmsTopicList(CmsTopic cmsTopic) {
         return topicQueryService.selectCmsTopicList(cmsTopic);
+    }
+
+    @Override
+    public int countCmsTopicByClubId(Long clubId) {
+        return clubId == null ? 0 : cmsTopicMapper.countCmsTopicByClubId(clubId);
     }
 
     @Override
@@ -3081,6 +3099,32 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
      * 「我改了、也提示成功了、但没生效」的假成功 —— 而它盖住的恰好是日期/结构/票价这三样资损面。
      * 拒收让前端必须显式地只送白名单,错了当场红。
      */
+    /**
+     * F10:待定价的自由探索主题,编辑器整包上送的票只允许改价 —— 票的集合、名称与数量必须与库里一致。
+     * 价格不在这里写(publishForSale 在发布事务里锁价),这里只判定「这次保存没有动票的其他字段」。
+     */
+    private boolean ticketsDifferOnlyInPrice(Long topicId,
+                                             List<com.chengyinhub.business.domain.dto.ActivityTicketRequest> tickets) {
+        OmsTicket q = new OmsTicket();
+        q.setOwnerType(1L);
+        q.setOwnerId(topicId);
+        q.setDelFlag(0);
+        Map<Long, OmsTicket> existing = new HashMap<>();
+        for (OmsTicket t : nullToEmpty(omsTicketMapper.selectOmsTicketList(q))) {
+            if (t != null && t.getId() != null) existing.put(t.getId(), t);
+        }
+        if (existing.size() != tickets.size()) return false;
+        java.util.Set<Long> seen = new java.util.HashSet<>();
+        for (com.chengyinhub.business.domain.dto.ActivityTicketRequest t : tickets) {
+            OmsTicket current = t == null || t.getId() == null ? null : existing.get(t.getId());
+            if (current == null || !seen.add(t.getId())) return false;
+            if (t.getName() != null && !t.getName().equals(current.getName())) return false;
+            if (t.getTotalStock() != null && (current.getTotalInventory() == null
+                    || t.getTotalStock().longValue() != current.getTotalInventory().longValue())) return false;
+        }
+        return true;
+    }
+
     private void applyWhitelistEdit(CmsTopic exist, com.chengyinhub.business.domain.dto.TopicUpdateDTO dto,
                                     String username) {
         List<String> locked = new ArrayList<>();
@@ -3095,7 +3139,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (!CollectionUtils.isEmpty(dto.getChapters())) {
             locked.add("章节站点结构");
         }
-        if (!CollectionUtils.isEmpty(dto.getTickets())) {
+        if (!CollectionUtils.isEmpty(dto.getTickets())
+                && !(com.chengyinhub.business.util.TopicEditWindow.allowsFreeExplorePriceFill(exist, exist.getMemberId())
+                    && ticketsDifferOnlyInPrice(exist.getId(), dto.getTickets()))) {
             locked.add("票种与价格");
         }
         if (!locked.isEmpty()) {

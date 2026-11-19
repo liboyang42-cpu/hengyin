@@ -1109,6 +1109,32 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         private AuditTask task;
     }
 
+    /** MC-035:通知里点名活动名 / 模板名;读失败按原「内容」兜底,不让通知措辞拖垮审核事务。 */
+    String reviewedItemName(AuditTask task, String fallback) {
+        if (task == null || task.getBizId() == null) return fallback;
+        try {
+            String bizType = task.getBizType();
+            if (AuditTask.BIZ_ACTIVITY.equals(bizType)) {
+                CmsActivity activity = cmsActivityMapper == null ? null : cmsActivityMapper.selectCmsActivityById(task.getBizId());
+                return activity == null ? fallback
+                        : com.chengyinhub.business.service.support.SystemNoticeCard.item("活动", activity.getName());
+            }
+            if (AuditTask.BIZ_TEMPLATE.equals(bizType)) {
+                CmsMemberTemplate template = templateMapper == null ? null : templateMapper.selectCmsMemberTemplateById(task.getBizId());
+                return template == null ? fallback
+                        : com.chengyinhub.business.service.support.SystemNoticeCard.item("玩法模板", template.getTitle());
+            }
+            if (AuditTask.BIZ_TEMPLATE_LIBRARY.equals(bizType)) {
+                CmsTemplateLibrary library = libraryMapper == null ? null : libraryMapper.selectCmsTemplateLibraryById(task.getBizId());
+                return library == null ? fallback
+                        : com.chengyinhub.business.service.support.SystemNoticeCard.item("玩法模板", library.getTitle());
+            }
+        } catch (RuntimeException e) {
+            logger.warn("审核通知取名称失败，按「内容」发送 taskId={}", task.getId(), e);
+        }
+        return fallback;
+    }
+
     /** 系统消息就是同库持久通知；与决定、处罚同事务，失败回滚，原 requestId 可安全重试。 */
     private void notifyReviewResult(AuditTask task, AuditReviewDTO request) {
         if (!isTerminalDecision(request.getStatus())) return;
@@ -1136,6 +1162,10 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             reviewedItem = com.chengyinhub.business.service.support.SystemNoticeCard.item("主题", topic.getName());
         } else if (task.getSubmitterId() != null && (SOURCE_REPORT.equals(task.getSourceType()) || !report)) {
             reporters.add(task.getSubmitterId());
+        }
+        // MC-035:活动 / 玩法模板的审核结果也点名是哪一条;取不到名字时仍写「内容」,不影响审核本身。
+        if (!report && "内容".equals(reviewedItem)) {
+            reviewedItem = reviewedItemName(task, reviewedItem);
         }
         boolean appeal = !report && SOURCE_APPEAL.equals(task.getSourceType());
         java.util.Map<Long, String> recipients = new java.util.LinkedHashMap<>();
@@ -3024,5 +3054,37 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         if (AuditTask.STATUS_ESCALATED.equals(status)) return "ESCALATE";
         if (AuditTask.STATUS_CANCELLED.equals(status)) return "CANCEL";
         return "REVIEW";
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void approveSaleReviewForAuthor(Long taskId, Long topicId, Long authorMemberId) {
+        if (taskId == null || topicId == null || authorMemberId == null) {
+            throw new IllegalArgumentException("开售记录参数不完整");
+        }
+        AuditTask task = auditTaskMapper.selectAuditTaskByIdForUpdate(taskId);
+        if (task == null || !AuditTask.BIZ_TOPIC_SALE_REVIEW.equals(task.getBizType())
+                || !topicId.equals(task.getBizId()) || !authorMemberId.equals(task.getSubmitterId())) {
+            throw new IllegalStateException("开售审核单与主题或作者不一致");
+        }
+        if (!AuditTask.STATUS_PENDING.equals(task.getStatus())) {
+            throw new IllegalStateException("开售审核单已处理，请刷新后重试");
+        }
+        Date now = DateUtils.getNowDate();
+        if (auditTaskMapper.updateAuditTaskReviewCas(taskId, task.getStatus(), AuditTask.STATUS_APPROVED,
+                authorMemberId, task.getVersion(), now) != 1) {
+            throw new IllegalStateException("开售审核单刚发生变化，请刷新后重试");
+        }
+        AuditRecord record = new AuditRecord();
+        record.setTaskId(taskId);
+        record.setAction(statusToAction(AuditTask.STATUS_APPROVED));
+        record.setOperatorId(authorMemberId);
+        record.setReasonCode("AUTHOR_FE_SELF_PUBLISH");
+        record.setReasonText("自由探索作者填价后直接发布开售(FE-G13/14),运营可事后下架");
+        record.setSnapshotJson(task.getSnapshotJson());
+        record.setCreateTime(now);
+        if (auditRecordMapper.insertAuditRecord(record) != 1) {
+            throw new ServiceException("审批时间线写入失败", HttpStatus.ERROR);
+        }
     }
 }

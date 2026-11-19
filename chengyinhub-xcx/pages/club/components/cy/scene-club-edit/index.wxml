@@ -1,7 +1,7 @@
 <view class="cle">
 
   <cy-skeleton wx:if="{{loadState === 'loading'}}" type="form-section" count="6" loading-label="正在读取俱乐部资料" />
-  <cy-error wx:elif="{{loadState === 'missing-param'}}" title="没有指定俱乐部" sub="{{loadErrorText}}" retry="返回俱乐部" bind:retry="onBack" class="cy-fade-in" />
+  <cy-empty wx:elif="{{loadState === 'missing-param'}}" fill size="lg" kind="missing-param" cta="返回" bind:cta="onBack" class="cy-fade-in" />
   <cy-error wx:elif="{{loadState === 'permission'}}" title="暂无编辑权限" sub="{{loadErrorText}}" retry="返回俱乐部" bind:retry="onBack" class="cy-fade-in" />
   <cy-error load-failure wx:elif="{{loadState === 'business-error'}}" title="编辑资料没能打开" sub="{{loadErrorText}}" retry="重新加载" bind:retry="loadClub" class="cy-fade-in" />
   <cy-error load-failure wx:elif="{{loadState === 'network-error'}}" title="网络连接失败" sub="{{loadErrorText}}" retry="重新加载" bind:retry="loadClub" class="cy-fade-in" />
@@ -20,8 +20,6 @@
       </view>
     </view>
 
-    <!-- 管理员副标题(Figma 29:145):管理员进来先知道自己能改什么,不用点到锁那一步才发现。 -->
-    <view class="admin-note" wx:if="{{!isOwner}}">你是管理员 · 只能改展示信息</view>
 
     <!-- 形象 -->
     <view class="sec-label">俱乐部形象</view>

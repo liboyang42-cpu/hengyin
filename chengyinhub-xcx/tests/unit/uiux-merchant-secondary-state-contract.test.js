@@ -110,7 +110,7 @@ function assertSecondaryStateMarkup(aiWxml, customerWxml, ledgerWxml) {
   assert.match(ledgerWxml,
     /class="ledger-inline-state ledger-inline-state--global"[^>]*wx:if="\{\{hasLoaded && \(loading \|\| error\)[^}]*settlementLoading\.overview[^}]*settlementErrors\.batches\}\}"[\s\S]*?正在确认商家身份与最新结算…[\s\S]*?<cy-inline-error wx:elif="\{\{error\}\}"[^>]*title="最新结算暂未取回"[^>]*action="重试"[^>]*bind:action="retry"/,
     '结算有旧金额时，身份重验 loading/error 必须显式标记 stale 并提供恢复动作')
-  assert.match(ledgerWxml, /kind="missing-param"[^>]*primary="返回工作台"/,
+  assert.match(ledgerWxml, /kind="missing-param"[^>]*primary="返回" bind:primary="onNavBack"/,
     '账本缺参不能提供无效重试')
   assert.match(ledgerWxml, /type="merchant-metric"/, '资金首载骨架必须与金额 hero 同构')
   for (const section of ['overview', 'entries', 'batches']) {

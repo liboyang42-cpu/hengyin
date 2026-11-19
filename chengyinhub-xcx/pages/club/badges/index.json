@@ -16,5 +16,9 @@
     "cy-state-shell": "/components/cy/state-shell/index",
     "cy-toast": "/components/cy/toast/index"
   },
-  "enablePullDownRefresh": true
+  "enablePullDownRefresh": true,
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#F3F4F4",
+  "backgroundColorTop": "#F3F4F4",
+  "backgroundColorBottom": "#F3F4F4"
 }

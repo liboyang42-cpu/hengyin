@@ -28,7 +28,7 @@ const { drawPlayStateMarker } = require('../../utils/play-marker-draw.js');
 const { readReducedMotion, writeReducedMotion } = require('../../utils/motion-preference.js');
 const { readFogOff, writeFogOff } = require('../../utils/roam-fog-preference.js');
 const countUp = require('../../utils/count-up.js');
-const { selectDemoRoamPois } = require('../../utils/roam-demo-gate.js');
+const { selectDemoRoamPois, canUseDemoRoamPois } = require('../../utils/roam-demo-gate.js');
 const {
   channelFlags,
   channelsForVisibility,
@@ -966,6 +966,7 @@ Page({
 
   onLoad(q) {
     roamMemory(this); // 固定本页玩家归属；切号后的旧异步回包不得写进新玩家桶
+    this._loadDemoPois();
     this._bindRoamNetwork(); // BL-03 断网提示
     this._stats = { time: '00:00', shops: 0, explorePct: 0, distance: '0.0' };
     this._elapsedSeconds = 0;
@@ -1244,25 +1245,20 @@ Page({
     return merged;
   },
 
+  // PG-061:开发版且显式打开演示开关时,从漫游分包异步取演示种子点;正式包不触发、主包不带这份数据
+  _loadDemoPois() {
+    if (this._demoPoisFactory || !canUseDemoRoamPois(getApp()) || typeof require.async !== 'function') return;
+    require.async('../../subpackageRoam/data/roam-demo-pois.js')
+      .then((mod) => { if (mod && typeof mod.demoPois === 'function') this._demoPoisFactory = mod.demoPois; })
+      .catch(() => {});
+  },
+
   _initWorld(c) {
     const current = this._roamReadScope();
     this._c = c;
     const P = (x, y) => ({ lat: c.lat + m2lat(y), lng: c.lng + m2lng(x, c.lat) });
-    const raw = selectDemoRoamPois(getApp(), [
-      { id: 108, cat: 'merchant', name: '转角奶茶', ...P(35, -40), points: 20, desc: '放学路上总要绕的那家。', imgUrl: MOCK_IMG },
-      { id: 109, cat: 'merchant', name: '巷子面馆', ...P(-50, 25), points: 25, desc: '老板凌晨四点就开始熬汤。', imgUrl: MOCK_IMG },
-      { id: 110, cat: 'merchant', name: '拐角披萨', ...P(20, 55), points: 30, desc: '一整块芝士拉到看不见边。', imgUrl: MOCK_IMG },
-      { id: 101, cat: 'merchant', name: '深夜食堂', ...P(-40, -120), points: 30, desc: '凌晨两点还亮着灯的那家。', imgUrl: MOCK_IMG },
-      { id: 111, cat: 'merchant', name: '老友烧烤', ...P(-70, -95), points: 20, desc: '啤酒论箱起卖，老板不劝酒也不劝退。', imgUrl: MOCK_IMG },
-      { id: 102, cat: 'park', name: '苏堤小游园', ...P(-190, 20), points: 20, desc: '傍晚有人在这里遛狗、下棋、发呆。' },
-      { id: 103, cat: 'landmark', name: '城西美术馆', ...P(-320, 230), points: 25, desc: '免费开放的那层，总有学生在临摹。' },
-      { id: 104, cat: 'park', name: '梧桐口袋公园', ...P(-130, 390), points: 20, desc: '一小片被高楼夹住的绿。' },
-      { id: 105, cat: 'merchant', name: '山丘咖啡', ...P(130, 480), points: 30, desc: '巷口第三家。老板记得每个熟客的豆子。', imgUrl: MOCK_IMG },
-      { id: 112, cat: 'merchant', name: '巷角包子', ...P(160, 460), points: 20, desc: '皮薄馅大，早上六点就排队。', imgUrl: MOCK_IMG },
-      { id: 106, cat: 'landmark', name: '老钟楼', ...P(290, 310), points: 25, desc: '整点还会响。' },
-      { id: 107, cat: 'merchant', name: '无早旧书店', ...P(150, 120), points: 30, desc: '二手书按气味分类的地方。', imgUrl: MOCK_IMG },
-      { id: 113, cat: 'merchant', name: '老巷炸串', ...P(120, 145), points: 20, desc: '油锅从下午响到凌晨。', imgUrl: MOCK_IMG },
-    ]);
+    // PG-061:演示种子点在 subpackageRoam/data/roam-demo-pois.js,开发版开关打开时才异步载入,不进主包
+    const raw = selectDemoRoamPois(getApp(), this._demoPoisFactory ? this._demoPoisFactory(P, MOCK_IMG) : []);
     const catMap = {
       park: { icon: 'poi-park', catLabel: '公园 · 绿地', color: '#A6A6A6' },
       merchant: { icon: 'poi-shop', catLabel: '商家 · 探店', color: '#D9D9D9' },
@@ -5561,7 +5557,7 @@ Page({
   _shareToSquare() {
     const app = getApp();
     const writeAllowed = () => typeof app.canUseCommunity === 'function' && app.canUseCommunity(true);
-    if (!writeAllowed()) { cyToast('当前账号未开放广场发布'); return Promise.resolve({ ok: false, channel: '广场', posted: false, saved: false, blocked: true }); }
+    if (!writeAllowed()) { cyToast('当前身份不能发布到广场'); return Promise.resolve({ ok: false, channel: '广场', posted: false, saved: false, blocked: true }); }
     const scope = this._shareScope();
     const current = () => scope() && writeAllowed();
     const cancelled = () => ({ ok: false, channel: '广场', saved: false, posted: false, cancelled: true });

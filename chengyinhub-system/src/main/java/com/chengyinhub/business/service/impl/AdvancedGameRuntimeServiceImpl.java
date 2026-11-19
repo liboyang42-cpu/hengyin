@@ -345,6 +345,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         requireWithinTimeWindow(config.get("timeWindow"));
         Date now = clock.now();
         ObjectNode state = initialState(config, team, teamMembers);
+        adoptExistingNote(config, state, nodeId, memberId);
         // Server-created state only: author config cannot supply an original content identity.
         if (input.content != null) state.set("originalNodeContent", input.content.deepCopy());
         if (config.has("outcomeRules")) state.put("attemptOrdinal", 1);
@@ -403,6 +404,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             else if(topicRouteRuntimeService.genericPlayer(memberId,session.getTopicId(),session.getActivityId()) || TopicRoutePublicationCompiler.outcomeNeedsGenericRun(config))topicRouteRuntimeService.assertGameplayOutcomeStart(memberId,session.getTopicId(),session.getActivityId(),session.getNodeId(),session.getPlayInstanceId());
         }
         ObjectNode restarted = initialState(config, team, teamMembers);
+        adoptExistingNote(config, restarted, session.getNodeId(), memberId);
         if (config.has("outcomeRules")) restarted.put("attemptOrdinal", readJson(session.getStateJson(), "Invalid attempt state").path("attemptOrdinal").asLong(1) + 1);
         for(String origin:Arrays.asList("originalRouteSessionId","originalGameSessionId","originalNodeContent"))if(objectState(session.getStateJson()).has(origin))restarted.set(origin,objectState(session.getStateJson()).get(origin).deepCopy());
         for (String sensor : AdvancedActionJudgement.SKIPPABLE_SENSOR_SECTIONS) if (objectState(session.getStateJson()).path(sensor).path("soloNoLead").asBoolean(false)) restarted.with(sensor).put("soloNoLead", true);
@@ -654,6 +656,9 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                         break;
                     case "SUBMIT_PHOTO_CHECK":
                         pendingCardMint = submitPhotoCheck(config, state, safePayload, session, photoResult);
+                        break;
+                    case "SUBMIT_PHOTO_RECORD":
+                        submitPhotoRecord(config, state, safePayload, memberId);
                         break;
                     case "SUBMIT_NOTE":
                         submitNote(config, state, safePayload, session, memberId);
@@ -976,6 +981,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                 session.getTopicId(), session.getActivityId(), session.getNodeId());
         JsonNode config = readJson(session.getConfigSnapshotJson(), "高级玩法配置不可用");
         if (!enabled(config.get("photoCheck"))) throw new IllegalArgumentException("该玩法未开启拍照审核");
+        // CG-ALL-12:只记录的拍照站不走视觉模型与第三方处理同意，改用 SUBMIT_PHOTO_RECORD。
+        if (recordPhotoMode(config.get("photoCheck"))) throw new IllegalArgumentException("这一站拍照只做记录");
         ObjectNode state = objectState(session.getStateJson());
         if (state.path("photoCheck").path("passed").asBoolean()) throw new IllegalStateException("这一张已经过了");
         String selected = state.has("zeroChallengeInstance") && state.path("challenge").path("nodeId").asLong() == session.getNodeId()
@@ -1134,7 +1141,9 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    // 拒绝(ServiceException)都发生在任何写入之前;调用方(到站)会接住拒绝并回 4xx,
+    // 这里不能把共享事务标成 rollback-only,否则到站提交时变成 UnexpectedRollbackException 500。
+    @Transactional(rollbackFor = Exception.class, noRollbackFor = ServiceException.class)
     public String completeGate(Long memberId, Long activityId, Long topicId, Long nodeId) {
         CmsTopicNode node = nodeMapper.selectCmsTopicNodeById(nodeId);
         if (node == null || !topicId.equals(node.getTopicId())) return null;
@@ -1183,11 +1192,15 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         }
         JsonNode snapshot = readJson(session.getConfigSnapshotJson(), "高级玩法配置不可用");
         ObjectNode state = objectState(session.getStateJson());
+        // 留言站:本人上一局已留过时,本局按已留下收尾(否则这一站永远过不去)
+        if (adoptExistingNote(snapshot, state, nodeId, memberId)) session.setStateJson(state.toString());
         // 已按「跳过·辅助完成」收尾的局:允许走完,但终点码与奖励口径都由 skip 事实降级(见 terminalOutcome)。
         if (!mechanicsReady(snapshot, state) && !isSkipped(state)) {
             throw new ServiceException("高级玩法尚未完成");
         }
 
+        // 先算终点码:所有拒绝都在写库之前抛出,本方法不回滚调用方事务也不会留下半截完成状态。
+        String outcome = terminalOutcome(snapshot, state);
         int oldVersion = session.getVersion();
         Date now = clock.now();
         session.setStatus(GameRuntimeSession.STATUS_COMPLETED);
@@ -1197,7 +1210,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             throw new ServiceException("高级玩法状态已更新，请重试");
         }
         session.setVersion(oldVersion + 1);
-        return terminalOutcome(snapshot, state);
+        return outcome;
     }
     /**
      * 跳过本题:本题记 0 分 + 辅助完成,不产生答对、到达、扫码、照片、核销或支付证明。
@@ -1310,7 +1323,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
      * 跳过准入。三条都必须成立,少一条就拒,不做「差不多能跳」的放宽:
      * <ol>
      *   <li>作者在**冻结**阶梯里配了 {@code SKIP} 层 —— 没配就是没这功能;</li>
-     *   <li>该节点不是现实凭证类(扫码/拍照/计步/相册/竞猜):跳过不能替代现场证明;</li>
+     *   <li>该节点不是现实凭证类(扫码/拍照/计步/相册/竞猜):跳过不能替代现场证明;
+     *       拍照只是另一个主玩法之后的证据步时不算(随主玩法跳过,拍照步按可选);</li>
      *   <li>节点模板验真方式不是扫码(4)或现场到达(5):跳过不能绕到达围栏。</li>
      * </ol>
      */
@@ -1326,6 +1340,10 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             throw new IllegalArgumentException("该节点未配置跳过");
         }
         for (String section : new String[] { "scan", "photoCheck", "steps", "album", "predict" }) {
+            // 拍照作为另一个主玩法之后的证据步(GameplayOutcomeRules.isEvidenceStep)时随主玩法一起跳过;
+            // 只有拍照本身就是主玩法(纯拍照站)才仍按现场凭证拒绝跳过。
+            if ("photoCheck".equals(section)
+                    && com.chengyinhub.business.service.support.GameplayOutcomeRules.isEvidenceStep(config, section)) continue;
             if (enabled(config.get(section))) {
                 throw new IllegalArgumentException("该节点依赖现场凭证，不能跳过");
             }
@@ -2547,6 +2565,41 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         state.with("album").set("images",images.deepCopy());state.with("album").put("done",true);
     }
 
+    /** photoCheck.mode=RECORD:拍照只做留念记录(CG-ALL-12 / CG-02-D-4)。 */
+    static boolean recordPhotoMode(JsonNode photoCheck) {
+        return photoCheck != null && "RECORD".equals(photoCheck.path("mode").asText(""));
+    }
+
+    /**
+     * 只记录的拍照站:不调视觉模型、不要求 photo_model_processing 同意、不判对错。
+     * 交一张本人上传的照片，或拒绝相机时文字确认继续(textConfirmed=true)，这一站即记为完成。
+     * verdict=RECORDED 不是核验:photoVerified 仍为 false,奖励口径与今天未核验的拍照相同(不放宽)。
+     */
+    private void submitPhotoRecord(JsonNode config, ObjectNode state, Map<String, Object> payload, Long memberId) {
+        JsonNode cfg = config.get("photoCheck");
+        if (!enabled(cfg)) throw new IllegalArgumentException("该玩法未开启拍照审核");
+        if (!recordPhotoMode(cfg)) throw new IllegalArgumentException("这一站拍照需要审核");
+        ObjectNode node = state.with("photoCheck");
+        if (node.path("passed").asBoolean(false)) throw new IllegalStateException("这一张已经过了");
+        String imageUrl = text(payload, "imageUrl");
+        Object confirm = payload == null ? null : payload.get("textConfirmed");
+        boolean textConfirmed = Boolean.TRUE.equals(confirm) || "true".equalsIgnoreCase(String.valueOf(confirm));
+        if (imageUrl.length() > 512) throw new IllegalArgumentException("照片地址不能超过 512 字");
+        if (imageUrl.isEmpty() && !textConfirmed) throw new IllegalArgumentException("请先拍一张，或确认不拍继续");
+        if (!imageUrl.isEmpty()) {
+            photoEvidenceVerifier.accept(imageUrl, memberId);
+            node.put("lastUrl", imageUrl);
+            node.put("textConfirmed", false);
+        } else {
+            node.remove("lastUrl");
+            node.put("textConfirmed", true);
+        }
+        node.put("tries", node.path("tries").asInt(0) + 1);
+        node.put("passed", true);
+        node.put("verdict", "RECORDED");
+        node.put("degraded", false);
+    }
+
     private CardMintRequest submitPhotoCheck(JsonNode config, ObjectNode state, Map<String, Object> payload,
             GameRuntimeSession session, PhotoCheckVisionResult review) {
         JsonNode cfg = config.get("photoCheck");
@@ -2615,6 +2668,30 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
      * 留言:一句留给下一个人。存 play_note(跨玩家、按节点),不在会话 state 里 ——
      * state 只记「我留过了」,读的人在投影里拿 previous。
      */
+    /** 本人在这一站已留下的那句(play_note 一人一站唯一);没有返回 null。 */
+    private PlayNote ownNote(Long nodeId, Long memberId) {
+        if (playNoteMapper == null || nodeId == null || memberId == null) return null;
+        List<PlayNote> recent = playNoteMapper.selectRecentByNode(nodeId, 500);
+        if (recent != null) for (PlayNote row : recent) if (memberId.equals(row.getMemberId())) return row;
+        return null;
+    }
+
+    /**
+     * 本局留言段还没完成、但本人在这一站已有留言(上一局留下的)→ 记为已留下。
+     * 开局、重开与到站收尾都调;返回是否改了 state。
+     */
+    private boolean adoptExistingNote(JsonNode config, ObjectNode state, Long nodeId, Long memberId) {
+        if (!enabled(config.get("note")) || state.path("note").path("done").asBoolean(false)) return false;
+        PlayNote existing = ownNote(nodeId, memberId);
+        if (existing == null) return false;
+        ObjectNode node = state.with("note");
+        node.put("text", existing.getContent());
+        node.put("at", existing.getCreateTime() == null ? clock.now().getTime() : existing.getCreateTime().getTime());
+        node.put("done", true);
+        node.put("adopted", true);
+        return true;
+    }
+
     private void submitNote(JsonNode config, ObjectNode state, Map<String, Object> payload,
             GameRuntimeSession session, Long memberId) {
         JsonNode cfg = config.get("note");
@@ -2640,8 +2717,14 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         try {
             if (playNoteMapper.insert(note) != 1) throw new IllegalStateException("留言保存失败");
         } catch (DuplicateKeyException alreadyLeft) {
-            // uk_member_node 撞了 = 这一站这个人已经留过(可能是上一局留下的)
-            throw new IllegalStateException("这一句已经留下了");
+            // uk_member_node 撞了 = 这一站这个人已经留过(上一局留下的)。play_note 一人一站只留一句,
+            // 投影也已把那句当作「我的」显示为已留 —— 本局按「已留下」完成,不能把玩家卡在这一站。
+            PlayNote existing = ownNote(session.getNodeId(), memberId);
+            node.put("text", existing == null ? content : existing.getContent());
+            node.put("at", clock.now().getTime());
+            node.put("done", true);
+            node.put("adopted", true);
+            return;
         }
         node.put("text", content);
         node.put("at", clock.now().getTime());
@@ -3332,6 +3415,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             value.put("flagged", st.path("flagged").asBoolean(false));
             value.put("degraded", st.path("degraded").asBoolean(false));
             putText(value, "lastUrl", st);
+            if (recordPhotoMode(cfg)) value.put("textConfirmed", st.path("textConfirmed").asBoolean(false));
             putText(value, "lastReason", st);
             value.put("lastConfidence", st.path("lastConfidence").asInt(0));
             // C1:只有视觉模型当场真判 PASS 才算「照片已核验」;降级与次数用尽兜底放行不算。
@@ -3629,7 +3713,14 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         return state.has("zeroChallengeInstance") ? state.path("challenge").path("success").asBoolean()
                 : Integer.valueOf(GameRuntimeSession.STATUS_COMPLETED).equals(session.getStatus())
                 || (Integer.valueOf(GameRuntimeSession.STATUS_RUNNING).equals(session.getStatus())
-                && (config.has("outcomeRules")?"PASS".equals(state.path("gameplayDecision").path("outcome").asText()):mechanicsReady(config, state)));
+                && (config.has("outcomeRules") && !completionTypeMain(config)
+                    ? "PASS".equals(state.path("gameplayDecision").path("outcome").asText()) : mechanicsReady(config, state)));
+    }
+
+    /** 完成型主玩法(建档/相册/留言/每日签):交了就完,没有「没通过」,是否走完只看玩法本身。 */
+    private static boolean completionTypeMain(JsonNode config) {
+        String main = com.chengyinhub.business.service.support.GameplayOutcomeRules.mainKit(config);
+        return main != null && java.util.Arrays.asList("profile", "album", "note", "dailySign").contains(main);
     }
 
     /**

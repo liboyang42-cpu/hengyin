@@ -456,7 +456,6 @@ public class ChannelRedemptionServiceImpl implements IChannelRedemptionService {
 
     private Date dateValue(Map<String, Object> map, String key) {
         if (map == null) return null;
-        Object value = map.get(key);
-        return value instanceof Date ? (Date) value : null;
+        return com.chengyinhub.common.utils.DateUtils.asDate(map.get(key));
     }
 }

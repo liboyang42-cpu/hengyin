@@ -138,7 +138,7 @@ public class PlayPhotoCommandApplication {
                     String leadErr = playNodeContext.leadGateError(actId, node);
                     if (leadErr != null) return error(leadErr);
                     String unlockErr = playNodeContext.unlockGateError(memberId, actId, node);
-                    if (unlockErr != null) return error(unlockErr);
+                    if (unlockErr != null) return PlayCommandErrorContract.routeLocked(unlockErr);
                 }
                 if (playCompletionFacts.isExploreChapterRedeemed(memberId, actId, node.getChapterId())) {
                     return error("该章节已核销，不能改写到店凭证");
@@ -178,7 +178,7 @@ public class PlayPhotoCommandApplication {
         String leadErr = playNodeContext.leadGateError(actId, node);
         if (leadErr != null) return error(leadErr);
         String unlockErr = playNodeContext.routeAccessError(memberId, actId, ctx.topicId, node, routeActionId);
-        if (unlockErr != null) return error(unlockErr);
+        if (unlockErr != null) return PlayCommandErrorContract.routeLocked(unlockErr);
         // 已证明完成的节点允许幂等回执(advanceProgress 的 DuplicateKey→firstTime=false 天然防重发),
         // 不再重复校验来源;未完成必须严验,任意 picUrl 不能首次产生进度或奖励。
         PlayerNodeProgress completedPhotoNode = playNodeContext.findNodeProgressRow(memberId, actId, ctx.topicId, node.getId(), originalRun);

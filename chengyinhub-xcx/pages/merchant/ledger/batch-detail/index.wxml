@@ -3,7 +3,7 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
-  <cy-access-gate id="cy-access-gate" kind="merchant" need="canReadFinance" /><cy-nav-bar title="对公结算" custom-back bind:back="onNavBack" /><view class="order-detail__spacer" style="height: {{statusBarHeight + navBarHeight}}px;"></view><block wx:if="{{detail}}"><cy-progress-status class="order-detail__refresh" wx:if="{{loadState === 'refreshing'}}" title="正在更新结算详情" /><cy-inline-error class="order-detail__refresh" wx:elif="{{loadState === 'stale-error'}}" kind="{{errorKind}}" title="结算详情没有更新" sub="{{errorText}}" action="重试" bind:action="retryLoad" />
+  <cy-access-gate id="cy-access-gate" kind="merchant" need="canReadFinance" back-url="/pages/merchant/ledger/index?view=settlement" /><cy-nav-bar title="对公结算" custom-back bind:back="onNavBack" /><view class="order-detail__spacer" style="height: {{statusBarHeight + navBarHeight}}px;"></view><block wx:if="{{detail}}"><cy-progress-status class="order-detail__refresh" wx:if="{{loadState === 'refreshing'}}" title="正在更新结算详情" /><cy-inline-error class="order-detail__refresh" wx:elif="{{loadState === 'stale-error'}}" kind="{{errorKind}}" title="结算详情没有更新" sub="{{errorText}}" action="重试" bind:action="retryLoad" />
   <!-- 卡1:hero 唯一大数字 + 状态 chip + 打款事实 -->
   <view class="fin-hero" aria-role="region" aria-label="{{detail.batch.periodYm}} 批次净额 {{detail.batch.amountDisplay || detail.batch.amountFallback}}，{{detail.batch.paymentText}}">
     <text class="fin-hero__lab">{{detail.batch.periodYm}} 批次净额</text>

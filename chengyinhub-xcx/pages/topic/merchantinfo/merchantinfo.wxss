@@ -686,7 +686,7 @@ page {
   height: 333rpx;
   background: var(--cy-bg-card);
   border-radius: 0rpx;
-  border: 2rpx solid #D4CFC4;
+  border: 2rpx solid var(--cy-color-border-strong);
   padding: var(--cy-space-3-5) var(--cy-space-2-5);
   box-sizing: border-box;
   white-space: nowrap;
@@ -1960,3 +1960,11 @@ image.david_stu {
 .david_wh { transition: var(--cy-tr-press); }
 .pf-all { transition: var(--cy-tr-press); }
 .statbar__value { font-variant-numeric: tabular-nums; }
+
+/* F10 自己承接权益卡 */
+.ssp { padding: 0 var(--cy-page-x) var(--cy-space-3); }
+.ssp-field { display: flex; align-items: center; gap: var(--cy-space-2); min-height: var(--cy-btn-h); border-bottom: 1rpx solid var(--cy-border-card); }
+.ssp-label { flex: none; width: 180rpx; font-size: var(--cy-font-body); color: var(--cy-text-secondary); }
+.ssp-input { flex: 1; min-width: 0; font-size: var(--cy-font-body); color: var(--cy-text-title); }
+.ssp-input--empty { color: var(--cy-text-muted); }
+.ssp-cta { display: block; margin-top: var(--cy-space-3); }

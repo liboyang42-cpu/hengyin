@@ -15,14 +15,14 @@ const stateNames = { CLEAR: '未发现固定场次冲突', SCHEDULE: '账户报�
 function fieldChange(page, e) { const key = e.currentTarget.dataset.field; if (!Object.prototype.hasOwnProperty.call(page.data, key) || page.data.pending || page.data.busy) return; page.setData({ [key]: e.detail.value }); }
 function stateName(value) { return stateNames[value] || value || '未知'; }
 function runtime(kind, spec) {
-  const initial = () => Object.assign({ reducedMotion: readReducedMotion(), busy: false, error: '', message: '', rows: [], detail: null, pending: false, hasMore: false, fileReady: false, referencePicker: false, referenceKind: 'ROUTE' }, JSON.parse(JSON.stringify(spec.data || {})));
+  const initial = () => Object.assign({ reducedMotion: readReducedMotion(), guest: false, busy: false, error: '', message: '', rows: [], detail: null, pending: false, hasMore: false, fileReady: false, referencePicker: false, referenceKind: 'ROUTE' }, JSON.parse(JSON.stringify(spec.data || {})));
   return Object.assign({
     data: initial(),
     onLoad(query) { this._app = getApp(); this._query = query || {}; this._closed = false; this._generation = 0; this._files = []; this._sequence = 0; },
     onShow() {
       this._hidden = false;
       const who = identity(this._app);
-      if (!who) { this.clearPrivate(); this.setData({ error: '请通过现有登录流程登录后再使用' }); return; }
+      if (!who) { this.clearPrivate(); this.setData({ error: '请先登录', guest: true }); return; } // PG-015:游客不给「重试」
       if (this._identity === who && this.client && this._hiddenData) { this.setData(this._hiddenData); this._hiddenData = null; }
       if (this._identity !== who || !this.client) {
         if (this.client) this.client.dispose(); this.clearPrivate(); this._identity = who;

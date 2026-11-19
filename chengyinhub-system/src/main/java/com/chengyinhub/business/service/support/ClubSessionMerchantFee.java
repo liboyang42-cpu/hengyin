@@ -96,20 +96,27 @@ public class ClubSessionMerchantFee {
         private final Long merchantMemberId;
         private final BigDecimal fee;
         private final List<RegistrationFee> registrations;
+        /** 冻结章节供给的章节 id(仅 MERCHANT_CHAPTER_OFFER);旧合作单为 null。 */
+        private final Long chapterId;
 
         Charge(Long orderId, Long merchantMemberId, BigDecimal fee, List<RegistrationFee> registrations) {
-            this(orderId, "COOP_ORDER", merchantMemberId, fee, registrations);
+            this(orderId, "COOP_ORDER", merchantMemberId, fee, registrations, null);
         }
 
-        Charge(Long orderId, String contractType, Long merchantMemberId, BigDecimal fee, List<RegistrationFee> registrations) {
+        Charge(Long orderId, String contractType, Long merchantMemberId, BigDecimal fee, List<RegistrationFee> registrations,
+               Long chapterId) {
             this.orderId = orderId;
             this.contractType = contractType;
             this.merchantMemberId = merchantMemberId;
             this.fee = fee;
             this.registrations = registrations;
+            this.chapterId = chapterId;
         }
 
         public Long getOrderId() { return orderId; }
+        /** COOP_ORDER(旧合作单 id)| MERCHANT_CHAPTER_OFFER(章节供给 id)。 */
+        public String getContractType() { return contractType; }
+        public Long getChapterId() { return chapterId; }
         public Long getMerchantMemberId() { return merchantMemberId; }
         public BigDecimal getFee() { return fee; }
         public List<RegistrationFee> getRegistrations() { return registrations; }
@@ -360,7 +367,9 @@ public class ClubSessionMerchantFee {
             for (var registration : registrations) {
                 fees.add(new RegistrationFee(registration.getRegistrationId(), 1, fee));
             }
-            charges.add(new Charge(entry.getValue().path("id").asLong(), "MERCHANT_CHAPTER_OFFER", merchant, fee, fees));
+            Long chapterId = entry.getValue().path("chapterId").canConvertToLong() && entry.getValue().path("chapterId").asLong() > 0
+                    ? entry.getValue().path("chapterId").asLong() : null;
+            charges.add(new Charge(entry.getValue().path("id").asLong(), "MERCHANT_CHAPTER_OFFER", merchant, fee, fees, chapterId));
         }
     }
 

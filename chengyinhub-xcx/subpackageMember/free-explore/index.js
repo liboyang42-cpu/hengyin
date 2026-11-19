@@ -30,7 +30,7 @@ Page({
     this._identity = this.identity(); this._owner = bundle.exactId(app.getUserID());
     this.clearView();
     if (!this._owner || !app.getAuthorization()) { this.setData({ error: '请登录后查看' }); return; }
-    if (!this._registrationId && !this._topicId && !this._purchaseRequestId) { this.setData({ error: '链接已失效，请从原入口重新进入' }); return; }
+    if (!this._registrationId && !this._topicId && !this._purchaseRequestId) { this.setData({ error: '链接已失效' }); return; }
     this.restorePending();
     this.reload();
   },

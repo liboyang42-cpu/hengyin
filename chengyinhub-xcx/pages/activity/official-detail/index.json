@@ -1,7 +1,7 @@
 {
   "navigationBarTitleText": "活动详情",
-  "navigationBarTextStyle": "black",
-  "backgroundColor": "#F3F4F4",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#000000",
   "usingComponents": {
     "cy-state-shell": "/components/cy/state-shell/index",
     "cy-inline-error": "/components/cy/inline-error/index",

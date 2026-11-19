@@ -1,5 +1,5 @@
 <!-- §17.1/§17.2/P6 通行证:可购买只列服务端在售商品;订单与礼品只读本人记录。结构沿积分明细页 -->
-<view class="theme-dark mk"><cy-access-gate kind="login" />
+<view class="theme-dark mk">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />

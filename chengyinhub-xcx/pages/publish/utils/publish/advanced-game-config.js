@@ -49,7 +49,7 @@ const PHOTO_CHECK_FALLBACKS = ['retake', 'pass'];
    ⚠️ 这三份名单是后端 AdvancedGameConfigValidator 的镜像(PHOTO_CHECK_MODES /
    PHOTO_CARD_STYLES),必须同一个 PR 改 —— 两边错开的表现是「本地放行、服务端整份判死」。
    钉在 object-card-config-contract。 */
-const PHOTO_CHECK_MODES = ['CARD'];
+const PHOTO_CHECK_MODES = ['CARD', 'RECORD'];
 const PHOTO_CARD_STYLES = ['foil', 'plain'];
 /** 段里属于「卡片」的那三个字段:目录的 mode 判别 + 卡名 + 样式。投影链按这张表核对。 */
 const PHOTO_CARD_FIELDS = ['mode', 'cardTitle', 'cardStyle'];

@@ -40,19 +40,7 @@ function assertAnnotationDContract(files) {
 
   assert.match(files.shotMatrix, /\['D08',[\s\S]*?sourceName:\s*'城市夜行 · 建筑线索'[\s\S]*?sourceCover:\s*IMG[\s\S]*?stateText:\s*'进行'[\s\S]*?dateText:\s*'08\.01 – 08\.31'[\s\S]*?typeLabel:\s*'城市定向'[\s\S]*?sourceAddress:\s*'外滩观景平台'/)
 
-  assert.ok(files.tixianWxml.indexOf('class="txtpis"') < files.tixianWxml.indexOf('class="tx-cta"'), '提现说明必须在底部按钮上方')
-  // 2026-09-16 银行卡表单退役:页面不再采集输入,唯一动作是客服弹窗
-  assert.doesNotMatch(files.tixianWxml, /placeholder-class="tx-placeholder"|bindinput=/)
-  assert.doesNotMatch(files.tixianWxml, /placeholder-style=/)
-  assert.doesNotMatch(rule(files.tixianWxss, '.txcon_ly'), /border(?:-bottom)?:/)
-  assert.match(rule(files.tixianWxss, '.txcon_ly'), /background:\s*var\(--cy-color-input-bg-empty\)/)
-  assert.match(rule(files.tixianWxss, '.txcon_ly--filled'), /background:\s*var\(--cy-color-input-bg-filled\)/)
-  assert.match(rule(files.tixianWxss, '.tx-bottom'), /margin-top:\s*auto/)
-  assert.match(files.tixianWxml, /class="tx-history-entry"[^>]*bindtap="openWithdrawHistory"/)
-  assert.match(files.tixianWxml, /<cy-sheet[^>]*show="\{\{withdrawHistorySheet\}\}"[^>]*title="提现记录"[\s\S]*?<cy-scene-member-withdraw-history id="withdrawHistory"/)
-  assert.match(files.tixianJs, /withdrawHistorySheet:\s*false/)
-  assert.match(files.tixianJs, /openWithdrawHistory\(\)\s*\{\s*this\.setData\(\{ withdrawHistorySheet: true \}\)\s*\}/)
-  assert.match(files.tixianJs, /closeWithdrawHistory\(\)\s*\{\s*this\.setData\(\{ withdrawHistorySheet: false \}\)\s*\}/)
+  // PG-042:独立提现页 subpackageMember/tixian 下线,其展示契约随页移除。
 
   assert.match(files.tixianjiluWxml, /<cy-page-title title="提现记录"/)
   assert.doesNotMatch(files.tixianjiluWxml, /<cy-sheet/, '提现记录深链壳不再套常驻半屏')
@@ -137,9 +125,6 @@ function assertAnnotationDContract(files) {
 
   assert.match(rule(files.earningsSceneWxss, '.ae-action__ic'), /background:\s*var\(--cy-color-action-secondary-bg\)/)
 
-  assert.doesNotMatch(files.couponInfoWxss, /(?:^|[;\s])border(?:-top|-right|-bottom|-left)?:/m)
-  assert.match(rule(files.couponInfoWxss, '.fabu .form .li .item-cont'), /background:\s*var\(--cy-color-bg-surface-subtle\)/)
-  assert.match(rule(files.couponInfoWxss, '.fabu .form .li .item-cont2'), /background:\s*var\(--cy-color-bg-surface-subtle\)/)
 
   assert.match(files.settingsJs, /goDeregister\(\)\s*\{\s*this\.openScene\('settings-deregister'\);\s*\}/)
   assert.doesNotMatch(files.settingsJs, /goDeregister\(\)\s*\{\s*wx\.navigateTo/)
@@ -174,9 +159,6 @@ function sources() {
     tabsWxss: read('components/cy/tabs/index.wxss'),
     shotMatrix: read('scripts/shot-matrix.js'),
     orderWxss: read('subpackageMember/components/cy/scene-member-order-detail/index.wxss'),
-    tixianWxml: read('subpackageMember/tixian/tixian.wxml'),
-    tixianWxss: read('subpackageMember/tixian/tixian.wxss'),
-    tixianJs: read('subpackageMember/tixian/tixian.js'),
     tixianjiluWxml: read('subpackageMember/tixianjilu/tixianjilu.wxml'),
     tixianjiluJson: read('subpackageMember/tixianjilu/tixianjilu.json'),
     tixianjiluSceneWxml: read('subpackageMember/components/cy/scene-member-withdraw-history/index.wxml'),
@@ -200,7 +182,6 @@ function sources() {
     earningsSceneWxml: read('subpackageA/components/scene-asset-earnings/index.wxml'),
     earningsSceneWxss: read('subpackageA/components/scene-asset-earnings/index.wxss'),
     earningsSceneJs: read('subpackageA/components/scene-asset-earnings/index.js'),
-    couponInfoWxss: read('subpackageMember/couponInfo/couponInfo.wxss'),
     settingsJs: read('pages/shezhi/shezhi.js'),
     settingsWxml: read('pages/shezhi/shezhi.wxml'),
     routeContentWxml: read('subpackageMember/components/cy/scene-route-content/index.wxml'),
@@ -273,7 +254,7 @@ test('D22/D28：入口原地开 scene，正文沿用旧页面请求路径与参�
   assert.match(files.incomeSceneJs, /activeFilter === 'brand'[\s\S]*?reqData\.eventType = '2'/)
 })
 
-test('负控：资金弹窗入口退回独立页、提现行退回横线时必须判红', () => {
+test('负控：资金弹窗入口退回独立页时必须判红', () => {
   const original = sources()
   const broken = {
     ...original,
@@ -281,13 +262,8 @@ test('负控：资金弹窗入口退回独立页、提现行退回横线时必�
       "openWithdrawHistory() { if (!this._hasCurrentBalance()) return; this.triggerEvent('open', { id: 'member-withdraw-history' }) }",
       "openWithdrawHistory() { if (!this._hasCurrentBalance()) return; wx.navigateTo({ url: '/subpackageMember/tixianjilu/tixianjilu' }) }",
     ),
-    tixianWxss: original.tixianWxss.replace(
-      'background: var(--cy-color-input-bg-empty);',
-      'background: var(--cy-color-input-bg-empty); border-bottom: 1rpx solid var(--cy-border-line);',
-    ),
   }
   assert.notEqual(broken.earningsSceneJs, original.earningsSceneJs, '负控锚点失效：提现记录场景入口不存在')
-  assert.notEqual(broken.tixianWxss, original.tixianWxss, '负控锚点失效：提现灰色行不存在')
   assert.throws(() => assertAnnotationDContract(broken), assert.AssertionError)
 })
 

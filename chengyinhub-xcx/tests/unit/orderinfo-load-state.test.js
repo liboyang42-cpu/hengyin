@@ -512,7 +512,10 @@ function assertFailSheet(wxml, json) {
   assert.match(tag, /why="\{\{loadErrorText\}\}"/, '失败不静默:面板必须带原因')
   assert.match(tag, /duration="\{\{2000\}\}"/, '停 2s 让用户读到原因')
   assert.match(tag, /bind:close="backToOrderList"/, '自愈/手动关闭都必须回订单列表')
-  assert.doesNotMatch(tag, /primary-text|secondary-text|primaryText|secondaryText|wx:if/, '零按钮且无条件:有按钮 cy-result-sheet 不会自愈')
+  assert.doesNotMatch(tag, /secondary-text|primaryText|secondaryText|wx:if/, '零按钮且无条件:有按钮 cy-result-sheet 不会自愈')
+  // OR-036:唯一例外 —— 未登录(401)时给「登录」一颗,登录后重读同一单;其他失败仍零按钮自愈
+  const primaries = tag.match(/primary-text="[^"]*"/g) || []
+  assert.ok(primaries.every((attr) => attr === `primary-text="{{loginRequired ? '登录' : ''}}"`), '只允许未登录时的登录按钮')
   assert.doesNotMatch(wxml, /order-load-(error|retry|back|contact)/, '旧三按钮失败卡不得回潮')
 }
 

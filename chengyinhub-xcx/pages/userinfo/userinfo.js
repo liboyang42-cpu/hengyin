@@ -49,9 +49,6 @@ Page({
     });
   },
 
-  goMemberHome: function () {
-    wx.switchTab({ url: '/pages/member/index/index' });
-  },
 
   // 第七轮 C 第 1 项:朋友圈只对「可公开商家主页」开放。默认关掉朋友圈菜单,资料组件确认被看者是商家后再打开;
   // 普通个人主页不进朋友圈。

@@ -393,7 +393,8 @@ test('合作分润列表显示净额和原额调整，只用实际返回行的�
   assert.match(read('pages/merchant/ledger/index.wxml'), /bindtap="goSettlementDetail" data-id="\{\{item.coopDetailId\}\}"/);
 });
 
-test('财务核销列表只合并合法REFUND，手工工单及未知类型不生成空退款路由', () => {
+// PG-031(2026-11-17 业主批准):人工退款工单并入台账,点击进工单视图;未知类型与非法 id 仍不并入。
+test('财务核销列表合并合法REFUND与MANUAL_CASE，未知类型不生成空退款路由', () => {
   let page; const observed = [];
   require('node:vm').runInNewContext(read('pages/merchant/ledger/index.js'), {
     Page(value) { page = value; }, getApp: () => ({ globalData: {}, getUserID: () => '7' }),
@@ -406,5 +407,16 @@ test('财务核销列表只合并合法REFUND，手工工单及未知类型不�
   ] : [] } });
   page.refundRow = item => item; page._applyRedemptionView = () => observed.push(...page._refundRows);
   page._loadRefundRows('7', 1, true);
-  assert.equal(observed.length, 1); assert.equal(observed[0].refundId, 31);
+  assert.equal(observed.length, 2); assert.equal(observed[0].refundId, 31); assert.equal(observed[1].manualCaseId, 5);
+  const navs = [];
+  const ctx = { request() {} };
+  require('node:vm').runInNewContext(read('pages/merchant/ledger/index.js'), {
+    Page(value) { Object.assign(ctx, value); }, getApp: () => ({ globalData: {}, getUserID: () => '7' }),
+    require: id => id.includes('merchant-finance') ? require('../../pages/merchant/utils/merchant-finance.js') : {}, wx: { navigateTo: o => navs.push(o.url) },
+  });
+  const row = ctx.refundRow({ recordType: 'MANUAL_CASE', manualCaseId: 5, statusText: '平台已评估，待人工处理' }, true);
+  assert.equal(row.recordKey, 'aftercare-manual:5');
+  assert.doesNotMatch(row.title, /#/);
+  ctx.goRedemptionDetail({ currentTarget: { dataset: { item: row } } });
+  assert.deepEqual(navs, ['/pages/merchant/aftercare/detail/index?recordType=MANUAL_CASE&manualCaseId=5']);
 });

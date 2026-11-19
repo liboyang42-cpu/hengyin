@@ -14,7 +14,7 @@ function positive(value) {
 function distanceText(km) {
   const n = positive(km)
   if (!n) return ''
-  return `${Number.isInteger(n) ? n : n.toFixed(1)} km`
+  return `${Number.isInteger(n) ? n : n.toFixed(1)} 公里`
 }
 
 function durationText(minutes) {

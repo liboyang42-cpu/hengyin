@@ -23,7 +23,7 @@
               <text class="rp-row__title">{{item.targetText}} · {{item.reasonText}}</text>
               <cy-tag variant="{{item.stageTone}}">{{item.stageText}}</cy-tag>
             </view>
-            <text class="rp-row__sub">编号 {{item.id}}{{item.createText ? ' · ' + item.createText : ''}}</text>
+            <text class="rp-row__sub" wx:if="{{item.createText}}">{{item.createText}}</text>
             <text class="rp-row__sub" wx:if="{{item.etaText}}">{{item.etaText}}</text>
           </view>
           <cy-icon class="rp-row__arrow" name="arrow-right" size="28" />

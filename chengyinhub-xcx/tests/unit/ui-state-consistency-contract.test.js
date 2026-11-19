@@ -30,7 +30,7 @@ test('merchant profile dead ends explain themselves and always offer a safe land
   const wxml = read('pages/merchant/profile/index.wxml')
   const js = read('pages/merchant/profile/index.js')
   assert.match(wxml, /title="商家不存在或未开放"/)
-  assert.match(wxml, /title="链接已失效"/)
+  assert.match(wxml, /state === 'invalid'\}\}" cta="返回" bind:cta="onBack"[^>]*kind="missing-param"/)
   assert.match(wxml, /<cy-skeleton wx:if="\{\{state === 'loading' \|\| state === 'redirecting'\}\}" type="card"/)
   assert.match(wxml, /sub="[^\"]+"/)
   assert.match(wxml, /cta="回首页" bind:cta="goHome"/)
