@@ -1,7 +1,7 @@
 /* K1 客户 · 列表(暗)· Figma s7SEFaoJ3GQUIxJhdqcFUb node 141:90
    色/字/角一律走 token;Figma 页边 20px 按本仓 --cy-page-x(16px)对齐,与其他俱乐部页一致。 */
 page { background: var(--cy-color-bg-page); }   /* 顶栏与铺满层同色，避免固定导航下缘出色带(custom-nav-page-surface 契约) */
-.page { min-height: 100vh; box-sizing: border-box; padding-bottom: calc(var(--cy-space-5) + var(--cy-safe-bottom)); display: flex; flex-direction: column; } /* PG-054:底部留出安全区 */
+.page { min-height: 100vh; box-sizing: border-box; padding-bottom: calc(var(--cy-space-5) + var(--cy-safe-bottom)); display: flex; flex-direction: column; background: var(--cy-bg-page); color: var(--cy-color-text-primary); } /* 浅色作用域内铺底：page{} 在 .theme-merchant 之外取不到浅色变量 */ /* PG-054:底部留出安全区 */
 cy-empty, cy-error { display: flex !important; flex: 1 !important; min-height: 0; }
 
 /* 统计行:随筛选变化的数据,不是标题下的小标题 */
