@@ -483,10 +483,11 @@ class GuestBrowseAnonymousReadTest {
         // 第十二轮 k2(业主 2026-11-05「游客可看俱乐部页的全部内容」):主题 / 帖文 / 成员 / 贡献榜四条读加入。
         assertEquals(new TreeSet<>(Arrays.asList("ApiClubController#detail", "ApiClubController#list",
                 "ApiClubController#topics", "ApiClubController#postList", "ApiClubController#members",
-                "ApiClubController#leaderboard",
+                "ApiClubController#leaderboard", "ApiClubController#postFeed",
                 "ApiCreativeSquareController#retiredPostReads", "ApiTopicController#topicInfo")), anonymous);
         assertEquals(new TreeSet<>(Arrays.asList("/api/club/detail", "/api/club/list",
                 "/api/club/topics", "/api/club/post/list", "/api/club/members", "/api/club/leaderboard",
+                "/api/club/post/feed",
                 "/api/creativesquare/list", "/api/creativesquare/info", "/api/topic/info-to-user")), anonymousPaths);
         // @Anonymous 的放行不分 HTTP 方法:同一路径上若还挂着别的(写)方法,就会被顺带放行。
         for (String path : anonymousPaths) {

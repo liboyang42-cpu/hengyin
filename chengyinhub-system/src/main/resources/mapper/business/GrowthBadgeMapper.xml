@@ -46,6 +46,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by id desc
     </select>
 
+    <select id="countByClub" resultType="int">
+        select count(*) from growth_badge where club_id = #{clubId}
+    </select>
+
     <select id="selectByCode" resultMap="GrowthBadgeResult">
         select id, badge_code, badge_name, badge_desc, icon_url, unlock_rule, status, sort_no, club_id, create_time,
                asset_type, badge_style, category, trigger_event, unlock_rule_json, rule_version, rarity, badge_family, name_en, statement,

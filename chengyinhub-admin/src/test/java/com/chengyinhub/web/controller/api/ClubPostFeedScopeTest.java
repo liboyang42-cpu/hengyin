@@ -283,14 +283,49 @@ class ClubPostFeedScopeTest {
 
     @Test
     @Timeout(5)
-    void siteScopeClampsLimitAndStillNeedsLogin() {
+    void siteScopeClampsLimitForLoggedInViewer() {
         controller.postFeed(siteBody(9999, null));
         verify(postSvc).selectSiteFeed(ME, null, 51);
+    }
 
+    /** PG-001:游客可读全站流,但只走 viewerId=null 的公开口径,且不带任何查看者字段。 */
+    @Test
+    @Timeout(5)
+    void guestSiteScopeReadsPublicFeedWithoutViewerFields() {
         doReturn(null).when(controller).getAppUserId();
+        ClubPost p = new ClubPost();
+        p.setId(5L);
+        p.setClubId(1L);
+        p.setAuthorMemberId(77L);
+        p.setIsLiked(true);
+        p.setViewerCanManage(true);
+        when(postSvc.selectSiteFeed(null, null, 21)).thenReturn(new java.util.ArrayList<>(Collections.singletonList(p)));
+
         AjaxResult r = controller.postFeed(siteBody(null, null));
-        assertTrue(r.isError(), "全站流也要求登录");
-        verify(postSvc, times(1)).selectSiteFeed(any(), any(), anyInt());
+
+        assertTrue(r.isSuccess());
+        verify(postSvc).selectSiteFeed(null, null, 21);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> data = (Map<String, Object>) r.get(AjaxResult.DATA_TAG);
+        @SuppressWarnings("unchecked")
+        List<ClubPost> rows = (List<ClubPost>) data.get("rows");
+        assertEquals(1, rows.size());
+        assertEquals(null, rows.get(0).getAuthorMemberId());
+        assertEquals(null, rows.get(0).getIsLiked());
+        assertEquals(null, rows.get(0).getViewerCanManage());
+        verify(accessSvc, times(0)).resolve(any(), any(), any());
+    }
+
+    @Test
+    @Timeout(5)
+    void guestStillNeedsLoginForScopedFeedAndAuthorMe() {
+        doReturn(null).when(controller).getAppUserId();
+        assertTrue(controller.postFeed(body(null)).isError(), "我加入/合作的流仍要登录");
+        Map<String, Object> mine = siteBody(null, null);
+        mine.put("author", "me");
+        assertTrue(controller.postFeed(mine).isError(), "author=me 仍要登录");
+        verify(postSvc, times(0)).selectSiteFeed(any(), any(), anyInt());
+        verify(postSvc, times(0)).selectSiteFeedByAuthor(any(), any(), anyInt(), any());
     }
 
     @Test

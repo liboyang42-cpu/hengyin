@@ -333,7 +333,7 @@ class ClubLifecycleServiceTest {
         when(clubMapper.selectClubByIdForUpdate(CLUB_ID)).thenReturn(ownerClub());
         when(clubMapper.countJoinPolicyColumn()).thenReturn(1);
         when(clubMapper.updateJoinPolicy(CLUB_ID, 1)).thenReturn(1);
-        when(clubMapper.updateClub(club)).thenReturn(0);
+        when(clubMapper.updateClub(any())).thenReturn(0);
 
         IllegalStateException error = assertThrows(IllegalStateException.class,
                 () -> clubService.updateOwnedClubProfile(club, OWNER_ID, 1));
@@ -342,7 +342,7 @@ class ClubLifecycleServiceTest {
         InOrder writes = inOrder(clubMapper);
         writes.verify(clubMapper).selectClubByIdForUpdate(CLUB_ID);
         writes.verify(clubMapper).updateJoinPolicy(CLUB_ID, 1);
-        writes.verify(clubMapper).updateClub(club);
+        writes.verify(clubMapper).updateClub(any());
         Method method = ClubServiceImpl.class.getMethod(
                 "updateOwnedClubProfile", Club.class, Long.class, Integer.class);
         Transactional transactional = method.getAnnotation(Transactional.class);
