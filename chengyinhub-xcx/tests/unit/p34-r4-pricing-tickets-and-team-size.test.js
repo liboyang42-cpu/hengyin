@@ -138,3 +138,19 @@ test('单张票的确认请求不带 ticketPrices(老路径不变)', () => {
   assert.equal(body.ticketPrices, undefined);
   assert.equal(body.guidedPrice, 69);
 });
+
+test('FE-G24 多票种逐张算平台服务费与预计到手,改价当场重算', () => {
+  const page = load();
+  page.data.subType = 'guided';
+  page.data.teamSize = '4';
+  preview(page, { tickets: TWO, platformRate: 0.03 });
+  assert.equal(page.data.feeText, '', '多票种时底部单价那行不出');
+  assert.deepEqual(page.data.tickets.map((t) => [t.feeText, t.takeHomeText]),
+    [['¥2.07（3%）', '¥66.93'], ['¥2.97（3%）', '¥96.03']]);
+  page.onTicketPriceInput({ currentTarget: { dataset: { idx: 1 } }, detail: { value: '100' } });
+  assert.equal(page.data.tickets[1].feeText, '¥3.00（3%）');
+  assert.equal(page.data.tickets[1].takeHomeText, '¥97.00');
+  page.onTicketPriceInput({ currentTarget: { dataset: { idx: 0 } }, detail: { value: '' } });
+  assert.equal(page.data.tickets[0].feeText, '', '没填价不出服务费');
+  assert.match(wxml, /<view class="pg-fee" wx:if="\{\{item\.feeText\}\}">/);
+});

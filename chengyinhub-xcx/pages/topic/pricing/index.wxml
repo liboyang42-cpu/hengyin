@@ -49,6 +49,10 @@
           <input class="pg-input" type="digit" value="{{item.price}}" placeholder="0" data-idx="{{index}}"
                  aria-label="{{item.name || '票种 ' + (index + 1)}}终价" bindinput="onTicketPriceInput" />
           <text class="pg-field-err" wx:if="{{item.error}}" aria-role="alert">{{item.error}}</text>
+          <view class="pg-fee" wx:if="{{item.feeText}}">
+            <view class="pg-fee-row"><text>平台服务费</text><text>{{item.feeText}}</text></view>
+            <view class="pg-fee-row pg-fee-row--net"><text>预计到手</text><text>{{item.takeHomeText}}</text></view>
+          </view>
         </view>
         <view class="pg-reference" wx:if="{{referenceText}}"><text>{{referenceText}}</text></view>
       </view>

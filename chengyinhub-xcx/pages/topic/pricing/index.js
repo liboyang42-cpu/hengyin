@@ -268,7 +268,7 @@ Page({
     const row = this.data.tickets[idx];
     if (!row) return;
     const tickets = this.data.tickets.slice();
-    tickets[idx] = Object.assign({}, row, { price: e.detail.value, error: ticketPriceError(e.detail.value, this._floor) });
+    tickets[idx] = Object.assign({}, row, { price: e.detail.value, error: ticketPriceError(e.detail.value, this._floor) }, ticketFee(e.detail.value, this._platformRate));
     this.setData({ tickets, submitError: '', canConfirmPrice: this._canConfirmPrice({ tickets }) });
   },
 
@@ -363,16 +363,15 @@ Page({
   },
 
   // 平台服务费与预计到手（按平台费率，平台费四舍五入到分，到手 = 价 - 费）
+  // FE-G24:多票种时逐张算服务费与到手(写在每张票下面),底部单价那行不出
   updateFee(value) {
     const rate = this._platformRate;
-    const price = Number(value);
-    if (rate == null || !Number.isFinite(price) || price <= 0 || (this.data.tickets && this.data.tickets.length > 1)) {
-      this.setData({ feeText: '', takeHomeText: '' });
+    const tickets = this.data.tickets || [];
+    if (tickets.length > 1) {
+      this.setData({ feeText: '', takeHomeText: '', tickets: tickets.map(function (r) { return Object.assign({}, r, ticketFee(r.price, rate)); }) });
       return;
     }
-    const fee = Math.round(price * rate * 100) / 100;
-    const pct = Math.round(rate * 10000) / 100;
-    this.setData({ feeText: '¥' + money(fee) + '（' + pct + '%）', takeHomeText: '¥' + money(price - fee) });
+    this.setData(ticketFee(value, rate));
   },
 
   // 灰按钮被点时给一句为什么(cy-btn 在禁用态吞 tap、补发 disabledtap)。
@@ -475,6 +474,15 @@ function ticketPriceError(value, floor) {
 }
 
 // 可提交的价格判据:逐张时每张都不低于地板;单价时终价不低于地板(原判据)。
+// 平台服务费与预计到手:平台费四舍五入到分,到手 = 价 - 费;没有费率或价不合法时两项都空
+function ticketFee(value, rate) {
+  const price = Number(value);
+  if (rate == null || !Number.isFinite(price) || price <= 0) return { feeText: '', takeHomeText: '' };
+  const fee = Math.round(price * rate * 100) / 100;
+  const pct = Math.round(rate * 10000) / 100;
+  return { feeText: '¥' + money(fee) + '（' + pct + '%）', takeHomeText: '¥' + money(price - fee) };
+}
+
 function pricesOk(tickets, finalPrice, floor) {
   if (Array.isArray(tickets) && tickets.length > 1) {
     return tickets.every(function (r) { return !ticketPriceError(r.price, floor); });
