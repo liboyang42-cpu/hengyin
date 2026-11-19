@@ -3,6 +3,7 @@ const cyToast = require('../../utils/toast.js');
 const app = getApp();
 const { currentOwnerId } = require('../utils/coupon-credential.js');
 const merchantTheme = require('../../utils/merchant-theme.js');
+const policy = require('../../utils/identity/identity-policy.js');
 const couponForm = require('../../utils/coupon-form.js');
 // 起止时刻的拆装(跨天必须按「日期+时刻」一起算,见该文件注释)
 const datetimeRange = require('../../utils/datetime-range.js');
@@ -36,7 +37,8 @@ Page({
     submitErrorTitle: '',
     submitErrorRetryable: false,
     operationScope: '',
-    
+    isMerchant: false, // U10:商家口径走创建域浅色;玩家打开(新建已关闭,只剩关闭态)随玩家域深色
+
     // 显示文本
     displayStartTime: '开始日期',
     displayEndTime: '结束日期',
@@ -59,12 +61,18 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad(options) {
+    const operationScope = options && options.scope === 'MERCHANT' ? 'MERCHANT' : '';
+    this.setData({ operationScope, isMerchant: this._isMerchantView(operationScope) });
     if (!couponForm.CREATION_ENABLED) { this.exitPage(); return; }
-    var that = this 
     this._disposed = false;
     this._visible = true;
     this._formOwner = currentOwnerId(app);
-    that.setData({ operationScope: options && options.scope === 'MERCHANT' ? 'MERCHANT' : '' })
+  },
+
+  // 与 coupon 列表 / mytemplate 同一判据
+  _isMerchantView(scope) {
+    return scope === 'MERCHANT'
+      || policy.isMerchantView({ role: app.getUserRole && app.getUserRole(), userType: app.getUserType && app.getUserType() });
   },
 
   onShow() {
@@ -76,7 +84,8 @@ Page({
       this._cancelExitTimer();
       this.setData({ isSubmitting: false });
     }
-    merchantTheme.merchantPageShow();
+    if (this.data.isMerchant) merchantTheme.merchantPageShow();
+    else merchantTheme.merchantPageRestore();
   },
   onHide() {
     this._visible = false;

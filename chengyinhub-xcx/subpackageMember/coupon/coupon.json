@@ -16,7 +16,6 @@
     "cy-access-gate": "/components/cy/access-gate/index"
   },
   "navigationBarTitleText": "我发布的优惠券",
-  "navigationBarTextStyle": "black",
-  "backgroundColor": "#F3F4F4",
+  "navigationBarTextStyle": "white",
   "navigationStyle": "custom"
 }

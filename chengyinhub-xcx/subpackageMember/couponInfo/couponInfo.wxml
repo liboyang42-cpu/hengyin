@@ -1,10 +1,10 @@
-<view class="fabu theme-topic-editor">
+<view class="fabu {{couponCreationEnabled ? '' : 'fabu--closed'}} {{couponCreationEnabled || isMerchant ? 'theme-topic-editor' : 'theme-dark'}}">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
   <cy-nav-bar custom-back bind:back="onCancel" />
   <cy-page-title title="优惠券设置" />
-  <cy-empty class="coupon-creation-closed" wx:if="{{!couponCreationEnabled}}" title="暂未开放新建优惠券" />
+  <cy-empty class="coupon-creation-closed" wx:if="{{!couponCreationEnabled}}" fill size="lg" title="暂未开放新建优惠券" cta="返回" bind:cta="exitPage" />
   <block wx:if="{{couponCreationEnabled}}">
   <view class="wp">
     <view class="form">

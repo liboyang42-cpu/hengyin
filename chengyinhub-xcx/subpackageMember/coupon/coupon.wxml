@@ -1,4 +1,4 @@
-<view class="coupon-page theme-merchant">
+<view class="coupon-page {{isMerchant ? 'theme-merchant' : 'theme-dark'}}">
   <cy-toast id="cy-toast" />
   <cy-access-gate kind="login" />
   <cy-loading-mask id="cy-loading" />

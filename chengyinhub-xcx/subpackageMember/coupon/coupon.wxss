@@ -1,4 +1,5 @@
-@import '../../style/merchant-light.wxss';
+/* U10(2026-11-19):玩家「我发布的券」随玩家域深色;商家口径根节点挂 .theme-merchant 走浅色(类作用域版) */
+@import '../../style/merchant-light-scope.wxss';
 
 /* 根因2(总控排查):cy-empty 的 fill 变体优先用 flex:1 吃满父容器剩余空间,
    前提是**从 page 根到组件的整条**父容器链都是 flex column 且有确定高度,断一层就吃不到。

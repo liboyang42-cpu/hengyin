@@ -1,6 +1,7 @@
 const app = getApp();
 const { currentOwnerId } = require('../utils/coupon-credential.js');
 const merchantTheme = require('../../utils/merchant-theme.js');
+const policy = require('../../utils/identity/identity-policy.js');
 const datetime = require('../../utils/datetime.js');
 const modal = require('../../utils/modal.js');
 const cyToast = require('../../utils/toast.js');
@@ -85,6 +86,7 @@ Page({
     loadState: 'loading',
     errorMsg: '',
     operationScope: '',
+    isMerchant: false, // U10:商家口径(scope=MERCHANT 或商家视角)走浅色;玩家「我发布的券」随玩家域深色
     summaryItems: [], // BL-77 商家券领取/核销统计,无数据为空数组即不展示
     tpShow: false, // 弹窗显示状态
     currentCoupon: {} // 当前选中的优惠券
@@ -104,10 +106,19 @@ Page({
    */
   onShow() {
     this._visible = true;
-    merchantTheme.merchantPageShow(); this._navigating = false;
+    this.syncViewTheme(); this._navigating = false;
     var that = this
     that.getList()
     that.loadSummary()
+  },
+
+  // 与 subpackageMember/mytemplate 同一判据:scope=MERCHANT 或商家视角 ⇒ 浅色商家工作台,否则玩家深色
+  syncViewTheme() {
+    const isMerchant = this.data.operationScope === 'MERCHANT'
+      || policy.isMerchantView({ role: app.getUserRole && app.getUserRole(), userType: app.getUserType && app.getUserType() });
+    if (isMerchant !== this.data.isMerchant) this.setData({ isMerchant });
+    if (isMerchant) merchantTheme.merchantPageShow();
+    else merchantTheme.merchantPageRestore();
   },
 
   onHide() {
