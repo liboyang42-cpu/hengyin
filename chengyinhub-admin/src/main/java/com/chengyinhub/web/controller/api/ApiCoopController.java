@@ -812,7 +812,8 @@ public class ApiCoopController extends BaseController {
         }
         Long id = body == null ? null : toLong(body.get("id"));
         if (id == null) return error("缺少ID");
-        coopInviteService.deletePerkTemplate(id, memberId);
+        // MC-022:softDelete 的 WHERE 钉 id + 商家;0 行 = 模板不存在或不是本店的,不能回「已删除」。
+        if (coopInviteService.deletePerkTemplate(id, memberId) <= 0) return error("模板不存在或无权删除");
         return AjaxResult.success("已删除");
     }
 
