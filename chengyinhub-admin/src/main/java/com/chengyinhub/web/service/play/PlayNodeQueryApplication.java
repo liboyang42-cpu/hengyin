@@ -305,8 +305,15 @@ public class PlayNodeQueryApplication {
         m.put("chapterId", n.getChapterId());
         // 节点级前置解锁提示位:前置未完成 → locked=true(硬闸在 checkin/answer/arrive/photo 服务端)
         m.put("unlockAfterNodeId", n.getUnlockAfterNodeId());
-        m.put("locked", n.getUnlockAfterNodeId() != null && n.getUnlockAfterNodeId() > 0
-                && !read.completedNodeIds.contains(n.getUnlockAfterNodeId()));
+        boolean lockedByPredecessor = n.getUnlockAfterNodeId() != null && n.getUnlockAfterNodeId() > 0
+                && !read.completedNodeIds.contains(n.getUnlockAfterNodeId());
+        m.put("locked", lockedByPredecessor);
+        // CG-SH04-P1-3:前置关解出前不下发这一站的地址文字(地址本身可能就是上一题的答案)。
+        // 只收这一个字段;坐标与到达判定仍按原口径，自由探索门店不受影响。
+        if (lockedByPredecessor && read.playMode != PlayMode.FREE_COLLECT) {
+            m.put("address", null);
+            m.put("addressHidden", true);
+        }
         if (read.playMode == PlayMode.FREE_COLLECT) {
             // 玩家只对当前门店逐店授权；这是对面 scope id，不是玩家身份或玩法字段。
             m.put("merchantId", n.getMerchantMemberId());
