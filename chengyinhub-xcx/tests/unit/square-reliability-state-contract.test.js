@@ -240,7 +240,8 @@ test('发布附件、帖子操作和评论操作均保留至少 88rpx 触达区'
   assert.match(detailWxss, /\.item-link button\s*\{[^}]*min-height:\s*88rpx/s)
   assert.match(detailWxss, /\.actions \.act\s*\{[^}]*min-height:\s*88rpx/s)
   assert.match(detailWxss, /\.actions \.act-share\s*\{[^}]*min-width:\s*88rpx[^}]*min-height:\s*88rpx/s)
-  assert.match(detailWxss, /\.david_npl\s*\{[^}]*bottom:\s*env\(safe-area-inset-bottom\)[^}]*display:\s*flex/s)
+  // PG-051:评论条贴底(bottom:0),安全区并进条内 padding-bottom,不再露缝
+  assert.match(detailWxss, /\.david_npl\s*\{[^}]*bottom:\s*0;[^}]*display:\s*flex[^}]*padding:[^;}]*env\(safe-area-inset-bottom\)/s)
 })
 
 test('广场评论与举报入口有准确可读名称，举报不再错用默认头像', () => {

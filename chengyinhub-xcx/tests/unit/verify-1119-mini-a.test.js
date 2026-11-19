@@ -236,3 +236,22 @@ test('PG-035/PG-037/PG-038/PG-043/PG-056:徽章缺图落缺参、收益子页身
     assert.match(read(`subpackageMember/${f}/index.js`), /statusBarHeight: app\.globalData\.statusBarHeight \|\| 20/, f);
   }
 });
+
+test('PG-046/047/050/051/052/053/054/057/058:样式与主题收口', () => {
+  const club = read('pages/club/detail/index.wxss');
+  assert.doesNotMatch(club, /rgba\(255, ?255, ?255, ?0\.06\)\;?\n?[^\n]*$|border[^;]*rgba\(255, ?255, ?255, ?0\.(06|12)\)/m);
+  assert.match(read('pages/merchant/citynode/create/index.wxml'), /^<view class="cnc-page theme-merchant">/);
+  assert.match(read('subpackageP3/pages/stamp-album/index/index.wxss'), /\.al-fab \{[^}]*bottom: calc\(var\(--cy-space-7\) \+ env\(safe-area-inset-bottom\)\)/);
+  const sq = read('pages/square/detail/index.wxss');
+  assert.doesNotMatch(sq, /font-weight: 700rpx/);
+  assert.match(sq, /\.david_npl\{[^}]*bottom: 0;/);
+  assert.doesNotMatch(read('pages/deregister/components/scene-settings-deregister/index.wxml'), /color="#1a1a1a"/);
+  assert.equal(JSON.parse(read('pages/activity/official-detail/index.json')).backgroundColor, '#000000');
+  assert.match(read('pages/coop/invite-detail/index.wxss'), /page \{ background: var\(--cy-bg-page\); \}/);
+  assert.match(read('pages/club/customers/index.wxss'), /var\(--cy-safe-bottom\)/);
+  assert.match(read('pages/club/notify/index.wxss'), /var\(--cy-safe-bottom\)/);
+  const gc = read('subpackageP3/pages/growthcenter/index/index.wxss');
+  assert.doesNotMatch(gc.slice(gc.indexOf('.gc-page {'), gc.indexOf('}', gc.indexOf('.gc-page {'))), /--cy-(space|font|type|radius|page)-[\w-]+:/);
+  assert.match(read('subpackageP3/pages/growthcenter/index/index.wxml'), /<cy-page-title class="gc-title" title="成长中心" \/>/);
+  assert.doesNotMatch(read('pages/topic/merchantinfo/merchantinfo.wxss'), /#D4CFC4/);
+});

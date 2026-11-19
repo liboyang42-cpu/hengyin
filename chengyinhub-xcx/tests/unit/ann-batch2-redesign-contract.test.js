@@ -71,7 +71,8 @@ function assertGrowthContract(files) {
   assert.doesNotMatch(files.growthJs, /ME_GRAD|BADGE_PALETTE|discStyle/, '积分页数据层不得生成彩色渐变仪表')
   assert.match(files.growthWxss, /\.gc-score-rank\s*\{[^}]*background:\s*var\(--cy-color-bg-elevated\)/)
   assert.match(files.growthWxss, /\.gc-badge-disc\s*\{[^}]*background:\s*var\(--cy-color-bg-surface-subtle\)/)
-  assert.match(files.growthWxss, /\.gc-score-value\s*\{[^}]*font-size:\s*var\(--cy-type-data-xl\)/)
+  // PG-057:页内刻度改名 --gc-*,不再改写全局 token
+  assert.match(files.growthWxss, /\.gc-score-value\s*\{[^}]*font-size:\s*var\(--gc-type-data-xl\)/)
 }
 
 function assertAll(files) {

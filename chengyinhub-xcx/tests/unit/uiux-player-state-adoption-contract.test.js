@@ -412,8 +412,9 @@ function assertOfficialDetailMediaContrast(wxml, wxss, pageConfig) {
       `${selector} 压在图片/黑色蒙层上，必须使用固定浅色 on-image token`,
     );
   }
-  assert.equal(pageConfig.navigationBarTextStyle, 'black', '商家态原生导航文字必须按浅色底配置');
-  assert.equal(pageConfig.backgroundColor, '#F3F4F4', '商家态首帧不得先闪出玩家黑色背景');
+  // PG-053(2026-11-17 业主批准):官方活动详情按玩家深色页配首帧(多数入口是玩家);商家态由 merchantPageShow 在 onShow 切浅色原生底。
+  assert.equal(pageConfig.navigationBarTextStyle, 'white', '玩家首帧原生导航文字必须按深色底配置');
+  assert.equal(pageConfig.backgroundColor, '#000000', '玩家首帧不得先闪出浅色背景');
 }
 
 test('官方活动详情的封面蒙层与商家浅色滚动导航始终可读', () => {
@@ -424,7 +425,7 @@ test('官方活动详情的封面蒙层与商家浅色滚动导航始终可读',
   );
 });
 
-test('负控:图片蒙层退回主题反色字或商家首帧改暗时必须判红', () => {
+test('负控:图片蒙层退回主题反色字或玩家首帧改浅时必须判红', () => {
   const wxml = source('pages/activity/official-detail/index.wxml');
   const wxss = source('pages/activity/official-detail/index.wxss');
   const pageConfig = JSON.parse(source('pages/activity/official-detail/index.json'));
@@ -438,8 +439,8 @@ test('负控:图片蒙层退回主题反色字或商家首帧改暗时必须判�
     /固定浅色 on-image token/,
   );
   assert.throws(
-    () => assertOfficialDetailMediaContrast(wxml, wxss, { ...pageConfig, backgroundColor: '#000000' }),
-    /不得先闪出玩家黑色背景/,
+    () => assertOfficialDetailMediaContrast(wxml, wxss, { ...pageConfig, backgroundColor: '#F3F4F4' }),
+    /玩家首帧不得先闪出浅色背景/,
   );
 });
 
