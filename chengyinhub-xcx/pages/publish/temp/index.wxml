@@ -17,8 +17,19 @@
     for (var i = 0; i < (list || []).length; i++) { if (list[i].key === key) return true; }
     return false;
   };
+  // 选项的信任行(cast-game-trust-1119):每个角色一格,delta 为 0 的收起
+  var trust = function (cast, list) {
+    var out = [];
+    for (var i = 0; i < (cast || []).length; i++) {
+      var d = 0;
+      for (var j = 0; j < (list || []).length; j++) { if (list[j].castId === cast[i].id) d = list[j].delta; }
+      out.push({ castId: cast[i].id, name: cast[i].name || '未命名角色', delta: d, on: d !== 0 });
+    }
+    return out;
+  };
   module.exports = {
     has: has,
+    trust: trust,
     // R3：效果行的字段错误（effectErrors 列表）按 path/index 取本行第一条
     rowErr: function (errors, path, index) { for (var i = 0; i < (errors || []).length; i++) { if (errors[i].path === path && errors[i].index === index) return errors[i].error; } return ''; },
     memo: memo,
@@ -294,6 +305,13 @@
         </view>
       </view>
       <view class="cg-rw-line compact"><view class="cg-rw-name">记住这个选择（结局和后文可以用）</view><cy-switch checked="{{opt.memo(item.effects)}}" data-path="qa.options" data-index="{{qi}}" bindchange="toggleOptionMemo" /></view>
+      <view class="cg-trust" wx:if="{{castMembers.length}}">
+        <text class="cg-trust__k">信任</text>
+        <block wx:for="{{opt.trust(castMembers, item.trust)}}" wx:key="castId" wx:for-item="t">
+          <view wx:if="{{t.on}}" class="cg-trust__on"><text class="cg-trust__n">{{t.name}}</text><cy-stepper value="{{t.delta}}" min="-2" max="2" label="{{t.name}}信任" data-path="qa.options" data-index="{{qi}}" data-cast="{{t.castId}}" bind:change="onOptionTrust" /></view>
+          <view wx:else class="cg-chip" data-path="qa.options" data-index="{{qi}}" data-cast="{{t.castId}}" data-v="1" catchtap="onOptionTrust" aria-role="button" aria-label="{{t.name}}信任加一" hover-class="cy-pressed" hover-stay-time="80">{{t.name}}</view>
+        </block>
+      </view>
       <view wx:if="{{advanced.qa.judge !== false}}" class="cg-choice-li cg-adv-correct" data-index="{{qi}}" bindtap="pickCorrectQaOption"
             aria-role="{{advanced.qa.multi ? 'checkbox' : 'radio'}}" aria-checked="{{item.correct}}" aria-label="{{advanced.qa.multi ? '把选项 ' + (qi + 1) + ' 勾为正确答案' : '把选项 ' + (qi + 1) + ' 设为正确答案'}}"
             hover-class="cy-pressed" hover-stay-time="80">

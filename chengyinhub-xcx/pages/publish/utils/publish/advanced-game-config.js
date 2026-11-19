@@ -1,3 +1,4 @@
+const storyCast = require('./story-cast.js'); // 选项 trust 的归一(cast-game-trust-1119)
 const SCHEMA_VERSION = 1;
 
 // 旧五段:与 validationMethod 正交的通用机制,任何玩法都能叠加。
@@ -1069,6 +1070,8 @@ function normalize(model) {
         const item = { ...option, key: text(option && option.key), label: text(option && option.label) };
         const effects = normalizeEffects(option && option.effects);
         if (effects.length) item.effects = effects;
+        const trust = storyCast.normalizeTrust(option && option.trust);
+        if (trust.length) item.trust = trust; else delete item.trust;
         return item;
       });
       delete row.kaccha;
@@ -1184,6 +1187,9 @@ function normalize(model) {
       // 选中后的反馈图片（0 至 3 张）；没有就整键不送
       const fbImgs = (Array.isArray(item && item.fbImgs) ? item.fbImgs : []).map(text).filter(Boolean);
       if (fbImgs.length) row.fbImgs = fbImgs; else delete row.fbImgs;
+      // 角色信任(cast-game-trust-1119):与剧情分支选项同一形状;全是 0 就整键不送
+      const trust = storyCast.normalizeTrust(item && item.trust);
+      if (trust.length) row.trust = trust; else delete row.trust;
       return row;
     });
   }

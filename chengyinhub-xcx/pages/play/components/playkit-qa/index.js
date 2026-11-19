@@ -106,6 +106,8 @@ Component({
     /* P-10 第三轮:作者在模板「结果反馈」里给这次结果写了话('PASS' / 'FAIL',服务端判完才给)。
        作者的话由结算判定屏(cy-play-verdict)摆出来;这一屏答错时只描红清空,不再叠自己的兜底句。 */
     authoredOutcome: { type: String, value: '' },
+    /* 角色信任:选了的选项改了谁的信任,判完那一次由页面给「X会记住这件事」;没有为空串 */
+    remember: { type: String, value: '' },
   },
   data: {
     /* ⚠️ 派生数据必须换个键名。写回被 observer 监听的那个属性(options)

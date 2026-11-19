@@ -617,6 +617,8 @@ function pickPlayKit(view, now) {
         answerId: seg.judge !== false ? (seg.answerId || '') : '',
         answerIds: seg.judge !== false && Array.isArray(seg.answerIds) ? seg.answerIds.slice() : [],
         feedback: tidyText(seg.lastFeedback || ''),
+        // 角色信任「X会记住这件事」:要角色名,由页面按判完那次回包的 trustChanged 填(pages/play/index.js)
+        remember: '',
         // P-10:作者在「结果反馈」里给这次结果写了话(服务端判完才给 outcomeFeedback)→ 由结算判定屏摆作者的话,
         // 这一屏不再写自己的兜底句;没写时为空串,兜底照旧
         authoredOutcome: view.outcomeFeedback && ['PASS', 'FAIL'].includes(view.outcomeFeedback.outcome) ? view.outcomeFeedback.outcome : '',

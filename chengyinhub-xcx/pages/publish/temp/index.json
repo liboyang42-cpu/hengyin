@@ -8,6 +8,7 @@
     "cy-nav-bar": "/components/cy/nav-bar/index",
     "cy-category-sheet": "/components/cy/category-sheet/index",
     "cy-switch": "/components/cy/switch/index",
+    "cy-stepper": "/pages/publish/components/stepper/index",
     "cy-icon": "/components/cy/icon/index",
     "cy-dropdown": "/components/cy/dropdown/index",
     "cy-skeleton": "/components/cy/skeleton/index",

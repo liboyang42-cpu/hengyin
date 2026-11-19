@@ -199,6 +199,8 @@ Component({
         /* P-10/P-11 第四轮 rig 实测:作者「结果反馈」判完那一次的回包带 outcomeFeedback,丢在这一层的话
            题屏不知道作者写了话,判定屏下面仍叠兜底句「再想想 / 不对…」。 */
         outcomeFeedback: (state && state.outcomeFeedback) || null,
+        /* 角色信任:选择类站点判完那一次的回包带 trustChanged(改了信任的角色 id),回读 /state 没有 —— 页面据此显示「X会记住这件事」。 */
+        trustChanged: (state && Array.isArray(state.trustChanged)) ? state.trustChanged.slice() : null,
       });
     },
     /** 这一步没提交成功:页面据此让拍物成卡那一屏回到取景,别让玩家对着「处理中」干等。 */

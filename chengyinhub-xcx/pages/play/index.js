@@ -7876,6 +7876,7 @@ Page({
     const picked = this.data.isPreview && view.previewKit ? view.previewKit : pickPlayKit(Object.assign({}, view, { placeName }), new Date()); if (picked && picked.type === 'hangman' && placeNode) Object.assign(picked, hangmanStationText(picked, placeNode, stationLabel(playerTitle(placeNode.gameTitle || placeNode.name)))); // 逐字猜词服务端不一定带题面:缺时用本站题干/站名摆在格子上方,解开后接本站文字反馈
     const kit = dailySignRevealState(previous, picked);
     if (kit && kit.type === 'qa' && kit.passed && submitted && submitted.accepted) kit.acceptedInput = submitted.input;
+    if (kit && kit.type === 'qa') kit.remember = (this._castRemember ? this._castRemember(view.trustChanged) : '') || (previous && previous.sessionId != null && String(previous.sessionId) === String(kit.sessionId) && previous.remember) || ''; // 角色信任:判完那次回包才带,同局后续视图沿用
     if (kit && kit.type === 'album' && !kit.done && kit.sessionId === previous.sessionId && kit.version === previous.version) kit.uploaded = !!previous.uploaded;
     if (!kit) { this.setData({ playKit: { show: false, kit: null } }); return; }
     /* 内嵌(契约 §1.5):不弹整屏那一层 —— 它已经长在故事流里了(见 openChapterFull 的

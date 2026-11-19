@@ -1775,3 +1775,9 @@ page {
 .cg-fold-caret { color: var(--cy-color-text-secondary); transition: transform var(--cy-motion-fast) var(--cy-ease-out); }
 .cg-fold-caret.is-open { transform: rotate(90deg); }
 .cg--reduced-motion .cg-fold-caret { transition: none; }
+
+/* 选项的信任(cast-game-trust-1119):与剧情分支选项同一组 ±stepper,0 收起成名字药丸 */
+.cg-trust { display: flex; align-items: center; flex-wrap: wrap; gap: var(--cy-space-1-5); margin-top: var(--cy-space-2); }
+.cg-trust__k { color: var(--cy-color-text-tertiary); font-size: var(--cy-font-caption); }
+.cg-trust__on { display: inline-flex; align-items: center; gap: var(--cy-space-1); }
+.cg-trust__n { color: var(--cy-color-text-primary); font-size: var(--cy-font-caption); }

@@ -378,6 +378,28 @@ function trustSummary(cfg, trust) {
     .map(function (r) { return names[r.castId] + ' ' + (r.delta > 0 ? '+' + r.delta : '−' + Math.abs(r.delta)); }).join(' · ');
 }
 
+/* ===== 站点选择类玩法的信任(cast-game-trust-1119)===== */
+
+/** 主题编辑器 → 玩法编辑器:角色开着才带 &cast=[{id,name}],没开 / 没有角色返回空串(玩法编辑器就不出信任行)。 */
+function castQuery(cfg) {
+  if (!isEnabled(cfg)) return '';
+  var cast = ((cfg && cfg.cast) || []).filter(function (m) { return m && CAST_ID.test(str(m.id)); })
+    .slice(0, MAX_CAST).map(function (m) { return { id: m.id, name: str(m.name).trim() }; });
+  return cast.length ? '&cast=' + encodeURIComponent(JSON.stringify(cast)) : '';
+}
+
+/** 玩法编辑器读 &cast=:坏 JSON / 不合法的 id 一律丢掉,返回 [{id,name}]。 */
+function parseCastQuery(raw) {
+  var list;
+  try { list = JSON.parse(typeof raw === 'string' ? raw : ''); } catch (e) { return []; }
+  var seen = [];
+  return (Array.isArray(list) ? list : []).filter(function (m) {
+    if (!m || !CAST_ID.test(str(m.id)) || seen.indexOf(m.id) >= 0) return false;
+    seen.push(m.id);
+    return true;
+  }).slice(0, MAX_CAST).map(function (m) { return { id: m.id, name: str(m.name).trim() }; });
+}
+
 /* ===== 线索 / 结局台词 ===== */
 
 /** 线索解锁章节的选项:开局就有 + 已保存(有 id)的普通章节。 */
@@ -418,5 +440,6 @@ module.exports = {
   cardView: cardView, listView: listView, speakerOptions: speakerOptions, speakerName: speakerName, speakerNameMap: speakerNameMap,
   isLineType: isLineType, lineFields: lineFields, lineIssue: lineIssue,
   normalizeTrust: normalizeTrust, setTrust: setTrust, trustRows: trustRows, trustSummary: trustSummary,
+  castQuery: castQuery, parseCastQuery: parseCastQuery,
   clueChapterOptions: clueChapterOptions, clueChapterLabel: clueChapterLabel, endingForOptions: endingForOptions,
 };

@@ -243,3 +243,6 @@
 .qa--reduced .qa__pic, .qa--reduced .qa__pic-img, .qa--reduced .qa__pic-ring { transition: none; }
 .qa--reduced .qa__pic.is-on { transform: none; }
 .qa--reduced .qa__pic.is-on .qa__pic-img { transform: none; }
+
+/* 角色信任「X会记住这件事」:与故事流行内选项那一句同款(居中、12px、浅灰、不带数字) */
+.qa__remember { margin-top: var(--cy-space-3); font-size: var(--cy-type-caption); line-height: 1.5; text-align: center; opacity: .46; }

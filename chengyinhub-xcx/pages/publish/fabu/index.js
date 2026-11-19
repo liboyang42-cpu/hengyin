@@ -9651,7 +9651,8 @@ Page({
     wx.navigateTo({ url: '/pages/publish/temp/index?from=fabu&id=' + id
       + (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT&templateScope=my' : '&scope=my')
       + '&runtimeEndings=' + encodeURIComponent(JSON.stringify((this._runtimeConfig().endings || []).map(row => ({ id: row.id, title: row.title })))) + checkContext.query(this.data.formData.journeyRules)
-      + (this.data.supportMatrix ? '&supportContext=' + encodeURIComponent(JSON.stringify(this._nodeSupportContext())) : '') + focusQuery });
+      + (this.data.supportMatrix ? '&supportContext=' + encodeURIComponent(JSON.stringify(this._nodeSupportContext())) : '') + focusQuery
+      + storyCast.castQuery(this.data.formData.castConfig) });
   },
   onCopyBoundTemplate() {
     const node = this.data.nodesForm;
@@ -9924,7 +9925,7 @@ Page({
         + '&nodeName=' + encodeURIComponent(nodeName || '') + checkContext.query(this.data.formData.journeyRules)
         + (this.data.supportMatrix ? '&supportContext=' + encodeURIComponent(JSON.stringify(ctx)) : '')
         + (game ? '&game=' + encodeURIComponent(game.key) + (dataset.preview ? '&sample=1' : '') : '')
-        + (this.data.operationScope ? '&scope=MERCHANT' : ''),
+        + (this.data.operationScope ? '&scope=MERCHANT' : '') + storyCast.castQuery(this.data.formData.castConfig),
       events: {
         templateCreated(tpl) {
           if (!targetCurrent() || !tpl || !templateAdoption.id(tpl.id)) return;

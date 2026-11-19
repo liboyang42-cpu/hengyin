@@ -114,6 +114,7 @@
         </view>
       </view>
       <view wx:if="{{finished && answerText}}" class="qa__fb" aria-live="polite">{{answerText}}</view>
+      <view wx:if="{{remember && (finished || passed)}}" class="qa__remember" aria-live="polite">{{remember}}</view>
     </view>
   </view>
 

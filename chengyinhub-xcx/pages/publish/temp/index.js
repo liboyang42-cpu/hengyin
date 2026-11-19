@@ -44,6 +44,7 @@ const { splitRuleSteps } = require('../../../utils/rule-steps.js');
 const editorLayout = require('./editor-layout.js');
 const { rejectionNamesCover } = require('../utils/publish/cover-rejection.js');
 const { safeDecode } = require('../../../utils/safe-decode.js');
+const storyCast = require('../utils/publish/story-cast.js'); // 选择类选项的角色信任(cast-game-trust-1119)
 
 /* 发布全量校验的报错顺序 —— validateForm 与「查看预览」置灰点击必须读同一份。
    2026-09-19 审查 F-PU-1:这里曾各自维护一份,发布那份漏了 interactionType,
@@ -1112,6 +1113,23 @@ Page({
     });
     this._setEffects(d.path, next);
   },
+  /** 选项的「信任」:每个角色一个 ±(-2..2),0 收起成名字药丸;与剧情分支选项同一组件、同一份 trust 形状。 */
+  onOptionTrust: function (e) {
+    const d = e.currentTarget.dataset;
+    const index = Number(d.index);
+    const rows = this._effectsList(d.path);
+    if (!rows[index]) return;
+    const value = e.detail && e.detail.value != null ? Number(e.detail.value) : Number(d.v);
+    const order = (this.data.castMembers || []).map((m) => m.id);
+    const next = rows.map((row, i) => {
+      if (i !== index) return row;
+      const trust = storyCast.setTrust(row.trust, d.cast, value, order);
+      const out = Object.assign({}, row, { trust });
+      if (!trust.length) delete out.trust;
+      return out;
+    });
+    this._setEffects(d.path, next);
+  },
   addEffectRow: function (e) {
     const path = e.currentTarget.dataset.path;
     const list = this._effectsList(path);
@@ -1415,7 +1433,9 @@ Page({
       loadErrorIsAccess: !editingId && options.id != null,
       // FE-04:纯预览态(调用方传 mode=preview 或 preview=1)——隐藏发布/草稿控件,temp 只做预览确认。
       // 现有编辑调用方不传该参 → previewMode=false,行为完全不变。
-      previewMode: options.mode === 'preview' || options.preview === '1'
+      previewMode: options.mode === 'preview' || options.preview === '1',
+      // 主题开着角色时由主题编辑器带进来;没带 = 不出信任行,选项上已有的 trust 原样保留
+      castMembers: options.from === 'fabu' ? storyCast.parseCastQuery(safeDecode(options.cast)) : []
     });
 
     if (options.from === 'citynode') that.loadCityNodeAccess();
