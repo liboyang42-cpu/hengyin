@@ -7,7 +7,7 @@
     <cy-page-title title="举报进度" safe-top="{{false}}" />
     <view class="rd__body">
       <cy-skeleton wx:if="{{state === 'loading'}}" type="feed-card" count="2" />
-      <cy-state-shell wx:elif="{{state === 'missing-param'}}" kind="missing-param" class="cy-fade-in" />
+      <cy-state-shell wx:elif="{{state === 'missing-param'}}" kind="missing-param" primary="返回" bind:primary="goBack" class="cy-fade-in" />
       <cy-state-shell wx:elif="{{state === 'no-permission'}}" kind="no-permission"
                       title="暂时不能查看这条举报" sub="仅举报人可查看" class="cy-fade-in" />
       <cy-state-shell wx:elif="{{state === 'error'}}" kind="data" title="举报进度加载失败"

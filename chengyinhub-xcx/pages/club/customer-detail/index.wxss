@@ -1,7 +1,7 @@
 /* K2 客户详情(暗)· Figma s7SEFaoJ3GQUIxJhdqcFUb node 141:140
    同屏六态:K2 标准 / K2-B 金额无权限 / K2-C 暂无记录 / K2-D 无权限 / K2-E 加载失败 / K2-F 编辑标签与备注 */
 page { background: var(--cy-color-bg-page); }   /* 顶栏与铺满层同色，避免固定导航下缘出色带(custom-nav-page-surface 契约) */
-.page { min-height: 100vh; padding: 0 var(--cy-page-x) var(--cy-space-5); display: flex; flex-direction: column; box-sizing: border-box; }
+.page { min-height: 100vh; padding: 0 var(--cy-page-x) var(--cy-space-5); display: flex; flex-direction: column; box-sizing: border-box; background: var(--cy-bg-page); color: var(--cy-color-text-primary); } /* 浅色作用域内铺底：page{} 在 .theme-merchant 之外取不到浅色变量 */
 cy-empty, cy-error { display: flex !important; flex: 1 !important; min-height: 0; }
 
 .cd-head { position: relative; padding-right: 128rpx; }   /* 给绝对定位的头像(112rpx)留出净空,长名字才不会压到它底下 */

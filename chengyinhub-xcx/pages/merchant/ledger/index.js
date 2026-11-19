@@ -102,6 +102,9 @@ Page({
     if (!this.data.routeError) this.revalidateCurrentView();
   },
   onHide() { merchantTheme.merchantPageRestore(); },
+
+  // 非商家成员看账本:原地无权限态的唯一动作(UI 走查 1119 U3 同款)
+  onDenyCta() { require('../../../utils/merchant-no-permission.js').followDenyCta(this, false, '/pages/merchant/index/index'); },
   // MC-019:核销记录 / 收入明细 / 对公结算按 pageNum 递增触底加载,不再只看第 1 页。
   onReachBottom() {
     if (this.data.loading || this._loadingMore) return;
