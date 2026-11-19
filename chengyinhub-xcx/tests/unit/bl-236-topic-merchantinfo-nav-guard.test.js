@@ -36,7 +36,7 @@ const INFO = 'pages/topic/merchantinfo/merchantinfo.js'
 const ds = (d) => ({ currentTarget: { dataset: d } })
 
 const CASES = [
-  [TOPIC, 'goTemplateDetail', () => ds({ id: 5 }), /^\/pages\/templatedetail\/templatedetail\?id=5&scope=my$/],
+  // 2026-11-19:主题详情「节点介绍」改成章节卡(点开原地展开),index 的 goTemplateDetail 已无绑定、随之删除
   [TOPIC, 'goPoint', () => undefined, /growthcenter/],
   [TOPIC, 'onLineupTap', () => ds({ kind: 'club', id: 9 }), /^\/pages\/club\/detail\/index\?id=9$/],
   [TOPIC, 'goMyOrders', () => undefined, /^\/subpackageMember\/order\/order$/],

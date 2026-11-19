@@ -194,35 +194,29 @@
         <!-- 原型 B T-36 开局前准备:作者配了准备项或可玩时段才出现(B1),行形与上一行相同 -->
         <view wx:if="{{is_join == 1 && prep.show}}" class="topic-audio" bindtap="openPrep" aria-role="button" aria-label="{{prep.rowText}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="{{prep.icon}}" size="36" /><text>{{prep.rowText}}</text><cy-icon wx:if="{{!prep.loading && !prep.error}}" name="chevron-right" size="28" /></view>
 
-        <view class="davidxian" wx:if="{{ info.templateCount!=0 }}"></view>
-
-        <view class="det4" wx:if="{{ info.templateCount!=0 }}">
-          <!-- 修改1：节点介绍部分，循环 chaptersList->nodes->cmsMemberTemplate -->
+        <view class="det4" wx:if="{{ info.chapterCards.length }}">
+          <!-- 2026-11-19 业主:节点介绍一章一张卡(章节自己的图 + 玩法数/时长),点开原地展开本章介绍;结局章不出卡 -->
           <view class="dl">
             <view class="det-type david_sti">节点介绍</view>
             <view class="temp-list">
               <view class="ul  scroll-list">
-                <!-- 循环所有章节 -->
-                <block wx:for="{{ info.chaptersList }}" wx:key="chapterIndex" wx:for-index="chapterIndex"
-                  wx:for-item="chapter">
-                  <!-- 循环章节下的所有节点 -->
-                  <block wx:for="{{ chapter.nodes }}" wx:key="nodeIndex" wx:for-index="nodeIndex" wx:for-item="node">
-                    <!-- 检查节点是否有模板数据 -->
-                    <view data-id="{{node.cmsMemberTemplate.id}}" bindtap="goTemplateDetail" class="li"
-                      wx:if="{{ node.cmsMemberTemplate }}" hover-class="cy-pressed" hover-stay-time="80">
-                      <view class="item">
-                        <image lazy-load="true" src="{{ node.cmsMemberTemplate.imgUrl }}" mode="widthFix" class="pic" />
-                        <view class="item-txt">
-                          <view class="tit ep1">{{ node.cmsMemberTemplate.title }}</view>
-                          <view class="david_mbxi">
-                            <view class="david_mbxi_li">{{ node.cmsMemberTemplate.players }}</view>
-                            <view class="david_mbxi_li">{{ node.cmsMemberTemplate.duration === 0 ? '0分钟' : (node.cmsMemberTemplate.duration ? node.cmsMemberTemplate.duration + '分钟' : '—') }}</view>
-                          </view>
-                        </view>
+                <view wx:for="{{ info.chapterCards }}" wx:key="key" wx:for-item="card"
+                  class="li chap-card {{openChapterKey === card.key ? 'is-open' : ''}}"
+                  data-key="{{card.key}}" bindtap="onChapterCardTap" hover-class="cy-pressed" hover-stay-time="80"
+                  aria-role="button" aria-label="{{card.name}}" aria-expanded="{{openChapterKey === card.key}}">
+                  <view class="item">
+                    <image lazy-load="true" src="{{ card.img }}" mode="aspectFill" class="pic" />
+                    <view class="item-txt">
+                      <view class="tit ep1">{{ card.name }}</view>
+                      <view class="david_mbxi" wx:if="{{card.meta}}">
+                        <view class="david_mbxi_li">{{ card.meta }}</view>
+                      </view>
+                      <view class="chap-card__desc" wx:if="{{card.description}}">
+                        <text class="chap-card__txt">{{card.description}}</text>
                       </view>
                     </view>
-                  </block>
-                </block>
+                  </view>
+                </view>
               </view>
             </view>
           </view>

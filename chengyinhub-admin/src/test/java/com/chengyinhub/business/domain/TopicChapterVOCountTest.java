@@ -47,4 +47,22 @@ class TopicChapterVOCountTest {
         assertEquals(Long.valueOf(0L), chapter.getLocationCount());
         assertEquals(Long.valueOf(0L), chapter.getTemplateCount());
     }
+
+    private static CmsTopicNode stored(Long templateId) {
+        CmsTopicNode node = new CmsTopicNode();
+        node.setTemplateId(templateId);
+        return node;
+    }
+
+    @Test
+    void lockedTeaserTemplateCountFollowsPublishedNodesNotTeaserProjection() {
+        assertEquals(Long.valueOf(2L), TopicChapterVO.countTemplates(
+                Arrays.asList(stored(3L), stored(null), stored(0L), stored(8L), null), 9L));
+    }
+
+    @Test
+    void lockedTeaserWithoutNodeQueryFallsBackToStoredCount() {
+        assertEquals(Long.valueOf(4L), TopicChapterVO.countTemplates(null, 4L));
+        assertEquals(Long.valueOf(0L), TopicChapterVO.countTemplates(java.util.Collections.<CmsTopicNode>emptyList(), 4L));
+    }
 }

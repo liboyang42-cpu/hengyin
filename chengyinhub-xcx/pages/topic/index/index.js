@@ -37,6 +37,7 @@ const contentReport = require('../utils/content-report.js');
 const reportSheet = require('../../../utils/community-report-sheet.js');
 const mediaPreview = require('../../../utils/media-preview.js');
 const motion = require('../utils/topic-motion.js');
+const chapterCards = require('../utils/chapter-cards.js');
 const { checkoutView } = require('../utils/checkout-view.js');
 const money = require('../../../utils/money-format.js');
 const KB_MS = 3600;          // 封面每张停留时长
@@ -125,6 +126,7 @@ Page({
       why: '', duration: RESULT_SHEET_MS,
       consentName: '', consentChecked: false, consentState: 'idle', consentError: '' },
     reducedMotion: false,
+    openChapterKey: '',
     // cy-tabs 的数据源。2026-08-05 从手抄组件类名(<view class="cy-tabs cy-tabs--fill
     // cy-tabs--wide">)改成真的用组件 —— 手抄的那份还硬编码了 --cy-tabs-accent:#028707
     // (纯绿 hue 122°，和状态成功色的 161° 不是一档，属页面自选强调色)。
@@ -982,13 +984,6 @@ Page({
     wx.navigateTo({ url: '/subpackageMember/signup/index?stype=0&arrive=1' + walletTopicQuery(topicId, '&'), success: onGone, complete: () => { this._navigating = false; } });
   },
 
-  goTemplateDetail(e) {
-    let id = e.currentTarget.dataset.id;
-    if (this._navigating) return; this._navigating = true; wx.navigateTo({ complete: () => { this._navigating = false; },
-      url: '/pages/templatedetail/templatedetail?id=' + id + '&scope=my',
-    })
-  },
-  
   goLocation(e) {
     let latitude = e.currentTarget.dataset.latitude;
     let longitude = e.currentTarget.dataset.longitude;
@@ -2312,6 +2307,8 @@ Page({
             res.data['chaptersList'] = that.processChaptersList(res.data['chaptersList'], res.data['imgUrl']);
             that.buildRouteMap(res.data['chaptersList']);
           }
+          // 节点介绍:一章一张卡,结局章不出(防剧透)
+          res.data['chapterCards'] = chapterCards.buildChapterCards(res.data['chaptersList'], res.data['imgUrl'], (src) => app.getImgUrl(src));
           // 放在 if 外面:没有章节的主题也可能有俱乐部,阵容不该跟着章节一起消失
           res.data['lineup'] = that.buildLineup(res.data);
           res.data['contentIncludes'] = that.buildContentIncludes(res.data);
@@ -2326,7 +2323,7 @@ Page({
           that._canReport = canReportTopic(res.data, typeof app.getUserID === 'function' ? app.getUserID() : '');
           const routeStyle = routeMapStyleOf(res.data);
           that.setData({
-            info: res.data, mapSubkey: routeStyle.mapSubkey, mapLayerStyle: routeStyle.mapLayerStyle,
+            info: res.data, mapSubkey: routeStyle.mapSubkey, mapLayerStyle: routeStyle.mapLayerStyle, openChapterKey: '',
             // P0(2026-09-05 审核):已购态不再只信 URL 参数 is_join(全仓只有订单详情会传 1,
             // 从首页/搜索进来的已购用户永远看不到「开始玩」)。/info-to-user 已按 ownerType=1 &
             // registrationStatus=2 回填 isSignUp,与自玩通行证的建单口径同源,直接用它。
@@ -2509,6 +2506,12 @@ Page({
     }
 
     return chaptersList;
+  },
+
+  // 节点介绍章节卡:点一下原地展开本章介绍,再点收起;一次只开一张
+  onChapterCardTap(e) {
+    const key = e && e.currentTarget && e.currentTarget.dataset ? e.currentTarget.dataset.key : '';
+    this.setData({ openChapterKey: chapterCards.toggleOpen(this.data.openChapterKey, key) });
   },
 
   // 修改展开/收起函数，支持独立控制每个票务
