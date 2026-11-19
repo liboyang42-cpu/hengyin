@@ -18,6 +18,11 @@ Page({
       statusBarHeight: layout().statusBarHeight, navBarHeight: layout().navBarHeight,
     });
   },
+  goBack() {
+    if (getCurrentPages().length > 1) wx.navigateBack({ delta: 1 });
+    else wx.switchTab({ url: '/pages/member/index/index' });
+  },
+
   onLoad(options) {
     this._registrationId = bundle.exactId(options && options.registrationId);
     this._topicId = bundle.exactId(options && options.topicId);
@@ -30,7 +35,7 @@ Page({
     this._identity = this.identity(); this._owner = bundle.exactId(app.getUserID());
     this.clearView();
     if (!this._owner || !app.getAuthorization()) { this.setData({ error: '请登录后查看' }); return; }
-    if (!this._registrationId && !this._topicId && !this._purchaseRequestId) { this.setData({ error: '链接已失效' }); return; }
+    if (!this._registrationId && !this._topicId && !this._purchaseRequestId) { this.setData({ missingParam: true }); return; }
     this.restorePending();
     this.reload();
   },
