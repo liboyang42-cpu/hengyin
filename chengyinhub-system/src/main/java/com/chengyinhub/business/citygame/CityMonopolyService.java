@@ -100,8 +100,10 @@ public class CityMonopolyService {
         Runnable send = () -> {
             try {
                 notify.notifyCityTerritory(memberId, kind, territoryId, title, text, points);
-            } catch (Throwable ignored) {
-                // best-effort side channel (see INotifyService)
+            } catch (Throwable failure) {
+                // best-effort side channel (see INotifyService): logged, never propagated into the game action
+                org.slf4j.LoggerFactory.getLogger(CityMonopolyService.class).warn("[城市大富翁] 站内信未送达 memberId={} kind={} reason={}",
+                        memberId, kind, failure.getClass().getSimpleName());
             }
         };
         if (org.springframework.transaction.support.TransactionSynchronizationManager.isSynchronizationActive()) {

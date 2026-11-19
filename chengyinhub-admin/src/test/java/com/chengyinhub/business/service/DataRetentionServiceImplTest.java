@@ -94,11 +94,13 @@ class DataRetentionServiceImplTest {
         when(city.coarsenTerritoryCheckins(any(), eq(100))).thenReturn(100).thenReturn(3);
         when(city.clearTerritoryAudits(any(), eq(100))).thenReturn(4);
         when(city.clearClaimEvidence(any(), eq(100))).thenReturn(5);
+        when(city.clearTaskSubmissions(any(), eq(100))).thenReturn(6);
 
-        assertEquals(112, svc.cleanRoamLocations(cutoff, 100, 10));
+        assertEquals(118, svc.cleanRoamLocations(cutoff, 100, 10));
         verify(city, times(2)).coarsenTerritoryCheckins(eq(cutoff), eq(100));
         verify(city).clearTerritoryAudits(eq(cutoff), eq(100));
         verify(city).clearClaimEvidence(eq(cutoff), eq(100));
+        verify(city).clearTaskSubmissions(eq(cutoff), eq(100));
     }
 
     @Test

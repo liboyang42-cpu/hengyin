@@ -56,6 +56,8 @@ public interface AccountDeregistrationMapper {
 
     int deleteClaimEvidence(@Param("memberId") Long memberId);
 
+    int deleteOnsiteTaskSubmissions(@Param("memberId") Long memberId);
+
     int deleteDeviceAccounts(@Param("memberId") Long memberId);
 
     int deleteMemberAttributes(@Param("memberId") Long memberId);

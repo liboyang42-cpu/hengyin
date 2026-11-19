@@ -377,6 +377,7 @@ public class AccountDeregistrationServiceImpl implements IAccountDeregistrationS
         eraseOptional("roam_territory", () -> deregistrationMapper.revokeTerritories(memberId));
         eraseOptional("roam_territory_audit", () -> deregistrationMapper.scrubTerritoryAudits(memberId));
         eraseOptional("city_claim_evidence", () -> deregistrationMapper.deleteClaimEvidence(memberId));
+        eraseOptional("city_onsite_task_submission", () -> deregistrationMapper.deleteOnsiteTaskSubmissions(memberId));
         eraseOptional("city_device_account", () -> deregistrationMapper.deleteDeviceAccounts(memberId));
         eraseOptional("member_attribute", () -> deregistrationMapper.deleteMemberAttributes(memberId));
         eraseOptional("member_title", () -> deregistrationMapper.deleteMemberTitles(memberId));

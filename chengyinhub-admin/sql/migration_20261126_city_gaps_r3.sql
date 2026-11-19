@@ -39,7 +39,8 @@ JOIN (
   WHERE x.rules_kind = 'MONOPOLY' AND x.status = 'ACTIVE' AND x.deed_serial IS NULL
     AND x.board_id IS NOT NULL AND x.district_id IS NOT NULL AND x.district_id <> ''
 ) n ON n.territory_id = t.territory_id
-SET t.deed_serial = n.serial;
+SET t.deed_serial = n.serial
+WHERE t.rules_kind = 'MONOPOLY' AND t.status = 'ACTIVE' AND t.deed_serial IS NULL;
 
 INSERT INTO city_deed_counter(board_id, district_id, last_serial)
 SELECT board_id, district_id, MAX(deed_serial) FROM roam_territory

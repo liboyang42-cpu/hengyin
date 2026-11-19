@@ -57,6 +57,17 @@ class CityLocationRetentionServiceTest {
         assertFalse(sql.contains("verdict"));
     }
 
+    @Test
+    void onsiteTaskSubmissionsDropCoordinatesButKeepDistanceAndResult() {
+        svc.clearTaskSubmissions(cutoff, 50);
+        String sql = captureSql();
+        assertTrue(sql.startsWith("UPDATE city_onsite_task_submission "));
+        assertTrue(sql.contains("lat = NULL, lng = NULL, h_acc = NULL"));
+        assertTrue(sql.contains("create_time < ?") && sql.endsWith("LIMIT ?"));
+        assertFalse(sql.contains("distance_m"));
+        assertFalse(sql.contains("result"));
+    }
+
     private String captureSql() {
         ArgumentCaptor<String> sql = ArgumentCaptor.forClass(String.class);
         verify(jdbc).update(sql.capture(), eq(new Timestamp(cutoff.getTime())), eq(50));
