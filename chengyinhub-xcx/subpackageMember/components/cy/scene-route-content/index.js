@@ -182,7 +182,7 @@ Component({
         return
       }
       if (config.requiresId && !config.data.id) {
-        this.setData({ state: 'error', errorText: '链接已失效' })
+        this.setData({ state: 'missing' })
         return
       }
       if (sceneId === 'settings-likes') {
@@ -494,7 +494,7 @@ Component({
         return
       }
       if (sceneId === 'merchant-citynode' && !this.data.merchantAccess.canManageProjects) {
-        toast('当前岗位没有节点管理权限')
+        toast('当前身份不能管理节点')
         return
       }
       // 商家入驻先登记实名再发业务单；主理人能力档案没有票费，直接提交。

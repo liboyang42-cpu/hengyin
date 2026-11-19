@@ -9,8 +9,7 @@
   <cy-page-title title="个人主页" />
   <view class="userinfo-missing__body">
     <cy-empty kind="missing-param" fill="{{true}}" size="lg"
-      title="这个主页链接不完整"
-      cta="回到我的主页" bind:cta="goMemberHome" />
+      cta="返回" bind:cta="onBack" />
   </view>
 </view>
 </view>

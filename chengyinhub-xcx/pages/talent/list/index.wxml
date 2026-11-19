@@ -65,7 +65,7 @@
            (在合作中心 / 消息与动态里处理),这里就是完整的俱乐部列表。 -->
 
       <cy-skeleton wx:if="{{!clubsLoaded && !clubsError}}" type="card" count="{{3}}" />
-      <cy-error load-failure="{{!clubsLoginRequired && !clubsPermissionDenied}}" wx:elif="{{clubsError && clubsState !== 'stale-error'}}" fill title="{{clubsLoginRequired ? '登录后查看我的俱乐部' : clubsPermissionDenied ? '当前账号无法查看俱乐部' : '俱乐部列表加载失败'}}" sub="{{clubsErrorText}}" retry="{{clubsLoginRequired ? (clubsLoginPending ? '正在登录…' : '登录') : '重试'}}" bind:retry="retryClubs" />
+      <cy-error load-failure="{{!clubsLoginRequired && !clubsPermissionDenied}}" wx:elif="{{clubsError && clubsState !== 'stale-error'}}" fill title="{{clubsLoginRequired ? '登录后查看我的俱乐部' : clubsPermissionDenied ? '当前身份不能查看俱乐部' : '俱乐部列表加载失败'}}" sub="{{clubsErrorText}}" retry="{{clubsLoginRequired ? (clubsLoginPending ? '正在登录…' : '登录') : '重试'}}" bind:retry="retryClubs" />
       <block wx:else>
         <cy-progress-status class="talent-state cy-refresh-float" wx:if="{{clubsState === 'refreshing'}}" title="正在更新俱乐部" />
         <cy-progress-status class="talent-state" wx:if="{{isMerchantViewer && merchantCityState === 'loading' && clubsLoaded && clubsState !== 'refreshing'}}" title="正在确认同城范围" />

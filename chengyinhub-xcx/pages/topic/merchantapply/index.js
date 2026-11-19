@@ -221,7 +221,7 @@ Page({
       if (code !== 401 && code !== 403) return;
       that.setData({ shop: { name: '', address: '', businessTime: '', cover: '' }, canSubmit: false,
         loadState: code === 401 ? 'login' : 'permission',
-        loadError: app.getRequestErrorMessage(res, code === 401 ? '请重新登录' : '当前账号没有门店查看权限') });
+        loadError: app.getRequestErrorMessage(res, code === 401 ? '请重新登录' : '当前身份不能查看门店') });
     };
     app.sendRequest({
       url: '/api/merchant/info', method: 'POST', hideLoading: true, silentError: true,

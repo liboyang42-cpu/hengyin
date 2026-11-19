@@ -464,7 +464,7 @@ Page({
     this._focusTopicId = positiveId(options && options.topicId)
     const recurrenceType = options && options.recurrence === 'ONCE' ? 'ONCE' : this.data.recurrenceType
     if (!clubId) {
-      this.setData({ state: 'error', errorText: '缺少俱乐部信息' })
+      this.setData({ state: 'missing-param' })
       return
     }
     const slot = defaultSlot()
@@ -496,7 +496,7 @@ Page({
       const code = Number(statusCode) || Number(res && res.code)
       const isAuth = code === 401 || code === 2
       const isNetwork = !code && transportFailed === true
-      const fallback = code === 403 ? '当前账号无权管理该俱乐部'
+      const fallback = code === 403 ? '当前身份不能管理该俱乐部'
         : isNetwork ? '网络没有连上' : '活动权限暂时不可用，请稍后重试'
       that.setData({
         state: code === 403 ? 'no-permission' : isNetwork ? 'network-error' : 'error',
@@ -520,7 +520,7 @@ Page({
         }
         const permissions = Array.isArray(access.permissions) ? access.permissions : []
         if (access.active !== true || String(access.club && access.club.id) !== String(that.data.clubId)) {
-          that.setData({ state: 'no-permission', errorText: bizFailureMessage(res, '当前账号无权管理该俱乐部') })
+          that.setData({ state: 'no-permission', errorText: bizFailureMessage(res, '当前身份不能管理该俱乐部') })
           return
         }
         const canManage = permissions.indexOf('club:activity:manage') >= 0

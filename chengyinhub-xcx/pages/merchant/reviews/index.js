@@ -260,7 +260,7 @@ Page({
             loadingMore: false,
             filterLoading: false,
             errorMessage: failedState === 'no-permission'
-              ? '当前账号没有口碑管理权限'
+              ? '当前身份不能管理口碑'
               : app.getRequestErrorMessage(res, '评价加载失败'),
           });
           return;

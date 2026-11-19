@@ -188,7 +188,8 @@ test('(a) 确认失去商家身份才清:access/me 说 inactive 时撤掉权限'
   page.onShow()
   last('/api/merchant/access/me').success({ code: 200, data: { active: false, applicationState: 'NONE', permissions: [] } })
   assert.equal(page.data.merchantAccess.active, false)
-  assert.deepEqual(navigated, ['/pages/member/index/index'])
+  assert.deepEqual(navigated, [], 'UI-sweep 1119 U3:不再静默回我的')
+  assert.equal(page.data.consoleDenied, true, '原地落无权限态')
 })
 
 test('(c) 我的消息:三路落定后一次合并,新的在前取 3 条;落定前不冒充空态', () => {

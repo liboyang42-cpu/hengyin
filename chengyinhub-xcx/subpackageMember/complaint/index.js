@@ -173,7 +173,7 @@ Page({
       const code = failureStatus(res, statusCode);
       if (code === 401 || code === 2) { this._showReadLogin(app.getRequestErrorMessage(res, '请重新登录')); return; }
       if (code === 403) {
-        this.setData({ loading: false, readAccess: 'denied', readAccessMessage: app.getRequestErrorMessage(res, '当前账号无法发起投诉'),
+        this.setData({ loading: false, readAccess: 'denied', readAccessMessage: app.getRequestErrorMessage(res, '当前身份不能发起投诉'),
           topics: [], topicIndex: -1, canSubmit: false });
         return;
       }
@@ -224,7 +224,7 @@ Page({
       if (!current(res, statusCode)) return;
       if (code === 401 || code === 2) { this._showReadLogin(app.getRequestErrorMessage(res, '请重新登录')); return; }
       if ([400, 403, 422].indexOf(code) >= 0) {
-        this.setData({ history: [], historyAccessError: res.msg || (code === 401 ? '请登录后查看处理进展' : '当前账号无法查看处理进展') });
+        this.setData({ history: [], historyAccessError: res.msg || (code === 401 ? '请登录后查看处理进展' : '当前身份不能查看处理进展') });
       }
     };
     this._historyTask = app.sendRequest({

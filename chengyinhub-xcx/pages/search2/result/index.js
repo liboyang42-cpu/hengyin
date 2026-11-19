@@ -182,7 +182,7 @@ Page({
         if (code === 401 || code === 403) {
           groupsByType[request.type] = [];
           this.setData({
-            clubSearchDenied: code === 403 ? '当前账号没有俱乐部搜索权限' : '' });
+            clubSearchDenied: code === 403 ? '当前身份不能搜索俱乐部' : '' });
         }
         settled = true;
         failed += 1;
@@ -264,7 +264,7 @@ Page({
       }
       this.setData({ resultTabs: DEFAULT_RESULT_TABS.concat(this.data.resultGroups.map(g => ({ key: g.type, label: g.label + ' ' + g.items.length }))),
         contentLoading: false, contentError: code === 503 ? '内容搜索暂未开放，可稍后重试'
-        : code === 403 ? '当前账号无法读取这些内容' : '内容搜索未完成，重试本页' });
+        : code === 403 ? '当前身份不能查看这些内容' : '内容搜索未完成，重试本页' });
     };
     app.sendRequest({
       url: '/api/search/unified', method: 'GET', hideLoading: true, autoErrorToast: false,

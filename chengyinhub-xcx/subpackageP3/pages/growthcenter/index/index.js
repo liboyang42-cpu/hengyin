@@ -130,7 +130,7 @@ function rankHttpFailure(error) {
   if (code === '401' || code === '403') {
     return {
       boardState: 'permission',
-      message: '登录状态失效或当前账号没有查看权限，请重新进入'
+      message: '登录状态失效或当前身份不能查看，请重新进入'
     }
   }
   return {

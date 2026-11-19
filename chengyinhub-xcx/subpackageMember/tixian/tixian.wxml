@@ -6,7 +6,8 @@
 <view class="tixian-page">
   <cy-nav-bar />
   <cy-page-title title="提现申请" />
-  <view class="tixian-content">
+  <cy-empty wx:if="{{denied}}" kind="no-permission" fill size="lg" title="当前身份不能提现" cta="{{deniedMember ? '返回' : '申请入驻'}}" bind:cta="onDenyCta" />
+  <view wx:else class="tixian-content">
     <view class="tx-history-entry" bindtap="openWithdrawHistory" aria-role="button" aria-label="打开提现记录弹窗" hover-class="cy-pressed" hover-stay-time="80">
       <text>提现记录</text><cy-icon name="arrow-right" size="24" />
     </view>

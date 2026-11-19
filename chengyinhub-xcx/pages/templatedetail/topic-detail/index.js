@@ -268,7 +268,7 @@ Page({
   // 不再弹「沿用原地点 / 换一个城市」,一律沿用原地点采用;作者在编辑器的「地点待办」里逐个替换地址。
   useTemplate() {
     if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.useTemplate(), { owner: this, target: () => [this._id, this._scope] })) return; // 游客写前登录
-    if (this._readonly) { cyToast('当前岗位仅可浏览模板'); return; }
+    if (this._readonly) { cyToast('当前身份不能编辑模板'); return; }
     if (!this._id) return;
     // 第十二轮 k9(p3 N6):本页已经复制出一份草稿,从编辑器回来再点「应用」就回到那一份,不再每点一次多一份草稿
     if (this._copiedId) { this._openCopiedDraft(this._copiedId); return; }

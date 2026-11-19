@@ -16,7 +16,6 @@
     kind="missing-param"
     fill="{{true}}"
     size="lg"
-    title="这个核销码无法打开"
     cta="返回"
     bind:cta="onMissingBack"
   />

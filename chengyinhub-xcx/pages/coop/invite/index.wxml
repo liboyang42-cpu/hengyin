@@ -38,7 +38,7 @@
       <view class="topic-fixed">{{topicName || '本主题'}}</view>
     </block>
     <cy-skeleton wx:elif="{{topicsState === 'loading'}}" type="list" count="1" />
-    <cy-error class="error-kind--{{topicsErrorKind}}" wx:elif="{{topicsState === 'permission'}}" title="当前账号不能读取主题" sub="{{topicsErrorText}}" bind:retry="retryTopics" />
+    <cy-error class="error-kind--{{topicsErrorKind}}" wx:elif="{{topicsState === 'permission'}}" title="当前身份不能读取主题" sub="{{topicsErrorText}}" bind:retry="retryTopics" />
     <cy-error load-failure class="error-kind--{{topicsErrorKind}}" wx:elif="{{topicsState === 'error'}}" title="主题加载失败" bind:retry="retryTopics" />
     <cy-dropdown merchant="{{true}}" wx:elif="{{myTopics.length}}" mode="selector" range="{{myTopics}}" range-key="label" value="{{topicIndex}}" bind:change="onTopicChange" aria-label="选择关联主题">
       <view class="picker-row"><text class="{{topicId ? '' : 'placeholder'}}">{{topicId ? (topicPick || topicName) : '选择我发布的主题'}}</text><cy-icon class="picker-arrow" name="arrow-right" size="28" /></view>
@@ -76,7 +76,7 @@
       {{targetsErrorText}}<text class="inline-retry" bindtap="retryTargets" aria-role="button" aria-label="重试刷新合作对象" hover-class="cy-pressed" hover-stay-time="80">重试</text>
     </view>
     <cy-skeleton wx:if="{{targetsState === 'loading'}}" type="list" count="3" />
-    <cy-error class="error-kind--{{targetsErrorKind}}" wx:elif="{{targetsState === 'permission'}}" title="当前账号无权查看合作对象" bind:retry="retryTargets" />
+    <cy-error class="error-kind--{{targetsErrorKind}}" wx:elif="{{targetsState === 'permission'}}" title="当前身份不能查看合作对象" bind:retry="retryTargets" />
     <cy-error load-failure class="error-kind--{{targetsErrorKind}}" wx:elif="{{targetsState === 'error'}}" title="合作对象加载失败" bind:retry="retryTargets" />
 
     <block wx:elif="{{presetTarget}}">

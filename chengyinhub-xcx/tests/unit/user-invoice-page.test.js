@@ -340,7 +340,7 @@ test('unsafe Long response fields and invalid IDs never become write targets', (
   h.page.pickTitle(tap('9223372036854775808')); h.page.pick(tap('01')); h.page.apply();
   assert.equal(h.count('apply'), 0);
   const detail = mount('detail', { id: '01' }); detail.boot();
-  assert.equal(detail.count('detail'), 0); assert.equal(detail.page.data.error, 'read');
+  assert.equal(detail.count('detail'), 0); assert.equal(detail.page.data.missing, true);
 });
 
 test('FEATURE_OFF from every read/write response collapses to the same unavailable view', () => {

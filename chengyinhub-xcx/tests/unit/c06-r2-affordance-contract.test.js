@@ -286,7 +286,7 @@ test('R2-5 数据:每个非 ready 态都有一句真实原因,不留空白解释
   // 解释行在文案为空时整行不出(不渲染空条)。
   assert.equal(map.missing, '')
   const wxml = read(CHAT_WXML)
-  assert.match(wxml, /<cy-empty wx:elif="\{\{loadState === 'missing'\}\}"[^>]*title="这个会话无法打开" cta="返回消息列表" bind:cta="returnToMessageList" \/>/)
+  assert.match(wxml, /<cy-empty wx:elif="\{\{loadState === 'missing'\}\}"[^>]*kind="missing-param" cta="返回" bind:cta="returnToMessageList" \/>/)
   assert.match(wxml, /<view wx:if="\{\{disabled \|\| \(loadState !== 'ready' && sendBlockedMap\[loadState\]\)\}\}" class="disabled-tip"/)
 })
 

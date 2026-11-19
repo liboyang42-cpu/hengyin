@@ -7,7 +7,8 @@
   <cy-nav-bar custom-back bind:back="onBack" />
   <cy-page-title title="发票详情" />
   <view class="body">
-    <cy-empty wx:if="{{login}}" fill size="lg" kind="no-permission" title="登录后查看发票" cta="微信登录" bind:cta="login" />
+    <cy-empty wx:if="{{missing}}" fill size="lg" kind="missing-param" cta="返回" bind:cta="onBack" />
+    <cy-empty wx:elif="{{login}}" fill size="lg" kind="no-permission" title="登录后查看发票" cta="微信登录" bind:cta="login" />
     <cy-empty wx:elif="{{unavailable}}" fill size="lg" kind="no-permission" title="发票功能暂未开放" />
     <cy-skeleton wx:elif="{{loading && !detail}}" type="form-section" count="2" />
     <cy-error load-failure wx:elif="{{error && !detail}}" fill size="lg" title="发票申请加载失败" retry="重试" bind:retry="refresh" />

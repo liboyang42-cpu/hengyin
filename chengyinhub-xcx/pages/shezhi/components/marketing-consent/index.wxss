@@ -1,5 +1,6 @@
-.mc { padding: 0 var(--cy-page-x) calc(env(safe-area-inset-bottom) + var(--cy-space-4)); }
-.mc-intro, .mc-loading, .mc-empty { display: block; font-size: var(--cy-font-label); line-height: 1.6; color: var(--cy-text-secondary); }
+:host { display: flex; flex-direction: column; }
+.mc { flex: 1; display: flex; flex-direction: column; padding: 0 var(--cy-page-x) calc(env(safe-area-inset-bottom) + var(--cy-space-4)); }
+.mc-intro, .mc-loading { display: block; font-size: var(--cy-font-label); line-height: 1.6; color: var(--cy-text-secondary); }
 .mc-list { display: flex; flex-direction: column; gap: var(--cy-space-3); margin-top: var(--cy-space-3); }
 .mc-merchant { padding: var(--cy-space-3); border-radius: var(--cy-radius-lg); background: var(--cy-bg-elevated); }
 .mc-name { display: block; font-size: var(--cy-font-body); font-weight: 700; color: var(--cy-text-title); }
@@ -15,7 +16,6 @@
    组头是商家头像 + 店名(大一号),两行开关从店名那一列开始,行高 128rpx,组与组之间 56rpx */
 .mc--page { padding: var(--cy-space-2) 0 var(--cy-space-4); }
 .mc--page .mc-loading,
-.mc--page .mc-empty,
 .mc--page .mc-error,
 .mc--page .mc-error-text { padding: 0 var(--cy-page-x); }
 .mc--page .mc-list { gap: 56rpx; margin-top: 0; }
@@ -32,3 +32,6 @@
   border-bottom: 1rpx solid var(--cy-color-border-subtle);
 }
 .mc--page .mc-label { font-size: var(--cy-type-body); color: var(--cy-color-text-primary); }
+
+/* U7(2026-11-19):空态走标准两层插画,fill 在页标题下方余下空间居中(宿主页给一屏高的纵向 flex) */
+.mc-fill { display: flex; flex: 1; flex-direction: column; justify-content: center; }

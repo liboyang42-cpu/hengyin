@@ -77,7 +77,7 @@ Page({
         const code = Number(res && res.code);
         const msg = (res && res.msg) || '';
         if (code === 403 || /权限/.test(msg)) {
-          that.setData({ state: 'denied', errorText: msg || '当前岗位没有核销查看权限，请联系主理人' });
+          that.setData({ state: 'denied', errorText: msg || '当前身份不能查看核销记录' });
           return;
         }
         if (code !== 200 || !res.data) {
@@ -119,7 +119,7 @@ Page({
       const forbidden = code === 403 || /没有权限|无权|仅(?:俱乐部)?主理人/.test(msg);
       this.setData({
         state: forbidden ? 'denied' : 'error',
-        errorText: forbidden ? (msg || '当前岗位没有核销查看权限，请联系主理人')
+        errorText: forbidden ? (msg || '当前身份不能查看核销记录')
           : '登录已过期，请重新进入核销详情',
         detail: null,
       });

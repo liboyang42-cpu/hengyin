@@ -32,7 +32,7 @@ Page({
     this.setData({ registrationId: view.isId(o.registrationId) ? o.registrationId : '',
       cityCode: this._cityCode, countryCode: this._countryCode, clubId: this._clubId });
     if (!this._query.activityId && !this._query.topicId) {
-      this.setData({ state: 'missing', stateIcon: 'route', stateTitle: '链接已失效', stateCta: '' });
+      this.setData({ state: 'missing', stateIcon: 'route', stateTitle: '链接已失效', stateCta: '返回' });
       return;
     }
     this.reload();
@@ -65,6 +65,7 @@ Page({
   },
 
   onStateCta() {
+    if (this.data.state === 'missing') { if (getCurrentPages().length > 1) wx.navigateBack({ delta: 1 }); else wx.switchTab({ url: '/pages/index/index' }); return; }
     if (this.data.state === 'auth') {
       app.requireLogin({ reason: '登录后查看战报' }).then(ok => { if (ok) this.reload(); });
       return;

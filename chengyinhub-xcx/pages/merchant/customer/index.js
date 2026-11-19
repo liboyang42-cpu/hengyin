@@ -220,6 +220,9 @@ Page({
     });
   },
 
+  // 原地无权限态的唯一动作:非成员申请入驻,在营成员返回
+  onDenyCta() { require('../../../utils/merchant-no-permission.js').followDenyCta(this, this.data.notMerchant !== true, '/pages/merchant/index/index'); },
+
   onKeywordInput(e) {
     const keyword = (e.detail && e.detail.value) || '';
     this.setData({ keyword });

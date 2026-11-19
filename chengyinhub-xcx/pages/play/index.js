@@ -9622,7 +9622,7 @@ Page({
     if (pending && typeof pending.then === 'function') pending.then(sync);
   },
   shareFinish() {
-    if (typeof app.canUseCommunity !== 'function' || !app.canUseCommunity(true)) { cyToast('当前账号未开放广场发布'); return; }
+    if (typeof app.canUseCommunity !== 'function' || !app.canUseCommunity(true)) { cyToast('当前身份不能发布到广场'); return; }
     // 2026-10-29 业主:「动态」二级页已删,通关后去发现页的全站帖文。
     discoverNav.markDiscoverFeed(app);
     wx.switchTab({ url: '/pages/talent/list/index' });

@@ -1,4 +1,3 @@
-const cyToast = require('../../utils/toast.js');
 const app = getApp();
 const roleGuard = require('../../utils/roleGuard.js');
 const merchantTheme = require('../../utils/merchant-theme.js');
@@ -22,6 +21,9 @@ Page({
     balanceErr: false,
     balanceLoaded: false,
     withdrawHistorySheet: false,
+    // 没有 withdrawable 能力:原地无权限态(不再 toast 后 1.5s 自动退出);deniedMember 只决定唯一动作是「返回」还是「申请入驻」
+    denied: false,
+    deniedMember: false,
   },
 
   /**
@@ -39,17 +41,12 @@ Page({
     this._unloaded = false
     merchantTheme.merchantPageShow();
     roleGuard.load(function () {
+      if (that._unloaded) return
       if (!roleGuard.can('withdrawable')) {
-        merchantTheme.merchantPageRestore();
-        cyToast('暂无提现权限')
-        that._permissionBackTimer = setTimeout(function () {
-          that._permissionBackTimer = null
-          if (that._unloaded) return
-          that.exitPage()
-        }, 1500)
+        that.setData({ denied: true, deniedMember: roleGuard.role() === 'merchant' })
         return
       }
-      that.setData({ balanceLoaded: false })
+      that.setData({ denied: false, balanceLoaded: false })
       that.getUserData()
     })
   },
@@ -57,10 +54,6 @@ Page({
   onHide() { merchantTheme.merchantPageRestore(); },
   onUnload() {
     this._unloaded = true
-    if (this._permissionBackTimer) {
-      clearTimeout(this._permissionBackTimer)
-      this._permissionBackTimer = null
-    }
     merchantTheme.merchantPageRestore()
   },
 
@@ -68,6 +61,8 @@ Page({
     if (getCurrentPages().length > 1) wx.navigateBack()
     else wx.reLaunch({ url: '/pages/merchant/index/index' })
   },
+
+  onDenyCta() { require('../../utils/merchant-no-permission.js').followDenyCta(this, this.data.deniedMember === true, '/pages/merchant/index/index') },
 
   openWithdrawHistory() { this.setData({ withdrawHistorySheet: true }) },
   closeWithdrawHistory() { this.setData({ withdrawHistorySheet: false }) },

@@ -16,7 +16,10 @@ page { min-height: 100vh; background: var(--cy-bg-page); color: var(--cy-text-ti
   color: var(--cy-color-text-primary);
 }
 .er-page.theme-merchant { min-height: 100vh; background: var(--cy-color-bg-page); color: var(--cy-color-text-primary); } /* 商家浅色(10-22:商家永远浅色) */
-.er-shell { box-sizing: border-box; }
+/* U5:根节点是一屏高的纵向 flex,收益组件吃满余下高度,空态 fill 才有确定高度可居中 */
+.er-page { display: flex; flex-direction: column; }
+.er-shell { box-sizing: border-box; flex: 1; display: flex; flex-direction: column; }
+.er-earnings { flex: 1; }
 
 /* D19 提现表单：逐行灰底、无横线，说明位于底部 CTA 上方。 */
 .tx-body { padding-bottom: var(--cy-space-2); }

@@ -1197,7 +1197,7 @@ Page({
     function onFailure(res, statusCode) {
       const code = Number(statusCode) || Number(res && res.code);
       const denied = code === 403;
-      const fallback = denied ? '当前账号暂时不能查看主题设置' : '主题设置获取失败，请稍后重试';
+      const fallback = denied ? '当前身份不能查看主题设置' : '主题设置获取失败，请稍后重试';
       that.setData({
         settingState: denied ? 'denied' : 'error',
         settingErrorText: safeUserMessage(bizFailureMessage(res, fallback), fallback),

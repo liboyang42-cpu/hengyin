@@ -197,7 +197,7 @@ Page({
   onLoad(options) {
     const clubId = positiveId(options && options.clubId)
     if (!clubId) {
-      this.setData({ state: 'error', errorText: '缺少俱乐部ID' })
+      this.setData({ state: 'missing-param' })
       return
     }
     const requestedMode = options && options.mode
@@ -211,7 +211,7 @@ Page({
       if (!reportTargetId && legacyMemberId) reportTargetId = legacyMemberId
       if (reportTargetType === 'CLUB' && !reportTargetId) reportTargetId = clubId
       if (REPORT_TARGET_TYPES.indexOf(reportTargetType) < 0 || !reportTargetId) {
-        this.setData({ state: 'error', errorText: '缺少合法的举报目标' })
+        this.setData({ state: 'missing-param' })
         return
       }
     }
@@ -254,7 +254,7 @@ Page({
         const scopedClub = access && isRecord(access.club) ? access.club : null
         if (!access || access.active !== true || !scopedClub
             || String(scopedClub.id) !== String(that.data.clubId)) {
-          that.setData({ state: 'no-permission', errorText: bizFailureMessage(res, '当前账号不属于该俱乐部') })
+          that.setData({ state: 'no-permission', errorText: bizFailureMessage(res, '当前身份不能进入该俱乐部') })
           return
         }
         if (that.data.mode === 'report') {

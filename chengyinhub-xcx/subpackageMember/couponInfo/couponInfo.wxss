@@ -7,6 +7,11 @@
   color: var(--cy-text-title);
 }
 
+/* U10(2026-11-19):新建已关闭时整页只剩一个关闭态 —— 纵向 flex 让 cy-empty fill 在标题下方余下空间居中;
+   玩家打开挂 .theme-dark(tokens.wxss 逃生口把本页 page 级浅色 alias 写回暗值) */
+.fabu--closed { display: flex; flex-direction: column; padding-bottom: env(safe-area-inset-bottom); }
+.fabu--closed .coupon-creation-closed { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+
 .fabu.theme-topic-editor .wp {
   padding: 0 var(--cy-page-x) 0; /* aaa v2:标题下间距由 cy-page-title space-5 独家供给 */
 }

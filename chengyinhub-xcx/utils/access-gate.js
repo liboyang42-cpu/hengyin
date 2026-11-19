@@ -15,15 +15,17 @@ const LOGIN_EXPIRED = '登录已过期，请重新进入';
  * ⚠️ 铁律:**守卫绝不能比后端更严**。填 need 之前必须去 Controller 核实那一页真正调用的接口要哪个权限;
  * 拿不准就留空 —— 留空最多是「没帮上忙」,填错会把后端本会放行的岗位锁在页外(2026-09-06 复审实测 4 处)。
  */
+// deny 附 member:true = 在营商家成员只是岗位缺这项权限(去处「返回」);其余一律 false(去处「申请入驻」)。
+// expired:true = 会话没身份,守卫按登录门处理。都只影响呈现,state 判定不变。
 function decideMerchantGate(res, need) {
   if (!okCode(res)) {
-    if (noPrincipal(res)) return { state: 'deny', reason: LOGIN_EXPIRED };
+    if (noPrincipal(res)) return { state: 'deny', reason: LOGIN_EXPIRED, member: false, expired: true };
     const code = res && Number(res.code);
-    return (code === 401 || code === 403) ? { state: 'deny', reason: '当前账号不是商家成员' } : { state: 'unknown' };
+    return (code === 401 || code === 403) ? { state: 'deny', reason: '当前身份不能查看商家内容', member: false } : { state: 'unknown' };
   }
   const access = normalizeMerchantAccess(res.data);
-  if (!access.active) return { state: 'deny', reason: '当前账号不是商家成员' };
-  if (need && access[need] !== true) return { state: 'deny', reason: '当前岗位没有这项权限' };
+  if (!access.active) return { state: 'deny', reason: '当前身份不能查看商家内容', member: false };
+  if (need && access[need] !== true) return { state: 'deny', reason: '当前身份不能查看这项内容', member: true };
   return { state: 'allow', access };
 }
 
@@ -32,15 +34,15 @@ function decideClubGate(res, clubId, need) {
   if (!okCode(res) || !res.data || typeof res.data !== 'object') {
     if (noPrincipal(res)) return { state: 'deny', reason: LOGIN_EXPIRED };
     const code = res && Number(res.code);
-    return (code === 401 || code === 403) ? { state: 'deny', reason: '当前账号无权进入该俱乐部' } : { state: 'unknown' };
+    return (code === 401 || code === 403) ? { state: 'deny', reason: '当前身份不能进入该俱乐部' } : { state: 'unknown' };
   }
   const access = res.data;
   if (typeof access.active !== 'boolean') return { state: 'unknown' };   // 没表态 = 坏响应
-  if (access.active !== true) return { state: 'deny', reason: '当前账号无权进入该俱乐部' };
+  if (access.active !== true) return { state: 'deny', reason: '当前身份不能进入该俱乐部' };
   const club = access.club && typeof access.club === 'object' ? access.club : null;
-  if (clubId && (!club || String(club.id) !== String(clubId))) return { state: 'deny', reason: '当前账号不在这个俱乐部' };
+  if (clubId && (!club || String(club.id) !== String(clubId))) return { state: 'deny', reason: '当前身份不能进入这个俱乐部' };
   const permissions = Array.isArray(access.permissions) ? access.permissions : [];
-  if (need && permissions.indexOf(need) < 0) return { state: 'deny', reason: '当前角色没有这项权限' };
+  if (need && permissions.indexOf(need) < 0) return { state: 'deny', reason: '当前身份不能查看这项内容' };
   return { state: 'allow', access };
 }
 

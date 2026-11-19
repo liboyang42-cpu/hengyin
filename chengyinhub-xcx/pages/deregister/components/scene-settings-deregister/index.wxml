@@ -29,7 +29,7 @@
   </view>
 
   <cy-empty wx:elif="{{status === 'LOGIN_REQUIRED' || status === 'DENIED'}}" kind="no-permission" fill size="lg"
-    title="{{status === 'LOGIN_REQUIRED' ? '登录后查看账号注销条件' : '当前账号无法查看注销条件'}}"
+    title="{{status === 'LOGIN_REQUIRED' ? '登录后查看账号注销条件' : '当前身份不能查看注销条件'}}"
     sub=""
     cta="{{status === 'LOGIN_REQUIRED' ? '登录' : '刷新'}}" bind:cta="loginToRead" />
   <cy-error wx:elif="{{status === 'ERROR'}}" fill title="注销条件核验失败" sub="{{statusError}}" retry="重试" bind:retry="loadStatus" />

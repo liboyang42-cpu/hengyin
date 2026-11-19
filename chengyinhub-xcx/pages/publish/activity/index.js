@@ -877,7 +877,7 @@ Page({
   _showAccessError(res) {
     const status = failureStatus(res)
     if (status === 401) { this.setData({ accessState: 'login', accessError: '' }); return }
-    if (status === 403) { this.setData({ accessState: 'denied', deniedReason: res && res.msg || '当前账号不能发布活动' }); return }
+    if (status === 403) { this.setData({ accessState: 'denied', deniedReason: res && res.msg || '当前身份不能发布活动' }); return }
     this.setData({
       accessState: 'error',
       accessError: app.getRequestErrorMessage ? app.getRequestErrorMessage(res, '身份校验失败，请重试') : '身份校验失败，请重试'

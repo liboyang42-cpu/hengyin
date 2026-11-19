@@ -3321,7 +3321,7 @@ Page({
     const original = this._pendingTemplateWrite();
     if (original) return this.sendData(original.body, original.endpoint, original.action);
     if (this.data.from === 'citynode' && !this.data.merchantAccess.canManageProjects) {
-      toast('当前岗位没有节点管理权限');
+      toast('当前身份不能管理节点');
       return;
     }
     const formData = this.prepareFormData();
@@ -3436,7 +3436,7 @@ Page({
     const that = this;
     if (url === '/api/merchant/city-node/template/submit'
         && !that.data.merchantAccess.canManageProjects) {
-      toast('当前岗位没有节点管理权限');
+      toast('当前身份不能管理节点');
       return;
     }
     if (that._submitting) return;

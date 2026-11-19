@@ -1,6 +1,7 @@
 {
   "usingComponents": {
     "cy-sheet": "/components/cy/sheet/index",
+    "cy-empty": "/components/cy/empty/index",
     "cy-btn": "/components/cy/btn/index",
     "cy-nav-bar": "/components/cy/nav-bar/index",
     "cy-page-title": "/components/cy/page-title/index",
@@ -11,7 +12,6 @@
     "cy-modal-host": "/components/cy/modal-host/index"
   },
   "navigationBarTitleText": "优惠券设置",
-  "navigationBarTextStyle": "black",
-  "backgroundColor": "#F3F4F4",
+  "navigationBarTextStyle": "white",
   "navigationStyle": "custom"
 }
