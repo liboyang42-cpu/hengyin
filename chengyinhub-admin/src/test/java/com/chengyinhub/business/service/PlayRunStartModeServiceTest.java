@@ -53,6 +53,8 @@ class PlayRunStartModeServiceTest {
         when(mapper.upsertRunMode(anyLong(), anyLong(), anyLong(), anyString(), any())).thenThrow(new RuntimeException("db"));
         assertThrows(RuntimeException.class, () -> service.recordStart(1L, 4L, 2L, "ALT", 5L));
         assertThrows(IllegalStateException.class, () -> service(null).recordStart(1L, 4L, 2L, "DESK", null));
+        when(mapper.deleteRunMode(anyLong(), anyLong(), anyLong())).thenThrow(new RuntimeException("no table"));
+        assertDoesNotThrow(() -> service.recordStart(1L, 4L, 2L, null, null), "正常开局不因清理旧行失败而失败");
     }
 
     @Test

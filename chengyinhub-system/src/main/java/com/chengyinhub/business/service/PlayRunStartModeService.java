@@ -57,15 +57,20 @@ public class PlayRunStartModeService {
         }
     }
 
-    /** 开局时记录方式:DESK/ALT 写行，正常开局清掉同主题旧行。写失败直接抛出(开局随之失败)。 */
+    /** 开局时记录方式:DESK/ALT 写行(写失败抛出，开局随之失败);正常开局清掉同主题旧行(清理失败不拦开局)。 */
     public void recordStart(Long memberId, Long activityId, Long topicId, String mode, Long altStationId) {
         if (mapper == null) {
             if (mode != null) throw new IllegalStateException("开局方式暂时不可用");
             return;
         }
         long act = activityId == null ? 0L : activityId;
-        if (mode == null) mapper.deleteRunMode(memberId, act, topicId);
-        else mapper.upsertRunMode(memberId, act, topicId, mode, ALT.equals(mode) ? altStationId : null);
+        if (mode == null) {
+            // 正常开局只是清旧行:清不掉也不拦开局(残留的 DESK 行只会让奖励封顶，不会放宽)。
+            try { mapper.deleteRunMode(memberId, act, topicId); }
+            catch (RuntimeException staleKept) { log.warn("开局方式旧行清理失败 memberId={} topicId={}", memberId, topicId, staleKept); }
+            return;
+        }
+ mapper.upsertRunMode(memberId, act, topicId, mode, ALT.equals(mode) ? altStationId : null);
     }
 
     public List<Map<String, Object>> altStations(Long topicId) {
