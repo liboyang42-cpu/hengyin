@@ -287,3 +287,12 @@ test('PG-063/064/065/066/068/070/071/090:辅助说明与编号按清单撤除', 
   ];
   for (const [f, re] of gone) assert.doesNotMatch(read(f), re, f);
 });
+
+test('PG-049/PG-061:发票抬头明确失败保留税号;漫游演示种子点移出主包', () => {
+  assert.match(read('subpackageMember/invoice-title-edit/index.js'), /const nextDraft = unknown \? Object\.assign\(\{\}, this\.data\.draft, \{ taxNo: '' \}\) : this\.data\.draft;/);
+  const roam = read('pages/roam/index.js');
+  assert.doesNotMatch(roam, /转角奶茶|巷子面馆/);
+  assert.match(roam, /require\.async\('\.\.\/\.\.\/subpackageRoam\/data\/roam-demo-pois\.js'\)/);
+  const { demoPois } = require('../../subpackageRoam/data/roam-demo-pois.js');
+  assert.ok(demoPois((x, y) => ({ lat: y, lng: x }), '/img.png').length > 0);
+});
