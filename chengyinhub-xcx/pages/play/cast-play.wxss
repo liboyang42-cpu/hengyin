@@ -47,7 +47,7 @@
 .cbill__row{ display:flex; align-items:baseline; gap:var(--cy-space-2); padding:var(--cy-space-3) 0; }
 .cbill__n{ flex:none; font-size:var(--cy-type-card-title); font-weight:600; }
 .cbill__dots{ flex:1; min-width:var(--cy-space-4); border-bottom:2rpx dotted var(--cy-color-border-strong); transform:translateY(-8rpx); }
-.cbill__i{ flex:none; max-width:60%; font-size:var(--cy-type-body); color:var(--cy-color-text-secondary); text-align:right; }
+.cbill__i{ flex:none; max-width:74%; font-size:var(--cy-type-caption); line-height:1.5; color:var(--cy-color-text-secondary); text-align:right; }
 .cbill__rule{ margin:var(--cy-space-3) 0; height:1px; background:var(--cy-color-border-strong); }
 
 /* —— E4 角色卡:深色半屏 —— */

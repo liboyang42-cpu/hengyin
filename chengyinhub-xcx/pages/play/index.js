@@ -4057,9 +4057,10 @@ Page({
   /** 开局第一屏:故事主题先看开场页(原型 game-intro),「开始游戏」之后才进故事流;
    *  这一局看过就不再出现(试玩每次都看)。不是故事主题直接进故事流。 */
   _openStory() {
-    if (this._castGate(() => this._openStory())) return; const chapter = this.data.chapter || {};   // 角色 Cast v1:先起名(C)与人物表(E1),再进正文
+    const chapter = this.data.chapter || {};
     const seen = !this.data.isPreview && !!storyResume.read(this._runSessionScope()).intro;
-    if (!Array.isArray(chapter.blocks) || seen || this.data.storyIntro.show) { this.openChapterFull(); return; }
+    // 角色 Cast v1:开场页(开始游戏)在前,起名(C)与人物表(E1)在它之后、正文之前;没有开场页时直接先过角色门
+    if (!Array.isArray(chapter.blocks) || seen || this.data.storyIntro.show) { if (this._castGate(() => this.openChapterFull())) return; this.openChapterFull(); return; }
     this.setData({ storyIntro: { show: true, out: false, title: this.data.topicName || chapter.name || '', line: introLine(this.data.topicDesc) } });
   },
   /** 旁白(章节旁白 / 站点语音讲解 / 题面配音 / 故事流音频块)出声时把配乐压低,停了再抬回去。
@@ -4199,7 +4200,8 @@ Page({
     this._startThemeBgm();
     // P-26:城市定向有带坐标的站时,在「开始游戏」这一刻问一次定位,而不是等到第一道题交卷
     const located = Number(this.data.mode) === 1 && (this.data.nodes || []).some((n) => n && n.lat && n.lng);
-    const go = () => { this.setData({ 'storyIntro.show': false }); this.openChapterFull(); if (located && this._startLocationNeeded()) this.requestPlayLocation(); };
+    const open = () => { this.openChapterFull(); if (located && this._startLocationNeeded()) this.requestPlayLocation(); };
+    const go = () => { this.setData({ 'storyIntro.show': false }); if (this._castGate(open)) return; open(); };
     if (this.data.reducedMotion) { go(); return; }
     this.setData({ 'storyIntro.out': true });
     this._fxTimers = (this._fxTimers || []).concat(setTimeout(go, 400));
@@ -5260,7 +5262,8 @@ Page({
   // ---------- 定位 ----------
   // 游戏可玩且含待完成地点时进页说明用途，拒绝后仍可从原入口重试。
   requestPlayLocation() {
-    if (!this._isPlayAccountCurrent() || this._themeHidden || this.data.isPreview || this.data.isMock || this.data.gpsOk || this._locationRequesting || this._locationAskedOnce()) return;   // a1-v3-21 一局只问一次
+    if (!this._isPlayAccountCurrent() || this._themeHidden || this.data.isPreview || this.data.isMock || this.data.gpsOk || this._locationRequesting || this._locationAskedOnce()) return;   // a1-v3-21
+    if (this._castHolds && this._castHolds()) { this._castDeferLocation = true; return; }   // 角色 Cast v1:起名 / 人物表结束后再问定位 一局只问一次
     const that = this;
     // 与加载代际分开；切后台会作废尚未完成的定位回调。
     const epoch = this._playLocationEpoch = (this._playLocationEpoch || 0) + 1;

@@ -311,7 +311,7 @@ function methods(req) {
     },
     /** _openStory 前置:C 起名 → E1 登场人物 → 正文。返回 true = 已接管,做完调 next */
     _castGate(next) {
-      if (this.data.isPreview || this._chapterReadCursor) return false;
+      if (this.data.isPreview || this._chapterReadCursor) { this._castFlushLocation(); return false; }
       const c = this.data.cast;
       if (c.start.show || (c.bill.show && !c.bill.menu)) { this._castAfter = next; return true; }   // 起名 / 人物表还开着:刷新回包不越过它们开正文
       if (this._castGated) return false;
@@ -323,7 +323,7 @@ function methods(req) {
       this._castGated = true;
       // 中途重进(走过站 / 已有档案 / 本机看过人物表)不再问名字,也不再放人物表
       const resumed = (this.data.nodes || []).some((n) => n.done) || !!this._castProfile || !!this._castMine().billSeen;
-      if (!this._cast || resumed) return false;
+      if (!this._cast || resumed) { this._castFlushLocation(); return false; }
       this._castAfter = next;
       if (!needsStart(this._cast, this._castProfile, resumed)) { this._castShowBill(); return true; }
       const cfg = this._cast;
@@ -377,7 +377,18 @@ function methods(req) {
       this._castWrite({ billSeen: true });
       this._castContinue();
     },
-    _castContinue() { const next = this._castAfter; this._castAfter = null; if (typeof next === 'function') next(); },
+    _castContinue() { const next = this._castAfter; this._castAfter = null; if (typeof next === 'function') next(); this._castFlushLocation(); },
+    /** 起名 / 人物表开着(或角色配置还在路上、尚未过门)时,开局定位弹窗先不弹,免得盖在起名上 */
+    _castHolds() {
+      const c = this.data.cast;
+      if (!c || !c.on) return false;
+      return !!(c.start.show || (c.bill.show && !c.bill.menu) || (this._castLoading && !this._castGated));
+    },
+    _castFlushLocation() {
+      if (!this._castDeferLocation) return;
+      this._castDeferLocation = false;
+      this.requestPlayLocation();
+    },
     /** 点页边名字 → E4 角色卡 */
     openCastCard(e) {
       const i = Number(e && e.currentTarget && e.currentTarget.dataset.i);
