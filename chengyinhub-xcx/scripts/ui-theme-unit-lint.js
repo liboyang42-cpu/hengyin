@@ -38,7 +38,9 @@ const DOMAIN_RULES = [
     // 2026-11-11 f-merchant(M-35):商家工作台的搜索(search2)与「发现」点进的帖文详情(square/detail)进共享域,
     // 同样按 roleGuard.isMerchantView 在根节点二选一。商家可达页的暗根清单由 tests/unit/f-merchant-light-reach.test.js 守。
     // 2026-11-19 ui-sweep U10:我发布的优惠券(coupon)与建券页(couponInfo)进共享域 —— 商家(scope=MERCHANT/商家视角)浅色,玩家深色。
-    route: /^(?:pages\/coop\/finance\/index$|pages\/topic\/pricing\/index$|pages\/(?:template|templatedetail|talent|shezhi|mylike|crop|searchmap|search2)\/|pages\/square\/detail\/|pages\/club\/(?:topic-story|detail)\/|pages\/activity\/(?:detail|official-(?:inbox|mine|detail|organizer))\/|subpackageMember\/(?:mytemplate|tixianjilu|coupon|couponInfo)\/|subpackageA\/pages\/(?:infomation|myproject|assetcenter\/(?:earnings|analysis|income-detail))\/|subpackageB\/pages\/im\/)/
+    // 2026-11-19 PG-029:商家口碑页(merchant/reviews)进共享域 —— 公开态(玩家看商家)深色,管理态商家浅色。
+    // 2026-11-19 PG-036:资料详情(infomationdetail)随资料列表进共享域,按 policy.isMerchantView 二选一。
+    route: /^(?:pages\/merchant\/reviews\/|subpackageA\/pages\/infomationdetail\/|pages\/coop\/finance\/index$|pages\/topic\/pricing\/index$|pages\/(?:template|templatedetail|talent|shezhi|mylike|crop|searchmap|search2)\/|pages\/square\/detail\/|pages\/club\/(?:topic-story|detail)\/|pages\/activity\/(?:detail|official-(?:inbox|mine|detail|organizer))\/|subpackageMember\/(?:mytemplate|tixianjilu|coupon|couponInfo)\/|subpackageA\/pages\/(?:infomation|myproject|assetcenter\/(?:earnings|analysis|income-detail))\/|subpackageB\/pages\/im\/)/
   },
   {
     domain: 'merchant',
@@ -276,7 +278,7 @@ function runSelfTest() {
     console.error('主题与孤立单位门禁:自证失败');
     process.exit(1);
   }
-  console.log('主题与孤立单位门禁:自证通过(能判红也能判绿，排除项锁死为 3 个设计域 + 1 个无实体重定向壳)');
+  console.log('主题与孤立单位门禁:自证通过(能判红也能判绿，排除项锁死为设计域 + 已登记的无实体重定向壳(当前 0 个))');
 }
 
 function printThemeErrors(errors) {
