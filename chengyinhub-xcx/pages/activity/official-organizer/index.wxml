@@ -86,6 +86,8 @@
         <cy-btn class="oo-btn" variant="danger" disabled="{{!avail.pause.enabled || !!busyAction}}" loading="{{busyAction === 'pause'}}" data-action="pause" bindtap="onAction">暂停活动</cy-btn>
       </block>
     </view>
+    <!-- PG-016:签到出勤只在控制台放行(phase ready)后渲染,随主题根节点与滚动区走 -->
+    <cy-event-attendance wx:if="{{phase === 'ready'}}" event-id="{{attendanceEventId}}" organizer="{{true}}" />
     <view class="oo-bottom"></view>
   </scroll-view>
 
@@ -94,4 +96,3 @@
   <cy-danger-confirm id="dc-resume" bind:confirm="onConfirmResume" />
 </view>
 
-<cy-event-attendance event-id="{{attendanceEventId}}" organizer="{{true}}" />

@@ -115,3 +115,32 @@ test('PG-015/PG-045:工具页游客文案「请先登录」且不给重试;探�
   assert.match(exp, /wx:elif="\{\{!guest\}\}" bindtap="prepare"/);
   assert.equal((read('subpackageTools/exploration-goals/index.wxml').match(/<cy-modal-host /g) || []).length, 1);
 });
+
+test('PG-016:主办控制台签到出勤移入主题根节点与滚动区,只在 ready 渲染', () => {
+  const wxml = read('pages/activity/official-organizer/index.wxml');
+  const scroll = wxml.slice(wxml.indexOf('<scroll-view wx:else'), wxml.indexOf('</scroll-view>'));
+  assert.match(scroll, /<cy-event-attendance wx:if="\{\{phase === 'ready'\}\}"/);
+  assert.equal((wxml.match(/<cy-event-attendance/g) || []).length, 1);
+});
+
+test('PG-017:站点商家页缺节点时从游玩页重读后再找;链接直达只给返回', () => {
+  const vm = require('node:vm');
+  const file = path.join(root, 'pages/play/merchant/index.js');
+  let def; const timers = [];
+  const prev = { data: { nodes: [], loading: false }, reloadPlay() { this.data.loading = true; this.data.nodes = [{ nodeId: 5, name: 'A' }]; } };
+  const wx = { getWindowInfo: () => ({ statusBarHeight: 20 }), getMenuButtonBoundingClientRect: () => ({}), navigateBack() {}, switchTab() {} };
+  vm.runInNewContext(fs.readFileSync(file, 'utf8'), {
+    Page: (d) => { def = d; }, getApp: () => ({ globalData: {}, getUserID: () => '1' }), wx, console,
+    getCurrentPages: () => [prev, {}], setTimeout: (fn) => { timers.push(fn); return timers.length; }, clearTimeout() {},
+    require: require('node:module').createRequire(file),
+  });
+  const page = Object.assign({}, def, { data: JSON.parse(JSON.stringify(def.data)), setData(p, cb) { Object.assign(this.data, p); if (cb) cb(); } });
+  page.onLoad({ nodeId: '5' });
+  assert.equal(page.data.notFound, true);
+  assert.equal(page.data.canReloadNode, true);
+  page.onReloadNode();
+  prev.data.loading = false;
+  timers.shift()();
+  assert.equal(page.data.notFound, false);
+  assert.equal(page.data.node.name, 'A');
+});
