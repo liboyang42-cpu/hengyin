@@ -2166,16 +2166,9 @@ public class ApiClubController extends BaseController {
      */
     @Operation(summary = "聚合动态流(我加入/我合作过的俱乐部;scope=all 为全站)")
     @PostMapping("/post/feed")
-    // PG-001:scope=all 的全站流对游客只读开放 —— 只出公开可见俱乐部的帖文(SQL viewerId=null 时私密团条件全不成立),
-    // 不带任何查看者字段(guestPostProjection)。其余 scope 与 author=me 仍要登录。
-    @Anonymous
     public AjaxResult postFeed(@RequestBody(required = false) Map<String, Object> body) {
-        Long memberId = viewerOrGuest();
-        boolean siteScope = body != null && "all".equals(String.valueOf(body.get("scope")));
-        if (memberId == null) {
-            if (!siteScope || "me".equals(String.valueOf(body.get("author")))) return error("请先登录");
-            return guestSiteFeed(body);
-        }
+        Long memberId;
+        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
 
         // limit 是外部输入,边界收在入口这层:解析不了用默认,越界夹到 [1,50]。
         // 放在 service 里会被 controller 测试的 mock 绕过 —— 那道闸测不到就等于没有。
@@ -2232,30 +2225,6 @@ public class ApiClubController extends BaseController {
         Map<String, Object> d = new HashMap<>();
         d.put("rows", rows.size() > limit ? new ArrayList<>(rows.subList(0, limit)) : rows);
         d.put("clubCount", scope.size());
-        return AjaxResult.success(d);
-    }
-
-    /** PG-001:游客看全站流 —— 只取公开俱乐部帖文,抹掉作者 id 与一切查看者字段。 */
-    private AjaxResult guestSiteFeed(Map<String, Object> body) {
-        int limit = 20;
-        if (body.get("limit") != null) {
-            try { limit = Integer.parseInt(String.valueOf(body.get("limit")).trim()); } catch (Exception ignored) { }
-        }
-        if (limit <= 0) limit = 20;
-        if (limit > 50) limit = 50;
-        Long beforeId = null;
-        if (body.get("beforeId") != null) {
-            try { beforeId = Long.parseLong(String.valueOf(body.get("beforeId")).trim()); } catch (Exception ignored) { }
-        }
-        List<ClubPost> page = clubPostService.selectSiteFeed(null, beforeId, limit + 1);
-        if (page == null) page = new ArrayList<>();
-        boolean hasMore = page.size() > limit;
-        List<ClubPost> rows = hasMore ? new ArrayList<>(page.subList(0, limit)) : new ArrayList<>(page);
-        projectPostReferences(rows);
-        guestPostProjection(rows, null);
-        Map<String, Object> d = new HashMap<>();
-        d.put("rows", rows);
-        d.put("hasMore", hasMore);
         return AjaxResult.success(d);
     }
 
