@@ -695,6 +695,7 @@ public class AdvancedGameConfigValidator {
                 // R14:选项结果当场写本局状态(路线图效果写法);不配 = 老配置照旧。
                 validateEffects(option.get("effects"),
                         "分支步骤 " + entry.getKey() + " 选项 " + optionId + " 的 effects");
+                validateOptionTrust(option.get("trust"), "分支步骤 " + entry.getKey() + " 选项 " + optionId);
                 targets.add(target);
             }
             edges.put(entry.getKey(), targets);
@@ -1291,6 +1292,7 @@ public class AdvancedGameConfigValidator {
                 validateFeedbackImages(option.get("fbImgs"));
                 // R14:玩家提交这个选项时当场写本局状态(无论对错 —— 代价也可以挂在错项上)。
                 validateEffects(option.get("effects"), "问答选项 " + id + " 的 effects");
+                validateOptionTrust(option.get("trust"), "问答选项 " + id);
                 if (option.path("correct").asBoolean(false)) correct++;
             }
             // 单选(默认)正好一个:零个无解,多个等于随便点都对。
@@ -1954,6 +1956,7 @@ public class AdvancedGameConfigValidator {
                 if (!optionKeys.add(optionKey)) throw new IllegalArgumentException("建档选项的 key 不能重复");
                 requiredText(option, "label", 32, "建档选项文案不能为空", "建档选项文案不能超过 32 字");
                 validateEffects(option.get("effects"), "建档问题 " + key + " 选项 " + optionKey + " 的 effects");
+                validateOptionTrust(option.get("trust"), "建档问题 " + key + " 选项 " + optionKey);
             }
             validateProfileOverride(question.get("override"), options, key);
         }
@@ -2236,6 +2239,29 @@ public class AdvancedGameConfigValidator {
         return "sys.hp".equals(var) || "sys.luck".equals(var) || "sys.exhausted".equals(var)
                 || JourneyRpg.SYS_MOMENTUM.equals(var)
                 || SYS_ASKED_VAR.matcher(var).matches() || SYS_NODE_VAR.matcher(var).matches();
+    }
+
+    /**
+     * 角色信任(cast-game-trust-1119):选择类选项上的 trust:[{castId,delta}],与剧情分支选项同一口径 ——
+     * castId 是角色 id 格式且不重复,delta 为 -2..2 的非零整数,最多 {@link CastConfigSupport#MAX_CAST} 条。
+     * 玩法模板不绑定主题,角色是否存在由运行期对照主题角色表判(不认识的角色忽略)。
+     */
+    static void validateOptionTrust(JsonNode trust, String label) {
+        if (trust == null || trust.isNull()) return;
+        if (!trust.isArray()) throw new IllegalArgumentException(label + " 的信任变化必须是数组");
+        if (trust.size() > CastConfigSupport.MAX_CAST)
+            throw new IllegalArgumentException(label + " 的信任变化最多 " + CastConfigSupport.MAX_CAST + " 条");
+        Set<String> seen = new HashSet<>();
+        for (JsonNode one : trust) {
+            if (one == null || !one.isObject()) throw new IllegalArgumentException(label + " 的信任变化格式不正确");
+            String castId = one.path("castId").asText("").trim();
+            if (!CastConfigSupport.CAST_ID.matcher(castId).matches())
+                throw new IllegalArgumentException(label + " 的信任变化角色 id 格式不对");
+            if (!seen.add(castId)) throw new IllegalArgumentException(label + " 对同一角色只能写一次信任变化");
+            JsonNode delta = one.get("delta");
+            if (delta == null || !delta.isIntegralNumber() || delta.asInt() < -2 || delta.asInt() > 2 || delta.asInt() == 0)
+                throw new IllegalArgumentException(label + " 的信任变化只能是 -2 至 2(不为 0)");
+        }
     }
 
     /**

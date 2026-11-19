@@ -527,13 +527,13 @@ public class TopicRouteEngine {
         private String actorRoleCode;
         /** 调用方注入的奖励上限:true = 只放行 XP / 徽章(自报传感完成)。不落库。 */
         private boolean rewardCeilingXpBadgeOnly;
-        /** 角色 Cast v1:本局各角色信任 {castId:int};只由服务端在记录剧情分支选择时累加。空时不写出,老局形状不变。 */
+        /** 角色 Cast v1:本局各角色信任 {castId:int};只由服务端在记录剧情分支选择与站点选择类玩法时累加。空时不写出,老局形状不变。 */
         @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
         private Map<String, Integer> trust = new LinkedHashMap<String, Integer>();
         /** 角色 Cast v1:本局玩家档案 {name, identityKey};空时不写出。 */
         @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
         private Map<String, String> playerProfile = new LinkedHashMap<String, String>();
-        /** 角色 Cast v1:剧情分支块的选择 {"chapterId:blockKey": 选项下标(0 起)};同一块只记一次,信任只结算一次。 */
+        /** 角色 Cast v1:剧情分支块的选择 {"chapterId:blockKey": 选项下标(0 起)};站点信任标记 {"station:nodeId:玩法段": 1}。同一块 / 站点只结算一次信任。 */
         @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
         private Map<String, Integer> storyChoices = new LinkedHashMap<String, Integer>();
 

@@ -300,6 +300,7 @@ public final class NodeJourneySnapshot {
                     ObjectNode optionRow = options.addObject();
                     optionRow.put("id", option.path("id").asText(""));
                     if (option.has("effects")) optionRow.set("effects", option.get("effects"));
+                    copyOptionTrust(option, optionRow);
                 }
             }
         }
@@ -320,6 +321,7 @@ public final class NodeJourneySnapshot {
                         ObjectNode optionRow = questionOptions.addObject();
                         optionRow.put("id", option.path("key").asText(""));
                         if (option.has("effects")) optionRow.set("effects", option.get("effects"));
+                        copyOptionTrust(option, optionRow);
                     }
                 }
                 continue;
@@ -334,9 +336,19 @@ public final class NodeJourneySnapshot {
                 ObjectNode optionRow = optionRows.addObject();
                 optionRow.put("id", option.path("id").asText(""));
                 if (option.has("effects")) optionRow.set("effects", option.get("effects"));
+                copyOptionTrust(option, optionRow);
             }
         }
         if (view.size() > 0) target.set(CHOICE_EFFECTS_KEY, view);
+    }
+
+    /**
+     * 角色信任(cast-game-trust-1119):选项上的 trust:[{castId,delta}] 与 effects 同一份冻结口径,
+     * 运行期只从本局快照读,客户端从不送信任值。
+     */
+    private static void copyOptionTrust(JsonNode option, ObjectNode optionRow) {
+        JsonNode trust = option.get("trust");
+        if (trust != null && trust.isArray() && trust.size() > 0) optionRow.set("trust", trust);
     }
 
     /**
@@ -415,6 +427,8 @@ public final class NodeJourneySnapshot {
             if (option == null || !option.isObject()) continue;
             JsonNode effects = option.get("effects");
             if (effects != null && effects.isArray() && effects.size() > 0) return true;
+            JsonNode trust = option.get("trust");
+            if (trust != null && trust.isArray() && trust.size() > 0) return true;
         }
         return false;
     }

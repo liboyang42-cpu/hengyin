@@ -287,6 +287,19 @@ public interface ITopicRouteRuntimeService {
     Map<String, Object> recordStoryBranch(Long memberId, Long runId, Long chapterId, String blockKey, Integer optionIndex);
 
     /**
+     * 角色(Cast)· 站点玩法的信任:玩家在选择类玩法(问答选项 / 建档选项 / 分支步骤选项)里选中的选项若带 trust,
+     * 从本局建局冻结的节点块读出并结算进 state_json.trust。每个站点(nodeId + 玩法段)只结算第一次提交,
+     * 重放 / 重答不重复;主题角色没开、本局不在进行、角色 id 不认识一律不写。客户端从不送信任值。
+     *
+     * @param choices 服务端判出的选择 [stepOrKit, optionId]
+     * @return 信任真的变了的角色 id(去重、按出现顺序);没有变化返回空列表
+     */
+    default java.util.List<String> applyStationTrust(Long memberId, Long topicId, Long activityId, Long nodeId,
+                                                     java.util.List<String[]> choices) {
+        return java.util.Collections.emptyList();
+    }
+
+    /**
      * 角色(Cast)v1 · GET /api/topic/cast/voice:台词配音地址。块自带 audioUrl 直接回;否则按说话角色预设声音合成,
      * 按 sha256(preset + text) 缓存。已发布主题登录即可听;草稿只有主题主人。
      *

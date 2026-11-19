@@ -200,6 +200,42 @@ class AdvancedGameChoiceHookTest {
                 isNull());
     }
 
+    /** cast-game-trust-1119:选择类站点把判出的选项交给旅程运行时结算信任,变了的角色回在 trustChanged。 */
+    @Test
+    @SuppressWarnings("unchecked")
+    void qaPickSettlesStationTrustAndEchoesChangedCast() {
+        when(topicRouteRuntimeService.applyStationTrust(eq(MEMBER_ID), eq(TOPIC_ID), eq(ACTIVITY_ID), eq(NODE_ID), any()))
+                .thenReturn(java.util.Collections.singletonList("c_abc123"));
+        GameRuntimeSession session = runningSession(QA_CONFIG, "{}");
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+
+        Map<String, Object> view = service.act(MEMBER_ID, 51L, 0, "qa-trust", "SUBMIT_QA", payload("optionId", "b"));
+
+        org.mockito.ArgumentCaptor<java.util.List<String[]>> refs = org.mockito.ArgumentCaptor.forClass(java.util.List.class);
+        verify(topicRouteRuntimeService).applyStationTrust(eq(MEMBER_ID), eq(TOPIC_ID), eq(ACTIVITY_ID), eq(NODE_ID), refs.capture());
+        org.junit.jupiter.api.Assertions.assertEquals(1, refs.getValue().size());
+        org.junit.jupiter.api.Assertions.assertArrayEquals(new String[]{"qa", "b"}, refs.getValue().get(0));
+        org.junit.jupiter.api.Assertions.assertEquals(java.util.Collections.singletonList("c_abc123"), view.get("trustChanged"));
+    }
+
+    @Test
+    void noTrustChangeLeavesResultShapeUntouched() {
+        GameRuntimeSession session = runningSession(QA_CONFIG, "{}");
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+
+        Map<String, Object> view = service.act(MEMBER_ID, 51L, 0, "qa-no-trust", "SUBMIT_QA", payload("optionId", "a"));
+
+        org.junit.jupiter.api.Assertions.assertFalse(view.containsKey("trustChanged"));
+    }
+
+    @Test
+    void typedAnswerHasNoChoiceSoNoTrustSettlement() {
+        String config = QA_CONFIG.replace("\"mode\":\"PICK\"", "\"mode\":\"TYPE\",\"answerText\":\"乙\"");
+        act(config, "{}", "SUBMIT_QA", payload("input", "乙"), "qa-typed-trust");
+
+        verify(topicRouteRuntimeService, never()).applyStationTrust(any(), any(), any(), any(), any());
+    }
+
     // ==================== helpers ====================
 
     private void act(String config, String state, String action, Map<String, Object> payload, String key) {

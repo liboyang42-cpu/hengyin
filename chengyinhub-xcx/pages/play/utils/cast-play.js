@@ -110,6 +110,13 @@ function pickedItem(block, index, cfg, profile, base) {
     remember: movers.length ? movers.map((c) => c.name).join('、') + '会记住这件事' : '' }, base || {});
 }
 
+/** 站点选择类玩法改了信任(服务端回包 trustChanged:[castId]):「X、Y会记住这件事」;不认识的角色不出名字,没有就空串 */
+function rememberText(cfg, castIds) {
+  const names = (Array.isArray(castIds) ? castIds : []).map((id) => findCast(cfg, id)).filter(Boolean)
+    .filter((c, i, all) => all.indexOf(c) === i).map((c) => c.name).filter(Boolean);
+  return names.length ? names.join('、') + '会记住这件事' : '';
+}
+
 /** 五格信任勾:0 及以下一格不亮,满 5 封顶 */
 function trustTicks(value) {
   const on = Math.max(0, Math.min(TICKS, Math.trunc(Number(value) || 0)));
@@ -268,6 +275,8 @@ function methods(req) {
       if (this.data.chapterFull && !this.data.cast.start.show) this.openChapterFull();   // 已在读:按角色样式重铺(与刷新同一路径)
     },
     _castOn() { return !!this._cast; },
+    /** 站点结果反馈里那句「X会记住这件事」:只认服务端回包的 trustChanged,本地不算信任 */
+    _castRemember(castIds) { return this._cast ? rememberText(this._cast, castIds) : ''; },
     /** 本局在本机记下的:选过的分支、显示用信任、看过人物表。按局号分开,换一局自动换一份 */
     _castMine() {
       const key = storeKey(this);
@@ -511,5 +520,5 @@ function methods(req) {
 module.exports = {
   CAST_COLORS, normalizeCast, profileOf, needsStart, playerName, castVars, speakerOf, lineHasVoice, lineItem,
   trustMovers, applyTrust, choiceItem, pickedItem, trustTicks, trustBand, clueView, cardView, playbill, routeCastRow,
-  leadingCast, endingView, dropCap, footerText, fmtDur, voiceHidden, castParas, castHints, remember, cached, data, methods,
+  leadingCast, endingView, dropCap, footerText, fmtDur, voiceHidden, castParas, castHints, remember, cached, rememberText, data, methods,
 };

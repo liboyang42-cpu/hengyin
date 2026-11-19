@@ -4237,6 +4237,88 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         return out;
     }
 
+    /** 站点信任的幂等标记:写在本局 storyChoices 里(只在服务端用,不下发),一个站点的一个玩法段只结算一次。 */
+    private static final String STATION_TRUST_PREFIX = "station:";
+
+    @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
+    public List<String> applyStationTrust(Long memberId, Long topicId, Long activityId, Long nodeId, List<String[]> choices) {
+        if (memberId == null || memberId <= 0L || topicId == null || topicId <= 0L || nodeId == null || nodeId <= 0L
+                || choices == null || choices.isEmpty()) return Collections.emptyList();
+        JsonNode cfg = com.chengyinhub.business.service.support.CastConfigSupport.parse(topicMapper.selectCastConfigById(topicId));
+        if (cfg == null || !cfg.path("enabled").asBoolean(false)) return Collections.emptyList();
+        TopicRouteSession found = TopicRouteSessionScope.find(routeMapper, memberId, topicId, activityId);
+        if (found == null || !Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(found.getStatus())) return Collections.emptyList();
+        JsonNode frozen = NodeJourneySnapshot.block(found.getConfigSnapshotJson(), nodeId);
+        JsonNode view = frozen == null ? null : frozen.get(NodeJourneySnapshot.CHOICE_EFFECTS_KEY);
+        if (view == null || !view.isObject()) return Collections.emptyList();
+
+        // 按玩法段分组:多选一次提交的几个选项一起算,同一站点之后的重答 / 重放不再算。
+        Map<String, List<JsonNode>> byKit = new LinkedHashMap<String, List<JsonNode>>();
+        for (String[] choice : choices) {
+            if (choice == null || choice.length < 2 || choice[0] == null || choice[1] == null) continue;
+            String kit = choice[0].trim(), option = choice[1].trim();
+            if (kit.isEmpty() || option.isEmpty() || !stationHasTrust(view, kit)) continue;
+            List<JsonNode> picked = byKit.get(kit);
+            if (picked == null) byKit.put(kit, picked = new ArrayList<JsonNode>());
+            JsonNode trust = stationOptionTrust(view, kit, option);
+            if (trust != null) picked.add(trust);
+        }
+        if (byKit.isEmpty()) return Collections.emptyList();
+
+        TopicRouteSession session = castLockOwnedRunningRun(memberId, found.getId());
+        TopicRouteEngine.State state = castReadState(session);
+        Map<String, Integer> before = new LinkedHashMap<String, Integer>(state.getTrust());
+        java.util.Set<String> castIds = com.chengyinhub.business.service.support.CastConfigSupport.castIds(cfg);
+        boolean marked = false;
+        for (Map.Entry<String, List<JsonNode>> entry : byKit.entrySet()) {
+            String marker = STATION_TRUST_PREFIX + nodeId + ":" + entry.getKey();
+            if (state.getStoryChoices().containsKey(marker)) continue;
+            state.getStoryChoices().put(marker, Integer.valueOf(1));
+            marked = true;
+            for (JsonNode trust : entry.getValue())
+                com.chengyinhub.business.service.support.CastRunRules.applyTrust(state.getTrust(), trust, castIds);
+        }
+        if (!marked) return Collections.emptyList();
+        castWriteState(session, state);
+        List<String> changed = new ArrayList<String>();
+        for (Map.Entry<String, Integer> entry : state.getTrust().entrySet()) {
+            if (!java.util.Objects.equals(before.get(entry.getKey()), entry.getValue())) changed.add(entry.getKey());
+        }
+        return changed;
+    }
+
+    /** 冻结投影里这个玩法段(或分支步骤)是否有任一选项带信任;没有 = 不碰本局状态,行为零变化。 */
+    private boolean stationHasTrust(JsonNode view, String kit) {
+        for (JsonNode option : stationOptions(view, kit)) {
+            JsonNode trust = option.get("trust");
+            if (trust != null && trust.isArray() && trust.size() > 0) return true;
+        }
+        return false;
+    }
+
+    private JsonNode stationOptionTrust(JsonNode view, String kit, String optionId) {
+        for (JsonNode option : stationOptions(view, kit)) {
+            if (optionId.equals(option.path("id").asText(""))) return option.get("trust");
+        }
+        return null;
+    }
+
+    /** 分支步骤 options / 建档 questions[].options(id = key)/ 其它玩法段 options,都来自本局冻结的 choiceEffects。 */
+    private List<JsonNode> stationOptions(JsonNode view, String kit) {
+        List<JsonNode> out = new ArrayList<JsonNode>();
+        JsonNode branchOptions = findRowById(view.path("branch").path("steps"), kit, "options");
+        if (branchOptions != null && branchOptions.isArray()) for (JsonNode option : branchOptions) out.add(option);
+        if (!NodeJourneySnapshot.CHOICE_KITS.contains(kit)) return out;
+        if ("profile".equals(kit)) {
+            for (JsonNode question : view.path("profile").path("questions"))
+                for (JsonNode option : question.path("options")) out.add(option);
+        } else {
+            for (JsonNode option : view.path(kit).path("options")) out.add(option);
+        }
+        return out;
+    }
+
     @Override
     public Map<String, Object> castLineVoice(Long memberId, Long topicId, Long chapterId, String blockKey, Long runId) {
         castRequireLogin(memberId);
