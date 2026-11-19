@@ -1,4 +1,4 @@
-<view class="fabu {{couponCreationEnabled ? '' : 'fabu--closed'}} {{couponCreationEnabled || isMerchant ? 'theme-topic-editor' : 'theme-dark'}}">
+<view class="fabu {{couponCreationEnabled ? '' : 'fabu--closed'}} {{couponCreationEnabled || isMerchant ? 'theme-merchant theme-topic-editor' : 'theme-dark'}}">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />

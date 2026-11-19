@@ -181,7 +181,7 @@ test('U10 新建优惠券(已关闭):cy-empty 已注册、玩家深色、关闭�
   const json = JSON.parse(read('subpackageMember/couponInfo/couponInfo.json'))
   assert.equal(json.usingComponents['cy-empty'], '/components/cy/empty/index', '未注册时关闭态整页空白')
   const wxml = read('subpackageMember/couponInfo/couponInfo.wxml')
-  assert.match(wxml, /class="fabu \{\{couponCreationEnabled \? '' : 'fabu--closed'\}\} \{\{couponCreationEnabled \|\| isMerchant \? 'theme-topic-editor' : 'theme-dark'\}\}"/)
+  assert.match(wxml, /class="fabu \{\{couponCreationEnabled \? '' : 'fabu--closed'\}\} \{\{couponCreationEnabled \|\| isMerchant \? 'theme-merchant theme-topic-editor' : 'theme-dark'\}\}"/)
   assert.match(wxml, /<cy-empty class="coupon-creation-closed" wx:if="\{\{!couponCreationEnabled\}\}" fill size="lg" title="暂未开放新建优惠券" cta="返回" bind:cta="exitPage" \/>/)
   assert.match(rule(read('subpackageMember/couponInfo/couponInfo.wxss'), '.fabu--closed'), /display:\s*flex;\s*flex-direction:\s*column/)
 
