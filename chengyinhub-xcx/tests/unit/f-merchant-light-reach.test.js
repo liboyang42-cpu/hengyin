@@ -14,7 +14,6 @@ const lint = require(path.join(ROOT, 'scripts/ui-theme-unit-lint.js'));
 
 const PLAYER_BY_DESIGN = {
   'pages/index/index': '切回玩家首页(商家退出商家视角/分享落地),本身就是玩家页',
-  'pages/member/index/index': '「我的」宿主页;商家视角由 cy-profile 根节点挂 theme-merchant',
   'pages/userinfo/userinfo': '公开主页:被看者是商家或观看者是商家(D-91)走浅色,否则玩家主页深色',
   'pages/topic/index/index': '主题域,保持主题自己的强制配色',
   'subpackageRoam/citystamp/index': '城市签仪式页,漫游游戏设计域',

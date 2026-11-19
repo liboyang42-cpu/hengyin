@@ -24,6 +24,7 @@ module.exports = { valid: valid };
   <cy-tabs class="rel-tabs" variant="fill" wide="{{true}}" tabs="{{tabs}}" active="{{activeTab}}" bind:change="onTabChange" />
 
   <cy-empty wx:if="{{guestLogin}}" kind="no-permission" fill size="lg" title="登录后查看发现" cta="登录" bind:cta="onGuestLogin" />
+  <cy-empty wx:elif="{{pageState === 'denied'}}" kind="no-permission" fill size="lg" title="当前身份不能查看商家内容" cta="申请入驻" bind:cta="onDeniedApply" />
   <view wx:else class="body" style="{{pmList === 1 ? '--pm-q:1;' : (pmList === 2 ? '--pm-q-d:.32s;--pm-q-s:1;' : '')}}">
     <!-- 帖子(默认):2026-10-22 owner —— 商家不再看到其他商家。走查 v2 W2-17:tab 改名「发现」,
          与 pages/talent/list 同一条全站流(/api/club/post/feed scope=all),可点赞、评论;骨架超过 400ms 才出。 -->
