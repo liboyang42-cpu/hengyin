@@ -353,3 +353,17 @@ test('F08:没有玩法的店点「到店打卡」不进 startGame,直接去本�
   const merchant = fs.readFileSync(path.join(ROOT, 'pages/play/merchant/index.js'), 'utf8')
   assert.match(merchant, /String\(query && query\.verify\) === '1' && node\.arrived && !node\.done\) this\.openVerifyCode\(\)/)
 })
+
+// FE-G10:随 FE-G1 / G3 / G7–G9 落地同步的自由探索详情契约
+test('FE-G3 自由探索「我的权益」回格子层,不跳卡包页;FE-G1 无玩法店写我已到店 / 查看权益', () => {
+  const body = js.slice(js.indexOf('  openRightsFromTools() {'), js.indexOf('  openThemeFromTools()'))
+  assert.match(body, /if \(Number\(this\.data\.mode\) === 2\) \{[\s\S]*?return;\s*\}/)
+  assert.match(body, /this\.goCouponWallet\(\)/, '城市定向仍去卡包')
+  assert.match(wxml, /hero\.node\.perkOnly \? \(hero\.node\.done \? '查看权益' : '我已到店'\)/)
+})
+
+test('FE-G7–G9 纯权益主题:已完成环、章节读数、小瘾说、完成横幅随 perkOnlyTopic 隐藏', () => {
+  assert.match(wxml, /<view class="fx-ring" wx:elif="\{\{!perkOnlyTopic\}\}">/)
+  assert.match(wxml, /hero\.node\.hook && !perkOnlyTopic/)
+  assert.match(wxml, /=== 'banner' && !perkOnlyTopic/)
+})
