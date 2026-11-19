@@ -2326,7 +2326,7 @@ Page({
           that._canReport = canReportTopic(res.data, typeof app.getUserID === 'function' ? app.getUserID() : '');
           const routeStyle = routeMapStyleOf(res.data);
           that.setData({
-            info: res.data, castRow: castPlay.routeCastRow(castPlay.remember(that.data.id, res.data.castConfig)), mapSubkey: routeStyle.mapSubkey, mapLayerStyle: routeStyle.mapLayerStyle, openChapterKey: '',
+            info: res.data, mapSubkey: routeStyle.mapSubkey, mapLayerStyle: routeStyle.mapLayerStyle, castRow: castPlay.routeCastRow(castPlay.remember(that.data.id, res.data.castConfig)), openChapterKey: '',
             // P0(2026-09-05 审核):已购态不再只信 URL 参数 is_join(全仓只有订单详情会传 1,
             // 从首页/搜索进来的已购用户永远看不到「开始玩」)。/info-to-user 已按 ownerType=1 &
             // registrationStatus=2 回填 isSignUp,与自玩通行证的建单口径同源,直接用它。

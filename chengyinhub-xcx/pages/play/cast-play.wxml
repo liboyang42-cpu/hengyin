@@ -34,7 +34,7 @@
       <image wx:if="{{cast.card.face.url}}" class="ccard__face" src="{{img.first(cast.card.face.url)}}" mode="aspectFill" aria-hidden="true" />
       <view wx:else class="ccard__face ccard__face--i" style="background:{{cast.card.face.color}}" aria-hidden="true">{{cast.card.face.initial}}</view>
       <view class="ccard__copy"><text class="ccard__name">{{cast.card.name}}</text><text class="ccard__id" wx:if="{{cast.card.identity}}">{{cast.card.identity}}</text></view>
-      <view wx:if="{{cast.card.voice}}" class="ccard__play" bindtap="playCastCardVoice" aria-role="button" aria-label="听{{cast.card.name}}说这一句" hover-class="cy-pressed" hover-stay-time="80">▶︎</view>
+      <view wx:if="{{cast.card.voice}}" class="ccard__play" bindtap="playCastCardVoice" aria-role="button" aria-label="听{{cast.card.name}}说这一句" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="play" size="28" /></view>
     </view>
     <view class="ccard__k">{{cast.card.trustLabel}}</view>
     <view class="ccard__ticks" aria-role="img" aria-label="{{cast.card.trustLabel}}"><view wx:for="{{cast.card.ticks}}" wx:key="i" class="castend__tick {{item.on ? 'is-on' : ''}}" style="{{item.on ? 'background:' + cast.card.color : ''}}"></view></view>

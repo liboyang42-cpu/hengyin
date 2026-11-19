@@ -204,3 +204,23 @@ test('开场门:新局先起名 → 人物表 → 正文;重进 / 没开角色�
   const plain = host(null, { _routeState: { sessionId: 'r3' } })
   assert.equal(plain._castGate(() => {}), false, '没开角色的主题不拦')
 })
+
+test('没有角色痕迹的主题:游玩页开局不多一次请求;有台词块 / 本局档案才补读主题信息', async () => {
+  assert.equal(cast.castHints({ chapters: [{ blocks: [{ type: 'text' }] }], routeState: {} }), false)
+  assert.equal(cast.castHints({ chapters: [{ blocks: [{ type: 'line', speaker: 'player' }] }] }), true)
+  assert.equal(cast.castHints({ routeState: { playerProfile: { name: '阿栗' } } }), true)
+  const calls = []
+  const mk = () => Object.assign({ data: { cast: cast.data.cast, topicId: '' }, _routeState: {}, setData(p) { Object.assign(this.data, p) } },
+    cast.methods((...args) => { calls.push(args); return Promise.resolve({ code: 200, data: { castConfig: RAW } }) }))
+  mk()._applyCast({ topicId: 501, chapters: [{ blocks: [{ type: 'text', content: '雾。' }] }], routeState: {} })
+  assert.equal(calls.length, 0, '没有角色的主题请求逐条不变')
+  const page = mk()
+  page._applyCast({ topicId: 502, chapters: [{ blocks: [{ type: 'line', speaker: 'c_a', content: '来了。' }] }], routeState: {} })
+  assert.deepEqual(calls.map((c) => c[0]), ['/api/topic/info-to-user'])
+  await page._castReady
+  assert.equal(page._castOn(), true); assert.equal(page.data['cast.on'], true)
+  mk()._applyCast({ topicId: 502, chapters: [{ blocks: [{ type: 'line' }] }] })
+  assert.equal(calls.length, 1, '同一主题读过就用缓存')
+  const inline = mk(); inline._applyCast({ topicId: 503, castConfig: null, chapters: [{ blocks: [{ type: 'line' }] }] })
+  assert.equal(calls.length, 1, '回包自带 castConfig 就不再查'); assert.equal(inline._castOn(), false)
+})

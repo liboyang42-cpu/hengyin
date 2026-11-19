@@ -131,7 +131,8 @@ test('optional text blocks render as one collapsed 「延伸阅读」 card (who 
   assert.equal(opts.length, 2, 'each optional block is one paragraph');
   assert.deepEqual(opts.map(p => [p.who, p.open, p.lines]), [['示例站点的来历', false, ['第一段。', '第二段。']], ['', false, ['没有副标题的延伸。']]]);
   assert.ok(paras.some(p => p.kind === 'text' && p.text === '示例站点的正文。'));
-  assert.ok(paras.some(p => p.kind === 'text' && p.text === '旁人：照常一段。'), 'non-optional blocks unchanged');
+  // 2026-11-19 角色契约 Hard UI rules(业主):who 不再拼成「旁人：」,改为画在页边的名字;正文一字不变
+  assert.ok(paras.some(p => p.kind === 'text' && p.text === '照常一段。' && p.who === '旁人'), 'non-optional blocks keep their text; who moves to the margin');
   assert.ok(!paras.some(p => p.kind === 'text' && /第一段/.test(p.text)), 'collapsed text is not leaked into the plain flow');
   const i = opts[0].i;
   page.toggleOptionalRead({ currentTarget: { dataset: { i } } });

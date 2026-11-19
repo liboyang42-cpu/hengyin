@@ -5,7 +5,7 @@
 /* —— 正文段:说话人在左侧页边,与首行齐平;段落左右各让 52rpx,名字永远不压字 —— */
 .chfull__para--who{ position:relative; padding-left:52rpx; padding-right:52rpx; }
 .chfull__who{ position:absolute; top:0; left:-80rpx; width:128rpx; font-size:20rpx; font-weight:400; line-height:66rpx; text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:.46; letter-spacing:.04em; font-family:-apple-system, "PingFang SC", "Noto Sans SC", sans-serif; } /* ds-ok 契约 10px/400/浅灰;66rpx = 正文 34rpx × 1.95 首行行高 */
-.chfull__vrow{ display:block; margin:var(--cy-space-2) auto 0; padding:var(--cy-space-2) 0; font-size:22rpx; line-height:1.4; letter-spacing:.08em; text-align:center; opacity:.46; font-family:-apple-system, "PingFang SC", sans-serif; } /* ds-ok 契约 D1「▶︎ 0:08」小、居中、浅灰 */
+.chfull__vrow{ display:flex; align-items:center; justify-content:center; gap:var(--cy-space-1); margin:var(--cy-space-2) auto 0; padding:var(--cy-space-2) 0; font-size:22rpx; line-height:1.4; letter-spacing:.08em; text-align:center; opacity:.46; font-family:-apple-system, "PingFang SC", sans-serif; } /* ds-ok 契约 D1「▶︎ 0:08」小、居中、浅灰 */
 .chfull__remember{ display:block; margin-top:var(--cy-space-3); font-size:24rpx; line-height:1.5; text-align:center; opacity:.46; font-family:-apple-system, "PingFang SC", sans-serif; } /* ds-ok 契约 E3 12px 浅灰居中 */
 
 /* —— E2 首段首字下沉:约三行高,左浮;这一段改左对齐,首字才贴得住 —— */

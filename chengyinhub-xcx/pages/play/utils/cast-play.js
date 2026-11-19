@@ -254,6 +254,13 @@ function castParas(items, cfg, profile) {
   });
 }
 
+/** /api/play/nodes 回包里有没有角色的痕迹:本局档案,或任一章的台词块 */
+function castHints(d) {
+  if (!d) return false;
+  if (isObj(d.routeState) && isObj(d.routeState.playerProfile)) return true;
+  return (Array.isArray(d.chapters) ? d.chapters : []).some((c) => c && Array.isArray(c.blocks) && c.blocks.some((b) => b && b.type === 'line'));
+}
+
 /* ---------------- 主题详情与播放页共用的配置缓存 ---------------- */
 const cache = new Map();   // topicId → 规范化后的配置(null = 这个主题没开)
 function remember(topicId, raw) { if (topicId) cache.set(str(topicId), normalizeCast(raw)); return cache.get(str(topicId)) || null; }
@@ -274,9 +281,12 @@ function methods(req) {
       if (route.playerProfile !== undefined || !this._castProfile) this._castProfile = profileOf(route.playerProfile);
       const topicId = str(d && d.topicId) || str(this.data.topicId);
       if (!topicId || this.data.isPreview || this.data.isMock) return;
+      if (d && d.castConfig !== undefined) { this._castSet(remember(topicId, d.castConfig)); return; }   // 游玩回包自己带了就用它
       const hit = cached(topicId);
       if (hit) { this._castSet(hit.cfg); return; }
-      if (this._castLoading === topicId) return;
+      // 没在详情页读过:只有回包里真有角色的痕迹(台词块 / 本局档案)才补读一次主题信息 ——
+      // 没有角色的主题开局请求与今天逐条一致,不多一次查询、不多等一拍
+      if (!castHints(d) || this._castLoading === topicId) return;
       this._castLoading = topicId;
       this._castReady = req('/api/topic/info-to-user', 'POST', { id: topicId }, undefined, true).then((res) => {
         if (this._castLoading !== topicId) return;
@@ -514,5 +524,5 @@ function methods(req) {
 module.exports = {
   CAST_COLORS, normalizeCast, profileOf, needsStart, playerName, castVars, speakerOf, lineHasVoice, lineItem,
   trustMovers, applyTrust, choiceItem, pickedItem, trustTicks, trustBand, clueView, cardView, playbill, routeCastRow,
-  leadingCast, endingView, dropCap, footerText, fmtDur, voiceHidden, castParas, remember, cached, data, methods,
+  leadingCast, endingView, dropCap, footerText, fmtDur, voiceHidden, castParas, castHints, remember, cached, data, methods,
 };

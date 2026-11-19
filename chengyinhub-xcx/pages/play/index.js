@@ -8810,7 +8810,7 @@ Page({
     const finish = () => { if (isCurrent()) { this._lifeEndingPendingScope = ''; next(); } };
     req('/api/play/journey/ending', 'GET', params, undefined, true).then((res) => {
       if (!isCurrent()) return;
-      const d = res && (res.code == 200 || res.code == '200') ? res.data : null; this._castEnding(d);   // E6:服务端信任 → 「他们怎么看你」
+      const d = res && (res.code == 200 || res.code == '200') ? res.data : null; if (this._castEnding) this._castEnding(d);   // E6:服务端信任 → 「他们怎么看你」
       if (!res || !(res.code == 200 || res.code == '200')) { finish(); return; }
       // 没配结局的路线也给同一张「本局完成」卡(标题取主题名,档案取本局走过的站),不是只有故事路线才有
       const ending = d && d.title ? d : { code: '', title: this.data.topicName || '本局完成', summary: '' };
