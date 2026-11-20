@@ -360,7 +360,8 @@ test('队伍详情缺参可返回；刷新失败保留最后一次确认的队�
   missing.page.onLoad({})
   assert.equal(missing.page.data.loading, false)
   assert.equal(missing.page.data.errorKind, 'missing-param')
-  assert.equal(missing.page.data.errorAction, '返回上一页')
+  assert.equal(missing.page.data.errorAction, '返回')
+  assert.equal(missing.page.data.error, '链接已失效')
   missing.page.load(true)
   assert.equal(missing.pullStops.length, 1, '缺参时下拉刷新也必须收口，不能留下系统 loading')
 
@@ -382,7 +383,8 @@ test('邀请缺参只返回来源页；加入失败保留原请求恢复状态',
   const missing = loadTeamPage('pages/team/join/index.js')
   missing.page.onLoad({})
   assert.equal(missing.page.data.errorKind, 'missing-param')
-  assert.equal(missing.page.data.errorAction, '返回上一页')
+  assert.equal(missing.page.data.errorAction, '返回')
+  assert.equal(missing.page.data.error, '链接已失效')
   missing.page.onErrorAction()
   assert.equal(missing.backs.length, 1)
   assert.equal(missing.requests.length, 0)
@@ -459,7 +461,7 @@ test('j4 F2: a team-info refusal shows its reason with a back action on both pag
     harness.requests.find((item) => item.url === '/api/team/info').success({ code: 500, msg: reason, errorCode: 'TEAM_INFO_REFUSED' })
     assert.equal(harness.page.data.errorKind, 'missing-param', relative)
     assert.equal(harness.page.data.error, reason, relative)
-    assert.equal(harness.page.data.errorAction, '返回上一页', relative)
+    assert.equal(harness.page.data.errorAction, '返回', relative)
     assert.equal(harness.page.data.team, null, relative)
   }
 })

@@ -186,11 +186,12 @@ test('负控:给失败面板挂上 wx:if="{{id}}" 后必须判红(缺 id 正是�
 // 11.2 mycanyuinfo:缺参数时也必须有一个能走的出口
 // ————————————————————————————————————————————————————————————
 
-test('参与详情缺参数 ⇒ 动作标签是「返回参与列表」,点了真的回参与列表', () => {
+test('参与详情缺参数 ⇒ 「链接已失效」+ 动作标签「返回」,点了真的回参与列表', () => {
   const { page, sandbox } = loadMyCanyuInfo([MYCANYU_LIST, MYCANYUINFO])
   page.onLoad()
   assert.equal(page.data.loadState, 'missing-param')
-  assert.equal(page.data.errorActionText, '返回参与列表', '缺参数时不能是空标签(空 ⇒ 整屏无按钮)')
+  assert.equal(page.data.errorActionText, '返回', '缺参数时不能是空标签(空 ⇒ 整屏无按钮)')
+  assert.equal(page.data.missingTitle, '链接已失效')
 
   // 组件里这一步是 triggerEvent('back'):回到宿主(我的参与列表),
   // 「点了真的回参与列表」由宿主保证 —— 弹窗宿主是列表页本身,深链壳里则 redirectTo 列表(见下一条)。
@@ -221,14 +222,14 @@ test('参与详情有 id 但接口失败 ⇒ 动作仍是「重试」,点了重�
 
 test('负控:把缺参数档的动作标签清空(退回 R1 的纯文字终态)必须判红', () => {
   const source = read(`${MYCANYUINFO_C}.js`)
-  const mutated = source.replace(/errorActionText:\s*'返回参与列表'/g, "errorActionText: ''")
+  const mutated = source.replace(/errorActionText:\s*'返回'/g, "errorActionText: ''")
   assert.notEqual(mutated, source, '变异锚点失效:未找到缺参数档的动作标签')
 
   const { page } = loadMyCanyuInfo([MYCANYU_LIST, MYCANYUINFO], mutated)
   page.onLoad()
   assert.equal(page.data.errorActionText, '', '变异体应退回无动作')
   assert.throws(
-    () => assert.equal(page.data.errorActionText, '返回参与列表'),
+    () => assert.equal(page.data.errorActionText, '返回'),
     assert.AssertionError,
     '缺参数档没有出口时必须判红',
   )

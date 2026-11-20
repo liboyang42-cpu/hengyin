@@ -110,7 +110,9 @@ test('U2 第二批 wxml:缺参态默认文案 + 唯一「返回」', () => {
     assert.ok(tags.length, rel + ' 必须有 missing-param 缺参态');
     for (const tag of tags) {
       assert.match(tag, /cta="返回"/, rel);
-      assert.doesNotMatch(tag, /\btitle="|\bsub="/, rel + ' 缺参态用组件默认文案、不加副文案');
+      const title = tag.match(/\btitle="([^"]*)"/);
+      assert.ok(!title || title[1] === '链接已失效', rel + ' 缺参态只用「链接已失效」');
+      assert.doesNotMatch(tag, /\bsub="/, rel + ' 缺参态不加副文案');
     }
   }
   const partner = read('pages/topic/pricing/partner/index.wxml').match(/<cy-empty wx:if="\{\{invalidLink\}\}"[^>]*>/);

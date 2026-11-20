@@ -251,7 +251,8 @@ test('C04 mycanyuinfo: 缺参、接口失败、重试成功各自进入可观察
   ctx.page.onLoad()
   assert.equal(ctx.sandbox.requests.length, 0, '缺少 id 时不应发无效请求')
   assert.equal(ctx.page.data.loadState, 'missing-param', '缺参不能停在无限 loading')
-  assert.ok(ctx.page.data.loadErrorText)
+  assert.equal(ctx.page.data.missingTitle, '链接已失效', '缺参用统一文案,不加副文案')
+  assert.equal(ctx.page.data.errorActionText, '返回')
 
   ctx = loadMyCanyuInfoPage()
   ctx.page.data.recordId = '33'
