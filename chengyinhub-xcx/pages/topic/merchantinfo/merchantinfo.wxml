@@ -13,7 +13,7 @@
      与其它详情页统一:提示 + 返回上一页。 -->
 <block wx:if="{{ missingParam }}">
   <cy-nav-bar custom-back bind:back="goBack" />
-  <cy-empty fill size="lg" kind="missing-param" cta="返回上一页" bind:cta="goBack" />
+  <cy-empty fill size="lg" kind="missing-param" cta="返回" bind:cta="goBack" />
 </block>
 <block wx:elif="{{ projectReadAuth }}">
   <cy-nav-bar custom-back bind:back="goBack" />

@@ -61,10 +61,10 @@ Page({
     if (!topicId) {
       this.setData({
         loading: false,
-        errorText: '探索链接不完整',
+        errorText: '链接已失效',
         errorKind: 'missing-param',
         errorSub: '',
-        errorAction: '返回首页'
+        errorAction: '返回'
       })
       return
     }

@@ -215,6 +215,12 @@ Page({
     else this.selectActivity();
   },
 
+  // 缺参(invalid)的唯一出口:有上一页就回去,没有就落俱乐部管理(UI-sweep 1119 U2)。
+  goBack() {
+    if (getCurrentPages().length > 1) wx.navigateBack({ fail: () => this.goManage() });
+    else this.goManage();
+  },
+
   goManage() {
     wx.redirectTo({
       url: '/pages/club/detail/index?owner=1&tab=manage',

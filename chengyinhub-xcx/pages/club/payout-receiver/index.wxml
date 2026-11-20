@@ -7,6 +7,7 @@
 
     <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="2" />
     <cy-error wx:elif="{{state === 'error'}}" fill size="lg" title="个人收款加载失败" sub="{{errorText}}" retry="重新加载" bind:retry="load" class="cy-fade-in" />
+    <cy-empty wx:elif="{{state === 'missing-param'}}" fill size="lg" kind="missing-param" cta="返回" bind:cta="goBack" class="cy-fade-in" />
     <cy-empty wx:elif="{{state === 'no-club'}}" fill size="lg" kind="empty" title="还没有自己的俱乐部" class="cy-fade-in" />
 
     <view wx:else class="pr-shell cy-fade-in">
