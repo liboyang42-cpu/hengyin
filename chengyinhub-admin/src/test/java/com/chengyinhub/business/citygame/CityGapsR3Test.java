@@ -12,6 +12,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.sql.Timestamp;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -93,6 +94,8 @@ class CityGapsR3Test {
 
     private SqlRoutingJdbc mapDb() {
         SqlRoutingJdbc db = new SqlRoutingJdbc();
+        // be-integ CITY-3: property() first resolves the id (territory or board property id) to a territory id.
+        db.on("SELECT territory_id FROM roam_territory", a -> new ArrayList<>(List.of("T1")));
         db.on("FROM roam_fog_tile WHERE member_id = ?", a -> List.of("ws0e9bx"));
         Map<String, Object> lit = territory("T1", 99L, 3);
         Map<String, Object> fogged = territory("T2", 98L, 4);
@@ -189,6 +192,8 @@ class CityGapsR3Test {
 
     private SqlRoutingJdbc challengeDb(CityMonopolyConfig c, Map<String, Object> terr) {
         SqlRoutingJdbc db = new SqlRoutingJdbc();
+        // be-integ: monopolyTerritory() first looks for a LEGACY row to adopt; there is none here.
+        db.rows("rules_kind = 'LEGACY'", List.of());
         db.rows("FROM city_monopoly_quote WHERE quote_id = ?", List.of(row("quote_id", "Q1", "quote_hash", "QH", "used_at", null,
                 "expires_at", new Timestamp(NOW + 60_000L), "cost", 30L, "target_key", "T1", "rules_hash", c.rulesHash(),
                 "payload_json", JSON.toJSONString(Map.of("territoryId", "T1", "fee", 30)))));
