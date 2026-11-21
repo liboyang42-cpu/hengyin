@@ -22,6 +22,9 @@ function emptyForm(address) {
     quotaTotal: '',
     familyAccepted: false, // F12:是否接受亲子票(1 大 1 小同享一份权益)
     familyPerkText: '',    // F12:儿童份说明,如「儿童份小杯」
+    included: false,       // FE-G5:权益已含在票内
+    extraSpendText: '',    // FE-G5:未含时需另付的说明
+    reserveRequired: false, // FE-G5:需预约
     perHeadFee: '',
     supplyName: '',
     supplyKind: 'SERVICE',
@@ -273,6 +276,18 @@ Component({
       this.setData({ form: Object.assign({}, this.data.form, { familyAccepted: on, familyPerkText: on ? this.data.form.familyPerkText : '' }) });
     },
 
+    // FE-G5:权益展示条款的两个开关(已含在票内时不需要另付说明)
+    onIncludedChange(e) {
+      if (this.data.submitting) return;
+      const on = !!(e && e.detail && e.detail.value);
+      this.setData({ form: Object.assign({}, this.data.form, { included: on, extraSpendText: on ? '' : this.data.form.extraSpendText }) });
+    },
+
+    onReserveRequiredChange(e) {
+      if (this.data.submitting) return;
+      this.setData({ form: Object.assign({}, this.data.form, { reserveRequired: !!(e && e.detail && e.detail.value) }) });
+    },
+
     onInput(e) {
       if (this.data.submitting) return;
       const key = e.currentTarget.dataset.key;
@@ -521,6 +536,11 @@ Component({
         detail.quotaTotal = quotaTotal;
         detail.familyAccepted = form.familyAccepted ? 1 : 0;
         detail.familyPerkText = form.familyAccepted ? String(form.familyPerkText || '').trim().slice(0, 200) : '';
+        detail.displayTerms = {
+          included: !!form.included,
+          extraSpendText: form.included ? '' : String(form.extraSpendText || '').trim().slice(0, 100),
+          reserveRequired: !!form.reserveRequired,
+        };
       }
       if (termsMode === 'REVSHARE') detail.perHeadFee = perHeadFee;
       this.triggerEvent('submit', detail);

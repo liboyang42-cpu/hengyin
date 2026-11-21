@@ -286,7 +286,7 @@
     </cy-card>
 
     <!-- 批5 探店日完局面:图鉴(F4)。show=false 时整块不渲染,不留空壳 -->
-    <cy-card class="order-card" wx:if="{{completion.show}}">
+    <cy-card class="order-card" wx:if="{{completion.show && !completion.perkOnly}}">
       <view class="section-title">探店图鉴</view>
       <view class="stamp-grid">
         <view class="stamp {{item.collected ? 'stamp--on' : ''}}" wx:for="{{completion.stamps}}" wx:key="chapterId">
@@ -298,7 +298,7 @@
     </cy-card>
 
     <!-- 批5 通关奖励到账明细:读的是已落库的到账事实,没有就说没有,不写 0 -->
-    <cy-card class="order-card" wx:if="{{completion.show}}">
+    <cy-card class="order-card" wx:if="{{completion.show && !completion.perkOnly}}">
       <view class="section-title">通关奖励</view>
       <block wx:if="{{completion.awards.credited}}">
         <view class="award-row" wx:for="{{completion.awards.items}}" wx:key="index">

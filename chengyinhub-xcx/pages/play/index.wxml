@@ -871,6 +871,7 @@
             <view class="fx-perk__m">
               <view class="fx-perk__m-i"><cy-icon name="check" size="26" /><text>{{hero.node.perkRule}}</text></view>
               <view class="fx-perk__m-i" wx:if="{{hero.node.perkValid}}"><cy-icon name="clock" size="26" /><text>{{hero.node.perkValid}}</text></view>
+              <view class="fx-perk__m-i" wx:if="{{hero.node.perkTerms}}"><cy-icon name="info" size="26" /><text>{{hero.node.perkTerms}}</text></view>
             </view>
           </view>
         </view>

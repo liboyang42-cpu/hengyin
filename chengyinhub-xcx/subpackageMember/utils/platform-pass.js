@@ -140,13 +140,48 @@ function passView(o, selected, platform, canVirtual) {
 
 /** OR-024:退款页须知 —— 只要续费与退款两条,服务端 terms 有就用服务端文本。 */
 function termRows(ov) {
-  const t = (ov && ov.terms) || {}
+  const lines = serverTermLines(ov)
+  if (lines) {
+    const rows = lines.map(termLineRow).filter((r) => r.k === '续费' || r.k === '退款规则')
+    if (rows.length) return rows
+  }
+  const t = (ov && !Array.isArray(ov.terms) && ov.terms) || {}
   const txt = (v) => (typeof v === 'string' && v.trim() ? v.trim() : '')
   return [{ k: '续费', v: txt(t.renewal) || '不自动续费' }, { k: '退款规则', v: txt(t.refund) || '退款为整单' }]
 }
 
+/** OR-024:后端 PlatformPassService.terms 下发的是 List<String>;返回非空字符串数组,不是数组返回 null。 */
+function serverTermLines(ov) {
+  const t = ov && ov.terms
+  if (!Array.isArray(t)) return null
+  const lines = t.filter((v) => typeof v === 'string' && v.trim()).map((v) => v.trim())
+  return lines.length ? lines : null
+}
+
+/** 一条服务端须知 → { k, v }。原文不改写:带「：」的拆成标题与内容,其余按关键词给标题,正文保持原句。 */
+function termLineRow(line) {
+  const i = line.indexOf('：')
+  if (i > 0 && i < 8) return { k: line.slice(0, i), v: line.slice(i + 1) }
+  if (line.indexOf('自动续费') >= 0) return { k: '续费', v: line }
+  if (line.indexOf('退款') === 0) return { k: '退款规则', v: line }
+  if (line.indexOf('仅本人') === 0) return { k: '适用范围', v: line }
+  return { k: '须知', v: line }
+}
+
 /** 购买前须知:全部来自服务端(overview.terms + 套餐天数 + 可玩主题数),缺哪项就不出哪项。 */
 function factRows(ov, count, plan) {
+  const lines = serverTermLines(ov)
+  if (lines) {
+    const rows = count !== null ? [{ k: '可玩主题', v: count + ' 个主题' }] : []
+    const seen = new Set(rows.map((r) => r.k))
+    lines.map(termLineRow).forEach((r) => {
+      let k = r.k
+      for (let n = 2; seen.has(k); n += 1) k = r.k + n
+      seen.add(k)
+      rows.push({ k, v: r.v })
+    })
+    return rows
+  }
   const t = ov.terms || {}
   const txt = (v) => (typeof v === 'string' && v.trim() ? v.trim() : '')
   const rows = []

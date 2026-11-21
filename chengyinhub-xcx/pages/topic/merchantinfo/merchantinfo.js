@@ -1530,6 +1530,7 @@ Page({
           this.finishChapterNodeSubmit();
           this.loadMyChapterApplications(true);
           const pending = replacementApplication(application) || (res.data && Number(res.data.status) === 0);
+          if (!pending) this.saveOfferDisplayTerms(res.data && res.data.id, draft.displayTerms);
           cyToast.success(pending ? '供给已提交，等待审核' : '实际供给已生效');
           return;
         }
@@ -1541,6 +1542,26 @@ Page({
         this.finishChapterNodeSubmit();
         cyToast('网络错误，请重试');
       },
+    });
+  },
+
+  // FE-G5:供给生效后补写权益展示条款(已含 / 需另付 / 需预约),走 POST /api/coop/offer/display-terms。
+  // 只在供给已生效时写(服务端只认 status=1 的供给);失败只提示,不回滚已生效的供给。
+  saveOfferDisplayTerms(offerId, terms) {
+    const id = Number(offerId);
+    if (!(id > 0) || !terms || typeof terms !== 'object') return;
+    app.sendRequest({
+      url: '/api/coop/offer/display-terms',
+      method: 'POST',
+      header: { 'Content-Type': 'application/json' },
+      data: JSON.stringify({
+        offerId: id,
+        included: !!terms.included,
+        extraSpendText: terms.included ? '' : String(terms.extraSpendText || ''),
+        reserveRequired: !!terms.reserveRequired,
+      }),
+      success: (res) => { if (res.code != '200') app.tips(app.getRequestErrorMessage(res, '权益说明保存失败')); },
+      fail: () => {},
     });
   },
 

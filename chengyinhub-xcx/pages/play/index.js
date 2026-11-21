@@ -443,7 +443,7 @@ const themeTrade = require('./utils/theme-trade.js');
 const themePlans = require('./utils/theme-plans.js');
 const playerOps = require('./utils/theme-player-ops.js');
 const { loadStoryFont } = require('./utils/story-font.js'); const { storyFontUrl: STORY_FONT_URL } = require('../../utils/config.js');
-const playOverlays = require('./utils/play-hud-overlays.js'); const playTopbar = require('./utils/play-topbar.js'); const locOnce = require('./utils/play-location-once.js'); const { connectionFailure } = require('./utils/play-net-fail.js'); const playLook = require('./utils/play-look.js'); const stageEvents = require('./utils/stage-events.js'); const { perkOnlyOf } = require('./utils/perk-only.js'); const runStartMode = require('./utils/run-start-mode.js'); const evidenceKit = require('./utils/evidence-cards.js'); /* 故事流顶栏:罗盘⇄地图、背包、案件册、各站奖励 */
+const playOverlays = require('./utils/play-hud-overlays.js'); const playTopbar = require('./utils/play-topbar.js'); const locOnce = require('./utils/play-location-once.js'); const { connectionFailure } = require('./utils/play-net-fail.js'); const playLook = require('./utils/play-look.js'); const stageEvents = require('./utils/stage-events.js'); const { perkOnlyOf, perkTermsText } = require('./utils/perk-only.js'); const runStartMode = require('./utils/run-start-mode.js'); const evidenceKit = require('./utils/evidence-cards.js'); /* 故事流顶栏:罗盘⇄地图、背包、案件册、各站奖励 */
 const feStoryGate = require('./utils/fe-story-gate.js'); const feVisit = require('./utils/fe-story-visit.js'); // 自由探索:只读已到访地点的章节
 const chapterVideo = require('./chapter-video.js'); const packDetail = require('./utils/pack-detail.js'); const menuOpen = require('./utils/menu-open.js'); const castPlay = require('./utils/cast-play.js'); /* 角色 Cast v1:页边名字 / 起名 / 人物表 / 角色卡 / 行内选项 */
 Page({
@@ -2598,6 +2598,7 @@ Page({
       // ⑤ 本店权益
       perkName: perk ? (perk.name || '') : '',
       perkRule: perk ? (perk.redeemRule || '到店出示核销') : '',
+      perkTerms: perkTermsText(perk),
       perkValid: (function () {
         const t = perk && perk.validEnd ? chinaParts(perk.validEnd) : null;
         return t ? ('有效期至 ' + t.month + '/' + t.day) : '';

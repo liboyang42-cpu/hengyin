@@ -95,6 +95,7 @@ function emptyCompletion() {
   return {
     show: false,
     completed: false,
+    perkOnly: false,
     stamps: [],
     stampProgressText: '',
     awards: { credited: false, items: [], emptyText: '' },
@@ -127,6 +128,9 @@ function toCompletionView(vo) {
   const redeemed = Number(vo.redeemedChapterCount) || 0
   view.show = true
   view.completed = !!vo.completed
+  // FE-G9:纯权益探店(主题里每一家都没有玩法)不出「探店图鉴 / 通关奖励」。只认服务端 perkOnly===true;
+  // 字段缺省(后端还没下发)时照旧显示,不在前端推断。
+  view.perkOnly = vo.perkOnly === true
   view.stamps = (Array.isArray(vo.stamps) ? vo.stamps : []).map(function (stamp) {
     return {
       chapterId: stamp.chapterId,

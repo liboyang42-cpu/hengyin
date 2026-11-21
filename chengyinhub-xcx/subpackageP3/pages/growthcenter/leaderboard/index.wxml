@@ -55,6 +55,7 @@
     size="lg"
     kind="empty"
     title="这张榜还没有人上榜"
+    sub="完成一次城市探索即可累计{{unit}}"
     cta="去探索"
     bind:cta="goExplore"
   />

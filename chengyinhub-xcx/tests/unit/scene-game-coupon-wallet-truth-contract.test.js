@@ -147,3 +147,11 @@ for (const [status, label] of [[1, '已使用'], [2, '已过期'], [3, '已失�
     assert.equal(sandbox.requests.length, 3, '下一次返回仍只重新读取一次')
   })
 }
+
+test('FE-G3/FE-G10: free-explore tools drawer returns to the coupon grid instead of opening this wallet page', () => {
+  const src = fs.readFileSync(path.join(ROOT, 'pages/play/index.js'), 'utf8')
+  const body = src.slice(src.indexOf('  openRightsFromTools() {'), src.indexOf('  openThemeFromTools()'))
+  assert.match(body, /Number\(this\.data\.mode\) === 2/)
+  const freeBranch = body.slice(body.indexOf('=== 2'), body.indexOf('return;'))
+  assert.doesNotMatch(freeBranch, /goCouponWallet/, 'mode 2 must not navigate to the coupon wallet')
+})
