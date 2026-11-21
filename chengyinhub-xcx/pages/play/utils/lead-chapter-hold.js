@@ -27,4 +27,10 @@ function releaseCue(prevLead, nextLead) {
   return name ? '队长放行了「' + name + '」' : '队长放行了下一章';
 }
 
-module.exports = { leadHoldsChapter, releaseCue };
+/** 带领场轮询:两份 lead 快照内容一致(纯 JSON 数据)⇒ 不必再 setData。 */
+function sameLeadSnapshot(prevLead, nextLead) {
+  if (!prevLead || !nextLead) return false;
+  try { return JSON.stringify(prevLead) === JSON.stringify(nextLead); } catch (e) { return false; }
+}
+
+module.exports = { leadHoldsChapter, releaseCue, sameLeadSnapshot };

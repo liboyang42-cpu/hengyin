@@ -110,7 +110,7 @@ function violations(file, source) {
 }
 
 test('reviewed leaves remain inside existing subpackages and keep their original source files out of main', () => {
-  assert.equal(moves.length, 160)  // 2026-11-19 PG-021:简易发布页删除,ai-theme-draft-journal 随页删,161→160;2026-11-03 第七轮主包瘦身:+128 个文件(单分包组件 / 工具 / 图片与 13 个 scene 组件);
+  assert.equal(moves.length, 162)  // 2026-11-21 startup-perf:answer-text / chapter-count 各自下沉到唯一使用的分包,160→162;2026-11-19 PG-021:简易发布页删除,ai-theme-draft-journal 随页删,161→160;2026-11-03 第七轮主包瘦身:+128 个文件(单分包组件 / 工具 / 图片与 13 个 scene 组件);
   for (const moved of moves) {
     assert.equal(owner(moved.from), 'MAIN', moved.from);
     assert.notEqual(owner(moved.to), 'MAIN', moved.to);

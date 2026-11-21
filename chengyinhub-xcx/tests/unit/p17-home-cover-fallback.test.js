@@ -9,7 +9,7 @@ const wxss = fs.readFileSync(path.join(__dirname, '../../pages/index/index.wxss'
 
 test('活动卡缺封面回落到中性的城市路线封面', () => {
   assert.doesNotMatch(wxml, /index-figma\/nearby-card\.jpg/);
-  assert.match(wxml, /item\.cover \|\| item\.imgUrl \|\| '\/images\/route_city_cover\.png'/);
+  assert.match(wxml, /img\.fit\(item\.cover \|\| item\.imgUrl, imgCtx, 'half', true\) \|\| '\/images\/route_city_cover\.png'/);
   assert.ok(fs.existsSync(path.join(__dirname, '../../images/route_city_cover.png')));
 });
 

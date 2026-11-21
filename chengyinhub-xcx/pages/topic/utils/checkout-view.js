@@ -7,7 +7,7 @@
 // - 信任行:退款只读报价 refundableNow / refundPercentNow;席位数是建单事实(自玩恒 1 人)。
 //   有效期写在单次购买卡上,沿用 topic-motion.passWindow(与建单同口径),信任行不重复。
 
-const { chapterCountText } = require('../../../utils/chapter-count.js');
+const { chapterCountText } = require('./chapter-count.js');
 const { yuan, yuanTrim } = require('../../../utils/money-format.js');
 const { refundRuleText } = require('./refund-rule.js');
 

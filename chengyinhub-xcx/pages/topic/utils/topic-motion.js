@@ -156,8 +156,8 @@ function buildStoryCards(info, merchantCards) {
   })).filter((c) => c.title);
 }
 
-/* 章数口径(结局不算章)在 utils/chapter-count.js,详情页和结账页共用。 */
-const { isEndingChapter, chapterCountText } = require('../../../utils/chapter-count.js');
+/* 章数口径(结局不算章)在 pages/topic/utils/chapter-count.js,详情页和结账页共用。 */
+const { isEndingChapter, chapterCountText } = require('./chapter-count.js');
 
 function storyMeta(info) {
   const d = info || {};
