@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -51,7 +53,7 @@ public class ApiMedalController extends BaseController {
     @PostMapping("/wall")
     public AjaxResult wall() {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
 
         // 玩家全部已完成节点(R10-09 收尾:只认 status==1 正式完成;status=0 到店/凭证行只作到达展示)
         PlayerNodeProgress probe = new PlayerNodeProgress();

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.push.PushMapper">
+
+    <insert id="upsertDevice">
+        INSERT INTO push_device(member_id, platform, token, environment, bundle_id, locale, enabled, last_seen_at)
+        VALUES (#{memberId}, #{platform}, #{token}, #{environment}, #{bundleId}, #{locale}, 1, CURRENT_TIMESTAMP(3))
+        ON DUPLICATE KEY UPDATE member_id = VALUES(member_id), platform = VALUES(platform), bundle_id = VALUES(bundle_id),
+            locale = VALUES(locale), enabled = 1, last_seen_at = CURRENT_TIMESTAMP(3)
+    </insert>
+    <select id="selectDeviceId" resultType="java.lang.Long" useCache="false">
+        SELECT id FROM push_device WHERE token = #{token} AND environment = #{environment}
+    </select>
+    <update id="disableOwnedToken">
+        UPDATE push_device SET enabled = 0 WHERE token = #{token} AND member_id = #{memberId} AND enabled = 1
+    </update>
+    <update id="disableToken">
+        UPDATE push_device SET enabled = 0 WHERE token = #{token} AND environment = #{environment} AND enabled = 1
+    </update>
+    <select id="selectEnabledDevices" resultType="com.chengyinhub.business.push.PushDevice" useCache="false">
+        SELECT id, member_id AS memberId, token, environment, locale FROM push_device
+         WHERE enabled = 1 AND environment = #{environment} AND member_id IN
+         <foreach collection="memberIds" item="m" open="(" separator="," close=")">#{m}</foreach>
+         ORDER BY member_id, last_seen_at DESC
+         LIMIT 5000
+    </select>
+
+    <select id="selectChatMessage" resultType="java.util.HashMap" useCache="false">
+        SELECT msg.id AS messageId, msg.conversation_id AS conversationId, msg.sender_id AS senderId, msg.msg_type AS msgType,
+               msg.content AS content, msg.extra_json AS extraJson, msg.status AS status, msg.check_status AS checkStatus,
+               c.type + 0 AS conversationType, c.biz_key AS bizKey, c.status AS conversationStatus, c.last_msg_text AS summary,
+               u.nickname AS senderName
+          FROM im_message msg
+          JOIN im_conversation c ON c.id = msg.conversation_id
+          LEFT JOIN ums_member u ON u.id = msg.sender_id
+         WHERE msg.id = #{messageId}
+    </select>
+    <select id="selectChatAudience" resultType="java.util.HashMap" useCache="false">
+        SELECT m.member_id AS memberId, m.muted AS memberMuted,
+               p.level AS convLevel, p.permanent_muted AS convPermanent,
+               (p.muted_until IS NOT NULL AND p.muted_until &gt; CURRENT_TIMESTAMP(3)) AS convMutedActive,
+               p.quiet_start AS convQuietStart, p.quiet_end AS convQuietEnd, p.quiet_tz AS convQuietTz,
+               p.suppress_broadcast AS suppressBroadcast, p.show_preview AS convShowPreview,
+               a.level AS accountLevel, a.quiet_start AS accountQuietStart, a.quiet_end AS accountQuietEnd,
+               a.quiet_tz AS accountQuietTz, a.show_preview AS accountShowPreview
+          FROM im_conversation_member m
+          LEFT JOIN im_notify_pref p ON p.member_id = m.member_id AND p.scope_type = 1 AND p.scope_id = m.conversation_id
+          LEFT JOIN im_notify_pref a ON a.member_id = m.member_id AND a.scope_type = 4 AND a.scope_id = m.member_id
+         WHERE m.conversation_id = #{conversationId} AND m.member_id &lt;&gt; #{senderId}
+           <if test="!single">AND m.deleted = 0</if>
+           AND NOT EXISTS (SELECT 1 FROM im_block b WHERE b.member_id = m.member_id AND b.blocked_member_id = #{senderId})
+           AND m.member_id &gt; #{afterMemberId}
+         ORDER BY m.member_id
+         LIMIT #{limit}
+    </select>
+    <select id="selectChannelPushContext" resultType="java.util.HashMap" useCache="false">
+        SELECT ch.name AS channelName, ch.kind AS channelKind, ch.guild_kind AS guildKind, ch.guild_id AS guildId,
+               ch.notify_default AS notifyDefault,
+               CASE WHEN ch.guild_kind = 1 THEN c.name ELSE t.title END AS guildName
+          FROM im_channel ch
+          LEFT JOIN club c ON ch.guild_kind = 1 AND c.id = ch.guild_id
+          LEFT JOIN play_team t ON ch.guild_kind = 3 AND t.id = ch.guild_id
+         WHERE ch.id = #{conversationId} AND ch.del_flag = 0
+    </select>
+    <select id="countPostedEventCard" resultType="java.lang.Integer" useCache="false">
+        SELECT COUNT(1) FROM channel_event WHERE message_id = #{messageId}
+    </select>
+    <select id="selectMentions" resultType="java.util.HashMap" useCache="false">
+        SELECT mention_type AS mentionType, target_id AS targetId FROM im_message_mention WHERE message_id = #{messageId}
+    </select>
+
+    <select id="selectRoleMemberIds" resultType="java.lang.Long" useCache="false">
+        select distinct rm.member_id
+          from im_guild_role_member rm join im_guild_role r on r.id = rm.role_id and r.status = 1
+         where rm.role_id in <foreach collection="roleIds" item="i" open="(" separator="," close=")">#{i}</foreach>
+    </select>
+    <select id="selectChannelClubId" resultType="java.lang.Long" useCache="false">
+        SELECT guild_id FROM im_channel WHERE id = #{conversationId} AND guild_kind = 1 AND del_flag = 0
+    </select>
+    <select id="selectClubDefaultLevel" resultType="java.lang.Integer" useCache="false">
+        SELECT level FROM im_club_notify_default WHERE club_id = #{clubId}
+    </select>
+    <select id="selectPref" resultType="java.util.HashMap" useCache="false">
+        SELECT level, permanent_muted AS permanentMuted,
+               (muted_until IS NOT NULL AND muted_until &gt; CURRENT_TIMESTAMP(3)) AS mutedActive,
+               quiet_start AS quietStart, quiet_end AS quietEnd, quiet_tz AS quietTz, show_preview AS showPreview
+          FROM im_notify_pref WHERE member_id = #{memberId} AND scope_type = #{scopeType} AND scope_id = #{scopeId}
+    </select>
+
+    <insert id="markCampaignPush">
+        INSERT IGNORE INTO club_event_campaign_push(campaign_id, channel) VALUES (#{campaignId}, 'APNS')
+    </insert>
+    <select id="countCampaignPush" resultType="java.lang.Integer" useCache="false">
+        SELECT COUNT(1) FROM club_event_campaign_push WHERE campaign_id = #{campaignId}
+    </select>
+</mapper>

@@ -104,7 +104,7 @@ class ApiRoamCoordinateBoundaryTest
         when(roamMapper.selectPlayerPoisByIds(anyList())).thenReturn(Collections.singletonList(poi));
         when(roamMapper.selectLastPoiFoundLoc(PLAYER)).thenReturn(null);
         when(roamMapper.selectMerchantNodesNear(anyDouble(), anyDouble(), anyDouble(), anyDouble(),
-                anyDouble(), anyDouble(), any(), any(), any(), any())).thenReturn(Collections.emptyList());
+                anyDouble(), anyDouble(), any(), any(), any(), any(), anyInt())).thenReturn(Collections.emptyList());
     }
 
     // ---------- POI 发现 ----------
@@ -290,7 +290,7 @@ class ApiRoamCoordinateBoundaryTest
         found.setId(POI_ID);
         found.setFound(true);
         when(roamMapper.selectPoisNear(anyDouble(), anyDouble(), anyDouble(), anyDouble(), org.mockito.ArgumentMatchers.eq(PLAYER),
-                org.mockito.ArgumentMatchers.eq(ApiRoamController.POIS_NEAR_LIMIT)))
+                org.mockito.ArgumentMatchers.eq(ApiRoamController.POIS_NEAR_LIMIT + 1)))
                 .thenReturn(Collections.singletonList(found));
 
         AjaxResult r = controller.pois(NEAR_LAT, NEAR_LNG, 3000);
@@ -299,6 +299,47 @@ class ApiRoamCoordinateBoundaryTest
         assertEquals(Boolean.TRUE, ((java.util.List<RoamPoi>) r.get("data")).get(0).getFound(),
                 "found 是服务端按账号投影的事实,必须原样下发 —— 前端靠它把已发现地点保持点亮");
         verify(roamMapper).selectPoisNear(anyDouble(), anyDouble(), anyDouble(), anyDouble(), org.mockito.ArgumentMatchers.eq(PLAYER),
-                org.mockito.ArgumentMatchers.eq(ApiRoamController.POIS_NEAR_LIMIT));
+                org.mockito.ArgumentMatchers.eq(ApiRoamController.POIS_NEAR_LIMIT + 1));
+    }
+
+    // ---------- A5.1 / A5.2 轻量投影 + truncated ----------
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void poisTrimsGalleryToThreeAndFlagsTruncation()
+    {
+        java.util.List<RoamPoi> rows = new java.util.ArrayList<>();
+        for (int i = 0; i < ApiRoamController.POIS_NEAR_LIMIT + 1; i++) {
+            RoamPoi p = new RoamPoi();
+            p.setId(1000L + i);
+            p.setGalleryJson("[\"a\",\"b\",\"c\",\"d\"]");
+            rows.add(p);
+        }
+        when(roamMapper.selectPoisNear(anyDouble(), anyDouble(), anyDouble(), anyDouble(), org.mockito.ArgumentMatchers.eq(PLAYER),
+                org.mockito.ArgumentMatchers.eq(ApiRoamController.POIS_NEAR_LIMIT + 1))).thenReturn(rows);
+
+        AjaxResult r = controller.pois(NEAR_LAT, NEAR_LNG, 3000);
+
+        java.util.List<RoamPoi> data = (java.util.List<RoamPoi>) r.get("data");
+        assertEquals(ApiRoamController.POIS_NEAR_LIMIT, data.size(), "多取的 1 条只用于判断截断,不下发");
+        assertEquals(Boolean.TRUE, r.get("truncated"));
+        assertEquals("[\"a\",\"b\",\"c\"]", data.get(0).getGalleryJson(), "相册只下发前 3 张");
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void poisNotTruncatedKeepsArrayShapeAndNullGallery()
+    {
+        RoamPoi p = new RoamPoi();
+        p.setId(1L);
+        p.setGalleryJson("not json");
+        when(roamMapper.selectPoisNear(anyDouble(), anyDouble(), anyDouble(), anyDouble(), org.mockito.ArgumentMatchers.eq(PLAYER),
+                org.mockito.ArgumentMatchers.eq(ApiRoamController.POIS_NEAR_LIMIT + 1))).thenReturn(Collections.singletonList(p));
+
+        AjaxResult r = controller.pois(NEAR_LAT, NEAR_LNG, null);
+
+        assertEquals(Boolean.FALSE, r.get("truncated"));
+        assertEquals(1, ((java.util.List<RoamPoi>) r.get("data")).size());
+        assertEquals(null, ((java.util.List<RoamPoi>) r.get("data")).get(0).getGalleryJson());
     }
 }

@@ -100,12 +100,28 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
     /** 频道会话(type=5)授权闸；未装配时频道会话按普通会话成员行处理。 */
     @Autowired(required = false)
     private IChannelConversationGate channelGate;
+
+    /** W7 x-channel-reach (SOC-2): leaving a club or team also drops the member's channel conversation rows. */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.channel.platform.ChannelMembershipSync channelMembership;
     /** 语音/视频/文件消息(10/11/12)的上传挂接闸；未装配时这三类按不支持处理。 */
     @Autowired(required = false)
     private IImMediaAttachGate mediaGate;
     /** 频道出站 Webhook 发件箱（message.created）；未装配时不扇出。 */
     @Autowired(required = false)
     private com.chengyinhub.business.service.channel.platform.ChannelWebhookService webhookOutbox;
+    /** App 远程推送（APNs）；未装配或未配置时不扇出。提交后异步，不影响发送结果。 */
+    @Autowired(required = false)
+    @Lazy
+    private com.chengyinhub.business.service.IPushFanoutService pushFanout;
+
+    /** W5 C2：文字消息的回复/话题/@提及（发送同事务写行）。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.channel.messaging.MessageComposeSupport compose;
+
+    /** W5 C2：打开中会话的实时提示（提交后发布）。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IImRealtimePublisher realtime;
     @Autowired(required = false)
     private InGameChannelService inGameChannelService;
 
@@ -131,7 +147,77 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
     @Override
     public List<Map<String, Object>> listConversations(Long memberId)
     {
-        List<ConversationSummary> mine = memberMapper.selectMyConversationSummaries(memberId);
+        return projectConversations(memberMapper.selectMyConversationSummaries(memberId), memberId);
+    }
+
+    /** R9 BE-17：会话列表最大页长。 */
+    static final int CONVERSATION_PAGE_MAX = 50;
+
+    /**
+     * R9 BE-17：会话列表键集分页。cursor 为上一页回包里的 nextCursor（不透明字符串），首页传 null/空。
+     * 回 {items, nextCursor, hasMore}；items 与旧数组同形。页内仍按最新可见消息排序，跨页按会话最后消息时间。
+     */
+    @Override
+    public Map<String, Object> listConversationPage(Long memberId, String cursor, Integer size)
+    {
+        int limit = size == null || size <= 0 ? 20 : Math.min(size, CONVERSATION_PAGE_MAX);
+        ConversationCursor at = ConversationCursor.parse(cursor);
+        List<ConversationSummary> raw = memberMapper.selectMyConversationSummaryPage(
+                memberId, at == null ? null : at.lastMsgAt, at == null ? null : at.conversationId, limit + 1);
+        boolean hasMore = raw != null && raw.size() > limit;
+        List<ConversationSummary> page = raw == null ? new ArrayList<>() : hasMore ? raw.subList(0, limit) : raw;
+        String next = null;
+        if (hasMore)
+        {
+            ImConversation last = page.get(page.size() - 1).getConversation();
+            next = last == null ? null : ConversationCursor.format(last.getLastMsgAt(), last.getId());
+        }
+        Map<String, Object> out = new HashMap<>();
+        out.put("items", projectConversations(page, memberId));
+        out.put("nextCursor", next);
+        out.put("hasMore", next != null);
+        return out;
+    }
+
+    /** 不透明游标：「最后消息毫秒或 n」+「_」+「会话 id」。 */
+    static final class ConversationCursor
+    {
+        final java.util.Date lastMsgAt;
+        final Long conversationId;
+
+        private ConversationCursor(java.util.Date lastMsgAt, Long conversationId)
+        {
+            this.lastMsgAt = lastMsgAt;
+            this.conversationId = conversationId;
+        }
+
+        static String format(java.util.Date lastMsgAt, Long conversationId)
+        {
+            if (conversationId == null) return null;
+            return (lastMsgAt == null ? "n" : String.valueOf(lastMsgAt.getTime())) + "_" + conversationId;
+        }
+
+        static ConversationCursor parse(String raw)
+        {
+            if (raw == null || raw.trim().isEmpty()) return null;
+            String[] parts = raw.trim().split("_", -1);
+            try
+            {
+                if (parts.length != 2) throw new NumberFormatException();
+                long id = Long.parseLong(parts[1]);
+                if (id <= 0) throw new NumberFormatException();
+                java.util.Date at = "n".equals(parts[0]) ? null : new java.util.Date(Long.parseLong(parts[0]));
+                return new ConversationCursor(at, id);
+            }
+            catch (NumberFormatException e)
+            {
+                throw new ServiceException("会话列表位置无效，请从头加载", 400);
+            }
+        }
+    }
+
+    private List<Map<String, Object>> projectConversations(List<ConversationSummary> mine, Long memberId)
+    {
         List<Map<String, Object>> out = new ArrayList<>();
         Map<Long, ImMessage> latestVisible = new HashMap<>();
         if (mine == null)
@@ -401,25 +487,8 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
     public Map<String, Object> listMessages(Long memberId, Long conversationId, Long cursorId, int size, Long afterId)
     {
         if (afterId != null && afterId < 0) throw new ServiceException("消息增量位置无效", 400);
+        requireReadable(memberId, conversationId);
         ImConversation conversation = conversationMapper.selectImConversationById(conversationId);
-        if (isClosedHangoutForHistoricalMember(conversation, memberId))
-        {
-            throw new ServiceException("该组局已结束，聊天已关闭", 409).setDetailMessage("HANGOUT_CLOSED");
-        }
-        if (channelGate != null && channelGate.isChannel(conversationId)) channelGate.requireRead(memberId, conversationId);
-        requireConversationMembership(conversationId, memberId, "无权查看该会话");
-        if (!hasActiveGroupAccess(conversation, memberId, false))
-        {
-            throw new RuntimeException(hangoutIdOfBizKey(conversation.getBizKey()) != null ? "已退出该局，无权查看群消息"
-                    : InGameChannelService.isInGameBizKey(conversation.getBizKey()) ? "无权查看该游戏频道"
-                    : teamIdOf(conversation) == null
-                    ? "已退出俱乐部，无权查看群消息" : "已退出队伍，无权查看群消息");
-        }
-        if (conversation != null && Integer.valueOf(ImConversation.TYPE_GROUP).equals(conversation.getType())
-                && !Integer.valueOf(0).equals(conversation.getStatus()))
-        {
-            throw new RuntimeException("群聊已结束");
-        }
         int s = size <= 0 ? 20 : Math.min(size, 50);
         boolean incremental = afterId != null && afterId >= 0;
         // 增量按可见序正序补拉；历史分页沿用可见序倒序窗口。两者都只返回当前读者可见的消息。
@@ -453,20 +522,13 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         if (incremental) res.put("nextAfter", desc.isEmpty() ? afterId : desc.get(desc.size() - 1).getId());
         res.put("hasMore", hasMore);
         // 3-22:1:1 会话回读拉黑态,重进会话也能禁用输入框(拉黑只存服务端,前端内存态重进即丢)
-        Long otherId = null;
-        if (conversation != null && !Integer.valueOf(ImConversation.TYPE_GROUP).equals(conversation.getType()))
-        {
-            List<ImConversationMember> parts = memberMapper.selectByConversation(conversationId);
-            if (parts != null)
-            {
-                for (ImConversationMember p : parts)
-                {
-                    if (p.getMemberId() != null && !p.getMemberId().equals(memberId)) { otherId = p.getMemberId(); break; }
-                }
-            }
-        }
+        // SOC-10：只有单聊有“对方”。频道 / 群没有，任取一名成员会让无关的拉黑锁住整个频道。
+        boolean multiParty = conversation != null && isMultiParty(conversation.getType());
+        Long otherId = conversation != null && !multiParty ? singlePeerOf(conversationId, memberId) : null;
         res.put("blocked", otherId != null && blockMapper.existsBetween(memberId, otherId) > 0);
         res.put("blockedByMe", otherId != null && blockMapper.selectOne(memberId, otherId) != null);
+        // SOC-4：群聊和频道里，标记当前读者拉黑的发送者（不删行，分页游标保持稳定）。
+        if (multiParty) markBlockedSenders(memberId, asc);
         return res;
     }
 
@@ -591,6 +653,10 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         {
             memberMapper.markDeleted(c.getId(), memberId);
         }
+        if (channelMembership != null)
+        {
+            channelMembership.memberLeft(com.chengyinhub.business.service.channel.platform.ChannelGuildAccess.GUILD_CLUB, clubId, memberId);
+        }
     }
 
     @Override
@@ -706,6 +772,10 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         ImConversation conversation = conversationMapper.selectByTypeAndBizKey(
                 ImConversation.TYPE_GROUP, "team_" + teamId);
         if (conversation != null) memberMapper.markDeleted(conversation.getId(), memberId);
+        if (channelMembership != null)
+        {
+            channelMembership.memberLeft(com.chengyinhub.business.service.channel.platform.ChannelGuildAccess.GUILD_TEAM, teamId, memberId);
+        }
     }
 
     @Override
@@ -879,10 +949,7 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         {
             throw new ServiceException("请先登录");
         }
-        if (blockMapper.existsBetween(0L, memberId) > 0)
-        {
-            throw new ServiceException("账号已被限制发言");
-        }
+        requireNotSpeechRestricted(memberId);
         int type = msgType == null ? ImMessage.MSG_TEXT : msgType;
         if (content == null || content.trim().length() == 0)
         {
@@ -899,22 +966,7 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
             convId = startSingle(memberId, targetMemberId);
         }
         ImConversation observed = conversationMapper.selectImConversationById(convId);
-        if (observed != null && Integer.valueOf(ImConversation.TYPE_GROUP).equals(observed.getType()))
-        {
-            Long governedClubId = clubIdOf(observed);
-            if (governedClubId != null)
-            {
-                // 不能只信 /api/club/chat 入口：旧 conversation_id 可直接打 /api/im/send。
-                clubParticipationGuard.requireAllowed(governedClubId, memberId);
-            }
-            if (!hasActiveGroupAccess(observed, memberId, true))
-            {
-                throw new ServiceException(hangoutIdOfBizKey(observed.getBizKey()) != null ? "已退出该局，不能继续发送群消息"
-                        : InGameChannelService.isInGameBizKey(observed.getBizKey()) ? "无权在该游戏频道发送消息"
-                        : teamIdOf(observed) == null
-                        ? "已退出俱乐部，不能继续发送群消息" : "已退出队伍，不能继续发送群消息", 403);
-            }
-        }
+        requireGroupSendAccess(observed, memberId);
         if (channelGate != null && channelGate.isChannel(convId)) channelGate.requireSend(memberId, convId);
         requireConversationMembership(convId, memberId, "无权在该会话发送");
 
@@ -938,7 +990,8 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         }
 
         Long receiverId = 0L;
-        List<ImConversationMember> parts = memberMapper.selectByConversation(convId);
+        // SOC-13：群/频道不再加载整张成员表（未读用一条集合 UPDATE 扇出），只有单聊需要找对方。
+        List<ImConversationMember> parts = isGroup ? null : memberMapper.selectByConversation(convId);
         if (!isGroup && parts != null)
         {
             for (ImConversationMember p : parts)
@@ -978,12 +1031,18 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         int checkStatus = 1;
         String traceId = null;
         Long mediaUploadId = null;
+        com.chengyinhub.business.service.channel.messaging.MessageComposeSupport.Plan composePlan = null;
         if (type == ImMessage.MSG_TEXT)
         {
             String secMsg = wxContentSecurityService.checkText(content, openid);
             if (secMsg != null)
             {
                 throw new ServiceException(secMsg);
+            }
+            if (compose != null && conv != null && conv.getType() != null)
+            {
+                composePlan = compose.prepareText(memberId, convId, conv.getType(), extraJson);
+                extraJson = composePlan.extraJson();
             }
         }
         else if (type == ImMessage.MSG_IMAGE)
@@ -1051,6 +1110,7 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         msg.setClientMessageId(clientMessageId);
         msg.setRequestHash(requestHash);
         messageMapper.insertImMessage(msg);
+        if (composePlan != null) compose.afterInsert(msg, composePlan);
         if (mediaUploadId != null) mediaGate.bind(mediaUploadId, msg.getId());
         if (type == ImMessage.MSG_IMAGE && traceId != null
                 && !wxContentCallbackInboxService.register(traceId,
@@ -1072,17 +1132,8 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         if (type != ImMessage.MSG_IMAGE && isGroup)
         {
             // 图片在审核通过后才给收件人增加未读。
-            // 群:给除发送者外的所有成员各 +1 未读(替代单聊的单一 receiver 扇出)
-            if (parts != null)
-            {
-                for (ImConversationMember p : parts)
-                {
-                    if (!p.getMemberId().equals(memberId))
-                    {
-                        memberMapper.addUnreadForActiveMember(convId, p.getMemberId(), 1);
-                    }
-                }
-            }
+            // 群/频道:一条集合 UPDATE 给除发送者外的在籍成员各 +1 未读(SOC-13，不再逐人 UPDATE 持锁)
+            memberMapper.addUnreadForActiveMembersExcept(convId, memberId, 1);
         }
         else if (type != ImMessage.MSG_IMAGE && receiverId > 0)
         {
@@ -1094,6 +1145,21 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
             webhookOutbox.enqueueForConversation(convId, "message.created", "msg-" + msg.getId(), messageCreatedEvent(msg));
         }
         memberMapper.markRead(convId, memberId, msg.getId());
+        if (pushFanout != null && type != ImMessage.MSG_IMAGE && checkStatus == 1)
+        {
+            // 图片过审后才算对收件人可见，不在这里推。
+            try { pushFanout.chatMessageSent(msg.getId()); }
+            catch (RuntimeException ignored) { /* 推送是旁路，绝不影响发送 */ }
+        }
+        if (realtime != null && checkStatus == 1)
+        {
+            // 只发“有新消息”的提示；正文由客户端经 /messages?after_id 按自己的可见性补拉。
+            java.util.Map<String, Object> hint = new java.util.LinkedHashMap<>();
+            hint.put("message_id", String.valueOf(msg.getId()));
+            hint.put("sender_id", String.valueOf(memberId));
+            try { realtime.publish(convId, com.chengyinhub.business.service.IImRealtimePublisher.MESSAGE_CREATED, hint); }
+            catch (RuntimeException ignored) { /* 实时提示是旁路 */ }
+        }
         return projectRouteMessage(msg, memberId);
     }
 
@@ -1167,6 +1233,122 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
             throw new ServiceException(errorMessage, 403);
         }
         return membership;
+    }
+
+    /** 账号被平台限制发言（拉黑表里 0 → member 的行）。 */
+    private void requireNotSpeechRestricted(Long memberId)
+    {
+        if (blockMapper.existsBetween(0L, memberId) > 0)
+        {
+            throw new ServiceException("账号已被限制发言", 403);
+        }
+    }
+
+    /** 俱乐部参与限制，以及群聊 / 组局 / 游戏频道 / 队伍的实时发送权。 */
+    private void requireGroupSendAccess(ImConversation observed, Long memberId)
+    {
+        if (observed == null || !Integer.valueOf(ImConversation.TYPE_GROUP).equals(observed.getType())) return;
+        Long governedClubId = clubIdOf(observed);
+        if (governedClubId != null)
+        {
+            // 不能只信 /api/club/chat 入口：旧 conversation_id 可直接打 /api/im/send。
+            clubParticipationGuard.requireAllowed(governedClubId, memberId);
+        }
+        if (!hasActiveGroupAccess(observed, memberId, true))
+        {
+            throw new ServiceException(hangoutIdOfBizKey(observed.getBizKey()) != null ? "已退出该局，不能继续发送群消息"
+                    : InGameChannelService.isInGameBizKey(observed.getBizKey()) ? "无权在该游戏频道发送消息"
+                    : teamIdOf(observed) == null
+                    ? "已退出俱乐部，不能继续发送群消息" : "已退出队伍，不能继续发送群消息", 403);
+        }
+    }
+
+    /** SOC-4：发送、表情回应与正在输入共用的写闸（不加锁；发送路径另在会话行锁内复核）。 */
+    @Override
+    public void requireSendable(Long memberId, Long conversationId)
+    {
+        if (memberId == null || memberId <= 0) throw new ServiceException("请先登录", 401);
+        if (conversationId == null || conversationId <= 0) throw new ServiceException("会话不存在", 404);
+        requireNotSpeechRestricted(memberId);
+        ImConversation observed = conversationMapper.selectImConversationById(conversationId);
+        if (observed == null) throw new ServiceException("会话不存在", 404);
+        if (Integer.valueOf(ImConversation.TYPE_SYSTEM).equals(observed.getType()))
+        {
+            throw new ServiceException("系统会话不允许用户发送消息", 403);
+        }
+        requireGroupSendAccess(observed, memberId);
+        requireConversationMembership(conversationId, memberId, "无权在该会话发送");
+        if (!isMultiParty(observed.getType()))
+        {
+            Long otherId = singlePeerOf(conversationId, memberId);
+            if (otherId != null && blockMapper.existsBetween(memberId, otherId) > 0)
+            {
+                throw new ServiceException("对方暂不可联系", 403);
+            }
+        }
+    }
+
+    /** 群聊与频道：多人会话，没有单一“对方”。 */
+    private static boolean isMultiParty(Integer type)
+    {
+        return type != null && (type == ImConversation.TYPE_GROUP || type == IChannelConversationGate.CONVERSATION_TYPE_CHANNEL);
+    }
+
+    /** SOC-4：给当前读者拉黑的发送者的消息打上 senderBlocked（一条查询，不删行）。 */
+    private void markBlockedSenders(Long viewer, List<ImMessage> page)
+    {
+        if (viewer == null || page == null || page.isEmpty()) return;
+        Set<Long> senders = new HashSet<>();
+        for (ImMessage m : page)
+        {
+            Long sid = m.getSenderId();
+            if (sid != null && sid > 0 && !sid.equals(viewer)) senders.add(sid);
+        }
+        if (senders.isEmpty()) return;
+        List<Long> blocked = blockMapper.selectBlockedAmong(viewer, new ArrayList<>(senders));
+        if (blocked == null || blocked.isEmpty()) return;
+        Set<Long> hit = new HashSet<>(blocked);
+        for (ImMessage m : page)
+        {
+            if (m.getSenderId() != null && hit.contains(m.getSenderId())) m.setSenderBlocked(Boolean.TRUE);
+        }
+    }
+
+    /** 一对一会话（单聊、商家会话）里的另一方；群和频道没有“对方”。 */
+    private Long singlePeerOf(Long conversationId, Long memberId)
+    {
+        List<ImConversationMember> parts = memberMapper.selectByConversation(conversationId);
+        if (parts == null) return null;
+        for (ImConversationMember p : parts)
+        {
+            if (p.getMemberId() != null && !p.getMemberId().equals(memberId)) return p.getMemberId();
+        }
+        return null;
+    }
+
+    /** 读会话的同一道闸（历史分页、实时流、表情回应与引用读取共用）。 */
+    @Override
+    public void requireReadable(Long memberId, Long conversationId)
+    {
+        ImConversation conversation = conversationMapper.selectImConversationById(conversationId);
+        if (isClosedHangoutForHistoricalMember(conversation, memberId))
+        {
+            throw new ServiceException("该组局已结束，聊天已关闭", 409).setDetailMessage("HANGOUT_CLOSED");
+        }
+        if (channelGate != null && channelGate.isChannel(conversationId)) channelGate.requireRead(memberId, conversationId);
+        requireConversationMembership(conversationId, memberId, "无权查看该会话");
+        if (!hasActiveGroupAccess(conversation, memberId, false))
+        {
+            throw new RuntimeException(hangoutIdOfBizKey(conversation.getBizKey()) != null ? "已退出该局，无权查看群消息"
+                    : InGameChannelService.isInGameBizKey(conversation.getBizKey()) ? "无权查看该游戏频道"
+                    : teamIdOf(conversation) == null
+                    ? "已退出俱乐部，无权查看群消息" : "已退出队伍，无权查看群消息");
+        }
+        if (conversation != null && Integer.valueOf(ImConversation.TYPE_GROUP).equals(conversation.getType())
+                && !Integer.valueOf(0).equals(conversation.getStatus()))
+        {
+            throw new RuntimeException("群聊已结束");
+        }
     }
 
     @Override

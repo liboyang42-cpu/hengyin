@@ -102,9 +102,10 @@
           <el-tag :type="scope.row.status === 1 ? 'success' : 'info'">{{ scope.row.status === 1 ? '启用' : '停用' }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="160" align="center">
+      <el-table-column label="操作" width="210" align="center">
         <template slot-scope="scope">
           <el-button size="mini" type="text" icon="el-icon-edit" v-hasPermi="['business:rewarddrop:edit']" @click="handleEdit(scope.row)">编辑</el-button>
+          <el-button size="mini" type="text" icon="el-icon-switch-button" v-hasPermi="['business:rewardDrop:edit']" @click="handleToggle(scope.row)">{{ scope.row.status === 1 ? '停用' : '启用' }}</el-button>
           <el-button size="mini" type="text" icon="el-icon-delete" v-hasPermi="['business:rewarddrop:remove']" @click="handleDelete(scope.row)">删除</el-button>
         </template>
       </el-table-column>
@@ -148,7 +149,9 @@
           </el-radio-group>
         </el-form-item>
       </el-form>
+      <el-alert v-if="checkResult" :type="checkResult.ok ? 'success' : 'error'" :closable="false" :title="checkResult.text" />
       <div slot="footer" class="dialog-footer">
+        <el-button v-hasPermi="['business:rewardDrop:list']" @click="handleCheck">检查规则</el-button>
         <el-button @click="dialogOpen = false">取消</el-button>
         <el-button type="primary" @click="submitForm">确定</el-button>
       </div>
@@ -164,7 +167,9 @@ import {
   delDropRule,
   getBaseDropProb,
   updateBaseDropProb,
-  previewDropProbabilities
+  previewDropProbabilities,
+  validateRewardDropRule,
+  setRewardDropRuleStatus
 } from '@/api/business/rewardDrop'
 
 export default {
@@ -189,6 +194,7 @@ export default {
       },
       dialogOpen: false,
       dialogTitle: '新增掉落规则',
+      checkResult: null,
       form: {}
     }
   },
@@ -248,11 +254,13 @@ export default {
         paramJson: '{"mult":2}',
         status: 1
       }
+      this.checkResult = null
       this.dialogOpen = true
     },
     handleEdit(row) {
       this.dialogTitle = '编辑掉落规则'
       this.form = { ...row }
+      this.checkResult = null
       this.dialogOpen = true
     },
     submitForm() {
@@ -260,6 +268,25 @@ export default {
       action.then(() => {
         this.$modal.msgSuccess('保存成功')
         this.dialogOpen = false
+        this.getList()
+        this.loadPreview()
+      }).catch(() => {})
+    },
+    handleCheck() {
+      // 只校验不保存：返回规范化后的参数，或说明哪里不对
+      validateRewardDropRule(this.form).then(res => {
+        const rule = res.data || {}
+        this.checkResult = { ok: true, text: '规则可以保存，保存内容：' + (rule.paramJson || '{}') }
+      }).catch(err => {
+        this.checkResult = { ok: false, text: (err && err.message) || '规则检查未通过' }
+      })
+    },
+    handleToggle(row) {
+      const next = row.status === 1 ? 0 : 1
+      this.$modal.confirm(next === 1 ? '启用后玩家立即可能获得这条奖励，确认启用？' : '确认停用这条规则？').then(() => {
+        return setRewardDropRuleStatus(row.id, next)
+      }).then(() => {
+        this.$modal.msgSuccess(next === 1 ? '已启用' : '已停用')
         this.getList()
         this.loadPreview()
       }).catch(() => {})

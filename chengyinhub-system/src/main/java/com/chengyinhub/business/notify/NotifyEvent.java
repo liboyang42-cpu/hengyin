@@ -33,4 +33,8 @@ public enum NotifyEvent {
     AFTERCARE_PLATFORM_TAKEOVER,
     /** 城市大富翁地产事件（被抢、守住、收租）；仅站内信通道处理，不占用订阅消息模板，也不新增推送通道。 */
     CITY_TERRITORY,
+    /** G2 异步对决:发起、接受、出结果;仅站内信通道处理,不占用订阅消息模板。 */
+    GAME_DUEL,
+    /** MERCHANT-14 商家入驻审核结果(通过/驳回);仅站内信通道处理,不占用订阅消息模板。 */
+    MERCHANT_REVIEW,
 }

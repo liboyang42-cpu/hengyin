@@ -33,6 +33,21 @@ public interface IPlayerProgressionService
     /** 节点首次完成:累计+1、连续打卡、等级,发首枚/连续徽章。返回本次新得徽章 */
     List<PlayerBadge> onNodeDone(Long memberId);
 
+    /**
+     * P7(GRO-07):一次「算数」的活跃(如达标的漫游结算)。只推进连续天数/补签卡并发连续徽章,
+     * 不加累计打卡数、不改等级。同一天重复调用不写库。返回本次新得徽章。
+     */
+    List<PlayerBadge> onActiveDay(Long memberId);
+
+    /** P7:连续天数读口径(含补签卡、是否今天已活跃、是否快断),供 /api/play/growth 合并输出。只读。 */
+    Map<String, Object> streakSummary(Long memberId);
+
     /** 通关:累加主题里程,发通关/里程徽章。返回本次新得徽章 */
     List<PlayerBadge> onTopicComplete(Long memberId, Long topicId);
+
+    /**
+     * R11 growth-loops(GRO-13):邀请人又有一位朋友完成了首次可信漫游。按累计人数发 INVITE_1 / INVITE_3 / INVITE_10
+     * (阈值在 growth_badge.unlock_rule_json;def 未落库则不发)。返回本次新得徽章。
+     */
+    List<PlayerBadge> onInviteRewarded(Long inviterId, int grantedInvites);
 }

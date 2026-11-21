@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.opsconsole.ChannelModerationAdminMapper">
+
+    <sql id="channelCols">
+        c.id, c.guild_kind AS guildKind, c.guild_id AS guildId, c.kind, c.name, c.topic, c.status, c.visibility,
+        c.slowmode_sec AS slowmodeSec, c.create_time AS createTime,
+        c.parent_id AS parentId, c.position, c.is_default AS isDefault,
+        (SELECT COUNT(1) FROM im_channel_report r WHERE r.channel_id = c.id AND r.status = 'PENDING') AS pendingReports
+    </sql>
+
+    <select id="searchChannels" resultType="java.util.LinkedHashMap" useCache="false">
+        SELECT <include refid="channelCols"/>
+        FROM im_channel c
+        WHERE c.del_flag = 0
+        <if test="keyword != null and keyword != ''"> AND (c.name LIKE CONCAT('%', #{keyword}, '%') OR c.topic LIKE CONCAT('%', #{keyword}, '%')) </if>
+        <if test="guildKind != null"> AND c.guild_kind = #{guildKind} </if>
+        <if test="guildId != null"> AND c.guild_id = #{guildId} </if>
+        <if test="status != null"> AND c.status = #{status} </if>
+        <choose>
+            <when test="guildId != null"> ORDER BY c.parent_id, c.position, c.id </when>
+            <otherwise> ORDER BY c.id DESC </otherwise>
+        </choose>
+        LIMIT 100
+    </select>
+
+    <select id="selectChannel" resultType="java.util.LinkedHashMap" useCache="false">
+        SELECT <include refid="channelCols"/> FROM im_channel c WHERE c.id = #{id} AND c.del_flag = 0
+    </select>
+
+    <sql id="messageCols">
+        m.id, m.conversation_id AS channelId, m.sender_id AS senderId, m.msg_type AS msgType, m.content,
+        m.status, m.check_status AS checkStatus, m.version, m.create_time AS createTime,
+        c.guild_kind AS guildKind, c.guild_id AS guildId, c.name AS channelName
+    </sql>
+
+    <select id="searchMessages" resultType="java.util.LinkedHashMap" useCache="false">
+        SELECT <include refid="messageCols"/>
+        FROM im_message m JOIN im_channel c ON c.id = m.conversation_id
+        <where>
+            <if test="channelId != null"> AND m.conversation_id = #{channelId} </if>
+            <if test="senderId != null"> AND m.sender_id = #{senderId} </if>
+            <if test="keyword != null and keyword != ''"> AND m.content LIKE CONCAT('%', #{keyword}, '%') </if>
+            <if test="status != null"> AND m.status = #{status} </if>
+            <if test="beforeId != null"> AND m.id &lt; #{beforeId} </if>
+        </where>
+        ORDER BY m.id DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="listReports" resultType="java.util.LinkedHashMap" useCache="false">
+        SELECT r.id, r.reporter_member_id AS reporterMemberId, r.target_type AS targetType, r.target_id AS targetId,
+               r.channel_id AS channelId, r.reason_code AS reasonCode, r.reason_text AS reasonText, r.status,
+               r.audit_task_id AS auditTaskId, r.create_time AS createTime,
+               m.sender_id AS senderId, m.content, m.status AS messageStatus, m.version AS messageVersion,
+               c.name AS channelName, c.guild_kind AS guildKind, c.guild_id AS guildId
+        FROM im_channel_report r
+        LEFT JOIN im_message m ON r.target_type = 'MESSAGE' AND m.id = r.target_id
+        LEFT JOIN im_channel c ON c.id = r.channel_id
+        <where>
+            <if test="status != null and status != ''"> AND r.status = #{status} </if>
+            <if test="channelId != null"> AND r.channel_id = #{channelId} </if>
+            <if test="beforeId != null"> AND r.id &lt; #{beforeId} </if>
+        </where>
+        ORDER BY r.id DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="lockMessage" resultType="java.util.LinkedHashMap" useCache="false" flushCache="true">
+        SELECT <include refid="messageCols"/>
+        FROM im_message m JOIN im_channel c ON c.id = m.conversation_id
+        WHERE m.id = #{id}
+        FOR UPDATE
+    </select>
+
+    <!-- 平台屏蔽：0 正常 → 2 违规屏蔽；恢复：2 → 0。版本 +1 让客户端按变更流同步。 -->
+    <update id="setMessageStatus">
+        UPDATE im_message SET status = #{to}, version = version + 1
+        WHERE id = #{id} AND status = #{from}
+    </update>
+
+    <insert id="insertMutation">
+        INSERT INTO im_message_mutation(conversation_id, message_id, version, kind, create_time)
+        VALUES (#{conversationId}, #{messageId}, #{version}, #{kind}, CURRENT_TIMESTAMP(3))
+    </insert>
+
+    <select id="lockReport" resultType="java.util.LinkedHashMap" useCache="false" flushCache="true">
+        SELECT id, target_type AS targetType, target_id AS targetId, channel_id AS channelId, status
+        FROM im_channel_report WHERE id = #{id} FOR UPDATE
+    </select>
+
+    <update id="closeReport">
+        UPDATE im_channel_report SET status = #{status} WHERE id = #{id} AND status = 'PENDING'
+    </update>
+
+    <update id="closeReportsForMessage">
+        UPDATE im_channel_report SET status = #{status}
+        WHERE target_type = 'MESSAGE' AND target_id = #{messageId} AND status = 'PENDING'
+    </update>
+
+    <select id="listActions" resultType="java.util.LinkedHashMap" useCache="false">
+        SELECT id, guild_kind AS guildKind, guild_id AS guildId, target_member_id AS targetMemberId, action_type AS actionType,
+               CASE WHEN status = 'ACTIVE' AND expires_at IS NOT NULL AND expires_at &lt;= CURRENT_TIMESTAMP(3) THEN 'EXPIRED' ELSE status END AS status,
+               version, scope_type AS scopeType, scope_id AS scopeId, reason_code AS reasonCode, reason_text AS reasonText,
+               duration_sec AS durationSec, starts_at AS startsAt, expires_at AS expiresAt, operator_id AS operatorId,
+               revoked_by AS revokedBy, revoke_reason AS revokeReason, revoked_at AS revokedAt
+        FROM im_moderation_action
+        <where>
+            <if test="guildKind != null"> AND guild_kind = #{guildKind} </if>
+            <if test="guildId != null"> AND guild_id = #{guildId} </if>
+            <if test="targetMemberId != null"> AND target_member_id = #{targetMemberId} </if>
+            <if test="status == 'ACTIVE'"> AND status = 'ACTIVE' AND (expires_at IS NULL OR expires_at &gt; CURRENT_TIMESTAMP(3)) </if>
+            <if test="status != null and status != '' and status != 'ACTIVE'"> AND status = #{status} </if>
+        </where>
+        ORDER BY id DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="countClubMember" resultType="int" useCache="false">
+        SELECT COUNT(1) FROM club_member WHERE club_id = #{clubId} AND member_id = #{memberId} AND status = 1 AND del_flag = 0
+    </select>
+
+    <select id="countTeamMember" resultType="int" useCache="false">
+        SELECT COUNT(1) FROM play_team_member WHERE team_id = #{teamId} AND member_id = #{memberId} AND status = 1
+    </select>
+
+    <select id="selectClubOwner" resultType="java.lang.Long" useCache="false">
+        SELECT member_id FROM club WHERE id = #{clubId}
+    </select>
+
+    <select id="selectTeamLeader" resultType="java.lang.Long" useCache="false">
+        SELECT leader_member_id FROM play_team WHERE id = #{teamId}
+    </select>
+</mapper>

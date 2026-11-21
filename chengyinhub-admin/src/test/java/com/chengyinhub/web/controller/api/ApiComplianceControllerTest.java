@@ -32,6 +32,7 @@ class ApiComplianceControllerTest {
         versions.put("activity_host_data_sharing", "v2.1");
         versions.put("merchant_onsite_data_sharing", "v1.0");
         versions.put("bank_account_collection", "v1.0");
+        versions.put("walk_safety_notice", "v1.0");
         props.setDocVersions(versions);
         return props;
     }
@@ -65,6 +66,31 @@ class ApiComplianceControllerTest {
                 "提现单独同意被拒 ⇒ 三个提现入口都会卡在「同意记录未保存」且永不提交");
         verify(service).record(eq(1001L), eq("bank_account_collection"), eq("v1.0"),
                 eq("withdrawal"), eq("AGREE"), eq("consent-request-withdraw-001"), anyString());
+    }
+
+    /** P1b SEC-15:首次漫游安全提示按账号留痕,App 用 walk_safety_notice / walk_start。 */
+    @Test
+    void walkSafetyNoticeIsWhitelistedOnlyForWalkStart() {
+        IConsentRecordService service = mock(IConsentRecordService.class);
+        TestApiComplianceController controller = new TestApiComplianceController();
+        ReflectionTestUtils.setField(controller, "consentRecordService", service);
+        ReflectionTestUtils.setField(controller, "complianceProperties", complianceProps());
+        Map<String, Object> body = new HashMap<>();
+        body.put("docType", "walk_safety_notice");
+        body.put("scene", "walk_start");
+        body.put("eventType", "AGREE");
+        body.put("requestId", "walk-safety-001");
+        stubReadback(service, body);
+        AjaxResult result = controller.record(body, mock(HttpServletRequest.class));
+        assertEquals(HttpStatus.SUCCESS, result.get(AjaxResult.CODE_TAG));
+        verify(service).record(eq(1001L), eq("walk_safety_notice"), eq("v1.0"),
+                eq("walk_start"), eq("AGREE"), eq("walk-safety-001"), anyString());
+
+        Map<String, Object> foreign = new HashMap<>(body);
+        foreign.put("scene", "publish");
+        foreign.put("requestId", "walk-safety-002");
+        AjaxResult rejected = controller.record(foreign, mock(HttpServletRequest.class));
+        assertEquals("协议类型或场景不合法", rejected.get(AjaxResult.MSG_TAG));
     }
 
     /** 负控:场景对不上时必须拒,别让白名单退化成「只要 docType 认识就放行」。 */

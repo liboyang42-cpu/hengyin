@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.service.IOrientScoringService;
 import com.chengyinhub.business.service.support.OrientRejection;
 import com.chengyinhub.business.service.support.OrientScoringException;
@@ -35,7 +37,7 @@ public class ApiOrientScoringController extends BaseController {
     @GetMapping("/session/{sessionId}")
     public AjaxResult breakdown(@PathVariable("sessionId") Long sessionId) {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         return run(() -> orientScoringService.breakdown(memberId, sessionId));
     }
 
@@ -43,7 +45,7 @@ public class ApiOrientScoringController extends BaseController {
     @PostMapping("/session/{sessionId}/recovery")
     public AjaxResult recovery(@PathVariable("sessionId") Long sessionId, String kind) {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         return run(() -> orientScoringService.submitRecovery(memberId, sessionId, kind).playerView());
     }
 
@@ -51,7 +53,7 @@ public class ApiOrientScoringController extends BaseController {
     @GetMapping("/session/{sessionId}/leaderboard")
     public AjaxResult leaderboard(@PathVariable("sessionId") Long sessionId) {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         return run(() -> orientScoringService.leaderboard(memberId, sessionId));
     }
 
@@ -59,7 +61,7 @@ public class ApiOrientScoringController extends BaseController {
     @PostMapping("/session/{sessionId}/sync")
     public AjaxResult sync(@PathVariable("sessionId") Long sessionId, String idempotencyKey) {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         return run(() -> orientScoringService.syncSession(memberId, sessionId, idempotencyKey));
     }
 
@@ -67,7 +69,7 @@ public class ApiOrientScoringController extends BaseController {
     @PostMapping("/session/{sessionId}/settle")
     public AjaxResult settle(@PathVariable("sessionId") Long sessionId, String idempotencyKey) {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         return run(() -> orientScoringService.settle(memberId, sessionId, idempotencyKey));
     }
 
@@ -75,7 +77,7 @@ public class ApiOrientScoringController extends BaseController {
     @PostMapping("/appeal")
     public AjaxResult appeal(String sessionId, String entryId, String nodeId, String reason, String idempotencyKey) {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         return run(() -> orientScoringService.submitAppeal(memberId, Convert.toLong(sessionId, null),
                 Convert.toLong(entryId, null), Convert.toLong(nodeId, null), reason, idempotencyKey));
     }
@@ -84,7 +86,7 @@ public class ApiOrientScoringController extends BaseController {
     @PostMapping("/dispute")
     public AjaxResult dispute(String sessionId, String reason, String idempotencyKey) {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         return run(() -> orientScoringService.submitDispute(memberId, Convert.toLong(sessionId, null), reason,
                 idempotencyKey));
     }
@@ -93,7 +95,7 @@ public class ApiOrientScoringController extends BaseController {
     @GetMapping("/receipt")
     public AjaxResult receipt(String kind, String sessionId, String idempotencyKey) {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         return run(() -> orientScoringService.receipt(memberId, kind, Convert.toLong(sessionId, null), idempotencyKey));
     }
 

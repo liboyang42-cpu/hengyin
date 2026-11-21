@@ -413,7 +413,7 @@ public final class ThemeRuntimeConfig {
             List<String> warnings=new ArrayList<>();
             String mapped=com.chengyinhub.business.domain.JourneyStory.remapChapterIds(scene.path("journeyStory").toString(),chapters);
             if(npcs!=null)mapped=com.chengyinhub.business.domain.JourneyStory.remapNpcIds(mapped,npcs,warnings);
-            if(!warnings.isEmpty())fail("场景人物复制没有对应目标: "+String.join(";",warnings));
+            if(!warnings.isEmpty())fail("场景人物复制没有对应目标： "+String.join(";",warnings));
             try { ((ObjectNode)scene).set("journeyStory",JSON.readTree(mapped)); } catch(Exception ex) { throw new IllegalArgumentException("场景剧情复制失败",ex); }
         }
         return config.toString();
@@ -553,7 +553,7 @@ public final class ThemeRuntimeConfig {
     private static void text(JsonNode n, String key, int max, boolean required) { JsonNode v = n.path(key); if (!v.isMissingNode() && !v.isTextual()) fail(key + " 须为文字"); if ((required && v.asText().trim().isEmpty()) || v.asText().length() > max) fail(key + " 内容不合法"); }
     private static void media(JsonNode n, String key, boolean required) { text(n,key,500,required); if (n.has(key) && !n.path(key).asText().matches("(https://[^\\s]+|media-asset:[1-9][0-9]{0,18})")) fail("图片须为 HTTPS 地址"); }
     static void enumeration(JsonNode n, String key, String... allowed) { if (!set(allowed).contains(n.path(key).asText())) fail(key + " 选项不支持"); }
-    static void fields(JsonNode n, Set<String> allowed) { if (!n.isObject()) fail("配置条目须为对象"); n.fieldNames().forEachRemaining(f -> { if (!allowed.contains(f)) fail("不支持的配置字段: " + f); }); }
+    static void fields(JsonNode n, Set<String> allowed) { if (!n.isObject()) fail("配置条目须为对象"); n.fieldNames().forEachRemaining(f -> { if (!allowed.contains(f)) fail("不支持的配置字段： " + f); }); }
     static Set<String> set(String... values) { return new HashSet<>(Arrays.asList(values)); }
     private static void fail(String message) { throw new IllegalArgumentException(message); }
     private ThemeRuntimeConfig() {}

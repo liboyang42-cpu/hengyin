@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
@@ -92,7 +94,7 @@ public class ApiVerifyController extends BaseController {
     @PostMapping("/groupcode/redeem")
     public AjaxResult redeemGroupCode(String code) {
         long principalMemberId = appUid();
-        if (principalMemberId <= 0) return error("请先登录");
+        if (principalMemberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         MerchantAccessContext access = merchantAccessService.require(
                 principalMemberId, MerchantPermission.VERIFY);
         return groupCodeService.redeem(code, access.getOwnerMemberId(),

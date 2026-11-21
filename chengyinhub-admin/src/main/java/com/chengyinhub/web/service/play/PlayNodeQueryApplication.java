@@ -60,9 +60,9 @@ public class PlayNodeQueryApplication {
     @Autowired(required = false)
     private com.chengyinhub.business.service.IMmsMerchantService mmsMerchantService;
     @Autowired(required = false)
-    private com.chengyinhub.business.service.support.rpg.TopicWeatherEventService topicWeatherEventService;
-    @Autowired(required = false)
     private com.chengyinhub.business.externalgame.ExternalGameMonetizationService externalGameMonetization;
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.rpg.TopicWeatherEventService topicWeatherEventService;
 
     static final String MERCHANT_CLOSED_TODAY = "今日已打烊";
 
@@ -136,7 +136,7 @@ public class PlayNodeQueryApplication {
                 // 未报名没有权威路线局；返回注册空态，但绝不把未选支线素材塞进响应。
                 read.nodeList = new ArrayList<>();
             } else if (read.routeState == null || !TopicRouteState.BRANCH_GRAPH.equals(read.routeState.getRouteMode())) {
-                return error("路线状态暂时不可用,请重试");
+                return error("路线状态暂时不可用，请重试");
             } else {
                 read.nodeList = visibleBranchNodes(read.nodeList, read.routeState);
             }
@@ -152,7 +152,7 @@ public class PlayNodeQueryApplication {
                 if (read.puzzleHintLevelByNode == null) read.puzzleHintLevelByNode = new HashMap<>();
             } catch (Exception e) {
                 logger.error("谜题提示状态批量读取失败 member={} topic={} activity={}", read.memberId, read.tId, read.progActId, e);
-                return error("谜题提示状态暂时不可用,请重试");
+                return error("谜题提示状态暂时不可用，请重试");
             }
         }
         read.inStoreLoadByChapter = new HashMap<>();
@@ -414,6 +414,12 @@ public class PlayNodeQueryApplication {
         m.put("advancedConfigJson", com.chengyinhub.business.util.AdvancedGamePublicProjection
                 .safeConfigJson(themeNodeConfig==null?tpl.getAdvancedConfigJson():themeNodeConfig.toString(),
                         read.bargainOffered));
+        // 高级玩法也复用模板题面；答案仍只由服务端判定。
+        if (validationMethod != null && validationMethod == 0) {
+            m.put("question", tpl.getQuestionName());
+            m.put("questionImg", tpl.getQuestionImg());
+            m.put("questionAudio", tpl.getQuestionAudio());
+        }
         if (validationMethod != null && (validationMethod == ValidationMethod.APP_SENSOR
                 || SensorChallengePolicy.isPlayablePhotoFilter(validationMethod,
                 tpl.getSensorType(), tpl.getSensorConfig()))) {
@@ -695,6 +701,8 @@ public class PlayNodeQueryApplication {
         data.put("leadSpectator", read.leadSpectator);
         // M2 自玩会话:标记 + 通行证有效期(前端顶部"自由定向中·有效期至 M/D")
         data.put("selfPlay", read.selfPlay);
+        if (read.routeState != null && read.routeState.getSessionId() != null)
+            data.put("runKey", read.routeState.getSessionId().toString());
         if (read.selfPlay) {
             data.put("expiresAt", read.passExpiresAt);
         }

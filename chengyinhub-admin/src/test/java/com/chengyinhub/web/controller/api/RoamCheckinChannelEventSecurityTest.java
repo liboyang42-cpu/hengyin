@@ -58,7 +58,7 @@ class RoamCheckinChannelEventSecurityTest
         node.setLat(BigDecimal.valueOf(LAT));
         node.setLng(BigDecimal.valueOf(LNG));
         when(roamMapper.selectMerchantNodesNear(anyDouble(), anyDouble(), anyDouble(), anyDouble(),
-                anyDouble(), anyDouble(), any(), any(), any(), any())).thenReturn(List.of(node));
+                anyDouble(), anyDouble(), any(), any(), any(), any(), anyInt())).thenReturn(List.of(node));
     }
 
     @Test

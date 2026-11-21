@@ -41,7 +41,7 @@ function manualCommands(view, nodes) {
 }
 function occurredAt(value) {
   const match = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/.exec(String(value || ''));
-  if (!match) throw new Error('请填写实际发生时间，格式为 年-月-日 时:分:秒');
+  if (!match) throw new Error('请填写实际发生时间，格式为 YYYY-MM-DD HH:mm:ss');
   const parts = match.slice(1).map(Number), date = new Date(parts[0], parts[1] - 1, ...parts.slice(2));
   if ([date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds()].some((part, i) => part !== parts[i])) throw new Error('实际发生时间无效');
   return date.getTime();

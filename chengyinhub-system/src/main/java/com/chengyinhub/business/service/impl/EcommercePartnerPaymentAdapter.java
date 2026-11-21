@@ -88,6 +88,16 @@ public class EcommercePartnerPaymentAdapter {
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     void setCombined(EcommerceCombinedPayment combined) { this.combined = combined; }
 
+    /** S2 collection model (optional): while active it decides which tickets go to a seller sub-merchant. */
+    private com.chengyinhub.business.collection.CollectionModelService collectionModel;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void setCollectionModel(com.chengyinhub.business.collection.CollectionModelService collectionModel) {
+        this.collectionModel = collectionModel;
+    }
+
+    private boolean collectionModelActive() { return collectionModel != null && collectionModel.active(); }
+
     private EcommerceCombinedPayment activeCombined() { return combined != null && combined.enabled() ? combined : null; }
 
     /** 电商收付通总开关。为假时网关不调用本类任何其它方法。 */
@@ -157,17 +167,32 @@ public class EcommercePartnerPaymentAdapter {
         String businessNo = registration.getRegistrationNo();
         EcomOrderSeller seller = mapper.selectOrderSeller(businessNo);
         if (seller == null) {
-            EcommerceCombinedPayment c = activeCombined();
+            // S2: while the collection model is active no NEW order uses combined payment: its platform self-operated
+            // sub-order holds other parties' shares and pays them later as supplier payables (collect-then-pay, a legal
+            // question for counsel). Single-seller split + ledger profit sharing serves those tickets instead.
+            EcommerceCombinedPayment c = collectionModelActive() ? null : activeCombined();
             if (c != null) {
                 // l-payout3：多方收款的主题门票走合单；单一收款方继续下面的 l-payout2 路径。
                 EcommerceCombinedPayment.Placed placed = c.createOrder(registration, platformMchid);
                 if (placed.route() == EcommerceCombinedPayment.Route.COMBINED) return placed.params();
                 if (placed.route() == EcommerceCombinedPayment.Route.PLATFORM) return null;
             }
-            if (!switches.sellerRoutingEnabled() || !Long.valueOf(1L).equals(registration.getOwnerType())) return null;
-            if (platformMchid != null && !platformMchid.isBlank() && intents.hasAnyAttempt(platformMchid, businessNo)) return null;
-            SellerOfRecordPolicy.Decision decision = sellers.decide(registration);
-            if (decision == null || !decision.subMerchant()) return null;
+            com.chengyinhub.business.collection.CollectionDecision split = null;
+            SellerOfRecordPolicy.Decision decision;
+            if (collectionModelActive()) {
+                // S2 collection model: topic AND activity tickets of a third-party seller go to its sub-merchant (SPLIT);
+                // anything else returns to the caller, whose platform path admits only PLATFORM decisions.
+                if (platformMchid != null && !platformMchid.isBlank() && intents.hasAnyAttempt(platformMchid, businessNo)) return null;
+                split = collectionModel.decide(registration);
+                if (!split.split()) return null;
+                decision = new SellerOfRecordPolicy.Decision(true, split.subMchid(), split.sellerType(), split.sellerId(),
+                        split.reason());
+            } else {
+                if (!switches.sellerRoutingEnabled() || !Long.valueOf(1L).equals(registration.getOwnerType())) return null;
+                if (platformMchid != null && !platformMchid.isBlank() && intents.hasAnyAttempt(platformMchid, businessNo)) return null;
+                decision = sellers.decide(registration);
+                if (decision == null || !decision.subMerchant()) return null;
+            }
             EcomOrderSeller row = new EcomOrderSeller();
             row.setOutTradeNo(businessNo);
             row.setSubMchid(decision.subMchid());
@@ -181,6 +206,11 @@ public class EcommercePartnerPaymentAdapter {
             }
             seller = mapper.selectOrderSeller(businessNo);
             if (seller == null) throw PaymentPreorderException.definiteFailure("卖家收款单写入失败", null);
+            if (split != null && seller.getSubMchid().equals(split.subMchid())) {
+                // Ledger source for split settlement; idempotent. Written before any WeChat call, so a paid split order
+                // is always known to settlement (left out of every wallet) even if the response is lost.
+                collectionModel.recordSplitOrder(registration, split, seller.getTotalFen());
+            }
         }
         if (!switches.sellerRoutingEnabled() && seller.getTransactionId() == null && !intents.hasAnyAttempt(seller.getSubMchid(), businessNo)) {
             // 路由开关已关、该单也从未向卖家商户号下过单：回到平台商户号前先确认没有遗留卖家意图。
@@ -216,6 +246,68 @@ public class EcommercePartnerPaymentAdapter {
         try {
             RestoreDispatchGuard.requireDispatchAllowed();
             return gateway.prepayJsapi(subMchid, wxNo, totalFen, description, openid);
+        } catch (RestoreDispatchGuard.Blocked paused) {
+            throw paused;
+        } catch (RuntimeException e) {
+            throw PaymentPreorderException.resultUncertain("创建微信支付订单结果未知：" + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * K1 club dues: places a dues invoice ({@code CLM...}) on the club's own sub-merchant (service-provider JSAPI,
+     * {@code settle_info.profit_sharing=true}). Called only while the collection model is active and its decision is
+     * SPLIT. A seller row is written first (an order already started on a sub-merchant keeps it), then
+     * {@code beforeWechat} records the dues split ledger, then the payment intent is frozen and WeChat is called.
+     * Never falls back to the platform merchant account: a platform attempt already exists → definite refusal.
+     */
+    public Map<String, String> createDuesOrder(String outTradeNo, long totalFen, String description, String openid,
+                                               com.chengyinhub.business.collection.CollectionDecision split,
+                                               String platformMchid,
+                                               java.util.function.Consumer<EcomOrderSeller> beforeWechat) {
+        if (!enabled() || split == null || !split.split() || outTradeNo == null || !outTradeNo.startsWith("CLM")
+                || totalFen <= 0 || openid == null || openid.isBlank())
+            throw PaymentPreorderException.definiteFailure("卖家收款暂不可用，请稍后再试", null);
+        EcomOrderSeller seller = mapper.selectOrderSeller(outTradeNo);
+        if (seller == null) {
+            if (platformMchid != null && !platformMchid.isBlank() && intents.hasAnyAttempt(platformMchid, outTradeNo))
+                throw PaymentPreorderException.definiteFailure("这笔会费曾按旧方式发起支付，请关闭后重新续费", null);
+            EcomOrderSeller row = new EcomOrderSeller();
+            row.setOutTradeNo(outTradeNo);
+            row.setSubMchid(split.subMchid());
+            row.setSellerType(split.sellerType().name());
+            row.setSellerId(split.sellerId());
+            row.setTotalFen(totalFen);
+            try {
+                mapper.insertOrderSeller(row);
+            } catch (DuplicateKeyException concurrent) {
+                // 并发下单：以先写入的那条为准。
+            }
+            seller = mapper.selectOrderSeller(outTradeNo);
+            if (seller == null) throw PaymentPreorderException.definiteFailure("卖家收款单写入失败", null);
+        }
+        if (seller.getTotalFen() == null || seller.getTotalFen() != totalFen)
+            throw PaymentPreorderException.definiteFailure("支付金额与卖家收款单不符", null);
+        if (beforeWechat != null) beforeWechat.accept(seller);
+        String subMchid = seller.getSubMchid();
+        String body = description(description == null || description.isBlank() ? "俱乐部会费" : description);
+        String notifyUrl;
+        try {
+            notifyUrl = gateway.paymentNotifyUrl();
+        } catch (RuntimeException invalid) {
+            throw PaymentPreorderException.definiteFailure("创建微信支付订单参数异常：" + invalid.getMessage(), invalid);
+        }
+        String wxNo = intents.freezePaymentIntent(outTradeNo, subMchid, switches.spAppid(), "JSAPI", "CNY",
+                Math.toIntExact(totalFen), openid, body, notifyUrl, () -> {
+                    try {
+                        gateway.queryPartnerOrder(subMchid, outTradeNo);
+                        throw new IllegalStateException("历史卖家原单缺少冻结请求，须保留原单查证");
+                    } catch (EcommercePayGateway.PartnerOrderNotFound absent) {
+                        // 微信侧不存在同号原单，可以首次提交。
+                    }
+                });
+        try {
+            RestoreDispatchGuard.requireDispatchAllowed();
+            return gateway.prepayJsapi(subMchid, wxNo, totalFen, body, openid);
         } catch (RestoreDispatchGuard.Blocked paused) {
             throw paused;
         } catch (RuntimeException e) {

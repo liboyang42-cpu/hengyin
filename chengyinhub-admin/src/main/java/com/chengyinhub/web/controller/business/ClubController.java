@@ -90,6 +90,9 @@ public class ClubController extends BaseController {
     @Autowired
     private IAuditTaskService auditTaskService;
 
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.channel.platform.ChannelPlatformService channelPlatformService;
+
     @PreAuthorize("@ss.hasPermi('business:club:list')")
     @GetMapping("/list")
     public TableDataInfo list(Club club) {
@@ -365,7 +368,7 @@ public class ClubController extends BaseController {
         }
         // 账户互斥(2026-07-05 恢复严格分离):已是商户者不能审核为俱乐部主理人。
         if (club.getStatus() == 1L && capabilityService.hasCapability(db.getMemberId(), MemberCapability.CAP_MERCHANT)) {
-            return error("该会员已是商户,一个账户不能同时是商户与主理人");
+            return error("该会员已是商户，一个账户不能同时是商户与主理人");
         }
         db.setStatus(club.getStatus());
         db.setRejectReason(club.getRejectReason());
@@ -373,6 +376,14 @@ public class ClubController extends BaseController {
 
         if (club.getStatus() == 1L) {
             roleService.changeRole(db.getMemberId(), IRoleService.ROLE_CLUB, getUserId());
+            // club-reach: an approved club opens with 闲聊 / 公告 / 活动 (own transaction, best effort).
+            if (channelPlatformService != null && db.getMemberId() != null) {
+                try {
+                    channelPlatformService.ensureClubDefaults(db.getId(), db.getMemberId());
+                } catch (RuntimeException e) {
+                    logger.warn("club default channels not seeded, clubId={}", db.getId(), e);
+                }
+            }
         } else if (club.getStatus() == 2L) {
             // 驳回 → 仅当该主理人名下已无其它在营(status=1)俱乐部时,才回收 club 能力
             // (多俱乐部:下架其中一个团不应连锅端掉整个主理人能力)

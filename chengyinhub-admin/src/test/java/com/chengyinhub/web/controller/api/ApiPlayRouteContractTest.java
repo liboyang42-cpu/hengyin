@@ -37,8 +37,9 @@ class ApiPlayRouteContractTest {
         post("submitPreference", new Class<?>[]{Long.class, PreferenceSubmitRequest.class});
         post("arrive", new Class<?>[]{String.class, String.class, String.class, String.class, String.class, String.class, Integer.class,
                 String.class, String.class, Long.class, String.class, Integer.class});
+        // x-template-games R2:拍照随带定位(带坐标的站,奖品要到场),与 answer 同一形状
         post("photo", new Class<?>[]{String.class, String.class, String.class, String.class, String.class, Integer.class,
-                Long.class, String.class, Integer.class});
+                Long.class, String.class, Integer.class, String.class, String.class, String.class});
 
         assertClientCannotChooseRoute(PreferenceSubmitRequest.class);
         assertClientCannotChooseRoute(SensorResultRequest.class);

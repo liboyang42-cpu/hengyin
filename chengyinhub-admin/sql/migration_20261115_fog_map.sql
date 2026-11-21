@@ -1,0 +1,35 @@
+-- P3 fog-map (2026-11-15): per-member revealed fog cells, kept for good with consent (roam.fog.retainRevealedCells).
+-- One row per member and geohash-7 cell with its first and latest reveal time. No session, no travel order, no
+-- coordinates: a raw track cannot be rebuilt from it. Raw tracks and roam_fog_tile keep their 30-day retention.
+--
+-- Rollback: set CHENGYIN_ROAM_FOG_RETAIN_REVEALED_CELLS=false (reads return to the 30-day window at once, and the
+-- retention job removes kept cells not revealed again within 30 days), then, if the table must go:
+--   DROP TABLE IF EXISTS roam_member_fog_cell;
+-- Nothing else in this file changes existing tables or rows.
+
+CREATE TABLE IF NOT EXISTS roam_member_fog_cell (
+  member_id          BIGINT      NOT NULL,
+  cell_key           VARCHAR(12) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT 'geohash-7 cell (~150 m), server datum GCJ-02',
+  cell_prefix5       CHAR(5)     CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT 'left(cell_key,5): bounding-box lookup',
+  first_revealed_at  DATETIME    NOT NULL,
+  last_revealed_at   DATETIME    NOT NULL,
+  PRIMARY KEY (member_id, cell_key),
+  KEY idx_member_prefix (member_id, cell_prefix5),
+  KEY idx_last_revealed (last_revealed_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='玩家已点亮迷雾格(按人永久保留,可由 roam.fog.retainRevealedCells 关闭)';
+
+-- Backfill from the per-session tiles still inside their 30-day window (older tiles were already cleared to NULL).
+-- Idempotent: re-running keeps the earliest first time and the latest last time.
+INSERT INTO roam_member_fog_cell (member_id, cell_key, cell_prefix5, first_revealed_at, last_revealed_at)
+SELECT f.member_id, LOWER(f.geohash7), LEFT(LOWER(f.geohash7), 5), MIN(f.revealed_at), MAX(f.revealed_at)
+FROM roam_fog_tile f
+WHERE f.geohash7 IS NOT NULL AND CHAR_LENGTH(f.geohash7) = 7 AND f.revealed_at IS NOT NULL
+GROUP BY f.member_id, LOWER(f.geohash7)
+ON DUPLICATE KEY UPDATE
+  first_revealed_at = LEAST(first_revealed_at, VALUES(first_revealed_at)),
+  last_revealed_at = GREATEST(last_revealed_at, VALUES(last_revealed_at));
+
+-- runner: assert=scalar-true
+SELECT COUNT(*) = 5 FROM information_schema.columns WHERE table_schema = DATABASE()
+  AND table_name = 'roam_member_fog_cell'
+  AND column_name IN ('member_id', 'cell_key', 'cell_prefix5', 'first_revealed_at', 'last_revealed_at');

@@ -48,7 +48,7 @@ test('Explore 沿用同一 HUD 结构但左侧显示真实路程', () => {
     paused: true,
   })
 
-  assert.deepEqual(hud.left, { label: '已走', value: '1.26', unit: 'km' })
+  assert.deepEqual(hud.left, { label: '已走', value: '1.3', unit: 'km' })
   assert.deepEqual(hud.right, { label: '用时', value: '62:03', unit: '' })
   assert.equal(hud.state, 'paused')
   assert.equal(hud.actionLabel, '继续')
@@ -350,7 +350,7 @@ test('主题游玩进页先说明定位用途，确认前不采集，并保留�
   // 业主 2026-11-13:导航到某一站不再逐站申请定位
   assert.doesNotMatch(playJs.slice(playJs.indexOf('  startNav(node) {'), playJs.indexOf('  stopNav() {')), /requestPlayLocation\(\)/)
   assert.match(playJs, /onScanArrive\(\)\s*\{[\s\S]*?this\.scanArrive\(node\)/)
-  assert.match(playJs, /content:\s*'仅在开局时检查你是否在起点约 300 米内[^']*锁屏、切到后台、暂停、结束或离开后停止/)
+  assert.match(playJs, /content:\s*'只在开局时检查你是否在第一站 300 米内，之后各站不再要求定位[^']*锁屏、切到后台、暂停、结束或离开后停止/)
   assert.match(playWxml, /bindtap="onScanArriveFromTools"[^>]*aria-label="扫码到达"/)
 })
 
@@ -379,8 +379,8 @@ test('真实游玩定位方法在用途弹窗前和取消后均零 GPS，明确�
   page.requestPlayLocation()
   assert.equal(dialogs.length, 1, 'a declined offer is not repeated in the same run')
   assert.equal(locations.length, 0)
-  page._locAsked = false
-  page.requestPlayLocation()
+  global.wx.getSetting = options => options.success({ authSetting: {} })
+  page.onEnableLocation()
   dialogs[1].success({ confirm: true })
   assert.equal(locations.length, 1, 'positive control must reach the real SDK caller after consent')
   assert.equal(locations[0].type, 'gcj02')

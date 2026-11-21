@@ -59,7 +59,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         insert into content_search_document
         (document_type, document_id, title, search_text, img_url, city_code, visibility_state, source_time, indexed_at)
         select 'TOPIC', cms_topic.id, left(cms_topic.name, 200),
-               concat_ws(' ', cms_topic.name, cms_topic.address_name, left(cms_topic.description, 2000)),
+               concat_ws(' ', cms_topic.name, cms_topic.address_name, cms_topic.city_code, left(cms_topic.description, 2000)),
                left(cms_topic.img_url, 500), cms_topic.city_code, 'VISIBLE', cms_topic.create_time, #{now}
         from cms_topic
         where <include refid="topicStaticPublicGate"/>
@@ -145,7 +145,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         d.visibility_state = 'VISIBLE'
           and d.document_type in
           <foreach collection="types" item="type" open="(" separator="," close=")">#{type}</foreach>
-          and d.search_text like concat('%', #{keyword}, '%') escape '\\'
+          and (
+              (d.document_type = 'TOPIC'
+                  and concat_ws(' ', current_topic.name, current_topic.address_name, current_topic.city_code,
+                      left(current_topic.description, 2000)) like concat('%', #{keyword}, '%') escape '\\')
+              or (d.document_type != 'TOPIC' and d.search_text like concat('%', #{keyword}, '%') escape '\\')
+          )
           <if test="cityCode != null and cityCode != ''"> and <include refid="currentSourceCity"/> = #{cityCode}</if>
           and (
               (d.document_type = 'TOPIC' and exists (

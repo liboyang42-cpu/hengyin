@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.PmsGift;
 import com.chengyinhub.business.domain.UmsCreativeSquare;
 import com.chengyinhub.business.domain.UmsCrowdfunding;
@@ -69,13 +71,13 @@ public class ApiCrowdfundingController extends BaseController {
         try {
             // 参数校验
             if (member_id == null || member_id <= 0) {
-                return error("请先登录");
+                return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
             }
 
             Long activeIdLong = Convert.toLong(active_id, 0L);
             Long giftIdLong = Convert.toLong(gift_id, 0L);
             if (activeIdLong <= 0 || giftIdLong <= 0) {
-                return error("参数错误");
+                return refuse(ErrorCode.BAD_REQUEST, "参数错误");
             }
 
             PmsGift pmsGift = pmsGiftService.selectPmsGiftById(giftIdLong);
@@ -100,7 +102,7 @@ public class ApiCrowdfundingController extends BaseController {
             // 查询用户信息
             UmsMember umsMember = umsMemberService.selectUmsMemberById(member_id);
             if (umsMember == null) {
-                return error("用户不存在");
+                return refuse(ErrorCode.USER_NOT_FOUND, "用户不存在");
             }
 
             Long userPoint = umsMember.getPoint();

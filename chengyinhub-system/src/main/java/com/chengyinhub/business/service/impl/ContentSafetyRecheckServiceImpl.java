@@ -65,6 +65,12 @@ public class ContentSafetyRecheckServiceImpl implements IContentSafetyRecheckSer
     private ObjectProvider<IAuditTaskService> auditTaskServiceProvider;
     @Autowired(required = false)
     private com.chengyinhub.business.service.ISensitiveContentLibrary sensitiveLibrary;
+    /** SEC-12:无 openid 作者的机审路由;可选注入,老测试直接 new 时为空(保持原有 NO_OPENID 重试)。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.moderation.ModerationRouter moderationRouter;
+
+    /** SEC-12:没有任何机审能判时,本行结束、审核单留给人工(内容仍仅作者可见),不再耗尽后自动驳回。 */
+    static final int STATE_HUMAN_REVIEW = 5;
 
     @Value("${content.safety.recheck.batch-limit:50}")
     private int batchLimit = 50;
@@ -127,7 +133,7 @@ public class ContentSafetyRecheckServiceImpl implements IContentSafetyRecheckSer
         return done;
     }
 
-    enum Outcome { PASS, RISKY, UNAVAILABLE }
+    enum Outcome { PASS, RISKY, UNAVAILABLE, HUMAN }
 
     void processOne(ContentSafetyRecheck row, Date now) {
         if (row.getCreateTime() != null && now.getTime() - row.getCreateTime().getTime() > MAX_AGE_MS) {
@@ -141,6 +147,11 @@ public class ContentSafetyRecheckServiceImpl implements IContentSafetyRecheckSer
             retry(row, now, code[0]);
             return;
         }
+        if (outcome == Outcome.HUMAN) {
+            mapper.finish(row.getId(), attempts(row), STATE_HUMAN_REVIEW, code[0], now);
+            log.info("[内容复检] 无可用机审,留给人工审核 bizType={} bizId={}", row.getBizType(), row.getBizId());
+            return;
+        }
         if (outcome == Outcome.RISKY) {
             decide(row, now, false, REASON_RISKY, ContentSafetyRecheck.STATE_REJECTED, "RISKY");
             return;
@@ -151,7 +162,7 @@ public class ContentSafetyRecheckServiceImpl implements IContentSafetyRecheckSer
             log.info("[内容复检] 内容安全通过,业务审批仍待人工 bizType={} bizId={}", row.getBizType(), row.getBizId());
             return;
         }
-        submitMedia(row, openid);
+        if (openid != null && !openid.trim().isEmpty()) submitMedia(row, openid); // 无 openid 的图片已同步机审
         decide(row, now, true, null, ContentSafetyRecheck.STATE_PASSED, "PASS");
     }
 
@@ -161,6 +172,9 @@ public class ContentSafetyRecheckServiceImpl implements IContentSafetyRecheckSer
         if (hasText && sensitiveLibrary != null
                 && sensitiveLibrary.blockingCategory(row.getTextBody(), row.getBizType(), row.getBizId()) != null) {
             return Outcome.RISKY; // Round5D:自建词库命中不依赖微信
+        }
+        if (moderationRouter != null && (openid == null || openid.trim().isEmpty())) {
+            return checkWithoutOpenid(row, hasText, media, code);
         }
         if (hasText) {
             if (!wx.isEnabled()) { code[0] = "DETECT_DISABLED"; return Outcome.UNAVAILABLE; }
@@ -187,6 +201,44 @@ public class ContentSafetyRecheckServiceImpl implements IContentSafetyRecheckSer
             return Outcome.UNAVAILABLE;
         }
         return Outcome.PASS;
+    }
+
+    /** SEC-12:作者没有 openid。有同步机审就用它判文本和图片;一个都没有 → 交给人工,不耗尽驳回。 */
+    private Outcome checkWithoutOpenid(ContentSafetyRecheck row, boolean hasText, List<String> media, String[] code) {
+        com.chengyinhub.business.moderation.ContentModerationProvider provider = moderationRouter.fallbackFor(null);
+        if (provider == null || (!media.isEmpty() && !provider.judgesImagesSynchronously())) {
+            code[0] = "HUMAN_REVIEW";
+            return Outcome.HUMAN;
+        }
+        try {
+            if (hasText) {
+                for (String chunk : chunks(row.getTextBody())) {
+                    Outcome outcome = outcome(provider.checkText(chunk, null), code, "TEXT_UNAVAILABLE");
+                    if (outcome != Outcome.PASS) return outcome;
+                }
+            }
+            for (String url : media) {
+                Outcome outcome = outcome(provider.checkImage(url, null), code, "MEDIA_UNAVAILABLE");
+                if (outcome != Outcome.PASS) return outcome;
+            }
+        } catch (RuntimeException e) {
+            code[0] = "DETECT_ERROR";
+            return Outcome.UNAVAILABLE;
+        }
+        return Outcome.PASS;
+    }
+
+    private static Outcome outcome(com.chengyinhub.business.moderation.ModerationVerdict verdict, String[] code, String unavailableCode) {
+        if (verdict == com.chengyinhub.business.moderation.ModerationVerdict.PASS) return Outcome.PASS;
+        if (verdict == com.chengyinhub.business.moderation.ModerationVerdict.UNAVAILABLE) {
+            code[0] = unavailableCode;
+            return Outcome.UNAVAILABLE;
+        }
+        if (verdict == com.chengyinhub.business.moderation.ModerationVerdict.REVIEW) {
+            code[0] = "PROVIDER_REVIEW"; // 机审明确要人工:交给审核台,不自动驳回
+            return Outcome.HUMAN;
+        }
+        return Outcome.RISKY;
     }
 
     private void retry(ContentSafetyRecheck row, Date now, String code) {

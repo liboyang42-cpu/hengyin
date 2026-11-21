@@ -41,6 +41,22 @@ class PricingServicePreviewTest {
         ReflectionTestUtils.setField(svc, "coopPerkMapper", coopPerkMapper);
     }
 
+    @Test
+    void freeExploreUsesTicketPricingWithoutGuidedTeamCosts() {
+        CmsTopicMapper topics = mock(CmsTopicMapper.class);
+        ReflectionTestUtils.setField(svc, "cmsTopicMapper", topics);
+        when(topics.selectProductTypeById(100L)).thenReturn(2);
+        when(coopOrderMapper.selectEffectiveOrdersByTopicId(100L)).thenReturn(Collections.emptyList());
+
+        PricingResult result = svc.previewTopic(100L, new BigDecimal("100"), 0, "guided");
+
+        assertEquals("free", result.getSubType());
+        assertEquals(Integer.valueOf(2), result.getProductType());
+        assertEquals(0, BigDecimal.ZERO.compareTo(result.getLeadCostPerHead()));
+        assertEquals(0, BigDecimal.ZERO.compareTo(result.getPriceMin()));
+        assertEquals("self", svc.previewTopic(100L, null, null, "self").getSubType());
+    }
+
     private CoopOrder share(BigDecimal rate) {
         CoopOrder o = new CoopOrder();
         o.setShareMode(1);

@@ -27,6 +27,43 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
               )
     </select>
 
+    <!-- R10 后台规则编辑器（/business/rewardDropRule）：读写全部规则（含停用）。 -->
+    <select id="selectAdminList" parameterType="RewardDropRule" resultMap="RewardDropRuleResult">
+        select id, scope, topic_id, scene_key, drop_type, weight, param_json, status, create_time
+        from reward_drop_rule
+        <where>
+            <if test="scope != null"> and scope = #{scope} </if>
+            <if test="topicId != null"> and topic_id = #{topicId} </if>
+            <if test="sceneKey != null and sceneKey != ''"> and scene_key = #{sceneKey} </if>
+            <if test="dropType != null"> and drop_type = #{dropType} </if>
+            <if test="status != null"> and status = #{status} </if>
+        </where>
+        order by id desc
+        limit 500
+    </select>
+
+    <select id="selectById" resultMap="RewardDropRuleResult">
+        select id, scope, topic_id, scene_key, drop_type, weight, param_json, status, create_time
+        from reward_drop_rule where id = #{id}
+    </select>
+
+    <insert id="insertRule" parameterType="RewardDropRule" useGeneratedKeys="true" keyProperty="id">
+        insert into reward_drop_rule (scope, topic_id, scene_key, drop_type, weight, param_json, status, create_time)
+        values (#{scope}, #{topicId}, #{sceneKey}, #{dropType}, #{weight}, #{paramJson}, #{status}, #{createTime})
+    </insert>
+
+    <update id="updateRule" parameterType="RewardDropRule">
+        update reward_drop_rule
+           set scope = #{scope}, topic_id = #{topicId}, scene_key = #{sceneKey}, drop_type = #{dropType},
+               weight = #{weight}, param_json = #{paramJson}
+         where id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        update reward_drop_rule set status = #{status} where id = #{id}
+    </update>
+
+    <!-- sys-random 后台（/business/reward-drop）：规则 CRUD、基础概率与预览。 -->
     <select id="selectRewardDropRuleList" parameterType="RewardDropRule" resultMap="RewardDropRuleResult">
         select id, scope, topic_id, scene_key, drop_type, weight, param_json, status, create_time
         from reward_drop_rule

@@ -176,7 +176,7 @@ class ScanContextSharedGateTest {
         refunded.setPaymentStatus(4);
         when(regSvc.selectByverificationCode(CODE)).thenReturn(refunded);
 
-        assertBothEntriesRejectWith("订单未完成支付或已退款,无法核销");
+        assertBothEntriesRejectWith("订单未完成支付或已退款，无法核销");
     }
 
     /** 闸③:活动查不到 ⇒ 两个入口都拒(拿不到 activity 就拿不到 topicId,再往下全是空指针或错表)。 */
@@ -203,7 +203,7 @@ class ScanContextSharedGateTest {
 
         // chapter 入口:③ 专用断言拒掉它
         AjaxResult viaChapter = controller.scanQrCodeChapter(CODE, CHAPTER);
-        assertEquals("该订单不是探索票,请走普通核销", viaChapter.get("msg"));
+        assertEquals("该订单不是探索票，请走普通核销", viaChapter.get("msg"));
 
         // scan_qr_code 入口:必须放行到 ①② 原路(这里扫码人非主办方 ⇒ 明确提示权限与领队团码,
         // 关键是**没有**被「不是探索票」拒 —— 那才是通用闸被污染的信号)

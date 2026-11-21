@@ -19,7 +19,9 @@ class ConsentGuardTest {
         ComplianceProperties versions = new ComplianceProperties();
         versions.setDocVersions(Map.of("photo_model_processing", "v1.0", "voice_clone_processing", "v1.0"));
         ConsentGuard guard = new ConsentGuard(records, versions);
-        assertThrows(ServiceException.class, () -> guard.requireCurrentAgreement(7L, "photo_model_processing", "object_photo"));
+        ServiceException missing = assertThrows(ServiceException.class, () -> guard.requireCurrentAgreement(7L, "photo_model_processing", "object_photo"));
+        assertEquals(400, missing.getCode());
+        assertEquals(Map.of("reason", "PHOTO_MODEL_CONSENT_REQUIRED"), missing.getData());
         ConsentRecord record = new ConsentRecord(); record.setDocVersion("v1.0"); record.setEventType("AGREE");
         when(mapper.selectLatest(7L,"photo_model_processing","object_photo")).thenReturn(record);
         assertDoesNotThrow(() -> guard.requireCurrentAgreement(7L,"photo_model_processing","object_photo"));

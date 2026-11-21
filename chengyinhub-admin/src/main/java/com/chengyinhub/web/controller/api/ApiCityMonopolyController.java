@@ -49,9 +49,35 @@ public class ApiCityMonopolyController extends BaseController {
 
     @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 60, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
     @GetMapping("/territory/map")
-    public AjaxResult map(@RequestParam Double minLat, @RequestParam Double minLng,
-                          @RequestParam Double maxLat, @RequestParam Double maxLng) {
-        return success(service.map(member(), minLat, minLng, maxLat, maxLng));
+    public AjaxResult map(@RequestParam(required = false) Double minLat, @RequestParam(required = false) Double minLng,
+                          @RequestParam(required = false) Double maxLat, @RequestParam(required = false) Double maxLng,
+                          @RequestParam(required = false) String bbox,
+                          @RequestParam(required = false) Boolean includeFree) {
+        // CITY-3: the four bounds, or bbox=minLat,minLng,maxLat,maxLng.
+        if ((minLat == null || minLng == null || maxLat == null || maxLng == null) && bbox != null) {
+            String[] p = bbox.split(",");
+            if (p.length == 4) {
+                try {
+                    minLat = Double.valueOf(p[0].trim());
+                    minLng = Double.valueOf(p[1].trim());
+                    maxLat = Double.valueOf(p[2].trim());
+                    maxLng = Double.valueOf(p[3].trim());
+                } catch (NumberFormatException e) {
+                    throw new CityGameException(400, "BBOX_INVALID", "地图范围无效");
+                }
+            }
+        }
+        if (minLat == null || minLng == null || maxLat == null || maxLng == null) {
+            throw new CityGameException(400, "BBOX_REQUIRED", "缺少地图范围");
+        }
+        // W7 x-fog-monopoly: includeFree=true also lists the unheld places in view (fog rule applies).
+        return success(service.map(member(), minLat, minLng, maxLat, maxLng, Boolean.TRUE.equals(includeFree)));
+    }
+
+    /** CITY-2: whether claims, upgrades, challenges and chance tasks can pass right now, with reason codes. */
+    @GetMapping("/territory/capabilities")
+    public AjaxResult capabilities() {
+        return success(service.capabilities(member()));
     }
 
     @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 60, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
@@ -124,7 +150,7 @@ public class ApiCityMonopolyController extends BaseController {
         return success(service.revenue(member(), cursor, limit));
     }
 
-    /** 积分 HUD summary (balance, pending rent, season earned/spent). There is no separate wallet. */
+    /** 积分 HUD summary (balance, pending and held rent, debt, opening credit, season earned/spent). No separate wallet. */
     @GetMapping("/territory/points")
     public AjaxResult points() {
         return success(service.points(member()));
@@ -146,9 +172,11 @@ public class ApiCityMonopolyController extends BaseController {
         return success(service.leaderboard(member(), scope, seasonId));
     }
 
+    /** CITY-8: opening credit (sink-bound, never 积分); same consent gate as the claims it pays for. */
+    @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 10, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
     @PostMapping("/season/stipend")
     public AjaxResult stipend() {
-        return success(service.stipend(member()));
+        return success(service.stipend(consentedMember()));
     }
 
     @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 20, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)

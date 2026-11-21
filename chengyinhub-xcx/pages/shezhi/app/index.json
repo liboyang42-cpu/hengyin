@@ -1,0 +1,9 @@
+{
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "cy-nav-bar": "/components/cy/nav-bar/index",
+    "cy-page-title": "/components/cy/page-title/index",
+    "cy-cell": "/components/cy/cell/index",
+    "cy-toast": "/components/cy/toast/index"
+  }
+}

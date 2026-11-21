@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.appgaps.CouponCommandReceipts;
 import com.chengyinhub.business.access.merchant.MerchantAccessContext;
@@ -119,7 +121,7 @@ public class ApiCouponController extends BaseController {
 
         }
         if (member_id == 0L) {
-            return error("请登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请登录");
         }
         CouponOperationContext operation = resolveCouponOperation(
                 member_id, MerchantPermission.COUPON_MANAGE, scope);
@@ -166,7 +168,7 @@ public class ApiCouponController extends BaseController {
         }
         Long member_id = currentAppMember();
         if (member_id == null) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (couponCommandReceipts == null) {
             return AjaxResult.error(503, "优惠券命令回执未开放");
@@ -195,7 +197,7 @@ public class ApiCouponController extends BaseController {
                 request == null ? null : request.getPublishCount());
         Long member_id = currentAppMember();
         if (member_id == null) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         CouponOperationContext operation = resolveCouponOperation(
                 member_id, MerchantPermission.COUPON_MANAGE, request.getScope());
@@ -308,7 +310,7 @@ public class ApiCouponController extends BaseController {
         }
         Long member_id = currentAppMember();
         if (member_id == null) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (couponCommandReceipts == null) {
             return AjaxResult.error(503, "优惠券命令回执未开放");
@@ -336,10 +338,10 @@ public class ApiCouponController extends BaseController {
     public AjaxResult stopIssuing(Long couponId, String scope) {
         Long member_id = currentAppMember();
         if (member_id == null) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (couponId == null || couponId <= 0) {
-            return error("参数缺失");
+            return refuse(ErrorCode.BAD_REQUEST, "参数缺失");
         }
         CouponOperationContext operation = resolveCouponOperation(
                 member_id, MerchantPermission.COUPON_MANAGE, scope);
@@ -368,7 +370,7 @@ public class ApiCouponController extends BaseController {
             return CouponCommandReceipts.Outcome.rejected("COUPON_MANUALLY_INVALIDATED", couponId, 3, "该优惠券已被平台手动失效");
         }
         if (Integer.valueOf(4).equals(coupon.getStatus())) {
-            return CouponCommandReceipts.Outcome.rejected("COUPON_ALREADY_STOPPED", couponId, 4, "该优惠券已停发,无需重复操作");
+            return CouponCommandReceipts.Outcome.rejected("COUPON_ALREADY_STOPPED", couponId, 4, "该优惠券已停发，无需重复操作");
         }
         if (!Integer.valueOf(0).equals(coupon.getStatus()) && !Integer.valueOf(1).equals(coupon.getStatus())) {
             return CouponCommandReceipts.Outcome.rejected("COUPON_ENDED", couponId, coupon.getStatus(), "已结束的优惠券无法停发");
@@ -379,7 +381,7 @@ public class ApiCouponController extends BaseController {
             return CouponCommandReceipts.Outcome.rejected("STOP_CAS_NOT_APPLIED", couponId,
                     current == null ? null : current.getStatus(),
                     current != null && Integer.valueOf(4).equals(current.getStatus())
-                            ? "该优惠券已停发,无需重复操作" : "停发失败,请刷新后重试");
+                            ? "该优惠券已停发，无需重复操作" : "停发失败，请刷新后重试");
         }
         logger.info("商家停发优惠券 couponId={} ownerMemberId={} actor={}",
                 couponId, operation.ownerMemberId, member_id);
@@ -391,7 +393,7 @@ public class ApiCouponController extends BaseController {
     public AjaxResult commandReceipt(Long merchantId, String requestId, String scope) {
         Long member_id = currentAppMember();
         if (member_id == null) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (couponCommandReceipts == null) {
             return AjaxResult.error(503, "优惠券命令回执未开放");
@@ -429,7 +431,7 @@ public class ApiCouponController extends BaseController {
 
         }
         if (member_id == 0L) {
-            return error("请登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请登录");
         }
 
         //先更新优惠券过期状态
@@ -523,10 +525,10 @@ public class ApiCouponController extends BaseController {
         } catch (Exception e) {
         }
         if (member_id == null || member_id <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (couponHistoryId == null) {
-            return error("参数缺失");
+            return refuse(ErrorCode.BAD_REQUEST, "参数缺失");
         }
         SmsCouponHistory h = smsCouponHistoryService.selectSmsCouponHistoryById(couponHistoryId);
         if (h == null || (h.getDelFlag() != null && h.getDelFlag() != 0)) {
@@ -534,7 +536,7 @@ public class ApiCouponController extends BaseController {
         }
         // 归属校验:只能出示自己的券
         if (OwnershipUtils.notOwner(h.getMemberId(), member_id)) {
-            return error("无权查看该券");
+            return refuse(ErrorCode.FORBIDDEN, "无权查看该券");
         }
         // 附券展示信息(名称/描述)+ 失效投影,都靠这一次券查询,不多读一遍
         SmsCoupon coupon = smsCouponService.selectSmsCouponById(h.getCouponId());
@@ -571,17 +573,17 @@ public class ApiCouponController extends BaseController {
         } catch (Exception e) {
         }
         if (member_id == null || member_id <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (couponHistoryId == null) {
-            return error("参数缺失");
+            return refuse(ErrorCode.BAD_REQUEST, "参数缺失");
         }
         SmsCouponHistory h = smsCouponHistoryService.selectSmsCouponHistoryById(couponHistoryId);
         if (h == null || (h.getDelFlag() != null && h.getDelFlag() != 0)) {
             return AjaxResult.error(410, "优惠券已撤销或不存在");
         }
         if (OwnershipUtils.notOwner(h.getMemberId(), member_id)) {
-            return error("无权查看该券");
+            return refuse(ErrorCode.FORBIDDEN, "无权查看该券");
         }
         java.util.Map<String, Object> data = new java.util.HashMap<>();
         data.put("useStatus", displayedUseStatus(h, smsCouponService.selectSmsCouponById(h.getCouponId())));
@@ -616,10 +618,10 @@ public class ApiCouponController extends BaseController {
         try {
             member_id = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (member_id == null || member_id <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         CouponOperationContext operation = resolveCouponOperation(
                 member_id, MerchantPermission.VERIFY, scope);
@@ -636,7 +638,7 @@ public class ApiCouponController extends BaseController {
         // F6:不再回落静态 couponCode —— 静态码是永久凭据,截图即可复用,会绕过 60s 时效。
         String credential = StringUtils.isNotBlank(token) ? token : code;
         if (StringUtils.isBlank(credential)) {
-            return error("请输入核销码");
+            return refuse(ErrorCode.BAD_REQUEST, "请输入核销码");
         }
         Long hid = smsCouponService.verifyCouponQrToken(credential);
         if (hid == null) {
@@ -644,15 +646,15 @@ public class ApiCouponController extends BaseController {
         }
         SmsCouponHistory target = smsCouponHistoryService.selectSmsCouponHistoryById(hid);
         if (target == null) {
-            return error("该优惠券不存在");
+            return refuse(ErrorCode.COUPON_NOT_FOUND, "该优惠券不存在");
         }
 
         SmsCoupon coupon = smsCouponService.selectSmsCouponById(target.getCouponId());
         if (coupon == null) {
-            return error("该优惠券不存在");
+            return refuse(ErrorCode.COUPON_NOT_FOUND, "该优惠券不存在");
         }
         if (OwnershipUtils.notOwner(coupon.getMemberId(), ownerMemberId)) {
-            return error("无权核销该优惠券");
+            return refuse(ErrorCode.FORBIDDEN, "无权核销该优惠券");
         }
 
         ISmsCouponHistoryService.RedemptionResult result =
@@ -668,7 +670,7 @@ public class ApiCouponController extends BaseController {
                 data.put("useTime", current == null ? null : current.getUseTime());
                 return AjaxResult.success("该优惠券已核销", data);
             case FORBIDDEN:
-                return error("无权核销该优惠券");
+                return refuse(ErrorCode.FORBIDDEN, "无权核销该优惠券");
             case EXPIRED:
                 return error("该优惠券已过期");
             case DISABLED:
@@ -680,7 +682,7 @@ public class ApiCouponController extends BaseController {
                 return error(usableFrom == null ? "该优惠券尚未到可用时间"
                         : "该优惠券于 " + usableFrom + " 起可使用");
             default:
-                return error("该优惠券不存在");
+                return refuse(ErrorCode.COUPON_NOT_FOUND, "该优惠券不存在");
         }
     }
 
@@ -698,7 +700,7 @@ public class ApiCouponController extends BaseController {
             // 未登录:按既有端点口径如实要求登录,不注入任何假身份
         }
         if (memberId == null || memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         return success(couponUsabilityService.listMine(memberId));
     }

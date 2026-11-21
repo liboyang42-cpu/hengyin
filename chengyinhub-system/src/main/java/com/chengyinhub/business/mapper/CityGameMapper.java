@@ -96,9 +96,17 @@ public interface CityGameMapper {
                          @Param("actorType") String actorType, @Param("rulesHash") String rulesHash, @Param("detailJson") String detailJson);
     List<Map<String, Object>> selectBoardRollAudit(@Param("boardId") String boardId, @Param("limit") int limit);
     List<Map<String, Object>> selectTeamRollAudit(@Param("boardId") String boardId, @Param("teamId") String teamId, @Param("limit") int limit);
+    /**
+     * City Monopoly (CITY-MONOPOLY-SPEC) only: its points economy credits income in 积分 inside its own ledger
+     * (city_points_flow + season debt). The classic territory yield uses its own non-points path and must not use these.
+     */
     int creditMemberPoints(@Param("memberId") long memberId, @Param("points") long points);
     int insertPointsEarnDetail(@Param("memberId") long memberId, @Param("before") long before, @Param("points") long points,
                                @Param("reason") String reason, @Param("businessKey") String businessKey);
+    /** CITY-7: same as {@link #insertPointsEarnDetail} with the governed award source (71-76) as event_type. */
+    int insertPointsEarnDetailTyped(@Param("memberId") long memberId, @Param("before") long before, @Param("points") long points,
+                                    @Param("reason") String reason, @Param("businessKey") String businessKey,
+                                    @Param("eventType") long eventType);
     List<Map<String, Object>> selectRoundRolls(@Param("boardId") String boardId, @Param("teamId") String teamId, @Param("roundSeq") long roundSeq);
     Map<String, Object> selectRoundForUpdate(@Param("boardId") String boardId, @Param("teamId") String teamId, @Param("roundSeq") long roundSeq);
 }

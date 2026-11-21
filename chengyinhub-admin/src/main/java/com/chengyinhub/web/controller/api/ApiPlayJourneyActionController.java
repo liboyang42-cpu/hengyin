@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.service.ITopicRouteRuntimeService;
 import com.chengyinhub.business.service.IWeChatMiniSessionService;
 import com.chengyinhub.business.service.support.WeRunDecryptor;
@@ -46,8 +48,8 @@ public class ApiPlayJourneyActionController extends BaseController {
     @PostMapping("/ask")
     public AjaxResult ask(@RequestBody(required = false) Map<String, Object> body) {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
-        if (topicRouteRuntimeService == null) return error("参数有误");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (topicRouteRuntimeService == null) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         Map<String, Object> input = body == null ? Collections.<String, Object>emptyMap() : body;
         try {
             return success(topicRouteRuntimeService.ask(memberId, longOrZero(input.get("topicId")), optionalActivityId(input),
@@ -61,8 +63,8 @@ public class ApiPlayJourneyActionController extends BaseController {
     @PostMapping("/call")
     public AjaxResult call(@RequestBody(required = false) Map<String, Object> body) {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
-        if (topicRouteRuntimeService == null) return error("参数有误");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (topicRouteRuntimeService == null) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         Map<String, Object> input = body == null ? Collections.<String, Object>emptyMap() : body;
         try {
             return success(topicRouteRuntimeService.call(memberId, longOrZero(input.get("topicId")), optionalActivityId(input),
@@ -101,8 +103,8 @@ public class ApiPlayJourneyActionController extends BaseController {
     @PostMapping("/thought/sync")
     public AjaxResult syncThoughts(@RequestBody(required = false) Map<String, Object> body) {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
-        if (topicRouteRuntimeService == null || body == null) return error("参数有误");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (topicRouteRuntimeService == null || body == null) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         try {
             WeRunDecryptor.WeRunResult reading = null;
             boolean stepsUnavailable = false;
@@ -172,8 +174,8 @@ public class ApiPlayJourneyActionController extends BaseController {
         GameSloResult sloResult = GameSloResult.REJECTED;
         try {
             Long memberId = currentMemberId();
-            if (memberId == null) return error("请先登录");
-            if (topicRouteRuntimeService == null || body == null) return error("参数有误");
+            if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+            if (topicRouteRuntimeService == null || body == null) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
             try {
                 AjaxResult response = success(topicRouteRuntimeService.completeOpening(memberId, longOrZero(body.get("topicId")),
                         longOrZero(body.get("activityId")), longOrZero(body.get("chapterId")),

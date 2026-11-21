@@ -111,7 +111,7 @@ Component({
         if (!this._active(epoch) || this.data.phase !== 'wait') return;
         this._timer = null;
         this._goAt = Date.now();
-        this.setData({ phase: 'go', big: '点!', unit: '', sub: '' });
+        this.setData({ phase: 'go', big: '点！', unit: '', sub: '' });
       }, pickWait());
     },
 

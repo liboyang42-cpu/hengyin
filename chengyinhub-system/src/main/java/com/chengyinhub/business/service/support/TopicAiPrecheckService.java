@@ -116,7 +116,7 @@ public class TopicAiPrecheckService {
                 && ((AiServiceException) cause).getReason() == AiServiceException.Reason.INPUT_BLOCKED) {
             // 入参被内容安全拒:与正式发布的文本内容安全闸同一判据,发布同样会被拦。
             return Collections.singletonList(PublishCheckIssue.error(CODE_AI_PRECHECK_CONTENT_BLOCKED, null,
-                    "主题文字未通过内容安全检测,请修改后再发布"));
+                    "主题文字未通过内容安全检测，请修改后再发布"));
         }
         String reason = cause instanceof AiServiceException
                 ? ((AiServiceException) cause).getReason().name() : String.valueOf(cause);
@@ -139,12 +139,12 @@ public class TopicAiPrecheckService {
                     parseError = true;
                 } else if ("content_security".equals(issue.getType())) {
                     out.add(PublishCheckIssue.error(CODE_AI_PRECHECK_CONTENT_BLOCKED, null,
-                            "主题文字未通过内容安全检测:" + nullToEmpty(issue.getMessage())));
+                            "主题文字未通过内容安全检测：" + nullToEmpty(issue.getMessage())));
                 } else if ("parse_error".equals(issue.getType())) {
                     parseError = true;
                 } else {
                     out.add(PublishCheckIssue.warn(CODE_AI_PRECHECK_RISK, null,
-                            "AI 预检提示:" + nullToEmpty(issue.getMessage())));
+                            "AI 预检提示：" + nullToEmpty(issue.getMessage())));
                 }
             }
         }

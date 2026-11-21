@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantOperationScope;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
@@ -50,9 +52,9 @@ public class ApiMerchantChapterApplicationController extends BaseController {
     @PostMapping("/apply")
     public AjaxResult apply(@RequestBody(required = false) Map<String, Object> body) {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Long chapterId = toLong(body == null ? null : body.get("chapterId"));
-        if (chapterId == null) return error("缺少章节");
+        if (chapterId == null) return refuse(ErrorCode.BAD_REQUEST, "缺少章节");
         String message = toText(body == null ? null : body.get("message"));
         String risk = textRisk(memberId, message);
         if (risk != null) return error(risk);
@@ -76,9 +78,9 @@ public class ApiMerchantChapterApplicationController extends BaseController {
     @PostMapping("/withdraw")
     public AjaxResult withdraw(@RequestBody(required = false) Map<String, Object> body) {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Long applicationId = toLong(body == null ? null : body.get("applicationId"));
-        if (applicationId == null) return error("缺少申请");
+        if (applicationId == null) return refuse(ErrorCode.BAD_REQUEST, "缺少申请");
         try {
             MerchantChapterApplication application = merchantChapterApplicationService.withdraw(
                     applicationId, merchantOwnerMemberId(memberId));
@@ -98,9 +100,9 @@ public class ApiMerchantChapterApplicationController extends BaseController {
     @PostMapping("/invitable")
     public AjaxResult invitable(@RequestBody(required = false) Map<String, Object> body) {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Long topicId = toLong(body == null ? null : body.get("topicId"));
-        if (topicId == null) return error("缺少主题");
+        if (topicId == null) return refuse(ErrorCode.BAD_REQUEST, "缺少主题");
         // 定位可选:给了就按距离从近到远排,没给(拒绝授权/取不到)仍按原顺序返回,不当错误。
         Double lat = toDouble(body == null ? null : body.get("latitude"));
         Double lng = toDouble(body == null ? null : body.get("longitude"));
@@ -117,12 +119,12 @@ public class ApiMerchantChapterApplicationController extends BaseController {
     @PostMapping("/invite")
     public AjaxResult invite(@RequestBody(required = false) Map<String, Object> body) {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Long chapterId = toLong(body == null ? null : body.get("chapterId"));
         Long merchantMemberId = toLong(body == null ? null : body.get("merchantMemberId"));
         Long replacementOfOfferId = toLong(body == null ? null : body.get("replacementOfOfferId"));
-        if (chapterId == null) return error("缺少章节");
-        if (merchantMemberId == null) return error("请选择商家");
+        if (chapterId == null) return refuse(ErrorCode.BAD_REQUEST, "缺少章节");
+        if (merchantMemberId == null) return refuse(ErrorCode.BAD_REQUEST, "请选择商家");
         String inviteRisk = textRisk(memberId, toText(body == null ? null : body.get("message")));
         if (inviteRisk != null) return error(inviteRisk);
         try {
@@ -143,8 +145,8 @@ public class ApiMerchantChapterApplicationController extends BaseController {
         Long memberId = currentMemberId();
         Long applicationId = toLong(body == null ? null : body.get("applicationId"));
         Boolean accepted = toBoolean(body == null ? null : body.get("accepted"));
-        if (memberId == null) return error("请先登录");
-        if (applicationId == null || accepted == null) return error("请选择邀请及处理方式");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (applicationId == null || accepted == null) return refuse(ErrorCode.BAD_REQUEST, "请选择邀请及处理方式");
         try {
             Long owner = merchantOwnerMemberId(memberId);
             return success(merchantChapterApplicationService.respondInvite(applicationId, owner, accepted));
@@ -159,8 +161,8 @@ public class ApiMerchantChapterApplicationController extends BaseController {
     public AjaxResult revokeInvite(@RequestBody(required = false) Map<String, Object> body) {
         Long memberId = currentMemberId();
         Long applicationId = toLong(body == null ? null : body.get("applicationId"));
-        if (memberId == null) return error("请先登录");
-        if (applicationId == null) return error("请选择邀请");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (applicationId == null) return refuse(ErrorCode.BAD_REQUEST, "请选择邀请");
         try {
             Long owner = publisherMemberId(memberId, body);
             return success(merchantChapterApplicationService.revokeInvite(applicationId, owner));
@@ -175,11 +177,11 @@ public class ApiMerchantChapterApplicationController extends BaseController {
     @PostMapping("/audit")
     public AjaxResult audit(@RequestBody(required = false) Map<String, Object> body) {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Long applicationId = toLong(body == null ? null : body.get("applicationId"));
         Boolean approved = toBoolean(body == null ? null : body.get("approved"));
-        if (applicationId == null) return error("缺少申请");
-        if (approved == null) return error("缺少审核结果");
+        if (applicationId == null) return refuse(ErrorCode.BAD_REQUEST, "缺少申请");
+        if (approved == null) return refuse(ErrorCode.BAD_REQUEST, "缺少审核结果");
         String auditRemark = toText(body == null ? null : body.get("auditRemark"));
         String remarkRisk = textRisk(memberId, auditRemark);
         if (remarkRisk != null) return error(remarkRisk);
@@ -198,9 +200,9 @@ public class ApiMerchantChapterApplicationController extends BaseController {
     @PostMapping("/owner-list")
     public AjaxResult ownerList(@RequestBody(required = false) Map<String, Object> body) {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Long topicId = toLong(body == null ? null : body.get("topicId"));
-        if (topicId == null) return error("缺少主题");
+        if (topicId == null) return refuse(ErrorCode.BAD_REQUEST, "缺少主题");
         try {
             List<MerchantChapterApplication> rows = merchantChapterApplicationService.selectForTopic(
                     topicId, publisherMemberId(memberId, body));
@@ -216,7 +218,7 @@ public class ApiMerchantChapterApplicationController extends BaseController {
     @PostMapping("/owner-mine")
     public AjaxResult ownerMine(@RequestBody(required = false) Map<String, Object> body) {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             return AjaxResult.success(merchantChapterApplicationService.selectForPublisher(
                     publisherMemberId(memberId, body)));
@@ -231,7 +233,7 @@ public class ApiMerchantChapterApplicationController extends BaseController {
     @PostMapping("/mine")
     public AjaxResult mine() {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             return AjaxResult.success(merchantChapterApplicationService.selectMine(
                     merchantOwnerMemberId(memberId)));

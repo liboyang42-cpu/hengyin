@@ -36,7 +36,7 @@
         <bouncycastle.version>1.86</bouncycastle.version>
         <okhttp.version>4.12.0</okhttp.version>
         <okio.version>3.6.0</okio.version>
-        <jwt.version>0.9.1</jwt.version>
+        <jwt.version>0.13.0</jwt.version>
         <!-- override dependency version -->
 <!--        <lombok.version>1.18.26</lombok.version>-->
         <springdoc.version>3.1.1</springdoc.version>
@@ -47,7 +47,7 @@
         <!-- Same-minor security floors: see docs/upgrade/java21-boot41-candidate.md. -->
         <jackson2.version>2.21.7</jackson2.version>
         <jackson3.version>3.1.7</jackson3.version>
-        <tomcat.version>11.0.26</tomcat.version>
+        <tomcat.version>11.0.27</tomcat.version>
     </properties>
 
     <!-- 依赖声明 -->
@@ -69,7 +69,7 @@
                 <scope>import</scope>
             </dependency>
 
-            <!-- Apache September security fixes; keep every managed Tomcat module aligned. -->
+            <!-- Apache security fixes (11.0.27 fixes CVE-2026-103119/101296/101356/93446/88041); keep every managed Tomcat module aligned. -->
             <dependency>
                 <groupId>org.apache.tomcat</groupId>
                 <artifactId>tomcat-annotations-api</artifactId>
@@ -251,9 +251,20 @@
             </dependency>
 
             <!-- Token生成与解析-->
+            <!-- SEC-03: jjwt 0.13 (maintained line); session-key compatibility in SessionJwt. -->
             <dependency>
                 <groupId>io.jsonwebtoken</groupId>
-                <artifactId>jjwt</artifactId>
+                <artifactId>jjwt-api</artifactId>
+                <version>${jwt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-impl</artifactId>
+                <version>${jwt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-jackson</artifactId>
                 <version>${jwt.version}</version>
             </dependency>
 
@@ -289,6 +300,13 @@
             <dependency>
                 <groupId>com.chengyinhub</groupId>
                 <artifactId>chengyinhub-system</artifactId>
+                <version>${chengyinhub.version}</version>
+            </dependency>
+
+            <!-- TEST-only E2E providers; see chengyinhub-e2e/pom.xml (R9 BE-16) -->
+            <dependency>
+                <groupId>com.chengyinhub</groupId>
+                <artifactId>chengyinhub-e2e</artifactId>
                 <version>${chengyinhub.version}</version>
             </dependency>
 
@@ -336,6 +354,7 @@
         <module>chengyinhub-quartz</module>
         <module>chengyinhub-generator</module>
         <module>chengyinhub-common</module>
+        <module>chengyinhub-e2e</module>
     </modules>
     <packaging>pom</packaging>
 

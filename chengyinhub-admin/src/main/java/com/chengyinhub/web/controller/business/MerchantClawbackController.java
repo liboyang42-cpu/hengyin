@@ -60,7 +60,7 @@ public class MerchantClawbackController extends BaseController {
         BigDecimal amount = body.get("amount") == null ? null : new BigDecimal(String.valueOf(body.get("amount")));
         try {
             MerchantClawbackApplication a = merchantClawbackService.initiate(merchantMemberId, reason, amount, getUsername());
-            return AjaxResult.success("已发起,待复核", a);
+            return AjaxResult.success("已发起，待复核", a);
         } catch (IllegalArgumentException e) {
             return AjaxResult.error(e.getMessage());
         }
@@ -79,7 +79,7 @@ public class MerchantClawbackController extends BaseController {
         try {
             return merchantClawbackService.confirmExecute(id, getUsername())
                     ? AjaxResult.success("已执行")
-                    : AjaxResult.error("执行失败:该申请已不是待复核状态(可能已执行或已驳回)");
+                    : AjaxResult.error("执行失败：该申请已不是待复核状态(可能已执行或已驳回)");
         } catch (IllegalStateException e) {
             return AjaxResult.error(e.getMessage());
         }
@@ -96,7 +96,7 @@ public class MerchantClawbackController extends BaseController {
         try {
             return merchantClawbackService.reject(id, getUsername(), rejectReason)
                     ? AjaxResult.success("已驳回")
-                    : AjaxResult.error("驳回失败:该申请已不是待复核状态");
+                    : AjaxResult.error("驳回失败：该申请已不是待复核状态");
         } catch (IllegalArgumentException e) {
             return AjaxResult.error(e.getMessage());
         }

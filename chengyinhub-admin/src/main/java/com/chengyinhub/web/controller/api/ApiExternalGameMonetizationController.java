@@ -123,6 +123,19 @@ public class ApiExternalGameMonetizationController extends BaseController {
         return success(monetization.submitResult(requireMember(), sessionId, body));
     }
 
+    /** W7 GAME-9: the creator's own result key for their game server. Shown once; calling again rotates it. */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.business.externalgame.ExternalGameResultKeyService resultKeys;
+
+    @Operation(summary = "创作者领取或更换自己游戏的成绩密钥（只显示一次）")
+    @RateLimiter(time = 60, count = 5, limitType = LimitType.MEMBER)
+    @PostMapping("/creator/games/{gameId}/result-key")
+    public AjaxResult issueResultKey(@PathVariable String gameId) {
+        long member = requireMember();
+        if (resultKeys == null) throw AppGapException.conflict("RESULT_KEY_NOT_CONFIGURED", "平台还没有开通成绩密钥，请稍后再试");
+        return success(resultKeys.issue(member, gameId));
+    }
+
     private Long optionalMember() {
         try {
             return getAppUserId();

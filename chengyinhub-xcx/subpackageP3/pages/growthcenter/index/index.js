@@ -4,6 +4,7 @@
 const app = getApp()
 const { recoverReadSession } = require('../../../../utils/session/login-reload.js')
 const { buildGrowthOverview } = require('../../../utils/growth-overview.js')
+const { shapeDailyBoard } = require('../../../utils/daily-board.js')
 const { chinaParts } = require('../../../../utils/datetime.js'); const pageMotion = require('../../../../utils/page-motion.js')
 
 function fmt(n) {
@@ -148,6 +149,7 @@ Page({
   rankErrorKind: 'data',
   errorMsg: '',
   data: {
+    daily: { show: false, missions: null, streak: null }, // P7 今日任务 + 连续天数(服务端下发才显示)
     growthAuthRequired: false,
     growthAccessDenied: false,
     rankState: 'loading', // loading | refreshing | ready | stale-error | error
@@ -250,6 +252,7 @@ Page({
       this.setData({ me: null, rankLoaded: false, scoreText: '—', overviewLoaded: false, badges: [],
         overview: buildGrowthOverview({}), overviewAvailable: {center:false,play:false,completed:false},
         showBadges: false, showBadgeEmpty: false, expandedBadge: '', badgeAnnouncement: '', celebrationEvent: '',
+        daily: { show: false, missions: null, streak: null },
         growthAuthRequired: !owner || owner === '0', growthAccessDenied: false })
     }
     return owner && owner !== '0' ? owner : ''
@@ -489,7 +492,16 @@ Page({
         badgeLoadError: !hasBadgeSource
       })
       if (!this.data.overviewLoaded) { pageMotion.enter(this, 'pmPage'); pageMotion.countIn(this, 'gcK') } // 2026-10-23:足迹与徽章行依次浮上来
+      // P7 今日任务 + 连续天数:两条来源各自读到才换;没读到保留上一次,首次就不显示(不伪装成 0)
+      const freshDaily = shapeDailyBoard(validSources[0] ? center.data : null, validSources[1] ? play.data : null)
+      const prevDaily = this.data.daily || {}
+      const daily = {
+        missions: validSources[0] ? freshDaily.missions : (prevDaily.missions || null),
+        streak: validSources[1] ? freshDaily.streak : (prevDaily.streak || null)
+      }
+      daily.show = !!(daily.missions || daily.streak)
       this.setData({
+        daily,
         overview,
         overviewAvailable: hadOverview && !allSuccess ? this.data.overviewAvailable : {
           center: validSources[0], play: validSources[1], completed: validSources[2]

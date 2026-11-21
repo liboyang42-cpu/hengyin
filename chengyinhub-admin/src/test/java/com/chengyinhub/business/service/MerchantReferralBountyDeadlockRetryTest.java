@@ -283,6 +283,10 @@ class MerchantReferralBountyDeadlockRetryTest {
         ReflectionTestUtils.setField(service, "umsMemberService", umsMemberService);
         ReflectionTestUtils.setField(service, "balanceDetailMapper", detailMapper);
         ReflectionTestUtils.setField(service, "umsMemberMapper", umsMemberMapper);
+        ReflectionTestUtils.setField(service, "autoPay", true);
+        ReflectionTestUtils.setField(service, "cashPayoutSwitch",
+                new com.chengyinhub.business.service.rewardpledge.CashPayoutSwitch(true, true,
+                        com.chengyinhub.business.moneyswitch.MoneyGateTestSupport.openGate()));
         return service;
     }
 

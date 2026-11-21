@@ -67,6 +67,17 @@ public class ClubMemberServiceImpl implements IClubMemberService
     @Autowired
     private IImService imService;
 
+    /** W7 x-channel-reach (SOC-2): a new member gets rows in the club channels they can see (after commit). */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.channel.platform.ChannelMembershipSync channelMembership;
+
+    private void enrollInClubChannels(Long clubId, Long memberId)
+    {
+        if (channelMembership == null || clubId == null || memberId == null) return;
+        channelMembership.memberJoinedAfterCommit(
+                com.chengyinhub.business.service.channel.platform.ChannelGuildAccess.GUILD_CLUB, clubId, memberId);
+    }
+
     @Override
     public boolean topicHasOrganizer(Long topicId) {
         if (topicId == null) {
@@ -280,6 +291,22 @@ public class ClubMemberServiceImpl implements IClubMemberService
     }
 
     @Override
+    public java.util.List<String> selectHeroAvatars(Long clubId, Long ownerId, int limit)
+    {
+        if (clubId == null || limit <= 0) return java.util.Collections.emptyList();
+        java.util.List<String> rows = clubMemberMapper.selectHeroAvatars(clubId, ownerId, Math.min(limit, 10));
+        java.util.List<String> safe = new java.util.ArrayList<String>();
+        if (rows == null) return safe;
+        for (String raw : rows)
+        {
+            String url = raw == null ? "" : raw.trim();
+            // Only absolute web URLs reach the app; anything else falls back to the plain placeholder.
+            if (url.startsWith("https://") || url.startsWith("http://")) safe.add(url);
+        }
+        return safe;
+    }
+
+    @Override
     public int countEffectiveMembers(Club club)
     {
         if (club == null || club.getId() == null) {
@@ -339,6 +366,7 @@ public class ClubMemberServiceImpl implements IClubMemberService
             clubMemberMapper.insertClubMember(clubMember);
         }
         clubMapper.updateMemberCount(clubMember.getClubId(), 1);
+        enrollInClubChannels(clubMember.getClubId(), clubMember.getMemberId());
         return true;
     }
 
@@ -415,6 +443,7 @@ public class ClubMemberServiceImpl implements IClubMemberService
 
         if (!approvalRequired) {
             clubMapper.updateMemberCount(clubId, 1);
+            enrollInClubChannels(clubId, memberId);
             return JOIN_STATE_JOINED;
         }
         return JOIN_STATE_PENDING;
@@ -456,6 +485,7 @@ public class ClubMemberServiceImpl implements IClubMemberService
             clubParticipationGuard.requireAllowed(clubId, memberId);
             clubMemberMapper.updateMembershipState(pending.getId(), 1, 0, new java.util.Date());
             clubMapper.updateMemberCount(clubId, 1);
+            enrollInClubChannels(clubId, memberId);
         } else {
             clubMemberMapper.updateMembershipState(pending.getId(), 2, 0, null);
         }
@@ -645,6 +675,10 @@ public class ClubMemberServiceImpl implements IClubMemberService
         if ("pace".equals(sortBy)) {
             return row.get("pace") != null;
         }
+        String countKey = countBoardKey(sortBy);
+        if (countKey != null) {
+            return toDecimal(row.get(countKey)).compareTo(BigDecimal.ZERO) > 0;
+        }
         // composite(含非法/缺省 sortBy,与 comparatorFor 的回落口径一致):加权分 > 0
         return toDecimal(row.get("score")).compareTo(BigDecimal.ZERO) > 0;
     }
@@ -652,6 +686,12 @@ public class ClubMemberServiceImpl implements IClubMemberService
     /** sortBy 白名单;非法/缺省一律回落 composite。memberId 兜底保证同分时顺序稳定(否则分页/测试会飘)。 */
     private static Comparator<Map<String, Object>> comparatorFor(String sortBy)
     {
+        String countKey = countBoardKey(sortBy);
+        if (countKey != null) {
+            return Comparator.<Map<String, Object>, BigDecimal>comparing(r -> toDecimal(r.get(countKey)))
+                    .reversed()
+                    .thenComparing(ClubMemberServiceImpl::memberIdOf);
+        }
         if ("pace".equals(sortBy)) {
             // 配速升序 = 快的靠前。无配速(零里程)沉底。
             return Comparator.<Map<String, Object>, BigDecimal>comparing(
@@ -673,6 +713,18 @@ public class ClubMemberServiceImpl implements IClubMemberService
         return Comparator.<Map<String, Object>, BigDecimal>comparing(r -> toDecimal(r.get("score")))
                 .reversed()
                 .thenComparing(ClubMemberServiceImpl::memberIdOf);
+    }
+
+    /**
+     * club-ops CLB-13:任何俱乐部都适用的计数榜。events = 到场场次,checkins = 打卡次数,hosted = 带队场次。
+     * 不是计数榜时回 null。
+     */
+    public static String countBoardKey(String sortBy)
+    {
+        if ("events".equals(sortBy)) return "attendedCount";
+        if ("checkins".equals(sortBy)) return "checkinCount";
+        if ("hosted".equals(sortBy)) return "hostedSessions";
+        return null;
     }
 
     private static Long memberIdOf(Map<String, Object> r)

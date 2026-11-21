@@ -135,6 +135,10 @@ public class RefundServiceImpl implements IRefundService {
     @Autowired
     private com.chengyinhub.business.service.support.SettlementDebtLedger settlementDebtLedger;
 
+    /** S2 collection model: a split-collected sale was never credited to a wallet, so there is nothing to claw back there. */
+    @Autowired(required = false)
+    private com.chengyinhub.business.collection.CollectionSplitSettlementService collectionSplitSettlement;
+
     @Autowired
     private UmsMemberMapper umsMemberMapper;
 
@@ -758,11 +762,11 @@ public class RefundServiceImpl implements IRefundService {
         }
         List<CmsRegistration> order = cmsRegistrationMapper.selectByParentOrderNoForUpdate(payer.getParentOrderNo(), Long.valueOf(2L).equals(payer.getOwnerType()) ? payer.getOwnerId() : null);
         if (order == null || order.isEmpty()) {
-            throw new ServiceException("父订单报名快照为空,请人工核对", HttpStatus.CONFLICT);
+            throw new ServiceException("父订单报名快照为空，请人工核对", HttpStatus.CONFLICT);
         }
         for (CmsRegistration m : order) {
             if (Integer.valueOf(2).equals(m.getPaymentStatus()) && Integer.valueOf(1).equals(m.getVerificationStatus())) {
-                throw new ServiceException("同单有票已核销,不能按整单退款,请走人工退款工单", HttpStatus.CONFLICT);
+                throw new ServiceException("同单有票已核销，不能按整单退款，请走人工退款工单", HttpStatus.CONFLICT);
             }
         }
         BigDecimal remaining = OrderRefundCash.remaining(order, payer, this, refund.getId());
@@ -1549,7 +1553,10 @@ public class RefundServiceImpl implements IRefundService {
             // 客诉期提现闸:结算时涉诉暂扣、尚未补结的报名单,商家没拿到这单的钱 ⇒ 不扣。
             boolean paid = activity != null && Integer.valueOf(1).equals(activity.getIsSettlement())
                     && (registration.getId() == null
-                        || activitySettlementHoldMapper.countHeldByRegistrationId(registration.getId()) == 0);
+                        || activitySettlementHoldMapper.countHeldByRegistrationId(registration.getId()) == 0)
+                    // S2: the platform take on a split sale is returned by profit-sharing return before the refund
+                    // (EcommercePartnerPaymentAdapter#submitRefund); no wallet was credited, so none is debited.
+                    && !(collectionSplitSettlement != null && collectionSplitSettlement.isSplitCollected(registration.getId()));
             Set<Long> paidCreators = paid
                     ? positiveIncomeReceivers(settledList, 6L, parentId) : new HashSet<Long>();
             return settled -> paid && (!"creator".equals(settled.getReceiverType())

@@ -56,6 +56,7 @@ class PlayTeamInviteQrcodeTest {
 
         assertEquals("READY", result.get("qrState"));
         assertEquals("https://oss.example/qr.png", result.get("qrcodeUrl"));
+        assertEquals("https://www.chengyinhub.com/door?scene=tm." + NEW_CODE, result.get("linkQr"));
         assertEquals(NEW_CODE, result.get("inviteCode"));
         assertEquals(TEAM_ID, result.get("teamId"));
     }
@@ -80,6 +81,8 @@ class PlayTeamInviteQrcodeTest {
 
         assertEquals("UNAVAILABLE", result.get("qrState"));
         assertFalse(result.containsKey("qrcodeUrl"));
+        assertEquals("https://www.chengyinhub.com/door?scene=tm." + NEW_CODE, result.get("linkQr"),
+                "ONB-5:标准链接码不依赖微信接口,降级时照样给");
         assertEquals(NEW_CODE, result.get("inviteCode"));
     }
 
@@ -92,6 +95,7 @@ class PlayTeamInviteQrcodeTest {
 
         assertEquals("UNAVAILABLE", result.get("qrState"));
         verify(wxacode, never()).getOrCreateScene(anyString());
+        assertFalse(result.containsKey("linkQr"));
     }
 
     @Test

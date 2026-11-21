@@ -57,6 +57,15 @@ public class ChannelGuildAccess
         return memberId == toLong(team.get("ownerId")) ? GuildStanding.OWNER : GuildStanding.MEMBER;
     }
 
+    /** W7 SOC-6: the owner of a live club (the host of events its admins post); 0 when there is none. */
+    public long clubOwnerId(long clubId)
+    {
+        if (clubId <= 0) return 0L;
+        Map<String, Object> club = mapper.selectClubGuild(clubId);
+        if (club == null || toLong(club.get("status")) != 1L || toLong(club.get("delFlag")) != 0L) return 0L;
+        return toLong(club.get("ownerId"));
+    }
+
     public GuildStanding requireMember(int guildKind, long guildId, long memberId)
     {
         GuildStanding standing = standing(guildKind, guildId, memberId);
@@ -100,7 +109,7 @@ public class ChannelGuildAccess
         if (standing == GuildStanding.NONE) return 0L;
         RoleProfile profile = roles(channel.getGuildKind(), channel.getGuildId(), memberId);
         return ChannelPermissionCalculator.effective(standing, profile.permissions(), profile.roleIds(), overwrites,
-                channel.getStatus() == null ? -1 : channel.getStatus());
+                channel.getStatus() == null ? -1 : channel.getStatus(), channel.getKind() == null ? -1 : channel.getKind());
     }
 
     /** 空间级能力（不看单频道覆盖）：管理频道/角色/审计/进度等。 */

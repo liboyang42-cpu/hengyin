@@ -18,6 +18,7 @@ import com.chengyinhub.business.mapper.StoreVerifyGrowthDeliveryMapper;
 import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.service.IGrowthService;
 import com.chengyinhub.business.service.IUmsMemberService;
+import com.chengyinhub.business.service.support.DailyMissionBoardReader;
 import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.utils.DateUtils;
 import com.chengyinhub.common.utils.StringUtils;
@@ -61,6 +62,9 @@ public class GrowthServiceImpl implements IGrowthService {
     @Autowired
     private StoreVerifyGrowthDeliveryMapper storeVerifyGrowthDeliveryMapper;
 
+    @Autowired(required = false)
+    private DailyMissionBoardReader dailyMissionBoardReader;
+
     @Override
     public MemberGrowthCenterVO getCenter(Long memberId) {
         if (memberId == null) {
@@ -85,6 +89,14 @@ public class GrowthServiceImpl implements IGrowthService {
         vo.setMissions(nullToEmpty(growthMissionMapper.selectActiveMissionList()));
         vo.setProgress(nullToEmpty(growthMissionProgressMapper.selectMemberProgress(memberId)));
         vo.setBadges(nullToEmpty(playerBadgeMapper.selectListByMember(memberId)));
+        // P7(GRO-06):今日任务板。读失败不拖垮成长中心,daily 留空,客户端显示「暂时读不到」。
+        if (dailyMissionBoardReader != null) {
+            try {
+                vo.setDaily(dailyMissionBoardReader.board(memberId));
+            } catch (RuntimeException e) {
+                vo.setDaily(null);
+            }
+        }
         return vo;
     }
 
@@ -100,6 +112,7 @@ public class GrowthServiceImpl implements IGrowthService {
         Date weekEnd = weekStart == null ? null
                 : Date.from(weekStart.toInstant().atZone(ZoneId.systemDefault()).plusWeeks(1).toInstant());
 
+        boolean guest = memberId <= 0;
         boolean exp = "exp".equals(metric);
         boolean week = "week".equals(period);
 
@@ -107,16 +120,16 @@ public class GrowthServiceImpl implements IGrowthService {
         Map<String, Object> myRank;
         if (exp && week) {
             list = memberLeaderboardMapper.selectExpWeekTop(weekStart, weekEnd, limit);
-            myRank = memberLeaderboardMapper.selectExpWeekMyRank(memberId, weekStart, weekEnd);
+            myRank = guest ? null : memberLeaderboardMapper.selectExpWeekMyRank(memberId, weekStart, weekEnd);
         } else if (exp) {
             list = memberLeaderboardMapper.selectExpTotalTop(limit);
-            myRank = memberLeaderboardMapper.selectExpTotalMyRank(memberId);
+            myRank = guest ? null : memberLeaderboardMapper.selectExpTotalMyRank(memberId);
         } else if (week) {
             list = memberLeaderboardMapper.selectPointWeekTop(weekStart, limit);
-            myRank = memberLeaderboardMapper.selectPointWeekMyRank(memberId, weekStart);
+            myRank = guest ? null : memberLeaderboardMapper.selectPointWeekMyRank(memberId, weekStart);
         } else {
             list = memberLeaderboardMapper.selectPointTotalTop(limit);
-            myRank = memberLeaderboardMapper.selectPointTotalMyRank(memberId);
+            myRank = guest ? null : memberLeaderboardMapper.selectPointTotalMyRank(memberId);
         }
 
         list = nullToEmpty(list);
@@ -129,7 +142,7 @@ public class GrowthServiceImpl implements IGrowthService {
         vo.setMetric(metric);
         vo.setPeriod(period);
         vo.setList(list);
-        vo.setMe(buildMe(memberId, myRank));
+        if (!guest) vo.setMe(buildMe(memberId, myRank));
         return vo;
     }
 
@@ -200,8 +213,23 @@ public class GrowthServiceImpl implements IGrowthService {
         if (mission != null && "store_verify".equals(mission.getTriggerEvent())) {
             throw new ServiceException("该任务需完成到店核验后由系统发放");
         }
+        // P7:每日任务由系统按真实事件自动记录,自报通道不能代替走路/点亮/游玩/到店。
+        if (mission != null && DailyMissionBoardReader.isAutoTracked(mission.getTriggerEvent())) {
+            throw new ServiceException("该任务完成后会自动记录");
+        }
         // 自助上报通道不接受前端传入的 bizType/bizId，否则用户可通过变更 bizId 绕过幂等键反复刷奖励。
         // 需要按真实业务核销发奖的场景，应由服务端在动作完成后调用 applyEvent，bizId 由服务端生成。
+        return completeMission(memberId, mission, null, null);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int completeDailyMission(Long memberId, GrowthMission mission) {
+        if (memberId == null || memberId <= 0 || mission == null
+                || !DailyMissionBoardReader.isAutoTracked(mission.getTriggerEvent())) {
+            return 0;
+        }
+        // 与自报通道同一幂等键(biz_type=''、biz_id=0、当天):同一任务一天只发一次,奖励取 exp_reward 现有配置。
         return completeMission(memberId, mission, null, null);
     }
 

@@ -9,6 +9,7 @@ const { buildActionKey, buildUnitId } = require('../../utils/play-action-key.js'
 const { canContinue, isR5, feedbackWritable } = require('../../utils/playkit-r5-segments.js');
 
 const { bundledMerchantGameAudioPath } = require('../../utils/merchant-game-assets.js');
+const shopGameRunner = require('../../utils/shop-game-runner.js');
 
 Component({
   properties: {
@@ -18,7 +19,9 @@ Component({
     activityId: { type: null, value: '' },
     topicId: { type: null, value: '' },
     preview: { type: Boolean, value: false },
-    mock: { type: Boolean, value: false }
+    mock: { type: Boolean, value: false },
+    // W7 x-shop-game-runner:有值时这是店铺小游戏的一局(没有旅程),start/state/action 走这局自己的会话路由。
+    shopPlayId: { type: null, value: '' }
   },
   data: {
     loading: false,
@@ -27,6 +30,7 @@ Component({
     // unknown：请求已发出但结果未知。不是失败，也不能当成功——保持锁定，
     // 所有局只读原请求回执；负向查询不解除未知状态。
     unknown: false,
+    photoRetryable: false,
     unknownText: '',
     readingBack: false,
     state: null,
@@ -80,6 +84,8 @@ Component({
       return (same || retry) && (state.nodeId == null || !context.nodeId || String(state.nodeId) === context.nodeId);
     },
     request(url, method, data) {
+      // W7 x-shop-game-runner:店铺小游戏一局只走这局自己的会话路由,见 shopRequest。
+      if (this.data.shopPlayId) return this.shopRequest(url, method, data, this.data.shopPlayId);
       return new Promise((resolve, reject) => app.sendRequest({
         hideLoading: true,
         url,
@@ -87,9 +93,29 @@ Component({
         data: method === 'GET' ? data : JSON.stringify(data || {}),
         header: method === 'GET' ? undefined : { 'Content-Type': 'application/json' },
         success: resolve,
-        successStatusAbnormal: reject,
+        successStatusAbnormal: resolve,
         fail: reject
       }));
+    },
+    /** 店铺小游戏:组件的 start/state/action 换成这局自己的会话路由(开局不带旅程 id),其他路由不发;
+     *  成功回包在本机补上这局的本地身份(见 utils/shop-game-runner.js)。 */
+    shopRequest(url, method, data, shopPlayId) {
+      const mapped = shopGameRunner.mapRequest(url, method, data, shopPlayId);
+      if (!mapped) return Promise.resolve(shopGameRunner.refusal());
+      const done = (res) => shopGameRunner.identify(res, shopPlayId);
+      if (mapped.route === 'start') {
+        return new Promise((resolve, reject) => app.sendRequest({ hideLoading: true,
+          url: '/api/shop-games/plays/' + Number(shopPlayId) + '/session', method: 'POST', data: '{}',
+          header: { 'Content-Type': 'application/json' }, success: resolve, successStatusAbnormal: resolve, fail: reject })).then(done);
+      }
+      if (mapped.route === 'state') {
+        return new Promise((resolve, reject) => app.sendRequest({ hideLoading: true,
+          url: '/api/shop-games/sessions/state', method: 'GET', data: mapped.data,
+          success: resolve, successStatusAbnormal: resolve, fail: reject })).then(done);
+      }
+      return new Promise((resolve, reject) => app.sendRequest({ hideLoading: true,
+        url: '/api/shop-games/sessions/action', method: 'POST', data: JSON.stringify(mapped.data || {}),
+        header: { 'Content-Type': 'application/json' }, success: resolve, successStatusAbnormal: resolve, fail: reject })).then(done);
     },
     pendingKey() {
       const scope = this.sessionRequestContext();
@@ -131,10 +157,11 @@ Component({
       }
       const scope = { activityId: integer(this.data.activityId || 0),
         topicId: integer(this.data.topicId || 0), nodeId: integer(node.nodeId || 0) };
-      if (Object.values(scope).some(value => !value)) {
+      if (this.data.shopPlayId) scope.activityId = 0;
+      if (Object.entries(scope).some(([key, value]) => !value && !(key === 'activityId' && this.data.shopPlayId))) {
         this.setData({ loading: false, error: '玩法标识不完整，请重新进入' }); return;
       }
-      this.setData({ loading: true, acting: false, unknown: false, readingBack: false, error: '', state: null });
+      this.setData({ loading: true, acting: false, unknown: false, photoRetryable: false, readingBack: false, error: '', state: null });
       let restored;
       try { restored = photoPending.read(wx, context); }
       catch (error) { this.setData({ loading: false, unknown: true, error: error.message }); return; }
@@ -201,9 +228,10 @@ Component({
       });
     },
     /** 这一步没提交成功:页面据此让拍物成卡那一屏回到取景,别让玩家对着「处理中」干等。 */
-    emitActionFail(action, sessionId) {
-      this.triggerEvent('actionfail', { action: action || '',
-        sessionId: sessionId == null ? (this.data.state || {}).sessionId : sessionId });
+    emitActionFail(action, sessionId, reason) {
+      const detail = { action: action || '', sessionId: sessionId == null ? (this.data.state || {}).sessionId : sessionId };
+      if (reason) detail.reason = reason;
+      this.triggerEvent('actionfail', detail);
     },
     staleSnapshot(state) {
       const current = this.data.state || {};
@@ -253,18 +281,20 @@ Component({
           || !(['FAILED', 'EXPIRED'].includes(state.status) || state.status === 'COMPLETED' && !!state.challenge)) return false;
       return this.action('RETRY', {});
     },
-    action(name, payload) {
+    action(name, payload, originalPhoto) {
       if (this.data.acting || this.data.unknown || !this.data.state) return;
+      if (originalPhoto && (name !== 'SUBMIT_PHOTO_CHECK' || originalPhoto !== this._unknownCommand
+          || String(originalPhoto.sessionId) !== String(this.data.state.sessionId))) return;
       if (name === 'CHOOSE' && isR5(this.data.state)
           && !feedbackWritable(this.data.state, { stepId: (this.data.currentStep || {}).id })) return;
       if (this.data.preview || this.data.mock) return this.previewAction(name, payload || {});
       const context = this.sessionRequestContext();
-      const sessionId = this.data.state.sessionId;
-      const version = this.data.state.version;
+      const sessionId = originalPhoto ? originalPhoto.sessionId : this.data.state.sessionId;
+      const version = originalPhoto ? originalPhoto.version : this.data.state.version;
       const body = JSON.parse(JSON.stringify(payload || {}));
       // 幂等键由「session + 服务端 version + 动作 + 入参」派生：同一次意图重试复用同一个键，
       // 服务端 selectByIdempotencyKey 才能 replay；写成功后 version 前进，下一动作自动换键。
-      const idempotencyKey = buildActionKey(sessionId, version, name, body);
+      const idempotencyKey = originalPhoto ? originalPhoto.idempotencyKey : buildActionKey(sessionId, version, name, body);
       if (!id(sessionId) || !idempotencyKey) {
         this.setData({ error: '当前玩法状态不完整，请退出节点后重新进入' });
         return;
@@ -312,7 +342,7 @@ Component({
           this._unknownCommand = null;
           this.hydrate(res.data.view);
           this.setData({ acting: false, error: safeUserMessage(res, '玩法状态已更新，请确认后再操作') });
-          this.emitActionFail(name, sessionId);
+          this.emitActionFail(name, sessionId, res.data && res.data.reason);
           return false;
         }
         // Explicit 4xx come from ServiceException inside the @Transactional act: rolled back, nothing written.
@@ -320,8 +350,9 @@ Component({
         if (status >= 400 && status < 500 && status !== 408) {
           wx.removeStorageSync(pendingKey);
           this._unknownCommand = null;
-          this.setData({ acting: false, error: safeUserMessage(res, '操作失败，请重试') });
-          this.emitActionFail(name, sessionId);
+          this.setData({ acting: false, error: res.data && res.data.reason === 'PHOTO_MODEL_CONSENT_REQUIRED'
+            ? '' : safeUserMessage(res, '操作失败，请重试') });
+          this.emitActionFail(name, sessionId, res.data && res.data.reason);
           return false;
         }
         // act can commit before finishPendingCardMint fails. A generic error is not proof of rollback.
@@ -340,7 +371,7 @@ Component({
     /** 请求没拿到响应：服务端可能已写入，只按原意图核对，不能生成新键重复提交。 */
     enterUnknown(sentVersion) {
       this.setData({
-        acting: false, unknown: true, error: '',
+        acting: false, unknown: true, photoRetryable: false, error: '',
         unknownText: '结果还没确认，正在确认，请勿重复提交'
       });
       this._unknownVersion = sentVersion;
@@ -358,6 +389,11 @@ Component({
         sessionId: original.sessionId, idempotencyKey: original.idempotencyKey
       }).then(res => {
         if (!this.currentRequestContext(context)) return false;
+        if (Number(res.code) === 404 && capturedPhoto) {
+          this.setData({ readingBack: false, unknown: true, photoRetryable: true,
+            unknownText: '未查到不代表未提交；可重新确认同意后重试原照片' });
+          return false;
+        }
         const receipt = res.data || {};
         if (Number(res.code) !== 200 || String(receipt.sessionId) !== String(original.sessionId)
             || receipt.idempotencyKey !== original.idempotencyKey
@@ -368,7 +404,7 @@ Component({
         this.hydrate(receipt.view);
         if (!this.currentRequestContext(context, false)) return true;
         this._unknownCommand = null;
-        this.setData({ readingBack: false, unknown: false, unknownText: '', error: '' });
+        this.setData({ readingBack: false, unknown: false, photoRetryable: false, unknownText: '', error: '' });
         return true;
       }).catch(() => {
         if (!this.currentRequestContext(context)) return false;
@@ -376,6 +412,22 @@ Component({
           unknownText: '原请求仍待确认，未查到不代表未提交；请勿重复提交，核对原结果' });
         return false;
       });
+    },
+    retryOriginalPhoto() {
+      const original = this._unknownCommand, context = this._unknownRequestContext;
+      if (!this.data.photoRetryable || this.data.readingBack || this.data.acting || this._photoConsentAsking
+          || !original || original.action !== 'SUBMIT_PHOTO_CHECK' || !this._photoPending
+          || !context || !this.currentRequestContext(context)) return Promise.resolve(false);
+      const current = () => original === this._unknownCommand && this.currentRequestContext(context);
+      this._photoConsentAsking = true;
+      return app.requestSeparateConsent('photo', current).then(() => {
+        if (!current()) return false;
+        this.setData({ unknown: false, photoRetryable: false });
+        return this.action(original.action, original.payload, original);
+      }).catch(error => {
+        if (current()) this.setData({ unknownText: safeUserMessage(error, '未同意照片处理，原请求仍可核对或重试') });
+        return false;
+      }).finally(() => { this._photoConsentAsking = false; });
     },
     previewKitAction(event) {
       if (!this.data.preview || !this.data.state || !this.data.state.previewKit) return false;

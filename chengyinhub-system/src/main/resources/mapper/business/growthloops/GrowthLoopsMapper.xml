@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- R11 growth-loops. Tables: growth_winback_state, growth_winback_log, growth_invite_reward, growth_invite_device
+     (migration_20261115_growth_loops.sql). Everything else is read only. -->
+<mapper namespace="com.chengyinhub.business.mapper.growthloops.GrowthLoopsMapper">
+
+    <sql id="contactable">
+        AND IFNULL(s.opted_out, 0) = 0
+        AND IFNULL(s.ignored_count, 0) &lt; #{maxIgnored}
+        AND (s.last_sent_at IS NULL OR s.last_sent_at &lt; #{sentBefore})
+        AND (s.last_evaluated_at IS NULL OR s.last_evaluated_at &lt; #{evalBefore})
+        AND EXISTS (SELECT 1 FROM push_device d WHERE d.member_id = m.id AND d.enabled = 1)
+    </sql>
+
+    <sql id="lastActive">
+        GREATEST(IFNULL(m.login_time, '1970-01-01'),
+                 IFNULL(CAST(g.last_checkin_date AS DATETIME), '1970-01-01'),
+                 IFNULL((SELECT MAX(rs.started_at) FROM roam_session rs WHERE rs.member_id = m.id), '1970-01-01'))
+    </sql>
+
+    <select id="selectStreakAtRisk" resultType="java.util.HashMap" useCache="false">
+        SELECT m.id AS memberId, g.streak_days AS streak
+          FROM player_growth g
+          JOIN ums_member m ON m.id = g.member_id AND m.status = 1 AND m.del_flag = 0
+          LEFT JOIN growth_winback_state s ON s.member_id = m.id
+         WHERE g.streak_days &gt;= #{minStreak}
+           AND g.last_checkin_date &gt;= #{yesterday} AND g.last_checkin_date &lt; #{today}
+           <include refid="contactable"/>
+         ORDER BY s.last_evaluated_at IS NOT NULL, s.last_evaluated_at, m.id
+         LIMIT #{limit}
+    </select>
+
+    <select id="selectLapsed" resultType="java.util.HashMap" useCache="false">
+        SELECT * FROM (
+            SELECT m.id AS memberId, <include refid="lastActive"/> AS lastActive, s.last_evaluated_at AS evaluatedAt
+              FROM ums_member m
+              LEFT JOIN player_growth g ON g.member_id = m.id
+              LEFT JOIN growth_winback_state s ON s.member_id = m.id
+             WHERE m.status = 1 AND m.del_flag = 0
+               <include refid="contactable"/>
+        ) c
+         WHERE c.lastActive &lt; #{lapsedBefore} AND c.lastActive &gt;= #{lapsedAfter}
+         ORDER BY c.evaluatedAt IS NOT NULL, c.evaluatedAt, c.memberId
+         LIMIT #{limit}
+    </select>
+
+    <select id="selectPendingResolution" resultType="java.util.HashMap" useCache="false">
+        SELECT s.member_id AS memberId, s.last_sent_at AS lastSent, s.awaiting_return AS awaiting,
+               s.ignored_count AS ignored, <include refid="lastActive"/> AS lastActive
+          FROM growth_winback_state s
+          JOIN ums_member m ON m.id = s.member_id
+          LEFT JOIN player_growth g ON g.member_id = m.id
+         WHERE s.last_sent_at IS NOT NULL AND (s.awaiting_return = 1 OR s.ignored_count &gt; 0)
+         ORDER BY s.last_sent_at
+         LIMIT #{limit}
+    </select>
+
+    <update id="updateResolution">
+        UPDATE growth_winback_state SET awaiting_return = #{awaiting}, ignored_count = #{ignored}, update_time = NOW()
+         WHERE member_id = #{memberId}
+    </update>
+
+    <insert id="ensureState">
+        INSERT IGNORE INTO growth_winback_state (member_id, update_time) VALUES (#{memberId}, NOW())
+    </insert>
+
+    <select id="selectState" resultType="java.util.HashMap" useCache="false">
+        SELECT member_id AS memberId, opted_out AS optedOut, opted_out_at AS optedOutAt, last_sent_at AS lastSent,
+               last_trigger AS lastTrigger, awaiting_return AS awaiting, ignored_count AS ignored, sent_total AS sentTotal
+          FROM growth_winback_state WHERE member_id = #{memberId}
+    </select>
+
+    <update id="touchEvaluated">
+        INSERT INTO growth_winback_state (member_id, last_evaluated_at, update_time) VALUES (#{memberId}, #{now}, #{now})
+        ON DUPLICATE KEY UPDATE last_evaluated_at = VALUES(last_evaluated_at)
+    </update>
+
+    <update id="claimSend">
+        UPDATE growth_winback_state
+           SET last_sent_at = #{now}, last_trigger = #{trigger}, last_ref = #{ref}, awaiting_return = 1,
+               sent_total = sent_total + 1, last_evaluated_at = #{now}, update_time = #{now}
+         WHERE member_id = #{memberId} AND opted_out = 0 AND ignored_count &lt; #{maxIgnored}
+           AND (last_sent_at IS NULL OR last_sent_at &lt; #{sentBefore})
+    </update>
+
+    <update id="releaseSend">
+        UPDATE growth_winback_state
+           SET last_sent_at = #{prevSent}, awaiting_return = #{prevAwaiting}, sent_total = GREATEST(sent_total - 1, 0),
+               update_time = NOW()
+         WHERE member_id = #{memberId} AND last_sent_at = #{now}
+    </update>
+
+    <insert id="insertLog">
+        INSERT INTO growth_winback_log (member_id, trigger_code, ref, outcome, devices, create_time)
+        VALUES (#{memberId}, #{trigger}, #{ref}, #{outcome}, #{devices}, #{now})
+    </insert>
+
+    <insert id="upsertOptOut">
+        INSERT INTO growth_winback_state (member_id, opted_out, opted_out_at, update_time)
+        VALUES (#{memberId}, #{optedOut}, IF(#{optedOut} = 1, #{now}, NULL), #{now})
+        ON DUPLICATE KEY UPDATE opted_out = VALUES(opted_out), opted_out_at = VALUES(opted_out_at), update_time = VALUES(update_time)
+    </insert>
+
+    <select id="selectExploredPrefixes" resultType="java.lang.String" useCache="false">
+        SELECT DISTINCT LEFT(geohash7, 5) FROM roam_fog_tile WHERE member_id = #{memberId} LIMIT #{limit}
+    </select>
+
+    <select id="selectNewPois" resultType="java.util.HashMap" useCache="false">
+        SELECT id, name, lat, lng, create_time AS createTime FROM roam_poi
+         WHERE status = 1 AND create_time &gt;= #{since}
+         ORDER BY create_time DESC LIMIT #{limit}
+    </select>
+
+    <select id="selectUpcomingActivities" resultType="java.util.HashMap" useCache="false">
+        SELECT a.id, a.name, a.latitude AS lat, a.longitude AS lng, a.club_id AS clubId, a.start_date AS startDate
+          FROM cms_activity a
+         WHERE a.status = 1 AND a.publish_status = 1 AND a.del_flag = 0 AND a.cancel_time IS NULL
+           AND a.start_date &gt;= #{from} AND a.start_date &lt; #{to}
+           AND (a.club_id IS NULL OR a.club_id = 0
+                OR EXISTS (SELECT 1 FROM club c WHERE c.id = a.club_id AND c.del_flag = 0))
+         ORDER BY a.start_date LIMIT #{limit}
+    </select>
+
+    <select id="selectMemberClubIds" resultType="java.lang.Long" useCache="false">
+        SELECT club_id FROM club_member WHERE member_id = #{memberId} AND status = 1 AND del_flag = 0 LIMIT 200
+    </select>
+
+    <!-- ============================================================ invite reward -->
+
+    <select id="selectInvitee" resultType="java.util.HashMap" useCache="false">
+        SELECT id, invite_user_id AS inviteUserId, phone, status, del_flag AS delFlag, create_time AS createTime
+          FROM ums_member WHERE id = #{memberId}
+    </select>
+
+    <select id="selectInviteReward" resultType="java.util.HashMap" useCache="false">
+        SELECT invitee_member_id AS inviteeId, inviter_member_id AS inviterId, status, reason, create_time AS createTime
+          FROM growth_invite_reward WHERE invitee_member_id = #{inviteeId}
+    </select>
+
+    <select id="countGrantedByPhoneHash" resultType="int" useCache="false">
+        SELECT COUNT(1) FROM growth_invite_reward WHERE granted_phone_hash = #{phoneHash}
+    </select>
+
+    <select id="countGrantedByDeviceHashes" resultType="int" useCache="false">
+        SELECT COUNT(1) FROM growth_invite_device WHERE device_hash IN
+        <foreach collection="hashes" item="h" open="(" separator="," close=")">#{h}</foreach>
+    </select>
+
+    <select id="countGrantedForInviterSince" resultType="int" useCache="false">
+        SELECT COUNT(1) FROM growth_invite_reward
+         WHERE inviter_member_id = #{inviterId} AND status = 'GRANTED' AND create_time &gt;= #{since}
+    </select>
+
+    <select id="countGrantedForInviter" resultType="int" useCache="false">
+        SELECT COUNT(1) FROM growth_invite_reward WHERE inviter_member_id = #{inviterId} AND status = 'GRANTED'
+    </select>
+
+    <select id="selectInviteeDeviceTokens" resultType="java.lang.String" useCache="false">
+        SELECT token FROM push_device WHERE member_id = #{memberId} LIMIT 20
+    </select>
+
+    <select id="selectSessionTrust" resultType="java.util.HashMap" useCache="false">
+        SELECT SUM(CASE WHEN decision = 'ACCEPT' AND IFNULL(simulated, 0) = 0 THEN 1 ELSE 0 END) AS clean,
+               SUM(CASE WHEN decision &lt;&gt; 'ACCEPT' OR IFNULL(simulated, 0) = 1 THEN 1 ELSE 0 END) AS flagged
+          FROM location_trust_fix
+         WHERE member_id = #{memberId} AND session_id = #{sessionId}
+    </select>
+
+    <insert id="insertInviteReward">
+        INSERT IGNORE INTO growth_invite_reward
+            (invitee_member_id, inviter_member_id, status, reason, roam_session_id, granted_phone_hash, create_time)
+        VALUES (#{inviteeId}, #{inviterId}, #{status}, #{reason}, #{sessionId},
+                <choose><when test="status == 'GRANTED'">#{phoneHash}</when><otherwise>NULL</otherwise></choose>, #{now})
+    </insert>
+
+    <insert id="insertInviteDevice">
+        INSERT IGNORE INTO growth_invite_device (device_hash, invitee_member_id, create_time)
+        VALUES (#{deviceHash}, #{inviteeId}, #{now})
+    </insert>
+
+    <select id="selectInviteRewardsForInviter" resultType="java.util.HashMap" useCache="false">
+        SELECT r.invitee_member_id AS inviteeId, r.status, r.reason, r.create_time AS createTime, m.nickname
+          FROM growth_invite_reward r
+          LEFT JOIN ums_member m ON m.id = r.invitee_member_id
+         WHERE r.inviter_member_id = #{inviterId}
+         ORDER BY r.create_time DESC LIMIT #{limit}
+    </select>
+</mapper>

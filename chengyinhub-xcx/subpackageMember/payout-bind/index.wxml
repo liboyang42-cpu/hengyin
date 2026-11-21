@@ -1,0 +1,33 @@
+<view class="theme-dark">
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+<view class="pb-page">
+  <cy-nav-bar />
+  <cy-page-title title="绑定收款微信" />
+  <view class="pb-content">
+    <view class="pb-card" wx:if="{{done}}" aria-role="alert">
+      <view class="pb-title">已确认是你的微信</view>
+      <view class="pb-match" wx:if="{{matchNumber}}" aria-label="核对数字 {{matchNumber}}">{{matchNumber}}</view>
+      <view class="pb-text" wx:if="{{matchNumber}}">请在城瘾 App 里选择 {{matchNumber}}，再点「确认绑定」。App 里确认之前，什么都不会绑定。</view>
+      <view class="pb-text" wx:else>请回到城瘾 App，点「确认绑定」完成。App 里确认之前，什么都不会绑定。</view>
+      <view class="pb-text">如果不是你自己在 App 里生成的二维码，请不要告诉别人这个数字。</view>
+    </view>
+    <block wx:else>
+      <view class="pb-card">
+        <view class="pb-title">把这个微信设为 App 账号的收款微信</view>
+        <view class="pb-text">提现和俱乐部个人收款会打到这个微信的零钱。点下面的按钮后，还需要回到 App 里确认。</view>
+      </view>
+      <view class="pb-card" wx:if="{{!code}}">
+        <view class="pb-text">没有读到绑定码。请在 App 里重新生成二维码后用微信扫一扫，或把 App 里显示的绑定码填在这里：</view>
+        <input class="pb-input" value="{{codeInput}}" maxlength="24" placeholder="App 里显示的绑定码" bindinput="onCodeInput" aria-label="绑定码" />
+      </view>
+      <view class="pb-notice" wx:if="{{notice}}" aria-role="alert">{{notice}}</view>
+    </block>
+    <view class="pb-bottom">
+      <cy-btn wx:if="{{!done}}" variant="primary" loading="{{busy}}" disabled="{{busy}}" bindtap="claim">用这个微信</cy-btn>
+      <cy-btn wx:else variant="secondary" bindtap="exitPage">好的</cy-btn>
+    </view>
+  </view>
+</view>
+</view>

@@ -686,7 +686,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         }
         // 幂等闸:已取消不得重复取消,否则会对已退款的报名再走一遍退款链路
         if (!replayAllowed && act.getCancelTime() != null) {
-            throw new ServiceException("活动已取消,请勿重复操作");
+            throw new ServiceException("活动已取消，请勿重复操作");
         }
 
         return act;
@@ -848,7 +848,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
                 // 上面已在锁内判过「无已核销」,不该走到转人工分支;真走到了说明快照与锁内事实不一致
                 if (!refundResolvingOrder(orderSnapshot.payer, orderSnapshot.payer.getTicketName(),
                         "主办方取消活动,全额退款", actorMemberId, true)) {
-                    throw new ServiceException("订单核销状态已变化,请刷新后重试", HttpStatus.CONFLICT);
+                    throw new ServiceException("订单核销状态已变化，请刷新后重试", HttpStatus.CONFLICT);
                 }
                 refundedOrders++;
             }
@@ -1716,7 +1716,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
                 throw new RuntimeException("同单存在已核销的票,不能整单退");
             }
             if (payer != null) {
-                throw new ServiceException("整单退款状态已变化,请刷新后重试", HttpStatus.CONFLICT);
+                throw new ServiceException("整单退款状态已变化，请刷新后重试", HttpStatus.CONFLICT);
             }
         }
         // 只有 claim winner 才能通过库存回补闸；后续任意异常仍由外层事务一起回滚。
@@ -1754,11 +1754,11 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         if (Long.valueOf(1L).equals(seed.getOwnerType())) {
             CmsTopic topic = cmsTopicMapper.selectCmsTopicById(seed.getOwnerId());
             if (topic == null || topic.getId() == null || topic.getMemberId() == null) {
-                throw new ServiceException("主题不存在,请人工核对", HttpStatus.CONFLICT);
+                throw new ServiceException("主题不存在，请人工核对", HttpStatus.CONFLICT);
             }
             PaidOrderSnapshot snapshot = inspectPaidOrderForCancellation(seed, 1L, topic.getId(), paidIds);
             if (!snapshot.hasVerified || !snapshot.hasUnverified) {
-                throw new ServiceException("订单核销状态已变化,请刷新后重试", HttpStatus.CONFLICT);
+                throw new ServiceException("订单核销状态已变化，请刷新后重试", HttpStatus.CONFLICT);
             }
             recordTopicManualRefundCaseOnce(topic, actorMemberId, seed.getParentOrderNo(), snapshot);
             logger.warn("[退款转人工] 主题票整单部分核销,未核销成员已记人工退款工单 topicId={} parentOrderNo={} actorMemberId={}",
@@ -1766,15 +1766,15 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
             return;
         }
         if (!Long.valueOf(2L).equals(seed.getOwnerType())) {
-            throw new ServiceException("父订单归属不明,请人工核对", HttpStatus.CONFLICT);
+            throw new ServiceException("父订单归属不明，请人工核对", HttpStatus.CONFLICT);
         }
         com.chengyinhub.business.domain.CmsActivity act = cmsActivityMapper.selectCmsActivityById(seed.getOwnerId());
         if (act == null || act.getId() == null) {
-            throw new ServiceException("场次不存在,请人工核对", HttpStatus.CONFLICT);
+            throw new ServiceException("场次不存在，请人工核对", HttpStatus.CONFLICT);
         }
         PaidOrderSnapshot snapshot = inspectPaidOrderForCancellation(seed, 2L, act.getId(), paidIds);
         if (!snapshot.hasVerified || !snapshot.hasUnverified) {
-            throw new ServiceException("订单核销状态已变化,请刷新后重试", HttpStatus.CONFLICT);
+            throw new ServiceException("订单核销状态已变化，请刷新后重试", HttpStatus.CONFLICT);
         }
         recordManualRefundCaseOnce(act, actorMemberId, seed.getParentOrderNo(), snapshot);
         logger.warn("[退款转人工] 整单部分核销,未核销成员已记人工退款工单 activityId={} parentOrderNo={} actorMemberId={}",
@@ -1784,6 +1784,28 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
     /** Existing current-ticket/paid-recipient wake source. The typed notice owner commits the original
      * BEFORE_START input and one irreversible WeChat attempt. UNKNOWN is only read, never resent.
      * Legacy positive Redis keys are read during cutover; no new TTL key replaces the durable receipt. */
+    /** 出发前提醒的 App 远程推送（APNs）；未装配/未配置时空操作。 */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    @org.springframework.context.annotation.Lazy
+    private com.chengyinhub.business.service.IPushFanoutService pushFanout;
+
+    /** C3 channel events: members who answered "maybe" on an event card; enrolled members are reminded below. */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    @org.springframework.context.annotation.Lazy
+    private com.chengyinhub.business.channelevent.ChannelEventService channelEvents;
+
+    /** App push only (no WeChat notice: "maybe" holds no ticket). Same once-per-ticket-and-member rule as enrolled members. */
+    private void remindChannelEventMaybes(OmsTicket t) {
+        if (channelEvents == null || pushFanout == null || t == null || t.getId() == null) return;
+        try {
+            for (Long memberId : channelEvents.maybeMembersForReminder(t.getId())) {
+                pushFanout.eventReminder(t.getId(), memberId, t.getName(), t.getStartTime(), t.getOwnerType(), t.getOwnerId());
+            }
+        } catch (RuntimeException e) {
+            logger.warn("频道活动「可能去」提醒登记失败 ticketId={}", t.getId());
+        }
+    }
+
     @Override
     public BeforeStartNotifyResult notifyBeforeStartBatch() {
         Date now = new Date();
@@ -1792,10 +1814,20 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         int scanned = 0, skipped = 0, delivered = 0, failed = 0;
         if (tickets != null) {
             for (OmsTicket t : tickets) {
+                remindChannelEventMaybes(t);
                 List<CmsRegistration> regs = cmsRegistrationMapper.selectPaidByTicket(t.getId());
                 if (regs == null) continue;
                 for (CmsRegistration r : regs) {
                     scanned++;
+                    if (pushFanout != null) {
+                        // App 推送与微信订阅提醒各自去重（每个票次×会员一次），互不影响计数。
+                        try {
+                            pushFanout.eventReminder(t.getId(), r.getMemberId(), t.getName(), t.getStartTime(),
+                                    t.getOwnerType(), t.getOwnerId());
+                        } catch (RuntimeException ignored) {
+                            logger.warn("出发前提醒 App 推送登记失败 ticketId={} memberId={}", t.getId(), r.getMemberId());
+                        }
+                    }
                     String key = "team:beforenotify:" + t.getId() + ":" + r.getMemberId();
                     // Keep pre-cutover positive success keys; never manufacture a durable acceptance from them.
                     // New delivery identity/receipt lives permanently in the existing notice ledger, not this TTL.

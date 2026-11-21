@@ -7,6 +7,9 @@ const merchantTheme = require('../../utils/merchant-theme.js');
 // 页面仍由场景注册(utils/scene-registry.js 'member-withdraw')挂在这里,所以它不能是旧表单,
 // 只能是一个客服入口。后端 /api/withdrawal/* 接口与共享工具不动。
 const withdrawCs = require('../../utils/withdraw-cs.js');
+// R6b(2026-11-15):资金开关「用户提现」打开时(只在测试环境),按钮改去「提现申请」页(平台审核后打到微信零钱);
+// 开关关闭、读不到或出错时 payoutOpen 保持 false,页面与今天完全一样(联系客服)。
+const moneyPayout = require('../../utils/money-payout.js');
 Page({
 
   /**
@@ -22,6 +25,7 @@ Page({
     balanceErr: false,
     balanceLoaded: false,
     withdrawHistorySheet: false,
+    payoutOpen: false,
   },
 
   /**
@@ -51,6 +55,9 @@ Page({
       }
       that.setData({ balanceLoaded: false })
       that.getUserData()
+      moneyPayout.withdrawalOpen(function (open) {
+        if (!that._unloaded) that.setData({ payoutOpen: open })
+      })
     })
   },
 
@@ -75,6 +82,7 @@ Page({
   // 2026-09-15 收款模型定稿 §3:平台不打款,提现不再走银行卡表单、不再调 /api/withdrawal/create,
   // 一律弹平台客服微信线下处理。表单校验/单独同意的旧实现已随表单一起删除(页面不再采集银行卡信息)。
   saveData: function() {
+    if (this.data.payoutOpen) { wx.navigateTo({ url: '/subpackageMember/payout-request/index' }); return }
     withdrawCs.showWithdrawCsPopup()
   },
 

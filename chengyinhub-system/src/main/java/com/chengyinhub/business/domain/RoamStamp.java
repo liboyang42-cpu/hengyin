@@ -19,10 +19,14 @@ public class RoamStamp {
     private String idemKey;
     private Integer delFlag;
     private Date createTime;
+    /** GAME-12: the place a place stamp (kind = 1) was earned at; NULL for a free photo (postcard). */
+    private Long poiId;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public Long getMemberId() { return memberId; }
+    public Long getPoiId() { return poiId; }
+    public void setPoiId(Long poiId) { this.poiId = poiId; }
     public void setMemberId(Long memberId) { this.memberId = memberId; }
     public String getPicUrl() { return picUrl; }
     public void setPicUrl(String picUrl) { this.picUrl = picUrl; }

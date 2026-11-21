@@ -103,7 +103,7 @@ public final class DiscoveryFilterContract {
         }
         requireCoordinates(longitude, latitude);
         if (!String.valueOf(ACTIVITY_RADIUS_METERS).equals(normalized)) {
-            throw new ServiceException("distance_meters 枚举无效，支持值: [" + ACTIVITY_RADIUS_METERS + "]", 400);
+            throw new ServiceException("distance_meters 枚举无效，支持值： [" + ACTIVITY_RADIUS_METERS + "]", 400);
         }
         return ACTIVITY_RADIUS_METERS;
     }
@@ -147,7 +147,7 @@ public final class DiscoveryFilterContract {
     private static boolean blank(String value) { return value == null || value.trim().isEmpty(); }
 
     private static ServiceException invalid(String field, Object values) {
-        return new ServiceException(field + " 枚举无效，支持值: " + values, 400);
+        return new ServiceException(field + " 枚举无效，支持值： " + values, 400);
     }
 
     private static Map<String, Object> map(Object... values) {

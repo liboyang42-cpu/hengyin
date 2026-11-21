@@ -1,6 +1,7 @@
 package com.chengyinhub.web.service.play;
 
 import com.chengyinhub.common.core.domain.AjaxResult;
+import com.chengyinhub.common.exception.ErrorCode;
 
 /**
  * 玩家基础命令的「拒绝可解释 + 原请求可恢复」回包契约。
@@ -29,6 +30,12 @@ import com.chengyinhub.common.core.domain.AjaxResult;
  *
  * <p>不变量:只加字段,不改既有 body code、不改既有 msg 文案、不放宽 50m 围栏与 80m 精度闸、
  * 不改幂等键(仍由 routeActionId 派生)与结算语义。回执重放**不加任何字段**:重放体与首次逐字一致。
+ *
+ * <p>GAME-10(x-journey-app):本类构造的拒绝(rejected / retryable / retryableUncertain / unresolvedEffect /
+ * conflict / refresh / arriveFirst)一律带有类型的 {@link ErrorCode#REFUSED}(409 两种为 {@link ErrorCode#CONFLICT}),
+ * 让 v2 契约({@code X-Error-Contract: 2},App 打开)按「业务拒绝 4xx」回,不再按文案推断——
+ * 「这次定位暂不计入,稍后再试」「请稍后再试」之类含「稍后」的拒绝过去会被判成系统故障 5xx,App 只能当结果未知。
+ * 旧契约(小程序)body 逐字不变。pending / unresolved(520)不是拒绝,不在此列。
  */
 public final class PlayCommandErrorContract
 {
@@ -43,6 +50,8 @@ public final class PlayCommandErrorContract
     public static final String ARRIVE_TOO_FAR = "ARRIVE_TOO_FAR";
     /** 冻结到达策略要求定位时效，而上报定位时间缺失/来自未来/已过期:重新定位后可重发。 */
     public static final String ARRIVE_LOCATION_STALE = "ARRIVE_LOCATION_STALE";
+    /** P8 SEC-09:定位被手机标为模拟,或与上一次可信定位相比移动快得不可能:留痕待查,稍后重新定位可重发。 */
+    public static final String ARRIVE_LOCATION_UNTRUSTED = "ARRIVE_LOCATION_UNTRUSTED";
     /** 本局要求先经 GPS 记到达才能作答,而尚无到达事实。 */
     public static final String ARRIVE_NOT_RECORDED = "ARRIVE_NOT_RECORDED";
     /** vm=5 站点缺坐标:配置缺合同,扫码或找运营,重发无用。 */
@@ -124,7 +133,7 @@ public final class PlayCommandErrorContract
      */
     public static AjaxResult rejected(String message, String errorCode)
     {
-        return AjaxResult.error(message)
+        return AjaxResult.refuse(ErrorCode.REFUSED, message)
                 .put("errorCode", errorCode)
                 .put("retryable", false)
                 .put("refreshRequired", false)
@@ -137,7 +146,7 @@ public final class PlayCommandErrorContract
      */
     public static AjaxResult unresolvedEffect(String message, String errorCode)
     {
-        return AjaxResult.error(message)
+        return AjaxResult.refuse(ErrorCode.REFUSED, message)
                 .put("errorCode", errorCode)
                 .put("retryable", false)
                 .put("refreshRequired", false);
@@ -148,7 +157,7 @@ public final class PlayCommandErrorContract
      */
     public static AjaxResult conflict(String message, String errorCode)
     {
-        return new AjaxResult(409, message)
+        return AjaxResult.refuse(409, ErrorCode.CONFLICT, message)
                 .put("errorCode", errorCode)
                 .put("retryable", false)
                 .put("refreshRequired", false)

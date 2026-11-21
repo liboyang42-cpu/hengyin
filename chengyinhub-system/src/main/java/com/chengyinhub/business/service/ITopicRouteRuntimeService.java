@@ -71,6 +71,12 @@ public interface ITopicRouteRuntimeService {
 
     TopicRouteState state(Long memberId, Long topicId, Long activityId,
             com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration declaration);
+
+    /** Player entry always has a run identity, including linear topics without journey rules. */
+    default TopicRouteState personalRun(Long memberId, Long topicId,
+            com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration declaration) {
+        return state(memberId, topicId, 0L, declaration);
+    }
     /** Pure current-run projection; null means no initialized session. Never initializes or refreshes state. */
     TopicRouteState queryState(Long memberId, Long topicId, Long activityId);
     TopicRouteState completeOpening(Long memberId, Long topicId, Long activityId, Long chapterId, Integer expectedVersion);

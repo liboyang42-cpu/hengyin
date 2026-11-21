@@ -50,6 +50,11 @@ public class CityGameActionService {
     private final boolean customRandom;
     @Autowired(required = false)
     private com.chengyinhub.business.service.impl.GameRandom gameRandom;
+    /** CITY-10: on LIVE City Monopoly boards places are held by individuals; the team game no longer takes them. */
+    @Autowired(required = false)
+    private CityMonopolyService monopoly;
+
+    void setMonopoly(CityMonopolyService monopoly) { this.monopoly = monopoly; }
 
     @Autowired
     public CityGameActionService(CityGameMapper mapper) {
@@ -207,6 +212,9 @@ public class CityGameActionService {
         Map<String, Object> board = mapper.selectBoard(boardId);
         if (board == null) throw new CityGameException(404, "CITY_BOARD_NOT_FOUND", "城市棋盘不存在");
         if (!"OPEN".equals(board.get("lifecycle"))) throw new CityGameException(409, "BOARD_NOT_OPEN", "棋盘未开放");
+        if ((action == Action.ACQUIRE_PROPERTY || action == Action.START_CHALLENGE) && monopoly != null && monopoly.liveBoard(boardId)) {
+            throw new CityGameException(409, "PROPERTY_IS_CITY_MONOPOLY", "这里由个人持有，请用城市大富翁占领或挑战。");
+        }
         Membership m = membership(mapper, boardId, memberId);
         if (!m.joined()) throw new CityGameException(409, "NOT_JOINED", "尚未加入队伍");
         Long cost = price(action, board, targetId);
@@ -338,6 +346,10 @@ public class CityGameActionService {
 
         // Point-spending actions: quote and explicit payer consent.
         if (neutral) return a.close("REJECTED", "NEUTRAL_GOAL");
+        if ((action == CityGameRules.Action.ACQUIRE_PROPERTY || action == CityGameRules.Action.START_CHALLENGE)
+                && monopoly != null && monopoly.liveBoard(boardId)) {
+            return a.close("REJECTED", "PROPERTY_IS_CITY_MONOPOLY");
+        }
         Map<String, Object> quote = mapper.selectQuoteForUpdate(str(body, "quoteId"));
         String quoteIssue = quoteIssue(quote, body, memberId, action, boardId, targetId, now);
         if (quoteIssue != null) return a.close("REJECTED", quoteIssue);

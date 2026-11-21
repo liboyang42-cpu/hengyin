@@ -88,6 +88,18 @@ public class MerchantReferralBountyService
     @Autowired
     private MerchantReferralBountyMapper bountyMapper;
 
+    /**
+     * R9 BE-13:达成激活后是否不经运营审核直接入账。默认 false ⇒ 先进审核队列(status=4)。
+     * 即使打开,也必须同时满足资金开关 {@link com.chengyinhub.business.service.rewardpledge.CashPayoutSwitch#open()}
+     * (生产关闭),否则一样进队列。所以生产环境里没有任何一笔赏金会绕过人工审核或资金开关。
+     */
+    @org.springframework.beans.factory.annotation.Value("${chengyin.referral-bounty.auto-pay:false}")
+    private boolean autoPay;
+
+    /** 资金开关(moneyPayments && payout)。缺失视为关闭。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.rewardpledge.CashPayoutSwitch cashPayoutSwitch;
+
     @Autowired
     private IUmsMemberService umsMemberService;
 
@@ -244,6 +256,17 @@ public class MerchantReferralBountyService
                 merchantMemberId, bounty.getMerchantRegisteredAt(), bounty.getWindowExpiresAt(), ACTIVATION_HEADS);
         String snapshot = join(regIds);
 
+        // R9 BE-13:默认先进运营审核队列,不入账;只有 auto-pay 与资金开关同时打开才直接发。
+        if (!autoPayOpen())
+        {
+            if (bountyMapper.markAwaitingReviewIfPending(bounty.getId(), now, snapshot, BOUNTY_AMOUNT) == 1)
+            {
+                log.info("[ReferralBounty] activated, awaiting review inviterMemberId={} merchantMemberId={} snapshot={}",
+                        bounty.getInviterMemberId(), merchantMemberId, snapshot);
+            }
+            return;
+        }
+
         Date frozenUntil = plusHours(now, FREEZE_HOURS);
         // ★ CAS:仅 status=0 可置 1。并发/重复触发只有一方 affected=1 ⇒ 只发一次钱。
         //   先读后写会让两个线程都读到 0、都发钱。
@@ -256,6 +279,120 @@ public class MerchantReferralBountyService
         payBounty(inviter, BOUNTY_AMOUNT, bounty.getId(), merchantMemberId);
         log.info("[ReferralBounty] paid inviterMemberId={} merchantMemberId={} amount={} snapshot={}",
                 bounty.getInviterMemberId(), merchantMemberId, BOUNTY_AMOUNT, snapshot);
+    }
+
+    private boolean autoPayOpen()
+    {
+        return autoPay && moneyOpen();
+    }
+
+    /** 资金开关:生产关闭。审核通过的入账也必须过它。 */
+    public boolean moneyOpen()
+    {
+        return cashPayoutSwitch != null && cashPayoutSwitch.open();
+    }
+
+    // ------------------------------------------------------------------ R9 BE-13 审核队列
+
+    /** 运营队列(分页由调用方 startPage())。 */
+    public List<MerchantReferralBounty> queue(Integer status, Long inviterMemberId, Long merchantMemberId)
+    {
+        return bountyMapper.selectQueue(status, inviterMemberId, merchantMemberId);
+    }
+
+    public MerchantReferralBounty detail(Long id)
+    {
+        return id == null ? null : bountyMapper.selectById(id);
+    }
+
+    /** 拓展人本人的赏金(只读,最多 100 条)。 */
+    public List<MerchantReferralBounty> mine(Long inviterMemberId)
+    {
+        return inviterMemberId == null ? new ArrayList<>() : bountyMapper.selectByInviter(inviterMemberId);
+    }
+
+    /**
+     * 审核通过并入账。资金开关关闭时直接拒绝(不改状态)。入账前复核:激活快照仍成立、封顶未满、收款人存在。
+     * 锁序与核销路径一致:先锁拓展人余额行,再锁赏金行。
+     */
+    public MerchantReferralBounty approve(Long id, String reviewer, String note)
+    {
+        if (!moneyOpen())
+        {
+            throw new com.chengyinhub.common.exception.ServiceException("资金开关关闭，暂不能发放赏金", 409);
+        }
+        MerchantReferralBounty probe = detail(id);
+        if (probe == null)
+        {
+            throw new com.chengyinhub.common.exception.ServiceException("赏金记录不存在", 404);
+        }
+        String cleanNote = trimNote(note);
+        org.springframework.transaction.support.TransactionTemplate tx =
+                new org.springframework.transaction.support.TransactionTemplate(transactionManager);
+        tx.executeWithoutResult(status -> {
+            if (umsMemberMapper.selectBalanceForUpdate(probe.getInviterMemberId()) == null)
+            {
+                throw new com.chengyinhub.common.exception.ServiceException("拓展人不存在，不能发放", 409);
+            }
+            MerchantReferralBounty b = bountyMapper.selectByMerchantMemberIdForUpdate(probe.getMerchantMemberId());
+            if (b == null || !b.getId().equals(probe.getId()) || b.getStatus() == null
+                    || b.getStatus() != MerchantReferralBounty.STATUS_AWAITING_REVIEW)
+            {
+                throw new com.chengyinhub.common.exception.ServiceException("这条赏金不在待审核状态", 409);
+            }
+            List<Long> snapshot = parseSnapshot(b.getVerifiedHeadsSnapshot());
+            if (snapshot.isEmpty() || bountyMapper.countStillValidAmong(snapshot, b.getMerchantMemberId()) < ACTIVATION_HEADS)
+            {
+                throw new com.chengyinhub.common.exception.ServiceException("激活依据已不成立（有核销被退款），请驳回", 409);
+            }
+            if (bountyMapper.selectPaidIdsByInviterForUpdate(b.getInviterMemberId()).size() >= INVITER_CAP)
+            {
+                throw new com.chengyinhub.common.exception.ServiceException("该拓展人已达发放上限", 409);
+            }
+            UmsMember inviter = umsMemberService.selectUmsMemberById(b.getInviterMemberId());
+            if (inviter == null)
+            {
+                throw new com.chengyinhub.common.exception.ServiceException("拓展人不存在，不能发放", 409);
+            }
+            BigDecimal amount = b.getBountyAmount() == null ? BOUNTY_AMOUNT : b.getBountyAmount();
+            Date now = new Date();
+            if (bountyMapper.markPaidIfAwaitingReview(b.getId(), now, plusHours(now, FREEZE_HOURS), reviewer, cleanNote) == 0)
+            {
+                throw new com.chengyinhub.common.exception.ServiceException("这条赏金已被处理", 409);
+            }
+            inviter.setBalance(umsMemberMapper.selectBalanceForUpdate(inviter.getId()));
+            payBounty(inviter, amount, b.getId(), b.getMerchantMemberId());
+            log.info("[ReferralBounty] approved and paid id={} inviterMemberId={} amount={} reviewer={}",
+                    b.getId(), b.getInviterMemberId(), amount, reviewer);
+        });
+        return detail(id);
+    }
+
+    /** 驳回:待激活或待审核的记录置 5(终态),不入账。原因必填。 */
+    public MerchantReferralBounty reject(Long id, String reviewer, String note)
+    {
+        String cleanNote = trimNote(note);
+        if (cleanNote == null)
+        {
+            throw new com.chengyinhub.common.exception.ServiceException("请填写驳回原因", 400);
+        }
+        if (detail(id) == null)
+        {
+            throw new com.chengyinhub.common.exception.ServiceException("赏金记录不存在", 404);
+        }
+        if (bountyMapper.markRejectedIfOpen(id, reviewer, cleanNote) == 0)
+        {
+            throw new com.chengyinhub.common.exception.ServiceException("这条赏金已发放或已结束，不能驳回", 409);
+        }
+        log.info("[ReferralBounty] rejected id={} reviewer={}", id, reviewer);
+        return detail(id);
+    }
+
+    private static String trimNote(String note)
+    {
+        if (note == null || note.trim().isEmpty()) return null;
+        String t = note.trim();
+        return t.length() > 255 ? t.substring(0, 255) : t;
     }
 
     /**

@@ -31,6 +31,7 @@
       </block>
 
       <view class="hm__fb" wx:if="{{solved}}" aria-live="polite">{{display}}</view>
+      <view class="hm__pass" wx:if="{{solved && feedback}}">{{feedback}}</view>
     </view>
   </view>
 

@@ -21,6 +21,10 @@ function componentFactory() {
     require(id) {
       if (id.includes('reduced-motion')) return {};
       if (id.includes('/motion.js')) return { haptic() {} };
+      // 相机被系统拒绝的「去设置」引导与弹层/toast 不在本合同范围(这里只验实例隔离与不本地判题)
+      if (id.includes('media-denied')) return { guideIfDenied() { return false; } };
+      if (id.endsWith('/utils/toast.js')) return () => {};
+      if (id.includes('playkit-questo')) return require('../../pages/play/utils/playkit-questo.js');
       throw new Error('Unexpected component port ' + id);
     },
   }, { filename: file });

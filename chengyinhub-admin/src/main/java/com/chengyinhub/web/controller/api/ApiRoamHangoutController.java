@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.service.IRoamHangoutService;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
@@ -47,9 +49,8 @@ public class ApiRoamHangoutController extends BaseController {
     @GetMapping("/nearby")
     public AjaxResult nearby(Double lat, Double lng, Integer radius) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
-        if (lat == null || lng == null) return error("缺少定位");
-        if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return error("经纬度格式不正确");
+        if (lat == null || lng == null) return refuse(ErrorCode.LOCATION_REQUIRED, "缺少定位");
+        if (!Double.isFinite(lat) || !Double.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) return error("经纬度格式不正确");
         return success(roamHangoutService.nearby(memberId, lat, lng, radius == null ? 0 : radius));
     }
 
@@ -66,8 +67,8 @@ public class ApiRoamHangoutController extends BaseController {
     @GetMapping("/detail")
     public AjaxResult detail(Long id) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
-        if (id == null || id <= 0) return error("参数有误");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (id == null || id <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         try {
             return success(roamHangoutService.detail(memberId, id));
         } catch (ServiceException e) {
@@ -85,8 +86,8 @@ public class ApiRoamHangoutController extends BaseController {
     @PostMapping("/leave")
     public AjaxResult leave(Long id) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
-        if (id == null || id <= 0) return error("参数有误");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (id == null || id <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         try {
             roamHangoutService.leave(memberId, id);
             return success();
@@ -99,8 +100,8 @@ public class ApiRoamHangoutController extends BaseController {
     @PostMapping("/close")
     public AjaxResult close(Long id) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
-        if (id == null || id <= 0) return error("参数有误");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (id == null || id <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         try {
             roamHangoutService.close(memberId, id);
             return success();

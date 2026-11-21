@@ -26,7 +26,7 @@
 
     <view class="tx-bottom">
       <view class="tx-cta">
-        <cy-btn variant="primary" bindtap="saveData">联系客服提现</cy-btn>
+        <cy-btn variant="primary" bindtap="saveData">{{payoutOpen ? '申请提现' : '联系客服提现'}}</cy-btn>
       </view>
     </view>
   </view>

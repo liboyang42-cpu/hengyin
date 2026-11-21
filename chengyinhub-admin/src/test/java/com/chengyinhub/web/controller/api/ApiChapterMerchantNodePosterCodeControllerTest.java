@@ -101,6 +101,7 @@ class ApiChapterMerchantNodePosterCodeControllerTest {
         Map<String, Object> data = (Map<String, Object>) r.get(AjaxResult.DATA_TAG);
         assertEquals(CODE, data.get("code"), "二维码内容必须是 checkin_code 本身");
         assertEquals("https://oss/wxacode.png", data.get("qrcodeUrl"));
+        assertEquals("https://www.chengyinhub.com/door?scene=" + CODE, data.get("linkQr"), "ONB-5:标准链接码与小程序码同一 scene");
         assertEquals(77L, data.get("nodeId"));
         assertEquals(9L, data.get("chapterId"));
         // 负控:动态核销码那套串一定带分隔符与签名段,长度也不同。出现它就说明有人照抄漫游了。

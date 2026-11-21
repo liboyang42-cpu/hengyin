@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.dto.TeamEventCommand;
 import com.chengyinhub.business.service.impl.TeamEventCommandService;
 import java.util.List;
@@ -64,7 +66,7 @@ public class ApiOfficialEventController extends BaseController {
 
     @GetMapping("/events/{id}/attendance/manage")
     public AjaxResult attendanceManage(@PathVariable Long id) {
-        if (!canPublish(uid())) return error("无官方发布权限");
+        if (!canPublish(uid())) return refuse(ErrorCode.OFFICIAL_PUBLISH_FORBIDDEN, "无官方发布权限");
         return success(attendance.read(id,uid(),true));
     }
 
@@ -74,7 +76,7 @@ public class ApiOfficialEventController extends BaseController {
     @PostMapping("/command")
     public AjaxResult command(@RequestBody TeamEventCommand input) {
         Long actor = uid();
-        if (!canPublish(actor)) return error("无官方发布权限");
+        if (!canPublish(actor)) return refuse(ErrorCode.OFFICIAL_PUBLISH_FORBIDDEN, "无官方发布权限");
         return AjaxResult.success(commandReceipts.execute(actor, "EVENT", input));
     }
 
@@ -155,11 +157,12 @@ public class ApiOfficialEventController extends BaseController {
     @PostMapping("/events/{id}/share-code")
     public AjaxResult shareCode(@PathVariable("id") Long id) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
-        if (id == null || id <= 0 || officialEventService.detail(id, memberId) == null) return error("活动不存在");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (id == null || id <= 0 || officialEventService.detail(id, memberId) == null) return refuse(ErrorCode.ACTIVITY_NOT_FOUND, "活动不存在");
         Map<String, Object> data = new java.util.HashMap<>();
         try {
             data.put("qrcodeUrl", playerWxacodeService.getOrCreateScene("ac." + id));
+            data.put("linkQr", com.chengyinhub.business.service.IPlayerWxacodeService.linkFor("ac." + id));
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }
@@ -170,7 +173,7 @@ public class ApiOfficialEventController extends BaseController {
     @GetMapping("/events/{id}")
     public AjaxResult detail(@PathVariable("id") Long id) {
         Map<String, Object> vo = officialEventService.detail(id, uid());
-        if (vo == null) return error("活动不存在");
+        if (vo == null) return refuse(ErrorCode.ACTIVITY_NOT_FOUND, "活动不存在");
         return success(vo);
     }
 
@@ -178,7 +181,7 @@ public class ApiOfficialEventController extends BaseController {
     @PostMapping("/events/{id}/signup")
     public AjaxResult signup(@PathVariable("id") Long id) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         String err = officialEventService.signup(id, memberId);
         return err == null ? success("报名成功") : error(err);
     }
@@ -187,7 +190,7 @@ public class ApiOfficialEventController extends BaseController {
     @PostMapping("/events/{id}/complete")
     public AjaxResult complete(@PathVariable("id") Long id) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         String err = officialEventService.completeTask(id, memberId);
         return err == null ? success() : error(err);
     }
@@ -202,7 +205,7 @@ public class ApiOfficialEventController extends BaseController {
     @GetMapping("/my-events")
     public AjaxResult myEvents() {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         return success(officialEventService.myEvents(memberId));
     }
 
@@ -216,7 +219,7 @@ public class ApiOfficialEventController extends BaseController {
     @PostMapping("/events/{id}/arrivals")
     public AjaxResult verifyArrival(@PathVariable("id") Long id, @RequestBody OfficialEventV2ArrivalRequest request) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         return success(officialEventV2Service.verifyArrival(id, memberId, request));
     }
 
@@ -225,7 +228,7 @@ public class ApiOfficialEventController extends BaseController {
     public AjaxResult respondParty(@PathVariable("partyId") Long partyId, @PathVariable("action") String action,
                                    @RequestBody(required = false) OfficialEventV2PartyActionRequest request) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         String err = officialEventV2Service.respondParty(partyId, memberId, action, request == null ? null : request.getReason());
         return err == null ? success() : error(err);
     }
@@ -235,7 +238,7 @@ public class ApiOfficialEventController extends BaseController {
     public AjaxResult acceptOrganizerInvitation(@PathVariable("partyId") Long partyId,
                                                  @RequestBody(required = false) OfficialEventV2PartyActionRequest request) {
         Long memberId = uid();
-        if (!canPublish(memberId)) return error("无官方发布权限");
+        if (!canPublish(memberId)) return refuse(ErrorCode.OFFICIAL_PUBLISH_FORBIDDEN, "无官方发布权限");
         String err = officialEventV2Service.acceptOrganizerInvitation(partyId, memberId, request == null ? null : request.getReason());
         return err == null ? success("已接受主办邀约") : error(err);
     }
@@ -245,7 +248,7 @@ public class ApiOfficialEventController extends BaseController {
     public AjaxResult declineOrganizerInvitation(@PathVariable("partyId") Long partyId,
                                                   @RequestBody(required = false) OfficialEventV2PartyActionRequest request) {
         Long memberId = uid();
-        if (!canPublish(memberId)) return error("无官方发布权限");
+        if (!canPublish(memberId)) return refuse(ErrorCode.OFFICIAL_PUBLISH_FORBIDDEN, "无官方发布权限");
         String err = officialEventV2Service.declineOrganizerInvitation(partyId, memberId, request == null ? null : request.getReason());
         return err == null ? success("已拒绝主办邀约") : error(err);
     }
@@ -254,7 +257,7 @@ public class ApiOfficialEventController extends BaseController {
     @GetMapping("/v2/party-inbox")
     public AjaxResult partyInbox() {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         return success(officialEventV2Service.partyInbox(memberId));
     }
 
@@ -273,7 +276,7 @@ public class ApiOfficialEventController extends BaseController {
     @PostMapping("/invites")
     public AjaxResult inviteMerchants(@RequestBody OfficialMerchantInviteRequest request) {
         Long memberId = uid();
-        if (!canPublish(memberId)) return error("无官方发布权限");
+        if (!canPublish(memberId)) return refuse(ErrorCode.OFFICIAL_PUBLISH_FORBIDDEN, "无官方发布权限");
         if (request == null) return error("官方邀约参数不完整");
         try {
             List<Long> ids = coopInviteService.createOfficialMerchantInvites(memberId, request);
@@ -292,7 +295,7 @@ public class ApiOfficialEventController extends BaseController {
     @GetMapping("/invites")
     public AjaxResult officialInvites(@RequestParam(required = false) Integer status) {
         Long memberId = uid();
-        if (!canPublish(memberId)) return error("无官方发布权限");
+        if (!canPublish(memberId)) return refuse(ErrorCode.OFFICIAL_PUBLISH_FORBIDDEN, "无官方发布权限");
         CoopInvite query = new CoopInvite();
         query.setInviteType(CoopInvite.TYPE_OFFICIAL_MERCHANT);
         query.setFromType(CoopInvite.FROM_OFFICIAL);
@@ -305,7 +308,7 @@ public class ApiOfficialEventController extends BaseController {
     @GetMapping("/merchant-invites")
     public AjaxResult merchantInvites() {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             return success(coopInviteService.listOfficialMerchantInvites(memberId));
         } catch (NotActiveMerchantException e) {
@@ -322,7 +325,7 @@ public class ApiOfficialEventController extends BaseController {
     @PostMapping("/publish")
     public AjaxResult publish(@RequestBody OfficialEvent event) {
         Long memberId = uid();
-        if (!canPublish(memberId)) return error("无官方发布权限");
+        if (!canPublish(memberId)) return refuse(ErrorCode.OFFICIAL_PUBLISH_FORBIDDEN, "无官方发布权限");
         if (event == null) return error("活动不能为空");
         // 2026-10-20 分级审核:官方活动先审后发。标题/副标题/故事过统一门禁(PRE_REVIEW),明确违规直接拒;
         // 其余一律落待审并建 OFFICIAL_EVENT 审核单,审核台通过后才公开。
@@ -351,9 +354,9 @@ public class ApiOfficialEventController extends BaseController {
     @PostMapping("/v2/drafts")
     public AjaxResult saveV2Draft(@RequestBody OfficialEventV2DraftRequest request) {
         Long memberId = uid();
-        if (!canPublish(memberId)) return error("无官方发布权限");
+        if (!canPublish(memberId)) return refuse(ErrorCode.OFFICIAL_PUBLISH_FORBIDDEN, "无官方发布权限");
         if (request == null || request.getEvent() == null) return error("活动草稿不能为空");
-        if (request.getEvent().getId() != null && !ownsV2Event(request.getEvent().getId(), memberId)) return error("无权修改该活动");
+        if (request.getEvent().getId() != null && !ownsV2Event(request.getEvent().getId(), memberId)) return refuse(ErrorCode.FORBIDDEN, "无权修改该活动");
         request.getEvent().setSenderAccount(memberId);
         OfficialEvent saved = officialEventV2Service.saveDraft(request, memberId);
         return AjaxResult.success("草稿已保存", saved.getId());
@@ -363,7 +366,7 @@ public class ApiOfficialEventController extends BaseController {
     @GetMapping("/v2/events/{id}/publish-check")
     public AjaxResult v2PublishCheck(@PathVariable("id") Long id) {
         Long memberId = uid();
-        if (!canPublish(memberId) || !officialEventV2Service.canReadControlledEvent(id, memberId)) return AjaxResult.error(HttpStatus.FORBIDDEN, "无权查看该活动发布检查");
+        if (!canPublish(memberId) || !officialEventV2Service.canReadControlledEvent(id, memberId)) return AjaxResult.refuse(HttpStatus.FORBIDDEN, ErrorCode.FORBIDDEN, "无权查看该活动发布检查");
         return success(officialEventV2Service.checkPublishableForOperator(id, memberId));
     }
 
@@ -371,7 +374,7 @@ public class ApiOfficialEventController extends BaseController {
     @PostMapping("/v2/events/{id}/schedule")
     public AjaxResult scheduleV2(@PathVariable("id") Long id) {
         Long memberId = uid();
-        if (!canPublish(memberId)) return error("无官方发布权限");
+        if (!canPublish(memberId)) return refuse(ErrorCode.OFFICIAL_PUBLISH_FORBIDDEN, "无官方发布权限");
         String err = officialEventV2Service.schedule(id, memberId);
         return err == null ? success("已提交审核，审核通过后进入排期") : error(err);
     }
@@ -380,7 +383,7 @@ public class ApiOfficialEventController extends BaseController {
     @PostMapping("/v2/events/{id}/organizer-invites")
     public AjaxResult inviteOrganizer(@PathVariable("id") Long id, @RequestBody OfficialEventV2OrganizerInviteRequest request) {
         Long memberId = uid();
-        if (!canPublish(memberId)) return error("无官方发布权限");
+        if (!canPublish(memberId)) return refuse(ErrorCode.OFFICIAL_PUBLISH_FORBIDDEN, "无官方发布权限");
         String err = officialEventV2Service.inviteOrganizer(id, memberId,
                 request == null ? null : request.getMemberId(), request == null ? null : request.getReason());
         return err == null ? success("主办邀约已发送") : error(err);
@@ -390,7 +393,7 @@ public class ApiOfficialEventController extends BaseController {
     @PostMapping("/v2/events/{id}/organizer-transfer")
     public AjaxResult transferOrganizer(@PathVariable("id") Long id, @RequestBody OfficialEventV2OrganizerTransferRequest request) {
         Long memberId = uid();
-        if (!canPublish(memberId)) return error("无官方发布权限");
+        if (!canPublish(memberId)) return refuse(ErrorCode.OFFICIAL_PUBLISH_FORBIDDEN, "无官方发布权限");
         String err = officialEventV2Service.transferOrganizer(id, memberId,
                 request == null ? null : request.getPartyId(), request == null ? null : request.getReason());
         return err == null ? success("主办方已转交") : error(err);
@@ -400,7 +403,7 @@ public class ApiOfficialEventController extends BaseController {
     @PostMapping("/v2/events/{id}/pause")
     public AjaxResult pauseV2(@PathVariable("id") Long id, @RequestBody OfficialEventV2PauseRequest request) {
         Long memberId = uid();
-        if (!canPublish(memberId)) return error("无官方发布权限");
+        if (!canPublish(memberId)) return refuse(ErrorCode.OFFICIAL_PUBLISH_FORBIDDEN, "无官方发布权限");
         String err = officialEventV2Service.pause(id, memberId, request == null ? null : request.getReason(),
                 request == null ? null : request.getImpactScope(), request == null ? null : request.getAlternativePlan(),
                 request == null ? null : request.getNotificationPlan());
@@ -412,19 +415,19 @@ public class ApiOfficialEventController extends BaseController {
     public AjaxResult resumeV2(@PathVariable("id") Long id,
                                @RequestBody(required = false) OfficialEventV2PartyActionRequest request) {
         Long memberId = uid();
-        if (!canPublish(memberId)) return error("无官方发布权限");
+        if (!canPublish(memberId)) return refuse(ErrorCode.OFFICIAL_PUBLISH_FORBIDDEN, "无官方发布权限");
         String err = officialEventV2Service.resume(id, memberId, request == null ? null : request.getReason());
         return err == null ? success("活动已恢复") : error(err);
     }
 
     @PostMapping("/broadcast-request/cancel")
     public AjaxResult cancelBroadcastCreation(@RequestBody java.util.Map<String,String> input){
-        if(!canPublish(uid()))return error("无官方发布权限");return success(officialBroadcastService.cancelCreation("MEMBER:"+uid(),input.get("requestId")));
+        if(!canPublish(uid()))return refuse(ErrorCode.OFFICIAL_PUBLISH_FORBIDDEN, "无官方发布权限");return success(officialBroadcastService.cancelCreation("MEMBER:"+uid(),input.get("requestId")));
     }
 
     @GetMapping("/broadcast-request")
     public AjaxResult broadcastRequest(@RequestParam String requestId){
-        if(!canPublish(uid()))return error("无官方发布权限");
+        if(!canPublish(uid()))return refuse(ErrorCode.OFFICIAL_PUBLISH_FORBIDDEN, "无官方发布权限");
         return success(officialBroadcastService.creationReceipt("MEMBER:"+uid(),requestId));
     }
 
@@ -432,13 +435,13 @@ public class ApiOfficialEventController extends BaseController {
     @PostMapping("/broadcast")
     public AjaxResult broadcast(@RequestBody OfficialBroadcast bc) {
         Long memberId = uid();
-        if (!canPublish(memberId)) return error("无官方发布权限");
+        if (!canPublish(memberId)) return refuse(ErrorCode.OFFICIAL_PUBLISH_FORBIDDEN, "无官方发布权限");
         if (bc == null) return error("通知不能为空");
         bc.setRequestOwner("MEMBER:"+memberId);
         OfficialEvent event = null;
         if (bc.getEventId() != null) {
             event = officialEventService.adminGet(bc.getEventId());
-            if (event == null) return error("活动不存在");
+            if (event == null) return refuse(ErrorCode.ACTIVITY_NOT_FOUND, "活动不存在");
         }
         // 内容安全:标题 + 文案(含分角色文案 JSON)
         String sec = wxSec.checkText(
@@ -456,7 +459,7 @@ public class ApiOfficialEventController extends BaseController {
 
     @PostMapping("/broadcast/{id}/recover")
     public AjaxResult recoverBroadcast(@PathVariable Long id) {
-        Long actor=uid();if(!canPublish(actor))return error("无官方发布权限");
+        Long actor=uid();if(!canPublish(actor))return refuse(ErrorCode.OFFICIAL_PUBLISH_FORBIDDEN, "无官方发布权限");
         return success(officialBroadcastService.recover(id,actor));
     }
 
@@ -464,19 +467,19 @@ public class ApiOfficialEventController extends BaseController {
     @GetMapping("/broadcast/{id}/stats")
     public AjaxResult broadcastStats(@PathVariable("id") Long id) {
         Long me = uid();
-        if (!canPublish(me)) return error("无官方发布权限");
+        if (!canPublish(me)) return refuse(ErrorCode.OFFICIAL_PUBLISH_FORBIDDEN, "无官方发布权限");
         // 归属校验:仅发布者本人可看自己通知的复盘,防白名单内互看他人数据
         OfficialBroadcast bc = officialBroadcastService.getById(id, me);
-        if (bc == null) return error("通知不存在");
+        if (bc == null) return refuse(ErrorCode.NOT_FOUND, "通知不存在");
         if (bc.getEventId() != null) {
             OfficialEvent event = officialEventService.adminGet(bc.getEventId());
-            if (event == null) return error("活动不存在");
+            if (event == null) return refuse(ErrorCode.ACTIVITY_NOT_FOUND, "活动不存在");
             if (event.getContractVersion() != null && event.getContractVersion() >= 2) {
                 return success(officialEventV2Service.broadcastStatsForOperator(id, me));
             }
         }
         if (bc.getSenderAccount() == null || !bc.getSenderAccount().equals(me)) {
-            return error("无权查看该通知数据");
+            return refuse(ErrorCode.FORBIDDEN, "无权查看该通知数据");
         }
         return success(officialBroadcastService.reachStats(id, me));
     }

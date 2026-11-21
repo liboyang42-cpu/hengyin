@@ -34,6 +34,11 @@ public class ChannelPlatformService
     static final int MEMBER_COUNT_CAP = 50;
     static final String DEFAULT_CATEGORY = "文字频道";
     static final String DEFAULT_CHANNEL = "综合";
+    /** CLB club-reach: a club opens with 闲聊 (default, position 0), then 公告 (announcement kind 2) and 活动. */
+    static final String CLUB_CHAT_CHANNEL = "闲聊";
+    static final String CLUB_NOTICE_CHANNEL = "公告";
+    static final String CLUB_EVENTS_CHANNEL = "活动";
+    static final int BACKFILL_MAX_BATCH = 500;
 
     @Autowired
     private ChannelPlatformMapper mapper;
@@ -43,6 +48,11 @@ public class ChannelPlatformService
     private com.chengyinhub.business.mapper.channel.platform.ChannelGovernanceMapper governance;
     @Autowired(required = false)
     private ChannelGovernanceService.MuteBridge muteBridge;
+    /** W7 x-channel-reach (SOC-2): enrol guild members into new or re-permissioned channels after commit. */
+    @Autowired(required = false)
+    private ChannelMembershipSync membership;
+
+    void setMembership(ChannelMembershipSync membership) { this.membership = membership; }
 
     public ChannelPlatformService() { }
 
@@ -68,6 +78,7 @@ public class ChannelPlatformService
         ChannelGuildAccess.RoleProfile profile = access.roles(guildKind, guildId, viewer);
         int memberCount = mapper.countGuildMembers(guildKind, guildId);
         Map<Long, Long> unread = new HashMap<>();
+        Map<Long, Long> mentions = new HashMap<>();
         Map<Long, ChannelRow> categories = new LinkedHashMap<>();
         Map<Long, List<Map<String, Object>>> grouped = new LinkedHashMap<>();
         List<Map<String, Object>> ungrouped = new ArrayList<>();
@@ -81,7 +92,7 @@ public class ChannelPlatformService
                 continue;
             }
             long bits = ChannelPermissionCalculator.effective(standing, profile.permissions(), profile.roleIds(),
-                    overwrites.getOrDefault(row.getId(), List.of()), row.getStatus());
+                    overwrites.getOrDefault(row.getId(), List.of()), row.getStatus(), row.getKind() == null ? -1 : row.getKind());
             if (!has(bits, VIEW_CHANNEL)) continue;
             visible.add(row);
             bitsById.put(row.getId(), bits);
@@ -92,11 +103,18 @@ public class ChannelPlatformService
             for (ChannelRow r : visible) ids.add(r.getId());
             for (Map<String, Object> u : mapper.selectUnread(viewer, ids))
                 unread.put(toLong(u.get("conversationId")), toLong(u.get("unread")));
+            // SOC-2: unread @me / @everyone / @my role / replies to me, so the list can say "Mentioned you".
+            for (Map<String, Object> u : mapper.selectMentionUnread(viewer, ids))
+                mentions.put(toLong(u.get("conversationId")), toLong(u.get("mentions")));
         }
         for (ChannelRow row : visible)
         {
             Map<String, Object> view = channelView(row, bitsById.get(row.getId()), memberCount, true);
-            if (withUnread) view.put("unread_count", unread.getOrDefault(row.getId(), 0L));
+            if (withUnread)
+            {
+                view.put("unread_count", unread.getOrDefault(row.getId(), 0L));
+                view.put("mention_count", mentions.getOrDefault(row.getId(), 0L));
+            }
             if (row.getParentId() != 0 && categories.containsKey(row.getParentId()))
                 grouped.computeIfAbsent(row.getParentId(), k -> new ArrayList<>()).add(view);
             else
@@ -445,6 +463,128 @@ public class ChannelPlatformService
         });
     }
 
+    static final int REORDER_MAX_ITEMS = 200;
+    static final int POSITION_MAX = 100_000;
+
+    /** One requested placement: channel or category id, target parent (0 = top level), position, optional CAS. */
+    record Placement(long id, long parentId, int position, Long expectedVersion) { }
+
+    /**
+     * C1 channels-structure: reorder channels and categories, and move channels between categories, in one
+     * request. Needs MANAGE_CHANNEL (club owner/admin, team leader). Categories stay top level; the default
+     * channel stays first (position 0); every other position is 1..100000. Each moved row bumps its version
+     * and writes a MOVE line in the channel log. Replays return the original receipt.
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> reorder(long viewer, int guildKind, long guildId, Map<String, Object> body, String headerReason)
+    {
+        Command c = Command.of(body, headerReason, Set.of("items"), false);
+        List<Placement> items = placements(c.fields.get("items"));
+        String fp = ChannelReceipts.fingerprint("MOVE", guildKind + ":" + guildId, c.fields);
+        requireGuildBit(viewer, guildKind, guildId, MANAGE_CHANNEL);
+        return ChannelReceipts.once(mapper, viewer, ChannelReceipts.META, c.requestId, fp, "MOVE", 0L, () -> {
+            requireGuildBit(viewer, guildKind, guildId, MANAGE_CHANNEL);
+            List<Placement> sorted = new ArrayList<>(items);
+            sorted.sort(java.util.Comparator.comparingLong(Placement::id));
+            Map<Long, ChannelRow> locked = new HashMap<>();
+            for (Placement p : sorted)
+            {
+                ChannelRow row = mapper.lockChannel(p.id());
+                if (row == null || row.getStatus() == null || row.getStatus() > 1
+                        || row.getGuildKind() != guildKind || row.getGuildId() != guildId)
+                    throw ChannelRejection.notFound();
+                locked.put(p.id(), row);
+            }
+            for (Placement p : sorted)
+            {
+                ChannelRow row = locked.get(p.id());
+                if (p.expectedVersion() != null && row.getMetaVersion() != p.expectedVersion().longValue())
+                    throw new ChannelRejection(409, "VERSION_CONFLICT", "频道已被他人修改");
+                if (row.isCategory())
+                {
+                    if (p.parentId() != 0) throw ChannelRejection.badField("分类不能再放进分类");
+                }
+                else if (p.parentId() != 0)
+                {
+                    ChannelRow parent = locked.containsKey(p.parentId()) ? locked.get(p.parentId()) : mapper.lockChannel(p.parentId());
+                    if (parent == null || !parent.isCategory() || parent.getStatus() == null || parent.getStatus() != 0
+                            || parent.getGuildKind() != guildKind || parent.getGuildId() != guildId)
+                        throw ChannelRejection.badField("父分类不存在");
+                }
+                boolean isDefault = row.getIsDefault() != null && row.getIsDefault() == 1;
+                if (isDefault && p.position() != 0)
+                    throw new ChannelRejection(409, "CHANNEL_STATE_CONFLICT", "默认频道固定在最前");
+                if (!isDefault && p.position() < 1) throw ChannelRejection.badField("position 超出范围");
+            }
+            List<Map<String, Object>> moved = new ArrayList<>();
+            for (Placement p : sorted)
+            {
+                ChannelRow row = locked.get(p.id());
+                long currentParent = row.getParentId() == null ? 0L : row.getParentId();
+                int currentPosition = row.getPosition() == null ? 0 : row.getPosition();
+                if (currentParent == p.parentId() && currentPosition == p.position()) continue;
+                try
+                {
+                    if (mapper.updatePlacement(p.id(), row.getMetaVersion(), p.parentId(), p.position()) != 1)
+                        throw new ChannelRejection(409, "VERSION_CONFLICT", "频道已被他人修改");
+                }
+                catch (RuntimeException dup)
+                {
+                    if (!ChannelRejection.isDuplicateKey(dup)) throw dup;
+                    throw new ChannelRejection(409, "CHANNEL_NAME_TAKEN", "同一分类下已有同名频道");
+                }
+                log(p.id(), "MOVE", row.getStatus(), row.getStatus(), c.reason, viewer, c.requestId);
+                Map<String, Object> view = new LinkedHashMap<>();
+                view.put("id", String.valueOf(p.id()));
+                view.put("parent_id", String.valueOf(p.parentId()));
+                view.put("position", p.position());
+                view.put("version", String.valueOf(row.getMetaVersion() + 1));
+                moved.add(view);
+            }
+            Map<String, Object> r = new LinkedHashMap<>();
+            r.put("request_id", c.requestId);
+            r.put("state", "APPLIED");
+            r.put("guild_kind", guildKind);
+            r.put("guild_id", String.valueOf(guildId));
+            r.put("moved", moved);
+            if (moved.isEmpty()) r.put("unchanged", true);
+            r.put("replayed", false);
+            return r;
+        });
+    }
+
+    static List<Placement> placements(Object raw)
+    {
+        if (!(raw instanceof List<?> list) || list.isEmpty() || list.size() > REORDER_MAX_ITEMS)
+            throw ChannelRejection.badField("items 不合法");
+        List<Placement> out = new ArrayList<>();
+        Set<Long> seen = new java.util.HashSet<>();
+        for (Object entry : list)
+        {
+            if (!(entry instanceof Map<?, ?> m)) throw ChannelRejection.badField("items 不合法");
+            for (Object key : m.keySet())
+                if (!Set.of("id", "parent_id", "position", "expected_version").contains(key))
+                    throw ChannelRejection.badField("未知字段 " + key);
+            long id = idField(m.get("id"), false);
+            long parentId = idField(m.get("parent_id"), true);
+            if (parentId == id) throw ChannelRejection.badField("父分类不存在");
+            Map<String, Object> pos = new HashMap<>();
+            pos.put("position", m.get("position"));
+            int position = intField(pos, "position", 0, POSITION_MAX);
+            Long expected = null;
+            Object v = m.get("expected_version");
+            if (v != null)
+            {
+                if (!(v instanceof String text) || !text.matches("0|[1-9][0-9]{0,18}"))
+                    throw ChannelRejection.badField("expected_version 必须是十进制字符串");
+                expected = Long.parseLong(text);
+            }
+            if (!seen.add(id)) throw ChannelRejection.badField("items 有重复频道");
+            out.add(new Placement(id, parentId, position, expected));
+        }
+        return out;
+    }
+
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> putOverwrite(long viewer, long channelId, int targetType, String targetId,
             Map<String, Object> body, String headerReason)
@@ -473,6 +613,7 @@ public class ChannelPlatformService
                 throw new ChannelRejection(403, "CHANNEL_FORBIDDEN", "不能授予自己没有的权限");
             casPermissions(row, expected, expectedPerm);
             mapper.upsertOverwrite(channelId, targetType, target, allow, deny, note, viewer);
+            if (membership != null) membership.channelChangedAfterCommit(channelId);
             long auditId = log(channelId, "PERMISSION_PUT", row.getStatus(), row.getStatus(), c.reason, viewer, c.requestId);
             Map<String, Object> result = permissionApplied(c.requestId, channelId, targetType, target, expected, expectedPerm, auditId);
             result.put("allow_bits", hex(allow));
@@ -497,6 +638,7 @@ public class ChannelPlatformService
             casPermissions(row, expected, expectedPerm);
             if (mapper.deleteOverwrite(channelId, targetType, target) != 1)
                 throw new ChannelRejection(404, "OVERWRITE_NOT_FOUND", "该覆盖不存在");
+            if (membership != null) membership.channelChangedAfterCommit(channelId);
             long auditId = log(channelId, "PERMISSION_DELETE", row.getStatus(), row.getStatus(), c.reason, viewer, c.requestId);
             Map<String, Object> result = permissionApplied(c.requestId, channelId, targetType, target, expected, expectedPerm, auditId);
             result.put("deleted", true);
@@ -514,6 +656,17 @@ public class ChannelPlatformService
         {
             ChannelRow category = insert(viewer, guildKind, guildId, 0, 0, DEFAULT_CATEGORY, null, 1, 0, false,
                     "provision", null);
+            if (guildKind == ChannelGuildAccess.GUILD_CLUB)
+            {
+                // The default must be a text channel at position 0 (ck_channel_default), so 闲聊 leads the list.
+                insert(viewer, guildKind, guildId, category.getId(), 1, CLUB_CHAT_CHANNEL, null, 1, 0, true, "provision", null);
+                insert(viewer, guildKind, guildId, category.getId(), 2, CLUB_NOTICE_CHANNEL, null, 1, 0, false, "provision", null);
+                ChannelRow events = insert(viewer, guildKind, guildId, category.getId(), 1, CLUB_EVENTS_CHANNEL, null, 1, 0, false,
+                        "provision", null);
+                // SOC-2 owner decision: 活动 (like every 公告) defaults to "all messages" so new events reach everyone.
+                notifyAllByDefault(events.getId());
+                return;
+            }
             insert(viewer, guildKind, guildId, category.getId(), 1, DEFAULT_CHANNEL, null, 1, 0, true, "provision", null);
         }
         catch (RuntimeException race)
@@ -523,6 +676,57 @@ public class ChannelPlatformService
             throw new ChannelRejection(409, "CHANNEL_PROVISION_RACE", "频道正在初始化，请重试");
         }
     }
+
+    /**
+     * Seeds the default club channels when a club has none (club creation, approval and the backfill job).
+     * Idempotent: a club that already has any channel row, live or deleted, is left alone.
+     * The owner is the operator, so the owner is the first conversation member of each channel.
+     * Runs in its own transaction so a caller's rollback (or a seeding race) never couples to the club write.
+     * @return true when this call created the defaults
+     */
+    @Transactional(rollbackFor = Exception.class, propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
+    public boolean ensureClubDefaults(long clubId, long ownerId)
+    {
+        if (clubId <= 0 || ownerId <= 0) return false;
+        if (!mapper.selectGuildChannels(ChannelGuildAccess.GUILD_CLUB, clubId, true).isEmpty()) return false;
+        provisionDefaults(ownerId, ChannelGuildAccess.GUILD_CLUB, clubId);
+        return true;
+    }
+
+    /**
+     * Backfill: open clubs that have no channel rows get the defaults. Each club runs in its own call so one
+     * failure does not roll back the others. Returns the number of clubs seeded.
+     */
+    public int backfillClubDefaults(int limit)
+    {
+        int batch = Math.max(1, Math.min(limit, BACKFILL_MAX_BATCH));
+        int seeded = 0;
+        for (Map<String, Object> club : mapper.selectOpenClubsWithoutChannels(batch))
+        {
+            long clubId = toLong(club.get("id"));
+            long ownerId = toLong(club.get("ownerId"));
+            try
+            {
+                if (self().ensureClubDefaults(clubId, ownerId)) seeded++;
+            }
+            catch (RuntimeException e)
+            {
+                org.slf4j.LoggerFactory.getLogger(ChannelPlatformService.class)
+                        .warn("club channel backfill skipped clubId={}", clubId, e);
+            }
+        }
+        return seeded;
+    }
+
+    /** The Spring proxy (lazy self-reference) so ensureClubDefaults keeps its own transaction; plain this in unit tests. */
+    private ChannelPlatformService self()
+    {
+        return selfRef != null ? selfRef : this;
+    }
+
+    @Autowired(required = false)
+    @org.springframework.context.annotation.Lazy
+    private ChannelPlatformService selfRef;
 
     private ChannelRow insert(long viewer, int guildKind, long guildId, long parentId, int kind, String name, String topic,
             int visibility, int slowmode, boolean isDefault, String reason, String requestId)
@@ -554,7 +758,28 @@ public class ChannelPlatformService
         }
         mapper.ensureConversationMember(id, viewer);
         log(id, "CREATE", null, 0, reason, viewer, requestId);
+        if (kind == ChannelPermissionCalculator.KIND_ANNOUNCEMENT) notifyAllByDefault(id);
+        // SOC-2: every guild member who can see the new channel gets a conversation row (after commit).
+        if (kind != 0 && membership != null) membership.channelChangedAfterCommit(id);
         return mapper.selectChannel(id);
+    }
+
+    /**
+     * SOC-2: 公告 and the provisioned 活动 channel push every message unless the member chose otherwise.
+     * The column comes from migration_20261116_channel_notify_default; if it is missing the channel simply
+     * inherits the club default, so a failure here never blocks creating the channel.
+     */
+    private void notifyAllByDefault(long channelId)
+    {
+        try
+        {
+            mapper.updateNotifyDefault(channelId, 0);
+        }
+        catch (RuntimeException missingColumn)
+        {
+            org.slf4j.LoggerFactory.getLogger(ChannelPlatformService.class)
+                    .warn("channel notify default not set channelId={} reason={}", channelId, missingColumn.getClass().getSimpleName());
+        }
     }
 
     private void transition(ChannelRow row, long expected, int from, int to, String archiveReason, Date purgeAt, String deleteReason)

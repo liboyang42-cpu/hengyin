@@ -22,9 +22,12 @@ import java.util.function.LongSupplier;
  * Merged CITY + Roam territory service.
  *
  * <p>Board spaces map to real places ({@code roam_poi.id <-> city_game_point.place_id <-> city_game_property}).
- * Players claim spaces via geotagged photo + GPS check-in within the configured geofence and
- * earn in-game POINTS (never real money) when other players check in via {@code /api/roam/checkin},
- * {@code /api/roam/territory/checkin}, or CITY arrival confirmation.
+ * Players claim spaces via geotagged photo + GPS check-in within the configured geofence. When other players
+ * check in via {@code /api/roam/checkin}, {@code /api/roam/territory/checkin} or CITY arrival confirmation, the
+ * holder's yield is paid in city coin through the points-governance credit-only service, after commit
+ * (non-cashable, own daily cap, idempotent per check-in; MKT-12 / MON-10). The territory's
+ * {@code owner_revenue_points} / {@code revenue_total_points} stay a yield score for the leaderboard; no points are paid.
+ * A member who loses a territory to a takeover is told through {@link com.chengyinhub.business.growthloops.ICityEventNotifyService}.
  */
 @Service
 public class RoamTerritoryService {
@@ -45,6 +48,23 @@ public class RoamTerritoryService {
     private final LongSupplier clock;
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     private com.chengyinhub.business.service.impl.InGameChannelService inGameChannelService;
+    /** Holder yield (points-governance MON-10). Absent: no yield is paid. */
+    @Autowired(required = false)
+    private com.chengyinhub.business.citycoin.CityCoinService cityCoinService;
+    /** CITY territory pushes (growth-loops GRO-08). Absent: no push. */
+    @Autowired(required = false)
+    private com.chengyinhub.business.growthloops.ICityEventNotifyService cityNotify;
+
+    public static final String REVENUE_MODE = "CITY_COIN";
+
+    void setCityCoinService(com.chengyinhub.business.citycoin.CityCoinService cityCoinService) {
+        this.cityCoinService = cityCoinService;
+    }
+
+    void setCityNotify(com.chengyinhub.business.growthloops.ICityEventNotifyService cityNotify) {
+        this.cityNotify = cityNotify;
+    }
+
     private CityMonopolyService monopoly;
 
     @Autowired
@@ -73,6 +93,14 @@ public class RoamTerritoryService {
 
     private boolean monopolyActive(String boardId) {
         return monopoly != null && monopoly.enabled(boardId);
+    }
+
+    /**
+     * CITY-7 (owner decision 2026-11-16): City Monopoly pays 积分 only, so its boards say POINTS; classic territory keeps
+     * the non-cashable city coin ({@link #REVENUE_MODE}).
+     */
+    String revenueModeFor(String boardId) {
+        return monopolyActive(boardId) ? "POINTS" : REVENUE_MODE;
     }
 
     /** Plausibility evaluation outcome for GPS coordinates and speed jumps. */
@@ -209,7 +237,8 @@ public class RoamTerritoryService {
                                       String boardId, String regionId, String seasonId) {
         CityGameSupport.requireMember(memberId);
         if (!validCoord(lat, lng)) throw new CityGameException(400, "INVALID_COORDINATES", "无效的坐标");
-        int radius = radiusM == null || radiusM <= 0 ? 3000 : Math.min(radiusM, 50_000);
+        // CITY-12: a player read covers the walk around them, not a whole city.
+        int radius = radiusM == null || radiusM <= 0 ? 3000 : Math.min(radiusM, MAX_NEARBY_RADIUS_M);
         Map<String, Object> board = resolveBoard(boardId, regionId);
         String resolvedBoardId = board == null ? null : (String) board.get("boardId");
         String resolvedSeasonId = seasonId != null && !seasonId.isEmpty() ? seasonId
@@ -230,7 +259,9 @@ public class RoamTerritoryService {
                             + "t.territory_id AS territoryId, t.deed_serial AS deedSerial, t.owner_member_id AS ownerMemberId, t.claim_photo_url AS claimPhotoUrl, "
                             + "t.checkin_toll_points AS checkinTollPoints, t.owner_revenue_points AS ownerRevenuePoints, "
                             + "t.checkin_count AS checkinCount, t.revenue_total_points AS revenueTotalPoints, t.status AS territoryStatus, "
-                            + "t.protected_until AS territoryProtectedUntil, m.nickname AS ownerNickname "
+                            + "t.protected_until AS territoryProtectedUntil, m.nickname AS ownerNickname, "
+                            + "t.rules_kind AS rulesKind, COALESCE(t.tier, pt.tier) AS tier, t.upgrade_level AS upgradeLevel, "
+                            + "t.decay_state AS decayState, COALESCE(t.district_id, pt.district_id) AS districtId "
                             + "FROM city_game_point pt "
                             + "JOIN city_game_board b ON b.board_id = pt.board_id "
                             + "LEFT JOIN city_game_property pr ON pr.board_id = pt.board_id AND pr.point_id = pt.point_id "
@@ -242,7 +273,7 @@ public class RoamTerritoryService {
                     resolvedBoardId, lat - dLat, lat + dLat, lng - dLng, lng + dLng);
             for (Map<String, Object> row : boardSpaces) {
                 if (row.get("poiId") instanceof Number) seenPoiIds.add(((Number) row.get("poiId")).longValue());
-                items.add(wireSpaceItem(row, lat, lng, now));
+                items.add(wireSpaceItem(row, lat, lng, now, memberId));
             }
         }
 
@@ -253,7 +284,9 @@ public class RoamTerritoryService {
                         + "t.point_id AS pointId, t.district_id AS districtId, t.owner_member_id AS ownerMemberId, t.claim_photo_url AS claimPhotoUrl, "
                         + "t.checkin_toll_points AS checkinTollPoints, t.owner_revenue_points AS ownerRevenuePoints, "
                         + "t.checkin_count AS checkinCount, t.revenue_total_points AS revenueTotalPoints, t.status AS territoryStatus, "
-                        + "t.protected_until AS territoryProtectedUntil, m.nickname AS ownerNickname "
+                        + "t.protected_until AS territoryProtectedUntil, m.nickname AS ownerNickname, "
+                        + "t.rules_kind AS rulesKind, t.tier AS tier, t.upgrade_level AS upgradeLevel, "
+                        + "t.decay_state AS decayState, t.district_id AS districtId "
                         + "FROM roam_poi poi "
                         + "LEFT JOIN roam_territory t ON t.poi_id = poi.id AND t.status = 'ACTIVE' "
                         + "LEFT JOIN ums_member m ON m.id = t.owner_member_id "
@@ -263,7 +296,7 @@ public class RoamTerritoryService {
         for (Map<String, Object> row : roamPois) {
             Long pid = row.get("poiId") instanceof Number ? ((Number) row.get("poiId")).longValue() : null;
             if (pid != null && seenPoiIds.contains(pid)) continue;
-            items.add(wireSpaceItem(row, lat, lng, now));
+            items.add(wireSpaceItem(row, lat, lng, now, memberId));
         }
 
         java.util.Set<String> boards = new java.util.TreeSet<>();
@@ -276,14 +309,17 @@ public class RoamTerritoryService {
         out.put("boardId", resolvedBoardId);
         out.put("regionId", board == null ? regionId : board.get("regionId"));
         out.put("seasonId", resolvedSeasonId);
-        out.put("revenueMode", "POINTS");
+        out.put("revenueMode", revenueModeFor(resolvedBoardId));
         out.put("items", items);
         out.put("territories", items);
         out.put("districts", new ArrayList<>(districts.values()));
         return out;
     }
 
-    private Map<String, Object> wireSpaceItem(Map<String, Object> r, double curLat, double curLng, long now) {
+    /** CITY-12: largest radius a player's nearby read may cover. */
+    static final int MAX_NEARBY_RADIUS_M = 5000;
+
+    private Map<String, Object> wireSpaceItem(Map<String, Object> r, double curLat, double curLng, long now, long viewer) {
         double pLat = dbl(r.get("latitude"));
         double pLng = dbl(r.get("longitude"));
         double distM = GeoDistanceUtils.haversineMeters(curLat, curLng, pLat, pLng);
@@ -303,19 +339,32 @@ public class RoamTerritoryService {
         item.put("latitude", pLat);
         item.put("longitude", pLng);
         item.put("radiusM", r.get("poiRadiusM") instanceof Number ? ((Number) r.get("poiRadiusM")).intValue() : DEFAULT_RADIUS_M);
-        item.put("ownerMemberId", r.get("ownerMemberId"));
-        item.put("ownerNickname", r.get("ownerNickname"));
+        // CITY-12: other players are visible only by opt-in. Another holder is shown masked, like the City Monopoly
+        // reads; the keys stay (null) for older clients. The viewer sees their own place in full.
+        Long owner = r.get("ownerMemberId") instanceof Number ? ((Number) r.get("ownerMemberId")).longValue() : null;
+        boolean mine = owner != null && owner == viewer;
+        item.put("ownerMemberId", mine ? owner : null);
+        item.put("ownerNickname", mine ? r.get("ownerNickname") : null);
+        item.put("holderMasked", owner == null ? null : CityMonopolyService.mask(owner));
+        item.put("isMine", mine);
         item.put("holderTeamId", r.get("holderTeamId"));
         item.put("claimed", r.get("territoryId") != null || r.get("ownerMemberId") != null);
         item.put("status", r.get("territoryId") != null ? (isProtected ? "PROTECTED" : "CLAIMED") : (r.get("propStatus") != null ? r.get("propStatus") : "UNCLAIMED"));
         item.put("protectedUntilMillis", protMillis);
         item.put("isProtected", isProtected);
-        item.put("claimPhotoUrl", r.get("claimPhotoUrl"));
+        item.put("claimPhotoUrl", mine ? r.get("claimPhotoUrl") : null);
         item.put("checkinTollPoints", r.get("checkinTollPoints") instanceof Number ? ((Number) r.get("checkinTollPoints")).longValue() : DEFAULT_TOLL_POINTS);
         item.put("ownerRevenuePoints", r.get("ownerRevenuePoints") instanceof Number ? ((Number) r.get("ownerRevenuePoints")).longValue() : DEFAULT_REVENUE_POINTS);
         item.put("checkinCount", r.get("checkinCount") instanceof Number ? ((Number) r.get("checkinCount")).longValue() : 0L);
         item.put("revenueTotalPoints", r.get("revenueTotalPoints") instanceof Number ? ((Number) r.get("revenueTotalPoints")).longValue() : 0L);
         item.put("distanceM", Math.round(distM * 10.0) / 10.0);
+        // CITY-1: which claim flow the app must run for this place, plus the City Monopoly facts it shows.
+        item.put("claimFlow", monopolyActive((String) r.get("boardId")) ? "MONOPOLY" : "LEGACY");
+        item.put("rulesKind", r.get("rulesKind"));
+        item.put("tier", r.get("tier") instanceof Number ? ((Number) r.get("tier")).intValue() : null);
+        item.put("upgradeLevel", r.get("upgradeLevel") instanceof Number ? ((Number) r.get("upgradeLevel")).intValue() : null);
+        item.put("decayState", r.get("decayState"));
+        item.put("districtId", r.get("districtId"));
         return item;
     }
 
@@ -451,7 +500,7 @@ public class RoamTerritoryService {
         jdbc.update("INSERT INTO roam_territory(territory_id, geohash7, poi_id, board_id, season_id, property_id, point_id, "
                         + "title, city_code, latitude, longitude, radius_m, owner_member_id, claim_photo_url, claim_request_id, "
                         + "checkin_toll_points, owner_revenue_points, revenue_mode, checkin_count, revenue_total_points, status, version, claimed_at, protected_until) "
-                        + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'POINTS',0,0,'ACTIVE',1,?,?)",
+                        + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'CITY_COIN',0,0,'ACTIVE',1,?,?)",
                 territoryId, geohash7, poiId, boardId, seasonId, propertyId, pointId,
                 title, cityCode, targetLat, targetLng, radiusM, memberId, cleanPhotoUrl, requestId,
                 tollPoints, revenuePoints, nowTs, protectedUntilTs);
@@ -459,13 +508,17 @@ public class RoamTerritoryService {
         String checkinId = UUID.randomUUID().toString();
         jdbc.update("INSERT INTO roam_territory_checkin(checkin_id, territory_id, member_id, owner_member_id, request_id, checkin_kind, "
                         + "latitude, longitude, accuracy_m, distance_m, photo_url, points_spent, owner_revenue_points, revenue_mode, plausibility_status, plausibility_reason, implied_speed_mps, create_time) "
-                        + "VALUES (?,?,?,?,?,'CLAIM',?,?,?,?,?,0,0,'POINTS',?,?,?,?)",
+                        + "VALUES (?,?,?,?,?,'CLAIM',?,?,?,?,?,0,0,'CITY_COIN',?,?,?,?)",
                 checkinId, territoryId, memberId, memberId, requestId,
                 lat, lng, accuracyM, distM, cleanPhotoUrl, plausibility.status, plausibility.reasonCode, plausibility.impliedSpeedMps, nowTs);
 
         // 4) Reflect claim directly on linked CITY board space (photo+GPS replaces staff-code-only for claims)
         if (boardId != null && propertyId != null) {
             syncBoardPropertyOnClaim(boardId, propertyId, pointId, memberId, territoryId, cleanPhotoUrl, protectedUntilTs);
+        }
+        if (cityNotify != null && existingActive != null) {
+            long formerOwner = ((Number) existingActive.get("owner_member_id")).longValue();
+            if (formerOwner != memberId) cityNotify.lost(formerOwner, "terr:" + existingActive.get("territory_id"), title);
         }
         if (inGameChannelService != null) {
             boolean isTakeover = existingActive != null && ((Number) existingActive.get("owner_member_id")).longValue() != memberId;
@@ -493,12 +546,30 @@ public class RoamTerritoryService {
 
     void syncBoardPropertyOnClaim(String boardId, String propertyId, String pointId, long memberId,
                                           String territoryId, String photoUrl, Timestamp protectedUntilTs) {
+        projectBoardHolder(boardId, propertyId, pointId, memberId, territoryId, photoUrl, protectedUntilTs, null);
+    }
+
+    /**
+     * CITY-10: writes the holder's team onto the board property. A team holding that is not the projection of the
+     * former City Monopoly holder ({@code formerHolder}) is left alone and logged as BOARD_HELD_BY_TEAM.
+     */
+    void projectBoardHolder(String boardId, String propertyId, String pointId, long memberId,
+                            String territoryId, String photoUrl, Timestamp protectedUntilTs, Long formerHolder) {
         Map<String, Object> board = mapper.selectBoardForUpdate(boardId);
         if (board == null || !"OPEN".equals(board.get("lifecycle"))) return;
         Map<String, Object> prop = mapper.selectPropertyForUpdate(boardId, propertyId);
         if (prop == null) return;
         Map<String, Object> participation = mapper.selectParticipation(boardId, memberId);
         String teamId = participation == null ? null : (String) participation.get("teamId");
+        // CITY-10: the board row is a projection of who holds the place. Never overwrite another team's holding.
+        Object currentTeam = prop.get("holderTeamId");
+        Map<String, Object> former = formerHolder == null ? null : mapper.selectParticipation(boardId, formerHolder);
+        boolean projectionOfFormer = former != null && currentTeam != null && currentTeam.equals(former.get("teamId"));
+        if (currentTeam != null && !currentTeam.equals(teamId) && !projectionOfFormer) {
+            org.slf4j.LoggerFactory.getLogger(RoamTerritoryService.class).warn(
+                    "event=BOARD_HELD_BY_TEAM board={} property={} team={} territory={}", boardId, propertyId, currentTeam, territoryId);
+            return;
+        }
         long expectedVer = ((Number) prop.get("stateVersion")).longValue();
         mapper.updateProperty(boardId, propertyId, expectedVer, "PROTECTED", teamId,
                 new Date(protectedUntilTs.getTime() - 1000L), new Date(protectedUntilTs.getTime()), null);
@@ -515,7 +586,7 @@ public class RoamTerritoryService {
                         pointId == null ? "" : pointId, "photoUrl", photoUrl)));
     }
 
-    /** Visitor check-in on a territory: charges optional in-game point toll and credits owner in POINTS. */
+    /** Visitor check-in on a territory: charges the optional in-game point toll; the owner's yield is paid in city coin. */
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> checkin(Long memberId, Map<String, Object> body) {
         CityGameSupport.requireMember(memberId);
@@ -533,9 +604,8 @@ public class RoamTerritoryService {
         List<Map<String, Object>> existing = jdbc.queryForList(
                 "SELECT * FROM roam_territory_checkin WHERE member_id = ? AND request_id = ? LIMIT 1", memberId, requestId);
         if (!existing.isEmpty()) {
-            Map<String, Object> out = new LinkedHashMap<>(existing.get(0));
-            out.put("idempotentReplay", true);
-            return out;
+            // CITY-4: a replay answers in the same camelCase shape as the first answer.
+            return checkinReplay(existing.get(0), memberId);
         }
 
         long now = clock.getAsLong();
@@ -573,10 +643,15 @@ public class RoamTerritoryService {
             out.put("idempotentReplay", false);
             out.put("checkinId", checkinId);
             out.put("territoryId", territoryId);
+            putHolder(out, ownerId, memberId);
             out.put("selfVisit", selfVisit);
+            out.put("cooldownActive", false);
             out.put("visitorPointsSpent", 0L);
             out.put("ownerRevenuePoints", granted);
             out.put("revenueMode", "POINTS");
+            out.put("rentState", rent.get("yieldEventId") != null ? "PENDING" : "NONE");
+            out.put("ineligibleReason", rent.get("ineligibleReason"));
+            out.put("visitorPoints", rent.get("visitorPoints") instanceof Number ? ((Number) rent.get("visitorPoints")).longValue() : 0L);
             out.put("territory", rent);
             out.put("plausibilityStatus", plausibility.status);
             out.put("distanceM", Math.round(distM * 10.0) / 10.0);
@@ -596,7 +671,7 @@ public class RoamTerritoryService {
                 mapper.insertPointsDetail(memberId, beforeVisitor, tollPoints, "领地打卡消耗积分", "TERR_CHECKIN:" + requestId);
             }
             if (ownerRevenue > 0) {
-                creditOwnerPoints(ownerId, ownerRevenue, "领地他人打卡积分收益", "TERR_REV:" + requestId);
+                creditOwnerYield(ownerId, territoryId, "TERR_REV:" + requestId);
             }
             jdbc.update("UPDATE roam_territory SET checkin_count = checkin_count + 1, revenue_total_points = revenue_total_points + ?, last_checkin_at = ? WHERE territory_id = ?",
                     ownerRevenue, new Timestamp(now), territoryId);
@@ -605,7 +680,7 @@ public class RoamTerritoryService {
         String checkinId = UUID.randomUUID().toString();
         jdbc.update("INSERT INTO roam_territory_checkin(checkin_id, territory_id, member_id, owner_member_id, request_id, checkin_kind, "
                         + "latitude, longitude, accuracy_m, distance_m, photo_url, points_spent, owner_revenue_points, revenue_mode, plausibility_status, plausibility_reason, implied_speed_mps, create_time) "
-                        + "VALUES (?,?,?,?,?,'VISIT',?,?,?,?,?,?,?,'POINTS',?,?,?,?)",
+                        + "VALUES (?,?,?,?,?,'VISIT',?,?,?,?,?,?,?,'CITY_COIN',?,?,?,?)",
                 checkinId, territoryId, memberId, ownerId, requestId,
                 lat, lng, accuracyM, distM, photoUrl, tollPoints, ownerRevenue,
                 plausibility.status, plausibility.reasonCode, plausibility.impliedSpeedMps, new Timestamp(now));
@@ -614,26 +689,26 @@ public class RoamTerritoryService {
         out.put("idempotentReplay", false);
         out.put("checkinId", checkinId);
         out.put("territoryId", territoryId);
-        out.put("ownerMemberId", ownerId);
+        putHolder(out, ownerId, memberId);
         out.put("selfVisit", selfVisit);
         out.put("cooldownActive", cooldownHit);
         out.put("visitorPointsSpent", tollPoints);
         out.put("ownerRevenuePoints", ownerRevenue);
-        out.put("revenueMode", "POINTS");
+        out.put("revenueMode", REVENUE_MODE);
         out.put("plausibilityStatus", plausibility.status);
         out.put("distanceM", Math.round(distM * 10.0) / 10.0);
         if (inGameChannelService != null) {
             inGameChannelService.postRoamEvent(
                     com.chengyinhub.business.service.impl.InGameChannelService.EVENT_CHECKIN,
                     memberId, str(territory, "city_code"), str(territory, "title"),
-                    ownerRevenue > 0 ? ("过路收益 +" + ownerRevenue + " 积分") : null);
+                    ownerRevenue > 0 ? "领主获得城市币收益" : null);
         }
         return out;
     }
 
     /**
      * Hook invoked when another player checks in via /api/roam/checkin or CITY arrival confirmation.
-     * Awards owner in-game POINTS (never real money), idempotent per (visitorMemberId, sourceKey).
+     * Pays the owner's yield in city coin (never points or money), idempotent per (visitorMemberId, sourceKey).
      */
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> rewardExternalCheckin(long visitorMemberId, Long poiId, String boardId, String pointId,
@@ -705,7 +780,7 @@ public class RoamTerritoryService {
         }
         long ownerRevenue = Math.max(0L, ((Number) territory.get("owner_revenue_points")).longValue());
         if (ownerRevenue > 0) {
-            creditOwnerPoints(ownerId, ownerRevenue, "漫游/CITY到店积分收益", "EXT_REV:" + sourceKey);
+            creditOwnerYield(ownerId, territoryId, "EXT_REV:" + sourceKey);
         }
         jdbc.update("UPDATE roam_territory SET checkin_count = checkin_count + 1, revenue_total_points = revenue_total_points + ?, last_checkin_at = ? WHERE territory_id = ?",
                 ownerRevenue, new Timestamp(now), territoryId);
@@ -715,11 +790,17 @@ public class RoamTerritoryService {
         String checkinId = UUID.randomUUID().toString();
         jdbc.update("INSERT INTO roam_territory_checkin(checkin_id, territory_id, member_id, owner_member_id, request_id, checkin_kind, "
                         + "latitude, longitude, accuracy_m, distance_m, photo_url, points_spent, owner_revenue_points, revenue_mode, plausibility_status, create_time) "
-                        + "VALUES (?,?,?,?,?,?,?,?,?,?,NULL,0,?,'POINTS','PASS',?)",
+                        + "VALUES (?,?,?,?,?,?,?,?,?,?,NULL,0,?,'CITY_COIN','PASS',?)",
                 checkinId, territoryId, visitorMemberId, ownerId, sourceKey, checkinKind,
                 useLat, useLng, null, distM, ownerRevenue, new Timestamp(now));
-        return Map.of("credited", true, "territoryId", territoryId, "ownerMemberId", ownerId,
-                "ownerRevenuePoints", ownerRevenue, "revenueMode", "POINTS", "checkinId", checkinId);
+        Map<String, Object> credited = new LinkedHashMap<>();
+        credited.put("credited", true);
+        credited.put("territoryId", territoryId);
+        putHolder(credited, ownerId, visitorMemberId);
+        credited.put("ownerRevenuePoints", ownerRevenue);
+        credited.put("revenueMode", REVENUE_MODE);
+        credited.put("checkinId", checkinId);
+        return credited;
     }
 
     /** Coordinate-based fallback hook when /api/roam/checkin lights a non-participating point near an active territory. */
@@ -757,7 +838,49 @@ public class RoamTerritoryService {
                 (String) row.get("board_id"), (String) row.get("point_id"), curLat, curLng, accuracyM, deviceKey, sourceKey, "ROAM_CHECKIN");
     }
 
-    /** Season/board leaderboard ranking territory owners by total points revenue and holdings. */
+    /**
+     * CITY-12: the player leaderboard. Every holder except the viewer is masked (no real id or nickname); the viewer's own
+     * rows say {@code isMine}. The admin console keeps {@link #leaderboard(String, String, String, Integer)}.
+     */
+    public Map<String, Object> leaderboard(Long viewer, String boardId, String regionId, String seasonId, Integer limit) {
+        Map<String, Object> raw = leaderboard(boardId, regionId, seasonId, limit);
+        long me = viewer == null ? 0L : viewer;
+        Map<String, Object> out = new LinkedHashMap<>(raw);
+        for (String key : List.of("leaders", "topTerritories")) {
+            List<Map<String, Object>> masked = new ArrayList<>();
+            Object rows = raw.get(key);
+            if (rows instanceof List<?> list) {
+                for (Object o : list) {
+                    if (!(o instanceof Map<?, ?> m)) continue;
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    for (Map.Entry<?, ?> e : m.entrySet()) row.put(String.valueOf(e.getKey()), e.getValue());
+                    // Leaders keep a distinct number (their rank) so older clients that require the key still decode.
+                    maskHolder(row, me, "leaders".equals(key) ? masked.size() + 1L : 0L);
+                    masked.add(row);
+                }
+            }
+            out.put(key, masked);
+        }
+        return out;
+    }
+
+    /**
+     * Masks another holder on a leaderboard row. {@code ownerMemberId} and {@code ownerNickname} stay present (older
+     * clients decode them as required): the id becomes {@code substituteId} (rank, or 0), the nickname the masked name.
+     */
+    static void maskHolder(Map<String, Object> row, long viewer, long substituteId) {
+        Long owner = row.get("ownerMemberId") instanceof Number ? ((Number) row.get("ownerMemberId")).longValue() : null;
+        boolean mine = owner != null && viewer > 0 && owner == viewer;
+        String masked = owner == null ? null : CityMonopolyService.mask(owner);
+        row.put("holderMasked", masked);
+        row.put("isMine", mine);
+        if (!mine) {
+            row.put("ownerMemberId", substituteId);
+            row.put("ownerNickname", masked);
+        }
+    }
+
+    /** Season/board leaderboard ranking territory owners by total points revenue and holdings (admin console). */
     public Map<String, Object> leaderboard(String boardId, String regionId, String seasonId, Integer limit) {
         int capped = limit == null ? 20 : Math.max(1, Math.min(limit, 100));
         Map<String, Object> board = resolveBoard(boardId, regionId);
@@ -793,7 +916,7 @@ public class RoamTerritoryService {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("boardId", useBoardId);
         out.put("seasonId", useSeasonId);
-        out.put("revenueMode", "POINTS");
+        out.put("revenueMode", revenueModeFor(useBoardId));
         out.put("leaders", leaders);
         out.put("topTerritories", topTerritories);
         return out;
@@ -929,6 +1052,40 @@ public class RoamTerritoryService {
         return findActiveTerritoryForUpdate(poiId, boardId, propertyId);
     }
 
+    /**
+     * W7 x-fog-monopoly (carried over from x-city-territory): a check-in answer names the holder the way CITY-12 does.
+     * {@code ownerMemberId} stays as a key for older builds but is the id only for the player's own place; everyone
+     * else gets {@code holderMasked} ("玩家1***9") and {@code isMine}.
+     */
+    static void putHolder(Map<String, Object> out, long owner, long viewer) {
+        boolean mine = owner > 0 && owner == viewer;
+        out.put("ownerMemberId", mine ? owner : null);
+        out.put("holderMasked", owner > 0 ? CityMonopolyService.mask(owner) : null);
+        out.put("isMine", mine);
+    }
+
+    /** CITY-4: rebuilds the check-in answer from the stored row (same keys as the first answer). */
+    static Map<String, Object> checkinReplay(Map<String, Object> row, long memberId) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        long owner = row.get("owner_member_id") instanceof Number ? ((Number) row.get("owner_member_id")).longValue() : 0L;
+        boolean points = "POINTS".equals(row.get("revenue_mode"));
+        long granted = row.get("owner_revenue_points") instanceof Number ? ((Number) row.get("owner_revenue_points")).longValue() : 0L;
+        out.put("idempotentReplay", true);
+        out.put("checkinId", row.get("checkin_id"));
+        out.put("territoryId", row.get("territory_id"));
+        putHolder(out, owner, memberId);
+        out.put("selfVisit", owner == memberId);
+        out.put("cooldownActive", false);
+        out.put("visitorPointsSpent", row.get("points_spent") instanceof Number ? ((Number) row.get("points_spent")).longValue() : 0L);
+        out.put("ownerRevenuePoints", granted);
+        out.put("revenueMode", row.get("revenue_mode"));
+        if (points) out.put("rentState", granted > 0 ? "PENDING" : "NONE");
+        out.put("plausibilityStatus", row.get("plausibility_status"));
+        Object d = row.get("distance_m");
+        out.put("distanceM", d instanceof Number ? Math.round(((Number) d).doubleValue() * 10.0) / 10.0 : null);
+        return out;
+    }
+
     private boolean hasRecentRevenueCheckin(String territoryId, long visitorMemberId, long nowMillis) {
         Long cnt = jdbc.queryForObject(
                 "SELECT COUNT(*) FROM roam_territory_checkin WHERE territory_id = ? AND member_id = ? "
@@ -937,10 +1094,24 @@ public class RoamTerritoryService {
         return cnt != null && cnt > 0;
     }
 
-    private void creditOwnerPoints(long ownerId, long points, String reason, String businessKey) {
-        long before = mapper.selectMemberPoints(ownerId);
-        mapper.creditMemberPoints(ownerId, points);
-        mapper.insertPointsEarnDetail(ownerId, before, points, reason, businessKey);
+    /**
+     * Holder yield goes through the points-governance city coin service only, after the caller's transaction
+     * commits (a rolled-back check-in pays nothing). Amount and daily cap come from the city coin config.
+     */
+    private void creditOwnerYield(long ownerId, String territoryId, String checkInRef) {
+        if (cityCoinService == null) return;
+        cityCoinService.creditHolderAfterCommit(ownerId, "terr:" + territoryId, yieldRef(checkInRef));
+    }
+
+    /** City coin refs are at most 80 chars; longer refs are replaced by a stable digest. */
+    static String yieldRef(String ref) {
+        if (ref.length() <= 80) return ref;
+        try {
+            byte[] d = java.security.MessageDigest.getInstance("SHA-256").digest(ref.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            return "h:" + java.util.HexFormat.of().formatHex(d);
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private Map<String, Object> formatTerritoryRow(Map<String, Object> r) {

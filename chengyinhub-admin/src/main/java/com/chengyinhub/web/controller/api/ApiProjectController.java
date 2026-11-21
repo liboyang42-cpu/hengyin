@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
@@ -94,10 +96,10 @@ public class ApiProjectController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (memberId == null || memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         Long topicId = null;
         if (body != null && body.get("topicId") != null) {
@@ -152,10 +154,10 @@ public class ApiProjectController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (memberId == null || memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         Long topicId = null;
         if (body != null && body.get("topicId") != null) {
@@ -205,10 +207,10 @@ public class ApiProjectController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (memberId == null || memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         try {
             if (MerchantOperationScope.isMerchant(scope)) {

@@ -31,6 +31,7 @@ const advancedGamePreview = require('../utils/publish/advanced-game-preview.js')
 const { applyPreviewAction } = require('../../../utils/game-preview-action.js');
 const nodeGameCatalog = require('../utils/publish/node-game-catalog.js');
 const nodeOutcomeContract = require('../utils/publish/node-outcome-contract.js');
+const aiNodeAssist = require('./ai-node-assist.js');
 const supportMatrix = require('../utils/publish/gameplay-support-matrix.js');
 const templateTools = require('../utils/publish/template-tools.js');
 const r5Editor = require('./r5-editor.js'); const questoAuthor = require('./questo-author.js'); const checkSection = require('./check-section.js'); const afterSection = require('./after-section.js');
@@ -471,6 +472,10 @@ Page({
     /* 玩法规则的展示形态:一行一步。真值仍在 formData.ruleInstructions(换行分隔),
        这里只是把它拆开给界面用,存盘前再拼回去 —— 不新建后端字段。 */
     ruleSteps: [''],
+    aiAssistState: 'idle',
+    aiAssistError: '',
+    aiAssistNote: '',
+    aiAssistChips: ['拍照打卡,找到门口的老招牌', '答题:这座建筑建于哪一年', '谜题:根据线索找到下一站'],
     // 预览要演的那一屏玩法。null = 这个节点没开玩法配置,回落到基础验证那套
     pvKit: null,
     canPublishGame: false,
@@ -1403,6 +1408,7 @@ Page({
       // R9-04:scope=my 说明 id 来自「我的模板」,回填要走 /api/template/myinfo 才能读草稿。
       // 它不参与写链路身份 —— 写身份仍只由 operationScope(MERCHANT)决定。
       isMyScope: options.scope === 'my' || options.templateScope === 'my',
+      tallyTemplateId: editingId || 0,   // x-life-games:偏好题汇总只读,按「我的模板」里这条的 id 查
       from: options.from || '',
       editorLoading: !!editingId,
       loadError: editingId || options.id == null ? '' : '模板编号无效，请返回后重试',
@@ -1626,6 +1632,9 @@ Page({
       'formData.ruleInstructions': steps.map((one) => String(one || '').trim()).filter(Boolean).join('\n'),
     });
   },
+  // G2 / GAM-14:AI 助写(cy-ai-assist),见 ai-node-assist.js
+  onAiAssistGenerate: function (e) { aiNodeAssist.generate(this, app, e); },
+  onAiAssistCancel: function () { aiNodeAssist.cancel(this); },
   onRuleStepInput: function (e) {
     const index = Number(e.currentTarget.dataset.index);
     const steps = (this.data.ruleSteps || []).slice();
@@ -1732,12 +1741,12 @@ Page({
   },
   fillPreferenceExample: function () {
     const value = JSON.stringify({
-      steps: [{ key: 'space', type: 'single', title: '你现在的空间更像哪一种?', options: [
+      steps: [{ key: 'space', type: 'single', title: '你现在的空间更像哪一种？', options: [
         { key: 'A', text: '小而紧凑', scores: { compact: 2, open: 0 } },
         { key: 'B', text: '开阔但杂乱', scores: { compact: 0, open: 2 } }
       ] }],
       dimensions: ['compact', 'open'],
-      tiebreak: { key: 'tradeoff', type: 'single', title: '如果只能先改一个?', options: [
+      tiebreak: { key: 'tradeoff', type: 'single', title: '如果只能先改一个？', options: [
         { key: 'A', text: '先减物品', scores: { compact: 1 } },
         { key: 'B', text: '先改动线', scores: { open: 1 } }
       ] },

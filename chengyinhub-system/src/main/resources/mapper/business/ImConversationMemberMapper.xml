@@ -41,6 +41,13 @@
         where m.conversation_id = #{conversationId} and m.member_id = #{memberId} and m.deleted = 0
     </update>
 
+    <update id="addUnreadForActiveMembersExcept">
+        update im_conversation_member m
+        join im_conversation c on c.id = m.conversation_id and c.status = 0
+        set m.unread_count = m.unread_count + #{delta}
+        where m.conversation_id = #{conversationId} and m.member_id &lt;&gt; #{exceptMemberId} and m.deleted = 0
+    </update>
+
     <select id="selectMyConversations" resultMap="ImConversationMemberResult">
         select m.id, m.conversation_id, m.member_id, m.role, m.unread_count, m.last_read_msg_id, m.muted, m.deleted, m.create_time
         from im_conversation_member m
@@ -60,6 +67,7 @@
             <result property="type" column="conv_type"/>
             <result property="bizKey" column="conv_biz_key"/>
             <result property="status" column="conv_status"/>
+            <result property="lastMsgAt" column="conv_last_msg_at"/>
             <result property="remark" column="conv_remark"/>
         </association>
         <association property="latest" javaType="com.chengyinhub.business.domain.ImMessage"
@@ -86,12 +94,14 @@
 
     <!-- 每个成员索引一行。两个相关子查询只选主键，不把会话历史/参与者扇出到应用层。
          最新消息的条件、可见序与 ImMessageMapper.selectVisiblePage(cursor=null,size=1) 保持一致。
-         群业务权限与路线卡当前权限不在此查询中推断。 -->
-    <select id="selectMyConversationSummaries" resultMap="ConversationSummaryResult">
+         群业务权限与路线卡当前权限不在此查询中推断。
+         R9 BE-17：先在派生表里按 (last_msg_at desc, id desc) 键集分页并 LIMIT，再只对这一页的行跑两个相关子查询；
+         不再对读者的全部会话逐行跑子查询。索引见 migration_20261115_im_conversation_page.sql。 -->
+    <select id="selectMyConversationSummaryPage" resultMap="ConversationSummaryResult">
         select m.id, m.conversation_id, m.member_id, m.role, m.unread_count, m.last_read_msg_id,
                m.muted, m.deleted, m.create_time,
-               c.id as conv_id, c.type as conv_type, c.biz_key as conv_biz_key, c.status as conv_status,
-               c.remark as conv_remark,
+               m.conv_id, m.conv_type, m.conv_biz_key, m.conv_status, m.conv_last_msg_at,
+               m.conv_remark,
                msg.id as latest_id, msg.sender_id as latest_sender_id, msg.msg_type as latest_msg_type,
                msg.content as latest_content, msg.extra_json as latest_extra_json,
                msg.status as latest_status, msg.check_status as latest_check_status,
@@ -99,20 +109,36 @@
                date_format(coalesce(msg.visible_at, msg.create_time), '%Y-%m-%d %H:%i:%s.%f') as latest_visible_order_at,
                other.member_id as counterparty_id, u.id as profile_id, u.nickname as profile_nickname,
                u.name as profile_name, u.avatar as profile_avatar
-        from im_conversation_member m
-        join im_conversation c on c.id = m.conversation_id
+        from (
+            select pm.id, pm.conversation_id, pm.member_id, pm.role, pm.unread_count, pm.last_read_msg_id,
+                   pm.muted, pm.deleted, pm.create_time,
+                   pc.id as conv_id, pc.type as conv_type, pc.biz_key as conv_biz_key, pc.status as conv_status,
+                   pc.last_msg_at as conv_last_msg_at, pc.remark as conv_remark
+            from im_conversation_member pm
+            join im_conversation pc on pc.id = pm.conversation_id
+            where pm.member_id = #{memberId} and pm.deleted = 0 and pc.status = 0
+            <if test="cursorAt != null">
+              and (pc.last_msg_at &lt; #{cursorAt}
+                   or (pc.last_msg_at = #{cursorAt} and pc.id &lt; #{cursorConversationId})
+                   or pc.last_msg_at is null)
+            </if>
+            <if test="cursorAt == null and cursorConversationId != null">
+              and pc.last_msg_at is null and pc.id &lt; #{cursorConversationId}
+            </if>
+            order by pc.last_msg_at desc, pc.id desc
+            limit #{limit}
+        ) m
         left join im_message msg on msg.id = (
             select id from im_message
-            where conversation_id = c.id and status != 2
+            where conversation_id = m.conv_id and status != 2
               and (msg_type != 2 or check_status = 1 or sender_id = #{memberId})
             order by coalesce(visible_at, create_time) desc, id desc limit 1)
         left join im_conversation_member other on other.id = (
             select p.id from im_conversation_member p
-            where p.conversation_id = c.id and p.member_id != #{memberId} limit 1)
-            and (c.type is null or c.type not in (2, 3, 4))
+            where p.conversation_id = m.conv_id and p.member_id != #{memberId} limit 1)
+            and (m.conv_type is null or m.conv_type not in (2, 3, 4))
         left join ums_member u on u.id = other.member_id
-        where m.member_id = #{memberId} and m.deleted = 0 and c.status = 0
-        order by c.last_msg_at desc
+        order by m.conv_last_msg_at desc, m.conv_id desc
     </select>
 
     <resultMap id="ClubConversationSummaryResult"

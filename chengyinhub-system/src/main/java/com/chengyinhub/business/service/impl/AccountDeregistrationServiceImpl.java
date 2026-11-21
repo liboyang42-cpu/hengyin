@@ -77,6 +77,19 @@ public class AccountDeregistrationServiceImpl implements IAccountDeregistrationS
     private com.chengyinhub.business.service.IRoamHangoutService roamHangoutService;
     @Autowired
     private IImService imService;
+    /** FLOW-03: revoke Sign in with Apple tokens after erasure; optional so older tests can build the service bare. */
+    @Autowired(required = false)
+    private com.chengyinhub.business.account.apple.AppleTokenRevocationService appleTokenRevocationService;
+    /**
+     * R13: erases kept fog cells, roam tracks, location-trust trail/evidence, install link and push devices in the
+     * same per-account transaction. Spring always provides it; optional only so older tests can build the service bare.
+     */
+    @Autowired(required = false)
+    private MemberPrivacyErasureService memberPrivacyErasureService;
+
+    /** SOC-14: chat text and channel operator ids (switches chengyin.erasure.*). */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.channel.platform.ChatErasureService chatErasureService;
 
     @Override
     public DeregistrationStatusVO precheck(Long memberId) {
@@ -89,7 +102,8 @@ public class AccountDeregistrationServiceImpl implements IAccountDeregistrationS
         if ("ELIGIBLE".equals(precheck.getStatus())) {
             precheck.setVerificationMethod(member.getPhone() != null && !member.getPhone().trim().isEmpty()
                     ? "SMS" : member.getWxOpenId() != null && !member.getWxOpenId().trim().isEmpty()
-                    ? "WECHAT" : "UNAVAILABLE");
+                    ? "WECHAT" : member.getAppleId() != null && !member.getAppleId().trim().isEmpty()
+                    ? "APPLE" : "UNAVAILABLE");
         }
         return precheck;
     }
@@ -217,6 +231,7 @@ public class AccountDeregistrationServiceImpl implements IAccountDeregistrationS
                 Boolean done = tx.execute(s -> executeOne(deregistration, now, failedMembers));
                 if (Boolean.TRUE.equals(done)) {
                     completed++;
+                    revokeAppleTokens(deregistration.getMemberId());
                 }
             } catch (Exception e) {
                 CriticalPathEvents.failure(CriticalPathCode.CP_DEREGISTRATION_FAILED, "execute", e);
@@ -272,6 +287,16 @@ public class AccountDeregistrationServiceImpl implements IAccountDeregistrationS
                     + " member=" + deregistration.getMemberId()
                     + " cause=" + fallbackFailure.getClass().getSimpleName());
             return false;
+        }
+    }
+
+    /** FLOW-03: after the erasure committed, revoke the member's Apple tokens. Never fails the deletion. */
+    private void revokeAppleTokens(Long memberId) {
+        if (appleTokenRevocationService == null) return;
+        try {
+            appleTokenRevocationService.revokeAfterDeletion(memberId);
+        } catch (RuntimeException ignored) {
+            // revokeAfterDeletion already logs and records; erasure is complete either way
         }
     }
 
@@ -357,6 +382,10 @@ public class AccountDeregistrationServiceImpl implements IAccountDeregistrationS
             // ★清发布者实名登记(姓名+身份证号):注销后人已经不是人了,这行密文没有留存理由
             deregistrationMapper.deleteMemberIdentity(memberId);
             deregistrationMapper.deleteMemberAddresses(memberId);
+            // R13:路线图新增的位置/设备个人信息(保留迷雾格、漫游轨迹、定位可信留痕、安装号关联、推送设备)
+            if (memberPrivacyErasureService != null) memberPrivacyErasureService.erase(memberId, now);
+            // SOC-14:聊天正文(私信/群/频道)与频道操作人;KEEP 开关下不动
+            if (chatErasureService != null) eraseOptional("im_message", () -> chatErasureService.eraseMember(memberId));
             roamHangoutService.closeAllByMember(memberId);   // 附近的局:局主没了,局转关、群转关
             eraseR3PersonalData(memberId);                   // ★HIGH-S6:领地/城市大富翁/属性/频道/外部游戏/随机
             appSessionRegistryService.revokeAll(memberId);

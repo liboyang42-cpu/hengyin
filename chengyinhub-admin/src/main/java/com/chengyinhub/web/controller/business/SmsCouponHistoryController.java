@@ -105,7 +105,7 @@ public class SmsCouponHistoryController extends BaseController
         if (!reversed)
         {
             // 条件置位拿 0 行 = 券当前不是已核销态。幂等不报成功:运维需要知道这次点击没有产生新动作。
-            return error("该券当前不是已核销状态,无需撤销");
+            return error("该券当前不是已核销状态，无需撤销");
         }
         return success("已撤销");
     }

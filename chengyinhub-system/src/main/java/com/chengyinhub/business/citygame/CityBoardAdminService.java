@@ -291,6 +291,219 @@ public class CityBoardAdminService {
         return getBoardDetail(boardId);
     }
 
+    // =================================================================== CITY-19 tier & district authoring
+
+    private CityMonopolyConfigService monopolyConfigs;
+
+    @Autowired(required = false)
+    public void setMonopolyConfigs(CityMonopolyConfigService monopolyConfigs) { this.monopolyConfigs = monopolyConfigs; }
+
+    private CityMonopolyConfig monopolyConfig(String boardId) {
+        return monopolyConfigs == null ? CityMonopolyConfig.defaults() : monopolyConfigs.forBoard(boardId);
+    }
+
+    static int requireTier(Object v) {
+        int t = v instanceof Number n ? n.intValue() : -1;
+        if (!(v instanceof Number) && v != null) {
+            try { t = Integer.parseInt(String.valueOf(v).trim().replaceFirst("^[Tt]", "")); } catch (NumberFormatException e) { t = -1; }
+        }
+        if (t < 1 || t > 4) throw new CityGameException(400, "TIER_INVALID", "地点等级只能是 T1 街角、T2 小店、T3 名店或 T4 地标");
+        return t;
+    }
+
+    static String requireDistrictName(String name) {
+        if (name == null || name.trim().isEmpty() || name.trim().length() > 64) {
+            throw new CityGameException(400, "DISTRICT_NAME_INVALID", "街区名称必填，最多 64 个字");
+        }
+        return name.trim();
+    }
+
+    static String requireColorToken(String token) {
+        if (token == null || token.isBlank()) return "district.c1";
+        if (!token.trim().matches("district\\.c([1-9]|10)")) {
+            throw new CityGameException(400, "DISTRICT_COLOR_INVALID", "街区颜色只能是 district.c1 到 district.c10");
+        }
+        return token.trim();
+    }
+
+    Map<String, Object> boardRowForAuthoring(String boardId) { return selectBoardRow(boardId); }
+
+    private void requireEditableBoard(String boardId) {
+        Map<String, Object> live = boardRowForAuthoring(boardId);
+        if (live == null) throw new CityGameException(404, "CITY_BOARD_NOT_FOUND", "城市棋盘不存在");
+        if ("FROZEN".equals(live.get("lifecycle"))) throw new CityGameException(409, "BOARD_FROZEN", "已冻结的棋盘不可修改");
+    }
+
+    /** Sets a place's tier (T1 街角 .. T4 地标). New claims pay and earn by it; a place already held keeps its bought tier. */
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> updatePointTier(Long adminUserId, String boardId, String pointId, Object tierValue) {
+        CityGameSupport.requireId(boardId, "boardId");
+        CityGameSupport.requireId(pointId, "pointId");
+        int tier = requireTier(tierValue);
+        requireEditableBoard(boardId);
+        if (jdbc.update("UPDATE city_game_point SET tier = ? WHERE board_id = ? AND point_id = ? AND del_flag = 0", tier, boardId, pointId) != 1) {
+            throw new CityGameException(404, "POINT_NOT_FOUND", "地点不存在");
+        }
+        patchDraftSpace(boardId, pointId, "tier", tier);
+        mapper.insertBoardAudit(boardId, "POINT_TIER", adminUserId, "ADMIN", null, JSON.toJSONString(Map.of("pointId", pointId, "tier", tier)));
+        return layout(boardId);
+    }
+
+    /** Creates or renames a district (colour group). The board may hold at most city.monopoly.board.districts.max. */
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> upsertDistrict(Long adminUserId, String boardId, String districtId, String name, String colorToken) {
+        CityGameSupport.requireId(boardId, "boardId");
+        CityGameSupport.requireId(districtId, "districtId");
+        String cleanName = requireDistrictName(name);
+        String color = requireColorToken(colorToken);
+        requireEditableBoard(boardId);
+        List<Map<String, Object>> existing = jdbc.queryForList("SELECT district_id FROM city_district WHERE board_id = ? FOR UPDATE", boardId);
+        boolean known = existing.stream().anyMatch(r -> districtId.equals(r.get("district_id")));
+        int max = monopolyConfig(boardId).integer("city.monopoly.board.districts.max");
+        if (!known && existing.size() >= max) {
+            throw new CityGameException(409, "DISTRICTS_OUT_OF_RANGE", "一张棋盘最多 " + max + " 个街区");
+        }
+        jdbc.update("INSERT INTO city_district(board_id, district_id, name, color_token) VALUES (?,?,?,?) "
+                + "ON DUPLICATE KEY UPDATE name = VALUES(name), color_token = VALUES(color_token)", boardId, districtId, cleanName, color);
+        patchDraftDistrict(boardId, districtId, cleanName, color);
+        mapper.insertBoardAudit(boardId, known ? "DISTRICT_UPDATE" : "DISTRICT_CREATE", adminUserId, "ADMIN", null,
+                JSON.toJSONString(Map.of("districtId", districtId, "name", cleanName, "colorToken", color)));
+        recountOwnable(boardId);
+        return layout(boardId);
+    }
+
+    /** Puts a place in a district (null = no district). A district holds at most city.monopoly.board.properties_per_district.max. */
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> assignDistrict(Long adminUserId, String boardId, String pointId, String districtId) {
+        CityGameSupport.requireId(boardId, "boardId");
+        CityGameSupport.requireId(pointId, "pointId");
+        String target = districtId == null || districtId.isBlank() ? null : districtId.trim();
+        requireEditableBoard(boardId);
+        if (target != null) {
+            CityGameSupport.requireId(target, "districtId");
+            if (jdbc.queryForList("SELECT district_id FROM city_district WHERE board_id = ? AND district_id = ? FOR UPDATE", boardId, target).isEmpty()) {
+                throw new CityGameException(404, "DISTRICT_NOT_FOUND", "街区不存在");
+            }
+            Integer inside = jdbc.queryForObject("SELECT COUNT(*) FROM city_game_point WHERE board_id = ? AND district_id = ? AND point_id <> ? AND del_flag = 0",
+                    Integer.class, boardId, target, pointId);
+            int max = monopolyConfig(boardId).integer("city.monopoly.board.properties_per_district.max");
+            if (inside != null && inside >= max) {
+                throw new CityGameException(409, "DISTRICT_FULL", "一个街区最多 " + max + " 个地点");
+            }
+        }
+        if (jdbc.update("UPDATE city_game_point SET district_id = ? WHERE board_id = ? AND point_id = ? AND del_flag = 0", target, boardId, pointId) != 1) {
+            throw new CityGameException(404, "POINT_NOT_FOUND", "地点不存在");
+        }
+        // Held City Monopoly places follow their board place, so set bonus and district challenges see the new group.
+        jdbc.update("UPDATE roam_territory SET district_id = ?, version = version + 1 WHERE board_id = ? AND point_id = ? AND status = 'ACTIVE' "
+                + "AND rules_kind = 'MONOPOLY'", target, boardId, pointId);
+        patchDraftSpace(boardId, pointId, "districtId", target);
+        recountOwnable(boardId);
+        Map<String, Object> detail = new LinkedHashMap<>();
+        detail.put("pointId", pointId);
+        detail.put("districtId", target);
+        mapper.insertBoardAudit(boardId, "POINT_DISTRICT", adminUserId, "ADMIN", null, JSON.toJSONString(detail));
+        return layout(boardId);
+    }
+
+    /** Recounts each district's ownable places (role OPERABLE; neutral places are not ownable). */
+    void recountOwnable(String boardId) {
+        jdbc.update("UPDATE city_district d SET ownable_count = (SELECT COUNT(*) FROM city_game_point p JOIN city_game_property pr "
+                + "ON pr.board_id = p.board_id AND pr.point_id = p.point_id WHERE p.board_id = d.board_id AND p.district_id = d.district_id "
+                + "AND p.del_flag = 0 AND pr.role = 'OPERABLE') WHERE d.board_id = ?", boardId);
+    }
+
+    /** Tier and district layout of a board with what is still outside the approved ranges. */
+    public Map<String, Object> layout(String boardId) {
+        CityGameSupport.requireId(boardId, "boardId");
+        List<Map<String, Object>> districts = jdbc.queryForList("SELECT district_id AS districtId, name, color_token AS colorToken, "
+                + "ownable_count AS ownableCount FROM city_district WHERE board_id = ? ORDER BY district_id", boardId);
+        List<Map<String, Object>> points = jdbc.queryForList("SELECT p.point_id AS pointId, p.title, COALESCE(p.tier, 1) AS tier, "
+                + "p.district_id AS districtId, COALESCE(pr.role, 'OPERABLE') AS role FROM city_game_point p LEFT JOIN city_game_property pr "
+                + "ON pr.board_id = p.board_id AND pr.point_id = p.point_id WHERE p.board_id = ? AND p.del_flag = 0 "
+                + "ORDER BY pr.track_index, p.point_id", boardId);
+        Map<String, Integer> perDistrict = new LinkedHashMap<>();
+        for (Map<String, Object> d : districts) perDistrict.put(String.valueOf(d.get("districtId")), 0);
+        int neutral = 0, unassigned = 0;
+        for (Map<String, Object> p : points) {
+            Object d = p.get("districtId");
+            if ("NEUTRAL".equals(p.get("role"))) neutral++;
+            else if (d == null) unassigned++;
+            if (d != null) perDistrict.merge(String.valueOf(d), 1, Integer::sum);
+        }
+        CityMonopolyConfig c = monopolyConfig(boardId);
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("boardId", boardId);
+        out.put("districts", districts);
+        out.put("points", points);
+        out.put("issues", layoutIssues(c, perDistrict, points.size(), neutral, unassigned));
+        Map<String, Object> ranges = new LinkedHashMap<>();
+        ranges.put("districtsMin", c.integer("city.monopoly.board.districts.min"));
+        ranges.put("districtsMax", c.integer("city.monopoly.board.districts.max"));
+        ranges.put("placesPerDistrictMin", c.integer("city.monopoly.board.properties_per_district.min"));
+        ranges.put("placesPerDistrictMax", c.integer("city.monopoly.board.properties_per_district.max"));
+        ranges.put("neutralShareMin", c.num("city.monopoly.board.neutral_share.min"));
+        ranges.put("neutralShareMax", c.num("city.monopoly.board.neutral_share.max"));
+        out.put("ranges", ranges);
+        return out;
+    }
+
+    /** Stable issue codes for the console; empty when the board is inside every approved range. */
+    static List<String> layoutIssues(CityMonopolyConfig c, Map<String, Integer> perDistrict, int totalPlaces, int neutralPlaces, int unassigned) {
+        List<String> issues = new ArrayList<>();
+        int n = perDistrict.size();
+        if (n < c.integer("city.monopoly.board.districts.min")) issues.add("DISTRICTS_TOO_FEW");
+        if (n > c.integer("city.monopoly.board.districts.max")) issues.add("DISTRICTS_TOO_MANY");
+        for (Map.Entry<String, Integer> e : perDistrict.entrySet()) {
+            if (e.getValue() < c.integer("city.monopoly.board.properties_per_district.min")) issues.add("DISTRICT_TOO_SMALL:" + e.getKey());
+            if (e.getValue() > c.integer("city.monopoly.board.properties_per_district.max")) issues.add("DISTRICT_TOO_LARGE:" + e.getKey());
+        }
+        double share = totalPlaces == 0 ? 0 : (double) neutralPlaces / totalPlaces;
+        if (share < c.num("city.monopoly.board.neutral_share.min") - 1e-9 || share > c.num("city.monopoly.board.neutral_share.max") + 1e-9) {
+            issues.add("NEUTRAL_SHARE_OUT_OF_RANGE");
+        }
+        if (unassigned > 0) issues.add("PLACES_WITHOUT_DISTRICT");
+        return issues;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void patchDraftSpace(String boardId, String pointId, String key, Object value) {
+        List<Map<String, Object>> drafts = jdbc.queryForList("SELECT payload_json FROM city_game_board_draft WHERE board_id = ? FOR UPDATE", boardId);
+        if (drafts.isEmpty() || drafts.get(0).get("payload_json") == null) return;
+        Map<String, Object> payload = new LinkedHashMap<>(JSON.parseObject(String.valueOf(drafts.get(0).get("payload_json"))));
+        if (!(payload.get("spaces") instanceof List<?> spaces)) return;
+        boolean changed = false;
+        for (Object o : spaces) {
+            if (o instanceof Map<?, ?> m && pointId.equals(m.get("pointId"))) {
+                ((Map<String, Object>) m).put(key, value);
+                changed = true;
+            }
+        }
+        if (changed) jdbc.update("UPDATE city_game_board_draft SET payload_json = ? WHERE board_id = ?", JSON.toJSONString(payload), boardId);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void patchDraftDistrict(String boardId, String districtId, String name, String colorToken) {
+        List<Map<String, Object>> drafts = jdbc.queryForList("SELECT payload_json FROM city_game_board_draft WHERE board_id = ? FOR UPDATE", boardId);
+        if (drafts.isEmpty() || drafts.get(0).get("payload_json") == null) return;
+        Map<String, Object> payload = new LinkedHashMap<>(JSON.parseObject(String.valueOf(drafts.get(0).get("payload_json"))));
+        List<Object> districts = payload.get("districts") instanceof List<?> l ? new ArrayList<>(l) : new ArrayList<>();
+        Map<String, Object> entry = new LinkedHashMap<>();
+        entry.put("districtId", districtId);
+        entry.put("name", name);
+        entry.put("colorToken", colorToken);
+        boolean replaced = false;
+        for (int i = 0; i < districts.size(); i++) {
+            if (districts.get(i) instanceof Map<?, ?> m && districtId.equals(m.get("districtId"))) {
+                districts.set(i, entry);
+                replaced = true;
+            }
+        }
+        if (!replaced) districts.add(entry);
+        payload.put("districts", districts);
+        jdbc.update("UPDATE city_game_board_draft SET payload_json = ? WHERE board_id = ?", JSON.toJSONString(payload), boardId);
+    }
+
     /** Admin board audit trail: board events + unified dice roll audit + admin/merchant actions. */
     public Map<String, Object> boardAudit(String boardId, Integer limit) {
         CityGameSupport.requireId(boardId, "boardId");
@@ -419,6 +632,19 @@ public class CityBoardAdminService {
     @SuppressWarnings("unchecked")
     private void syncPointsAndTrack(String boardId, Map<String, Object> norm, Timestamp validFrom) {
         List<Map<String, Object>> spaces = (List<Map<String, Object>>) norm.get("spaces");
+        // CITY-19: a republish keeps each place's authored tier and district unless the payload sets them.
+        Map<String, Map<String, Object>> previous = new java.util.HashMap<>();
+        for (Map<String, Object> r : jdbc.queryForList("SELECT point_id, tier, district_id FROM city_game_point WHERE board_id = ?", boardId)) {
+            previous.put(String.valueOf(r.get("point_id")), r);
+        }
+        if (norm.get("districts") instanceof List<?> ds) {
+            for (Object o : ds) {
+                Map<String, Object> d = (Map<String, Object>) o;
+                jdbc.update("INSERT INTO city_district(board_id, district_id, name, color_token) VALUES (?,?,?,?) "
+                        + "ON DUPLICATE KEY UPDATE name = VALUES(name), color_token = VALUES(color_token)",
+                        boardId, d.get("districtId"), d.get("name"), d.get("colorToken"));
+            }
+        }
         // Clear old task defs & services cleanly before rewriting current board config
         jdbc.update("DELETE FROM city_game_service WHERE board_id = ?", boardId);
         jdbc.update("DELETE FROM city_task_definition WHERE board_id = ?", boardId);
@@ -440,9 +666,12 @@ public class CityBoardAdminService {
             if (!"NEUTRAL".equals(role) && !"OPERABLE".equals(role)) role = "OPERABLE";
             int trackIndex = sp.get("trackIndex") instanceof Number ? ((Number) sp.get("trackIndex")).intValue() : idx;
 
-            jdbc.update("INSERT INTO city_game_point(board_id, point_id, title, latitude, longitude, domain, collected_at, availability, merchant_id, place_id, slot_version, del_flag) "
-                            + "VALUES (?,?,?,?,?,?,?, 'AVAILABLE', ?, ?, 1, 0)",
-                    boardId, pointId, title, lat, lng, domain, validFrom, merchantId, placeId);
+            Map<String, Object> before = previous.getOrDefault(pointId, Map.of());
+            Object tier = sp.get("tier") != null ? sp.get("tier") : before.get("tier");
+            Object district = sp.get("districtId") != null ? sp.get("districtId") : before.get("district_id");
+            jdbc.update("INSERT INTO city_game_point(board_id, point_id, title, latitude, longitude, domain, collected_at, availability, merchant_id, place_id, slot_version, del_flag, tier, district_id) "
+                            + "VALUES (?,?,?,?,?,?,?, 'AVAILABLE', ?, ?, 1, 0, ?, ?)",
+                    boardId, pointId, title, lat, lng, domain, validFrom, merchantId, placeId, tier, district);
             jdbc.update("INSERT INTO city_game_property(board_id, property_id, point_id, track_index, role, status, state_version) "
                             + "VALUES (?,?,?,?,?, 'AVAILABLE', 1)",
                     boardId, propertyId, pointId, trackIndex, role);
@@ -456,6 +685,7 @@ public class CityBoardAdminService {
             }
             idx++;
         }
+        recountOwnable(boardId);
 
         List<Map<String, Object>> tasks = (List<Map<String, Object>>) norm.get("tasks");
         int sortOrder = 1;
@@ -525,6 +755,13 @@ public class CityBoardAdminService {
             cleanSp.put("role", "NEUTRAL".equals(str(sp, "role")) ? "NEUTRAL" : "OPERABLE");
             cleanSp.put("tollPoints", num(sp, "tollPoints") != null ? Math.max(0L, num(sp, "tollPoints")) : 5L);
             cleanSp.put("serviceId", nonEmpty(str(sp, "serviceId"), "svc-" + propertyId));
+            // CITY-19: authored tier (T1..T4) and district; absent = keep what the live board has.
+            if (sp.get("tier") != null) cleanSp.put("tier", requireTier(sp.get("tier")));
+            String districtId = str(sp, "districtId");
+            if (districtId != null) {
+                CityGameSupport.requireId(districtId, "districtId");
+                cleanSp.put("districtId", districtId);
+            }
             spaces.add(cleanSp);
         }
 
@@ -596,6 +833,37 @@ public class CityBoardAdminService {
         out.put("mapMaxZoom", intVal(raw.get("mapMaxZoom"), 18));
         out.put("spaces", spaces);
         out.put("tasks", tasks);
+        List<Map<String, Object>> districts = normalizeDistricts(raw.get("districts"));
+        if (!districts.isEmpty()) {
+            Set<String> ids = new LinkedHashSet<>();
+            for (Map<String, Object> d : districts) ids.add((String) d.get("districtId"));
+            for (Map<String, Object> sp : spaces) {
+                if (sp.get("districtId") != null && !ids.contains(sp.get("districtId"))) {
+                    throw new CityGameException(400, "DISTRICT_NOT_FOUND", "地块所属街区不存在: " + sp.get("pointId"));
+                }
+            }
+            out.put("districts", districts);
+        }
+        return out;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<Map<String, Object>> normalizeDistricts(Object raw) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        if (!(raw instanceof List)) return out;
+        Set<String> seen = new LinkedHashSet<>();
+        for (Object o : (List<Object>) raw) {
+            if (!(o instanceof Map)) continue;
+            Map<String, Object> d = (Map<String, Object>) o;
+            String id = str(d, "districtId");
+            CityGameSupport.requireId(id, "districtId");
+            if (!seen.add(id)) throw new CityGameException(400, "BOARD_DRAFT_INVALID", "街区编号不能重复");
+            Map<String, Object> clean = new LinkedHashMap<>();
+            clean.put("districtId", id);
+            clean.put("name", requireDistrictName(str(d, "name")));
+            clean.put("colorToken", requireColorToken(str(d, "colorToken")));
+            out.add(clean);
+        }
         return out;
     }
 
@@ -612,7 +880,8 @@ public class CityBoardAdminService {
         List<Map<String, Object>> props = jdbc.queryForList(
                 "SELECT pt.point_id AS pointId, pr.property_id AS propertyId, pr.track_index AS trackIndex, "
                         + "pt.title, pt.latitude, pt.longitude, pt.place_id AS poiId, pt.merchant_id AS merchantId, "
-                        + "pt.domain, pr.role, pr.status, COALESCE(s.member_points_fee, 5) AS tollPoints, s.service_id AS serviceId "
+                        + "pt.domain, pr.role, pr.status, COALESCE(s.member_points_fee, 5) AS tollPoints, s.service_id AS serviceId, "
+                        + "pt.tier, pt.district_id AS districtId "
                         + "FROM city_game_point pt "
                         + "LEFT JOIN city_game_property pr ON pr.board_id = pt.board_id AND pr.point_id = pt.point_id "
                         + "LEFT JOIN city_game_service s ON s.board_id = pr.board_id AND s.property_id = pr.property_id "

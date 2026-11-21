@@ -34,7 +34,7 @@ test('reason 文案:在窗带「营业中」、不在窗带「不在营业时间
   const r1 = out.find((r) => r.x.nodeId === 1).reason;
   const r2 = out.find((r) => r.x.nodeId === 2).reason;
   assert.ok(r1.startsWith('离你约') && r1.includes('营业中'), r1);
-  assert.strictEqual(r2, '可能不在营业时间 · 看看别处?');
+  assert.strictEqual(r2, '可能不在营业时间 · 看看别处？');
 });
 
 test('无 GPS 且无完成点坐标 → dm=null → reason「顺路的下一处发现」', () => {

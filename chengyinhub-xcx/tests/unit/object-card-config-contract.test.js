@@ -104,10 +104,22 @@ const OUT_OF_PROJECTION = {
   card: '不是配置投影，是判过这一次回包带的 objectCard 回执(契约 §10.2「当场看到卡」)',
   place: '不是配置投影，是游玩页给的「主题名 · 节点名」(会话视图里只有 nodeId),信息卡的「地点」一行',
   photoFailSeq: '不是配置投影，是页面的提交失败信号:上传没成时通知拍物成卡那一屏回取景,kit 恒给 0',
+  photoFailKind: '不是配置投影，是页面上传/提交失败阶段；kit 初值为空，只由 _notifyPhotoFail 写入',
+  photoJudging: '不是配置投影，是页面提交 Promise 的审核中状态；kit 初值 false，只由 _trackPhotoJudging 写入',
   preview: '不是配置投影，是编辑页预览标记:玩家侧恒 false,只有 advanced-game-preview 给 true',
   photoVerified: 'C1:服务端由 verdict 派生(只有视觉模型当场 PASS 才为真),不是配置/状态原字段；缺失即 false',
   rewardCeiling: 'C1:服务端按 passed + photoVerified 派生的奖励上限，没过之前不下发；缺失即空串',
 }
+
+test('照片提交阶段与审核中来自页面本地状态，服务端段字段不能注入', () => {
+  const kit = pickPlayKit({ sessionId: 's1', version: 1,
+    playKit: { photoCheck: { title: 't', photoFailKind: 'submit', photoJudging: true } } })
+  assert.equal(kit.photoFailKind, '')
+  assert.equal(kit.photoJudging, false)
+  const page = read('pages/play/index.js')
+  assert.match(page, /'playKit\.kit\.photoFailKind': kind === 'submit' \? 'submit' : 'upload'/)
+  assert.match(page, /'playKit\.kit\.photoJudging': on/)
+})
 
 test('★objectCard 的三个字段:配置段有默认、后端 Validator 认、两边枚举逐字相同', () => {
   const seg = cfg.defaultConfig().photoCheck

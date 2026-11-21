@@ -272,9 +272,18 @@
           <image class="rv-more-ico" src="/pages/merchant/images/icon_calendar.svg" mode="aspectFit" />
           <text class="rv-more-label">核销记录</text>
         </view>
+        <view class="rv-more-item" wx:if="{{merchantAccess.canVerify}}" bindtap="onMoreItem" data-action="bundleReservations" aria-role="button" aria-label="打开套票到店" hover-class="cy-pressed" hover-stay-time="80">
+          <cy-icon class="rv-more-ico" name="clock" size="40" />
+          <text class="rv-more-label">套票到店</text>
+        </view>
         <view class="rv-more-item" wx:if="{{merchantAccess.canReadFinance}}" bindtap="onMoreItem" data-action="payoutAccount" aria-role="button" aria-label="打开收款账户" hover-class="cy-pressed" hover-stay-time="80">
           <cy-icon class="rv-more-ico" name="finance" size="40" />
           <text class="rv-more-label">收款账户</text>
+        </view>
+        <!-- S3a 商家套餐:当前套餐与各套餐包含的内容;开售与否由服务端资金开关决定(关着写「即将开放」)。 -->
+        <view class="rv-more-item" wx:if="{{merchantAccess.canReadBasic}}" bindtap="onMoreItem" data-action="plans" aria-role="button" aria-label="打开套餐" hover-class="cy-pressed" hover-stay-time="80">
+          <cy-icon class="rv-more-ico" name="list" size="40" />
+          <text class="rv-more-label">套餐</text>
         </view>
         <view class="rv-more-item" wx:if="{{merchantAccess.canManageCoupons}}" bindtap="onMoreItem" data-action="coupon" aria-role="button" aria-label="管理优惠券" hover-class="cy-pressed" hover-stay-time="80">
           <cy-icon class="rv-more-ico" name="coupon" size="40" />
@@ -348,7 +357,7 @@
 </view>
 <view class="merchant-scene-host" wx:if="{{sceneCurrent && sceneCurrent.id === 'roam-poi-detail'}}" catchtouchmove="blockSceneTouch">
   <cy-scene-sheet show="{{true}}" variant="{{sceneCurrent.variant}}" theme="{{sceneCurrent.theme}}" title="{{sceneCurrent.title}}" can-back="{{sceneCurrent.canBack}}" dirty="{{sceneCurrent.dirty}}" mask-closable="{{sceneCurrent.maskClosable}}" bind:requestclose="requestSceneClose" bind:back="backScene">
-    <cy-scene-roam-poi-detail poi-id="{{sceneCurrent.params.poiId}}" merchant-id="{{sceneCurrent.params.merchantId}}" bind:open="openChildScene" bind:close="closeScene" bind:citystamp="openCityStamp" />
+    <cy-scene-roam-poi-detail poi-id="{{sceneCurrent.params.poiId}}" merchant-id="{{sceneCurrent.params.merchantId}}" bind:open="openChildScene" bind:close="closeScene" bind:citystamp="openCityStamp" bind:titlechange="onPoiTitle" />
   </cy-scene-sheet>
 </view>
 <cy-modal class="theme-merchant" show="{{sceneConfirm.show}}" title="放弃本轮修改" confirm-text="确认放弃" cancel-text="继续编辑" danger bind:confirm="confirmSceneDiscard" bind:cancel="cancelSceneDiscard" />

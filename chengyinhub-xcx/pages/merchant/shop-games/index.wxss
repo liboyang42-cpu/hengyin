@@ -1,0 +1,15 @@
+@import '../../../style/merchant-light.wxss';
+@import '../style/merchant-finance.wxss';
+
+/* S5 店铺小游戏:结构照 pages/merchant/payout-account(浅色商家域,fin-card 行)。 */
+page { background: var(--cy-bg-page); }
+.sg-page { min-height: 100vh; box-sizing: border-box; background: var(--cy-bg-page); display: flex; flex-direction: column; }
+.sg-shell { flex: 1; box-sizing: border-box; padding: 0 var(--cy-page-x) var(--cy-space-8); display: flex; flex-direction: column; }
+.sg-desc { display: block; margin: 0 var(--cy-space-1) var(--cy-space-3); color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
+.sg-row { min-height: var(--cy-btn-h); }
+.sg-row--off { opacity: 0.5; }
+.sg-meta { display: block; color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
+.sg-link { color: var(--cy-color-brand); }
+.sg-warn { color: var(--cy-color-status-warning); }
+.sg-action { margin-top: var(--cy-space-6); }
+.sg-content { padding: 0 var(--cy-space-4) var(--cy-space-3); }

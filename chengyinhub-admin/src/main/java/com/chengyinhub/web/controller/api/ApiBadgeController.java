@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,7 +29,7 @@ public class ApiBadgeController extends BaseController {
     @PostMapping("/wall-v2")
     public AjaxResult wallV2() {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         return AjaxResult.success(badgeReadModelService.buildWallV2(memberId));
     }
 }

@@ -479,7 +479,7 @@
         <view class="ed-cap__body">
           <textarea wx:if="{{!storyEditor.preview}}" class="ed-cap__name" value="{{formData.chapters[storyEditor.chapterIndex].name}}" bindinput="onStoryChapterNameInput" maxlength="30" auto-height placeholder="章节名称" placeholder-class="ed-cap__ph" show-confirm-bar="{{false}}" disable-default-padding="{{true}}" />
           <view wx:else class="ed-cap__name ed-cap__name--read">{{formData.chapters[storyEditor.chapterIndex].name}}</view>
-          <view wx:if="{{!storyEditor.preview}}" class="ed-cap__ta"><textarea class="ed-cap__ta-in" value="{{storyCaps.open}}" data-cap="open" bindinput="onStoryCapInput" maxlength="500" auto-height placeholder="开场白:玩家进入本章先看到的话" placeholder-class="ed-cap__ph" show-confirm-bar="{{false}}" disable-default-padding="{{true}}" /></view>
+          <view wx:if="{{!storyEditor.preview}}" class="ed-cap__ta"><textarea class="ed-cap__ta-in" value="{{storyCaps.open}}" data-cap="open" bindinput="onStoryCapInput" maxlength="500" auto-height placeholder="开场白：玩家进入本章先看到的话" placeholder-class="ed-cap__ph" show-confirm-bar="{{false}}" disable-default-padding="{{true}}" /></view>
           <view wx:elif="{{storyCaps.open}}" class="ed-cap__ta ed-cap__ta--read">{{storyCaps.open}}</view>
         </view>
       </view>
@@ -735,7 +735,7 @@
           <view class="ed-cap__pv ed-cap__pv--flat" data-stage="chEnd" catchtap="openStoryPreviewPop" aria-role="button" aria-label="预览章节结束弹窗" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="discover-shop" size="28" /><text>预览弹窗</text></view>
         </view>
         <view class="ed-cap__body">
-          <view wx:if="{{!storyEditor.preview}}" class="ed-cap__ta"><textarea class="ed-cap__ta-in" value="{{storyCaps.end}}" data-cap="end" bindinput="onStoryCapInput" maxlength="500" auto-height placeholder="结语:本章完成时弹窗里的话" placeholder-class="ed-cap__ph" show-confirm-bar="{{false}}" disable-default-padding="{{true}}" /></view>
+          <view wx:if="{{!storyEditor.preview}}" class="ed-cap__ta"><textarea class="ed-cap__ta-in" value="{{storyCaps.end}}" data-cap="end" bindinput="onStoryCapInput" maxlength="500" auto-height placeholder="结语：本章完成时弹窗里的话" placeholder-class="ed-cap__ph" show-confirm-bar="{{false}}" disable-default-padding="{{true}}" /></view>
           <view wx:elif="{{storyCaps.end}}" class="ed-cap__ta ed-cap__ta--read">{{storyCaps.end}}</view>
           <view class="ed-cap__row"><text class="ed-cap__k">去向</text><view class="ed-chip is-on">{{storyCaps.next}}</view></view>
         </view>
@@ -1616,7 +1616,7 @@
         <scroll-view class="chapter-atmosphere__list" scroll-x enhanced show-scrollbar="{{false}}">
           <view class="chapter-atmosphere__track look-pal--{{publishCheck.preview.lookStyleKey}}">
             <view class="chapter-atmosphere__item {{item.className}} {{item.on ? 'is-on' : ''}}" wx:for="{{publishCheck.preview.lookPalettes}}" wx:key="value" data-value="{{item.value}}"
-                  bindtap="onPreviewLookPalette" aria-role="button" aria-label="主题配色:{{item.label}}" aria-selected="{{item.on}}" hover-class="cy-pressed" hover-stay-time="80">
+                  bindtap="onPreviewLookPalette" aria-role="button" aria-label="主题配色：{{item.label}}" aria-selected="{{item.on}}" hover-class="cy-pressed" hover-stay-time="80">
               <text class="chapter-atmosphere__name">{{item.label}}</text>
               <text class="chapter-atmosphere__note">{{item.note}}</text><cy-icon wx:if="{{item.on}}" class="chapter-atmosphere__check" name="check" size="24" />
             </view>

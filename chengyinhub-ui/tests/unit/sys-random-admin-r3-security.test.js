@@ -64,9 +64,25 @@ test('HIGH-A2: drop-rule and task-pool perms are dedicated and registered in sys
     const used = [...permsInView(view), ...permsInController(ctrl)];
     assert.ok(used.length > 0);
     for (const perm of used) {
+      // The merged drop page also reaches the roadmap rule editor (validate, enable/disable) under
+      // business:rewardDrop:*; those are checked below against their own controller and registration.
+      if (prefix === 'rewarddrop' && perm.startsWith('business:rewardDrop:')) continue;
       assert.ok(perm.startsWith(`business:${prefix}:`), `${perm} must use the dedicated ${prefix} prefix`);
       assert.ok(registered.has(perm), `${perm} must be inserted into sys_menu`);
     }
+  }
+  // Roadmap rule-editor perms used on the merged page: checked by RewardDropRuleAdminController and
+  // registered case-exactly (sys_menu.perms is case-insensitive) by the perm-union migration.
+  const union = read('chengyinhub-admin/sql/migration_20261126_reward_drop_perm_union.sql');
+  const unionRegistered = new Set([...union.matchAll(/COLLATE utf8mb4_bin = '(business:(?:rewarddrop|rewardDrop):[a-z]+)'/g)].map((m) => m[1]));
+  const editorPerms = new Set(permsInController('chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/RewardDropRuleAdminController.java'));
+  const pageView = 'chengyinhub-ui/src/views/business/rewarddrop/index.vue';
+  for (const perm of [...permsInView(pageView), ...permsInController(
+    'chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/RewardDropAdminController.java'), ...editorPerms]) {
+    assert.ok(unionRegistered.has(perm), `${perm} must be registered case-exactly by the perm-union migration`);
+  }
+  for (const perm of permsInView(pageView).filter((p) => p.startsWith('business:rewardDrop:'))) {
+    assert.ok(editorPerms.has(perm), `${perm} must be a perm the rule-editor controller checks`);
   }
   // Every F row is additive and idempotent.
   const inserts = sql.split(/INSERT INTO/).slice(1);

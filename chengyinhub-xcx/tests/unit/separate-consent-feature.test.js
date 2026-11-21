@@ -56,6 +56,7 @@ function play(h, options={}){
   const page=Object.assign({},def,{data:JSON.parse(JSON.stringify(def.data)),
     setData(patch){for(const[k,v]of Object.entries(patch)){const parts=k.split('.');let t=this.data;for(const p of parts.slice(0,-1)){t[p]=t[p]||{};t=t[p];}t[parts.at(-1)]=v;}},
     selectComponent:()=>advancedGame});
+  page._routeState={sessionId:901};
   page.data.playKit={kit:{type:'photocheck',mode:'CARD',sessionId:17,version:3}};
   page.data.advancedPlay={show:true,node:{nodeId:51}};
   let aborted=false;h.app.createPageBoundOperation=()=>({onAbort(){},isAborted:()=>aborted,finish(){},attach(){}});

@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.access.club.ClubAccessContext;
 import com.chengyinhub.business.access.club.ClubEventAccess;
 import com.chengyinhub.business.access.club.ClubPermission;
@@ -53,7 +55,7 @@ public class ApiClubRoleController extends BaseController {
     @PostMapping("/access/me")
     public AjaxResult accessMe(@RequestBody(required = false) ClubAccessRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少俱乐部参数");
         try {
             ClubAccessContext access = request.getActivityId() == null
@@ -112,7 +114,7 @@ public class ApiClubRoleController extends BaseController {
     @PostMapping("/roles/list")
     public AjaxResult list(@RequestBody(required = false) ClubAccessRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少俱乐部参数");
         try {
             List<ClubRoleAssignment> rows = clubRoleAssignmentService.list(
@@ -131,7 +133,7 @@ public class ApiClubRoleController extends BaseController {
     @PostMapping("/roles/assign")
     public AjaxResult assign(@RequestBody(required = false) ClubRoleAssignRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少角色参数");
         if (missingRequestId(request.getRequestId())) {
             return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少 requestId");
@@ -151,7 +153,7 @@ public class ApiClubRoleController extends BaseController {
     @PostMapping("/roles/assign-receipt")
     public AjaxResult assignReceipt(@RequestBody(required = false) Map<String, Object> body) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         return roleOriginalReceipts.assign(principal, body);
     }
 
@@ -159,7 +161,7 @@ public class ApiClubRoleController extends BaseController {
     @PostMapping("/roles/revoke-receipt")
     public AjaxResult revokeReceipt(@RequestBody(required = false) Map<String, Object> body) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         return roleOriginalReceipts.revoke(principal, body);
     }
 
@@ -168,7 +170,7 @@ public class ApiClubRoleController extends BaseController {
     @PostMapping("/roles/revoke")
     public AjaxResult revoke(@RequestBody(required = false) ClubRoleRevokeRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少角色参数");
         if (missingRequestId(request.getRequestId())) {
             return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少 requestId");

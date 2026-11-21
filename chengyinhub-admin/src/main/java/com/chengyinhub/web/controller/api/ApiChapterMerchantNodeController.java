@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
@@ -95,8 +97,8 @@ public class ApiChapterMerchantNodeController extends BaseController {
     @PostMapping("/submit")
     public AjaxResult submit(@RequestBody ChapterNodeRequest body) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
-        if (body == null) return error("参数有误");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (body == null) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         try {
             MerchantAccessContext access = merchantAccessService.require(
                     memberId, MerchantPermission.PROJECT_MANAGE);
@@ -128,7 +130,7 @@ public class ApiChapterMerchantNodeController extends BaseController {
     @PostMapping("/mine")
     public AjaxResult mine(Long topicId) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             MerchantAccessContext access = merchantAccessService.require(
                     memberId, MerchantPermission.BASIC_READ);
@@ -142,8 +144,8 @@ public class ApiChapterMerchantNodeController extends BaseController {
     @PostMapping("/pending")
     public AjaxResult pending(Long topicId, String scope) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
-        if (topicId == null || topicId <= 0) return error("参数有误");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (topicId == null || topicId <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         Long ownerMemberId;
         try {
             ownerMemberId = resolveProjectOwner(memberId, scope);
@@ -153,7 +155,7 @@ public class ApiChapterMerchantNodeController extends BaseController {
         CmsTopic topic = topicService.selectCmsTopicById(topicId);
         // 谁发布谁审核。不校验归属的话,任何人都能翻别人主题的待审内容。
         if (topic == null || OwnershipUtils.notOwner(topic.getMemberId(), ownerMemberId)) {
-            return error("只有主题发布者可以查看");
+            return refuse(ErrorCode.FORBIDDEN, "只有主题发布者可以查看");
         }
         CmsTopicNode probe = new CmsTopicNode();
         probe.setTopicId(topicId);
@@ -181,7 +183,7 @@ public class ApiChapterMerchantNodeController extends BaseController {
     @PostMapping("/poster-code")
     public AjaxResult posterCode(Long nodeId) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         CmsTopicNode node;
         try {
             MerchantAccessContext access = merchantAccessService.require(
@@ -200,6 +202,7 @@ public class ApiChapterMerchantNodeController extends BaseController {
         data.put("code", node.getCheckinCode());
         try {
             data.put("qrcodeUrl", playerWxacodeService.getOrCreateScene(node.getCheckinCode()));
+            data.put("linkQr", IPlayerWxacodeService.linkFor(node.getCheckinCode()));
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }
@@ -220,7 +223,7 @@ public class ApiChapterMerchantNodeController extends BaseController {
     @PostMapping("/live-checkin-code")
     public AjaxResult liveCheckinCode(Long nodeId) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             MerchantAccessContext access = merchantAccessService.require(
                     memberId, MerchantPermission.VERIFY);
@@ -244,7 +247,7 @@ public class ApiChapterMerchantNodeController extends BaseController {
     @PostMapping("/audit")
     public AjaxResult audit(Long nodeId, Boolean approve, String reason, String scope) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             String risk = textRisk(memberId, reason);
             if (risk != null) return error(risk);
@@ -267,9 +270,9 @@ public class ApiChapterMerchantNodeController extends BaseController {
     @PostMapping(value = "/npc/detail", consumes = MediaType.APPLICATION_JSON_VALUE)
     public AjaxResult npcDetail(@RequestBody(required = false) NodeNpcRequest body) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         // 小程序一律 JSON 体发请求 —— 参数必须从 @RequestBody 绑,漏了它每个请求都会是「参数有误」。
-        if (body == null || body.getNodeId() == null || body.getNodeId() <= 0) return error("参数有误");
+        if (body == null || body.getNodeId() == null || body.getNodeId() <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         try {
             MerchantAccessContext access = merchantAccessService.require(
                     memberId, MerchantPermission.PROJECT_MANAGE);
@@ -285,8 +288,8 @@ public class ApiChapterMerchantNodeController extends BaseController {
     @PostMapping(value = "/npc/save", consumes = MediaType.APPLICATION_JSON_VALUE)
     public AjaxResult npcSave(@RequestBody(required = false) NodeNpcRequest body) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
-        if (body == null || body.getNodeId() == null || body.getNodeId() <= 0) return error("参数有误");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (body == null || body.getNodeId() == null || body.getNodeId() <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         try {
             MerchantAccessContext access = merchantAccessService.require(
                     memberId, MerchantPermission.PROJECT_MANAGE);
@@ -303,8 +306,8 @@ public class ApiChapterMerchantNodeController extends BaseController {
     @PostMapping(value = "/npc/voice/enroll", consumes = MediaType.APPLICATION_JSON_VALUE)
     public AjaxResult npcVoiceEnroll(@RequestBody(required = false) NodeNpcRequest body) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
-        if (body == null || body.getNodeId() == null || body.getNodeId() <= 0) return error("参数有误");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (body == null || body.getNodeId() == null || body.getNodeId() <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         try {
             MerchantAccessContext access = merchantAccessService.require(
                     memberId, MerchantPermission.PROJECT_MANAGE);
@@ -325,8 +328,8 @@ public class ApiChapterMerchantNodeController extends BaseController {
     @PostMapping(value = "/npc/voice/status", consumes = MediaType.APPLICATION_JSON_VALUE)
     public AjaxResult npcVoiceStatus(@RequestBody(required = false) NodeNpcRequest body) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
-        if (body == null || body.getNodeId() == null || body.getNodeId() <= 0) return error("参数有误");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (body == null || body.getNodeId() == null || body.getNodeId() <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         try {
             MerchantAccessContext access = merchantAccessService.require(
                     memberId, MerchantPermission.PROJECT_MANAGE);
@@ -355,8 +358,8 @@ public class ApiChapterMerchantNodeController extends BaseController {
     @PostMapping(value = "/npc/voice/reset", consumes = MediaType.APPLICATION_JSON_VALUE)
     public AjaxResult npcVoiceReset(@RequestBody(required = false) NodeNpcRequest body) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
-        if (body == null || body.getNodeId() == null || body.getNodeId() <= 0) return error("参数有误");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (body == null || body.getNodeId() == null || body.getNodeId() <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         try {
             MerchantAccessContext access = merchantAccessService.require(
                     memberId, MerchantPermission.PROJECT_MANAGE);

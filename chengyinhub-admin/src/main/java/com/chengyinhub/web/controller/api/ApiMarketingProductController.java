@@ -92,8 +92,19 @@ public class ApiMarketingProductController extends BaseController {
 
     @Operation(summary = "首次使用激活：先原子写 expires_at，再由原注册服务放行可玩")
     @PostMapping("/activate")
-    public AjaxResult activate(@RequestParam Long topicId) {
-        return success(purchaseService.activateOnUse(requireAppMemberId(), topicId));
+    public AjaxResult activate(@RequestParam(required = false) Long topicId,
+                               @RequestBody(required = false) java.util.Map<String, Object> body) {
+        // R6a:App 以 JSON {topicId} 提交(其写入白名单不允许查询串);小程序 / 旧调用的 ?topicId= 仍然有效。
+        Long id = topicId != null ? topicId : bodyTopicId(body);
+        if (id == null || id <= 0) return AjaxResult.error(400, "topicId 无效");
+        return success(purchaseService.activateOnUse(requireAppMemberId(), id));
+    }
+
+    private static Long bodyTopicId(java.util.Map<String, Object> body) {
+        Object raw = body == null ? null : body.get("topicId");
+        if (raw instanceof Number n && n.doubleValue() == n.longValue()) return n.longValue();
+        if (raw instanceof String text && text.matches("[0-9]{1,18}")) return Long.valueOf(text);
+        return null;
     }
 
     @Operation(summary = "领取礼品（一次生效，重复同人返回原授权）")

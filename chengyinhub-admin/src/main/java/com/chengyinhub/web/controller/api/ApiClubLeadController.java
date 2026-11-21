@@ -1,6 +1,8 @@
 package com.chengyinhub.web.controller.api;
 
 import com.chengyinhub.common.constant.HttpStatus;
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.ClubLeadCheckin;
 import com.chengyinhub.business.domain.ClubLeadState;
 import com.chengyinhub.business.domain.GameCommandReceipt;
@@ -164,9 +166,9 @@ public class ApiClubLeadController extends BaseController {
     @Transactional(rollbackFor = Exception.class)
     public AjaxResult arrive(String activityId, Double latitude, Double longitude) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Long actId = Convert.toLong(activityId, 0L);
-        if (actId <= 0) return error("参数有误");
+        if (actId <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         CmsActivity activity = cmsActivityMapper.selectCmsActivityByIdForUpdate(actId);
         String invalid = clubGatherArrivalPolicy.validate(activity, latitude, longitude, new Date());
         if (invalid != null) return error(invalid);
@@ -174,7 +176,7 @@ public class ApiClubLeadController extends BaseController {
         if (st == null) return error("该场次不是带领场");
         if (!Integer.valueOf(1).equals(st.getStatus()) && !Integer.valueOf(2).equals(st.getStatus())) return error("该场次已结束");
         if (!canAccessLeadActivity(actId, memberId, st)) {
-            return error("仅本场已支付成员或领队可签到");
+            return refuse(ErrorCode.FORBIDDEN, "仅本场已支付成员或领队可签到");
         }
         Date arrivedAt = new Date();
         invalid = clubGatherArrivalPolicy.validate(activity, latitude, longitude, arrivedAt);
@@ -195,11 +197,11 @@ public class ApiClubLeadController extends BaseController {
     @PostMapping("/start")
     public AjaxResult start(String activityId) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Long actId = Convert.toLong(activityId, 0L);
         ClubLeadState st = actId > 0 ? ensureState(actId) : null;
         if (st == null) return error("该场次不是带领场");
-        if (!memberId.equals(st.getLeaderMemberId())) return error("只有队长可以开始行程");
+        if (!memberId.equals(st.getLeaderMemberId())) return refuse(ErrorCode.FORBIDDEN, "只有队长可以开始行程");
         if (st.getStatus() != null && st.getStatus() >= 2) return AjaxResult.success("行程已开始");
         CmsTopicChapter first = firstChapter(actId);
         ClubLeadState upd = new ClubLeadState();
@@ -207,7 +209,7 @@ public class ApiClubLeadController extends BaseController {
         upd.setStatus(2);
         if (first != null) upd.setCurrentChapterId(first.getId());
         clubLeadMapper.updateClubLeadState(upd);
-        return AjaxResult.success("出发!");
+        return AjaxResult.success("出发！");
     }
 
     @Operation(summary = "队长放行下一章")
@@ -215,7 +217,7 @@ public class ApiClubLeadController extends BaseController {
     @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult unlockChapter(String activityId, String commandId, Long expectedChapterId, Long targetChapterId) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Long actId = Convert.toLong(activityId, 0L);
         // 0 明确表示尚未放行；缺字段不能解释成“读取当前章再前进”。
         if (actId <= 0 || commandId == null || !commandId.matches("[A-Za-z0-9:_-]{1,80}")
@@ -224,11 +226,11 @@ public class ApiClubLeadController extends BaseController {
         }
         CmsActivity probe = cmsActivityService.selectCmsActivityById(actId);
         if (probe == null || probe.getClubId() == null || probe.getClubId() <= 0) return error("该场次不是带领场");
-        if (clubLeadMapper.lockClubOwner(probe.getClubId()) == null) return error("俱乐部不存在");
+        if (clubLeadMapper.lockClubOwner(probe.getClubId()) == null) return refuse(ErrorCode.CLUB_NOT_FOUND, "俱乐部不存在");
         CmsActivity activity = cmsActivityMapper.selectCmsActivityByIdForUpdate(actId);
         if (activity == null || !probe.getClubId().equals(activity.getClubId())) return error("场次不可用");
         // 先读权威授权，再读回执。旧队长不能借已知 commandId 读取新队长的结果。
-        if (!memberId.equals(resolveLeaderMemberId(activity))) return error("只有当前队长可以放行章节");
+        if (!memberId.equals(resolveLeaderMemberId(activity))) return refuse(ErrorCode.FORBIDDEN, "只有当前队长可以放行章节");
         String requestId = "lead:" + commandHash(commandId).substring(0, 48);
         String hash = commandHash(actId + ":" + memberId + ":" + expectedChapterId + ":" + targetChapterId);
         GameCommandReceipt prior = commandReceiptMapper.selectReceiptForUpdate(actId, memberId, requestId);
@@ -263,7 +265,7 @@ public class ApiClubLeadController extends BaseController {
         if (clubLeadMapper.unlockChapterCas(actId, st.getLeaderMemberId(), memberId, expected, targetChapterId) != 1) throw new IllegalStateException("章节状态已变化，命令未执行");
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("commandId", commandId); result.put("expectedChapterId", expectedChapterId); result.put("targetChapterId", targetChapterId);
-        AjaxResult response = AjaxResult.success("已开启:" + target.getName(), result);
+        AjaxResult response = AjaxResult.success("已开启：" + target.getName(), result);
         claim.setOutcome("APPLIED"); claim.setResultJson(commandJson(response)); claim.setUpdateTime(new Date());
         if (commandReceiptMapper.completeReceipt(claim) != 1) throw new IllegalStateException("章节回执保存失败");
         // 首响也使用已保存回执的表示，避免 Long ID 经无类型 JSON 回放变为 Integer 后不等价。
@@ -278,10 +280,10 @@ public class ApiClubLeadController extends BaseController {
     public AjaxResult unlockChapterReceipt(String activityId, String commandId) {
         Long memberId = uid();
         Long actId = Convert.toLong(activityId, 0L);
-        if (memberId <= 0) return error("请先登录");
-        if (actId <= 0 || commandId == null || !commandId.matches("[A-Za-z0-9:_-]{1,80}")) return error("参数有误");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (actId <= 0 || commandId == null || !commandId.matches("[A-Za-z0-9:_-]{1,80}")) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         CmsActivity activity = cmsActivityService.selectCmsActivityById(actId);
-        if (activity == null || !memberId.equals(resolveLeaderMemberId(activity))) return error("无权读取本场章节命令");
+        if (activity == null || !memberId.equals(resolveLeaderMemberId(activity))) return refuse(ErrorCode.FORBIDDEN, "无权读取本场章节命令");
         GameCommandReceipt receipt = commandReceiptMapper.selectReceipt(actId, memberId, "lead:" + commandHash(commandId).substring(0, 48));
         return receipt == null ? new AjaxResult(520, "章节命令结果待确认") : chapterReplay(receipt, receipt.getRequestHash());
     }
@@ -308,14 +310,14 @@ public class ApiClubLeadController extends BaseController {
     @PostMapping("/edit-ops")
     public AjaxResult editOps(@RequestBody java.util.Map<String, Object> body) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Long actId = Convert.toLong(body.get("activityId"), 0L);
         ClubLeadState st = actId > 0 ? ensureState(actId) : null;
         if (st == null) return error("该场次不是带领场");
         // 运营权委托:只有承接方领队(承接俱乐部主理人)可改运营详情
-        if (!memberId.equals(st.getLeaderMemberId())) return error("只有承接方领队可改运营详情");
+        if (!memberId.equals(st.getLeaderMemberId())) return refuse(ErrorCode.FORBIDDEN, "只有承接方领队可改运营详情");
         CmsActivity act = cmsActivityService.selectCmsActivityById(actId);
-        if (act == null) return error("场次不存在");
+        if (act == null) return refuse(ErrorCode.NOT_FOUND, "场次不存在");
         // 白名单:只允许改运营字段(集合时间/地点/结束时间/当日备注);核心(票价/奖励/结算/安全底线)锁发起人,不在此列。
         CmsActivity upd = new CmsActivity();
         upd.setId(actId);
@@ -348,7 +350,7 @@ public class ApiClubLeadController extends BaseController {
             return error("该场次已售出，集合时间与地点不能修改；当日备注仍可改")
                     .put("errorCode", "CLUB_OPS_SOLD_LOCKED");
         }
-        if (rows == 0) return error("场次不存在");
+        if (rows == 0) return refuse(ErrorCode.NOT_FOUND, "场次不存在");
         // 报备只留痕(入日志)+ 记发起人;没有实时推送,响应如实回执,不声称已通知。
         logger.info("运营权委托·承接方改运营详情 actId={} 领队(承接主理人)={} 发起人={} 改动=[{}]",
                 actId, memberId, act.getMemberId(), chg.toString());
@@ -369,11 +371,11 @@ public class ApiClubLeadController extends BaseController {
     @PostMapping("/broadcast")
     public AjaxResult broadcast(String activityId, String text) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Long actId = Convert.toLong(activityId, 0L);
         ClubLeadState st = actId > 0 ? ensureState(actId) : null;
         if (st == null) return error("该场次不是带领场");
-        if (!memberId.equals(st.getLeaderMemberId())) return error("只有队长可以广播");
+        if (!memberId.equals(st.getLeaderMemberId())) return refuse(ErrorCode.FORBIDDEN, "只有队长可以广播");
         if (text == null || text.trim().isEmpty()) return error("广播内容为空");
         String t = text.trim();
         String risk = com.chengyinhub.business.service.IWxContentSecurityService.checkTextAsMember(wxContentSecurityService, umsMemberService,
@@ -391,8 +393,8 @@ public class ApiClubLeadController extends BaseController {
     @GetMapping("/team-progress")
     public AjaxResult teamProgress(Long activityId) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
-        if (activityId == null || activityId <= 0) return error("参数有误");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (activityId == null || activityId <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         ClubLeadState st = ensureState(activityId);
         Map<String, Object> data = new LinkedHashMap<>();
         if (st == null) {
@@ -400,7 +402,7 @@ public class ApiClubLeadController extends BaseController {
             return success(data);
         }
         if (!canAccessLeadActivity(activityId, memberId, st)) {
-            return error("无权查看本场队伍进度");
+            return refuse(ErrorCode.FORBIDDEN, "无权查看本场队伍进度");
         }
         data.put("exists", true);
         data.put("status", st.getStatus());
@@ -534,14 +536,14 @@ public class ApiClubLeadController extends BaseController {
     @Transactional(rollbackFor = Exception.class)
     public AjaxResult releaseStation(Long activityId, Long memberId, Long nodeId) {
         Long leaderId = uid();
-        if (leaderId <= 0) return error("请先登录");
+        if (leaderId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (activityId == null || activityId <= 0 || memberId == null || memberId <= 0 || nodeId == null || nodeId <= 0) {
-            return error("参数有误");
+            return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         }
         if (advancedGameRuntimeService == null) return error("暂不支持现场放行");
         CmsActivity activity = cmsActivityService.selectCmsActivityById(activityId);
         if (activity == null || activity.getClubId() == null || activity.getClubId() <= 0) return error("该场次不是带领场");
-        if (!leaderId.equals(resolveLeaderMemberId(activity))) return error("只有本场队长可以放行");
+        if (!leaderId.equals(resolveLeaderMemberId(activity))) return refuse(ErrorCode.FORBIDDEN, "只有本场队长可以放行");
         ClubLeadState st = ensureState(activityId);
         if (st == null) return error("该场次不是带领场");
         if (!Integer.valueOf(2).equals(st.getStatus())) return error("仅行进中的场次可放行");
@@ -573,15 +575,15 @@ public class ApiClubLeadController extends BaseController {
     @PostMapping("/settle")
     public AjaxResult settle(String activityId) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Long actId = Convert.toLong(activityId, 0L);
-        if (actId <= 0) return error("参数有误");
+        if (actId <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         CmsActivity act = cmsActivityService.selectCmsActivityById(actId);
         if (act == null || act.getClubId() == null || act.getClubId() <= 0) return error("该场次不是带领场");
         ClubLeadState st = ensureState(actId);
         if (st == null) return error("该场次不是带领场");
         // D-9 授权:仅本场当前领队本人可触发全团结算
-        if (!memberId.equals(st.getLeaderMemberId())) return error("只有队长可以结算全团");
+        if (!memberId.equals(st.getLeaderMemberId())) return refuse(ErrorCode.FORBIDDEN, "只有队长可以结算全团");
         Integer status = st.getStatus();
         if (status == null || status < 2) return error("请先发车再结算");
         if (status >= 3) {
@@ -648,7 +650,7 @@ public class ApiClubLeadController extends BaseController {
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("settled", settled);
-        return AjaxResult.success("全团结算完成,共 " + settled + " 人", data);
+        return AjaxResult.success("全团结算完成，共 " + settled + " 人", data);
     }
 
     // ---------- helpers ----------

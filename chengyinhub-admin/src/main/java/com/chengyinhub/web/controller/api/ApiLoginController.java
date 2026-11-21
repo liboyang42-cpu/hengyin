@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.service.support.PointsRuleSwitch;
 
 
@@ -107,6 +109,10 @@ public class ApiLoginController extends BaseController {
     @Autowired
     private ICmsPointsSettingService cmsPointsSettingService;
 
+    /** SEC-11: sign-up points once per device on the app paths (phone, Apple, WeChat app). */
+    @Autowired(required = false)
+    private com.chengyinhub.business.signupdevice.SignupDevicePoints signupDevicePoints;
+
     @Autowired
     private RedisCache redisCache;
 
@@ -117,9 +123,12 @@ public class ApiLoginController extends BaseController {
     /**
      * B4(acceptance-r3):TEST-only。仅当 profile e2e-test 且 chengyin.e2e.test-providers=true 时才有此 bean;
      * 默认/生产 profile 下恒为 null,登录照旧只走微信 jscode2session。
+     * 桩类在 chengyinhub-e2e 模块(admin 只在测试范围依赖它),所以这里按接口 + bean 名注入,admin 不引用桩类本身。
      */
+    static final String E2E_MINI_SESSION_BEAN = "e2eTestWeChatMiniSessionService";
     @Autowired(required = false)
-    private com.chengyinhub.business.service.impl.E2eTestWeChatMiniSessionService e2eTestMiniSession;
+    @org.springframework.beans.factory.annotation.Qualifier(E2E_MINI_SESSION_BEAN)
+    private com.chengyinhub.business.service.IWeChatMiniSessionService e2eTestMiniSession;
 
     @Value("${chengyin.test.wechat-api-base-url:https://api.weixin.qq.com}")
     private String wechatApiBaseUrl = "https://api.weixin.qq.com";
@@ -352,7 +361,7 @@ public class ApiLoginController extends BaseController {
 
         }
         if (member_id == 0L) {
-            return error("请登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请登录");
         }
         com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
 
@@ -553,7 +562,7 @@ public class ApiLoginController extends BaseController {
             return error("手机号格式不正确");
         }
         if (StringUtils.isEmpty(code)) {
-            return error("请输入验证码");
+            return refuse(ErrorCode.BAD_REQUEST, "请输入验证码");
         }
 
         if (!checkMscode(phone, code, request)) {
@@ -593,9 +602,11 @@ public class ApiLoginController extends BaseController {
             umsMember.setWxOpenId("");
             umsMember.setStatus(1L);
             umsMember.setDelFlag(0);
-            umsMember.setPoint(welcomePoints());
+            com.chengyinhub.business.signupdevice.SignupDevicePoints.Claim device = claimSignupDevice(request, "phone");
+            umsMember.setPoint(welcomePoints(device));
             int rows = umsMemberService.insertUmsMember(umsMember);
             if (rows > 0) {
+                attachSignupDevice(device, umsMember.getId());
                 umsMember = new UmsMember();
                 umsMember.setPhone(phone);
                 list = umsMemberService.selectUmsMemberList(umsMember);
@@ -612,6 +623,7 @@ public class ApiLoginController extends BaseController {
 
                 return ajax;
             } else {
+                releaseSignupDevice(device);
                 return AjaxResult.error("注册失败");
             }
         }
@@ -625,7 +637,7 @@ public class ApiLoginController extends BaseController {
     })
     public AjaxResult loginWechatApp(String code) {
         if (StringUtils.isEmpty(code)) {
-            return error("参数有误");
+            return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         }
 
         // 注意:原生 App 走"微信开放平台"的 appid/secret,与小程序的 app.wechat.appid/appsecret 不同 key
@@ -742,11 +754,14 @@ public class ApiLoginController extends BaseController {
         }
         umsMember.setStatus(1L);
         umsMember.setDelFlag(0);
-        umsMember.setPoint(welcomePoints());
+        com.chengyinhub.business.signupdevice.SignupDevicePoints.Claim device = claimSignupDevice(currentRequest(), "wechat");
+        umsMember.setPoint(welcomePoints(device));
         int rows = umsMemberService.insertUmsMember(umsMember);
         if (rows <= 0) {
+            releaseSignupDevice(device);
             return AjaxResult.error("注册失败");
         }
+        attachSignupDevice(device, umsMember.getId());
 
         // useGeneratedKeys 已回填 id,直接用对象签 token(避免空 unionId/openid 反查越权)
         String token = appLoginService.loginByMember(umsMember, "wechat", appOpenid, unionid);
@@ -765,7 +780,7 @@ public class ApiLoginController extends BaseController {
     })
     public AjaxResult loginApple(String identityToken) {
         if (StringUtils.isEmpty(identityToken)) {
-            return error("参数有误");
+            return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         }
 
         String clientId = Convert.toStr(configService.selectConfigByKey("apple.clientId"));
@@ -825,11 +840,14 @@ public class ApiLoginController extends BaseController {
         }
         umsMember.setStatus(1L);
         umsMember.setDelFlag(0);
-        umsMember.setPoint(welcomePoints());
+        com.chengyinhub.business.signupdevice.SignupDevicePoints.Claim device = claimSignupDevice(currentRequest(), "apple");
+        umsMember.setPoint(welcomePoints(device));
         int rows = umsMemberService.insertUmsMember(umsMember);
         if (rows <= 0) {
+            releaseSignupDevice(device);
             return AjaxResult.error("注册失败");
         }
+        attachSignupDevice(device, umsMember.getId());
 
         String token = appLoginService.loginByMember(umsMember, "apple", appleId, null);
         AjaxResult ajax = AjaxResult.success();
@@ -846,6 +864,34 @@ public class ApiLoginController extends BaseController {
      */
     private long welcomePoints() {
         return PointsRuleSwitch.activeValue(cmsPointsSettingService.selectCmsPointsSettingById(1L));
+    }
+
+    /** SEC-11: the welcome points for an app sign-up; 0 when this device already took them. */
+    private long welcomePoints(com.chengyinhub.business.signupdevice.SignupDevicePoints.Claim device) {
+        return device == null || device.pointsAllowed() ? welcomePoints() : 0L;
+    }
+
+    private com.chengyinhub.business.signupdevice.SignupDevicePoints.Claim claimSignupDevice(HttpServletRequest request, String channel) {
+        if (signupDevicePoints == null) return null;
+        String header = request == null ? null
+                : request.getHeader(com.chengyinhub.business.signupdevice.SignupDevicePoints.HEADER);
+        return signupDevicePoints.claim(header, channel);
+    }
+
+    private static HttpServletRequest currentRequest() {
+        try {
+            return com.chengyinhub.common.utils.ServletUtils.getRequest();
+        } catch (RuntimeException outsideRequest) {
+            return null;
+        }
+    }
+
+    private void attachSignupDevice(com.chengyinhub.business.signupdevice.SignupDevicePoints.Claim device, Long memberId) {
+        if (signupDevicePoints != null) signupDevicePoints.attach(device, memberId);
+    }
+
+    private void releaseSignupDevice(com.chengyinhub.business.signupdevice.SignupDevicePoints.Claim device) {
+        if (signupDevicePoints != null) signupDevicePoints.release(device);
     }
 
     /**

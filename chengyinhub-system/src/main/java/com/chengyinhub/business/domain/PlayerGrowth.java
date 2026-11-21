@@ -20,6 +20,10 @@ public class PlayerGrowth
     private BigDecimal totalMileage;
     private Integer streakDays;
     private Date lastCheckinDate;
+    /** P7:手里的补签卡(连续天数漏一天时自动用掉一张) */
+    private Integer streakFreezes;
+    /** P7:累计已自动用掉的补签卡 */
+    private Integer streakFreezesUsed;
     private Date updateTime;
     private Date createTime;
 
@@ -43,6 +47,12 @@ public class PlayerGrowth
 
     public Date getLastCheckinDate() { return lastCheckinDate; }
     public void setLastCheckinDate(Date lastCheckinDate) { this.lastCheckinDate = lastCheckinDate; }
+
+    public Integer getStreakFreezes() { return streakFreezes; }
+    public void setStreakFreezes(Integer streakFreezes) { this.streakFreezes = streakFreezes; }
+
+    public Integer getStreakFreezesUsed() { return streakFreezesUsed; }
+    public void setStreakFreezesUsed(Integer streakFreezesUsed) { this.streakFreezesUsed = streakFreezesUsed; }
 
     public Date getUpdateTime() { return updateTime; }
     public void setUpdateTime(Date updateTime) { this.updateTime = updateTime; }

@@ -55,7 +55,8 @@ def validate_execution_env(env):
                        ('GITHUB_REPOSITORY', 'liboyang42-cpu/hengyin'),
                        ('CHENGYIN_CI_AUTH_REDIS_RECOVERY', 'true')]:
         require(env.get(key) == value, 'wrong hosted scope: ' + key)
-    require(env.get('GITHUB_EVENT_NAME') in ('pull_request', 'workflow_dispatch'), 'unsupported event')
+    post_merge = env.get('GITHUB_EVENT_NAME') == 'push' and env.get('GITHUB_REF') == 'refs/heads/master'
+    require(env.get('GITHUB_EVENT_NAME') in ('pull_request', 'workflow_dispatch') or post_merge, 'unsupported event')
     if env.get('CHENGYIN_CI_RESTORE_HTTP_STARTUP') == 'true':
         require(env.get('GITHUB_EVENT_NAME') == 'workflow_dispatch', 'restore startup is manual only')
         require('CHENGYIN_RESTORE_MODE' not in env, 'restore mode belongs to the owned application child')

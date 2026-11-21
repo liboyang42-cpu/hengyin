@@ -9,7 +9,7 @@ const read = (rel) => fs.readFileSync(path.join(root, rel), 'utf8')
 function loadList(responses) {
   let def
   const prev = { getApp: global.getApp, Component: global.Component }
-  global.getApp = () => ({ sendRequest(opts) { opts.success(responses[opts.url]) } })
+  global.getApp = () => ({ getUserID: () => '7', getAuthorization: () => 'fixture-member', sendRequest(opts) { opts.success(responses[opts.url]) } })
   global.Component = (c) => { def = c }
   try {
     const mod = require.resolve('../../components/cy/scene-roam-task-list/index.js')

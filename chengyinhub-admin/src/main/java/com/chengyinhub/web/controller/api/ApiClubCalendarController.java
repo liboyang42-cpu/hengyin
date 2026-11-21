@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.Club;
 import com.chengyinhub.business.domain.ClubMember;
 import com.chengyinhub.business.service.IClubCalendarService;
@@ -53,13 +55,13 @@ public class ApiClubCalendarController extends BaseController {
         try {
             viewer = getAppUserId();
         } catch (Exception notLoggedIn) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         Long clubId = body == null ? null : Convert.toLong(body.get("clubId"));
-        if (clubId == null || clubId <= 0) return error("缺少俱乐部ID");
+        if (clubId == null || clubId <= 0) return refuse(ErrorCode.BAD_REQUEST, "缺少俱乐部ID");
         Club club = clubService.selectClubById(clubId);
-        if (club == null) return error("俱乐部不存在");
-        if (!canViewClub(club, viewer)) return error("这个俱乐部只对成员开放");
+        if (club == null) return refuse(ErrorCode.CLUB_NOT_FOUND, "俱乐部不存在");
+        if (!canViewClub(club, viewer)) return refuse(ErrorCode.CLUB_MEMBERS_ONLY, "这个俱乐部只对成员开放");
         boolean governor = clubMemberService.canGovernClub(club, viewer);
         String month = body.get("month") == null ? null : String.valueOf(body.get("month"));
         try {

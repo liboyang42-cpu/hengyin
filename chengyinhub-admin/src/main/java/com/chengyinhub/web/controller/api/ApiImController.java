@@ -2,6 +2,7 @@ package com.chengyinhub.web.controller.api;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -51,6 +52,29 @@ public class ApiImController extends BaseController
         catch (Exception e)
         {
             logger.error("IM 会话列表异常", e);
+            return AjaxResult.error("操作失败，请稍后重试");
+        }
+    }
+
+    /**
+     * R9 BE-17：会话列表分页。旧 {@code /conversations} 仍回数组（最多最近 200 个会话）；
+     * 新客户端用本接口按 nextCursor 翻页，每页最多 50。
+     */
+    @Operation(summary = "我的会话列表(分页)")
+    @PostMapping("/conversations/page")
+    public AjaxResult conversationPage(String cursor, String size)
+    {
+        try
+        {
+            return AjaxResult.success(imService.listConversationPage(getAppUserId(), cursor, Convert.toInt(size, 20)));
+        }
+        catch (ServiceException e)
+        {
+            return AjaxResult.error(e.getCode() == null ? 400 : e.getCode(), e.getMessage());
+        }
+        catch (Exception e)
+        {
+            logger.error("IM 会话列表分页异常", e);
             return AjaxResult.error("操作失败，请稍后重试");
         }
     }
@@ -111,7 +135,7 @@ public class ApiImController extends BaseController
             ImMessage m = client_message_id == null
                     ? imService.send(getAppUserId(), cid, target > 0 ? target : null, mt, content, extra_json)
                     : imService.send(getAppUserId(), cid, target > 0 ? target : null, mt, content, extra_json, client_message_id);
-            return AjaxResult.success(channelMessage(m));
+            return AjaxResult.success(ownChannelMessage(m));
         }
         catch (ServiceException e)
         {
@@ -152,7 +176,7 @@ public class ApiImController extends BaseController
                     Convert.toLong(conversation_id, 0L), client_message_id);
             Map<String, Object> result = new HashMap<>();
             result.put("found", receipt != null);
-            result.put("message", channelMessage(receipt));
+            result.put("message", ownChannelMessage(receipt));
             return AjaxResult.success(result);
         } catch (ServiceException e) { return bizError(e); }
         catch (Exception e) { logger.error("IM 原消息回读异常", e); return AjaxResult.error("原消息结果待确认"); }
@@ -395,6 +419,23 @@ public class ApiImController extends BaseController
                 || !channelMessages.isChannel(message.getConversationId())) return message;
         Map<String, Object> snapshot = channelMessages.snapshot(message.getConversationId(), message.getId());
         return snapshot == null ? message : snapshot;
+    }
+
+    /**
+     * SOC-3：发送者自己的发送结果与收据。频道快照本身不带 clientMessageId，
+     * App 要用它核对“这就是我刚才那条”，所以只在这两处（只给发送者本人）补上。
+     */
+    private Object ownChannelMessage(ImMessage message)
+    {
+        Object view = channelMessage(message);
+        if (view instanceof Map<?, ?> snapshot && message != null && message.getClientMessageId() != null)
+        {
+            Map<String, Object> copy = new LinkedHashMap<>();
+            for (Map.Entry<?, ?> e : snapshot.entrySet()) copy.put(String.valueOf(e.getKey()), e.getValue());
+            copy.put("clientMessageId", message.getClientMessageId());
+            return copy;
+        }
+        return view;
     }
 
     private Map<String, Object> channelPage(Long conversationId, Map<String, Object> page)

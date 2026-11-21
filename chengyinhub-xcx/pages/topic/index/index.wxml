@@ -1,6 +1,6 @@
-<wxs src="../../../utils/wxs/money.wxs" module="money" /><wxs src="../utils/stat.wxs" module="cnt" />
+<wxs src="../../../utils/wxs/money.wxs" module="money" /><wxs src="../utils/stat.wxs" module="cnt" /><wxs src="../../../utils/wxs/station-title.wxs" module="stationTitle" />
 <view class="theme-dark">
-  <cy-toast id="cy-toast" />
+  <cy-toast id="cy-toast" lift="{{selfPlayCheckoutShow}}" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
   <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
@@ -30,7 +30,6 @@
          匹配这条分支,wx:if 必须紧跟标签名,插在前面会让那条契约假红。 -->
     <cy-empty wx:if="{{missingTopicId}}" kind="missing-param" title="{{loadErrorTitle}}" sub="{{loadErrorSub}}" cta="返回发布广场" fill="{{true}}" size="lg" bind:cta="goTopicList" class="fill-slot" />
     <!-- PR10 F-W1-12:未登录(无会话 / 401)不是加载失败,给登录引导 -->
-    <cy-empty wx:elif="{{loginRequired}}" kind="no-permission" title="登录后查看主题" cta="登录" fill="{{true}}" size="lg" bind:cta="onLoginRetry" class="fill-slot" />
     <cy-empty wx:elif="{{loadRefused}}" kind="not-found" title="{{loadErrorTitle}}" cta="返回" fill="{{true}}" size="lg" bind:cta="goBack" class="fill-slot" />
     <cy-error load-failure wx:else icon="empty-state" title="{{loadErrorTitle}}" sub="{{loadErrorSub}}" retry="重新加载" fill="{{true}}" size="lg" bind:retry="onRetryLoad" class="fill-slot" auto-back="{{!everLoaded}}" />
   </view>
@@ -404,7 +403,7 @@
           </view>
         </view>
       </view>
-      <view class="{{tabPre ? 'tab-pre ' : ''}}{{tabRun ? 'tab-run ' : ''}}tabcont topic-list" wx:if="{{ activeTab == '2' }}">
+      <view class="{{tabPre ? 'tab-pre ' : ''}}{{tabRun ? 'tab-run ' : ''}}tabcont topic-list {{docked && heroCta.text ? 'topic-list--docked' : ''}}" wx:if="{{ activeTab == '2' }}">
         <view class="wp route-top">
           <cy-route-progress total="{{progress.total}}" done="{{progress.done}}" labels="{{progress.labels}}" tone="{{isExplore ? 'free' : 'city'}}" reduced-motion="{{reducedMotion}}" />
           <view class="route-map-wrap rmap" wx:if="{{routeReady}}">
@@ -422,7 +421,7 @@
               show-location
               bindmarkertap="onNodeTap">
             </map>
-            <view class="route-map-tip" wx:if="{{routeReal}}">{{routeSourceText}}</view>
+
           </view>
           <view class="route-note route-note--{{isExplore ? 'free' : 'city'}}"><text class="route-note__k">{{isExplore ? '没有固定路线' : '固定路线'}}</text><text class="route-note__v">{{routeNote}}</text></view>
           <view wx:if="{{isExplore && merchantCards.length}}"><view class="det-type">参与商家</view><cy-merchant-cards items="{{merchantCards}}" owned="{{is_join == 1}}" bind:open="onMerchantOpen" /></view>
@@ -446,7 +445,7 @@
                   mode="aspectFill" wx:if="{{ (node.registrationMerchantList && node.registrationMerchantList.length > 0) || img.first(node.imgUrl) || img.first(info.imgUrl) }}" />
                 <view class="item-pic item-pic--blank" wx:else></view>
                 <view class="node-card-foot">
-                  <view class="david_hp_con_txt"><text class="node-card-name" wx:if="{{node.registrationMerchantList[0].mmsMerchant.name}}">{{node.registrationMerchantList[0].mmsMerchant.name}}</text><text class="node-card-name" wx:elif="{{node.name}}">{{node.name}}</text></view>
+                  <view class="david_hp_con_txt"><text class="node-card-name" wx:if="{{node.registrationMerchantList[0].mmsMerchant.name}}">{{stationTitle.text(node.registrationMerchantList[0].mmsMerchant.name)}}</text><text class="node-card-name" wx:elif="{{node.name}}">{{stationTitle.text(node.name)}}</text></view>
                   <view class="dz" wx:if="{{ node.address }}">{{ node.address }}</view>
                   <view class="david_hp_con_time" wx:if="{{ node.businessTime }}">{{ node.businessTime }}</view>
                   <view class="stn-gift" wx:if="{{ node.giftText }}">到店礼 · {{ node.giftText }}</view>
@@ -480,7 +479,7 @@
               src="{{index<=answer? '/pages/topic/images/icon_star2.png' : '/pages/topic/images/icon_star1.png'}}" mode="aspectFit"></image>
           </view>
         </view>
-        
+
         <view class="vote-cont">
           <textarea bindinput="onCommentInput" auto-height placeholder="请输入您的评价内容..." value="{{ plnr }}" />
         </view>
@@ -541,7 +540,7 @@
     view="{{checkout.view}}" profile-name="{{checkout.profileName}}" profile-phone="{{checkout.profilePhone}}"
     consent-checked="{{selfPlayConsentChecked}}" consent-hint="{{selfPlayConsentHint}}" consent-error="{{selfPlayConsentError}}"
     loading="{{selfPlayConfirmLoading}}"
-    bind:back="onCheckoutBack" bind:profile="onCheckoutProfile" bind:consentchange="onSelfPlayConsentChange" bind:pass="onCheckoutPass" bind:pay="onSelfPlayConfirm" />
+    bind:back="onCheckoutBack" bind:profile="onCheckoutProfile" bind:consentchange="onSelfPlayConsentChange" bind:pass="onCheckoutPass" bind:pay="onSelfPlayConfirm" bind:requote="onCheckoutRequote" />
 
   <cy-pass-reveal show="{{reveal.show}}" cover="{{reveal.cover}}" name="{{reveal.name}}" kind-text="{{reveal.kindText}}"
     until-text="{{reveal.untilText}}" days-text="{{reveal.daysText}}" duration-line="{{reveal.line}}" reduced-motion="{{reducedMotion}}"

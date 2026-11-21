@@ -18,6 +18,7 @@ const KIT_LABELS = {
 const WALK_M_PER_MIN = 80;
 const chapterTrail = require('./chapter-trail.js');
 const countUp = require('./count-roll.js');
+const { distanceText } = require('../../../utils/geo.js');
 const entryRhythm = require('../../../utils/entry-rhythm.js');
 
 function firstImg(v) { return v ? String(v).split(/[,;]/)[0].trim() : ''; }
@@ -50,7 +51,7 @@ const WALK_MAX_MIN = 60; // 超过一小时步行不报分钟,只留距离(km,�
 function sheetFacts(node, distText) {
   const out = { distText: distText || '', walkText: '', hoursText: '' };
   const m = /^([\d.]+)(km|m)$/.exec(distText || '');
-  if (m) { const meters = m[2] === 'km' ? Number(m[1]) * 1000 : Number(m[1]); if (meters > 0) { const min = Math.max(1, Math.ceil(meters / WALK_M_PER_MIN)); if (min <= WALK_MAX_MIN) out.walkText = String(min); } }
+  if (m) { const meters = m[2] === 'km' ? Number(m[1]) * 1000 : Number(m[1]); out.distText = distanceText(meters); if (meters > 0) { const min = Math.max(1, Math.ceil(meters / WALK_M_PER_MIN)); if (min <= WALK_MAX_MIN) out.walkText = String(min); } }
   const biz = String(node && node.businessTime || '');
   if (biz && !/^\s*00:00\s*[-–~至]\s*23:59\s*$/.test(biz)) out.hoursText = biz.replace(/:00/g, '').replace(/\s*[-~至]\s*/, '–');
   // x-fix2 P-8:大字格只放时段;「公共区域观察;以现场…为准」这类说明已在地址行(metaLine)里,不挤进数字位
@@ -79,6 +80,8 @@ function methods() {
         : origin === 'card' ? (this.data.advancedPlay && this.data.advancedPlay.node)
         : (this.data.nodes || []).find((n) => String(n.nodeId) === String(ds.nodeid));
       if (!node) return;
+      if (origin === 'sheet' && node.hasAdvanced && this._advancedReadyNodeId === node.nodeId
+          && [0, 5, 8, 9, 10].includes(Number(node.vm))) { this.startGame(); return; }
       if (origin === 'story') {
         const entry = (this.data.chapterParas || []).find((p) => p.kind === 'game' && String(p.nodeId) === String(node.nodeId));
         if (!entry || !this._isStoryGame(node) || node.done) { this.startStoryGame(e); return; }

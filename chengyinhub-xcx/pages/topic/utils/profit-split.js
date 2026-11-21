@@ -57,7 +57,7 @@ function buildSplit(lineup, platformRate) {
   });
   return {
     parts,
-    fixedText: fixed.length ? '另按核销:' + fixed.join(' · ') : '',
+    fixedText: fixed.length ? '另按核销：' + fixed.join(' · ') : '',
     tiers: rows.map(function (r) { return { key: (r.toType || '') + ':' + (r.toId || ''), toType: r.toType, toId: r.toId, name: r.name || '', tier: tierText(r) }; }),
   };
 }

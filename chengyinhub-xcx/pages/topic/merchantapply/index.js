@@ -439,7 +439,7 @@ Page({
     }
     if (!this.data.dirty) return; // 干净路径已经被 onSheetClose 处理,这里不重复退出
     modal.show({
-      title: '放弃这次报名?',
+      title: '放弃这次报名？',
       content: '已填写的承接地点、时间等信息不会保存',
       confirmText: '放弃',
       cancelText: '继续填写',

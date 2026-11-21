@@ -13,6 +13,19 @@ public interface RewardDropRuleMapper {
     List<RewardDropRule> selectApplicableRules(@Param("topicId") Long topicId,
                                                 @Param("sceneKey") String sceneKey);
 
+    /** R10 后台规则列表：含停用，按条件筛，id 倒序，最多 500 行。 */
+    List<RewardDropRule> selectAdminList(RewardDropRule filter);
+
+    RewardDropRule selectById(@Param("id") Long id);
+
+    int insertRule(RewardDropRule rule);
+
+    /** 整体覆盖可编辑字段；状态只经 updateStatus 改。 */
+    int updateRule(RewardDropRule rule);
+
+    int updateStatus(@Param("id") Long id, @Param("status") Integer status);
+
+    // sys-random 后台（/business/reward-drop）：规则 CRUD。
     List<RewardDropRule> selectRewardDropRuleList(RewardDropRule filter);
 
     RewardDropRule selectRewardDropRuleById(@Param("id") Long id);

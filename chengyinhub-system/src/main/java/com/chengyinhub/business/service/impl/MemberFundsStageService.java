@@ -69,6 +69,10 @@ public class MemberFundsStageService {
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     private com.chengyinhub.business.mapper.SettlementDetailMapper sessionFeeMapper;
 
+    /** S2 collection model: split sales are with the seller's sub-merchant, never in this wallet. Zero while inactive. */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.business.collection.CollectionSplitSettlementService collectionSplitSettlement;
+
     public Map<String, Object> stages(Long memberId, Date now) {
         String today = day(now);
         BigDecimal pending = BigDecimal.ZERO;
@@ -79,7 +83,7 @@ public class MemberFundsStageService {
         List<MemberActivityFundsRow> unsettled = holdMapper.selectUnsettledActivityFundsByMember(memberId);
         Map<Long, BigDecimal> feesByActivity = sessionFeesByActivity(unsettled);
         for (MemberActivityFundsRow row : unsettled) {
-            BigDecimal normal = share(row, row.getNormalSales());
+            BigDecimal normal = share(row, walletSales(row));
             BigDecimal dispute = share(row, row.getDisputedSales());
             if (normal == null || dispute == null) {
                 amountsKnown = false;
@@ -180,6 +184,13 @@ public class MemberFundsStageService {
             out.merge(fee.getActivityId(), fee.getAmount(), BigDecimal::add);
         }
         return out;
+    }
+
+    /** Normal (undisputed) sales that will reach the wallet: split-collected sales are left out (S2). */
+    private BigDecimal walletSales(MemberActivityFundsRow row) {
+        BigDecimal sales = row.getNormalSales();
+        if (sales == null || collectionSplitSettlement == null || row.getActivityId() == null) return sales;
+        return sales.subtract(collectionSplitSettlement.splitSalesForActivity(row.getActivityId())).max(BigDecimal.ZERO);
     }
 
     private BigDecimal share(MemberActivityFundsRow row, BigDecimal sales) {

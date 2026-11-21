@@ -25,7 +25,7 @@ const { pushScene, popScene, currentScene, exitDecision } = require('../../../..
 const { offerVerificationReadback } = require('../../../../utils/verification-readback.js');
 const { isRecord, isRecordList } = require('../../../../utils/response-shape.js');
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../../utils/merchant-access-policy.js');
-const { isEndedProject, statusLabelOf } = require('../../../../utils/merchant-workbench.js');
+const { isEndedProject, statusLabelOf } = require('../../../../utils/merchant-workbench.js'); const dayKey = require('../../../../utils/merchant-workbench.js').toDayStr; // MER-08 同一日历日换算(同一行,不动行号基线)
 const mediaPreview = require('../../../../utils/media-preview.js');
 const { buildOrderPreviewList } = require('./order-preview.js');
 const { shapeMerchantSafety } = require('./merchant-safety-summary.js');
@@ -252,9 +252,9 @@ function pickProjectCover(item) {
   return raw || '/images/route_free_cover.png';
 }
 
-function fmtShortDate(str) {
+function fmtShortDate(str) { // MER-08:带时区的时刻按上海日历日,不再截串差一天
   if (!str) return '';
-  return String(str).slice(0, 10).replace(/-/g, '.');
+  return dayKey(str).replace(/-/g, '.');
 }
 
 function calcTimeProgress(startDate, endDate) {
@@ -302,7 +302,7 @@ function buildUndertakePreview(rows, limit) {
     var hit = byTopic[key];
     var row = hit.row;
     var time = calcTimeProgress(row.startDate, row.endDate);
-    var statusText = hit.status === 0 ? '审核中' : statusLabelOf(row.startDate, row.endDate);
+    var statusText = hit.status === 0 ? '待审核' : statusLabelOf(row.startDate, row.endDate); // MER-08:与工作台卡同词「待审核」
     return {
       id: Number(row.topicId),
       name: row.topicName || '未命名主题',

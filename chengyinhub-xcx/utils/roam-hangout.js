@@ -109,7 +109,7 @@ function emptyStateCopy(radiusM, suggested) {
     // Figma S02:「还没有局 / 雾再远一点,20 km 内有 7 个局在约。/ 看远一点 / 或者,在这里开一局」
     return {
       title: '还没有局',
-      sub: '雾再远一点,' + fmtKm(suggested.radius) + ' 内有 ' + Number(suggested.count) + ' 个局在约。',
+      sub: '雾再远一点，' + fmtKm(suggested.radius) + ' 内有 ' + Number(suggested.count) + ' 个局在约。',
       primary: '看远一点',
       secondary: '或者，在这里开一局',
       action: 'expand',

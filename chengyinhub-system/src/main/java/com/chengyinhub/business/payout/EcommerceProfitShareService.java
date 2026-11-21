@@ -177,6 +177,85 @@ public class EcommerceProfitShareService {
         return created;
     }
 
+    // ---- S2 collection model: single-seller split orders ----
+
+    /** Manual reasons of single-seller split plans carry this prefix, so the ledger-based {@link #replan} never touches them. */
+    public static final String SPLIT_PREFIX = "SPLIT_";
+
+    /**
+     * S2 collection model: plan the profit sharing of one single-seller split payment. The platform's take is the only
+     * receiver (the rest stays with the seller's sub-merchant and is unfrozen by the same request); {@code platformTakeFen}
+     * comes from the rate the existing pricing path froze on the order. Idempotent on (out_trade_no, sourceId): an
+     * existing plan is returned unchanged. A payment with any refund before sharing goes to manual review, like
+     * {@link #planTopic}. Returns the share order id, or null while profit sharing is switched off.
+     *
+     * @param sourceId     topic id for a topic ticket, minus the activity id for an activity ticket
+     * @param manualReason non-null to record the plan straight into manual review (e.g. take rate missing)
+     */
+    public Long planSingleSeller(long sourceId, EcomOrderSeller trade, long platformTakeFen, String manualReason) {
+        if (!switches.profitSharingEnabled() || trade == null || trade.getOutTradeNo() == null) return null;
+        EcomProfitShareOrder existing = mapper.selectShareOrder(trade.getOutTradeNo(), sourceId);
+        if (existing != null) return existing.getId();
+        ProfitSharePlanner.Plan plan = manualReason != null
+                ? new ProfitSharePlanner.Plan("MANUAL", SPLIT_PREFIX + manualReason, List.of(), List.of(), 0, null)
+                : !mapper.selectRefundsByTrade(trade.getOutTradeNo()).isEmpty()
+                ? new ProfitSharePlanner.Plan("MANUAL", SPLIT_PREFIX + REFUNDED_BEFORE_SHARE, List.of(), List.of(), 0, null)
+                : singleSellerPlan(trade, platformTakeFen);
+        tx.execute(status -> persist(sourceId, trade, plan));
+        EcomProfitShareOrder row = mapper.selectShareOrder(trade.getOutTradeNo(), sourceId);
+        return row == null ? null : row.getId();
+    }
+
+    /**
+     * Operations re-plan of a single-seller split plan in manual review (never submitted to WeChat, no refund). The take is
+     * recomputed by the caller from the frozen rate. Returns PLANNED, MANUAL:&lt;reason&gt; or why it was not re-planned.
+     */
+    public String replanSingleSeller(long shareOrderId, EcomOrderSeller trade, long platformTakeFen) {
+        if (!switches.profitSharingEnabled()) return "SWITCH_OFF";
+        EcomProfitShareOrder order = mapper.selectShareOrderById(shareOrderId);
+        if (order == null || !MANUAL.equals(order.getState()) || order.getWxOrderId() != null
+                || order.getManualReason() == null || !order.getManualReason().startsWith(SPLIT_PREFIX)
+                || order.getManualReason().equals(SPLIT_PREFIX + REFUNDED_BEFORE_SHARE)
+                || trade == null || !order.getOutTradeNo().equals(trade.getOutTradeNo())
+                || trade.getTransactionId() == null || !trade.getTransactionId().equals(order.getTransactionId()))
+            return "NOT_REPLANNABLE";
+        if (!mapper.selectRefundsByTrade(order.getOutTradeNo()).isEmpty()) return "REFUNDED";
+        ProfitSharePlanner.Plan plan = singleSellerPlan(trade, platformTakeFen);
+        String result = tx.execute(status -> {
+            boolean manual = "MANUAL".equals(plan.state());
+            String hash = plan.planHash() == null ? sha("MANUAL|" + plan.manualReason() + "|" + order.getOutTradeNo()) : plan.planHash();
+            if (mapper.replanShareOrder(order.getId(), manual ? MANUAL : PLANNED, plan.sharedFen(), hash, plan.manualReason()) != 1)
+                return "CONCURRENT";
+            mapper.deleteShareLines(order.getId());
+            for (ProfitSharePlanner.Line l : plan.lines()) {
+                insertLine(order.getId(), l);
+            }
+            return manual ? "MANUAL:" + plan.manualReason() : PLANNED;
+        });
+        return result == null ? "CONCURRENT" : result;
+    }
+
+    /** Two ledger components: the platform take (ACCOUNTING) and the rest, retained by the seller's own member. */
+    private ProfitSharePlanner.Plan singleSellerPlan(EcomOrderSeller trade, long platformTakeFen) {
+        long total = trade.getTotalFen() == null ? 0 : trade.getTotalFen();
+        if (platformTakeFen < 0 || platformTakeFen > total)
+            return new ProfitSharePlanner.Plan("MANUAL", SPLIT_PREFIX + "TAKE_OUT_OF_RANGE", List.of(), List.of(), 0, null);
+        Long sellerMember = mapper.selectSellerMemberId(trade.getSellerType(), trade.getSellerId());
+        if (sellerMember == null)
+            return new ProfitSharePlanner.Plan("MANUAL", SPLIT_PREFIX + "SELLER_MEMBER_UNKNOWN", List.of(), List.of(), 0, null);
+        List<ProfitSharePlanner.Component> components = new ArrayList<>();
+        components.add(new ProfitSharePlanner.Component(0L, "platform_take", "ACCOUNTING", null,
+                java.math.BigDecimal.valueOf(platformTakeFen, 2)));
+        components.add(new ProfitSharePlanner.Component(0L, "seller", "MEMBER", sellerMember,
+                java.math.BigDecimal.valueOf(total - platformTakeFen, 2)));
+        ProfitSharePlanner.Order order = new ProfitSharePlanner.Order(trade.getOutTradeNo(), trade.getTransactionId(),
+                trade.getSubMchid(), total, Set.of(sellerMember));
+        ProfitSharePlanner.Plan plan = ProfitSharePlanner.plan(order, components, switches.platformReceiverMchid(),
+                switches.maxSharePercent(), member -> Optional.empty(), false, false, "");
+        if (!"MANUAL".equals(plan.state())) return plan;
+        return new ProfitSharePlanner.Plan("MANUAL", SPLIT_PREFIX + plan.manualReason(), plan.lines(), List.of(), 0, null);
+    }
+
     /** Session ids and their settlement-detail ids occupy the negative namespace in shared payout tables. */
     public int planActivity(long activityId) {
         if (activityId <= 0 || !switches.personalClubEnabled() || sessionPayoutMapper == null) return 0;

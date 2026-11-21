@@ -14,7 +14,8 @@
         "index",
         "merchant/index",
         "circle/index",
-        "poi-challenge/index"
+        "poi-challenge/index",
+        "shop-game/index"
       ]
     },
     {
@@ -90,13 +91,15 @@
         "governance/index",
         "group-code/index",
         "join-requests/index",
+        "membership/index",
         "notify/index",
         "payout-receiver/index",
         "roles/index",
         "settlement/index",
         "topic-detail/index",
         "topic-story/index",
-        "workbench/index"
+        "workbench/index",
+        "channels/index"
       ]
     },
     {
@@ -139,9 +142,12 @@
         "coop-center/index",
         "customer/index",
         "game-node/index",
+        "shop-games/index",
         "customer/detail/index",
         "verify-records/index",
+        "bundle-reservations/index",
         "payout-account/index",
+        "plans/index",
         "crm-campaigns/index",
         "team/index"
       ]
@@ -211,6 +217,7 @@
       "pages": [
         "shezhi",
         "about/index",
+        "app/index",
         "marketing/index"
       ]
     },
@@ -281,7 +288,9 @@
         "market/gift/index",
         "market/membership/index",
         "market/pass-order/index",
-        "market/library/index"
+        "market/library/index",
+        "payout-bind/index",
+        "payout-request/index"
       ]
     },
     {

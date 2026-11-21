@@ -3,7 +3,10 @@ package com.chengyinhub.common.core.domain;
 import java.util.HashMap;
 import java.util.Objects;
 import com.chengyinhub.common.constant.HttpStatus;
+import com.chengyinhub.common.exception.BusinessRefusal;
 import com.chengyinhub.common.exception.ServiceException;
+import com.chengyinhub.common.exception.ErrorCode;
+import com.chengyinhub.common.exception.ErrorContract;
 import com.chengyinhub.common.utils.StringUtils;
 import com.chengyinhub.common.utils.UserSafeMessage;
 
@@ -24,6 +27,18 @@ public class AjaxResult extends HashMap<String, Object>
 
     /** 数据对象 */
     public static final String DATA_TAG = "data";
+
+    /** 有类型错误码(R5 error-contract)。只在请求带 {@code X-Error-Contract: 2} 时才写入响应体。 */
+    public static final String ERROR_CODE_TAG = ErrorContract.ERROR_CODE_TAG;
+
+    /**
+     * 有类型错误码。刻意是 Java 字段而不是 Map 条目:序列化器只输出 Map 条目,
+     * 因此不带新请求头时响应体与迁移前逐字节一致(小程序兼容)。由 ErrorContractAdvice 在 v2 下写入。
+     */
+    private transient ErrorCode errorCode;
+
+    /** v2 下覆盖错误码建议值的 HTTP 状态(可空)。 */
+    private transient Integer suggestedHttpStatus;
 
     /**
      * 初始化一个新创建的 AjaxResult 对象，使其表示一个空消息。
@@ -183,6 +198,12 @@ public class AjaxResult extends HashMap<String, Object>
     public static AjaxResult refusal(RuntimeException e)
     {
         String msg = e == null ? null : e.getMessage();
+        if (e instanceof BusinessRefusal br)
+        {
+            // be-integ 的有类型拒绝:保留其旧契约码、错误码与 v2 HTTP 状态。
+            return refuse(br.getLegacyCode(), br.getErrorCode(), msg, br.getData())
+                    .withErrorCode(br.getErrorCode(), br.getHttpStatus());
+        }
         if (e instanceof ServiceException se)
         {
             int code = se.getCode() == null ? HttpStatus.ERROR : se.getCode();
@@ -197,6 +218,86 @@ public class AjaxResult extends HashMap<String, Object>
             return AjaxResult.error(HttpStatus.CONFLICT, msg);
         }
         return AjaxResult.error(msg);
+    }
+
+    /**
+     * 有类型的业务拒绝。旧契约体内 code 仍为 500(与 {@code error(msg)} 一致),文案用错误码兜底文案。
+     *
+     * @param errorCode 错误码
+     * @return 拒绝消息
+     */
+    public static AjaxResult refuse(ErrorCode errorCode)
+    {
+        return refuse(errorCode, errorCode.defaultMessage());
+    }
+
+    /**
+     * 有类型的业务拒绝。旧契约体内 code 仍为 500,msg 原样。
+     *
+     * @param errorCode 错误码
+     * @param msg 返回内容
+     * @return 拒绝消息
+     */
+    public static AjaxResult refuse(ErrorCode errorCode, String msg)
+    {
+        return refuse(HttpStatus.ERROR, errorCode, msg, null);
+    }
+
+    /**
+     * 有类型的业务拒绝,保留迁移前的体内 code(例如原来是 {@code error(403, msg)})。
+     *
+     * @param legacyCode 旧契约体内 code
+     * @param errorCode 错误码
+     * @param msg 返回内容
+     * @return 拒绝消息
+     */
+    public static AjaxResult refuse(int legacyCode, ErrorCode errorCode, String msg)
+    {
+        return refuse(legacyCode, errorCode, msg, null);
+    }
+
+    /**
+     * 有类型的业务拒绝,带数据。
+     */
+    public static AjaxResult refuse(int legacyCode, ErrorCode errorCode, String msg, Object data)
+    {
+        AjaxResult result = new AjaxResult(legacyCode, msg, data);
+        result.errorCode = errorCode;
+        return result;
+    }
+
+    /** 当前结果的有类型错误码(可空)。不是 bean getter,避免任何序列化器把它当属性输出。 */
+    public ErrorCode errorCode()
+    {
+        return errorCode;
+    }
+
+    /** v2 下显式指定的 HTTP 状态(可空)。 */
+    public Integer suggestedHttpStatus()
+    {
+        return suggestedHttpStatus;
+    }
+
+    /**
+     * 标注错误码(不改动响应体)。
+     *
+     * @param errorCode 错误码
+     * @return this
+     */
+    public AjaxResult withErrorCode(ErrorCode errorCode)
+    {
+        this.errorCode = errorCode;
+        return this;
+    }
+
+    /**
+     * 标注错误码与 v2 HTTP 状态(不改动响应体)。
+     */
+    public AjaxResult withErrorCode(ErrorCode errorCode, int httpStatus)
+    {
+        this.errorCode = errorCode;
+        this.suggestedHttpStatus = httpStatus;
+        return this;
     }
 
     /**

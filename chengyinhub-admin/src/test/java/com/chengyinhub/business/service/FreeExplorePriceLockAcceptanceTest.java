@@ -252,7 +252,7 @@ class FreeExplorePriceLockAcceptanceTest {
             freeExploreTopic(lifecycle);
             IllegalStateException e = assertThrows(IllegalStateException.class,
                     () -> service.confirmPrice(TOPIC_ID, null, new BigDecimal("66.60"), null, null, null));
-            assertEquals("主题未在定价阶段,不能确认终价", e.getMessage(), "lifecycle=" + lifecycle);
+            assertEquals("主题未在定价阶段，不能确认终价", e.getMessage(), "lifecycle=" + lifecycle);
         }
         assertNoWrite();
     }
@@ -345,7 +345,7 @@ class FreeExplorePriceLockAcceptanceTest {
         PricingResult preview = service.previewTopic(TOPIC_ID, null, null, "self");
 
         assertEquals(Boolean.FALSE, preview.getCanConfirm());
-        assertEquals("主题未在定价阶段,不能确认终价", preview.getConfirmBlockReason());
+        assertEquals("主题未在定价阶段，不能确认终价", preview.getConfirmBlockReason());
     }
 
     // ------------------------------------------------------------------ (c) 控制器:归属 + 原话透传
@@ -436,7 +436,7 @@ class FreeExplorePriceLockAcceptanceTest {
         AjaxResult result = controller.confirm(body());
 
         assertEquals(500, result.get(AjaxResult.CODE_TAG));
-        assertEquals("收费主题要先登记发布者实名(姓名与身份证号),再确认终价", result.get(AjaxResult.MSG_TAG));
+        assertEquals("收费主题要先登记发布者实名(姓名与身份证号)，再确认终价", result.get(AjaxResult.MSG_TAG));
         verifyNoInteractions(pricing);
     }
 

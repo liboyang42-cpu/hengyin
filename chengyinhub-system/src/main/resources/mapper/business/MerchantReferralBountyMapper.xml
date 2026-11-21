@@ -16,6 +16,9 @@
     <result column="frozen_until"            property="frozenUntil"/>
     <result column="clawed_back_at"          property="clawedBackAt"/>
     <result column="clawback_reason"         property="clawbackReason"/>
+    <result column="review_by"               property="reviewBy"/>
+    <result column="review_time"             property="reviewTime"/>
+    <result column="review_note"             property="reviewNote"/>
     <result column="del_flag"                property="delFlag"/>
     <result column="create_time"             property="createTime"/>
     <result column="update_time"             property="updateTime"/>
@@ -235,4 +238,60 @@
       )
   </select>
 
+  <!-- ============================ R9 BE-13 审核队列 ============================ -->
+
+  <select id="selectById" resultMap="BaseResultMap">
+    SELECT * FROM merchant_referral_bounty WHERE id = #{id} AND del_flag = '0'
+  </select>
+
+  <select id="selectQueue" resultMap="BaseResultMap">
+    SELECT * FROM merchant_referral_bounty
+    <where>
+      del_flag = '0'
+      <if test="status != null">AND status = #{status}</if>
+      <if test="inviterMemberId != null">AND inviter_member_id = #{inviterMemberId}</if>
+      <if test="merchantMemberId != null">AND merchant_member_id = #{merchantMemberId}</if>
+    </where>
+    ORDER BY id DESC
+  </select>
+
+  <select id="selectByInviter" resultMap="BaseResultMap">
+    SELECT * FROM merchant_referral_bounty
+    WHERE inviter_member_id = #{inviterMemberId} AND del_flag = '0'
+    ORDER BY id DESC
+    LIMIT 100
+  </select>
+
+  <!-- 达成激活 → 待审核。金额在此落值(改价不追溯),但不入账、不冻结。 -->
+  <update id="markAwaitingReviewIfPending">
+    UPDATE merchant_referral_bounty
+       SET status = 4,
+           activated_at = #{activatedAt},
+           verified_heads_snapshot = #{snapshot},
+           bounty_amount = #{amount},
+           update_time = NOW()
+     WHERE id = #{id} AND status = 0
+  </update>
+
+  <update id="markPaidIfAwaitingReview">
+    UPDATE merchant_referral_bounty
+       SET status = 1,
+           paid_at = #{paidAt},
+           frozen_until = #{frozenUntil},
+           review_by = #{reviewBy},
+           review_time = NOW(),
+           review_note = #{note},
+           update_time = NOW()
+     WHERE id = #{id} AND status = 4
+  </update>
+
+  <update id="markRejectedIfOpen">
+    UPDATE merchant_referral_bounty
+       SET status = 5,
+           review_by = #{reviewBy},
+           review_time = NOW(),
+           review_note = #{note},
+           update_time = NOW()
+     WHERE id = #{id} AND status IN (0, 4)
+  </update>
 </mapper>

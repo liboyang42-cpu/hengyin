@@ -470,6 +470,77 @@ class ClubEventNotificationServiceImplTest {
     }
 
     @Test
+    void apnsChannelIsUnavailableWhenNoPushFanoutIsWired() {
+        ClubEventCampaignRequest request = request("apns-unwired");
+        request.setChannel("APNS");
+
+        com.chengyinhub.common.exception.ServiceException error = assertThrows(
+                com.chengyinhub.common.exception.ServiceException.class,
+                () -> service.send(ACTOR, request));
+
+        assertEquals(Integer.valueOf(501), error.getCode());
+        verify(mapper, never()).insertCampaign(any());
+    }
+
+    /** P2 links-push：APNS 渠道照写 IN_APP 站内信，并只对站内信已送达的收件人登记推送。 */
+    @Test
+    void apnsChannelWritesInAppRecordAndPushesOnlyDeliveredRecipients() {
+        IPushFanoutService push = mock(IPushFanoutService.class);
+        when(push.clubCampaignPush(61L)).thenReturn(true);
+        ReflectionTestUtils.setField(service, "pushFanout", push);
+        when(mapper.selectRegisteredRecipients(CLUB, ACTIVITY)).thenReturn(Arrays.asList(51L, 52L));
+        when(mapper.insertCampaign(any())).thenAnswer(invocation -> {
+            ClubEventCampaign row = invocation.getArgument(0);
+            assertEquals("IN_APP", row.getChannel(), "站内信任务行的 channel 仍是 IN_APP");
+            row.setId(61L);
+            return 1;
+        });
+        when(mapper.insertDelivery(any())).thenAnswer(invocation -> {
+            ClubEventDelivery row = invocation.getArgument(0);
+            row.setId(70L + row.getRecipientMemberId());
+            return 1;
+        });
+        when(mapper.insertOutbox(any(), any())).thenReturn(1);
+        ClubEventDelivery first = delivery(121L, 51L);
+        ClubEventDelivery second = delivery(122L, 52L);
+        when(mapper.selectDispatchableByCampaign(eq(61L), eq(500), any())).thenReturn(Arrays.asList(first, second));
+        when(mapper.selectDeliveryByIdForUpdate(121L)).thenReturn(first);
+        when(mapper.selectDeliveryByIdForUpdate(122L)).thenReturn(second);
+        when(im.sendSystem(eq(51L), eq(1), any(), any())).thenReturn(501L);
+        when(im.sendSystem(eq(52L), eq(1), any(), any())).thenThrow(new RuntimeException("IM unavailable"));
+        when(mapper.markDeliverySentCas(eq(121L), eq(0), eq(501L), any())).thenReturn(1);
+        when(mapper.markDeliveryFailedCas(eq(122L), eq(0), any(), any())).thenReturn(1);
+        when(mapper.completeOutbox(121L)).thenReturn(1);
+        when(mapper.rescheduleOutbox(eq(122L), any())).thenReturn(1);
+        when(mapper.refreshCampaignCounts(61L)).thenReturn(1);
+        when(mapper.selectCampaignById(61L)).thenReturn(
+                campaign(61L, "apns-1", 2, 0, 0, ClubEventCampaign.PROCESSING),
+                campaign(61L, "apns-1", 2, 1, 1, ClubEventCampaign.PARTIAL_FAILED));
+        ClubEventCampaignRequest request = request("apns-1");
+        request.setChannel("apns");
+
+        ClubEventCampaign campaign = service.send(ACTOR, request);
+
+        assertEquals("APNS", campaign.getPushChannel());
+        assertEquals("IN_APP", campaign.getChannel());
+        verify(push).markClubCampaignPush(61L);
+        verify(im).sendSystem(eq(51L), eq(1), any(), any());
+        verify(push).clubNoticeDelivered(61L, CLUB, ACTIVITY, "集合提醒", "请提前十分钟到场", 51L);
+        verify(push, never()).clubNoticeDelivered(any(Long.class), any(Long.class), any(), any(), any(), eq(52L));
+    }
+
+    @Test
+    void previewReportsApnsAvailabilityHonestly() {
+        when(mapper.selectRegisteredRecipients(CLUB, ACTIVITY)).thenReturn(Arrays.asList(51L));
+        assertEquals("UNAVAILABLE", service.preview(ACTOR, request("p-1")).get("apns"));
+        IPushFanoutService push = mock(IPushFanoutService.class);
+        ReflectionTestUtils.setField(service, "pushFanout", push);
+        assertEquals("NOT_CONFIGURED", service.preview(ACTOR, request("p-2")).get("apns"));
+        when(push.apnsConfigured()).thenReturn(true);
+        assertEquals("AVAILABLE", service.preview(ACTOR, request("p-3")).get("apns"));
+    }
+
+    @Test
     void publicPreviewAndSendRejectReservedCancellationSnapshotPrefixes() {
         ClubEventCampaignRequest preview = request("cancel-w-forged");
         preview.setAudienceType("WAITLIST");

@@ -385,6 +385,16 @@
           </el-col>
         </el-row>
       </el-tab-pane>
+
+      <!-- CITY-19: 地点等级（T1–T4）与街区编排 -->
+      <el-tab-pane label="等级与街区" name="layout" lazy>
+        <city-board-layout :boards="boards" />
+      </el-tab-pane>
+
+      <!-- CITY-6: 城市大富翁运营（夜间任务补跑、规则差异、风控队列） -->
+      <el-tab-pane label="城市大富翁运营" name="monopoly" lazy>
+        <city-monopoly-ops />
+      </el-tab-pane>
     </el-tabs>
   </div>
 </template>
@@ -408,6 +418,8 @@ import {
   getTerritoryLeaderboard
 } from '@/api/business/citygame'
 import { listRoamPoi } from '@/api/business/roamPoi'
+import CityMonopolyOps from './monopoly'
+import CityBoardLayout from './layout'
 
 const emptyForm = () => ({
   boardId: '',
@@ -429,6 +441,7 @@ const emptyForm = () => ({
 
 export default {
   name: 'CityGameAdmin',
+  components: { CityMonopolyOps, CityBoardLayout },
   data() {
     return {
       activeTab: 'boards',

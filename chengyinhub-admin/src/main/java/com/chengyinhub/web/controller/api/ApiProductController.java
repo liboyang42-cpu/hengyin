@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.service.IPmsProductLikeService;
 import com.chengyinhub.business.service.IMmsMerchantService;
@@ -95,7 +97,7 @@ public class ApiProductController extends BaseController {
         if (productId > 0) {
             pmsProduct.setId(productId);
         } else {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
 
         pmsProduct = pmsProductService.selectPmsProductById(productId);
@@ -149,7 +151,7 @@ public class ApiProductController extends BaseController {
 
     /** 不公开的商品统一按不存在处理，不区分下架/删除/商家停用，避免探测。 */
     private AjaxResult productUnavailable() {
-        return error("商品不存在或已下架").put("errorCode", "PRODUCT_UNAVAILABLE");
+        return refuse(ErrorCode.NOT_FOUND, "商品不存在或已下架").put("errorCode", "PRODUCT_UNAVAILABLE");
     }
 
     @Operation(summary = "商品收藏")
@@ -162,11 +164,11 @@ public class ApiProductController extends BaseController {
         Long member_id = getAppUserId();
         // 参数校验
         if (member_id == null || member_id <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         Long productId = Convert.toLong(id, 0L);
         if (productId < 1) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         pmsProductLike.setProductId(productId);
         pmsProductLike.setMemberId(member_id);
@@ -206,7 +208,7 @@ public class ApiProductController extends BaseController {
         Long member_id = getAppUserId();
         // 参数校验
         if (member_id == null || member_id <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         viewProductLike.setMemberId(member_id);
 

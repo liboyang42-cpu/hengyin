@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.dto.ScopedLeaderboardQueryDTO;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
@@ -36,7 +38,7 @@ public class ApiScopedLeaderboardController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception notLoggedIn) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         return scopedLeaderboardApplication.list(memberId, query);
     }

@@ -138,6 +138,48 @@ class ChannelPlatformServiceTest
         assertEquals("REQUEST_ID_CONFLICT", code(() -> service.create(OWNER, 1, CLUB, changed, "new")));
     }
 
+    @Test void directoryReportsUnreadAndMentionCounts()
+    {
+        // W7 x-channel-reach (SOC-2)
+        when(mapper.selectGuildChannels(1, CLUB, false)).thenReturn(List.of(channel));
+        when(mapper.selectUnread(MEMBER, List.of(CH))).thenReturn(List.of(Map.of("conversationId", CH, "unread", 4L)));
+        when(mapper.selectMentionUnread(MEMBER, List.of(CH))).thenReturn(List.of(Map.of("conversationId", CH, "mentions", 1L)));
+        Map<String, Object> dir = service.directory(MEMBER, 1, CLUB, true);
+        @SuppressWarnings("unchecked") List<Map<String, Object>> rows = (List<Map<String, Object>>) dir.get("ungrouped");
+        assertEquals(4L, rows.get(0).get("unread_count"));
+        assertEquals(1L, rows.get(0).get("mention_count"));
+        Map<String, Object> plain = service.directory(MEMBER, 1, CLUB, false);
+        @SuppressWarnings("unchecked") List<Map<String, Object>> plainRows = (List<Map<String, Object>>) plain.get("ungrouped");
+        assertFalse(plainRows.get(0).containsKey("mention_count"));
+    }
+
+    @Test void createdChannelEnrolsMembersAndAnnouncementsDefaultToAll()
+    {
+        // W7 x-channel-reach (SOC-2)
+        ChannelMembershipSync sync = mock(ChannelMembershipSync.class);
+        service.setMembership(sync);
+        when(mapper.insertConversation(anyMap())).thenAnswer(i -> { ((Map<String, Object>) i.getArgument(0)).put("id", 2003L); return 1; });
+        when(mapper.selectChannel(2003L)).thenReturn(row(2003, 0, 2, "news"));
+        Map<String, Object> b = body("name", "news", "topic", null, "kind", 2, "parent_id", "0", "visibility", 1,
+                "slowmode_sec", 0, "request_id", "req-create-4", "reason", "new");
+        service.create(OWNER, 1, CLUB, b, "new");
+        verify(sync).channelChangedAfterCommit(2003L);
+        verify(mapper).updateNotifyDefault(2003L, 0);
+    }
+
+    @Test void provisionedEventsChannelDefaultsToAllAndChatInherits()
+    {
+        long[] next = {3000};
+        when(mapper.insertConversation(anyMap())).thenAnswer(i -> { ((Map<String, Object>) i.getArgument(0)).put("id", ++next[0]); return 1; });
+        when(mapper.selectChannel(anyLong())).thenAnswer(i -> row(i.getArgument(0), 0, 1, "x"));
+        when(mapper.updateNotifyDefault(anyLong(), any())).thenThrow(new RuntimeException("Unknown column")).thenReturn(1);
+        service.provisionDefaults(OWNER, 1, CLUB); // a missing column never blocks provisioning
+        verify(mapper, never()).updateNotifyDefault(3001L, 0); // category
+        verify(mapper, never()).updateNotifyDefault(3002L, 0); // 闲聊 inherits
+        verify(mapper).updateNotifyDefault(3003L, 0);          // 公告
+        verify(mapper).updateNotifyDefault(3004L, 0);          // 活动
+    }
+
     @Test void createMapsDuplicateNameTo409()
     {
         when(mapper.insertConversation(anyMap())).thenAnswer(i -> { ((Map<String, Object>) i.getArgument(0)).put("id", 2002L); return 1; });

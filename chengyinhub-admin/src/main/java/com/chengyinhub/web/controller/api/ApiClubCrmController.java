@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.service.IClubCrmAppService;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
@@ -40,7 +42,7 @@ public class ApiClubCrmController extends BaseController {
     @PostMapping("/customers/list")
     public AjaxResult customers(@RequestBody(required = false) Map<String, Object> body) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Map<String, Object> req = body == null ? new java.util.HashMap<String, Object>() : body;
         try {
             return AjaxResult.success(clubCrmAppService.listCustomers(principal,
@@ -56,7 +58,7 @@ public class ApiClubCrmController extends BaseController {
     @PostMapping("/customers/count")
     public AjaxResult customerCount(@RequestBody(required = false) Map<String, Object> body) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Map<String, Object> req = body == null ? new java.util.HashMap<String, Object>() : body;
         try {
             java.util.Map<String, Object> data = new java.util.LinkedHashMap<String, Object>();
@@ -71,7 +73,7 @@ public class ApiClubCrmController extends BaseController {
     @PostMapping("/customers/detail")
     public AjaxResult customerDetail(@RequestBody(required = false) Map<String, Object> body) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Map<String, Object> req = body == null ? new java.util.HashMap<String, Object>() : body;
         try {
             return AjaxResult.success(clubCrmAppService.customerDetail(principal,
@@ -86,7 +88,7 @@ public class ApiClubCrmController extends BaseController {
     @PostMapping("/customers/tag-remark")
     public AjaxResult saveTagRemark(@RequestBody(required = false) Map<String, Object> body) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Map<String, Object> req = body == null ? new java.util.HashMap<String, Object>() : body;
         try {
             clubCrmAppService.saveTagRemark(principal,
@@ -105,7 +107,7 @@ public class ApiClubCrmController extends BaseController {
     @PostMapping("/checkin/detail")
     public AjaxResult checkinDetail(@RequestBody(required = false) Map<String, Object> body) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Map<String, Object> req = body == null ? new java.util.HashMap<String, Object>() : body;
         try {
             return AjaxResult.success(clubCrmAppService.checkinDetail(principal,
@@ -120,7 +122,7 @@ public class ApiClubCrmController extends BaseController {
     @PostMapping("/topic-customers")
     public AjaxResult topicCustomers(@RequestBody(required = false) Map<String, Object> body) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Map<String, Object> req = body == null ? new java.util.HashMap<String, Object>() : body;
         try {
             return AjaxResult.success(clubCrmAppService.topicCustomers(principal,
@@ -136,7 +138,7 @@ public class ApiClubCrmController extends BaseController {
     @PostMapping("/topic-manage-stats")
     public AjaxResult topicManageStats(@RequestBody(required = false) Map<String, Object> body) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Map<String, Object> req = body == null ? new java.util.HashMap<String, Object>() : body;
         try {
             return AjaxResult.success(clubCrmAppService.topicManageStats(principal,

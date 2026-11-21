@@ -560,10 +560,10 @@ class RewardPledgeFlowTest {
         assertEquals("NOT_FOUND", assertThrows(PledgeRejection.class, () -> service.openCase(12L, versionId, awardId, "STORE_REFUSED")).code);
         assertEquals("CASH_CLOSED", assertThrows(PledgeRejection.class, () -> service.openCase(11L, versionId, awardId, "CASH_REFUND")).code);
         RewardPledgeService cashOpen = new RewardPledgeService(new DataSourceTransactionManager(dataSource),
-                session.getMapper(RewardPledgeMapper.class), coupons, CLOCK, null, new CashPayoutSwitch(true, true));
+                session.getMapper(RewardPledgeMapper.class), coupons, CLOCK, null, new CashPayoutSwitch(true, true, com.chengyinhub.business.moneyswitch.MoneyGateTestSupport.openGate()));
         assertEquals("CASH_REFUND", cashOpen.openCase(11L, versionId, awardId, "CASH_REFUND").get("reason"));
         assertEquals("CASH_CLOSED", assertThrows(PledgeRejection.class, () -> new RewardPledgeService(new DataSourceTransactionManager(dataSource),
-                session.getMapper(RewardPledgeMapper.class), coupons, CLOCK, null, new CashPayoutSwitch(true, false))
+                session.getMapper(RewardPledgeMapper.class), coupons, CLOCK, null, new CashPayoutSwitch(true, false, com.chengyinhub.business.moneyswitch.MoneyGateTestSupport.openGate()))
                 .openCase(11L, versionId, awardId, "CASH_REFUND")).code);
         Map<String, Object> expired = service.expire(7L, 50L, awardId, CLOCK.millis());
         assertEquals("expire", receipt(expired).get("op"));

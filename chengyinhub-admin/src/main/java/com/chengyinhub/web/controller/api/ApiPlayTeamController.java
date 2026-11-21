@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.dto.TeamEventCommand;
 import com.chengyinhub.business.service.impl.TeamEventCommandService;
 import com.chengyinhub.business.domain.PlayTeam;
@@ -142,9 +144,9 @@ public class ApiPlayTeamController extends BaseController {
     @Operation(summary = "地图附近可申请的公开队伍(不含邀请码)")
     @GetMapping("/nearby")
     public AjaxResult nearby(Double lat, Double lng, Integer radius) {
-        if (lat == null || lng == null) return error("缺少定位");
+        if (lat == null || lng == null) return refuse(ErrorCode.LOCATION_REQUIRED, "缺少定位");
         try {
-            return AjaxResult.success(playTeamService.nearby(memberId(), lat, lng, radius == null ? 0 : radius));
+            return AjaxResult.success(playTeamService.nearby(optionalMemberId(), lat, lng, radius == null ? 0 : radius));
         } catch (RuntimeException e) {
             return fail(e);
         }
@@ -290,7 +292,7 @@ public class ApiPlayTeamController extends BaseController {
     @GetMapping("/trail/state")
     public AjaxResult trailState(Long activityId) {
         Long me = optionalMemberId();
-        if (me == null || me <= 0L) return error("请先登录");
+        if (me == null || me <= 0L) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         return AjaxResult.success(teamTrailService.state(me, activityId));
     }
 
@@ -299,7 +301,7 @@ public class ApiPlayTeamController extends BaseController {
     @RateLimiter(time = 60, count = 20, limitType = LimitType.MEMBER)
     public AjaxResult trailConsent(@RequestBody Map<String, Object> body) {
         Long me = optionalMemberId();
-        if (me == null || me <= 0L) return error("请先登录");
+        if (me == null || me <= 0L) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Long activityId = body == null ? null : Convert.toLong(body.get("activityId"), null);
         return AjaxResult.success(teamTrailService.consent(me, activityId, body != null && approved(body.get("share"))));
     }
@@ -310,7 +312,7 @@ public class ApiPlayTeamController extends BaseController {
     @SuppressWarnings("unchecked")
     public AjaxResult trailSync(@RequestBody Map<String, Object> body) {
         Long me = optionalMemberId();
-        if (me == null || me <= 0L) return error("请先登录");
+        if (me == null || me <= 0L) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (body == null) return AjaxResult.success(teamTrailService.state(me, null));
         Long activityId = Convert.toLong(body.get("activityId"), null);
         List<List<Double>> pts = new java.util.ArrayList<>();

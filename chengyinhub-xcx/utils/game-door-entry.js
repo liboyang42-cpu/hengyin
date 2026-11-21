@@ -89,7 +89,47 @@ function isWxacodeEnter(scene) {
   return n === 1047 || n === 1048 || n === 1049
 }
 
+// ONB-5:「扫普通链接二维码打开小程序」。印在小程序码旁的标准二维码是
+// https://www.chengyinhub.com/door?scene=<同一 scene>,微信把整条链接放在 query.q(编码过一次)。
+// 只认这个前缀、只取 scene,其它链接一律不当 scene。
+const DOOR_LINK_PREFIX = 'https://www.chengyinhub.com/door?'
+function sceneFromDoorLink(q) {
+  if (q == null || q === '') return null
+  let link = String(q)
+  try { link = decodeURIComponent(link) } catch (e) { return null }
+  link = link.trim()
+  if (link.indexOf(DOOR_LINK_PREFIX) !== 0 || link.length > 512) return null
+  const pairs = link.slice(DOOR_LINK_PREFIX.length).split('#')[0].split('&')
+  let scene = null
+  for (let i = 0; i < pairs.length; i++) {
+    const at = pairs[i].indexOf('=')
+    const key = at < 0 ? pairs[i] : pairs[i].slice(0, at)
+    if (key !== 'scene') continue
+    if (scene !== null) return null
+    scene = at < 0 ? '' : pairs[i].slice(at + 1)
+  }
+  if (!scene) return null
+  try { scene = decodeURIComponent(scene) } catch (e) { return null }
+  scene = scene.trim()
+  return scene && scene.length <= 32 ? scene : null
+}
+
+// 普通链接二维码进入:1011 扫码 / 1012 长按识别 / 1013 相册选取。
+function isLinkQrEnter(scene) {
+  const n = Number(scene)
+  return n === 1011 || n === 1012 || n === 1013
+}
+
+/** 页面 options 归一:带 q 的标准链接码换成与小程序码相同的 options.scene;原有 scene 优先。 */
+function withDoorLinkScene(options) {
+  if (!options || options.scene || !options.q) return options
+  const scene = sceneFromDoorLink(options.q)
+  return scene ? Object.assign({}, options, { scene: scene }) : options
+}
+
 function captureDoorScene(e, currentPending) {
+  const linkScene = e && isLinkQrEnter(e.scene) ? sceneFromDoorLink(e.query && e.query.q) : null
+  if (linkScene) return captureDoorScene({ scene: 1047, query: { scene: linkScene } }, currentPending)
   const query = (e && e.query) || {}
   const topicId = parseTopicScene(query.scene)
   const activityId = parseActivityScene(query.scene)
@@ -108,4 +148,4 @@ function captureDoorScene(e, currentPending) {
   return code
 }
 
-module.exports = { parseDoorScene, parseTopicScene, pathForScanEntry, captureDoorScene, parseActivityScene, parseShopScene, parseTeamScene }
+module.exports = { parseDoorScene, parseTopicScene, pathForScanEntry, captureDoorScene, parseActivityScene, parseShopScene, parseTeamScene, sceneFromDoorLink, withDoorLinkScene }

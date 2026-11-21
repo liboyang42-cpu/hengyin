@@ -36,9 +36,28 @@ public interface RoamMapper {
      *  memberId 用于投影 found(该账号是否已发现过,roam_poi_found / roam_poi_reward_log);
      *  口径与 cityNodeContentApproved 一致 —— 未过审的商家投放不进玩家图层。 */
     /** 包围盒内在架 POI,按到包围盒中心由近到远排序,最多 limit 条(大半径不再整盒全量返回)。 */
-    List<RoamPoi> selectPoisNear(@Param("minLat") double minLat, @Param("maxLat") double maxLat,
-                                 @Param("minLng") double minLng, @Param("maxLng") double maxLng,
-                                 @Param("memberId") Long memberId, @Param("limit") int limit);
+    default List<RoamPoi> selectPoisNear(double minLat, double maxLat, double minLng, double maxLng,
+                                         Long memberId, int limit) {
+        return selectPoisNearFiltered(minLat, maxLat, minLng, maxLng, memberId, limit, null, null, null);
+    }
+
+    /**
+     * R1 MKT-08: the same player read with optional keyword (place or merchant name), merchant category and tag.
+     * Null filters leave the result unchanged. Filters only narrow; nothing paid changes order or inclusion.
+     */
+    List<RoamPoi> selectPoisNearFiltered(@Param("minLat") double minLat, @Param("maxLat") double maxLat,
+                                         @Param("minLng") double minLng, @Param("maxLng") double maxLng,
+                                         @Param("memberId") Long memberId, @Param("limit") int limit,
+                                         @Param("keyword") String keyword, @Param("categoryId") Long categoryId,
+                                         @Param("tag") String tag);
+
+    /** T2 maps-backend: shared columns (no member marks) of every player-visible place in the box, by id, at most limit. */
+    List<RoamPoi> selectPoiBaseInBox(@Param("minLat") double minLat, @Param("maxLat") double maxLat,
+                                     @Param("minLng") double minLng, @Param("maxLng") double maxLng,
+                                     @Param("limit") int limit);
+
+    /** T2 maps-backend: {poiId, found, pendingRedeem} for one member, same rules as selectPoisNearFiltered. */
+    List<Map<String, Object>> selectPoiMemberMarks(@Param("memberId") Long memberId, @Param("ids") List<Long> ids);
 
     List<RoamPoi> selectPoisByIds(@Param("ids") List<Long> ids);
 
@@ -123,6 +142,9 @@ public interface RoamMapper {
     int countPoisBySession(@Param("sessionId") Long sessionId);
     /** 该 member 今日新点亮格子数(日限 200 用) */
     int countTilesTodayByMember(@Param("memberId") Long memberId);
+
+    /** GAME-4: first-visit XP ("点亮地点") credited to this member since midnight, net of revocations. */
+    int sumVisitXpToday(@Param("memberId") Long memberId);
     /** 该 member 累计点亮格子数(里程碑勋章用) */
     int countTilesEverByMember(@Param("memberId") Long memberId);
     /** 该 member 历史点亮格子(供小程序换设备/清缓存后恢复迷雾状态) */
@@ -255,7 +277,19 @@ public interface RoamMapper {
                                              @Param("minLng") double minLng, @Param("maxLng") double maxLng,
                                              @Param("originLat") double originLat, @Param("originLng") double originLng,
                                              @Param("keyword") String keyword, @Param("categoryId") Integer categoryId,
-                                             @Param("tag") String tag, @Param("cityRole") String cityRole);
+                                             @Param("tag") String tag, @Param("cityRole") String cityRole,
+                                             @Param("limit") int limit);
+
+    /** 目录地点公开只读详情(type=1 + 种子标签 + 已上架);不含模板/券/答案。 */
+    com.chengyinhub.business.domain.vo.CatalogPlaceVO selectCatalogPlaceById(@Param("id") Long id);
+
+    /** 后台批量上/下架目录地点的命中数(范围口径同 updateCatalogBatchStatus)。 */
+    int countCatalogBatchTargets(@Param("cityCode") String cityCode, @Param("seedTag") String seedTag,
+                                 @Param("status") int status);
+
+    /** 后台批量上/下架目录地点:仅 type=1、无商家/模板/申请、同城、带种子标签;上架要求有坐标。 */
+    int updateCatalogBatchStatus(@Param("cityCode") String cityCode, @Param("seedTag") String seedTag,
+                                 @Param("status") int status);
     /** 单个商家节点详情(type=2) */
     CityNodeVO selectMerchantNodeDetail(@Param("id") Long id);
     /** 玩家详情：公开内容，或本人已有打卡记录的下线内容；memberId=0 仅查公开。 */

@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.vo.ClubSettlementSummaryRow;
 import com.chengyinhub.business.domain.vo.ClubSessionSettlementRow;
 
@@ -71,8 +73,8 @@ public class ApiClubSettlementController extends BaseController {
     @PostMapping("/mine")
     public AjaxResult mine() {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
-        if (memberId == null || memberId <= 0L) return error("请先登录");
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (memberId == null || memberId <= 0L) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         List<Map<String, Object>> rows = coopSettlementMapper.selectPersonalSettlementClubs(memberId);
         return rows == null ? error("结算数据暂不可用") : AjaxResult.success(rows);
     }
@@ -80,10 +82,10 @@ public class ApiClubSettlementController extends BaseController {
     @PostMapping("/summary")
     public AjaxResult summary(@RequestBody(required = false) Map<String, Object> body) {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         Long clubId = body == null ? null : Convert.toLong(body.get("clubId"));
-        if (clubId == null || clubId <= 0L) return error("缺少俱乐部信息");
-        if (memberId == null || memberId <= 0L) return error("请先登录");
+        if (clubId == null || clubId <= 0L) return refuse(ErrorCode.BAD_REQUEST, "缺少俱乐部信息");
+        if (memberId == null || memberId <= 0L) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         boolean personal = Boolean.TRUE.equals(body.get("personal")) || !belongsToClub(clubId, memberId);
         List<ClubSettlementSummaryRow> rows = personal
                 ? coopSettlementMapper.selectPersonalClubSummary(clubId, memberId)
@@ -210,12 +212,12 @@ public class ApiClubSettlementController extends BaseController {
     @PostMapping("/withdraw")
     public AjaxResult withdraw(@RequestBody(required = false) Map<String, Object> body) {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         Long clubId = body == null ? null : Convert.toLong(body.get("clubId"));
-        if (clubId == null || clubId <= 0L) return error("缺少俱乐部信息");
+        if (clubId == null || clubId <= 0L) return refuse(ErrorCode.BAD_REQUEST, "缺少俱乐部信息");
         // 提现是取钱，只有主理人本人可以发起——管理员能看账，不能取钱。
         Club club = clubService.selectClubById(clubId);
-        if (memberId == null || memberId <= 0L) return error("请先登录");
+        if (memberId == null || memberId <= 0L) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         List<ClubSettlementSummaryRow> ownRows = coopSettlementMapper.selectPersonalClubSummary(clubId, memberId);
         List<ClubSessionSettlementRow> ownSessions = coopSettlementMapper.selectPersonalClubSessions(clubId, memberId);
         boolean hasOwnHistory = (ownRows != null && !ownRows.isEmpty()) || (ownSessions != null && !ownSessions.isEmpty());

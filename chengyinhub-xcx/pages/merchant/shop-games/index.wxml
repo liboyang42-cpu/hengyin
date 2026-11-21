@@ -1,0 +1,40 @@
+<view class="sg-page theme-merchant" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+  <cy-toast id="cy-toast" />
+  <cy-nav-bar custom-back bind:back="onNavBack" />
+  <cy-page-title title="店铺小游戏" safe-top="{{false}}" />
+
+  <cy-skeleton wx:if="{{pageState === 'loading'}}" type="list" count="3" />
+  <cy-error wx:elif="{{pageState === 'error'}}" fill size="lg"
+            title="店铺小游戏加载失败" sub="{{errorMessage}}"
+            retry="重新加载" bind:retry="retry" auto-back />
+  <cy-error wx:elif="{{pageState === 'no-permission'}}" fill size="lg"
+            title="当前账号还不是在营业的商家"
+            retry="" bind:back="onNavBack" auto-back custom-back />
+
+  <view wx:elif="{{pageState === 'ready'}}" class="sg-shell">
+    <text class="sg-desc">玩家在你店里打卡后会玩这里的小游戏。按店铺类型「{{view.kindName}}」可选下面几种，每种都是三轮、赢两轮算过关，奖励一样。当前套餐可选 {{view.allowance}} 个，已选 {{selected}} 个。</text>
+    <text class="sg-desc" wx:if="{{!view.editable}}">{{view.sourceText}}，暂时不能修改。</text>
+    <view class="fin-card sg-card">
+      <block wx:for="{{view.pool}}" wx:key="key">
+        <view class="fin-row sg-row {{item.enabled ? '' : 'sg-row--off'}}"
+              data-key="{{item.key}}" bindtap="toggleGame" hover-class="cy-pressed" hover-stay-time="80" aria-role="checkbox"
+              aria-checked="{{item.selected}}" aria-label="{{item.name}}，约{{item.seconds}}秒，{{item.needs}}">
+          <view class="fin-row__dot {{item.selected ? 'fin-row__dot--success' : ''}}" aria-hidden="true" />
+          <view class="fin-row__main">
+            <text class="fin-row__t">{{item.name}}</text>
+            <text class="sg-meta">约 {{item.seconds}} 秒 · {{item.needs}}{{item.enabled ? '' : ' · 平台已暂停'}}</text>
+          </view>
+          <text class="fin-row__v">{{item.selected ? '已选' : ''}}</text>
+        </view>
+        <cy-dropdown wx:if="{{item.selected && item.options.length > 0 && canEdit}}" merchant
+                     range="{{item.optionTitles}}" value="{{item.optionIndex}}" data-key="{{item.key}}" bind:change="pickTemplate">
+          <text class="sg-meta sg-link sg-content">内容：{{item.optionTitles[item.optionIndex]}}</text>
+        </cy-dropdown>
+        <text wx:elif="{{item.selected && item.options.length === 0}}" class="sg-meta sg-warn sg-content">还没有这种玩法的内容，先在「成为节点」里配一个，玩家才能玩到</text>
+      </block>
+    </view>
+    <view class="sg-action" wx:if="{{canEdit}}">
+      <cy-btn variant="primary" loading="{{saving}}" disabled="{{saving || selected === 0}}" bindtap="save">保存</cy-btn>
+    </view>
+  </view>
+</view>

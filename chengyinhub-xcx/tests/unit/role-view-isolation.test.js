@@ -44,7 +44,7 @@ test('filter:只认商家工作台接口与商家身份 403', () => {
   // 非 403、或非商家身份文案不算
   assert.equal(filter.isMerchantDenial({ code: 500, msg: '商家身份无效或权限不足' }, 200), false);
   assert.equal(filter.isMerchantDenial({ code: 403, msg: '无权操作' }, 200), false);
-  assert.equal(filter.isMerchantDenial({ code: 409, msg: '您已注册为商户,一个账户不能同时是商户与俱乐部主理人' }, 200), false);
+  assert.equal(filter.isMerchantDenial({ code: 409, msg: '您已注册为商户，一个账户不能同时是商户与俱乐部主理人' }, 200), false);
 });
 
 test('玩家视角:商家工作台接口不发请求,异步按 403 静默失败', async () => {

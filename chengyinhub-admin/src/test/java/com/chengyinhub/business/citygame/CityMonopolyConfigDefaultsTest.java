@@ -20,15 +20,25 @@ import static org.junit.jupiter.api.Assertions.*;
 class CityMonopolyConfigDefaultsTest {
     private static final String MIGRATION = "sql/migration_20261124_city_numbers_attr.sql";
 
+    /** Keys added after the first seed (W7 x-city-monopoly) are seeded by their own migration. */
+    private static final String LATER_SEEDS = "sql/migration_20261127_city_monopoly_claim_flow.sql";
+    /** W7 x-city-economy: city.monopoly.abuse.clawback_lookback_d (CITY-15). */
+    private static final String ECONOMY_SEEDS = "sql/migration_20261128_city_economy.sql";
+
     private static Path migration() {
-        Path p = Paths.get(MIGRATION);
-        if (!Files.exists(p)) p = Paths.get("chengyinhub-admin", MIGRATION);
+        return path(MIGRATION);
+    }
+
+    private static Path path(String rel) {
+        Path p = Paths.get(rel);
+        if (!Files.exists(p)) p = Paths.get("chengyinhub-admin", rel);
         return p;
     }
 
     @Test
     void migrationSeedsEveryDefaultKeyWithTheSameValue() throws Exception {
-        String sql = Files.readString(migration(), StandardCharsets.UTF_8);
+        String sql = Files.readString(migration(), StandardCharsets.UTF_8) + "\n" + Files.readString(path(LATER_SEEDS), StandardCharsets.UTF_8)
+                + "\n" + Files.readString(path(ECONOMY_SEEDS), StandardCharsets.UTF_8);
         Matcher m = Pattern.compile("SELECT '(?:[^']|'')*', '([^']+)', '((?:[^']|'')*)', 'Y'").matcher(sql);
         Map<String, String> seeded = new LinkedHashMap<>();
         while (m.find()) seeded.put(m.group(1), m.group(2).replace("''", "'"));

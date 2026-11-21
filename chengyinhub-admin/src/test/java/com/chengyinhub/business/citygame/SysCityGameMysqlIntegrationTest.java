@@ -58,6 +58,8 @@ class SysCityGameMysqlIntegrationTest {
     private CityGameMapper mapper;
     private final AtomicLong clock = new AtomicLong();
     private final Deque<Integer> tickets = new ArrayDeque<>();
+    /** Holder yield calls routed to the city coin service (memberId|placeId|ref). */
+    private final List<String> yieldCredits = new java.util.ArrayList<>();
 
     private CityGameParticipationService participation;
     private CityGameActionService actions;
@@ -101,7 +103,14 @@ class SysCityGameMysqlIntegrationTest {
         }, clock::get), tx);
         CityR491Store store = new CityR491Store(mapper, jdbc, tx, clock::get);
         budget = new CityActionBudgetService(store, actions);
-        territories = transactional(new RoamTerritoryService(jdbc, mapper, null, clock::get), tx);
+        RoamTerritoryService rawTerritories = new RoamTerritoryService(jdbc, mapper, null, clock::get);
+        rawTerritories.setCityCoinService(new com.chengyinhub.business.citycoin.CityCoinService() {
+            @Override
+            public void creditHolderAfterCommit(Long memberId, String placeId, String checkInRef) {
+                yieldCredits.add(memberId + "|" + placeId + "|" + checkInRef);
+            }
+        });
+        territories = transactional(rawTerritories, tx);
         arrival = new CityArrivalService(store, merchants);
         arrival.setTerritoryService(territories);
         merchantValue = new CityMerchantValueService(store, merchants);
@@ -265,7 +274,7 @@ class SysCityGameMysqlIntegrationTest {
         String territoryId = (String) claimRes.get("territoryId");
         assertEquals(boardId, claimRes.get("boardId"));
         assertEquals("prop-1", claimRes.get("propertyId"));
-        assertEquals("POINTS", claimRes.get("revenueMode"));
+        assertEquals("CITY_COIN", claimRes.get("revenueMode"));
         assertEquals("PROTECTED", mapper.selectPropertyForUpdate(boardId, "prop-1").get("status"));
 
         // Protection window blocks P2 takeover
@@ -278,13 +287,14 @@ class SysCityGameMysqlIntegrationTest {
                 "requestId", "claim-far", "poiId", 9502L, "lat", 31.2400, "lng", 121.4900,
                 "accuracyM", 12.0, "photoUrl", "https://example.com/photo-far.jpg"))).getErrorCode());
 
-        // P2 valid check-in on 9501 -> earns owner P1 POINTS (never money)
+        // P2 valid check-in on 9501 -> P2 pays the points toll; owner P1's yield goes to city coin, not points
         Map<String, Object> visitRes = territories.checkin(P2, Map.of(
                 "requestId", "visit-p2-1", "territoryId", territoryId, "lat", 31.23041, "lng", 121.47371, "accuracyM", 10.0));
         assertEquals(5L, ((Number) visitRes.get("ownerRevenuePoints")).longValue());
-        assertEquals("POINTS", visitRes.get("revenueMode"));
-        assertEquals(105L, mapper.selectMemberPoints(P1));
+        assertEquals("CITY_COIN", visitRes.get("revenueMode"));
+        assertEquals(100L, mapper.selectMemberPoints(P1));
         assertEquals(95L, mapper.selectMemberPoints(P2));
+        assertEquals(List.of(P1 + "|terr:" + territoryId + "|TERR_REV:visit-p2-1"), yieldCredits);
 
         // Anti-cheat blocks P2 teleport 2 seconds later to 9502 (> 500m & > 45 m/s)
         clock.addAndGet(2_000L);
@@ -293,12 +303,13 @@ class SysCityGameMysqlIntegrationTest {
                 "accuracyM", 12.0, "photoUrl", "https://example.com/photo-tp.jpg"))).getErrorCode());
         assertTrue(territories.adminAuditList("BLOCKED", 10).size() >= 2);
 
-        // P3 checks in externally (simulating /api/roam/checkin) -> P1 earns another 5 POINTS
+        // P3 checks in externally (simulating /api/roam/checkin) -> one more city coin yield for P1, still no points
         Map<String, Object> ext = territories.rewardExternalCheckin(P3, 9501L, boardId, "pt-1", 31.2304, 121.4737, "roam-ext-1", "ROAM_CHECKIN");
         assertEquals(true, ext.get("credited"));
-        assertEquals(110L, mapper.selectMemberPoints(P1));
+        assertEquals(100L, mapper.selectMemberPoints(P1));
+        assertEquals(P1 + "|terr:" + territoryId + "|EXT_REV:roam-ext-1", yieldCredits.get(1));
 
-        // Season leaderboard shows P1 with 2 check-ins and 10 revenue points
+        // Season leaderboard shows P1 with 2 check-ins and a yield score of 10
         Map<String, Object> lb = territories.leaderboard(boardId, regionId, seasonId, 10);
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> leaders = (List<Map<String, Object>>) lb.get("leaders");

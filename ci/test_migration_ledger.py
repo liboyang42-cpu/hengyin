@@ -799,6 +799,29 @@ class HistoryPlanning(RepoFixture):
             self.assertIn(target, job_text)
         self.assertEqual(2, job_text.count("'3','1','1','system'"), "both rows stay registered paused")
 
+    def test_club_reach_and_growth_loop_jobs_are_post_deploy_with_their_stagger_last(self):
+        # r-integ-master: master's jar has neither clubChannelDefaultsTask nor growthWinbackTask, and
+        # CanonicalJobTarget resolves every sys_job row's bean on the old jar too (paused rows included).
+        # The stagger file only rewrites those two rows, so it is deferred with them and ordered after them.
+        jobs = ("20261115_club_reach", "20261115_growth_loops")
+        stagger = "20261115_stagger_club_growth_jobs"
+        for migration_id in jobs + (stagger,):
+            self.write("chengyinhub-admin/sql/migration_" + migration_id + ".sql")
+        manifest = build_manifest(self.tmp, TARGET, dependencies={stagger: list(jobs)})
+        phases = {m["migrationId"]: m.get("executionPhase") for m in manifest["migrations"]}
+        for migration_id in jobs + (stagger,):
+            self.assertEqual("POST_DEPLOY", phases[migration_id], migration_id)
+        order = [m["migrationId"] for m in manifest["migrations"]]
+        self.assertTrue(all(order.index(job) < order.index(stagger) for job in jobs))
+        plan = plan_release(manifest, [], bootstrap=self.fresh)
+        states = {row["migrationId"]: row["state"] for row in plan["migrations"]}
+        for migration_id in jobs + (stagger,):
+            self.assertEqual("DEFERRED_POST_DEPLOY", states[migration_id], migration_id)
+        repo_sql = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "chengyinhub-admin", "sql")
+        for migration_id, target in zip(jobs, ("clubChannelDefaultsTask.backfill(200)", "growthWinbackTask.run()")):
+            with open(os.path.join(repo_sql, "migration_" + migration_id + ".sql"), encoding="utf-8") as handle:
+                self.assertIn(target, handle.read())
+
     def test_demo_seed_is_inventory_only_and_never_a_pending_release_write(self):
         self.write("chengyinhub-admin/sql/seed_preset_demo.sql")
         manifest = build_manifest(self.tmp, TARGET, dependencies={"beta": ["alpha"]})

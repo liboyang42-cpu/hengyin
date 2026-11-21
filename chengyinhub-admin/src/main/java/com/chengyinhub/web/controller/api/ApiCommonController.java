@@ -71,6 +71,10 @@ public class ApiCommonController extends BaseController {
     @Autowired
     private ISysBannerService sysBannerService;
 
+    /** T2 maps-backend read cache for the banner list (optional: hand-built controllers in tests read MySQL). */
+    @Autowired(required = false)
+    private com.chengyinhub.business.readcache.ReadCache readCache;
+
     @Autowired
     private ICmsInfomationService cmsInfomationService;
 
@@ -295,7 +299,11 @@ public class ApiCommonController extends BaseController {
         if(linkType!=null && linkType==1){
             sysBanner.setLinkType(linkType);
         }
-        List<SysBanner> list = sysBannerService.selectSysBannerList(sysBanner);
+        // T2 maps-backend: shared list, cached per (showType, linkType filter); any sys_banner write invalidates it.
+        List<SysBanner> list = readCache == null ? sysBannerService.selectSysBannerList(sysBanner)
+                : readCache.read(com.chengyinhub.business.readcache.ReadCacheNamespace.BANNER,
+                        "s" + sysBanner.getShowType() + ":l" + (sysBanner.getLinkType() == null ? "-" : sysBanner.getLinkType()),
+                        readCache.listOf(SysBanner.class), () -> sysBannerService.selectSysBannerList(sysBanner));
 
 //        for(SysBanner banner: list){
 //            banner.setPicUrl(FileOssUploadUtils.getPresignedUrl(banner.getPicUrl()));

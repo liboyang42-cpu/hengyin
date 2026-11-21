@@ -102,6 +102,13 @@ public interface PlatformPassMapper {
 
     int revokeMembership(@Param("orderId") long orderId);
 
+    /** T5:Apple 撤回退款并经人工复核后,已退款订单回到已支付(退款留痕字段保留)。 */
+    int reinstateRefundedOrder(@Param("id") long id);
+
+    /** T5:重新打开该订单被撤销的那一段,窗口由调用方按顺延规则算好。 */
+    int reopenMembership(@Param("orderId") long orderId, @Param("validFrom") Date validFrom,
+                         @Param("validTo") Date validTo);
+
     /** 撤销中间一段后，把它之后的段整体前移，保证有效期连续且不白送。 */
     int shiftLaterMemberships(@Param("memberId") long memberId, @Param("after") Date after,
                               @Param("seconds") long seconds);

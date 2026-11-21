@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- R7 city coin. Credits and reads only: no debit, no delete, no conversion. See CityCoinNoConversionGuardTest. -->
+<mapper namespace="com.chengyinhub.business.mapper.CityCoinMapper">
+
+    <insert id="ensureAccount">
+        insert into city_coin_account (member_id, balance, create_time, update_time)
+        values (#{memberId}, 0, #{now}, #{now})
+        on duplicate key update member_id = member_id
+    </insert>
+
+    <select id="selectBalanceForUpdate" resultType="java.lang.Long" useCache="false" flushCache="true">
+        select balance from city_coin_account where member_id = #{memberId} for update
+    </select>
+
+    <select id="selectBalance" resultType="java.lang.Long" useCache="false">
+        select balance from city_coin_account where member_id = #{memberId}
+    </select>
+
+    <select id="selectByRef" resultType="java.util.LinkedHashMap" useCache="false" flushCache="true">
+        select id as "id", member_id as "memberId", amount as "amount", balance_after as "balanceAfter",
+               reason as "reason", ref_key as "refKey", place_id as "placeId", create_time as "createTime"
+        from city_coin_ledger where ref_key = #{refKey}
+    </select>
+
+    <select id="sumCreditedSince" resultType="long" useCache="false" flushCache="true">
+        select coalesce(sum(amount), 0) from city_coin_ledger
+        where member_id = #{memberId} and reason = #{reason} and create_time &gt;= #{since}
+    </select>
+
+    <insert id="insertCredit">
+        insert into city_coin_ledger (member_id, amount, balance_after, reason, ref_key, place_id, create_time)
+        values (#{memberId}, #{amount}, #{balanceAfter}, #{reason}, #{refKey}, #{placeId}, #{now})
+    </insert>
+
+    <update id="creditBalance">
+        update city_coin_account set balance = balance + #{amount}, update_time = #{now}
+        where member_id = #{memberId} and #{amount} &gt; 0
+    </update>
+
+    <select id="selectHistory" resultType="java.util.LinkedHashMap" useCache="false">
+        select id as "id", amount as "amount", balance_after as "balanceAfter", reason as "reason",
+               place_id as "placeId", create_time as "createTime"
+        from city_coin_ledger where member_id = #{memberId}
+        order by id desc limit #{limit}
+    </select>
+
+    <select id="sumCreditedBetween" resultType="long" useCache="false">
+        select coalesce(sum(amount), 0) from city_coin_ledger
+        where create_time &gt;= #{from} and create_time &lt; #{to}
+    </select>
+
+    <select id="sumOutstanding" resultType="long" useCache="false">
+        select coalesce(sum(balance), 0) from city_coin_account
+    </select>
+</mapper>

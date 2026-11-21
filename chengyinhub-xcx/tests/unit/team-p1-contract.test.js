@@ -443,7 +443,8 @@ test('F-W1-12: surviving 401/403 shows a visible login/permission state; other r
       request.success({ code, msg: 'x' })
       const denied = code !== '500'
       assert.equal(harness.page.data.errorKind, denied ? 'no-permission' : 'data', relative + ' ' + code)
-      if (denied) assert.match(harness.page.data.error, /登录后/)
+      if (denied) assert.match(harness.page.data.error, /无法查看/)
+      assert.doesNotMatch(harness.page.data.errorAction, /登录/)
     }
   }
 })

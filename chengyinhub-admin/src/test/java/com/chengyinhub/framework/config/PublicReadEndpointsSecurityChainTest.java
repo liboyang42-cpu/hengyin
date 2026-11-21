@@ -1,5 +1,7 @@
 package com.chengyinhub.framework.config;
 
+import com.chengyinhub.business.domain.vo.CatalogPlaceVO;
+import com.chengyinhub.business.mapper.RoamMapper;
 import com.chengyinhub.business.service.IAppSessionRegistryService;
 import com.chengyinhub.business.service.IMerchantReviewService;
 import com.chengyinhub.common.core.domain.AjaxResult;
@@ -10,6 +12,7 @@ import com.chengyinhub.framework.security.handle.AuthenticationEntryPointImpl;
 import com.chengyinhub.framework.security.handle.LogoutSuccessHandlerImpl;
 import com.chengyinhub.framework.web.service.AppTokenService;
 import com.chengyinhub.framework.web.service.TokenService;
+import com.chengyinhub.web.controller.api.ApiCityNodeController;
 import com.chengyinhub.web.controller.api.ApiMerchantReviewController;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,8 +44,11 @@ import jakarta.servlet.Filter;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -125,19 +131,91 @@ class PublicReadEndpointsSecurityChainTest {
         // 第九轮 m4(owner 2026-11-04):只开 GET /api/city/nodes/{数字 id};列表、写和本人接口照旧 401。
         mockMvc.perform(get("/api/city/nodes/123")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200));
-        mockMvc.perform(get("/api/city/nodes")).andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.code").value(401));
+        // 2026-11-14：附近目录与商家公开卡也允许游客读；真实控制器投影由 GuestPublicCatalogSecurityTest 覆盖。
+        mockMvc.perform(get("/api/city/nodes")).andExpect(status().isOk());
+        mockMvc.perform(get("/api/city/nodes/merchant/5")).andExpect(status().isOk());
         for (String route : new String[]{"/api/city/nodes", "/api/city/nodes/123"}) {
             mockMvc.perform(post(route)).andExpect(status().isUnauthorized())
                     .andExpect(jsonPath("$.code").value(401));
         }
-        for (String route : new String[]{"/api/city/nodes/favorites", "/api/city/nodes/merchant/5",
+        for (String route : new String[]{"/api/city/nodes/favorites", "/api/city/nodes/merchant/5/private",
                 "/api/city/nodes/123/complete", "/api/city/nodes/123/favorite", "/api/city/nodes/12a"}) {
             mockMvc.perform(get(route)).andExpect(status().isUnauthorized())
                     .andExpect(jsonPath("$.code").value(401));
             mockMvc.perform(post(route)).andExpect(status().isUnauthorized())
                     .andExpect(jsonPath("$.code").value(401));
         }
+    }
+
+    @Test
+    void catalogPlaceGetIsAnonymousAndReturnsOnlyPublicFields() throws Exception {
+        RoamMapper mapper = mock(RoamMapper.class);
+        CatalogPlaceVO place = new CatalogPlaceVO();
+        place.setPoiId(900L);
+        place.setName("目录公园");
+        place.setLat(new java.math.BigDecimal("31.27"));
+        place.setLng(new java.math.BigDecimal("121.48"));
+        place.setCoverImg("cover.jpg");
+        place.setGalleryJson("[\"photo.jpg\"]");
+        place.setQuotesJson("[{\"text\":\"引述\"}]");
+        place.setPhotoCredit("CC BY");
+        place.setBadgeCode("PARK");
+        when(mapper.selectCatalogPlaceById(900L)).thenReturn(place);
+
+        catalogPlaceMockMvc(mapper).perform(get("/api/city/places/900"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.poiId").value(900))
+                .andExpect(jsonPath("$.data.lat").value(31.27))
+                .andExpect(jsonPath("$.data.lng").value(121.48))
+                .andExpect(jsonPath("$.data.coverImg").value("cover.jpg"))
+                .andExpect(jsonPath("$.data.galleryJson").value("[\"photo.jpg\"]"))
+                .andExpect(jsonPath("$.data.quotesJson").value("[{\"text\":\"引述\"}]"))
+                .andExpect(jsonPath("$.data.photoCredit").value("CC BY"))
+                .andExpect(jsonPath("$.data.badgeCode").value("PARK"))
+                .andExpect(jsonPath("$.data.keys()", org.hamcrest.Matchers.containsInAnyOrder(
+                        "poiId", "name", "address", "description", "lat", "lng", "radiusM",
+                        "cityCode", "nodeLevel", "tags", "coverImg", "galleryJson", "quotesJson",
+                        "photoCredit", "badgeCode")));
+        verify(mapper).selectCatalogPlaceById(900L);
+        verifyNoMoreInteractions(mapper);
+    }
+
+    @Test
+    void unavailableCatalogPlacesReturnGoneAndOtherMethodsAndPathsRequireAuthentication() throws Exception {
+        RoamMapper mapper = mock(RoamMapper.class);
+        MockMvc catalogMvc = catalogPlaceMockMvc(mapper);
+        // Mapper returns null for non-catalog/offline/missing rows; real SQL coverage is in ApiCityNodeSearchTest.
+        for (long id : new long[]{901, 902, 999}) {
+            catalogMvc.perform(get("/api/city/places/" + id))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.code").value(410))
+                    .andExpect(jsonPath("$.data").doesNotExist());
+            verify(mapper).selectCatalogPlaceById(id);
+        }
+        for (org.springframework.http.HttpMethod method : new org.springframework.http.HttpMethod[]{
+                org.springframework.http.HttpMethod.POST, org.springframework.http.HttpMethod.PUT,
+                org.springframework.http.HttpMethod.PATCH, org.springframework.http.HttpMethod.DELETE,
+                org.springframework.http.HttpMethod.HEAD, org.springframework.http.HttpMethod.OPTIONS}) {
+            catalogMvc.perform(request(method, "/api/city/places/900"))
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.code").value(401));
+        }
+        for (String route : new String[]{"/api/city/places", "/api/city/places/12a",
+                "/api/city/places/-1", "/api/city/places/900/extra", "/api/city/places/900/",
+                "/api/city/places/900/complete", "/api/city/places/900/favorite"}) {
+            catalogMvc.perform(get(route)).andExpect(status().isUnauthorized());
+            catalogMvc.perform(post(route)).andExpect(status().isUnauthorized());
+        }
+        verifyNoMoreInteractions(mapper);
+    }
+
+    private MockMvc catalogPlaceMockMvc(RoamMapper mapper) {
+        ApiCityNodeController controller = new ApiCityNodeController();
+        ReflectionTestUtils.setField(controller, "roamMapper", mapper);
+        return MockMvcBuilders.standaloneSetup(controller)
+                .addFilters((Filter) applicationContext.getBean("springSecurityFilterChain"))
+                .build();
     }
 
     @Test
@@ -239,6 +317,18 @@ class PublicReadEndpointsSecurityChainTest {
         mockMvc.perform(get("/api/map/weather/extra")).andExpect(status().isUnauthorized());
         mockMvc.perform(post("/api/map/reverse-geocode")).andExpect(status().isUnauthorized());
         mockMvc.perform(post("/api/map/nearby")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void measurementIntakeIsAnonymousOnlyForTwoExactPostsAndLinkIsNot() throws Exception {
+        // P6 measurement:登录前埋点与 MetricKit 两条精确 POST 匿名;关联账号与兄弟路由照旧要登录。
+        mockMvc.perform(post("/api/telemetry/anon/events")).andExpect(status().isOk());
+        mockMvc.perform(post("/api/telemetry/metrickit")).andExpect(status().isOk());
+        mockMvc.perform(get("/api/telemetry/anon/events")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/telemetry/metrickit")).andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/telemetry/link")).andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/telemetry/anon/events/extra")).andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/telemetry/anon")).andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -454,7 +544,9 @@ class PublicReadEndpointsSecurityChainTest {
                 "/api/city/nodes/123/favorite", "/api/city/nodes/12a",
                 "/api/preset/route/list", "/api/preset/route/info", "/api/preset/style/list",
                 "/api/preset/route/info/extra", "/api/preset/route/listing", "/api/preset/route",
-                "/api/map/weather", "/api/map/weather/extra", "/api/map/reverse-geocode", "/api/map/nearby"})
+                "/api/map/weather", "/api/map/weather/extra", "/api/map/reverse-geocode", "/api/map/nearby",
+                "/api/telemetry/anon/events", "/api/telemetry/metrickit", "/api/telemetry/link",
+                "/api/telemetry/anon/events/extra", "/api/telemetry/anon"})
         AjaxResult probeAnyMethod() {
             return AjaxResult.success();
         }

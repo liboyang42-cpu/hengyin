@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.CmsPresetRoute;
 import com.chengyinhub.business.domain.dto.GameplayPresetDraftCommand;
 import com.chengyinhub.business.domain.vo.PresetRouteGuestProjection;
@@ -132,8 +134,8 @@ public class ApiPresetController extends BaseController {
     public AjaxResult createGameplayDraft(@RequestBody GameplayPresetDraftCommand command) {
         try {
             Long actor = getAppUserId();
-            if (actor == null || actor <= 0) return error("请先登录");
-            if (command == null || StringUtils.isBlank(command.getPresetKey())) return error("请选择要用的预设");
+            if (actor == null || actor <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+            if (command == null || StringUtils.isBlank(command.getPresetKey())) return refuse(ErrorCode.BAD_REQUEST, "请选择要用的预设");
             GameplayPresetDraftCommand body = command;
             if (StringUtils.isBlank(command.getRequestId())) {
                 return createGameplayDraftOnce(body, actor);

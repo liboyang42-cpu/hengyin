@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
@@ -174,7 +176,7 @@ public class ApiMerchantNodeController extends BaseController {
     @PostMapping("/template/submit")
     public AjaxResult templateSubmit(@RequestBody CmsMemberTemplate body) {
         Long principalMemberId = uid();
-        if (principalMemberId <= 0) return error("请先登录");
+        if (principalMemberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         MerchantAccessContext access;
         try {
             access = merchantAccessService.require(principalMemberId, MerchantPermission.PROJECT_MANAGE);
@@ -185,7 +187,7 @@ public class ApiMerchantNodeController extends BaseController {
         MmsMerchant merchant = requireMerchantNodePerm(access, err);
         if (merchant == null) return error(err[0]);
         Long ownerMemberId = access.getOwnerMemberId();
-        if (body == null || body.getTitle() == null || body.getTitle().trim().isEmpty()) return error("请填写标题");
+        if (body == null || body.getTitle() == null || body.getTitle().trim().isEmpty()) return refuse(ErrorCode.BAD_REQUEST, "请填写标题");
         // 按验证方式校验必填项。小程序表单也拦一道,但那只是体验 ——
         // 闸放在这里才算数:配不全就落库的话,玩家侧只会表现成「怎么答都不对」,
         // 商家还看不出哪里错了(vm=3 缺 correctAnswer 正是 2026-08-06 修的那个 bug)。
@@ -240,7 +242,7 @@ public class ApiMerchantNodeController extends BaseController {
     public AjaxResult save(Long poiId, Long templateId, Double lat, Double lng, Integer radius,
                            String name, String address, String tags, String coverImg, String cityCode) {
         Long principalMemberId = uid();
-        if (principalMemberId <= 0) return error("请先登录");
+        if (principalMemberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         MerchantAccessContext access;
         try {
             access = merchantAccessService.require(principalMemberId, MerchantPermission.PROJECT_MANAGE);
@@ -269,14 +271,14 @@ public class ApiMerchantNodeController extends BaseController {
         if (lat == null || lng == null) {
             Double shopLat = merchant.getLocationLat();
             Double shopLng = merchant.getLocationLng();
-            if (shopLat == null || shopLng == null) return error("你的店铺资料里还没有坐标,请先在地图上标注店址");
+            if (shopLat == null || shopLng == null) return error("你的店铺资料里还没有坐标，请先在地图上标注店址");
             lat = shopLat;
             lng = shopLng;
             if (address == null || address.trim().isEmpty()) address = merchant.getAddress();
         }
         int max = maxCityNodes(ownerMemberId);
         int used = roamMapper.countActiveNodesByMerchant(access.getMerchantId());
-        if (used >= max) return error("在架据点已达上限(" + max + "),请先下线其他据点");
+        if (used >= max) return error("在架据点已达上限(" + max + ")，请先下线其他据点");
 
         RoamPoiApplicationRequest request = new RoamPoiApplicationRequest();
         request.setName((name != null && !name.trim().isEmpty()) ? name.trim() : merchant.getName());
@@ -301,7 +303,7 @@ public class ApiMerchantNodeController extends BaseController {
     @PostMapping("/list")
     public AjaxResult list() {
         Long principalMemberId = uid();
-        if (principalMemberId <= 0) return error("请先登录");
+        if (principalMemberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         MerchantAccessContext access;
         try {
             access = merchantAccessService.require(principalMemberId, MerchantPermission.PROJECT_MANAGE);
@@ -321,7 +323,7 @@ public class ApiMerchantNodeController extends BaseController {
     @PostMapping("/claimable")
     public AjaxResult claimable(String keyword) {
         Long principalMemberId = uid();
-        if (principalMemberId <= 0) return error("请先登录");
+        if (principalMemberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             merchantAccessService.require(principalMemberId, MerchantPermission.PROJECT_MANAGE);
         } catch (ServiceException e) {
@@ -334,7 +336,7 @@ public class ApiMerchantNodeController extends BaseController {
     @PostMapping("/claim")
     public AjaxResult claim(Long poiId) {
         Long principalMemberId = uid();
-        if (principalMemberId <= 0) return error("请先登录");
+        if (principalMemberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         MerchantAccessContext access;
         try {
             access = merchantAccessService.require(principalMemberId, MerchantPermission.PROJECT_MANAGE);
@@ -354,8 +356,8 @@ public class ApiMerchantNodeController extends BaseController {
     @PostMapping("/claim/cancel")
     public AjaxResult cancelClaim(Long poiId) {
         Long principalMemberId = uid();
-        if (principalMemberId <= 0) return error("请先登录");
-        if (poiId == null || poiId <= 0) return error("参数不合规");
+        if (principalMemberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (poiId == null || poiId <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         MerchantAccessContext access;
         try {
             access = merchantAccessService.require(principalMemberId, MerchantPermission.PROJECT_MANAGE);
@@ -388,8 +390,8 @@ public class ApiMerchantNodeController extends BaseController {
     @PostMapping("/poster-code")
     public AjaxResult posterCode(Long poiId) {
         Long principalMemberId = uid();
-        if (principalMemberId <= 0) return error("请先登录");
-        if (poiId == null || poiId <= 0) return error("参数不合规");
+        if (principalMemberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (poiId == null || poiId <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         MerchantAccessContext access;
         try {
             access = merchantAccessService.require(principalMemberId, MerchantPermission.VERIFY);
@@ -415,8 +417,8 @@ public class ApiMerchantNodeController extends BaseController {
     @PostMapping("/offline")
     public AjaxResult offline(Long poiId, Integer status) {
         Long principalMemberId = uid();
-        if (principalMemberId <= 0) return error("请先登录");
-        if (poiId == null || poiId <= 0) return error("参数不合规");
+        if (principalMemberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (poiId == null || poiId <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         int st = (status != null && status == 1) ? 1 : 0;   // 默认下线;传 1 重新上架
         MerchantAccessContext access = null;
         Long ownerMemberId = principalMemberId;

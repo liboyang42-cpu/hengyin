@@ -262,7 +262,7 @@ test('通行证页 / 主题库 / 通行证列表:不做玻璃、通行证入口�
   assert.match(read('subpackagePass/reveal/index.wxss'), /\.ky--plain \{ display: flex; flex-direction: column;/)
   // 已有的两个入口仍按商家视角隐藏
   assert.match(read('subpackageMember/components/cy/profile/index.wxml'), /wx:if="\{\{!isMerchantView\}\}">\s*<cy-cell title="通行证与礼品"/)
-  assert.match(read('pages/talent/list/index.js'), /if \(this\.data\.isMerchantViewer \|\| !app\.getUserID\(\)\)/)
+  assert.match(read('pages/talent/list/index.js'), /if \(this\.data\.isMerchantViewer\)/)
 })
 
 test('玻璃配方只给星尘:模糊 22px(44rpx)· 饱和 1.7 · 高光边 · 斜向反光 · 噪点;纸本 / 末世 / 夜城没有 backdrop-filter', () => {

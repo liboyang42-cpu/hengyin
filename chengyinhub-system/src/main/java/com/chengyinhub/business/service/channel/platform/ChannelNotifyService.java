@@ -46,6 +46,9 @@ public class ChannelNotifyService implements ChannelGovernanceService.MuteBridge
     private ChannelGuildAccess access;
     @Autowired(required = false)
     private IImService im;
+    /** APNs 发送端：sources.apns 只反映“已配置可发”，不代表任何一条已送达。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.push.ApnsSender apns;
 
     // ================================================================ reads
 
@@ -110,7 +113,7 @@ public class ChannelNotifyService implements ChannelGovernanceService.MuteBridge
         return v;
     }
 
-    static boolean inQuiet(String start, String end, String zone)
+    public static boolean inQuiet(String start, String end, String zone)
     {
         if (start == null || end == null || zone == null) return false;
         try
@@ -425,7 +428,7 @@ public class ChannelNotifyService implements ChannelGovernanceService.MuteBridge
         return out;
     }
 
-    /** 投递结果日志：服务端未持久化已签名的投递事件，如实返回空页（delivery_proven=false）。 */
+    /** 投递结果日志：服务端未持久化已签名的投递事件，如实返回空页（delivery_proven=false）；sources.apns = APNs 发送端已配置。 */
     public Map<String, Object> deliveryLog(long viewer, int limit, String event, String cursor)
     {
         if (limit < 1 || limit > 50 || (event != null && !event.matches("[A-Z][A-Z0-9_]{0,39}"))) throw ChannelRejection.badField("query");
@@ -435,13 +438,13 @@ public class ChannelNotifyService implements ChannelGovernanceService.MuteBridge
         out.put("list", List.of());
         out.put("next_cursor", null);
         out.put("has_more", false);
-        out.put("sources", new LinkedHashMap<>(Map.of("wx", true, "apns", false, "inapp", false)));
+        out.put("sources", new LinkedHashMap<>(Map.of("wx", true, "apns", apns != null && apns.configured(), "inapp", false)));
         out.put("delivery_proven", false);
         return out;
     }
 
     /**
-     * 本机安装的推送尝试（App NativePushAttemptReader）：服务端没有 APNs 发送端，也不落尝试记录，
+     * 本机安装的推送尝试（App NativePushAttemptReader）：APNs 发送端（配置后可用）不落逐条尝试记录，
      * 所以如实回空页（delivery_proven=false），不当作成功或零条投递；带 read_attempts 时回空的已读对账。
      */
     public Map<String, Object> pushAttempts(long viewer, String installationId, String before, String readAttempts)

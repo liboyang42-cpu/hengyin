@@ -261,6 +261,28 @@ class EcommercePersonalReceiverServiceTest {
         } finally { org.springframework.transaction.support.TransactionSynchronizationManager.clear(); }
     }
 
+    @Test
+    void appCodeBindUsesTheProvenOpenidWhenTheAccountHasNoMiniIdentity() {
+        Fixture f = new Fixture();
+        f.member.setWxOpenId(null);
+        Map<String, Object> result = f.service.bindFromAppCode(MEMBER, CLUB, "scanned-in-mini");
+        verify(f.gateway).addPersonalReceiver("scanned-in-mini", APPID);
+        ArgumentCaptor<EcomPersonalReceiver> saved = ArgumentCaptor.forClass(EcomPersonalReceiver.class);
+        verify(f.receivers).insertVerified(saved.capture());
+        assertEquals("scanned-in-mini", saved.getValue().getOpenid());
+        assertEquals("VERIFIED", result.get("receiverState"));
+        verify(f.sessions, never()).exchange(any());
+    }
+
+    @Test
+    void appCodeBindRefusesAWechatOtherThanTheAccountsOwn() {
+        Fixture f = new Fixture();
+        ServiceException e = assertThrows(ServiceException.class, () -> f.service.bindFromAppCode(MEMBER, CLUB, "someone-else"));
+        assertEquals("PERSONAL_RECEIVER_IDENTITY_MISMATCH", e.getMessage());
+        verifyNoInteractions(f.gateway);
+        verify(f.receivers, never()).insertVerified(any());
+    }
+
     private static class Fixture {
         final EcomPayoutMapper receivers = mock(EcomPayoutMapper.class);
         final ClubMapper clubs = mock(ClubMapper.class);

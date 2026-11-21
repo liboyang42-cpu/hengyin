@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.rewardpledge.RewardPledgeAdminMapper">
+
+  <select id="listPolicies" resultType="java.util.LinkedHashMap">
+    SELECT policy_code AS policyCode, rule_version AS ruleVersion, decision, actor_member_id AS actorMemberId
+    FROM w17_reward_policy ORDER BY policy_code, rule_version LIMIT 500
+  </select>
+
+  <insert id="upsertPolicy">
+    INSERT INTO w17_reward_policy(policy_code, rule_version, decision, actor_member_id)
+    VALUES(#{policyCode}, #{ruleVersion}, #{decision}, #{actorMemberId})
+    ON DUPLICATE KEY UPDATE decision = VALUES(decision), actor_member_id = VALUES(actor_member_id)
+  </insert>
+
+  <sql id="queueCols">
+    v.version_id AS versionId, v.pledge_id AS pledgeId, v.version_no AS versionNo, v.quantity, v.service_start AS serviceStart,
+    v.service_end AS serviceEnd, v.redeem_start AS redeemStart, v.redeem_end AS redeemEnd, v.terms,
+    v.minor_restricted AS minorRestricted, v.rule_version AS ruleVersion, v.state, v.merchant_member_id AS merchantMemberId,
+    v.merchant_confirmed_at AS merchantConfirmedAt, v.reviewer_member_id AS reviewerMemberId, v.frozen_at AS frozenAt,
+    p.store_id AS storeId, p.coupon_id AS couponId, p.supply_ref AS supplyRef, p.state AS pledgeState
+  </sql>
+
+  <select id="queue" resultType="java.util.LinkedHashMap">
+    SELECT <include refid="queueCols"/>
+    FROM w17_reward_pledge_version v JOIN w17_reward_pledge p ON p.pledge_id = v.pledge_id
+    WHERE v.state = <choose><when test="state != null and state != ''">#{state}</when><otherwise>'CONFIRMED'</otherwise></choose>
+    <if test="storeId != null"> AND p.store_id = #{storeId} </if>
+    ORDER BY v.merchant_confirmed_at, v.version_id LIMIT 200
+  </select>
+
+  <select id="lockVersion" resultType="java.util.LinkedHashMap">
+    SELECT <include refid="queueCols"/>, v.payload_hash AS payloadHash
+    FROM w17_reward_pledge_version v JOIN w17_reward_pledge p ON p.pledge_id = v.pledge_id
+    WHERE v.version_id = #{versionId} FOR UPDATE
+  </select>
+
+  <select id="latestVersionId" resultType="java.lang.String">
+    SELECT version_id FROM w17_reward_pledge_version WHERE pledge_id = #{pledgeId} ORDER BY version_no DESC LIMIT 1
+  </select>
+
+  <!-- 平台审核冻结：reviewer_member_id 留空（审核人是后台账号，记在审核备注与平台审计里），其余与 freezeVersion 同形。 -->
+  <update id="freezeByPlatform">
+    UPDATE w17_reward_pledge_version
+    SET state='FROZEN', reviewer_member_id=NULL, reviewer_hash=#{hash}, rule_version=#{ruleVersion}, frozen_at=#{at}
+    WHERE version_id=#{versionId} AND state='CONFIRMED' AND merchant_member_id IS NOT NULL
+  </update>
+
+  <update id="rejectVersion">
+    UPDATE w17_reward_pledge_version SET state='REJECTED' WHERE version_id=#{versionId} AND state='CONFIRMED'
+  </update>
+
+  <insert id="insertNote">
+    INSERT INTO r10_reward_pledge_review_note(version_id, pledge_id, decision, note, sys_user_id, create_time)
+    VALUES(#{versionId}, #{pledgeId}, #{decision}, #{note}, #{sysUserId}, NOW(3))
+  </insert>
+
+  <select id="notes" resultType="java.util.LinkedHashMap">
+    SELECT id, version_id AS versionId, pledge_id AS pledgeId, decision, note, sys_user_id AS sysUserId, create_time AS createTime
+    FROM r10_reward_pledge_review_note WHERE pledge_id = #{pledgeId} ORDER BY id DESC LIMIT 100
+  </select>
+</mapper>

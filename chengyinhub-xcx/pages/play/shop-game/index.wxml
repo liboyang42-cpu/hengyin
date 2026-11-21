@@ -1,0 +1,25 @@
+<!-- W7 x-shop-game-runner:店铺小游戏一局。发局 → 开这局自己的会话 → 用 cy-advanced-game 玩 → 看结果。 -->
+<view class="sg-page">
+  <cy-toast id="cy-toast" />
+  <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
+  <view wx:if="{{step === 'loading'}}" class="sg-page__state"><cy-skeleton /></view>
+  <view wx:elif="{{step === 'unavailable'}}" class="sg-page__state">
+    <cy-error title="这局小游戏现在玩不了" sub="{{reasonText}}" retry="再试一次" bind:retry="retry" />
+    <view class="sg-page__exit" bindtap="exit" aria-role="button" aria-label="返回" hover-class="cy-pressed" hover-stay-time="80">返回</view>
+  </view>
+  <block wx:elif="{{step === 'play'}}">
+    <cy-advanced-game id="advancedGame" show="{{true}}" node="{{node}}" topic-id="{{playId}}" activity-id=""
+      shop-play-id="{{playId}}" bind:session="onSession" bind:close="exit" />
+    <view wx:if="{{finishNote}}" class="sg-page__note">{{finishNote}}</view>
+    <view wx:if="{{over}}" class="sg-page__finish">
+      <cy-btn variant="primary" loading="{{finishing}}" bindtap="finish">看结果</cy-btn>
+    </view>
+  </block>
+  <view wx:elif="{{step === 'verdict'}}" class="sg-page__state">
+    <view class="sg-page__headline">{{verdict.headline}}</view>
+    <view wx:if="{{verdict.pointsText}}" class="sg-page__line">{{verdict.pointsText}}</view>
+    <view wx:if="{{verdict.note}}" class="sg-page__note">{{verdict.note}}</view>
+    <view class="sg-page__note">每天每家店可以玩一局。</view>
+    <view class="sg-page__exit" bindtap="exit" aria-role="button" aria-label="返回" hover-class="cy-pressed" hover-stay-time="80">返回</view>
+  </view>
+</view>

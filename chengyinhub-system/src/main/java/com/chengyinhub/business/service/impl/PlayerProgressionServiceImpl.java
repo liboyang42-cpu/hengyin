@@ -28,6 +28,8 @@ import com.chengyinhub.business.mapper.PlayerBadgeMapper;
 import com.chengyinhub.business.mapper.PlayerGrowthMapper;
 import com.chengyinhub.business.service.ICmsTopicChapterService;
 import com.chengyinhub.business.service.IPlayerProgressionService;
+import com.chengyinhub.business.service.support.DailyLoopSettings;
+import com.chengyinhub.business.service.support.StreakLedger;
 
 /**
  * 玩家成长体系实现。徽章名称/图标/阈值均从 badge_def(growth_badge)驱动,经 RuleEvaluator 判定。
@@ -56,6 +58,12 @@ public class PlayerProgressionServiceImpl implements IPlayerProgressionService
     @Autowired
     private RuleEvaluator ruleEvaluator;
 
+    /** P7 配置;单测不注入时按默认值(每 7 天 1 张补签卡,最多 2 张)。 */
+    @Autowired(required = false)
+    private DailyLoopSettings dailyLoopSettings;
+
+    private static final DailyLoopSettings FALLBACK_SETTINGS = new DailyLoopSettings(null);
+
     @Override
     public PlayerGrowth getGrowth(Long memberId)
     {
@@ -67,6 +75,8 @@ public class PlayerProgressionServiceImpl implements IPlayerProgressionService
             g.setTotalCheckins(0);
             g.setTotalMileage(BigDecimal.ZERO);
             g.setStreakDays(0);
+            g.setStreakFreezes(0);
+            g.setStreakFreezesUsed(0);
         }
         return g;
     }
@@ -119,29 +129,59 @@ public class PlayerProgressionServiceImpl implements IPlayerProgressionService
         Date checkinTime = currentCheckinTime();
         int checkins = nz(g.getTotalCheckins()) + 1;
 
-        // 连续打卡
-        LocalDate today = toLocalDate(checkinTime);
-        LocalDate last = toLocalDate(g.getLastCheckinDate());
-        int streak;
-        if (last == null) streak = 1;
-        else if (last.isEqual(today)) streak = Math.max(1, nz(g.getStreakDays()));
-        else if (last.plusDays(1).isEqual(today)) streak = nz(g.getStreakDays()) + 1;
-        else streak = 1;
+        // 连续活跃(P7:与漫游共用一套规则,含补签卡)
+        StreakLedger.Outcome streak = advanceStreak(g, checkinTime);
 
-        PlayerGrowth changes = new PlayerGrowth();
-        changes.setMemberId(memberId);
+        PlayerGrowth changes = streakChanges(memberId, streak, checkinTime, g);
         changes.setTotalCheckins(checkins);
-        changes.setStreakDays(streak);
-        changes.setLastCheckinDate(checkinTime);
         changes.setLevel(levelFor(checkins));
-        changes.setUpdateTime(checkinTime);
         playerGrowthMapper.updatePlayerGrowth(changes);
 
         List<PlayerBadge> newly = new ArrayList<>();
         awardByThreshold(newly, memberId, "FIRST_STEP", 1, 0L, checkins);
-        awardByThreshold(newly, memberId, "STREAK_7", 4, 0L, streak);
-        awardByThreshold(newly, memberId, "STREAK_3", 4, 0L, streak);
+        awardStreakLadder(newly, memberId, streak.streak());
         return newly;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public List<PlayerBadge> onActiveDay(Long memberId)
+    {
+        List<PlayerBadge> newly = new ArrayList<>();
+        if (memberId == null || memberId <= 0) return newly;
+        PlayerGrowth g = ensureGrowth(memberId);
+        Date activeTime = currentCheckinTime();
+        StreakLedger.Outcome streak = advanceStreak(g, activeTime);
+        if (!streak.advanced()) return newly;   // 今天已经算过,不重复写
+        // 只推进连续天数/补签卡;累计打卡数与等级仍只由节点完成驱动。
+        playerGrowthMapper.updatePlayerGrowth(streakChanges(memberId, streak, activeTime, g));
+        awardStreakLadder(newly, memberId, streak.streak());
+        return newly;
+    }
+
+    @Override
+    public Map<String, Object> streakSummary(Long memberId)
+    {
+        PlayerGrowth g = getGrowth(memberId);
+        StreakLedger.Policy policy = settings().policy();
+        StreakLedger.View view = StreakLedger.view(
+                new StreakLedger.State(toLocalDate(g.getLastCheckinDate()), nz(g.getStreakDays()), nz(g.getStreakFreezes())),
+                toLocalDate(currentCheckinTime()), policy);
+        Map<String, Object> out = new java.util.LinkedHashMap<String, Object>();
+        out.put("currentStreak", view.currentStreak());
+        out.put("streakActiveToday", view.activeToday());
+        out.put("streakAtRisk", view.atRisk());
+        out.put("streakBroken", view.broken());
+        out.put("streakFreezes", view.freezesAvailable());
+        out.put("streakFreezesPending", view.freezesPending());
+        out.put("streakFreezesUsed", nz(g.getStreakFreezesUsed()));
+        out.put("streakFreezeMax", policy.freezeMax());
+        out.put("streakFreezeEveryDays", policy.freezeEveryDays());
+        out.put("streakLadder", DailyLoopSettings.STREAK_LADDER.clone());
+        out.put("nextStreakBadgeDays", StreakLedger.nextLadderStep(view.currentStreak(), DailyLoopSettings.STREAK_LADDER));
+        out.put("walkMinMeters", settings().walkMinMeters());
+        out.put("walkMinCells", settings().walkMinCells());
+        return out;
     }
 
     @Override
@@ -175,6 +215,54 @@ public class PlayerProgressionServiceImpl implements IPlayerProgressionService
     }
 
     // ===== helpers =====
+
+    private StreakLedger.Outcome advanceStreak(PlayerGrowth g, Date activeTime)
+    {
+        StreakLedger.State state = new StreakLedger.State(
+                toLocalDate(g.getLastCheckinDate()), nz(g.getStreakDays()), nz(g.getStreakFreezes()));
+        return StreakLedger.onActive(state, toLocalDate(activeTime), settings().policy());
+    }
+
+    private PlayerGrowth streakChanges(Long memberId, StreakLedger.Outcome streak, Date activeTime, PlayerGrowth before)
+    {
+        PlayerGrowth changes = new PlayerGrowth();
+        changes.setMemberId(memberId);
+        changes.setStreakDays(streak.streak());
+        changes.setLastCheckinDate(activeTime);
+        changes.setStreakFreezes(streak.freezes());
+        if (streak.freezesUsed() > 0) {
+            changes.setStreakFreezesUsed(nz(before.getStreakFreezesUsed()) + streak.freezesUsed());
+        }
+        changes.setUpdateTime(activeTime);
+        return changes;
+    }
+
+    /** R11 growth-loops 邀请徽章阶梯 1/3/10,source_type 7 = 邀请。 */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public List<PlayerBadge> onInviteRewarded(Long inviterId, int grantedInvites)
+    {
+        List<PlayerBadge> newly = new ArrayList<>();
+        if (inviterId == null || inviterId <= 0 || grantedInvites <= 0) return newly;
+        for (int threshold : new int[] { 10, 3, 1 }) {
+            awardByThreshold(newly, inviterId, "INVITE_" + threshold, 7, 0L, grantedInvites);
+        }
+        return newly;
+    }
+
+    /** GAM-04 徽章阶梯 3/7/14/30:按从高到低发(与原 STREAK_7 先于 STREAK_3 的次序一致)。 */
+    private void awardStreakLadder(List<PlayerBadge> newly, Long memberId, int streak)
+    {
+        int[] ladder = DailyLoopSettings.STREAK_LADDER;
+        for (int i = ladder.length - 1; i >= 0; i--) {
+            awardByThreshold(newly, memberId, "STREAK_" + ladder[i], 4, 0L, streak);
+        }
+    }
+
+    private DailyLoopSettings settings()
+    {
+        return dailyLoopSettings != null ? dailyLoopSettings : FALLBACK_SETTINGS;
+    }
 
     /**
      * 写入口专用:先用 uk_member 原子建行/取得行锁,再当前读。

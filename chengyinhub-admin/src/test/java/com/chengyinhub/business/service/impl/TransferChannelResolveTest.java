@@ -63,4 +63,13 @@ class TransferChannelResolveTest {
         assertArrayEquals(new String[] {"o_app", null},
                 CashWithdrawServiceImpl.resolveTransferChannel(null, "o_app", WX_APPID, null));
     }
+
+    @org.junit.jupiter.api.Test
+    void r6bBoundMiniOpenidIsOnlyAFallbackForTheMembersOwn() {
+        org.junit.jupiter.api.Assertions.assertEquals("own", CashWithdrawServiceImpl.miniOpenidOrBound("own", "bound"));
+        org.junit.jupiter.api.Assertions.assertEquals("bound", CashWithdrawServiceImpl.miniOpenidOrBound(null, "bound"));
+        org.junit.jupiter.api.Assertions.assertEquals("bound", CashWithdrawServiceImpl.miniOpenidOrBound("", "bound"));
+        org.junit.jupiter.api.Assertions.assertNull(CashWithdrawServiceImpl.miniOpenidOrBound(null, " "));
+        org.junit.jupiter.api.Assertions.assertNull(CashWithdrawServiceImpl.miniOpenidOrBound(null, null));
+    }
 }

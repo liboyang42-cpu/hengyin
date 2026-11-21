@@ -247,7 +247,7 @@ class PhotoReviewRewardContractTest
         AjaxResult result = submit();
 
         assertEquals(200, result.get("code"), String.valueOf(result.get("msg")));
-        assertEquals("已提交,打卡成功", result.get("msg"));
+        assertEquals("已提交，打卡成功", result.get("msg"));
         PlayerNodeProgress inserted = capturedInsert(progressService);
         assertEquals(Integer.valueOf(1), inserted.getStatus(), "开关开着也必须提交即完成");
         assertEquals(Integer.valueOf(1), inserted.getReviewStatus(), "既有机审完成事实必须可被计分读取，不能持久化为待审");
@@ -272,7 +272,7 @@ class PhotoReviewRewardContractTest
         AjaxResult result = submit();
 
         assertEquals(200, result.get("code"), String.valueOf(result.get("msg")));
-        assertEquals("已提交,打卡成功", result.get("msg"));
+        assertEquals("已提交，打卡成功", result.get("msg"));
         assertEquals(Boolean.TRUE, data(result).get("firstTime"), "转正必须走完成链");
         verify(progressService, times(1)).markPhotoMachineApproved(PROGRESS);
         verify(pointsAwardService, times(1)).award(PLAYER, 12L, NODE, "节点打卡");

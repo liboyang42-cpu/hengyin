@@ -38,6 +38,7 @@ class E2eTestProvidersProfileTest
                 E2eTestImMediaStore.class,
                 E2eTestSpeechToTextService.class,
                 E2eTestWeChatMiniSessionService.class,
+                com.chengyinhub.business.merchantgap.E2eTestMerchantAvatarProvider.class,
                 E2eTestTopicWeatherProvider.class,
                 E2eTestNpcDialogueResponder.class,
         })
@@ -50,6 +51,41 @@ class E2eTestProvidersProfileTest
             assertArrayEquals(new String[] {"chengyin.e2e.test-providers"}, property.name());
             assertEquals("true", property.havingValue());
         }
+    }
+
+    /**
+     * R9 BE-16: the providers live in the chengyinhub-e2e module, which chengyinhub-admin only takes with test scope
+     * (runtime only under the explicit `e2e-test-providers` Maven profile). No production module may carry one.
+     */
+    @Test
+    void productionModulesCarryNoE2eProviders() throws Exception
+    {
+        java.nio.file.Path root = java.nio.file.Paths.get("").toAbsolutePath();
+        if (!java.nio.file.Files.isDirectory(root.resolve("../chengyinhub-system"))) return; // not run from the reactor
+        for (String module : new String[] {"chengyinhub-admin", "chengyinhub-framework", "chengyinhub-system",
+                "chengyinhub-common", "chengyinhub-quartz", "chengyinhub-generator"})
+        {
+            java.nio.file.Path main = root.resolve("../" + module + "/src/main").normalize();
+            if (!java.nio.file.Files.isDirectory(main)) continue;
+            try (java.util.stream.Stream<java.nio.file.Path> files = java.nio.file.Files.walk(main))
+            {
+                java.util.List<String> offenders = files.filter(java.nio.file.Files::isRegularFile)
+                        .filter(f -> f.toString().endsWith(".java"))
+                        .filter(f -> {
+                            try
+                            {
+                                String src = new String(java.nio.file.Files.readAllBytes(f), StandardCharsets.UTF_8);
+                                return f.getFileName().toString().startsWith("E2eTest") || src.contains("@Profile(\"e2e-test\")");
+                            }
+                            catch (java.io.IOException e) { throw new java.io.UncheckedIOException(e); }
+                        })
+                        .map(java.nio.file.Path::toString).collect(java.util.stream.Collectors.toList());
+                assertTrue(offenders.isEmpty(), module + " ships E2E providers: " + offenders);
+            }
+        }
+        String adminPom = new String(java.nio.file.Files.readAllBytes(root.resolve("pom.xml")), StandardCharsets.UTF_8);
+        assertTrue(adminPom.contains("<chengyin.e2e.providers.scope>test</chengyin.e2e.providers.scope>"),
+                "chengyinhub-e2e must default to test scope");
     }
 
     @Test

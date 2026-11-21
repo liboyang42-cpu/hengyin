@@ -44,6 +44,6 @@ test('BL-108 装修页只读接线:不展示价格、不加购买入口', () => 
   assert.match(js, /url: '\/api\/merchant\/subscription', method: 'POST'/)
   assert.match(js, /activeSubs: \[\]/)
   assert.match(wxml, /wx:if="\{\{activeSubs\.length\}\}"/)
-  const block = wxml.slice(wxml.indexOf('activeSubs.length'), wxml.indexOf('wx:for="{{tiers}}"'))
+  const block = wxml.slice(wxml.indexOf('activeSubs.length'), wxml.indexOf('wx:for="{{saleTiers}}"'))
   assert.doesNotMatch(block, /bindtap|price|￥|¥/)
 })

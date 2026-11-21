@@ -167,6 +167,18 @@ public class NotifyServiceImpl implements INotifyService {
     }
 
     @Override
+    public boolean notifyGameDuel(Long memberId, Long duelId, String text) {
+        return fanout(NotifyMessage.of(NotifyEvent.GAME_DUEL, memberId)
+                .with("duelId", duelId == null ? "" : String.valueOf(duelId)).with("text", text == null ? "" : text));
+    }
+
+    @Override
+    public boolean notifyMerchantReview(Long memberId, boolean approved, String reason) {
+        return fanout(NotifyMessage.of(NotifyEvent.MERCHANT_REVIEW, memberId)
+                .with("approved", approved ? "1" : "0").with("reason", reason == null ? "" : reason.trim()));
+    }
+
+    @Override
     public boolean isRoamRecallReady() {
         // ⚠️ 名不副实的地方要写在明处:这条**只问微信通道**,不是「问所有通道」。
         // 就绪查询没做成 NotifyChannel 的方法 —— 现在只有一条通道,加个接口方法是没人要的抽象。

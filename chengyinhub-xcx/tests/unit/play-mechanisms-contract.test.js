@@ -92,9 +92,9 @@ test('O-01 删空精度放行:自动到达只在精度已知且 ≤80m 时发(�
   checkArrivalAccuracy(src);
   assert.throws(() => checkArrivalAccuracy(src.replace(' && playAccuracy.canAutoArrive(loc.accuracy)', '')),
     'removing the accuracy guard must fail this behavior check');
-  // 两个定位来源都把 accuracy 原样带进 _loc,arrive 请求从 _loc 取
+  // 定位来源(含开局 300m 闸的开局定位)都把 accuracy 原样带进 _loc,arrive 请求从 _loc 取
   const locWrites = src.match(/_loc = arrivalReading\.stamp\(\{ longitude: loc\.longitude, latitude: loc\.latitude, accuracy: loc\.accuracy \}\)/g) || [];
-  assert.equal(locWrites.length, 2);
+  assert.equal(locWrites.length, 3);
 });
 
 test('游玩页:6 路可播放音轨全部登记,唯一静音预热不播放且有界销毁', () => {

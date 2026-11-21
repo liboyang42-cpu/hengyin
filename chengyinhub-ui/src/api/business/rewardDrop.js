@@ -77,3 +77,19 @@ export function listRandomAudits(query) {
     params: query
   })
 }
+
+// R10 规则编辑器接口（/business/rewardDropRule）：只校验不保存、启停
+export function validateRewardDropRule(data) {
+  return request({
+    url: '/business/rewardDropRule/validate',
+    method: 'post',
+    data: data
+  })
+}
+
+export function setRewardDropRuleStatus(id, status) {
+  return request({
+    url: '/business/rewardDropRule/' + id + '/status/' + status,
+    method: 'put'
+  })
+}

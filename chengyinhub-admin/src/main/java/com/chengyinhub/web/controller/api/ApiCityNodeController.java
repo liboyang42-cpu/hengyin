@@ -1,8 +1,11 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.common.utils.GeoDistanceUtils;
 import com.chengyinhub.business.domain.CmsMemberTemplate;
 import com.chengyinhub.business.domain.MemberCollectible;
+import com.chengyinhub.business.domain.vo.CatalogPlaceVO;
 import com.chengyinhub.business.domain.vo.CityNodeGuestProjection;
 import com.chengyinhub.business.domain.vo.CityNodeVO;
 import com.chengyinhub.business.mapper.MemberCollectibleMapper;
@@ -68,25 +71,44 @@ public class ApiCityNodeController extends BaseController {
         try { return getAppUserId(); } catch (Exception e) { return 0L; }
     }
 
+    /** /nodes 单次最多返回条数(默认值与上限);由近到远,超出部分不返回。 */
+    static final int NODES_DEFAULT_LIMIT = 100;
+    static final int NODES_MAX_LIMIT = 200;
+
     @Operation(summary = "附近商家节点(经纬度包围盒粗筛)")
     @GetMapping("/nodes")
     public AjaxResult nodes(Double lat, Double lng, Integer radius,
-                            String keyword, Integer categoryId, String tag, String cityRole) {
-        if (lat == null || lng == null) return error("缺少定位");
+                            String keyword, Integer categoryId, String tag, String cityRole, Integer limit) {
+        if (lat == null || lng == null) return refuse(ErrorCode.LOCATION_REQUIRED, "缺少定位");
+        // A5.4:非有限数/越界坐标一律拒绝,不再拿 NaN 去算包围盒。
+        if (!Double.isFinite(lat) || !Double.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return error("定位无效");
+        // A5.5:tags 是 JSON 数组串,按带引号整标签匹配;含 LIKE 通配符/引号/反斜杠的 tag 直接拒绝。
+        if (tag != null && !tag.isEmpty() && (tag.length() > 32 || tag.matches(".*[%_\\\\\"].*"))) return error("标签无效");
         int r = (radius == null || radius <= 0) ? 3000 : Math.min(radius, 20000);
+        int n = (limit == null || limit <= 0) ? NODES_DEFAULT_LIMIT : Math.min(limit, NODES_MAX_LIMIT);
         double dLat = r / 111320.0;
         double dLng = r / (111320.0 * Math.max(0.2, Math.cos(Math.toRadians(lat))));
         List<CityNodeVO> list = roamMapper.selectMerchantNodesNear(
                 lat - dLat, lat + dLat, lng - dLng, lng + dLng,
-                lat, lng, keyword, categoryId, tag, cityRole);
+                lat, lng, keyword, categoryId, tag, cityRole, n);
         markUserState(list);
+        if (uid() <= 0) list.forEach(CityNodeGuestProjection::apply);
         return success(list);
+    }
+
+    @Operation(summary = "目录地点公开只读详情(照片/引述/署名;无挑战)")
+    @GetMapping("/places/{id}")
+    public AjaxResult place(@PathVariable("id") Long id) {
+        if (id == null || id <= 0) return error("参数不合规");
+        CatalogPlaceVO vo = roamMapper.selectCatalogPlaceById(id);
+        if (vo == null) return AjaxResult.error(410, "地点未开放或已下线");
+        return success(vo);
     }
 
     @Operation(summary = "商家节点详情")
     @GetMapping("/nodes/{id}")
     public AjaxResult detail(@PathVariable("id") Long id) {
-        if (id == null || id <= 0) return error("参数不合规");
+        if (id == null || id <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         Long memberId = uid();
         CityNodeVO vo = roamMapper.selectPlayerMerchantNodeDetail(id, memberId);
         if (vo == null) return AjaxResult.error(410, "据点未开放或已下线");
@@ -102,18 +124,18 @@ public class ApiCityNodeController extends BaseController {
     @Operation(summary = "商家公开主页的在架节点(收藏入口)")
     @GetMapping("/nodes/merchant/{merchantId}")
     public AjaxResult merchantNode(@PathVariable("merchantId") Long merchantId) {
-        if (merchantId == null || merchantId <= 0) return error("参数不合规");
+        if (merchantId == null || merchantId <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         CityNodeVO node = merchantNodeDiscoveryService.findActiveNode(merchantId);
         if (node == null) return success();
         markUserState(Collections.singletonList(node));
-        return success(node);
+        return success(uid() <= 0 ? CityNodeGuestProjection.apply(node) : node);
     }
 
     @Operation(summary = "我收藏的商家节点")
     @GetMapping("/nodes/favorites")
     public AjaxResult favorites() {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         List<CityNodeVO> list = roamMapper.selectFavoriteMerchantNodes(memberId);
         markUserState(list);
         return success(list);
@@ -123,8 +145,8 @@ public class ApiCityNodeController extends BaseController {
     @PostMapping("/nodes/{id}/favorite")
     public AjaxResult favorite(@PathVariable("id") Long id) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
-        if (id == null || id <= 0) return error("参数不合规");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (id == null || id <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         boolean nowFav;
         if (collectibleMapper.countOne(memberId, MemberCollectible.TYPE_NODE_FAV, id) > 0) {
             collectibleMapper.deleteOne(memberId, MemberCollectible.TYPE_NODE_FAV, id);
@@ -167,14 +189,19 @@ public class ApiCityNodeController extends BaseController {
         }
     }
 
+    /** GAME-4: scores the client fix like /api/roam/checkin. Optional so hand-built unit tests keep the legacy path. */
+    @Autowired(required = false)
+    private com.chengyinhub.business.locationtrust.LocationTrustService locationTrust;
+
     @Operation(summary = "完成节点互动并领券(半径二次校验 + 按验证方式判定 + 每人每节点仅一次)")
     @PostMapping("/nodes/{id}/complete")
+    @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 30, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
     @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public AjaxResult complete(@PathVariable("id") Long id, Double lat, Double lng,
                                String answer, String photoUrl, String code) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
-        if (id == null || id <= 0) return error("参数不合规");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (id == null || id <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         roamMapper.lockClaimOwner(memberId);
         CityNodeVO node = roamMapper.selectPlayerMerchantNodeDetail(id, 0L);
         if (node == null) return AjaxResult.error(410, "据点未开放或已下线");
@@ -182,10 +209,29 @@ public class ApiCityNodeController extends BaseController {
         if (node.getLat() == null || node.getLng() == null) return error("节点未设置坐标");
 
         // ① 服务端二次半径校验(GPS 只作触发,不作发放唯一依据)
-        if (lat == null || lng == null) return error("缺少定位");
+        if (lat == null || lng == null) return refuse(ErrorCode.LOCATION_REQUIRED, "缺少定位");
+        // GAME-4: the fix is scored before the radius check (accuracy, fix time, simulated, impossible speed).
+        // Rejected = retryable refusal; withheld = recorded answer "not credited" and no reward log row.
+        if (locationTrust != null) {
+            com.chengyinhub.business.locationtrust.LocationTrustService.Assessment trusted = locationTrust.assess(
+                    memberId, null, com.chengyinhub.business.locationtrust.LocationTrustKind.CITY_NODE, String.valueOf(id),
+                    com.chengyinhub.business.locationtrust.LocationSignals.current(lat, lng));
+            if (trusted.rejected()) {
+                return AjaxResult.error(com.chengyinhub.business.locationtrust.LocationTrustMessages.rejected(trusted.reasons()))
+                        .put("trustCode", com.chengyinhub.business.locationtrust.LocationTrustMessages.code(trusted.reasons()))
+                        .put("retryable", true);
+            }
+            if (trusted.withheld()) {
+                Map<String, Object> held = new LinkedHashMap<>();
+                held.put("uncredited", true);
+                held.put("trustCode", com.chengyinhub.business.locationtrust.LocationTrustMessages.code(trusted.reasons()));
+                held.put("trustMessage", com.chengyinhub.business.locationtrust.LocationTrustMessages.withheld(trusted.reasons()));
+                return AjaxResult.success(com.chengyinhub.business.locationtrust.LocationTrustMessages.withheld(trusted.reasons()), held);
+            }
+        }
         int radius = (node.getRadiusM() != null && node.getRadiusM() > 0) ? node.getRadiusM() : 80;
         double dist = distMeters(lat, lng, node.getLat().doubleValue(), node.getLng().doubleValue());
-        if (!withinReach(dist, radius)) return error("离据点太远,请到店后再完成");
+        if (!withinReach(dist, radius)) return error("离据点太远，请到店后再完成");
 
         // ② 按验证方式判定完成(玩法跟模板走)
         Integer vm = node.getValidationMethod();
@@ -201,9 +247,9 @@ public class ApiCityNodeController extends BaseController {
             // 跟没有这道闸一样(小程序 app.chooseImage 回的就是上传后的 http(s) URL)。
             // ⚠️ 目前只校验形态,照片内容未过审、也未落库(没有存放列),商家事后无从复核。
             String photo = photoUrl == null ? "" : photoUrl.trim();
-            if (photo.isEmpty()) return error("请上传拍照打卡照片");
+            if (photo.isEmpty()) return refuse(ErrorCode.BAD_REQUEST, "请上传拍照打卡照片");
             if (!photo.startsWith("http://") && !photo.startsWith("https://")) {
-                return error("照片地址不合法,请重新上传");
+                return error("照片地址不合法，请重新上传");
             }
         } else if (vm != null && vm == 4) {                // 4扫码:必须扫到本店那张张贴码
             // 2026-08-06 补实现。此前这里没有分支,落到下面的「以到店定位为准」——
@@ -266,7 +312,7 @@ public class ApiCityNodeController extends BaseController {
         data.put("completed", !hasCoupon);
         // ④ C2 防伪造GPS薅券:到店券不再凭客户端 GPS 自动发放,改由商家扫玩家「据点核销码」核销发券
         //    (/api/verify/citynode/issue 玩家出码 → 商家扫 → /api/verify/citynode/redeem 验签+归属+幂等+发券)
-        data.put("hint", hasCoupon ? "已到店打卡,出示据点核销码给商家即可领券" : "已到店打卡");
+        data.put("hint", hasCoupon ? "已到店打卡，出示据点核销码给商家即可领券" : "已到店打卡");
         return AjaxResult.success("完成", data);
     }
 

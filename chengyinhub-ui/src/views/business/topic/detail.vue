@@ -701,6 +701,9 @@
         <el-form-item v-if="nodeForm.id" label="打卡码(只读)">
           <span style="font-family:monospace;font-size:12px">{{ nodeForm.checkinCode || '未生成' }}</span>
         </el-form-item>
+        <el-form-item v-if="nodeForm.id && nodeForm.checkinCode" label="通用码">
+          <cy-link-qr-code :scene="nodeForm.checkinCode" />
+        </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="nodeDialogVisible = false">取 消</el-button>
@@ -964,6 +967,7 @@ import { addTopicNode, updateTopicNode, delTopicNode } from "@/api/business/topi
 import { getTopicFunnel } from "@/api/business/topicFunnel"
 import { parseTime } from "@/utils/ruoyi"
 import PlayHelpReadonlyPanel from "@/components/PlayHelpReadonlyPanel"
+import CyLinkQrCode from "@/components/CyLinkQrCode"
 import TopicEnvironmentRulesPanel from "./components/TopicEnvironmentRulesPanel"
 import { topicLifecycleMeta, topicCheckStatusMeta } from "@/utils/admin-status"
 
@@ -975,7 +979,7 @@ const hasPermission = (permissions, required) =>
 
 export default {
   name: "TopicDetail",
-  components: { PlayHelpReadonlyPanel, TopicEnvironmentRulesPanel },
+  components: { PlayHelpReadonlyPanel, TopicEnvironmentRulesPanel, CyLinkQrCode },
   dicts: ['sys_topic_type', 'sys_topic_status', 'sys_topic_user_status'],
   computed: {
     unifiedCheckMeta() {

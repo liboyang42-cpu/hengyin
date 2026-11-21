@@ -27,6 +27,10 @@ public interface ICommunityPostService {
     List<Map<String, Object>> filterPublicCompletedReferences(Long memberId, List<Map<String, Object>> completed);
     List<Map<String, Object>> referenceOptions(Long memberId, String referenceType, Integer limit);
     Map<String, Object> feed(Long viewerId, CommunityPostFeedQuery query);
+    /** K2 discovery (MKT-09): composer shop picker, places and merchants; nearest first when a point is given. */
+    List<Map<String, Object>> shopOptions(Long memberId, String keyword, Double lat, Double lng, Integer limit);
+    /** K2 discovery (MKT-09): posts linked to one shop (POI or MERCHANT), newest first, same visibility as every feed. */
+    Map<String, Object> placePosts(Long viewerId, String placeType, Long placeId, Long cursor, Integer limit);
     Map<String, Object> drafts(Long memberId, Long cursor, Integer limit);
     Map<String, Object> bookmarks(Long memberId, Long cursor, Integer limit);
     Map<String, Object> ownPosts(Long memberId, Long cursor, Integer limit);

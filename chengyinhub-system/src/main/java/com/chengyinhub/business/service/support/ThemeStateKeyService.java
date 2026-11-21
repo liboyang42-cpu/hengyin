@@ -87,7 +87,7 @@ public class ThemeStateKeyService {
     @Transactional(rollbackFor = Exception.class)
     public void register(Long topicId, List<ThemeStateKey> keys) {
         if (topicId == null || topicId <= 0L) {
-            throw new ServiceException("主题编号无效,无法注册状态键");
+            throw new ServiceException("主题编号无效，无法注册状态键");
         }
         if (keys == null || keys.isEmpty()) {
             return;
@@ -132,7 +132,7 @@ public class ThemeStateKeyService {
         ThemeStateKey existing = StringUtils.isEmpty(stateKey) ? null
                 : themeStateKeyMapper.selectByTopicIdAndStateKeyForUpdate(topicId, stateKey);
         if (existing == null) {
-            throw new ServiceException("状态键不存在:" + stateKey, HttpStatus.NOT_FOUND).setDetailMessage(ERR_NOT_FOUND);
+            throw new ServiceException("状态键不存在：" + stateKey, HttpStatus.NOT_FOUND).setDetailMessage(ERR_NOT_FOUND);
         }
         if ((patch.getKeyType() != null && !patch.getKeyType().equals(existing.getKeyType()))
                 || (patch.getScope() != null && !patch.getScope().equals(existing.getScope()))) {
@@ -286,7 +286,7 @@ public class ThemeStateKeyService {
     @Transactional(rollbackFor = Exception.class)
     public boolean delete(Long topicId, String stateKey) {
         if (topicId == null || topicId <= 0L) {
-            throw new ServiceException("主题编号无效,无法删除状态键");
+            throw new ServiceException("主题编号无效，无法删除状态键");
         }
         if (StringUtils.isEmpty(stateKey)) {
             throw new ServiceException("状态键名不能为空");
@@ -425,15 +425,15 @@ public class ThemeStateKeyService {
         }
         String stateKey = key.getStateKey();
         if (stateKey == null || !ThemeStateKey.KEY_NAME.matcher(stateKey).matches()) {
-            throw new ServiceException("状态键名不合法:" + stateKey
-                    + "(须为 clue./relation./tag./counter. 前缀 + 小写下划线,如 clue.ledger_page)");
+            throw new ServiceException("状态键名不合法：" + stateKey
+                    + "(须为 clue./relation./tag./counter. 前缀 + 小写下划线，如 clue.ledger_page)");
         }
         if (key.getKeyType() == null || !KEY_TYPES.contains(key.getKeyType())) {
-            throw new ServiceException("状态键类型不合法:" + key.getKeyType()
+            throw new ServiceException("状态键类型不合法：" + key.getKeyType()
                     + "(仅支持 flag/counter/relation/tag)");
         }
         if (key.getScope() == null || !SCOPES.contains(key.getScope())) {
-            throw new ServiceException("状态键作用域不合法:" + key.getScope()
+            throw new ServiceException("状态键作用域不合法：" + key.getScope()
                     + "(目前仅支持 run;party/deployment 尚未实现)");
         }
         String prefix = stateKey.substring(0, stateKey.indexOf('.') + 1);

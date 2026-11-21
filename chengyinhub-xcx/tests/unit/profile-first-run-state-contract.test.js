@@ -57,7 +57,7 @@ test('个人页返回：身份变化仍优先重新初始化，不读取旧视�
 
 test('排名文案与实际总积分榜一致，视觉和无障碍都不声称月份或城市筛选', () => {
   const wxml = read(PROFILE_WXML)
-  assert.match(wxml, /aria-label="总积分排名 \{\{rankDisplay.no\}\},查看成长中心详情"/)
+  assert.match(wxml, /aria-label="总积分排名 \{\{rankDisplay.no\}\}，查看成长中心详情"/)
   assert.match(wxml, /class="pc-rank-title">总积分排名<\/text>/)
   assert.doesNotMatch(wxml, /本月排名/)
 })

@@ -1,3 +1,4 @@
+const { resolvePlaceMedia } = require('../../utils/roam-place-media.js');
 // 漫游地图 · 附近的队伍(地图组队 P 方案,Figma txQoyVyKb3aQdFCnc8qmhj 590:1014 · P1–P6)。
 // 地图只做展示层:挂票务组队(公开队伍),不能开新局(9-15 裁决,搭子局 A 下架)。
 // 数据:队伍 + 探店地点/商家 + 自由探索/活动；城市定向只在独立主题入口展示。
@@ -7,14 +8,15 @@ const app = getApp();
 const teamOperation = require('../utils/roam-team-operation.js');
 const teamRecovery = require('../utils/roam-team-recovery.js');
 const session = require('../../utils/session/login-reload.js');
-const { playerMapStyle } = require('../../utils/map-style.js'); function openAddress() { return require('../../utils/open-address.js') }
-const PLAYER_MAP_STYLE = playerMapStyle();
+const mapSwitch = require('../../utils/map-style-switch.js'); function openAddress() { return require('../../utils/open-address.js') }
+const MAP_KIND_DATA = mapSwitch.initialData();
 const { getCurrentLocation } = require('../../utils/location/location-manager.js');
 const lastLocation = require('../../utils/location/last-location.js');
 const { isRecordList } = require('../../utils/response-shape.js');
 const H = require('../../utils/roam-hangout.js');
 const T = require('../utils/map-team.js'); const L = require('../utils/map-layers.js'); // L:2026-10-22 三类点位/筛选/边缘缩小
 const cyToast = require('../../utils/toast.js');
+const PM = require('../../utils/roam-place-map.js');
 const modal = require('../../utils/modal.js');
 const mediaPreview = require('../../utils/media-preview.js');
 const loading = require('../../utils/loading.js');
@@ -60,6 +62,10 @@ function emptyResult() {
 }
 
 Page({
+  ...mapSwitch.methods(),
+  openMapKind() { this.setData({ mapKindSheetShow: true }); },
+  closeMapKind() { this.setData({ mapKindSheetShow: false }); },
+  onMapKindPick(e) { const row = this.data.mapKindItems[Number(e.detail && e.detail.index)]; this.setData({ mapKindSheetShow: false }); if (row) this._applyMapKind(row.kind, true); },
   afterTeamCommandTerminal(receipt, command) {
     this._teamScopeEpoch = (this._teamScopeEpoch || 0) + 1;
     this.refresh(this.data.center);
@@ -79,8 +85,7 @@ Page({
   data: { teamCommandRows: [], teamCommandError: '',
     safeBottom: 0,
     hudTop: 90,
-    fmSubkey: PLAYER_MAP_STYLE.subkey,
-    fmLayerStyle: PLAYER_MAP_STYLE.layerStyle,
+    ...MAP_KIND_DATA, mapKindSheetShow: false,
     center: DEFAULT_CENTER,
     scale: 15,
     markers: [],
@@ -142,7 +147,7 @@ Page({
   },
 
   /* 买完票回到地图,卡片要从「去买这场的票」变成「申请加入」(P2 底注):回前台重拉一次。 */
-  onShow() { this._hidden = false;
+  onShow() { this._hidden = false; this._syncMapKindPref();
     this.reloadTeamCommands();
     const writeOwner = teamOperation.identity(app);
     if (this._teamWriteOwner && this._teamWriteOwner !== writeOwner) {
@@ -157,7 +162,7 @@ Page({
     const c = this.data.poiCard; if (c && c.official) this._loadSpot(c.id); // 挑战回来:完成状态、评价跟着刷新
   },
   onHide() {
-    this._hidden = true;
+    this._hidden = true; this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
     this._teamScopeEpoch = (this._teamScopeEpoch || 0) + 1;
     this._myReadSeq = (this._myReadSeq || 0) + 1;
     teamRecovery.dispose(this);
@@ -177,9 +182,7 @@ Page({
   },
 
   retryNearby() {
-    if (this.data.nearbyReadAccess === 'login') {
-      return session.retryLogin(this, app, function () { this.refresh(this.data.center); });
-    }
+    if (this._hidden || this._unloaded) return;
     this.refresh(this.data.center);
   },
 
@@ -188,12 +191,12 @@ Page({
   _resetNearbyRead(owner) {
     this._nearbyReadOwner = owner;
     this._teamSeq = (this._teamSeq || 0) + 1;
-    this._topicSeq = (this._topicSeq || 0) + 1;
+    this._topicSeq = (this._topicSeq || 0) + 1; this._poiSeq = (this._poiSeq || 0) + 1;
     this._nearbyTeamsLoaded = false; this._nearbyTopicsLoaded = false;
     this._nearbyFailures = { teams: false, topics: false };
-    this._teams = []; this._items = []; this._icons = {}; this._far = {}; this._iconFailed = {}; this._selfIcon = '';
+    this._teams = []; this._items = []; this._pois = []; this._icons = {}; this._far = {}; this._iconFailed = {}; this._selfIcon = '';
     this.setData({ headerText: '附近', nearbyReadAccess: '', loadError: false,
-      current: null, topic: null, applicants: [], leaderSub: '', sheet: '', sheetIn: false });
+      current: null, topic: null, poiCard: null, poiCardIn: false, applicants: [], leaderSub: '', sheet: '', sheetIn: false });
     this._syncMarkers();
   },
 
@@ -201,34 +204,28 @@ Page({
     if (this._unloaded) return null;
     const owner = this._myIdentity();
     if (this._nearbyReadOwner !== owner) this._resetNearbyRead(owner);
-    if (!session.memberId(app)) {
-      this._resetNearbyRead(owner);
-      this.setData({ nearbyReadAccess: 'login' });
-      return null;
-    }
     return owner;
   },
 
   _nearbyCurrent(layer, owner, seq) {
     return !this._unloaded && owner === this._nearbyReadOwner && owner === this._myIdentity()
-      && seq === (layer === 'teams' ? this._teamSeq : this._topicSeq);
+      && seq === (layer === 'teams' ? this._teamSeq : layer === 'pois' ? this._poiSeq : this._topicSeq);
   },
 
   _nearbyOutcome(layer, owner, seq, res, statusCode) {
     if (this._unloaded || owner !== this._nearbyReadOwner
-        || seq !== (layer === 'teams' ? this._teamSeq : this._topicSeq)) return true;
+        || seq !== (layer === 'teams' ? this._teamSeq : layer === 'pois' ? this._poiSeq : this._topicSeq)) return true;
     const nextOwner = this._myIdentity();
     // 真实 request-client 重登失败会先清旧会话；仍必须清掉页面私有快照。
     if (owner !== nextOwner) {
       this._resetNearbyRead(nextOwner);
-      if (!session.memberId(app)) this.setData({ nearbyReadAccess: 'login' });
-      else if (!this._hidden && owner.split('|')[0] === String(session.memberId(app))) this.refresh(this.data.center);
+      if (!this._hidden) this.refresh(this.data.center);
       return true;
     }
     const code = session.failureStatus(res, statusCode);
     if (code !== 401 && code !== 403) return false;
     this._resetNearbyRead(nextOwner);
-    this.setData({ nearbyReadAccess: code === 401 ? 'login' : 'denied' });
+    this.setData({ nearbyReadAccess: code === 403 ? 'denied' : '', loadError: code === 401 });
     return true;
   },
 
@@ -320,12 +317,13 @@ Page({
     const raw = H.buildHangoutMarkers(items, this._icons, this._far)
       .concat(T.buildTeamMarkers(teams, this._icons, (this._far || {})[MAP_AVATAR_COLORS.cream] || fallback))
       .concat(this._poiMarkers(f)).concat(H.buildSelfMarker(this._me, this._selfIcon));
-    const places = (this._items || []).length + (this._pois || []).filter((p) => L.poiKind(p) !== 'shop').length;
-    const shops = (this._pois || []).filter((p) => L.poiKind(p) === 'shop').length;
+    const places = items.length + pois.filter((p) => L.poiKind(p) !== 'shop').length;
+    const shops = pois.filter((p) => L.poiKind(p) === 'shop').length;
+    const rows = this._listRows(items, teams, pois);
     this.setData({
       markers: L.edgeLod(P.applyPins(raw, this._pins), this._lodCenter || this.data.center, this._lodRadius || this._radius).filter((m) => !hide || m.id !== hide),
-      headerText: '附近' + (this._nearbyTeamsLoaded ? ' · ' + (this._teams || []).length + ' 支队伍' : '') + (places ? ' · ' + places + ' 处地点' : '') + (shops ? ' · ' + shops + ' 家商家' : ''), // v13 计数条;队伍没读到不写 0
-      listRows: this._listRows(items, teams, pois), listLoaded: !!(this._nearbyTeamsLoaded && this._nearbyTopicsLoaded), // N-01:两路都读到之前不说「附近暂无节点」、不写假的 0
+      headerText: !rows.length && this._nearbyTeamsLoaded && this._nearbyTopicsLoaded ? '附近 · 0 个节点' : '附近' + (this._nearbyTeamsLoaded ? ' · ' + teams.length + ' 支队伍' : '') + (places ? ' · ' + places + ' 处地点' : '') + (shops ? ' · ' + shops + ' 家商家' : ''), // v13 计数条;队伍没读到不写 0
+      listRows: rows, listLoaded: !!(this._nearbyTeamsLoaded && this._nearbyTopicsLoaded), // N-01:两路都读到之前不说「附近暂无节点」、不写假的 0
     });
     this._wantPins(items, teams, pois);
   },
@@ -623,6 +621,7 @@ Page({
   },
 
   apply() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('team', () => this.apply(), { owner: this, target: () => [this.data.current && this.data.current.teamId] })) return;
     const cur = this.data.current;
     if (!cur || this.data.busy) return;
     const that = this;
@@ -632,7 +631,7 @@ Page({
     modal.show({
       title: '申请加入这支队伍',
       editable: true,
-      placeholderText: '想跟队长说一句(可选):同场打算、几个人…',
+      placeholderText: '想跟队长说一句（可选）：同场打算、几个人…',
       maxlength: 200,
       confirmText: '提交申请',
       success(r) {
@@ -689,7 +688,7 @@ Page({
       dangerKey: 'team.reject',
       dangerParams: { name: (who && who.name) || '这位玩家' },
       // 危险确认组件不认 key 时会退回普通确认框,这里给足兜底文案,别让队长面对一个空白框
-      title: '拒绝这条申请?',
+      title: '拒绝这条申请？',
       content: '拒绝后对方不能再申请加入这支队伍。此操作不可撤销。',
       confirmText: '拒绝申请',
       danger: true,
@@ -814,18 +813,25 @@ Page({
   /* ===== 2026-10-22 业主:三类点位 · 筛选行 · 点位卡(docs/design/动效界面落地_20261022 D 段) ===== */
   /* 地标 / 商家点位:与队伍、主题活动并列的第三类。读不到只是少一层点,不影响队伍与主题。 */
   fetchPois(center, radius) {
+    const owner = this._prepareNearbyRead();
+    if (!owner) return;
     const that = this;
     const seq = (this._poiSeq = (this._poiSeq || 0) + 1);
     app.sendRequest({
       url: '/api/roam/pois', method: 'GET', hideLoading: true, autoErrorToast: false,
       data: { lat: center.lat, lng: center.lng, radius },
-      success(res) {
-        if (that._unloaded || seq !== that._poiSeq) return;
-        that._pois = res && res.code == 200 && isRecordList(res.data) ? res.data : [];
+      async success(res) {
+        if (that._nearbyOutcome('pois', owner, seq, res)) return;
+        const got = res && res.code == 200 ? PM.unwrapPois(res) : null;
+        const rows = got && isRecordList(got.rows) ? await resolvePlaceMedia(app, got.rows) : [];
+        if (!that._nearbyCurrent('pois', owner, seq)) return;
+        that._pois = rows.map(r => Object.assign({}, r, { coverImg: PM.coverKey(r) }));
+        // A4.3:服务端按距离截断时说明一声,不再静默丢掉远处的点
+        if (got && got.truncated && !that._truncTold) { that._truncTold = true; cyToast('只显示离你最近的 ' + that._pois.length + ' 处'); }
         that._syncLayerOptions(); that._syncMarkers();
-        that._queueIcons(() => (!that._unloaded && seq === that._poiSeq) ? that._genPoiDots() : false).then((made) => { if (made && !that._unloaded) that._syncMarkers(); });
+        that._queueIcons(() => that._nearbyCurrent('pois', owner, seq) ? that._genPoiDots() : false).then((made) => { if (made && that._nearbyCurrent('pois', owner, seq)) that._syncMarkers(); });
       },
-      fail() { if (that._unloaded || seq !== that._poiSeq) return; that._pois = []; that._syncLayerOptions(); that._syncMarkers(); },
+      fail(res, status) { if (that._nearbyOutcome('pois', owner, seq, res, status)) return; that._pois = []; that._syncLayerOptions(); that._syncMarkers(); },
     });
   },
 
@@ -913,7 +919,7 @@ Page({
       const c = L.poiCard(p), shop = c.kind === 'shop', tag = c.tags[0] || c.tag;
       return { kind: shop ? 'shop' : 'spot', id: c.id, chipLetter: tag.slice(0, 1), chipColor: shop ? '#FF9F0A' : '#34C759', chipText: tag, img: img(c.img), faces: [], countText: '', // ds-ok v13 商家橙 / 地点绿
         ribbon: '', title: c.title, subName: shop ? (p.merchantName || '') : c.tags.slice(1, 3).join(' · '), metaLine: c.address, metaStrong: c.found ? '到过' : '',
-        address: c.address, desc: c.desc, thumbs: [], rows: [{ k: '类型', v: c.tags.join(' · ') || c.tag }].concat(c.address ? [{ k: '地址', v: c.address }] : []),
+        address: c.address, desc: c.desc, sourceList: c.sourceList, srcOpen: false, thumbs: PM.galleryKeys(p).map(img).filter(Boolean), photoCredit: PM.credit(p), creditOpen: false, rows: [{ k: '类型', v: c.tags.join(' · ') || c.tag }].concat(c.address ? [{ k: '地址', v: c.address }] : []),
         // 官方地点(带玩法):背面展开就是完整详情 —— 相册左右滑、玩法、小红书、评价都在这张卡里,不再跳别的半屏
         official: !!p.templateId, game: null, reviews: [], reviewsLoaded: false, ratingText: '',
         primary: p.templateId ? '开始挑战' : '去这里', secondary: p.templateId ? '导航' : '', lat: c.lat, lng: c.lng };
@@ -949,24 +955,8 @@ Page({
     this.setData({ poiCard: card, poiCardIn: false, poiFlip: false, poiExpand: false, pcClip: '', sheet: 'poi', pcTop }); this._syncMarkers(); // 点开的那颗点位藏起来:卡片就是它长出来的
     this._poiInTimer = setTimeout(() => { if (!this._unloaded) this.setData({ poiCardIn: true }); }, 30);
     this.setData({ poiPhoto: 0 });
-    if (card.official) this._loadSpot(card.id);
-    const request = {}; this._poiGalleryRequest = request;
-    const poi = kind === 'poi' && (this._pois || []).find((row) => String(row.id) === String(id));
-    const url = poi && L.poiGalleryPath(poi.coverImg);
-    if (url) {
-      const identity = this._myIdentity();
-      app.sendRequest({ url, method: 'GET', auth: false, hideLoading: true, silentError: true, autoErrorToast: false,
-        success: (res) => {
-          if (this._unloaded || this._poiGalleryRequest !== request || this._myIdentity() !== identity
-              || this.data.sheet !== 'poi' || !this.data.poiCard || String(this.data.poiCard.id) !== String(id)) return;
-          const gallery = res && res.code === 200 && L.poiGallery(res.data, id, poi.coverImg);
-          if (gallery && this.data.poiCard.official) { if (gallery.credit) this.setData({ 'poiCard.photoCredit': gallery.credit }); return; } // 官方地点的相册以节点 galleryJson 为准
-          if (gallery && gallery.keys.length) this.setData({
-            'poiCard.thumbs': gallery.keys.map((key) => app.getImgUrl(key)).filter(Boolean), 'poiCard.photoCredit': gallery.credit,
-          });
-        },
-      });
-    }
+    this._poiGalleryRequest = {}; if (card.official) this._loadSpot(card.id);
+
   },
   /* 点正面:队伍进原来的队伍半屏;其余翻到背面 */
   onPoiFront() {
@@ -998,21 +988,22 @@ Page({
 
   /* 官方地点:节点详情(相册 / 玩法 / 完成状态 / 评分)+ 评价。只写回仍开着的同一张卡 */
   _loadSpot(id) {
-    const live = () => !this._unloaded && this.data.poiCard && this.data.poiCard.official && String(this.data.poiCard.id) === String(id);
+    const identity = this._myIdentity(), request = this._poiGalleryRequest;
+    const live = () => !!request && request === this._poiGalleryRequest && !this._unloaded && identity === this._myIdentity() && this.data.poiCard && this.data.poiCard.official && String(this.data.poiCard.id) === String(id);
     app.sendRequest({ url: '/api/city/nodes/' + id, method: 'GET', hideLoading: true, silentError: true, autoErrorToast: false,
-      success: (res) => {
-        const n = res && res.code == 200 && res.data;
-        if (!live() || !n) return;
-        let keys = [];
-        try { keys = JSON.parse(n.galleryJson || '[]'); } catch (e) { keys = []; }
-        const thumbs = (Array.isArray(keys) ? keys : []).filter((k) => typeof k === 'string' && k).map((k) => app.getImgUrl(k)).filter(Boolean);
+      success: async (res) => {
+        const raw = res && res.code == 200 && res.data;
+        if (!live() || !raw) return;
+        const n = (await resolvePlaceMedia(app, [raw]))[0];
+        if (!live()) return;
+        const thumbs = PM.galleryKeys(n).map(k => app.getImgUrl(k)).filter(Boolean);
         const steps = [n.photoRequired ? '到场拍照' : '', n.validationMethod === 3 ? '观察答题' : '', n.badgeCode ? '收藏勋章' : ''].filter(Boolean);
         this.setData({
-          'poiCard.thumbs': thumbs.length ? thumbs : this.data.poiCard.thumbs,
-          'poiCard.img': this.data.poiCard.img || thumbs[0] || '',
+          'poiCard.thumbs': PM.photosAllowed(n) ? thumbs : [],
+          'poiCard.img': PM.photosAllowed(n) ? app.getImgUrl(PM.coverKey(n) || thumbs[0] || '') : '',
           'poiCard.game': { title: n.templateTitle || '', desc: n.templateDesc || '', steps, completed: n.completed === true, radiusM: Number(n.radiusM) || 80 },
           'poiCard.quotes': L.poiQuotes(n.quotesJson),
-          'poiCard.photoCredit': typeof n.photoCredit === 'string' ? n.photoCredit.slice(0, 1000) : this.data.poiCard.photoCredit,
+          'poiCard.photoCredit': PM.credit(n),
           'poiCard.ratingText': n.ratingCount ? '★ ' + Number(n.averageRating || 0).toFixed(1) + ' · ' + n.ratingCount + ' 条评价' : '',
           'poiCard.metaStrong': n.completed === true ? '已完成挑战' : this.data.poiCard.metaStrong,
           'poiCard.primary': n.completed === true ? '投一张换一张' : '开始挑战',
@@ -1034,6 +1025,7 @@ Page({
   },
   /* 开始挑战:先在卡里确认到没到,不到就在卡上写一句,不弹窗;到了进挑战页(拍照 / 答题 / 勋章各一屏) */
   _startChallenge() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('roam', () => this._startChallenge(), { owner: this, target: () => [this.data.poiCard && this.data.poiCard.id] })) return;
     const c = this.data.poiCard;
     if (!c || this._navigating) return;
     if (c.game && c.game.completed) { // 完成过:接原来的「投一张换一张」城市签
@@ -1060,6 +1052,7 @@ Page({
   closeSpotCam() { this.setData({ camOpen: false }); },
   /* 拍到一张:先传上去拿地址,再进整屏玩法(答题 → 勋章);上传失败回到卡片,卡上写原因 */
   onSpotShot(e) {
+    if (app.ensureLoginFor && !app.ensureLoginFor('roam', () => this.onSpotShot(e), { owner: this, target: () => [this.data.poiCard && this.data.poiCard.id] })) return;
     const path = (e && e.detail && e.detail.path) || '';
     const c = this.data.poiCard;
     this.setData({ camOpen: false });
@@ -1094,6 +1087,7 @@ Page({
   onReviewStar(e) { this.setData({ 'poiCard.myStars': Number(e.currentTarget.dataset.n) || 0 }); },
   onReviewInput(e) { this.setData({ 'poiCard.myText': e.detail.value }); },
   onReviewSubmit() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('post', () => this.onReviewSubmit(), { owner: this, target: () => [this.data.poiCard && this.data.poiCard.id, this.data.poiCard && this.data.poiCard.myStars, this.data.poiCard && this.data.poiCard.myText] })) return;
     const c = this.data.poiCard;
     if (!c || c.reviewBusy) return;
     const text = String(c.myText || '').trim();
@@ -1112,6 +1106,8 @@ Page({
       fail: () => done(false), successStatusAbnormal: (res) => done(false, res && res.msg) });
   },
   onPoiImagePreview(e) { mediaPreview.open((this.data.poiCard || {}).thumbs || [], Number(e.currentTarget.dataset.index)); },
+  onPoiSources() { if (this.data.poiCard) this.setData({ 'poiCard.srcOpen': !this.data.poiCard.srcOpen }); },
+  onPoiSourceCopy(e) { const url = e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.url; if (url) wx.setClipboardData({ data: String(url) }); },
   onPoiPhotoCredit() { if (this.data.poiCard) this.setData({ 'poiCard.creditOpen': !this.data.poiCard.creditOpen }); },
   onPoiFlip() { this.setData({ poiFlip: !this.data.poiFlip, poiExpand: false }); },
   onPoiExpand() { this._expand(!this.data.poiExpand); },

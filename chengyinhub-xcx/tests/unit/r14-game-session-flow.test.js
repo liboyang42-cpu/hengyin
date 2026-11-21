@@ -237,6 +237,13 @@ for (const reply of [{ code: 200, data: {} }, { code: 500, msg: '读取失败' }
     const { page: p, requests } = setup(); finishHost(p);
     p.openFinish(); requests.at(-1).success(reply);
     await new Promise(resolve => setImmediate(resolve));
+    if (reply.code === 200) {
+      // 没配结局的路线也先给同一张「本局完成」卡,点「继续」才进通关卡(b4)
+      assert.equal(p.data.previewEnding.real, true);
+      assert.equal(p.data.previewEnding.show, true);
+      p.data.reducedMotion = true; p.continueLifeEnding();
+      await new Promise(resolve => setImmediate(resolve));
+    }
     assert.equal(p.data.showFinish, true);
     assert.equal(p._lifeEndingPendingScope, '');
   });

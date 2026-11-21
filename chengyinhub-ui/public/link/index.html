@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>城瘾</title>
+<!-- ONB-6. Public landing page for every shared content path the AASA file claims (club, topic, activity, template,
+     post, place). With the app installed iOS opens the app and this page never loads. Without the app, or inside
+     WeChat's browser (where universal links do not open apps), it offers the App Store and the same page in the
+     WeChat mini program, instead of the operations console login. Same pattern as /door.
+     Needs the owner's nginx rule that serves this file for those paths (see docs/roadmap/x-codes-links/RESULT.md). -->
+<style>
+  :root { color-scheme: light dark; --bg: #0e0f12; --fg: #f2f2f4; --muted: #9a9ca5; --accent: #f2f2f4; --on-accent: #0e0f12; }
+  @media (prefers-color-scheme: light) { :root { --bg: #f6f6f8; --fg: #16171a; --muted: #5d606a; --accent: #16171a; --on-accent: #ffffff; } }
+  body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); color: var(--fg);
+         font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; }
+  main { width: 100%; max-width: 420px; padding: 32px 16px; box-sizing: border-box; text-align: center; }
+  h1 { font-size: 24px; margin: 0 0 8px; }
+  p { color: var(--muted); margin: 0 0 24px; line-height: 1.5; }
+  a.btn { display: block; padding: 14px; border-radius: 12px; background: var(--accent); color: var(--on-accent); text-decoration: none; font-weight: 600; margin-bottom: 12px; }
+  a.btn.secondary { background: transparent; color: var(--fg); border: 1px solid var(--muted); }
+  .soon { padding: 14px; border-radius: 12px; border: 1px solid var(--muted); color: var(--muted); margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<main>
+  <h1 lang="zh-Hans">城瘾</h1>
+  <p id="desc">内容需要在 App 或小程序中查看<br><span lang="en">Open this in the app or the mini program</span></p>
+  <div id="app"><div class="soon">城瘾 App 即将上架 · Coming soon to the App Store</div></div>
+  <div id="mini"></div>
+</main>
+<script>
+  (function () {
+    // Only the content pages the app shares; the id key the share link carries (poi-detail also accepts poiId).
+    var PAGES = {
+      '/pages/activity/detail/index': 1, '/pages/club/detail/index': 1, '/pages/topic/index/index': 1,
+      '/pages/templatedetail/templatedetail': 1, '/pages/square/detail/index': 1, '/subpackageRoam/poi-detail/index': 1
+    };
+    function param(name) {
+      var m = new RegExp('(?:^|[?&])' + name + '=([^&#]*)').exec(location.search);
+      return m ? m[1] : '';
+    }
+    function button(text, href, secondary) {
+      var a = document.createElement('a');
+      a.className = secondary ? 'btn secondary' : 'btn'; a.href = href; a.textContent = text;
+      return a;
+    }
+    function get(url, done) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', url);
+      xhr.onload = function () { try { done(JSON.parse(xhr.responseText)); } catch (e) { /* keep the honest state */ } };
+      xhr.send();
+    }
+
+    get('/prod-api/api/growth-loops/app-handoff', function (res) {
+      var url = res && res.data && res.data.appStoreUrl;
+      if (typeof url === 'string' && url.indexOf('https://apps.apple.com/') === 0) {
+        var box = document.getElementById('app'); box.innerHTML = '';
+        box.appendChild(button('用城瘾 App 打开 · Open in the Chengyin app', url, false));
+      }
+    });
+
+    var path = location.pathname.replace(/\/+$/, '');
+    var id = param('id') || (path === '/subpackageRoam/poi-detail/index' ? param('poiId') : '');
+    if (!PAGES[path] || !/^[1-9][0-9]{0,17}$/.test(id)) return;
+    get('/prod-api/api/share/url-link?path=' + encodeURIComponent(path) + '&id=' + id, function (res) {
+      var url = res && res.data && res.data.available && res.data.url;
+      if (typeof url === 'string' && url.indexOf('https://') === 0) {
+        document.getElementById('mini').appendChild(button('在微信小程序中打开 · Open in the WeChat mini program', url, true));
+      }
+    });
+  })();
+</script>
+</body>
+</html>

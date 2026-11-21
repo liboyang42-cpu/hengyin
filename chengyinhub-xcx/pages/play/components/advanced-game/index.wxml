@@ -5,7 +5,7 @@
   <view class="ag__head"><view><text class="ag__title">{{node.gameTitle || node.name}}</text></view><view class="ag__close" bindtap="close" aria-role="button" aria-label="关闭高级玩法" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="44" /></view></view>
   <scroll-view scroll-y class="ag__scroll">
     <view class="ag__loading" wx:if="{{loading}}">正在准备玩法…</view>
-    <!-- unknown 不是失败：不给「重试」,只给「再核对一次」,否则用户一点就是重复写入 -->
+    <!-- 只重放持久化原意图，版本和幂等键不变。 -->
     <view class="ag__status" wx:if="{{unknown}}" bindtap="resolveUnknown" aria-role="button" aria-label="{{unknownText}}" hover-class="ag__press" hover-stay-time="80">
       <view class="ag__status-dot"></view>
       <view class="ag__status-body">
@@ -13,6 +13,7 @@
         <text class="ag__status-act" wx:if="{{!readingBack}}">再确认一次</text>
       </view>
     </view>
+    <cy-btn wx:if="{{unknown && photoRetryable}}" variant="secondary" disabled="{{readingBack || acting}}" bindtap="retryOriginalPhoto">重试原照片</cy-btn>
     <view class="ag__error" wx:if="{{error && !unknown}}" bindtap="start" hover-class="ag__press" hover-stay-time="80">{{error}} · 点击重新读取</view>
     <block wx:if="{{state}}">
       <!-- 状态行给玩家看的是中文,不露 RUNNING / COMPLETED 这类内部状态名;没得分时不挂「得分 0」(实走 A15 复核) -->

@@ -227,6 +227,10 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     @Autowired
     private ObjectProvider<com.chengyinhub.business.service.ICmsTopicService> cmsTopicServiceProvider;
 
+    /** W7 SOC-7：活动审核结论提交后，把频道里等审的活动卡片发出(过审)或关闭(驳回)。懒取，避免依赖环。 */
+    @Autowired(required = false)
+    private ObjectProvider<com.chengyinhub.business.channelevent.ChannelEventService> channelEventServiceProvider;
+
     /** ObjectProvider 打破评价举报上报 IAuditTaskService 与平台复核回写之间的依赖环。 */
     @Autowired
     private ObjectProvider<com.chengyinhub.business.service.IMerchantReviewService> merchantReviewServiceProvider;
@@ -1995,6 +1999,31 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         return null;
     }
 
+    /**
+     * W7 SOC-7：活动过审后，频道里等审的活动卡片立刻出现(原先要等有人再打开活动列表)；驳回则关闭。
+     * 在审核结论提交后另起事务执行；卡片发送失败只记日志，绝不影响审核结论。
+     */
+    private void syncChannelEventCardAfterCommit(Long activityId) {
+        if (activityId == null || activityId <= 0 || channelEventServiceProvider == null) return;
+        Runnable sync = () -> {
+            try {
+                com.chengyinhub.business.channelevent.ChannelEventService events = channelEventServiceProvider.getIfAvailable();
+                if (events != null) events.syncByActivity(activityId);
+            } catch (RuntimeException e) {
+                logger.warn("频道活动卡片审核后同步失败 activityId={}", activityId);
+            }
+        };
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isSynchronizationActive()) {
+            org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                    new org.springframework.transaction.support.TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() { sync.run(); }
+                    });
+        } else {
+            sync.run();
+        }
+    }
+
     private void applyCommercialReviewLifecycle(AuditTask task, Integer decision) {
         if (AuditTask.BIZ_TOPIC_SALE_REVIEW.equals(task.getBizType())) {
             if (AuditTask.STATUS_APPROVED.equals(decision)) {
@@ -2249,6 +2278,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 cmsActivityMapper.updateCmsActivity(a);
                 // AUDIT-INT-7:人工审过作者重新提交的版本,解除图片内容安全留置(申诉/撤销到不了这里)。
                 if (up) cmsActivityMapper.clearContentSafetyHold(bizId);
+                syncChannelEventCardAfterCommit(bizId);
             } else if (AuditTask.BIZ_OFFICIAL_EVENT.equals(bizType)) {
                 // 官方活动先审后发:过审→上架/排期;驳回→保持不公开
                 officialEventServiceProvider.getObject().applyAuditDecision(bizId, up, reasonText, task.getSubmitterId());

@@ -49,7 +49,7 @@ public class NpcDialogueServiceImpl implements INpcDialogueService
     private final AiGatewayService aiGatewayService;
 
     @Autowired(required = false)
-    private E2eTestNpcDialogueResponder e2eTestNpcDialogueResponder;
+    private com.chengyinhub.business.service.NpcDialogueTestResponder e2eTestNpcDialogueResponder;
 
     @Autowired
     public NpcDialogueServiceImpl(NpcProfileMapper npcProfileMapper,

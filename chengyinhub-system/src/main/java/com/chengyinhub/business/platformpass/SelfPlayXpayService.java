@@ -38,6 +38,10 @@ import java.util.Map;
  */
 @Service
 public class SelfPlayXpayService {
+    /** R9 BE-26: with two nodes only the scheduling leader runs this @Scheduled method. */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.common.core.scheduling.SchedulingLeadership schedulingLeadership;
+
     private static final Logger log = LoggerFactory.getLogger(SelfPlayXpayService.class);
     public static final int SIGNED = 0, PAID = 1, REFUNDING = 2, REFUNDED = 3, PAID_CLOSED = 4, UNPAID_RELEASED = 5;
 
@@ -392,6 +396,7 @@ public class SelfPlayXpayService {
     @Scheduled(fixedDelayString = "${chengyin.selfplay.xpay.reconcile-delay-ms:60000}",
             initialDelayString = "${chengyin.selfplay.xpay.reconcile-delay-ms:60000}")
     public void reconcile() {
+        if (!com.chengyinhub.common.core.scheduling.SchedulingLeadership.allows(schedulingLeadership)) return; // R9 BE-26: leader node only
         if (!canSign() || registrations == null) return;
         try {
             reconcileBatch();

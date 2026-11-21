@@ -24,7 +24,7 @@ const tagLibrary = require('../../../utils/tag-library.js');
 // saver 指明这一条存去哪个接口 —— 三个接口的白名单不同,存错地方会静默丢字段。
 const FIELDS = {
   name:        { label: '店铺名称', placeholder: '店铺名称(必填)', saver: 'brand' },
-  cityRole:    { label: '城市角色名', placeholder: '如:巷口的夜间补给站', saver: 'decor' },
+  cityRole:    { label: '城市角色名', placeholder: '如：巷口的夜间补给站', saver: 'decor' },
   // CU-M-72:入口与卡片写「一句话介绍」,label 是弹层标题与关闭钮无障碍名的唯一真源,别在这改名夹英文
   slogan:      { label: '一句话介绍', placeholder: '一句话说清你的店', saver: 'decor' },
   preference: { label: '经营类目', placeholder: '如 餐饮 · 咖啡', saver: 'brand', max: 100 },
@@ -77,10 +77,10 @@ const tagIconSrc = label => (tagLibrary.decorateTags([label], 'merchant', tagLib
 
 // 品牌故事提示问题(引导商家,不自动生成内容)
 const STORY_HINTS = [
-  '你的店和这条街有什么关系?',
-  '用户第一次来最应该注意什么?',
-  '店里有没有一个可以被发现的小细节?',
-  '你希望用户完成任务后记住哪句话?'
+  '你的店和这条街有什么关系？',
+  '用户第一次来最应该注意什么？',
+  '店里有没有一个可以被发现的小细节？',
+  '你希望用户完成任务后记住哪句话？'
 ];
 
 function requestText(error, fallback) {
@@ -116,6 +116,17 @@ function readBackBusinessStatus(expected, success) {
     },
     fail: function () { success({ code: 'READBACK', msg: '状态更新中，请刷新' }); },
   });
+}
+
+const TIERS = [
+  { key: 'premium_template', name: '高级模板', desc: '行业高级视觉 · 更多图位' },
+  { key: 'promotion_slot', name: '推广曝光位', desc: '地图/搜索/官方活动优先展示' },
+  { key: 'brand_home', name: '品牌主页', desc: '定制视觉 · 官方认证 · 数据报告' },
+  { key: 'custom_event', name: '活动定制', desc: '人工策划 · 定制路线与权益组合' }
+];
+// R1 MKT-01:推广曝光位下架后不在可开通列表出现,已有授予记录仍用 TIERS 取名。
+function saleTiersOf(tiers, promotionSlotOnSale) {
+  return tiers.filter(t => promotionSlotOnSale === true || t.key !== 'promotion_slot');
 }
 
 Page({
@@ -178,12 +189,11 @@ Page({
     checkoutState: 'idle', // idle | submitting | paying | verifying | unknown | success | failed
     featuredState: 'idle',  // idle | loading | ready | error
     featuredError: '',
-    tiers: [
-      { key: 'premium_template', name: '高级模板', desc: '行业高级视觉 · 更多图位' },
-      { key: 'promotion_slot', name: '推广曝光位', desc: '地图/搜索/官方活动优先展示' },
-      { key: 'brand_home', name: '品牌主页', desc: '定制视觉 · 官方认证 · 数据报告' },
-      { key: 'custom_event', name: '活动定制', desc: '人工策划 · 定制路线与权益组合' }
-    ]
+    tiers: TIERS,
+    // R1 MKT-01:推广曝光位下架(merchant.promotionSlot.onSale 默认 false)。tiers 保留全量用于给
+    // 已有授予记录起名;可开通列表只渲染 saleTiers。服务端开关读不到时按下架处理。
+    promotionSlotOnSale: false,
+    saleTiers: saleTiersOf(TIERS, false)
   },
 
   // 页内隐私弹窗:没有它 app.js 会回退到 navigateTo(/pages/privacy/index),
@@ -572,10 +582,19 @@ Page({
       this.setData({ capabilityState: typeof enabled === 'boolean' ? 'ready' : 'error',
         chargeEnabled: typeof enabled === 'boolean' ? enabled : null });
     };
+    const applySale = (onSale) => {
+      if (!this._commerceCurrent(scope) || epoch !== this._capabilityEpoch) return;
+      const promotionSlotOnSale = onSale === true;
+      this.setData({ promotionSlotOnSale,
+        saleTiers: saleTiersOf(this.data.tiers, promotionSlotOnSale) });
+    };
     app.sendRequest({
       hideLoading: true, autoErrorToast: false,
       url: '/api/merchant/commerce/capabilities', method: 'POST',
-      success(res) { finish(res && res.code == 200 && res.data ? res.data.selfCheckoutEnabled : null); },
+      success(res) {
+        applySale(res && res.code == 200 && res.data ? res.data.promotionSlotOnSale : false);
+        finish(res && res.code == 200 && res.data ? res.data.selfCheckoutEnabled : null);
+      },
       successStatusAbnormal() { finish(null); }, fail() { finish(null); }
     });
     this.loadActiveSubs();
@@ -708,6 +727,7 @@ Page({
   },
   tapTier(e) {
     const bizType = e.currentTarget.dataset.key;
+    if (bizType === 'promotion_slot' && !this.data.promotionSlotOnSale) { toast('推广曝光位已下架'); return; }
     if (bizType !== 'brand_home' && this._capabilityScope !== this._commerceScope()) { this.loadSubs(); return; }
     if (bizType !== 'brand_home' && this.data.capabilityState !== 'ready') {
       toast(this.data.capabilityState === 'loading' ? '开通能力读取中' : '开通能力读取失败，请重试');

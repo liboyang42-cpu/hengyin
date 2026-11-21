@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
@@ -41,7 +43,7 @@ public class ApiMerchantOperatorController extends BaseController {
     @PostMapping("/access/me")
     public AjaxResult accessMe() {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             MerchantAccessContext access = merchantAccessService.resolve(principal);
             if (access == null) {
@@ -112,7 +114,7 @@ public class ApiMerchantOperatorController extends BaseController {
     @PostMapping("/operators/roles")
     public AjaxResult roles() {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             merchantAccessService.require(principal, MerchantPermission.OPERATOR_MANAGE);
             List<Map<String, Object>> roles = new ArrayList<>();
@@ -132,7 +134,7 @@ public class ApiMerchantOperatorController extends BaseController {
     @PostMapping("/operators/list")
     public AjaxResult team() {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try { return success(merchantOperatorService.team(principal)); }
         catch (ServiceException e) { return serviceError(e); }
     }
@@ -140,7 +142,7 @@ public class ApiMerchantOperatorController extends BaseController {
     @PostMapping("/operators/invite")
     public AjaxResult invite(@RequestBody(required = false) MerchantOperatorInviteRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             return success(merchantOperatorService.invite(principal,
                     request == null ? null : request.getRoleCode(),
@@ -152,7 +154,7 @@ public class ApiMerchantOperatorController extends BaseController {
     @PostMapping("/operators/invite/preview")
     public AjaxResult invitePreview(@RequestBody(required = false) MerchantOperatorAcceptRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             Map<String, Object> preview = merchantOperatorService.invitePreview(principal,
                     request == null ? null : request.getToken());
@@ -167,7 +169,7 @@ public class ApiMerchantOperatorController extends BaseController {
     @PostMapping("/operators/invite/accept")
     public AjaxResult accept(@RequestBody(required = false) MerchantOperatorAcceptRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             return success(merchantOperatorService.accept(principal,
                     request == null ? null : request.getToken(),
@@ -178,7 +180,7 @@ public class ApiMerchantOperatorController extends BaseController {
     @PostMapping("/operators/role")
     public AjaxResult updateRole(@RequestBody(required = false) MerchantOperatorRoleRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             return success(merchantOperatorService.updateRole(principal,
                     request == null ? null : request.getOperatorId(),
@@ -191,7 +193,7 @@ public class ApiMerchantOperatorController extends BaseController {
     @PostMapping("/operators/remove")
     public AjaxResult remove(@RequestBody(required = false) MerchantOperatorRemoveRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             return success(merchantOperatorService.remove(principal,
                     request == null ? null : request.getOperatorId(),
@@ -204,7 +206,7 @@ public class ApiMerchantOperatorController extends BaseController {
     @PostMapping("/operators/invite/revoke")
     public AjaxResult revokeInvite(@RequestBody(required = false) MerchantOperatorInviteRevokeRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             return success(merchantOperatorService.revokeInvite(principal,
                     request == null ? null : request.getInviteId(),

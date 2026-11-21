@@ -97,12 +97,12 @@ test('漫游 marker:照片图钉 + 仅参与商铺贴店名;没照片是深色�
     poi(6, 31.213, 121.413, { photo: MOCK, imgUrl: MOCK }),
   ];
   page._syncMarkers();
-  const byId = Object.fromEntries(page.data.markers.map((m) => [m.id, m]));
+  const byId = Object.fromEntries(page.data.markers.filter(m => page._markerTargets.get(m.id).kind === 'poi').map((m) => [page._markerTargets.get(m.id).target.id, m]));
   assert.ok(!byId[5], '更远的不画');
   assert.equal(byId[4].width, pins.EDGE_SIZE, '近出屏的缩小贴边');
   assert.ok(byId[4].longitude < 121.42);
   [1, 2, 3, 6].forEach((id) => { assert.equal(byId[id].iconPath, 'dark.png'); assert.equal(byId[id].callout, undefined, '地图上不挂文字气泡'); });
-  const pinById = Object.fromEntries(page.data.explorePins.map((p) => [p.id, p]));
+  const pinById = Object.fromEntries(page.data.explorePins.map((p) => [page._markerTargets.get(p.id).target.id, p]));
   assert.deepEqual(Object.keys(pinById).map(Number).sort(), [1, 2, 4]);
   assert.deepEqual([pinById[4].size, pinById[4].label], [pins.EDGE_SIZE, ''], '贴边的是小照片,不挂店名');
   assert.equal(pinById[1].label, '店1', '参与商铺贴店名');
@@ -124,7 +124,8 @@ test('同一份 markers 不重发 setData;拉远换成小圆点与附近点数',
   page._mapScale = 13;
   page._syncMarkers();
   assert.ok(page.data.markers.length > 0);
-  assert.ok(page.data.markers.every((m) => m.iconPath === 'dot.png'));
+  // A2.4:远景圆点按分类着色,叠在同一屏幕格的聚合并写数量
+  assert.ok(page.data.markers.every((m) => /^\/images\/roam\/pin\/dot-[a-z]+\.png$/.test(m.iconPath)));
   assert.equal(page.data.pinCountLabel, '附近 12 个地点');
 });
 
@@ -137,7 +138,8 @@ test('点图钉:地图居中放大 + 地点卡;点卡片才进原来的详情;�
   const opened = [];
   page.openScene = (id, params) => opened.push([id, params]);
   page._pois = [poi(700005, 31.212, 121.41, { _roamId: 5, isCityNode: true, merchantId: 9, photo: 'https://img/5.jpg', address: '山阴路 128 号' })];
-  page.onMarkerTap({ detail: { markerId: 700005 } });
+  page._syncMarkers();
+  page.onMarkerTap({ detail: { markerId: page._markerIds('poi', 'roam:5') } });
   assert.deepEqual(moved, [{ latitude: 31.212, longitude: 121.41 }]);
   const card = page.data.placeCard;
   assert.equal(card.name, '店700005');
@@ -226,7 +228,8 @@ test('普通地标不是据点:地点卡不给分享、不读评分', () => {
   const page = loadRoamPage();
   page._mapCtx = { moveToLocation() {} };
   page._pois = [poi(700014, 31.21, 121.41, { _roamId: 14, isCityNode: false, photo: 'https://img/14.jpg' })];
-  page.onMarkerTap({ detail: { markerId: 700014 } });
+  page._syncMarkers();
+  page.onMarkerTap({ detail: { markerId: page._markerIds('poi', 'roam:14') } });
   assert.deepEqual([page.data.placeCard.shareKind, page.data.placeCard.shareId], ['', '']);
 });
 
@@ -243,6 +246,33 @@ test('第九轮 m1 第 9 项:漫游地点卡与商家横滑卡的地址点开地
   global.wx = { openLocation: (o) => opened.push(o) };
   try { page.onAddrTap({ currentTarget: { dataset: { lat: 31.2, lng: 121.4, name: '店', address: '路' } } }); } finally { global.wx = prev; }
   assert.equal(opened[0].latitude, 31.2);
+});
+
+test('入口地点与主地图地点的地址按钮复用全站入口,校验坐标并保留名称地址', async () => {
+  const { handlerSlices, expandHandlerBody, inferActionClass } = require('../../scripts/uiaudit/build-action-ledger');
+  const slices = handlerSlices(path.resolve(__dirname, '../../pages/roam/index.js'));
+  for (const handler of ['navEntryPlace', 'navPaceCard']) {
+    assert.equal(inferActionClass(handler, expandHandlerBody(handler, slices, null, { modules: true }), new Set()), 'external');
+  }
+  const page = loadRoamPage();
+  const opened = [];
+  const prev = global.wx;
+  global.wx = { openLocation: (o) => opened.push(o) };
+  try {
+    page.data.entryPlace = { lat: '31.2', lng: '121.4', name: '入口地点', address: '甲路' };
+    page.data.paceCard = { lat: 31.3, lng: 121.5, title: '主地图地点', address: '乙路' };
+    assert.equal(await page.navEntryPlace(), true);
+    assert.equal(await page.navPaceCard(), true);
+    assert.deepEqual(opened, [
+      { latitude: 31.2, longitude: 121.4, name: '入口地点', address: '甲路', scale: 17 },
+      { latitude: 31.3, longitude: 121.5, name: '主地图地点', address: '乙路', scale: 17 },
+    ]);
+    page.data.entryPlace.lat = 91;
+    page.data.paceCard.lng = 181;
+    assert.equal(await page.navEntryPlace(), false);
+    assert.equal(await page.navPaceCard(), false);
+    assert.equal(opened.length, 2);
+  } finally { global.wx = prev; }
 });
 
 // 第九轮 m2 补充第 2 项:任意缩放下图钉互不重叠,参与商铺优先;46 枚与 200 枚都核对
@@ -298,7 +328,7 @@ test('第九轮 m2 补充第 3 项:拉远是热度——叠得越多越大越亮
   assert.deepEqual([1, 3, 9].map((n) => pins.heatLevel(n).level), [1, 2, 3]);
   const js = read('pages/roam/index.js');
   assert.match(js, /this\._icons\['pin-heat' \+ lv\] = await save\(\);/);
-  assert.match(js, /iconPath: icon, zIndex: 2 \+ heat\.level/);
+  assert.match(js, /placeMap\.buildPins\(dotRows, \{ soloDots: true, scale: pinScale, region: layoutRegion/);
 });
 
 test('rig 走查修正:玩家自己的点也占位,图钉不压蓝点', () => {

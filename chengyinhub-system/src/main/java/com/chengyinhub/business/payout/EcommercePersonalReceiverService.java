@@ -60,30 +60,58 @@ public class EcommercePersonalReceiverService {
         }
         if (session == null || !before.openid().equals(session.getOpenId()))
             throw new ServiceException("PERSONAL_RECEIVER_IDENTITY_MISMATCH");
+        return completeBind(memberId, clubId, appid, transaction, before, session.getOpenId(), false);
+    }
+
+    /**
+     * R6b (FLOW-13): bind from the app. The openid was proven in the mini-program by a fresh wx.login code against
+     * a short-lived binding code issued to this app account, and the app account then confirmed it. If the account
+     * already carries a mini-program openid, the proven one must be that same openid.
+     */
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER)
+    public Map<String, Object> bindFromAppCode(Long memberId, Long clubId, String provenOpenid) {
+        requireMember(memberId);
+        if (provenOpenid == null || provenOpenid.isBlank()) throw new ServiceException("WECHAT_FRESH_CODE_REQUIRED");
+        String appid = switches.spAppid();
+        if (appid == null || appid.isBlank() || !appid.equals(sessions.miniAppId()))
+            throw new ServiceException("PERSONAL_RECEIVER_APPID_MISMATCH");
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
+            throw new IllegalStateException("PERSONAL_RECEIVER_EXTERNAL_CALL_REQUIRES_NO_TRANSACTION");
+        var transaction = new org.springframework.transaction.support.TransactionTemplate(transactions);
+        BindingScope before = transaction.execute(status -> appBindingScope(memberId, clubId, appid, provenOpenid));
+        return completeBind(memberId, clubId, appid, transaction, before, provenOpenid, true);
+    }
+
+    private Map<String, Object> completeBind(Long memberId, Long clubId, String appid,
+            org.springframework.transaction.support.TransactionTemplate transaction, BindingScope before,
+            String openid, boolean fromApp) {
+        if (before == null || !openid.equals(before.openid()))
+            throw new ServiceException("PERSONAL_RECEIVER_IDENTITY_MISMATCH");
         boolean live = switches.personalClubEnabled();
         EcomPersonalReceiver earlier = before.receiver();
         if (earlier != null && !(live && "CONSENTED".equals(earlier.getState())))
-            return verifiedView(earlier, session.getOpenId());
+            return verifiedView(earlier, openid);
         Date consentedAt = new Date();
         if (live) {
             try {
-                gateway.addPersonalReceiver(session.getOpenId(), appid);
+                gateway.addPersonalReceiver(openid, appid);
             } catch (RuntimeException e) {
                 throw new ServiceException("PERSONAL_RECEIVER_PROVIDER_NOT_CONFIRMED");
             }
         }
         return transaction.execute(status -> {
-            BindingScope current = bindingScope(memberId, clubId, appid);
-            if (!session.getOpenId().equals(current.openid()))
+            BindingScope current = fromApp ? appBindingScope(memberId, clubId, appid, openid)
+                    : bindingScope(memberId, clubId, appid);
+            if (!openid.equals(current.openid()))
                 throw new ServiceException("PERSONAL_RECEIVER_IDENTITY_MISMATCH");
             EcomPersonalReceiver existing = current.receiver();
             if (existing != null && !(live && "CONSENTED".equals(existing.getState())))
-                return verifiedView(existing, session.getOpenId());
+                return verifiedView(existing, openid);
             EcomPersonalReceiver receiver = new EcomPersonalReceiver();
-            receiver.setMemberId(memberId); receiver.setAppid(appid); receiver.setOpenid(session.getOpenId());
+            receiver.setMemberId(memberId); receiver.setAppid(appid); receiver.setOpenid(openid);
             receiver.setConsentedAt(consentedAt); receiver.setVerifiedAt(new Date());
             if (existing != null) {
-                if (!session.getOpenId().equals(existing.getOpenid()))
+                if (!openid.equals(existing.getOpenid()))
                     throw new ServiceException("PERSONAL_RECEIVER_IDENTITY_IMMUTABLE");
                 receiver.setConsentedAt(existing.getConsentedAt());
                 receiver.setState("VERIFIED");
@@ -126,6 +154,17 @@ public class EcommercePersonalReceiverService {
         if (member == null || member.getWxOpenId() == null || member.getWxOpenId().isBlank())
             throw new ServiceException("WECHAT_MINI_IDENTITY_REQUIRED");
         return new BindingScope(member.getWxOpenId(), receivers.selectByMemberAndAppidForUpdate(memberId, appid));
+    }
+
+    /** App binding: the account's own mini-program openid wins; without one, the proven openid is the identity. */
+    private BindingScope appBindingScope(Long memberId, Long clubId, String appid, String provenOpenid) {
+        if (!memberId.equals(members.lockActiveMemberById(memberId))) throw new ServiceException("MEMBER_UNAVAILABLE");
+        requireOwner(memberId, clubId, true);
+        UmsMember member = members.selectUmsMemberById(memberId);
+        if (member == null) throw new ServiceException("MEMBER_UNAVAILABLE");
+        String own = member.getWxOpenId();
+        String identity = own == null || own.isBlank() ? provenOpenid : own;
+        return new BindingScope(identity, receivers.selectByMemberAndAppidForUpdate(memberId, appid));
     }
 
     private Map<String, Object> verifiedView(EcomPersonalReceiver receiver, String openid) {

@@ -555,7 +555,7 @@ public class ExternalGameMonetizationService {
     public Map<String, Object> nodeBindingView(long nodeId) {
         List<Map<String, Object>> rows = jdbc.queryForList(
                 "SELECT b.node_id, b.topic_id, b.game_id, b.min_score, b.require_pass, b.enabled, "
-                        + "COALESCE(s.name, b.game_id) AS game_name, s.version "
+                        + "COALESCE(s.name, b.game_id) AS game_name, s.version, g.approved_submission_id "
                         + "FROM external_game_node_binding b "
                         + "LEFT JOIN external_game g ON g.game_id = b.game_id "
                         + "LEFT JOIN external_game_submission s ON s.id = g.approved_submission_id "
@@ -574,6 +574,9 @@ public class ExternalGameMonetizationService {
         out.put("version", r.get("version"));
         out.put("minScore", (int) num(r.get("min_score")));
         out.put("requirePass", num(r.get("require_pass")) == 1L);
+        // G3: false while the game has no listed version (taken down or not yet approved); the app explains why
+        // with GET /api/external-game/catalog/{gameId}/availability.
+        out.put("listed", r.get("approved_submission_id") != null);
         return out;
     }
 
@@ -815,7 +818,19 @@ public class ExternalGameMonetizationService {
         return hmacSha256Hex(serverSecret, "EXTGAME_RESULT_KEY|" + gameId);
     }
 
+    /** W7 GAME-9: creator-provisioned per-game keys, tried before the derived key. Optional. */
+    @Autowired(required = false)
+    private ExternalGameResultKeyService resultKeys;
+
+    void setResultKeys(ExternalGameResultKeyService resultKeys) {
+        this.resultKeys = resultKeys;
+    }
+
     boolean verifyAuthoritySignature(String gameId, String canonical, String signature) {
+        String stored = resultKeys == null ? null : resultKeys.activeKey(gameId);
+        if (stored != null && constantTimeEquals(hmacSha256Hex(stored, canonical), signature)) {
+            return true;
+        }
         if (resultSecret != null
                 && constantTimeEquals(hmacSha256Hex(gameResultKey(resultSecret, gameId), canonical), signature)) {
             return true;
@@ -974,10 +989,17 @@ public class ExternalGameMonetizationService {
         } else if ("POINTS".equals(mode)) {
             points = validPlays * perPlayPoints;
             if (points > 0) {
-                if (walletBridge != null) {
-                    walletBridge.creditPoints(creatorId, points, bKey, "外部游戏流量日结积分: " + gameId + " (" + sqlDate + ")");
-                }
                 status = "SETTLED";
+                if (walletBridge != null) {
+                    // G3: creator traffic points stay inside the points-governance caps (event_type 99, PLAY).
+                    ExternalGameWalletBridge.PointsCredit credit = walletBridge.creditPointsGoverned(
+                            creatorId, points, bKey, "外部游戏流量日结积分: " + gameId + " (" + sqlDate + ")");
+                    if (credit.credited() <= 0) {
+                        status = "SKIPPED";
+                        note = "POINTS_GOVERNANCE_" + credit.outcome();
+                        points = 0;
+                    }
+                }
             } else {
                 note = "ZERO_RATE";
             }

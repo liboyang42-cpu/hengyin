@@ -14,7 +14,14 @@ const PREFIX = 'cy_story_resume:';
 
 function keyOf(scope) {
   const base = pausedRunStorageKey(scope);
-  return base ? PREFIX + base : '';
+  const runId = runIdOf(scope);
+  return base && runId ? PREFIX + base + ':r' + runId : '';
+}
+
+/** E-C2:续玩状态属于哪一局(routeSessionId)。记录上盖着局号,换了新一局就当没有,不把上一局的开场 / 章节门 / finished / 草稿带进来。
+ *  局号未确定时不读写，旧的仅按主题保存的状态不能让新一局跳过开场。 */
+function runIdOf(scope) {
+  return String((scope && scope.routeSessionId) == null ? '' : scope.routeSessionId).trim();
 }
 
 function read(scope) {
@@ -22,20 +29,32 @@ function read(scope) {
   if (!key) return {};
   try {
     const value = wx.getStorageSync(key);
-    return value && typeof value === 'object' ? value : {};
+    if (!value || typeof value !== 'object') return {};
+    const runId = runIdOf(scope);
+    if (String(value.runId || '') !== runId) return {};
+    return value;
   } catch (e) { return {}; }
 }
 
 function patch(scope, fields) {
   const key = keyOf(scope);
   if (!key) return;
-  try { wx.setStorageSync(key, Object.assign(read(scope), fields)); } catch (e) { /* 存不上就算了 */ }
+  const runId = runIdOf(scope);
+  try { wx.setStorageSync(key, Object.assign(read(scope), fields, runId ? { runId } : {})); } catch (e) { /* 存不上就算了 */ }
+}
+
+/** 新一局 / 通关收尾时清掉这一局的续玩状态。 */
+function clear(scope) {
+  const key = keyOf(scope);
+  if (!key) return;
+  try { wx.removeStorageSync(key); } catch (e) { /* 清不掉就算了,下一局的局号对不上也读不到 */ }
 }
 
 /** 玩法草稿的 key:同一局同一站一份。没有身份时返回空串,组件据此不存。 */
 function draftKey(scope, nodeId) {
   const key = keyOf(scope);
-  return key && nodeId != null ? key + ':n' + nodeId : '';
+  if (!key || nodeId == null) return '';
+  return key + ':n' + nodeId;
 }
 
-module.exports = { read, patch, draftKey };
+module.exports = { read, patch, clear, draftKey };

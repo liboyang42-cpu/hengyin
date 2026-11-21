@@ -74,7 +74,7 @@ test('通过/拒绝的确认层都写上申请人姓名，不再用「这一项�
   const reject = openWithRequests(TWO_APPLICANTS)
   reject.page.reject({ currentTarget: { dataset: { memberId: 901 } } })
   assert.equal(reject.modals.length, 1)
-  assert.equal(reject.modals[0].title, '拒绝「小林」的入会申请?')
+  assert.equal(reject.modals[0].title, '拒绝「小林」的入会申请？')
   assert.doesNotMatch(reject.modals[0].title, /这一项/, '缺参保底词不该再出现')
 })
 
@@ -102,7 +102,7 @@ test('F-L3-09 / p3 N13:拒绝只有一个弹层(指名道姓 + 选填原因 + �
   const withReason = openWithRequests(TWO_APPLICANTS)
   withReason.page.reject({ currentTarget: { dataset: { memberId: 901 } } })
   assert.equal(withReason.modals.length, 1, '拒绝不再先过一层危险确认')
-  assert.equal(withReason.modals[0].title, '拒绝「小林」的入会申请?')
+  assert.equal(withReason.modals[0].title, '拒绝「小林」的入会申请？')
   assert.equal(withReason.modals[0].editable, true)
   assert.equal(withReason.modals[0].confirmText, '确认拒绝')
   assert.ok(!withReason.modals[0].content, '弹层不再带说明行')

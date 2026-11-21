@@ -269,6 +269,38 @@ public class InGameChannelService
         return conv.getId();
     }
 
+    /**
+     * C3 channel events: the chat thread under an event card is this activity's channel. Adds one member to it
+     * (RSVP going/maybe, or a club member opening the thread) and returns the conversation id; null when the channel
+     * service or the activity is unavailable.
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public Long ensureActivityThreadMember(Long activityId, Long memberId)
+    {
+        if (activityId == null || activityId <= 0 || memberId == null || memberId <= 0
+                || conversationMapper == null || memberMapper == null)
+        {
+            return null;
+        }
+        String title = "活动频道";
+        Long creatorId = null;
+        if (cmsActivityMapper != null)
+        {
+            CmsActivity activity = cmsActivityMapper.selectCmsActivityById(activityId);
+            if (activity == null) return null;
+            if (trimToNull(activity.getName()) != null) title = activity.getName().trim();
+            creatorId = activity.getMemberId();
+        }
+        ImConversation conv = getOrCreateConversation(ACTIVITY_PREFIX + activityId, title);
+        conversationMapper.selectImConversationByIdForUpdate(conv.getId());
+        ensureMember(conv.getId(), memberId, memberId.equals(creatorId) ? 1 : 0, false);
+        if (creatorId != null && creatorId > 0 && !creatorId.equals(memberId))
+        {
+            ensureMember(conv.getId(), creatorId, 1, false);
+        }
+        return conv.getId();
+    }
+
     public boolean hasActiveAccess(ImConversation conversation, Long memberId)
     {
         if (conversation == null || memberId == null || memberId <= 0 || conversation.getBizKey() == null)
@@ -572,17 +604,8 @@ public class InGameChannelService
         String summary = msg.getContent().length() > 200 ? msg.getContent().substring(0, 200) : msg.getContent();
         conversationMapper.updateLastMessage(conv.getId(), ImMessage.MSG_TEXT, summary, new Date());
 
-        List<ImConversationMember> members = memberMapper.selectByConversation(conv.getId());
-        if (members != null)
-        {
-            for (ImConversationMember m : members)
-            {
-                if (m.getMemberId() == null || m.getMemberId() <= 0) continue;
-                if (Integer.valueOf(1).equals(m.getDeleted())) continue;
-                if (actorMemberId != null && actorMemberId.equals(m.getMemberId())) continue;
-                memberMapper.addUnreadForActiveMember(conv.getId(), m.getMemberId(), 1);
-            }
-        }
+        // SOC-13：一条集合 UPDATE 扇出未读（发起人除外；系统事件无发起人时用 0，成员 id 都 > 0）。
+        memberMapper.addUnreadForActiveMembersExcept(conv.getId(), actorMemberId == null ? 0L : actorMemberId, 1);
         return msg.getId();
     }
 

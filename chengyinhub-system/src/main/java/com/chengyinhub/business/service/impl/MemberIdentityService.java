@@ -77,7 +77,7 @@ public class MemberIdentityService {
             throw new ServiceException("请先登录");
         }
         if (!SOURCES.contains(source)) {
-            throw new ServiceException("实名登记入口不合法,请从发布页重新提交");
+            throw new ServiceException("实名登记入口不合法，请从发布页重新提交");
         }
         validateSubmission(realName, idCard, consent);
         String name = realName.trim();
@@ -97,7 +97,7 @@ public class MemberIdentityService {
             // 前者幂等放行,后者按「改绑走人工」拒掉。
             UmsMemberIdentity stored = identityMapper.selectByMemberId(memberId);
             if (stored == null || !normalizedId.equalsIgnoreCase(stored.getIdCard())) {
-                throw new ServiceException("实名信息已登记,如需变更请联系平台客服");
+                throw new ServiceException("实名信息已登记，如需变更请联系平台客服");
             }
             return;
         }

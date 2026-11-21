@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.PointsGovernanceMapper">
+
+    <select id="selectCap" resultType="java.util.LinkedHashMap" useCache="false">
+        select event_type as "eventType", source_name as "sourceName", programme as "programme",
+               daily_cap_points as "dailyCapPoints", status as "status"
+        from points_award_cap where event_type = #{eventType}
+    </select>
+
+    <select id="selectBudget" resultType="java.util.LinkedHashMap" useCache="false">
+        select programme as "programme", programme_name as "programmeName",
+               monthly_budget_points as "monthlyBudgetPoints", status as "status"
+        from points_programme_budget where programme = #{programme}
+    </select>
+
+    <select id="sumMemberSourceSince" resultType="long" useCache="false" flushCache="true">
+        select coalesce(sum(change_points), 0) from ums_member_points_detail
+        where member_id = #{memberId} and event_type = #{eventType} and change_type = 1
+          and (del_flag is null or del_flag = 0) and create_time &gt;= #{since}
+    </select>
+
+    <insert id="ensureUsage">
+        insert into points_budget_usage (programme, period, issued_points, update_time)
+        values (#{programme}, #{period}, 0, #{now})
+        on duplicate key update programme = programme
+    </insert>
+
+    <update id="consumeBudget">
+        update points_budget_usage
+        set issued_points = issued_points + #{points}, update_time = #{now}
+        where programme = #{programme} and period = #{period}
+        <if test="budget != null">and issued_points + #{points} &lt;= #{budget}</if>
+    </update>
+
+    <select id="selectCaps" resultType="java.util.LinkedHashMap" useCache="false">
+        select event_type as "eventType", source_name as "sourceName", programme as "programme",
+               daily_cap_points as "dailyCapPoints", status as "status", update_by as "updateBy", update_time as "updateTime"
+        from points_award_cap order by event_type
+    </select>
+
+    <select id="selectBudgetsWithUsage" resultType="java.util.LinkedHashMap" useCache="false">
+        select b.programme as "programme", b.programme_name as "programmeName",
+               b.monthly_budget_points as "monthlyBudgetPoints", b.status as "status",
+               coalesce(u.issued_points, 0) as "issuedPoints", b.update_by as "updateBy", b.update_time as "updateTime"
+        from points_programme_budget b
+        left join points_budget_usage u on u.programme = b.programme and u.period = #{period}
+        order by b.programme
+    </select>
+
+    <update id="updateCap">
+        update points_award_cap
+        set daily_cap_points = #{dailyCapPoints}, status = #{status}, update_by = #{updateBy}, update_time = #{now}
+        where event_type = #{eventType}
+    </update>
+
+    <update id="updateBudget">
+        update points_programme_budget
+        set monthly_budget_points = #{monthlyBudgetPoints}, status = #{status}, update_by = #{updateBy}, update_time = #{now}
+        where programme = #{programme}
+    </update>
+
+    <select id="sumPointsDetail" resultType="long" useCache="false">
+        select coalesce(sum(abs(change_points)), 0) from ums_member_points_detail
+        where change_type = #{changeType} and (del_flag is null or del_flag = 0)
+          and create_time &gt;= #{from} and create_time &lt; #{to}
+    </select>
+
+    <select id="sumOutstandingPoints" resultType="long" useCache="false">
+        select coalesce(sum(point), 0) from ums_member where point &gt; 0
+    </select>
+</mapper>

@@ -71,7 +71,7 @@ public class RegistrationTicketApplication {
         Integer regStatus = reg.getRegistrationStatus();
         if (regStatus == null || regStatus.intValue() != 2
                 || !Integer.valueOf(2).equals(reg.getPaymentStatus())) {
-            return AjaxResult.error("订单未完成支付或已结束,无法生成核销码");
+            return AjaxResult.error("订单未完成支付或已结束，无法生成核销码");
         }
         // 消费完了的不再出码。
         //

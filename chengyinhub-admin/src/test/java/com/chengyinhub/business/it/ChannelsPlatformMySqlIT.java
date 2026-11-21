@@ -162,13 +162,13 @@ class ChannelsPlatformMySqlIT
     {
         Map<String, Object> dir = platform.directory(MEMBER, 1, CLUB, true);
         List<Map<String, Object>> rows = rows(dir);
-        assertEquals(1, rows.size());
+        assertEquals(3, rows.size(), "club-reach: 闲聊 (default), 公告, 活动");
         assertEquals(1, rows.get(0).get("is_default"));
         long id = Long.parseLong((String) rows.get(0).get("id"));
         assertEquals(1, scalar("SELECT COUNT(*) FROM im_conversation WHERE id=" + id + " AND type=5"));
         assertTrue(((List<?>) rows.get(0).get("my_permissions_list")).contains("SEND_MESSAGE"));
         assertEquals("GUILD_FORBIDDEN", assertThrows(ChannelRejection.class, () -> platform.directory(STRANGER, 1, CLUB, true)).getErrorCode());
-        assertEquals(1, rows(platform.directory(OWNER, 1, CLUB, true)).size(), "second read does not provision again");
+        assertEquals(3, rows(platform.directory(OWNER, 1, CLUB, true)).size(), "second read does not provision again");
     }
 
     @Test void lifecycleAndOverwritesRunOnRealSchema() throws Exception

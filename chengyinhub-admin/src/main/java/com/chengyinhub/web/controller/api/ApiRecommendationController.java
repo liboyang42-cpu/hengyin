@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.service.IRecommendationService;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
@@ -30,7 +32,7 @@ public class ApiRecommendationController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         String candidateType = StringUtils.isBlank(candidate_type) ? "topic" : candidate_type;
         int size = limit == null ? 20 : Convert.toInt(limit, 20);

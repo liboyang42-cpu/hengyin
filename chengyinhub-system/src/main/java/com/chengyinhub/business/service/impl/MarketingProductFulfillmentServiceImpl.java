@@ -74,6 +74,10 @@ public class MarketingProductFulfillmentServiceImpl implements IMarketingProduct
 
     private static final int MONEY_SCALE = 2;
 
+    /** S3a: the bundle take setting; absent (tests) = each theme's frozen rate. */
+    @Autowired(required = false)
+    private com.chengyinhub.business.merchantplans.TakeRateService takeRates;
+
     @Autowired
     private CmsRegistrationMapper cmsRegistrationMapper;
 
@@ -934,7 +938,8 @@ public class MarketingProductFulfillmentServiceImpl implements IMarketingProduct
         if (topic.getFeePlatformRate() == null) {
             throw new IllegalStateException("主题缺少平台费率快照,拒绝落单 topicId=" + topic.getId());
         }
-        row.setFeePlatformRate(topic.getFeePlatformRate());
+        // S3a: a configured bundle take replaces the theme's frozen rate; none configured = today's behaviour.
+        row.setFeePlatformRate(takeRates == null ? topic.getFeePlatformRate() : takeRates.bundleRate(topic.getFeePlatformRate()));
         // 支付渠道总额与事实:仅首行一处持有;其余行为 0 / NULL。
         row.setWechatPaymentAmount(firstRow && command.payment.mode == PaymentFacts.MODE_CASH
                 ? money(command.payment.verifiedAmount) : BigDecimal.ZERO);

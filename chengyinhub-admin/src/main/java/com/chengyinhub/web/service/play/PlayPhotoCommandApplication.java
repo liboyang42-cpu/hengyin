@@ -13,6 +13,8 @@ import com.chengyinhub.common.constant.ValidationMethod;
 import com.chengyinhub.business.domain.CmsTopicNode;
 import com.chengyinhub.business.domain.PlayerNodeProgress;
 import com.chengyinhub.business.service.support.SensorChallengePolicy;
+import com.chengyinhub.business.service.support.ArrivalPolicy;
+import com.chengyinhub.business.service.support.RewardPresencePolicy;
 import com.chengyinhub.business.service.ICmsTopicNodeService;
 import com.chengyinhub.business.service.IShopDayProofService;
 import com.chengyinhub.common.core.domain.AjaxResult;
@@ -44,6 +46,9 @@ public class PlayPhotoCommandApplication {
     private PlayBasicIntentApplication playBasicIntentApplication;
     @Autowired
     private PlayTaskPresentation playTaskPresentation;
+    /** x-template-games R2:与 GAME-2 同一组开关;缺省 = 安全默认值。 */
+    @Autowired(required = false)
+    private com.chengyinhub.system.service.ISysConfigService sysConfigService;
 
     @FunctionalInterface
     public interface PlayPhotoUploadFactVerifier {
@@ -86,9 +91,24 @@ public class PlayPhotoCommandApplication {
     public AjaxResult photo(Long actorMemberId, String activityId, String nodeId, String picUrl, String topicId,
             String routeActionId, Integer expectedRouteVersion, Long routeSessionId, String runtimeInstance, Integer authorityEpoch)
     {
+        return photo(actorMemberId, activityId, nodeId, picUrl, topicId, routeActionId, expectedRouteVersion,
+                routeSessionId, runtimeInstance, authorityEpoch, null, null, null);
+    }
+
+    /**
+     * x-template-games R2:照片没人判(任何照片都过),所以「进度免费,奖品要到场」也管拍照站 ——
+     * 带坐标的站,随照片带来的定位不在奖励半径内(或没带定位)⇒ 照常完成,只发探索值与徽章。
+     * 与 GAME-2 同一开关 play.arrive.remote_reward_policy(FULL = 旧行为)与同一半径。
+     */
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
+    public AjaxResult photo(Long actorMemberId, String activityId, String nodeId, String picUrl, String topicId,
+            String routeActionId, Integer expectedRouteVersion, Long routeSessionId, String runtimeInstance, Integer authorityEpoch,
+            String longitude, String latitude, String accuracy)
+    {
         return playBasicIntentApplication.executeBasicIntent(actorMemberId, "PHOTO", activityId, topicId, nodeId,
                 routeActionId, expectedRouteVersion, null, routeSessionId, runtimeInstance, authorityEpoch,
-                java.util.Arrays.asList(picUrl), originalRun -> photoOnce(actorMemberId, activityId, nodeId, picUrl, topicId, routeActionId, expectedRouteVersion, originalRun));
+                java.util.Arrays.asList(picUrl), originalRun -> photoOnce(actorMemberId, activityId, nodeId, picUrl, topicId,
+                        routeActionId, expectedRouteVersion, originalRun, longitude, latitude, accuracy));
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
@@ -99,7 +119,8 @@ public class PlayPhotoCommandApplication {
     }
 
     private AjaxResult photoOnce(Long actorMemberId, String activityId, String nodeId, String picUrl, String topicId,
-            String routeActionId, Integer expectedRouteVersion, PlayOriginalRun originalRun)
+            String routeActionId, Integer expectedRouteVersion, PlayOriginalRun originalRun,
+            String longitude, String latitude, String accuracy)
     {
         Long memberId = actorMemberId;
         if (memberId <= 0) return error("请先登录");
@@ -165,7 +186,7 @@ public class PlayPhotoCommandApplication {
                         null, null, RewardPolicy.XP_BADGE_ONLY, routeActionId,
                         expectedRouteVersion, null, null, originalRun);
                 boolean firstTime = Boolean.TRUE.equals(data.get("firstTime"));
-                return AjaxResult.success(firstTime ? "已提交,任务完成" : "该节点已完成", data);
+                return AjaxResult.success(firstTime ? "已提交，任务完成" : "该节点已完成", data);
             }
             return AjaxResult.success("到店照片已记录", playTaskPresentation.shopDayProofData(node, proof));
         }
@@ -197,17 +218,48 @@ public class PlayPhotoCommandApplication {
 
         // 复用 advanceProgress(幂等/发分/通关),并在首次写入时回填照片与审核位
         playNodeCompletionApplication.logAttempt(memberId, node, actId, 4, 1, null); // M9 拍照打卡成功
-        RewardPolicy rewardPolicy = photoFilter
-                ? RewardPolicy.XP_BADGE_ONLY : RewardPolicy.FULL;
-        Map<String, Object> data = playNodeCompletionApplication.advanceProgress(memberId, node, actId, picUrl, null, null, rewardPolicy,
-                routeActionId, expectedRouteVersion, null, machineApproveProgressId, originalRun);
+        RewardPolicy rewardPolicy;
+        boolean photoRemote = false;
+        if (photoFilter) {
+            rewardPolicy = RewardPolicy.XP_BADGE_ONLY;
+        } else {
+            RewardPresencePolicy presence = rewardPresence();
+            rewardPolicy = presence.policyFor(presentAtStop(node, longitude, latitude, accuracy, presence));
+            photoRemote = rewardPolicy == RewardPolicy.XP_BADGE_ONLY;
+        }
+        // 在场(或线上站)走原来的入口,远程才带 remote 标记(写 remote_completion、回执带 rewardCeiling)。
+        Map<String, Object> data = photoRemote
+                ? playNodeCompletionApplication.advanceProgress(memberId, node, actId, picUrl, null, null, rewardPolicy,
+                        routeActionId, expectedRouteVersion, null, machineApproveProgressId, originalRun, true)
+                : playNodeCompletionApplication.advanceProgress(memberId, node, actId, picUrl, null, null, rewardPolicy,
+                        routeActionId, expectedRouteVersion, null, machineApproveProgressId, originalRun);
         if (ctx.nightWarning) data.put("nightWarning", true); // M2 自玩夜间提示(不阻断)
         boolean firstTime = Boolean.TRUE.equals(data.get("firstTime"));
-        return AjaxResult.success(firstTime ? "已提交,打卡成功" : "该节点已完成", data);
+        return AjaxResult.success(firstTime ? "已提交，打卡成功" : "该节点已完成", data);
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult photo(Long actorMemberId, String activityId, String nodeId, String picUrl, String topicId) {
         return photo(actorMemberId, activityId, nodeId, picUrl, topicId, null, null);
+    }
+
+    /** GAME-2 开关,每次读,改了不用重启;读不到 = 安全默认值。 */
+    private RewardPresencePolicy rewardPresence() {
+        if (sysConfigService == null) return RewardPresencePolicy.defaults();
+        return RewardPresencePolicy.read(sysConfigService::selectConfigByKey);
+    }
+
+    /** 站点没坐标 = 线上站,按在场。带坐标的站:定位须在 max(80 米, 站点半径) + min(精度, 50 米) 内。 */
+    static boolean presentAtStop(CmsTopicNode node, String longitude, String latitude, String accuracy,
+            RewardPresencePolicy presence) {
+        if (StringUtils.isBlank(node.getLongitude()) || StringUtils.isBlank(node.getLatitude())) return true;
+        Double stopLat = PlayNodeContext.parseGeoCoordinate(node.getLatitude(), -90d, 90d);
+        Double stopLng = PlayNodeContext.parseGeoCoordinate(node.getLongitude(), -180d, 180d);
+        if (stopLat == null || stopLng == null) return false;
+        return RewardPresencePolicy.within(
+                PlayNodeContext.parseGeoCoordinate(latitude, -90d, 90d),
+                PlayNodeContext.parseGeoCoordinate(longitude, -180d, 180d),
+                PlayNodeContext.parseGeoCoordinate(accuracy, 0d, Double.MAX_VALUE),
+                stopLat, stopLng, presence.rewardRadiusMeters(ArrivalPolicy.legacy()));
     }
 }

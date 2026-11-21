@@ -45,7 +45,39 @@ public class RoleServiceImpl implements IRoleService
                 || !Integer.valueOf(0).equals(current.getDelFlag())) {
             throw new com.chengyinhub.common.exception.ServiceException("会员不可用", 403);
         }
-        return clonePerm(userPermissionService.getByRole(resolveRole(current)));
+        UserPermission perm = clonePerm(userPermissionService.getByRole(resolveRole(current)));
+        // G2 / GAM-12:业主打开 creator.player.verified_unlock 后,持 verified_creator 能力的玩家创作者
+        // 可用分支与游戏机制。开关默认 false = 今天的玩家默认,一字不变。
+        if (perm != null && ROLE_PLAYER.equals(current.getRole()) && verifiedUnlockOn()
+                && hasActiveCapability(current.getId(), CAP_VERIFIED_CREATOR)) {
+            perm.setCanBranch(Boolean.TRUE);
+            perm.setCanGameMechanic(Boolean.TRUE);
+        }
+        return perm;
+    }
+
+    public static final String CAP_VERIFIED_CREATOR = "verified_creator";
+    public static final String CONFIG_VERIFIED_UNLOCK = "creator.player.verified_unlock";
+
+    @Autowired(required = false)
+    private com.chengyinhub.system.service.ISysConfigService sysConfigService;
+
+    boolean verifiedUnlockOn() {
+        try {
+            return sysConfigService != null
+                    && "true".equalsIgnoreCase(String.valueOf(sysConfigService.selectConfigByKey(CONFIG_VERIFIED_UNLOCK)).trim());
+        } catch (RuntimeException e) {
+            return false;
+        }
+    }
+
+    private boolean hasActiveCapability(Long memberId, String capability) {
+        try {
+            MemberCapability cap = memberCapabilityMapper.selectByMemberAndCapability(memberId, capability);
+            return cap != null && Integer.valueOf(1).equals(cap.getStatus());
+        } catch (RuntimeException e) {
+            return false;
+        }
     }
 
     @Override

@@ -20,6 +20,8 @@ public class MemberGrowthCenterVO {
     private List<GrowthMission> missions = Collections.emptyList();
     private List<GrowthMissionProgress> progress = Collections.emptyList();
     private List<PlayerBadge> badges = Collections.emptyList();
+    /** P7(GRO-06)今日任务板;读不到时为 null */
+    private DailyMissionBoardVO daily;
 
     public MemberGrowth getGrowth() { return growth; }
     public void setGrowth(MemberGrowth growth) { this.growth = growth; }
@@ -33,4 +35,6 @@ public class MemberGrowthCenterVO {
     public void setProgress(List<GrowthMissionProgress> progress) { this.progress = progress; }
     public List<PlayerBadge> getBadges() { return badges; }
     public void setBadges(List<PlayerBadge> badges) { this.badges = badges; }
+    public DailyMissionBoardVO getDaily() { return daily; }
+    public void setDaily(DailyMissionBoardVO daily) { this.daily = daily; }
 }

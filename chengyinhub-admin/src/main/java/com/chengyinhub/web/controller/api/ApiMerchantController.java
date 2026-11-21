@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.service.support.MerchantMetricWindow;
 import com.chengyinhub.business.domain.dto.MerchantDashboardIncome;
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
@@ -256,7 +258,7 @@ public class ApiMerchantController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
 
         if (memberId < 1) {
@@ -308,14 +310,14 @@ public class ApiMerchantController extends BaseController {
     })
     public AjaxResult nearby(String longitude, String latitude, String radius, String limit) {
         if (StringUtils.isEmpty(longitude) || StringUtils.isEmpty(latitude)) {
-            return error("缺少定位");
+            return refuse(ErrorCode.LOCATION_REQUIRED, "缺少定位");
         }
         double lng, lat;
         try {
             lng = Double.parseDouble(longitude);
             lat = Double.parseDouble(latitude);
         } catch (Exception e) {
-            return error("定位参数错误");
+            return refuse(ErrorCode.LOCATION_INVALID, "定位参数错误");
         }
         int r = parseIntOr(radius, 5000);
         if (r <= 0 || r > 50000) r = 5000;   // 限半径,防全城扫描
@@ -342,8 +344,8 @@ public class ApiMerchantController extends BaseController {
     @PostMapping("/business-status")
     public AjaxResult businessStatus() {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
-        if (memberId == null || memberId < 1) return error("请先登录");
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (memberId == null || memberId < 1) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         MerchantAccessContext access = merchantAccessService.require(
                 memberId, MerchantPermission.BASIC_READ);
         MmsMerchant m = mmsMerchantService.selectMmsMerchantById(access.getMerchantId());
@@ -360,8 +362,8 @@ public class ApiMerchantController extends BaseController {
     @Parameters({ @Parameter(name = "business_status", description = "1营业中 0已打烊") })
     public AjaxResult businessStatusUpdate(String business_status) {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
-        if (memberId == null || memberId < 1) return error("请先登录");
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (memberId == null || memberId < 1) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         MerchantAccessContext access = merchantAccessService.require(
                 memberId, MerchantPermission.PROFILE_WRITE);
         MmsMerchant m = mmsMerchantService.selectMmsMerchantById(access.getMerchantId());
@@ -408,6 +410,13 @@ public class ApiMerchantController extends BaseController {
         // 商家在装修页看到"发布后即可选一个置顶到主页",公开主页却什么都不显示。
         // 归属与公开状态每次匿名读取都重新核验,保存时合法不代表此刻仍公开。
         vo.setFeatured(resolvePublicFeatured(m));
+        // R1 storefront:已上架商品与价格。读不到就留 null,主页其余部分照常。
+        try {
+            vo.setStorefront(storefrontService.storefront(m.getId()));
+        } catch (Exception e) {
+            logger.warn("[merchant/public-home] storefront read failed, merchantId={}, errorType={}",
+                    m.getId(), e.getClass().getName());
+        }
         // 门店 AI 形象:取不到就留 null,主页整块不渲染。不能因为形象查询出错就把整个主页判失败。
         try {
             vo.setNpc(npcProfileService.resolveForMerchant(m.getId()));
@@ -427,14 +436,15 @@ public class ApiMerchantController extends BaseController {
     @PostMapping("/share-code")
     public AjaxResult shareCode(String memberId) {
         Long principal;
-        try { principal = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
-        if (principal == null || principal <= 0) return error("请先登录");
+        try { principal = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (principal == null || principal <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Long subject = com.chengyinhub.common.core.text.Convert.toLong(memberId, 0L);
         if (subject <= 0) return error("商家不存在或未开放");
         if (!isPubliclyVisible(mmsMerchantService.selectMmsMerchantByMemberId(subject))) return error("商家不存在或未开放");
         Map<String, Object> data = new HashMap<>();
         try {
             data.put("qrcodeUrl", playerWxacodeService.getOrCreateScene("sh." + subject));
+            data.put("linkQr", com.chengyinhub.business.service.IPlayerWxacodeService.linkFor("sh." + subject));
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }
@@ -443,6 +453,9 @@ public class ApiMerchantController extends BaseController {
 
     @Autowired
     private com.chengyinhub.business.service.IPlayerWxacodeService playerWxacodeService;
+
+    @Autowired
+    private com.chengyinhub.business.marketplace.MarketplaceStorefrontService storefrontService;
 
     /** 公开可见 = 审核通过 && 账号启用 && 未删除。未知值一律失败关闭。 */
     private boolean isPubliclyVisible(MmsMerchant m) {
@@ -477,7 +490,7 @@ public class ApiMerchantController extends BaseController {
     @Operation(summary = "商家公开主页(匿名可访问,脱敏) —— 旧客户端合同,新前端请用 /public-home")
     @PostMapping("/public-detail")
     public AjaxResult publicDetail(@RequestBody MmsMerchant body) {
-        if (body == null || body.getId() == null) return error("缺少商家ID");
+        if (body == null || body.getId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少商家ID");
         MmsMerchant m = mmsMerchantService.selectMmsMerchantById(body.getId());
         if (!isPubliclyVisible(m)) {
             return error("商家不存在或未开放");
@@ -603,8 +616,8 @@ public class ApiMerchantController extends BaseController {
     @PostMapping("/subscription")
     public AjaxResult mySubscription() {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
-        if (memberId == null || memberId < 1) return error("请先登录");
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (memberId == null || memberId < 1) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         MerchantAccessContext access = merchantAccessService.require(
                 memberId, MerchantPermission.BASIC_READ);
         MerchantSubscription q = new MerchantSubscription();
@@ -617,11 +630,11 @@ public class ApiMerchantController extends BaseController {
     @PostMapping("/coop-profile")
     public AjaxResult coopProfile() {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         MerchantAccessContext access = merchantAccessService.require(
                 memberId, MerchantPermission.COOP_MANAGE);
         MmsMerchant m = mmsMerchantService.selectMmsMerchantById(access.getMerchantId());
-        if (m == null) return error("商家不存在");
+        if (m == null) return refuse(ErrorCode.MERCHANT_NOT_FOUND, "商家不存在");
         MerchantEditProfileVO profile = MerchantEditProfileVO.from(m);
         if (!access.hasPermission(MerchantPermission.PROFILE_WRITE)) {
             // 联系方式只给能改资料的岗位(店主/店长)回显;只管承接的运营看不到
@@ -709,11 +722,11 @@ public class ApiMerchantController extends BaseController {
     @PostMapping("/coop-profile/save")
     public AjaxResult saveCoopProfile(@RequestBody MmsMerchant body) {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         MerchantAccessContext access = merchantAccessService.require(
                 memberId, MerchantPermission.COOP_MANAGE);
         MmsMerchant m = mmsMerchantService.selectMmsMerchantById(access.getMerchantId());
-        if (m == null) return error("商家不存在");
+        if (m == null) return refuse(ErrorCode.MERCHANT_NOT_FOUND, "商家不存在");
         // 内容安全:合作需求自由文本命中违规即拒(商家资料匿名可访问公开)
         String secMsg = wxContentSecurityService.checkText(IWxContentSecurityService.joinText(body.getDemand(),
                         body.getAvailableTime(), body.getSuitActivityTypes()),
@@ -746,12 +759,12 @@ public class ApiMerchantController extends BaseController {
     @PostMapping("/decor/save")
     public AjaxResult saveDecor(@RequestBody MmsMerchant body) {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
-        if (memberId == null || memberId < 1) return error("请先登录");
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (memberId == null || memberId < 1) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         MerchantAccessContext access = merchantAccessService.require(
                 memberId, MerchantPermission.PROFILE_WRITE);
         MmsMerchant m = mmsMerchantService.selectMmsMerchantById(access.getMerchantId());
-        if (m == null) return error("请先提交商家入驻申请");
+        if (m == null) return refuse(ErrorCode.MERCHANT_APPLICATION_REQUIRED, "请先提交商家入驻申请");
         if (body.getAddress() != null && (body.getAddress().length() > 255
                 || body.getLocationLat() == null || body.getLocationLng() == null)) return error("请在地图上选择完整门店地址");
         // 长度闸:超出列宽(varchar(8)/varchar(64))会落库报错,提前拒
@@ -837,8 +850,8 @@ public class ApiMerchantController extends BaseController {
     @PostMapping("/npc/profile")
     public AjaxResult npcProfile() {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
-        if (memberId == null || memberId < 1) return error("请先登录");
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (memberId == null || memberId < 1) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         MerchantAccessContext access = merchantAccessService.require(
                 memberId, MerchantPermission.PROFILE_WRITE);
         List<NpcProfile> list = npcProfileMapper.selectMerchantNpcList(access.getMerchantId(), null);
@@ -854,14 +867,14 @@ public class ApiMerchantController extends BaseController {
     @PostMapping("/npc/save")
     public AjaxResult npcSave(@RequestBody NpcProfile body) {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
-        if (memberId == null || memberId < 1) return error("请先登录");
-        if (body == null) return error("参数有误");
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (memberId == null || memberId < 1) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (body == null) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         MerchantAccessContext access = merchantAccessService.require(
                 memberId, MerchantPermission.PROFILE_WRITE);
         Long merchantId = access.getMerchantId();
         if (mmsMerchantService.selectMmsMerchantById(merchantId) == null) {
-            return error("请先提交商家入驻申请");
+            return refuse(ErrorCode.MERCHANT_APPLICATION_REQUIRED, "请先提交商家入驻申请");
         }
 
         String name = trimOrNull(body.getName());
@@ -872,9 +885,9 @@ public class ApiMerchantController extends BaseController {
         // M-28:性格改为预设(gentle/cute/savage,也认中文标签);旧版自由填写的人设原样保留为 legacy。
         String persona = com.chengyinhub.business.support.NpcPersonality.normalize(body.getPersona());
         String knowledge = body.getKnowledge() == null ? null : body.getKnowledge().trim();
-        if (name == null) return error("请填写形象名字");
+        if (name == null) return refuse(ErrorCode.BAD_REQUEST, "请填写形象名字");
         if (name.length() > 32) return error("名字最多 32 个字");
-        if (avatar == null) return error("请选择形象");
+        if (avatar == null) return refuse(ErrorCode.BAD_REQUEST, "请选择形象");
         if (avatar.length() > 255) return error("形象地址过长");
         if (greeting != null && greeting.length() > 255) return error("招呼语最多 255 个字");
         if (persona != null && persona.length() > NPC_PERSONA_MAX) {
@@ -920,7 +933,7 @@ public class ApiMerchantController extends BaseController {
             // 防 IDOR:只按 id 更新等于谁都能改别人的形象。id 从库里查出来,
             // 且必须是自己名下这条,不接受客户端传的 id。
             if (mine.getScopeId() == null || !mine.getScopeId().equals(merchantId)) {
-                return error("无权修改该形象");
+                return refuse(ErrorCode.FORBIDDEN, "无权修改该形象");
             }
             save.setId(mine.getId());
             save.setScopeId(merchantId);
@@ -956,8 +969,8 @@ public class ApiMerchantController extends BaseController {
     @GetMapping("/npc/review")
     public AjaxResult npcReview() {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
-        if (memberId == null || memberId < 1) return error("请先登录");
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (memberId == null || memberId < 1) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         MerchantAccessContext access = merchantAccessService.require(
                 memberId, MerchantPermission.PROFILE_WRITE);
         List<NpcProfile> list = npcProfileMapper.selectMerchantNpcList(access.getMerchantId(), null);
@@ -986,10 +999,10 @@ public class ApiMerchantController extends BaseController {
     @PostMapping("/npc/voice/enroll")
     public AjaxResult npcVoiceEnroll(@RequestBody NpcProfile body) {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
-        if (memberId == null || memberId < 1) return error("请先登录");
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (memberId == null || memberId < 1) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         consentGuard.requireCurrentAgreement(memberId, "voice_clone_processing", "merchant_voice");
-        if (body == null) return error("参数有误");
+        if (body == null) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         if (!Boolean.TRUE.equals(body.getVoiceConsent())) return AjaxResult.error(HttpStatus.BAD_REQUEST, "请先确认声音为本人所有或已获得授权");
         MerchantAccessContext access = merchantAccessService.require(
                 memberId, MerchantPermission.PROFILE_WRITE);
@@ -1000,7 +1013,7 @@ public class ApiMerchantController extends BaseController {
         if (!sample.matches("media-asset:[1-9][0-9]{0,18}") && !sample.startsWith("/") && !sample.startsWith("https://") && !sample.startsWith("http://")) return error("录音地址不支持");
 
         NpcProfile mine = ownNpcOrNull(access.getMerchantId());
-        if (mine == null) return error("请先保存形象,再给它配声音");
+        if (mine == null) return error("请先保存形象，再给它配声音");
         sample = mediaReferences.requireAttachment(memberId, sample, true);
         if (sample.length() > 255) return error("录音引用过长");
         final String canonicalSample = sample;
@@ -1032,8 +1045,8 @@ public class ApiMerchantController extends BaseController {
     @PostMapping("/npc/voice/status")
     public AjaxResult npcVoiceStatus(@RequestBody(required = false) NpcProfile body) {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
-        if (memberId == null || memberId < 1) return error("请先登录");
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (memberId == null || memberId < 1) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         MerchantAccessContext access = merchantAccessService.require(
                 memberId, MerchantPermission.PROFILE_WRITE);
 
@@ -1061,8 +1074,8 @@ public class ApiMerchantController extends BaseController {
     @PostMapping("/npc/voice/reset")
     public AjaxResult npcVoiceReset() {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
-        if (memberId == null || memberId < 1) return error("请先登录");
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (memberId == null || memberId < 1) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         MerchantAccessContext access = merchantAccessService.require(
                 memberId, MerchantPermission.PROFILE_WRITE);
 
@@ -1143,7 +1156,7 @@ public class ApiMerchantController extends BaseController {
     @PostMapping("/clubs")
     public AjaxResult clubs(@RequestBody(required = false) Club query) {
         Long principalMemberId;
-        try { principalMemberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         merchantAccessService.require(principalMemberId, MerchantPermission.COOP_MANAGE);
         Club publicQuery = new Club();
         if (query != null) {
@@ -1175,8 +1188,8 @@ public class ApiMerchantController extends BaseController {
     @PostMapping("/relation-home")
     public AjaxResult relationHome(@RequestBody(required = false) Map<String, Object> body) {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
-        if (memberId == null || memberId < 1) return error("请先登录");
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (memberId == null || memberId < 1) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         MerchantAccessContext access = merchantAccessService.require(
                 memberId, MerchantPermission.COOP_MANAGE);
 
@@ -1189,10 +1202,10 @@ public class ApiMerchantController extends BaseController {
         boolean hasOriginLat = body != null && body.containsKey("originLat");
         boolean hasOriginLng = body != null && body.containsKey("originLng");
         if (hasOriginLat != hasOriginLng) return error("定位参数需成对提供");
-        if (hasOriginLat && (originLat == null || originLng == null)) return error("定位参数错误");
+        if (hasOriginLat && (originLat == null || originLng == null)) return refuse(ErrorCode.LOCATION_INVALID, "定位参数错误");
         if (originLat != null && (!Double.isFinite(originLat) || !Double.isFinite(originLng)
                 || originLat < -90D || originLat > 90D
-                || originLng < -180D || originLng > 180D)) return error("定位参数错误");
+                || originLng < -180D || originLng > 180D)) return refuse(ErrorCode.LOCATION_INVALID, "定位参数错误");
         int limit = body == null ? 10 : aggregateInt(body.get("limit"), 10);
         if (limit < 1 || limit > 20) limit = 10;
         return success(merchantAggregateReadService.relationHome(
@@ -1204,8 +1217,8 @@ public class ApiMerchantController extends BaseController {
     public AjaxResult marketingHome(
             @RequestParam(value = "windowDays", required = false) String requestedWindowDays) {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
-        if (memberId == null || memberId < 1) return error("请先登录");
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (memberId == null || memberId < 1) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         MerchantAccessContext access = merchantAccessService.require(
                 memberId, MerchantPermission.MARKETING_READ);
         int windowDays = aggregateWindowDays(requestedWindowDays);
@@ -1244,11 +1257,11 @@ public class ApiMerchantController extends BaseController {
         try {
             member_id = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
 
         if (member_id == null || member_id <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
 
 
@@ -1256,12 +1269,12 @@ public class ApiMerchantController extends BaseController {
                 member_id, MerchantPermission.PROFILE_WRITE);
         MmsMerchant mmsMerchant = mmsMerchantService.selectMmsMerchantById(access.getMerchantId());
         if (mmsMerchant == null) {
-            return error("请先提交商家入驻申请");
+            return refuse(ErrorCode.MERCHANT_APPLICATION_REQUIRED, "请先提交商家入驻申请");
         }
         if (request.getBusinessTime() != null) {
             String hours = request.getBusinessTime();
             if (hours.length() > 255 || !hours.matches("周(?:一至周日|[一二三四五六日](?:、[一二三四五六日])*) ([01][0-9]|2[0-3]):[0-5][0-9]-(?:次日)?([01][0-9]|2[0-3]):[0-5][0-9]")) {
-                return AjaxResult.error(HttpStatus.BAD_REQUEST, "请选择有效的经营日与时间");
+                return AjaxResult.refuse(HttpStatus.BAD_REQUEST, ErrorCode.BAD_REQUEST, "请选择有效的经营日与时间");
             }
             String[] range = hours.substring(hours.indexOf(' ') + 1).replace("次日", "").split("-");
             if (range[0].equals(range[1])) return error("开始与结束时间不能相同");
@@ -1273,7 +1286,7 @@ public class ApiMerchantController extends BaseController {
         // owner 2026-10-22:联系电话 / 门店微信号 / 门店二维码改由商家在「门店信息」自助维护(原 CU-M-08 只读)。
         // 电话是到店联系的唯一通道,只收 11 位大陆手机号、不允许清空;微信号与二维码可清空。
         if (request.getPhone() != null && !MERCHANT_PHONE.matcher(request.getPhone()).matches()) {
-            return error("请填写 11 位手机号");
+            return refuse(ErrorCode.BAD_REQUEST, "请填写 11 位手机号");
         }
         if (request.getWechat() != null && !request.getWechat().isEmpty()
                 && !MERCHANT_WECHAT_ID.matcher(request.getWechat()).matches()) {
@@ -1335,7 +1348,7 @@ public class ApiMerchantController extends BaseController {
         try {
             principalMemberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         MerchantAccessContext access = merchantAccessService.require(
                 principalMemberId, MerchantPermission.BASIC_READ);
@@ -1417,7 +1430,7 @@ public class ApiMerchantController extends BaseController {
     @PostMapping("/todo-summary")
     public AjaxResult todoSummary() {
         Long principalMemberId;
-        try { principalMemberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         MerchantAccessContext access = merchantAccessService.require(
                 principalMemberId, MerchantPermission.BASIC_READ);
         Long ownerMemberId = access.getOwnerMemberId();
@@ -1624,7 +1637,7 @@ public class ApiMerchantController extends BaseController {
     @PostMapping("/upcoming-runs")
     public AjaxResult upcomingRuns(@RequestBody(required = false) Map<String, Object> body) {
         Long principalMemberId;
-        try { principalMemberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         MerchantAccessContext access = merchantAccessService.require(
                 principalMemberId, MerchantPermission.VERIFY_RECORD_READ);
 
@@ -1641,7 +1654,7 @@ public class ApiMerchantController extends BaseController {
     @PostMapping("/coupon-summary")
     public AjaxResult couponSummary() {
         Long principalMemberId;
-        try { principalMemberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         MerchantAccessContext access = merchantAccessService.require(
                 principalMemberId, MerchantPermission.COUPON_MANAGE);
         SmsCoupon probe = new SmsCoupon();
@@ -1673,7 +1686,7 @@ public class ApiMerchantController extends BaseController {
     @PostMapping("/events")
     public AjaxResult events() {
         Long principalMemberId;
-        try { principalMemberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         MerchantAccessContext access = merchantAccessService.require(
                 principalMemberId, MerchantPermission.BASIC_READ);
         Long memberId = access.getOwnerMemberId();
@@ -1783,8 +1796,8 @@ public class ApiMerchantController extends BaseController {
     public AjaxResult funnel(
             @RequestParam(value = "windowDays", required = false) String requestedWindowDays) {
         Long principalMemberId;
-        try { principalMemberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
-        if (principalMemberId == null || principalMemberId < 1) return error("请先登录");
+        try { principalMemberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (principalMemberId == null || principalMemberId < 1) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         MerchantAccessContext access = merchantAccessService.require(
                 principalMemberId, MerchantPermission.MARKETING_READ);
         int windowDays = aggregateWindowDays(requestedWindowDays);
@@ -1796,7 +1809,7 @@ public class ApiMerchantController extends BaseController {
     @PostMapping("/verification-records")
     public AjaxResult verificationRecords() {
         Long principalMemberId;
-        try { principalMemberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         MerchantAccessContext access = merchantAccessService.require(
                 principalMemberId, MerchantPermission.VERIFY_RECORD_READ);
         CmsRegistrationScan sq = new CmsRegistrationScan();
@@ -1814,7 +1827,7 @@ public class ApiMerchantController extends BaseController {
     @PostMapping("/orders")
     public AjaxResult orders(@RequestBody(required = false) OmsOrder query) {
         Long principalMemberId;
-        try { principalMemberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         MerchantAccessContext access = merchantAccessService.require(
                 principalMemberId, MerchantPermission.ORDER_READ);
         if (query == null) query = new OmsOrder();
@@ -1836,7 +1849,7 @@ public class ApiMerchantController extends BaseController {
     @PostMapping("/orders/ledger")
     public AjaxResult ledgerOrders(@RequestBody(required = false) MerchantLedgerQuery query) {
         Long principalMemberId;
-        try { principalMemberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         MerchantAccessContext access = merchantAccessService.require(
                 principalMemberId, MerchantPermission.ORDER_READ);
         if (query == null) {
@@ -1908,7 +1921,7 @@ public class ApiMerchantController extends BaseController {
     @PostMapping("/customers")
     public AjaxResult customers(@RequestBody(required = false) MerchantCustomerQuery query) {
         Long principalMemberId;
-        try { principalMemberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         MerchantAccessContext access = merchantAccessService.require(
                 principalMemberId, MerchantPermission.CRM_READ);
         if (query == null) {
@@ -1923,7 +1936,7 @@ public class ApiMerchantController extends BaseController {
     @PostMapping("/settlements/ledger")
     public AjaxResult settlementLedger(@RequestBody(required = false) MerchantLedgerQuery query) {
         Long principalMemberId;
-        try { principalMemberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         MerchantAccessContext access = merchantAccessService.require(
                 principalMemberId, MerchantPermission.FINANCE_READ);
         Long ownerMemberId = access.getOwnerMemberId();
@@ -1954,7 +1967,7 @@ public class ApiMerchantController extends BaseController {
     @PostMapping("/finance/overview")
     public AjaxResult financeOverview() {
         Long principalMemberId;
-        try { principalMemberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         MerchantAccessContext access = merchantAccessService.require(
                 principalMemberId, MerchantPermission.FINANCE_READ);
         return success(merchantFinanceQueryService.overview(access.getOwnerMemberId()));
@@ -1964,7 +1977,7 @@ public class ApiMerchantController extends BaseController {
     @PostMapping("/finance/redemptions")
     public AjaxResult financeRedemptions(@RequestBody(required = false) Map<String, Object> body) {
         Long principalMemberId;
-        try { principalMemberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         MerchantAccessContext access = merchantAccessService.require(
                 principalMemberId, MerchantPermission.VERIFY_RECORD_READ);
         boolean includeFinance = access.hasPermission(MerchantPermission.FINANCE_READ);
@@ -1984,7 +1997,7 @@ public class ApiMerchantController extends BaseController {
     @PostMapping("/finance/redemption-detail")
     public AjaxResult financeRedemptionDetail(@RequestBody(required = false) Map<String, Object> body) {
         Long principalMemberId;
-        try { principalMemberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         MerchantAccessContext access = merchantAccessService.require(
                 principalMemberId, MerchantPermission.VERIFY_RECORD_READ);
         String recordType = body == null || body.get("recordType") == null ? null : String.valueOf(body.get("recordType"));
@@ -2001,7 +2014,7 @@ public class ApiMerchantController extends BaseController {
     @PostMapping("/finance/public-transfer-batches")
     public AjaxResult financePublicTransferBatches(@RequestBody(required = false) Map<String, Object> body) {
         Long principalMemberId;
-        try { principalMemberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         MerchantAccessContext access = merchantAccessService.require(
                 principalMemberId, MerchantPermission.FINANCE_READ);
         int pageNum = body == null ? 1 : aggregateInt(body.get("pageNum"), 1);
@@ -2014,7 +2027,7 @@ public class ApiMerchantController extends BaseController {
     @PostMapping("/finance/public-transfer-batch-detail")
     public AjaxResult financePublicTransferBatchDetail(@RequestBody(required = false) Map<String, Object> body) {
         Long principalMemberId;
-        try { principalMemberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         MerchantAccessContext access = merchantAccessService.require(
                 principalMemberId, MerchantPermission.FINANCE_READ);
         Long batchId = body == null ? null : aggregateLong(body.get("batchId"));
@@ -2027,7 +2040,7 @@ public class ApiMerchantController extends BaseController {
     @PostMapping("/finance/settlement-entries")
     public AjaxResult financeSettlementEntries(@RequestBody(required = false) Map<String, Object> body) {
         Long principalMemberId;
-        try { principalMemberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         MerchantAccessContext access = merchantAccessService.require(
                 principalMemberId, MerchantPermission.FINANCE_READ);
         String source = body == null || body.get("source") == null ? "all" : String.valueOf(body.get("source"));
@@ -2094,11 +2107,11 @@ public class ApiMerchantController extends BaseController {
         try {
             member_id = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
 
         if (member_id == null || member_id <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
 
         // Round5B-6:入驻资料(店名/简介/周边/偏好/地址/营业时间)审核通过后公开,提交时先过文本机审;
@@ -2156,10 +2169,10 @@ public class ApiMerchantController extends BaseController {
         if (request.getId() != null) {
             MmsMerchant existing = mmsMerchantService.selectMmsMerchantById(request.getId());
             if (existing == null) {
-                return error("商家信息不存在");
+                return refuse(ErrorCode.NOT_FOUND, "商家信息不存在");
             }
             if (OwnershipUtils.notOwner(existing.getMemberId(), member_id)) {
-                return error("无权修改该商家信息");
+                return refuse(ErrorCode.FORBIDDEN, "无权修改该商家信息");
             }
             if (!Integer.valueOf(0).equals(existing.getDelFlag())
                     || existing.getAccountStatus() == null

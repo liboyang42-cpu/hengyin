@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.LocationTrustMapper">
+
+    <resultMap id="FixRow" type="com.chengyinhub.business.locationtrust.LocationTrustFixRow">
+        <id property="id" column="id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="sessionId" column="session_id"/>
+        <result property="kind" column="kind"/>
+        <result property="refId" column="ref_id"/>
+        <result property="lat" column="lat"/>
+        <result property="lng" column="lng"/>
+        <result property="accuracyM" column="accuracy_m"/>
+        <result property="clientTs" column="client_ts"/>
+        <result property="receivedAt" column="received_at"/>
+        <result property="simulated" column="simulated"/>
+        <result property="accessory" column="accessory"/>
+        <result property="speedMps" column="speed_mps"/>
+        <result property="decision" column="decision"/>
+        <result property="appliedDecision" column="applied_decision"/>
+        <result property="reasons" column="reasons"/>
+        <result property="detail" column="detail"/>
+    </resultMap>
+
+    <resultMap id="EvidenceRow" type="com.chengyinhub.business.locationtrust.ClaimEvidenceRow">
+        <id property="id" column="id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="placeRef" column="place_ref"/>
+        <result property="placeLat" column="place_lat"/>
+        <result property="placeLng" column="place_lng"/>
+        <result property="captureSource" column="capture_source"/>
+        <result property="photoSha256" column="photo_sha256"/>
+        <result property="photoPhash" column="photo_phash"/>
+        <result property="photoTakenAt" column="photo_taken_at"/>
+        <result property="photoLat" column="photo_lat"/>
+        <result property="photoLng" column="photo_lng"/>
+        <result property="fixId" column="fix_id"/>
+        <result property="verdict" column="verdict"/>
+        <result property="reasons" column="reasons"/>
+        <result property="duplicateOf" column="duplicate_of"/>
+        <result property="consumedAt" column="consumed_at"/>
+        <result property="consumedRef" column="consumed_ref"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <insert id="insertFix" parameterType="com.chengyinhub.business.locationtrust.LocationTrustFixRow"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into location_trust_fix
+            (member_id, session_id, kind, ref_id, lat, lng, accuracy_m, client_ts, received_at,
+             simulated, accessory, speed_mps, decision, applied_decision, reasons, detail)
+        values
+            (#{memberId}, #{sessionId}, #{kind}, #{refId}, #{lat}, #{lng}, #{accuracyM}, #{clientTs}, #{receivedAt},
+             #{simulated}, #{accessory}, #{speedMps}, #{decision}, #{appliedDecision}, #{reasons}, #{detail})
+    </insert>
+
+    <select id="selectLastCleanFix" resultType="java.util.HashMap" useCache="false">
+        select lat, lng, received_at as receivedAt, client_ts as clientTs, accuracy_m as accuracyM
+        from location_trust_fix
+        where member_id = #{memberId} and received_at &gt;= #{since}
+          and decision = 'ACCEPT' and (simulated is null or simulated = 0)
+        order by received_at desc, id desc
+        limit 1
+    </select>
+
+    <!-- GAME-4 rolling window: the earliest clean fix in the window (idx_member_received). -->
+    <select id="selectFirstCleanFix" resultType="java.util.HashMap" useCache="false">
+        select lat, lng, received_at as receivedAt, client_ts as clientTs, accuracy_m as accuracyM
+        from location_trust_fix
+        where member_id = #{memberId} and received_at &gt;= #{since}
+          and decision = 'ACCEPT' and (simulated is null or simulated = 0)
+        order by received_at asc, id asc
+        limit 1
+    </select>
+
+    <select id="countIdenticalSince" resultType="int" useCache="false">
+        select count(*) from location_trust_fix
+        where member_id = #{memberId} and received_at &gt;= #{since}
+          and lat = #{lat} and lng = #{lng}
+          and <choose><when test="accuracy != null">accuracy_m = #{accuracy}</when><otherwise>accuracy_m is null</otherwise></choose>
+    </select>
+
+    <select id="selectSessionRevealTrack" resultType="java.util.HashMap" useCache="false">
+        select lat, lng from location_trust_fix
+        where member_id = #{memberId} and session_id = #{sessionId} and kind = 'REVEAL' and decision = 'ACCEPT'
+        order by id desc
+        limit #{limit}
+    </select>
+
+    <select id="countTilesRevealedSince" resultType="int" useCache="false">
+        select count(*) from roam_fog_tile where member_id = #{memberId} and revealed_at &gt;= #{since}
+    </select>
+
+    <select id="selectCleanFixesSince" resultType="java.util.HashMap" useCache="false">
+        select lat, lng, received_at as receivedAt from location_trust_fix
+        where member_id = #{memberId} and received_at &gt;= #{since}
+          and decision = 'ACCEPT' and (simulated is null or simulated = 0)
+        order by id desc
+        limit #{limit}
+    </select>
+
+    <update id="updateFixDetail">
+        update location_trust_fix set detail = #{detail} where id = #{id}
+    </update>
+
+    <delete id="deleteFixesBefore">
+        delete from location_trust_fix where received_at &lt; #{cutoff} order by id limit #{limit}
+    </delete>
+
+    <select id="selectFlagged" resultMap="FixRow" useCache="false">
+        select * from location_trust_fix
+        where (decision &lt;&gt; 'ACCEPT' or reasons is not null)
+        <if test="memberId != null"> and member_id = #{memberId}</if>
+        <if test="kind != null and kind != ''"> and kind = #{kind}</if>
+        order by id desc
+        limit #{limit}
+    </select>
+
+    <insert id="insertEvidence" parameterType="com.chengyinhub.business.locationtrust.ClaimEvidenceRow"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into location_claim_evidence
+            (member_id, place_ref, place_lat, place_lng, capture_source, photo_sha256, photo_phash, photo_taken_at,
+             photo_lat, photo_lng, fix_id, verdict, reasons, duplicate_of, create_time)
+        values
+            (#{memberId}, #{placeRef}, #{placeLat}, #{placeLng}, #{captureSource}, #{photoSha256}, #{photoPhash},
+             #{photoTakenAt}, #{photoLat}, #{photoLng}, #{fixId}, #{verdict}, #{reasons}, #{duplicateOf}, #{createTime})
+    </insert>
+
+    <select id="selectEvidenceOwned" resultMap="EvidenceRow" useCache="false">
+        select * from location_claim_evidence where id = #{id} and member_id = #{memberId}
+    </select>
+
+    <select id="selectEvidenceBySha" resultMap="EvidenceRow" useCache="false">
+        select * from location_claim_evidence where photo_sha256 = #{sha} and create_time &gt;= #{since}
+        order by id limit 20
+    </select>
+
+    <select id="selectNearestPhash" resultType="java.util.HashMap" useCache="false">
+        select id, member_id as memberId, place_ref as placeRef, bit_count(photo_phash ^ #{phash}) as distance
+        from location_claim_evidence
+        where photo_phash is not null and create_time &gt;= #{since}
+          and not (member_id = #{memberId} and place_ref &lt;=&gt; #{placeRef})
+        order by distance asc, id asc
+        limit 1
+    </select>
+
+    <update id="consumeEvidence">
+        update location_claim_evidence set consumed_at = #{now}, consumed_ref = #{consumedRef}
+        where id = #{id} and member_id = #{memberId} and verdict = 'ACCEPT' and consumed_at is null
+    </update>
+
+    <update id="consumeEvidenceForReview">
+        update location_claim_evidence set consumed_at = #{now}, consumed_ref = #{consumedRef}
+        where id = #{id} and member_id = #{memberId} and verdict in ('ACCEPT', 'REVIEW') and consumed_at is null
+    </update>
+
+    <update id="clearEvidencePhotoCoordinatesBefore">
+        update location_claim_evidence set photo_lat = null, photo_lng = null
+        where create_time &lt; #{cutoff} and (photo_lat is not null or photo_lng is not null)
+        order by id limit #{limit}
+    </update>
+</mapper>

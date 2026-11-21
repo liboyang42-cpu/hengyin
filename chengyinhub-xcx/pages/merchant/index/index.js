@@ -311,6 +311,13 @@ Page({
     this.closeScene();
   },
   cancelSceneDiscard() { this.setData({ sceneConfirm: { show: false, action: null, pending: null } }); },
+  onPoiTitle(event) {
+    const scene = this.data.sceneCurrent, detail = event.detail || {};
+    if (!scene || scene.id !== 'roam-poi-detail' || !detail.name || scene.title === detail.name
+        || String(scene.params.poiId || '') !== String(detail.poiId || '')
+        || String(scene.params.merchantId || '') !== String(detail.merchantId || '')) return;
+    this.setData({ 'sceneCurrent.title': detail.name, sceneStack: this.data.sceneStack.map((row, index) => index === this.data.sceneStack.length - 1 ? Object.assign({}, row, { title: detail.name }) : row) });
+  },
   setSceneDirty(dirty) {
     if (!this.data.sceneStack.length) return;
     const sceneStack = this.data.sceneStack.slice();
@@ -341,7 +348,9 @@ Page({
     else if (action === 'brand') this.goBrandManage();
     else if (action === 'aftercare') this.goAftercare();
     else if (action === 'verifyRecords') this.goVerifyRecords();
+    else if (action === 'bundleReservations') this.goBundleReservations();
     else if (action === 'payoutAccount') this.goPayoutAccount();
+    else if (action === 'plans') this.goPlans();
   },
 
   goManageCoupon() {
@@ -353,6 +362,12 @@ Page({
     this._navigating = true; wx.navigateTo({ url: '/pages/merchant/aftercare/index', complete: () => { this._navigating = false; } });
   },
 
+  goBundleReservations() {
+    if (!this.data.merchantAccess.canVerify || this._navigating) return;
+    this._navigating = true;
+    wx.navigateTo({ url: '/pages/merchant/bundle-reservations/index', complete: () => { this._navigating = false; } });
+  },
+
   goVerifyRecords() {
     if (!this.data.merchantAccess.canReadVerifyRecords || this._navigating) return; // 跳转中不响应连点,免得叠两层核销记录页
     this._navigating = true;
@@ -362,6 +377,11 @@ Page({
     if (!this.data.merchantAccess.canReadFinance || this._navigating) return; // 跳转中不响应连点
     this._navigating = true;
     wx.navigateTo({ url: '/pages/merchant/payout-account/index', complete: () => { this._navigating = false; } });
+  },
+  goPlans() {
+    if (!this.data.merchantAccess.canReadBasic || this._navigating) return; // 跳转中不响应连点
+    this._navigating = true;
+    wx.navigateTo({ url: '/pages/merchant/plans/index', complete: () => { this._navigating = false; } });
   },
   // 今日待办(待核销/扫码待确认/待处理):后端 /api/merchant/todo-summary
   loadTodo(dataEpoch = this._dataEpoch || 0) {

@@ -8,14 +8,14 @@
   <scroll-view scroll-y class="pg-scroll" enhanced show-scrollbar="{{false}}">
     <cy-skeleton wx:if="{{loading && !hasPreview}}" type="card" count="{{2}}" />
     <cy-empty class="cy-fade-in" wx:elif="{{errorText === '缺少主题信息'}}" fill kind="missing-param" title="缺少主题信息" cta="返回上一页" bind:cta="goBack" />
-    <cy-error load-failure wx:elif="{{errorText && !hasPreview}}" fill title="定价信息加载失败" sub="{{errorText}}"
-              retry="重试" bind:retry="preview" auto-back />
+    <cy-error wx:elif="{{errorText && !hasPreview}}" fill title="定价信息加载失败" sub="{{errorText}}"
+              retry="重试" bind:retry="preview" />
     <block wx:else>
       <cy-inline-error wx:if="{{errorText && hasPreview}}" title="最新定价暂未取回" sub="{{errorText}}" action="重试" bind:action="preview" />
       <view wx:if="{{loading && hasPreview}}" class="pg-refreshing" aria-role="status" aria-live="polite">正在确认最新定价…</view>
-      <cy-tabs class="pg-tabs" variant="chip" tabs="{{typeTabs}}" active="{{subType}}" bind:change="chooseType" />
+      <cy-tabs wx:if="{{!isFreeExplore}}" class="pg-tabs" variant="chip" tabs="{{typeTabs}}" active="{{subType}}" bind:change="chooseType" />
 
-      <view class="pg-card cy-rise-in" wx:if="{{subType==='guided' && !priced}}">
+      <view class="pg-card cy-rise-in" wx:if="{{subType==='guided' && !isFreeExplore && !priced}}">
         <view class="pg-title">带队成本</view>
         <!-- ⚠️ 原来只有 placeholder 当标签,一填值就消失(2026-08-19 E24 实拍:两个框只剩 200 / 10,
              分不清谁是成本谁是人数)。这两个数直接驱动下面的成本地板,是定价页的输入,
@@ -35,7 +35,7 @@
         <cy-btn variant="secondary" bindtap="recalculate">重新计算地板</cy-btn>
       </view>
 
-      <view class="pg-card pg-floor cy-rise-in">
+      <view class="pg-card pg-floor cy-rise-in" wx:if="{{!isFreeExplore}}">
         <!-- CU-C-99:「乙-2」是内部条款编号,不该出现在给主理人看的标题里。 -->
         <text class="pg-kicker">最低价</text>
         <text class="pg-money">{{money.amount2(floorText)}}</text>
@@ -55,17 +55,29 @@
 
       <view class="pg-card cy-rise-in" wx:else>
         <view class="pg-price-row">
-          <text class="pg-title">你的终价</text>
+          <text class="pg-title">{{isFreeExplore ? (isFree ? '免费门票' : '门票价格') : '你的终价'}}</text>
           <text class="pg-final">{{money.amount2(finalPrice)}}</text>
         </view>
-        <slider min="{{floor}}" max="{{sliderMax}}" value="{{finalPrice}}" step="1"
+        <slider min="{{sliderMin}}" max="{{sliderMax}}" value="{{finalPrice}}" step="1"
                 activeColor="var(--cy-color-action-primary-bg)" backgroundColor="var(--cy-color-border-subtle)"
                 block-size="24" bindchange="onSliderChange" />
-        <view class="pg-range"><text>地板 {{money.amount2(floorText)}}</text><text>最高 {{money.amount2(sliderMax)}}</text></view>
+        <view class="pg-range" wx:if="{{!isFreeExplore}}"><text>地板 {{money.amount2(floorText)}}</text><text>最高 {{money.amount2(sliderMax)}}</text></view>
         <cy-inline-error class="pg-field-err" wx:if="{{selfPriceError}}" kind="field" title="{{selfPriceError}}" />
+        <view class="pg-fee" wx:if="{{feeText}}">
+          <view class="pg-fee-row"><text>平台服务费</text><text>{{feeText}}</text></view>
+          <view class="pg-fee-row pg-fee-row--net"><text>预计到手</text><text>{{takeHomeText}}</text></view>
+        </view>
         <view class="pg-reference" wx:if="{{referenceText}}">
           <text>{{referenceText}}</text>
           <text wx:if="{{referenceDeltaText}}" class="pg-delta">{{referenceDeltaText}}</text>
+        </view>
+      </view>
+
+      <view class="pg-card cy-rise-in" wx:if="{{pendingRows.length}}">
+        <view class="pg-title">结算待处理</view>
+        <view class="pg-pend" wx:for="{{pendingRows}}" wx:key="key">
+          <view class="pg-fee-row"><text class="ep1">{{item.name}}</text><text>{{item.money}}</text></view>
+          <text class="pg-pend-reason">{{item.reason}}</text>
         </view>
       </view>
 
@@ -85,12 +97,12 @@
 
       
       <view class="pg-actions">
-        <view class="pg-note" wx:if="{{priced}}">终价已确认</view>
-        <view class="pg-note" wx:elif="{{phaseBlocked}}">合作阵容锁定后可定价</view>
+        <view class="pg-note" wx:if="{{priced}}">{{saleStatusText || '终价已确认'}}</view>
+        <view class="pg-note" wx:elif="{{phaseBlocked}}">{{isFreeExplore ? confirmBlockReason : '合作阵容锁定后可定价'}}</view>
         <cy-inline-error wx:if="{{submitError}}" kind="error" title="终价确认失败" sub="{{submitError}}" action="{{phaseBlocked ? '' : '重试'}}" bind:action="confirmPrice" />
         <!-- CU-C-100:按钮原来写「并开售」,而后端确认只推到 PRICING、开售要运营另行送审
              (回执是「终价已确认，请等待开售审核」)。照回执改口径,不承诺当场开卖。 -->
-        <cy-btn variant="primary" loading="{{saving}}" disabled="{{!canConfirmPrice}}" bindtap="confirmPrice" bind:disabledtap="onConfirmDisabledTap">确认终价并提交开售审核</cy-btn>
+        <cy-btn variant="primary" loading="{{saving}}" disabled="{{!canConfirmPrice}}" bindtap="confirmPrice" bind:disabledtap="onConfirmDisabledTap">{{isFreeExplore ? '确认终价' : '确认终价并提交开售审核'}}</cy-btn>
       </view>
       <view class="pg-pad"></view>
     </block>

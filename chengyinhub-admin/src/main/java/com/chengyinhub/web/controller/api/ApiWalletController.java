@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,7 +48,7 @@ public class ApiWalletController extends BaseController {
     @PostMapping("/balance")
     public AjaxResult balance(@RequestBody(required = false) Map<String, Object> body) {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         UmsMember m = umsMemberService.selectUmsMemberById(memberId);
         Map<String, Object> d = new HashMap<>();
         d.put("balance", m != null && m.getBalance() != null ? m.getBalance() : BigDecimal.ZERO);
@@ -60,7 +62,7 @@ public class ApiWalletController extends BaseController {
     @PostMapping("/stages")
     public AjaxResult stages(@RequestBody(required = false) Map<String, Object> body) {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         try {
             return AjaxResult.success(memberFundsStageService.stages(memberId, new java.util.Date()));
         } catch (com.chengyinhub.common.exception.ServiceException e) {
@@ -71,10 +73,10 @@ public class ApiWalletController extends BaseController {
     @Operation(summary = "提现到微信零钱")
     @PostMapping("/withdraw")
     public AjaxResult withdraw(@RequestBody Map<String, Object> body) {
-        if (!fastWithdrawEnabled) return error("快速提现暂未开放,请使用其他提现方式或联系客服");
+        if (!fastWithdrawEnabled) return error("快速提现暂未开放，请使用其他提现方式或联系客服");
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
-        if (body == null || body.get("amount") == null) return error("请输入提现金额");
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body == null || body.get("amount") == null) return refuse(ErrorCode.BAD_REQUEST, "请输入提现金额");
         BigDecimal amount;
         try { amount = new BigDecimal(String.valueOf(body.get("amount")).trim()); }
         catch (Exception e) { return error("提现金额不合法"); }
@@ -89,7 +91,7 @@ public class ApiWalletController extends BaseController {
     @PostMapping("/withdraws")
     public AjaxResult withdraws(@RequestBody(required = false) Map<String, Object> body) {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         return AjaxResult.success(cashWithdrawService.myWithdraws(memberId));
     }
 }

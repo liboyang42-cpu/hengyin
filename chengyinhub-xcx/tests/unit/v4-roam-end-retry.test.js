@@ -36,6 +36,10 @@ beforeEach(() => {
     sendRequest(o) {
       calls.push({ url: o.url, data: o.data })
       const key = app.getUserID() + ':' + o.data.clientSessionKey
+      if (o.url === '/api/roam/passport/history') {
+        const rows = Object.values(sessions).filter(s => s.state === 'FINISHED').map(s => ({ sessionId: s.sessionId, startedAt: 1800000000000, finishedAt: 1800000060000, distanceM: 1200, shops: 0 }));
+        o.success({ code: 200, data: { items: rows, hasMore: false } }); return
+      }
       if (o.url === '/api/roam/reveal') {
         sessions[key] = sessions[key] || { state: 'ACTIVE', sessionId: SID, clientSessionKey: o.data.clientSessionKey }
         o.success({ code: 200, data: { sessionId: SID } }); return
@@ -120,6 +124,7 @@ for (const mode of ['timeout-after-apply', 'http-504-after-apply']) {
     const history = Object.assign({}, componentConfig.methods, { data: JSON.parse(JSON.stringify(componentConfig.data)) })
     history.setData = (patch) => Object.assign(history.data, patch)
     componentConfig.lifetimes.attached.call(history)
+    await settle()
     assert.equal(history.data.state, 'ready')
     assert.equal(history.data.list.length, 1, '本次漫游只留一条记录，不因重试重复')
     assert.equal(history.data.inProgress, false, '已结算的漫游不再显示为进行中')

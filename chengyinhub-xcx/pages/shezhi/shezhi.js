@@ -7,7 +7,7 @@ const roleGuard = require('../../utils/roleGuard.js');
 const merchantTheme = require('../../utils/merchant-theme.js');
 const { getScene } = require('../../utils/scene-registry.js');
 const { pushScene, popScene, currentScene, exitDecision } = require('../../utils/scene-stack.js');
-const { clearStoragePreservingPlayerRoamMemory } = require('../../utils/roam-player-memory.js');
+const { clearStorageForLogout } = require('../../utils/roam-player-memory.js');
 Page({
 
   data: {
@@ -237,6 +237,11 @@ Page({
   openAiChatRecords() { this.setData({ showAiChatRecords: true }); },
   closeAiChatRecords() { this.setData({ showAiChatRecords: false }); },
 
+  // R11 growth-loops(GRO-05):小程序 → App 入口
+  goApp() {
+    wx.navigateTo({ url: '/pages/shezhi/app/index' });
+  },
+
   goAbout() {
     wx.navigateTo({ url: '/pages/shezhi/about/index' });
   },
@@ -322,7 +327,7 @@ Page({
     const dc = this.selectComponent && this.selectComponent('#dc');
     if (dc) dc.busyOn();
     const clearLocalLogin = function () {
-      if (!clearStoragePreservingPlayerRoamMemory(wx)) return false;
+      if (!clearStorageForLogout(wx)) return false;
       sendRecovery.invalidate();
       app.globalData.authorization = '';
       app.globalData.open_id = '';

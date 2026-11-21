@@ -53,6 +53,9 @@ public class PlayBasicCommandApplication {
     private com.chengyinhub.business.service.IGameSessionRuntimeService gameSessionRuntimeService;
     @Autowired(required = false)
     private com.chengyinhub.business.service.support.ArriveLocationGuard arriveLocationGuard;
+    /** P8 SEC-09: scores the fix at the start AND at every later station that sends one. */
+    @Autowired(required = false)
+    private com.chengyinhub.business.locationtrust.LocationTrustService locationTrust;
     @Autowired
     private ICmsTopicNodeService cmsTopicNodeService;
     @Autowired
@@ -88,6 +91,33 @@ public class PlayBasicCommandApplication {
     private PlayTaskPresentation playTaskPresentation;
     @Autowired(required = false)
     private com.chengyinhub.business.service.impl.InGameChannelService inGameChannelService;
+    /** GAME-2: reads play.arrive.remote_reward_policy / play.arrive.reward_radius_m; absent = safe defaults. */
+    @Autowired(required = false)
+    private com.chengyinhub.system.service.ISysConfigService sysConfigService;
+
+    /** GAME-2 switches, read per call so an admin change applies without a restart. */
+    private com.chengyinhub.business.service.support.RewardPresencePolicy rewardPresence() {
+        if (sysConfigService == null) return com.chengyinhub.business.service.support.RewardPresencePolicy.defaults();
+        return com.chengyinhub.business.service.support.RewardPresencePolicy.read(sysConfigService::selectConfigByKey);
+    }
+
+    /**
+     * GAME-2:这次完成的人是否在这一站附近(奖励半径 = max(冻结站点半径, 80 米) + min(精度, 50 米))。
+     * 站点没坐标 = 线上站,判不了也不需要判,按在场。没带定位或定位无效 = 不在场。
+     */
+    private boolean presentAtStop(String targetLongitude, String targetLatitude, String longitude, String latitude,
+            String accuracy, ArrivalPolicy arrivalPolicy,
+            com.chengyinhub.business.service.support.RewardPresencePolicy presence) {
+        Double stopLat = PlayNodeContext.parseGeoCoordinate(targetLatitude, -90d, 90d);
+        Double stopLng = PlayNodeContext.parseGeoCoordinate(targetLongitude, -180d, 180d);
+        if (StringUtils.isBlank(targetLongitude) || StringUtils.isBlank(targetLatitude)) return true;
+        if (stopLat == null || stopLng == null) return false;
+        return com.chengyinhub.business.service.support.RewardPresencePolicy.within(
+                PlayNodeContext.parseGeoCoordinate(latitude, -90d, 90d),
+                PlayNodeContext.parseGeoCoordinate(longitude, -180d, 180d),
+                PlayNodeContext.parseGeoCoordinate(accuracy, 0d, Double.MAX_VALUE),
+                stopLat, stopLng, presence.rewardRadiusMeters(arrivalPolicy));
+    }
 
     /** 扫码打卡：原节点、输入与前置状态属于同一意图。 */
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
@@ -208,6 +238,8 @@ public class PlayBasicCommandApplication {
         boolean personalGameplay=originalRun.session()!=null && topicRouteRuntimeService!=null && topicRouteRuntimeService.genericPlayer(memberId,ctx.topicId,actId);
         if (sharedRoute != null || personalGameplay) {
             PlayerNodeProgress proof = shopDayProofService.markArrived(memberId, actId, node);
+            // GAME-2:现场扫到这一站的码 = 人在这里,可以作为本局开局。
+            shopDayProofService.markStartVerified(memberId, actId, ctx.topicId, node.getId());
             Map<String,Object> arrivalData=playTaskPresentation.shopDayProofData(node,proof);
             if(personalGameplay)arrivalData.put("themeRuntime",topicRouteRuntimeService.recordPlayerArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,expectedRouteVersion));
             if(sharedRoute!=null)arrivalData.put("sharedRuntime",gameSessionRuntimeService.recordSharedBasicArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,"SCAN",runtimeInstance,authorityEpoch));
@@ -224,6 +256,7 @@ public class PlayBasicCommandApplication {
         playNodeCompletionApplication.logAttempt(memberId, node, actId, 2, 1, null); // M9 扫码打卡成功
         Map<String, Object> data = playNodeCompletionApplication.advanceProgress(memberId, node, actId, null, null, null,
                 RewardPolicy.FULL, routeActionId, expectedRouteVersion, null, null, originalRun);
+        shopDayProofService.markStartVerified(memberId, actId, ctx.topicId, node.getId()); // GAME-2:现场扫码可作开局
         recordFirstSuccessfulScan(memberId, ctx);
         attachDispatchedTask(data, memberId, node);
         if (ctx.nightWarning) data.put("nightWarning", true); // M2 自玩夜间提示(不阻断)
@@ -390,6 +423,7 @@ public class PlayBasicCommandApplication {
         // 实走 A20:规则写「50米内解锁」,人不在附近也能答对完成。
         boolean runtimePath = originalRun.session() != null && topicRouteRuntimeService != null
                 && topicRouteRuntimeService.genericPlayer(memberId, ctx.topicId, actId);
+        boolean answerStartVerified = false;
         if (playMode == PlayMode.LINEAR_ORIENTEERING && runtimePath) {
             com.fasterxml.jackson.databind.JsonNode target = topicRouteRuntimeService.nodeArrivalConfig(memberId, ctx.topicId, actId, node.getId());
             boolean located = target != null && StringUtils.isNotBlank(target.path("longitude").asText(null))
@@ -404,8 +438,16 @@ public class PlayBasicCommandApplication {
             if (!shopDayProofService.runStarted(memberId, ctx.actId, ctx.topicId)) {
                 FenceRejection fence = startFenceError(node, longitude, latitude, accuracy);
                 if (fence != null) return PlayCommandErrorContract.arriveFirst(fence.message(), fence.reasonCode());
+                answerStartVerified = true;
             }
         }
+        // GAME-2「进度免费,奖品要到场」:老路径有坐标的站,作答随带的定位不在这一站附近 ⇒ 照常完成,只发探索值与徽章。
+        com.chengyinhub.business.service.support.RewardPresencePolicy answerPresence = rewardPresence();
+        boolean answerPresent = !(playMode == PlayMode.LINEAR_ORIENTEERING && !runtimePath)
+                || presentAtStop(node.getLongitude(), node.getLatitude(), longitude, latitude, accuracy,
+                        ArrivalPolicy.legacy(), answerPresence);
+        RewardPolicy answerRewardPolicy = answerPresence.policyFor(answerPresent);
+        boolean answerRemote = answerRewardPolicy == RewardPolicy.XP_BADGE_ONLY;
 
         // 读节点绑定模板的验证方式 + 校验答案(R18-FREEZE:对错判定按开局快照,新发布不改写
         // 进行中的一局;老局快照没有 nodeAnswers 键时回退实时模板)
@@ -467,7 +509,9 @@ public class PlayBasicCommandApplication {
             // 但**不加 errorCode**:原合同里「答错」不是传输/恢复错误,判据是
             // msg=「答案不正确」+ data.answerWrong。加了码会让既有客户端把普通答错
             // 当成业务拒绝(而业务拒绝恰恰不该带这个标记),等于改既有 body 语义。
-            return AjaxResult.error("答案不正确",
+            // GAME-10:只给有类型的 REFUSED(决定 v2 的 4xx),body 逐字不变,仍不加 body errorCode。
+            return AjaxResult.refuse(com.chengyinhub.common.constant.HttpStatus.ERROR,
+                    com.chengyinhub.common.exception.ErrorCode.REFUSED, "答案不正确",
                     java.util.Collections.singletonMap("answerWrong", true));
         }
 
@@ -490,8 +534,9 @@ public class PlayBasicCommandApplication {
                 return PlayCommandErrorContract.retryableUncertain(e.getMessage(), PlayCommandErrorContract.PUZZLE_STATE_UNAVAILABLE);
             }
             data = playNodeCompletionApplication.advanceProgress(memberId, node, actId, null,
-                    puzzleScore, PuzzleScorePolicy.COMPLETION_SOLVED, RewardPolicy.FULL,
-                    routeActionId, expectedRouteVersion, null, null, originalRun);
+                    puzzleScore, PuzzleScorePolicy.COMPLETION_SOLVED, answerRewardPolicy,
+                    routeActionId, expectedRouteVersion, null, null, originalRun, answerRemote);
+            if (answerStartVerified) shopDayProofService.markStartVerified(memberId, actId, ctx.topicId, node.getId());
         } else {
             data = playNodeCompletionApplication.advanceProgress(memberId, node, actId, null, null, null, RewardPolicy.FULL,
                     routeActionId, expectedRouteVersion, null, null, originalRun);
@@ -499,8 +544,22 @@ public class PlayBasicCommandApplication {
         if (ctx.nightWarning) data.put("nightWarning", true); // M2 自玩夜间提示(不阻断)
         // P-11:答对之后才把作者的揭示随回执给出,题卡停一拍写「对了」+ 揭示
         if (StringUtils.isNotBlank(answerReveal)) data.put("answerReveal", answerReveal.trim());
+        // x-life-games R10:作者写的完成反馈随答对回执一起给(与 /nodes 同源:冻结内容优先,否则实时模板),
+        // App 在判定下面显示;小程序仍用节点列表里的 passText,多一个键不影响它。
+        String feedbackText = answerFeedbackText(node, frozenAnswer);
+        if (StringUtils.isNotBlank(feedbackText)) data.put("feedbackText", feedbackText.trim());
         boolean firstTime = Boolean.TRUE.equals(data.get("firstTime"));
         return AjaxResult.success(firstTime ? "答对了！" : "该节点已完成", data);
+    }
+
+    private String answerFeedbackText(CmsTopicNode node, com.fasterxml.jackson.databind.JsonNode frozenAnswer) {
+        if (playNodeContext.hasFrozenContent(frozenAnswer)) {
+            CmsMemberTemplate frozen = playNodeContext.frozenTemplateView(node, frozenAnswer);
+            return frozen == null ? null : frozen.getFeedbackText();
+        }
+        if (node.getTemplateId() == null) return null;
+        CmsMemberTemplate live = cmsMemberTemplateService.selectCmsMemberTemplateById(node.getTemplateId());
+        return live == null ? null : live.getFeedbackText();
     }
 
     /** 开局时定位校验(300 米,精度 80 米);作答随带的定位与 arrive 同口径。null = 通过。 */
@@ -751,6 +810,7 @@ public class PlayBasicCommandApplication {
         // 唯一豁免:实体免费收集的店内扫码/拍照已核验凭证(进店本身就是现场证明,不走线路开局闸)。
         // 本局已有进度 = 开局校验已过,之后各站到点不再要求定位。没开局又不带定位的到达一律拒绝。
         boolean runStarted = shopDayProofService.runStarted(memberId, actId, ctx.topicId);
+        boolean startVerified = false;
         if (hasNodeCoord && !(freeCollectStore && stationGameProof) && !runStarted) {
             if (StringUtils.isBlank(longitude) || StringUtils.isBlank(latitude)) return arriveRejected(PlayCommandErrorContract.retryable("请开启定位", PlayCommandErrorContract.ARRIVE_LOCATION_MISSING), frozenStation);
             // R10-10:Double.parseDouble 接受 "NaN"/"Infinity",而 NaN 与任何数比较恒 false,
@@ -811,12 +871,30 @@ public class PlayBasicCommandApplication {
                     return arriveRejected(rejected, frozenStation);
                 }
             }
+            startVerified = true;
         }
+
+        // SEC-09: every journey node, not only the start. Owner 2026-11-13 still holds: after the start a station
+        // needs no location, so a missing fix is accepted (unless location.trust.journeyRequireFixAfterStart is on).
+        // A fix that IS sent is scored; a simulated or impossible one is refused with a retryable answer and
+        // stays on the review trail.
+        if (locationTrust != null && hasNodeCoord && !(freeCollectStore && stationGameProof)) {
+            AjaxResult untrusted = journeyTrustRejection(memberId, actId, nId, runStarted, longitude, latitude,
+                    accuracy, locationTimestamp, frozenStation);
+            if (untrusted != null) return untrusted;
+        }
+        // GAME-2「进度免费,奖品要到场」(业主 2026-11-16):到这里已不会拒绝;只看这次是否在这一站附近来定奖励。
+        // 定位分已经过了上面的 location-trust(没过就已经返回),所以这里只量距离。
+        com.chengyinhub.business.service.support.RewardPresencePolicy presence = rewardPresence();
+        boolean present = presentAtStop(targetLongitude, targetLatitude, longitude, latitude, accuracy, arrivalPolicy, presence);
+        RewardPolicy arriveRewardPolicy = freeCollectStore ? RewardPolicy.XP_BADGE_ONLY : presence.policyFor(present);
+        boolean arriveRemote = !freeCollectStore && arriveRewardPolicy == RewardPolicy.XP_BADGE_ONLY;
 
         JsonNode arrivalReading = frozenStation != null ? ArrivalReading.project(frozenStation)
                 : originalRun.session() == null ? null
                 : ArrivalReading.projectFrozen(originalRun.session().getConfigSnapshotJson(), nId);
         if(!freeCollectStore && (personalArrival || sharedArrival!=null)) {PlayerNodeProgress proof=shopDayProofService.markArrived(memberId,actId,node);Map<String,Object> data=playTaskPresentation.shopDayProofData(node,proof);
+            if(startVerified)shopDayProofService.markStartVerified(memberId,actId,ctx.topicId,node.getId());
             if(personalArrival)data.put("themeRuntime",topicRouteRuntimeService.recordPlayerArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,expectedRouteVersion,"GPS"));
             if(sharedArrival!=null)data.put("sharedRuntime",gameSessionRuntimeService.recordSharedBasicArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,"GPS",runtimeInstance,authorityEpoch));
             if(arrivalReading!=null)data.put("arrivalReading",arrivalReading);
@@ -824,6 +902,7 @@ public class PlayBasicCommandApplication {
         if (!freeCollectStore && solvedGame && topicRouteRuntimeService != null
                 && topicRouteRuntimeService.pendingCompassCheck(memberId,ctx.topicId,actId,node.getId())) {
             shopDayProofService.markArrived(memberId,actId,node);
+            if (startVerified) shopDayProofService.markStartVerified(memberId, actId, ctx.topicId, node.getId());
             // 已落到站事实(markArrived),不声称 intentNotExecuted;沿用主干的 CHECK_REQUIRED 回执形状。
             return AjaxResult.error("请先完成本站 D20 检定").put("errorCode","CHECK_REQUIRED");
         }
@@ -839,8 +918,8 @@ public class PlayBasicCommandApplication {
         }
         playNodeCompletionApplication.logAttempt(memberId, node, actId, 3, 1, null); // M9 GPS到达成功
         Map<String, Object> data = playNodeCompletionApplication.advanceProgress(memberId, node, actId, null, null, null,
-                freeCollectStore ? RewardPolicy.XP_BADGE_ONLY : RewardPolicy.FULL,
-                routeActionId, expectedRouteVersion, null, null, originalRun);
+                arriveRewardPolicy, routeActionId, expectedRouteVersion, null, null, originalRun, arriveRemote);
+        if (startVerified) shopDayProofService.markStartVerified(memberId, actId, ctx.topicId, node.getId());
         if (arrivalReading != null) data.put("arrivalReading", arrivalReading);
         if (ctx.nightWarning) data.put("nightWarning", true); // M2 自玩夜间提示(不阻断)
         boolean firstTime = Boolean.TRUE.equals(data.get("firstTime"));
@@ -850,6 +929,31 @@ public class PlayBasicCommandApplication {
                     memberId, actId, ctx.topicId, node.getName(), null);
         }
         return AjaxResult.success(firstTime ? "已到达，打卡成功" : "该节点已完成", data);
+    }
+
+    /** SEC-09 helper; null = proceed. */
+    private AjaxResult journeyTrustRejection(Long memberId, Long actId, Long nodeId, boolean runStarted, String longitude,
+            String latitude, String accuracy, String locationTimestamp, JsonNode frozenStation) {
+        Double lat = PlayNodeContext.parseGeoCoordinate(latitude, -90d, 90d);
+        Double lng = PlayNodeContext.parseGeoCoordinate(longitude, -180d, 180d);
+        if (lat == null || lng == null) {
+            if (runStarted && locationTrust.config().journeyRequireFixAfterStart()) {
+                return arriveRejected(PlayCommandErrorContract.retryable("请开启定位", PlayCommandErrorContract.ARRIVE_LOCATION_MISSING), frozenStation);
+            }
+            return null;
+        }
+        com.chengyinhub.business.locationtrust.LocationTrustService.Assessment a = locationTrust.assess(memberId, null,
+                runStarted ? com.chengyinhub.business.locationtrust.LocationTrustKind.JOURNEY_NODE
+                        : com.chengyinhub.business.locationtrust.LocationTrustKind.JOURNEY_START,
+                actId + ":" + nodeId,
+                com.chengyinhub.business.locationtrust.LocationSignals.current(lat, lng, accuracy, locationTimestamp));
+        if (a.credited()) return null;
+        String message = a.rejected()
+                ? com.chengyinhub.business.locationtrust.LocationTrustMessages.rejected(a.reasons())
+                : com.chengyinhub.business.locationtrust.LocationTrustMessages.withheld(a.reasons());
+        return arriveRejected(PlayCommandErrorContract.retryable(message, PlayCommandErrorContract.ARRIVE_LOCATION_UNTRUSTED)
+                .put("trustCode", com.chengyinhub.business.locationtrust.LocationTrustMessages.code(a.reasons()))
+                .put("appealable", false), frozenStation);
     }
 
     /** 端上定位时间(epoch 毫秒)；空白/非数字按缺失处理，由冻结策略决定是否拒绝。 */

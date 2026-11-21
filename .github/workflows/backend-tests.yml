@@ -1,0 +1,167 @@
+name: Backend tests (branches)
+
+# Q4 ci-baseline: every push to a feature/** or fix/** branch, and every pull
+# request, gets a Java 21 compile and the surefire tests of all modules
+# (`mvn -B test`; today only chengyinhub-admin has tests). GitHub-hosted
+# Ubuntu only — never the self-hosted Mac.
+#
+# The *MyBatisTest classes need a real MySQL. Each job runs on its own VM, so a
+# per-job service container cannot collide with other runs. The database is
+# empty and throwaway; the root password below is a fixed test value for that
+# container only, not a secret. No repository secrets are read.
+#
+# Known failure on fix/r5-be-infra-stubs (2026-11-15): one test,
+# ChapterFlowWriteServiceTest.openBundleReviewCannotBeBypassedBySwitchingToSimpleMode.
+# See docs/roadmap/ci-baseline/RESULT.md.
+#
+# The existing ci.yml "Backend tests" job (master and selected PR bases) stays
+# as it is; it also runs the named *IT suites and the Apple IAP fixtures.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['feature/**', 'fix/**']
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-tests-${{ github.event.pull_request.number && format('pr-{0}', github.event.pull_request.number) || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      mysql:
+        image: mysql:8.0.45
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 30
+    env:
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+      MAVEN_OPTS: -Xmx1024m
+      CHENGYIN_MYBATIS_IT_HOST: 127.0.0.1
+      CHENGYIN_MYBATIS_IT_PORT: '3306'
+      CHENGYIN_MYBATIS_IT_USER: root
+      CHENGYIN_MYBATIS_IT_PASSWORD: root
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Compile and run unit tests
+        run: mvn -B test
+      # x-loose-ends (2026-11-17): MySQL-only integration classes that surefire's
+      # default includes skip (*IT names) or that sit behind an env gate, and that
+      # no other workflow ran. Same pattern as ci/backend-test.sh: name each class,
+      # open its gate, then read the surefire reports back with ci/assert_it_ran.py
+      # (missing report, skipped, failure or error = red). Runs even when the unit
+      # step is red, so a known unit failure does not hide these results.
+      # The three W7 classes (MerchantReferralBountyDeadlockRetryMySqlIT,
+      # AdvancedGameRuntimeMySqlIT; ComplianceF7MyBatisTest already runs in the
+      # unit step) are also in ci/backend-test.sh, which only ci.yml runs on
+      # master pull requests; naming them here covers feature/** pushes too.
+      # Classes that need more than MySQL, or are red on a fresh MySQL 8.0.45,
+      # are listed in docs/roadmap/x-loose-ends/RESULT.md.
+      - name: Run named MySQL integration tests
+        if: ${{ !cancelled() }}
+        env:
+          CHENGYIN_TEST_MYSQL_HOST: 127.0.0.1
+          CHENGYIN_TEST_MYSQL_PORT: '3306'
+          CHENGYIN_TEST_MYSQL_USER: root
+          CHENGYIN_TEST_MYSQL_PASSWORD: root
+          CHENGYIN_TEST_MYSQL_DATABASE_BASE: chengyin_bt
+          CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX: _${{ github.run_id }}_${{ github.run_attempt }}
+          CHENGYIN_MYBATIS_IT: '1'
+          CHENGYIN_FUNDS_MYSQL_IT: '1'
+          CHENGYIN_R2_MYSQL_IT: '1'
+          CHENGYIN_MERCHANT_GAP_MYSQL_IT: '1'
+          CHENGYIN_SYS_AINPC_MYSQL_IT: '1'
+          CHENGYIN_WEATHER_MYSQL_IT: '1'
+        run: |
+          set -euo pipefail
+          NAMED_ITS=(
+            MerchantReferralBountyDeadlockRetryMySqlIT
+            AdvancedGameRuntimeMySqlIT
+            AuditAppealRequestMySqlIT
+            AuditItemProblemMySqlIT
+            AuthorAttributeBindingMyBatisIT
+            BeGapMiscMysqlIntegrationTest
+            CartSettlementWriteReceiptMySqlIT
+            ChainPersistenceMySqlIT
+            ChannelsFourthPassMySqlIT
+            ChannelsGapImMySqlIT
+            ChannelsPlatformMySqlIT
+            ChannelsSecondPassMySqlIT
+            ChannelsThirdPassMySqlIT
+            ChannelsWebhookDispatchMySqlIT
+            ClubProxyEnrollMysqlIntegrationTest
+            CompletedRouteFactMapperMySqlIT
+            CoopServiceRealDbIT
+            CreatorMaintenanceMysqlIntegrationTest
+            ExternalGameMonetizationMysqlIntegrationTest
+            FriendFoundationSchemaMySqlIT
+            GuardWorkbenchScopeMySqlIT
+            ImAdminSendIdempotencyMySqlIT
+            ImClubConversationBatchMySqlIT
+            ImModerationUnreadMySqlIT
+            InGameChannelMySqlIT
+            MerchantGapMySqlIT
+            OfficialEventAttendanceMySqlIT
+            OrientRouteSettlementMySqlIT
+            RewardsWorkshopMysqlIntegrationTest
+            SysAinpcMySqlIT
+            SysRandomMySqlIT
+            UserInvoiceLifecycleMySqlIT
+            WeatherEventRuleMySqlIT
+          )
+          IFS=, ; IT_LIST="${NAMED_ITS[*]}" ; unset IFS
+          mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false \
+            -Dsurefire.failIfNoSpecifiedTests=false -Dtest="$IT_LIST"
+          python3 ci/assert_it_ran.py chengyinhub-admin/target/surefire-reports "${NAMED_ITS[@]}"
+      - name: Test summary
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import glob, os, xml.etree.ElementTree as ET
+          total = failed = errored = skipped = 0
+          broken = []
+          for path in glob.glob('*/target/surefire-reports/TEST-*.xml'):
+              suite = ET.parse(path).getroot()
+              total += int(suite.get('tests', 0)); skipped += int(suite.get('skipped', 0))
+              for case in suite.iter('testcase'):
+                  for kind in ('failure', 'error'):
+                      if case.find(kind) is not None:
+                          broken.append(f"{kind}: {case.get('classname')}.{case.get('name')}")
+                          if kind == 'failure': failed += 1
+                          else: errored += 1
+          lines = ['## Backend tests', '', '| run | failed | errors | skipped |', '|---|---|---|---|',
+                   f'| {total} | {failed} | {errored} | {skipped} |', '']
+          lines += [f'- `{b}`' for b in sorted(broken)[:100]]
+          if not total:
+              lines.append('No surefire reports found: the build failed before tests ran.')
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as handle:
+              handle.write('\n'.join(lines) + '\n')
+          print('\n'.join(lines))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: surefire-reports-${{ github.run_id }}-${{ github.run_attempt }}
+          path: '*/target/surefire-reports/'
+          if-no-files-found: ignore
+          retention-days: 7

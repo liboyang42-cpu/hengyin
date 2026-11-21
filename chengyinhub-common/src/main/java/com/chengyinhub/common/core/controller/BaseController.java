@@ -15,6 +15,7 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.domain.AjaxResult;
+import com.chengyinhub.common.exception.ErrorCode;
 import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.core.domain.model.LoginUser;
 import com.chengyinhub.common.core.page.PageDomain;
@@ -141,6 +142,22 @@ public class BaseController
     public AjaxResult error(String message)
     {
         return AjaxResult.error(message);
+    }
+
+    /**
+     * 有类型的业务拒绝(R5 error-contract)。旧契约下与 {@code error(errorCode.defaultMessage())} 完全一致。
+     */
+    public AjaxResult refuse(ErrorCode errorCode)
+    {
+        return AjaxResult.refuse(errorCode);
+    }
+
+    /**
+     * 有类型的业务拒绝(R5 error-contract)。旧契约下与 {@code error(message)} 完全一致。
+     */
+    public AjaxResult refuse(ErrorCode errorCode, String message)
+    {
+        return AjaxResult.refuse(errorCode, message);
     }
 
     /** Preserve the existing coded service-error response used by authoring endpoints. */

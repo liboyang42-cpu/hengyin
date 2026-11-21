@@ -15,8 +15,11 @@ public class ConsentGuard {
     }
     public void requireCurrentAgreement(Long memberId, String docType, String scene) {
         if (!records.hasCurrentAgreement(memberId, docType, scene, versions.versionOf(docType))) {
-            throw new ServiceException("photo_model_processing".equals(docType)
-                    ? "请先单独同意照片发送第三方模型处理" : "请先单独同意声音克隆处理");
+            if ("photo_model_processing".equals(docType)) {
+                throw new ServiceException("请先单独同意照片发送第三方模型处理", 400)
+                        .setData(java.util.Map.of("reason", "PHOTO_MODEL_CONSENT_REQUIRED"));
+            }
+            throw new ServiceException("请先单独同意声音克隆处理");
         }
     }
 }

@@ -332,7 +332,7 @@ public class CmsRegistrationMerchantController extends BaseController
         }
         DispatchResult result = dispatchService.confirmRegistration(id);
         if (!result.isSelected()) return AjaxResult.error(result.getMessage());
-        return AjaxResult.success("已选定中标商家。请向该商家发出带条款的合作邀约 —— 接受后才成合作单,结算只认合作单");
+        return AjaxResult.success("已选定中标商家。请向该商家发出带条款的合作邀约 —— 接受后才成合作单，结算只认合作单");
     }
 
     /**

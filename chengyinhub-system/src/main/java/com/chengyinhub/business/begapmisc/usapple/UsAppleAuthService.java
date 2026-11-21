@@ -178,12 +178,12 @@ public class UsAppleAuthService {
         if (key == null) return null;
         Claims claims;
         try {
-            Jws<Claims> jws = Jwts.parser().setSigningKey(key).parseClaimsJws(token);
-            claims = jws.getBody();
+            Jws<Claims> jws = Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
+            claims = jws.getPayload();
         } catch (Exception invalid) {
             return null;
         }
-        if (!ISSUER.equals(claims.getIssuer()) || !clientId.equals(claims.getAudience())) return null;
+        if (!ISSUER.equals(claims.getIssuer()) || !java.util.Set.of(clientId).equals(claims.getAudience())) return null;
         if (claims.getExpiration() == null) return null;
         Object nonce = claims.get("nonce");
         if (!(nonce instanceof String) || !MessageDigest.isEqual(((String) nonce).getBytes(StandardCharsets.US_ASCII),

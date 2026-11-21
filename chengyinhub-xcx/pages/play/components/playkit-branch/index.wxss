@@ -91,3 +91,11 @@
   letter-spacing: 6rpx;
   opacity: .5;
 }
+
+/* 选之前的一行说明:与「结局 / 你选了」小标题同一档字号与次级色 */
+.br__hint {
+  width: 100%;
+  font-size: var(--cy-type-label);
+  line-height: 1.5;
+  color: var(--sub);
+}

@@ -41,6 +41,30 @@ public class EcommerceSellerResolver {
         return SellerOfRecordPolicy.decide(facts(registration), switches);
     }
 
+    /**
+     * S2 collection model: the seller facts of a ticket by (ownerType, ownerId), read whatever the routing switch says.
+     * Same resolution as {@link #decide}; null when the product cannot be found.
+     */
+    public SellerOfRecordPolicy.Facts factsFor(Long ownerType, Long ownerId) {
+        if (ownerType == null || ownerId == null) return null;
+        CmsRegistration probe = new CmsRegistration();
+        probe.setOwnerType(ownerType);
+        probe.setOwnerId(ownerId);
+        return facts(probe);
+    }
+
+    /**
+     * K1 club dues: the seller of a club's dues is always the club itself (never the platform, never a member). Reads the
+     * club's sub-merchant row only; whether the club exists and is active is checked by the membership service.
+     */
+    public SellerOfRecordPolicy.Facts clubDuesFacts(Long clubId) {
+        if (clubId == null || clubId <= 0) return null;
+        EcomSubMerchant row = payoutMapper.selectSubMerchant(SellerOfRecordPolicy.SellerType.CLUB.name(), clubId);
+        return new SellerOfRecordPolicy.Facts(SellerOfRecordPolicy.ProductKind.CLUB_DUES, false,
+                SellerOfRecordPolicy.SellerType.CLUB, clubId,
+                row == null ? null : row.getApplymentState(), row == null ? null : row.getSubMchid());
+    }
+
     SellerOfRecordPolicy.Facts facts(CmsRegistration registration) {
         if (registration == null || registration.getOwnerId() == null) return null;
         long ownerType = registration.getOwnerType() == null ? 0 : registration.getOwnerType();

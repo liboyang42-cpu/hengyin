@@ -13,6 +13,7 @@ import com.chengyinhub.business.domain.UmsMemberPointsDetail;
 import com.chengyinhub.business.mapper.CmsPointsSettingMapper;
 import com.chengyinhub.business.mapper.UmsMemberMapper;
 import com.chengyinhub.business.mapper.UmsMemberPointsDetailMapper;
+import com.chengyinhub.business.pointsgov.PointsGovernanceService;
 import com.chengyinhub.business.service.ICmsPointsSettingService;
 import com.chengyinhub.business.service.IPointsAwardService;
 import com.chengyinhub.business.service.IUmsMemberPointsDetailService;
@@ -46,6 +47,10 @@ public class PointsAwardServiceImpl implements IPointsAwardService
     /** H8 专用读写只走 mapper 上的专用语句，不经通用 service —— 见两个 mapper 里的隔离说明。 */
     @Autowired
     private CmsPointsSettingMapper cmsPointsSettingMapper;
+
+    /** R7 MON-09: per-member daily cap per source + monthly programme budget. Optional so legacy unit wiring still works. */
+    @Autowired(required = false)
+    private PointsGovernanceService pointsGovernanceService;
 
     @Override
     @Transactional
@@ -99,6 +104,12 @@ public class PointsAwardServiceImpl implements IPointsAwardService
         Long before = umsMemberMapper.selectPointsForUpdate(memberId);
         if (before == null) {
             throw new ServiceException("积分会员不存在或余额为空，memberId=" + memberId);
+        }
+
+        // R7:会员行锁已持有,在此判每日上限与月度预算;不放行就不发(不写流水,返回 0)。
+        if (pointsGovernanceService != null
+                && !pointsGovernanceService.admit(memberId, eventType, points).admitted()) {
+            return 0;
         }
 
         umsMemberService.addPoints(memberId, points);

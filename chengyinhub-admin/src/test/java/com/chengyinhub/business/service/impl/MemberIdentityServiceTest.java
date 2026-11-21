@@ -82,7 +82,7 @@ class MemberIdentityServiceTest {
     void 身份证号不自洽就拒() {
         ServiceException e = assertThrows(ServiceException.class,
                 () -> service.register(MEMBER_ID, "张三", "110105199003070018", true, SOURCE, null));
-        assertEquals("身份证号格式不正确,请核对后重填", e.getMessage());
+        assertEquals("身份证号格式不正确，请核对后重填", e.getMessage());
         verify(mapper, never()).insertIdentity(any());
     }
 

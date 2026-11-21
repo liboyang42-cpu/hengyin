@@ -93,6 +93,12 @@ class MerchantReferralBountyTest {
         org.mockito.Mockito.when(manager.getTransaction(org.mockito.ArgumentMatchers.any()))
                 .thenAnswer(i -> new org.springframework.transaction.support.SimpleTransactionStatus());
         org.springframework.test.util.ReflectionTestUtils.setField(service, "transactionManager", manager);
+        // R9 BE-13: these cases cover the direct-pay path (auto-pay on + money switch open). The review-queue
+        // default is covered by MerchantReferralBountyReviewTest.
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "autoPay", true);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "cashPayoutSwitch",
+                new com.chengyinhub.business.service.rewardpledge.CashPayoutSwitch(true, true,
+                        com.chengyinhub.business.moneyswitch.MoneyGateTestSupport.openGate()));
         org.mockito.Mockito.when(umsMemberMapper.selectBalanceForUpdate(org.mockito.ArgumentMatchers.anyLong()))
                 .thenAnswer(i -> {
                     UmsMember member = umsMemberService.selectUmsMemberById(i.getArgument(0));

@@ -37,7 +37,9 @@ import com.chengyinhub.business.merchantgap.MerchantGapSupport;
  *   <li>benefit: the mini-program's own city-node redemption audit ({@code CITY_NODE_REDEEM}) for the visit's
  *       player and POI, VERIFIED only when it granted a coupon and belongs to that visit.</li>
  * </ul>
- * Cohort stays MISSING_DEFINITION (one scalar in the app contract, no cohort key defined). A metric with no
+ * Cohort (Q1 merchant-reach): {@code RETURNING_WITHIN_28_DAYS} from {@code MerchantWeeklyProof#cohort}: a player who
+ * entered these points in the window and also entered them in the 28 days before the window start is returning;
+ * {@code count} = returning players, {@code rate} = "returning/players". A metric with no
  * source row in scope is MISSING_COVERAGE with no numbers (never a made-up 0). Reports are stored by request id;
  * events come from a frozen snapshot.
  */
@@ -141,7 +143,7 @@ public class MerchantCityValueReportService {
         }
         args.add(Timestamp.from(s.start));
         args.add(Timestamp.from(s.end));
-        return store.jdbc.queryForList("SELECT visit_id, point_id, entered_at, feedback_at, closed, feedback_kind, reason_code, rating FROM city_value_visit WHERE board_id = ? AND point_id IN ("
+        return store.jdbc.queryForList("SELECT visit_id, member_id, point_id, entered_at, feedback_at, closed, feedback_kind, reason_code, rating FROM city_value_visit WHERE board_id = ? AND point_id IN ("
                 + in + ") AND entered_at >= ? AND entered_at < ? ORDER BY entered_at, visit_id", args.toArray());
     }
 
@@ -330,7 +332,7 @@ public class MerchantCityValueReportService {
             ratings.put("mean", ratingSum + "/" + success);
             out.put("serviceRatings", ratings);
         }
-        out.put("byCohort", missing("MISSING_DEFINITION"));
+        out.put("byCohort", cohort(s, visits));
         Map<String, Object> group = new LinkedHashMap<>();
         if (entries == 0) {
             group.put("status", "MISSING_COVERAGE");
@@ -365,6 +367,26 @@ public class MerchantCityValueReportService {
         cost.put("budget", spent[0] == 0 ? missing("MISSING_COVERAGE") : sumMetric(spent[2], spent[0], "CITY_ACTION_UNITS"));
         out.put("visitCost", cost);
         return out;
+    }
+
+    /** Returning vs first-time players of the window at these points; see the class comment. */
+    Map<String, Object> cohort(Scope s, List<Map<String, Object>> visits) {
+        java.util.Set<Long> players = new java.util.HashSet<>();
+        for (Map<String, Object> v : visits) if (v.get("member_id") instanceof Number n) players.add(n.longValue());
+        java.util.Set<Long> earlier = new java.util.HashSet<>();
+        if (!players.isEmpty()) {
+            List<Object> args = new ArrayList<>();
+            StringBuilder in = new StringBuilder();
+            for (String p : s.points) {
+                in.append(in.length() == 0 ? "?" : ",?");
+                args.add(p);
+            }
+            args.add(Timestamp.from(s.start.minus(Duration.ofDays(com.chengyinhub.business.merchantproof.MerchantWeeklyProof.LOOKBACK_DAYS))));
+            args.add(Timestamp.from(s.start));
+            earlier.addAll(store.jdbc.queryForList("SELECT DISTINCT member_id FROM city_value_visit WHERE point_id IN (" + in
+                    + ") AND entered_at >= ? AND entered_at < ?", Long.class, args.toArray()));
+        }
+        return com.chengyinhub.business.merchantproof.MerchantWeeklyProof.cohort(players, earlier);
     }
 
     private static Map<String, Object> reasonCounts(int entries, Map<String, Integer> counts) {

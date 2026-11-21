@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.channel.platform.ChatErasureMapper">
+
+    <!-- SOC-14 account erasure. Order in ChatErasureService: previews, mutations, revisions, pins, then messages. -->
+    <update id="clearConversationPreviews">
+        update im_conversation set last_msg_text = null
+         where last_msg_text is not null
+           and id in (select m.conversation_id from im_message m
+                       where m.sender_id = #{memberId}
+                         and m.id = (select max(x.id) from im_message x where x.conversation_id = m.conversation_id))
+    </update>
+
+    <insert id="insertErasureMutations">
+        insert into im_message_mutation(conversation_id, message_id, version, kind)
+        select m.conversation_id, m.id, m.version + 1, 'RECALL'
+          from im_message m
+         where m.sender_id = #{memberId} and m.status = 0
+           and m.conversation_id in (select c.id from im_channel c)
+    </insert>
+
+    <update id="scrubRevisions">
+        update im_message_revision set content = null
+         where content is not null
+           and message_id in (select m.id from im_message m where m.sender_id = #{memberId})
+    </update>
+
+    <delete id="deletePins">
+        delete from im_message_pin
+         where message_id in (select m.id from im_message m where m.sender_id = #{memberId} and m.status = 0)
+    </delete>
+
+    <update id="scrubMessages">
+        update im_message
+           set content = '', extra_json = null, version = version + 1,
+               status = case when status = 0 then 1 else status end
+         where sender_id = #{memberId}
+           and (status = 0 or extra_json is not null or (content is not null and content &lt;&gt; ''))
+    </update>
+
+    <update id="unlinkOperatorLogs">
+        update im_channel_op_log set operator_id = null where operator_id = #{memberId}
+    </update>
+
+    <delete id="deleteRequestReceipts">
+        delete from im_channel_request_receipt where operator_id = #{memberId}
+    </delete>
+
+    <!-- SOC-14 purge of deleted channels (status 3) after purge_at. -->
+    <select id="selectDuePurges" resultType="java.lang.Long" useCache="false">
+        select id from im_channel
+         where status = 3 and del_flag = 0 and purge_at is not null and purge_at &lt; #{now}
+         order by purge_at, id
+         limit #{limit}
+    </select>
+
+    <select id="selectMessageIds" resultType="java.lang.Long" useCache="false">
+        select id from im_message where conversation_id = #{channelId} order by id limit #{limit}
+    </select>
+
+    <delete id="deleteReactions">
+        delete from im_message_reaction where message_id in
+        <foreach collection="ids" item="i" open="(" separator="," close=")">#{i}</foreach>
+    </delete>
+    <delete id="deleteMentions">
+        delete from im_message_mention where message_id in
+        <foreach collection="ids" item="i" open="(" separator="," close=")">#{i}</foreach>
+    </delete>
+    <delete id="deleteRefs">
+        delete from im_message_ref where message_id in
+        <foreach collection="ids" item="i" open="(" separator="," close=")">#{i}</foreach>
+    </delete>
+    <delete id="deleteRevisions">
+        delete from im_message_revision where message_id in
+        <foreach collection="ids" item="i" open="(" separator="," close=")">#{i}</foreach>
+    </delete>
+    <delete id="deleteMessages">
+        delete from im_message where id in
+        <foreach collection="ids" item="i" open="(" separator="," close=")">#{i}</foreach>
+    </delete>
+
+    <delete id="deleteChannelPins">
+        delete from im_message_pin where conversation_id = #{channelId}
+    </delete>
+    <delete id="deleteChannelMutations">
+        delete from im_message_mutation where conversation_id = #{channelId}
+    </delete>
+    <update id="closeConversation">
+        update im_conversation set last_msg_text = null, status = 1 where id = #{channelId}
+    </update>
+
+    <update id="markPurged">
+        update im_channel
+           set status = 4, meta_version = meta_version + 1, update_time = current_timestamp(3)
+         where id = #{channelId} and status = 3 and purge_at is not null and purge_at &lt; #{now}
+    </update>
+</mapper>

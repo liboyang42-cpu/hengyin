@@ -79,6 +79,22 @@
         where club_id = #{clubId} and status = 1 and del_flag = 0
     </select>
 
+    <!-- club-reach CLB-11:俱乐部头图头像叠。主理人在前,再按入会时间倒序取在营成员;只出非空头像 URL,不出 id/昵称。 -->
+    <select id="selectHeroAvatars" resultType="java.lang.String">
+        select x.avatar from (
+            select m.avatar as avatar, 0 as ord, null as joined
+              from ums_member m where m.id = #{ownerId}
+            union all
+            select m.avatar as avatar, 1 as ord, cm.join_time as joined
+              from club_member cm join ums_member m on m.id = cm.member_id
+             where cm.club_id = #{clubId} and cm.status = 1 and cm.del_flag = 0
+               <if test="ownerId != null"> and cm.member_id &lt;&gt; #{ownerId}</if>
+        ) x
+        where x.avatar is not null and trim(x.avatar) &lt;&gt; ''
+        order by x.ord, x.joined desc
+        limit #{limit}
+    </select>
+
     <!--
       D22:该俱乐部现有管理员数。口径 role=1 AND status=1(正常态)AND del_flag=0。
       **不含主理人** —— 他是 club.member_id、本就不在 club_member 里(set-member-role 明确拒绝给创建者
@@ -171,7 +187,10 @@
                ifnull(cleared.clearCount, 0)  as clearCount,
                ifnull(cleared.mileage, 0)     as mileage,
                ifnull(dur.durationMin, 0)     as durationMin,
-               ifnull(hosted.hostedCount, 0)  as hostedCount
+               ifnull(hosted.hostedCount, 0)  as hostedCount,
+               ifnull(attended.attendedCount, 0)  as attendedCount,
+               ifnull(checkins.checkinCount, 0)   as checkinCount,
+               ifnull(sessions.hostedSessions, 0) as hostedSessions
         from (
             select cm.member_id as memberId
             from club_member cm
@@ -250,6 +269,52 @@
               )
             group by t3.member_id
         ) hosted on hosted.memberId = mem.memberId
+        <!--
+          club-ops CLB-13:任何类型的俱乐部都用得上的三项。
+          · attendedCount:本窗内到场的本团场次数。到场口径与 ClubEventOpsMapper.selectPaidRoster 一致
+            (带队签到 / 核销 / 打卡进度),最近一次出勤更正优先。
+          · checkinCount:本窗内在本团主题里的打卡次数(player_node_progress status=1)。
+          · hostedSessions:本窗内已开始、未取消的本团场次中,由他带队(场次默认带队人,缺省为主题作者)的场数。
+        -->
+        left join (
+            select r.member_id as memberId, count(distinct r.owner_id) as attendedCount
+            from cms_registration r
+            join cms_activity a on a.id = r.owner_id and a.club_id = #{clubId}
+                 and a.del_flag = 0 and a.cancel_time is null
+            left join club_lead_checkin lck on lck.activity_id = r.owner_id and lck.member_id = r.member_id
+            left join club_event_attendance_correction corr on corr.id = (
+                select max(c2.id) from club_event_attendance_correction c2
+                where c2.activity_id = r.owner_id and c2.member_id = r.member_id
+            )
+            where r.owner_type = 2 and r.payment_status = 2 and r.registration_status = 2
+              <if test="sinceInclusive != null"> and a.start_date &gt;= #{sinceInclusive}</if>
+              and (corr.new_arrived = 1
+                   or (corr.id is null and (lck.arrived_at is not null or r.verification_status = 1
+                       or exists (select 1 from player_node_progress pp
+                                  where pp.activity_id = r.owner_id and pp.member_id = r.member_id
+                                    and pp.status = 1 and pp.del_flag = 0))))
+            group by r.member_id
+        ) attended on attended.memberId = mem.memberId
+        left join (
+            select p4.member_id as memberId, count(*) as checkinCount
+            from player_node_progress p4
+            join cms_topic t4 on t4.id = p4.topic_id
+            where t4.club_id = #{clubId} and t4.del_flag = 0
+              and p4.status = 1 and p4.del_flag = 0
+              <if test="sinceInclusive != null"> and p4.checkin_time &gt;= #{sinceInclusive}</if>
+            group by p4.member_id
+        ) checkins on checkins.memberId = mem.memberId
+        left join (
+            select coalesce(o5.default_lead_member_id, t5.member_id) as memberId,
+                   count(distinct a5.id) as hostedSessions
+            from cms_activity a5
+            left join club_event_occurrence o5 on o5.activity_id = a5.id
+            left join cms_topic t5 on t5.id = a5.topic_id
+            where a5.club_id = #{clubId} and a5.del_flag = 0 and a5.cancel_time is null
+              and a5.start_date &lt;= now()
+              <if test="sinceInclusive != null"> and a5.start_date &gt;= #{sinceInclusive}</if>
+            group by coalesce(o5.default_lead_member_id, t5.member_id)
+        ) sessions on sessions.memberId = mem.memberId
     </select>
 
     <update id="recordJoinReview">

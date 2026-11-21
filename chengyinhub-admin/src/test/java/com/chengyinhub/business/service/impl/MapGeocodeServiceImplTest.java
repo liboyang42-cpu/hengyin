@@ -12,6 +12,19 @@ import static org.mockito.Mockito.when;
 
 class MapGeocodeServiceImplTest {
 
+    // GAME-13: district lookup reads ad_info.adcode and the district name; anything else is "not found".
+    @Test
+    void districtComesFromAdcodeAndDistrictName() {
+        java.util.Map<String, String> d = MapGeocodeServiceImpl.parseDistrict(com.alibaba.fastjson2.JSONObject.parseObject(
+                "{\"status\":0,\"result\":{\"ad_info\":{\"adcode\":\"110105\"},\"address_component\":{\"district\":\"朝阳区\"}}}"));
+        assertEquals("110105", d.get("areaCode"));
+        assertEquals("朝阳区", d.get("areaName"));
+        assertNull(MapGeocodeServiceImpl.parseDistrict(com.alibaba.fastjson2.JSONObject.parseObject(
+                "{\"status\":0,\"result\":{\"ad_info\":{\"adcode\":\"1101\"},\"address_component\":{\"district\":\"x\"}}}")));
+        assertNull(MapGeocodeServiceImpl.parseDistrict(com.alibaba.fastjson2.JSONObject.parseObject("{\"status\":311}")));
+        assertNull(MapGeocodeServiceImpl.parseDistrict(null));
+    }
+
     @Test
     void cachesRepeatedRequestsWithinTheSameCoordinateGrid() {
         RecordingMapGeocodeService service = new RecordingMapGeocodeService();

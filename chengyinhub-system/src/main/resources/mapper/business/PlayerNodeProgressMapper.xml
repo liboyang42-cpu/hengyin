@@ -146,6 +146,35 @@
           and status = 0 and del_flag = 0
     </update>
 
+    <!-- GAME-2(migration_20261116_journey_presence):开局闸只认过了 300 米开局校验的行。
+         本局实例解析与 selectPlayerNodeProgressList 同口径(本主题最新一局,没有局行 = default)。 -->
+    <select id="countStartVerified" resultType="int">
+        select count(1) from player_node_progress
+        where member_id = #{memberId} and activity_id = #{activityId}
+          <if test="topicId != null"> and topic_id = #{topicId}</if>
+          and play_instance_id=coalesce((select r.play_instance_id from topic_route_session r where r.member_id=player_node_progress.member_id and r.topic_id=player_node_progress.topic_id and r.activity_id=player_node_progress.activity_id order by r.id desc limit 1),'default')
+          and start_verified = 1 and del_flag = 0
+    </select>
+
+    <update id="markStartVerified">
+        update player_node_progress
+        set start_verified = 1
+        where member_id = #{memberId} and activity_id = #{activityId}
+          and topic_id = #{topicId} and node_id = #{nodeId}
+          and start_verified = 0 and del_flag = 0
+    </update>
+
+    <update id="markRemoteCompletion">
+        update player_node_progress set remote_completion = 1 where id = #{id} and del_flag = 0
+    </update>
+
+    <select id="countRemoteCompletions" resultType="int">
+        select count(1) from player_node_progress
+        where member_id = #{memberId} and activity_id = #{activityId} and topic_id = #{topicId}
+          and play_instance_id = #{playInstanceId}
+          and status = 1 and remote_completion = 1 and del_flag = 0
+    </select>
+
     <!-- activity_id 是现有游玩局真源；只有该局完成全部公开可玩节点且所有谜题均有分数时才进入个人最佳。 -->
     <select id="selectPuzzlePersonalBest" resultType="Integer">
         select max(session_score)

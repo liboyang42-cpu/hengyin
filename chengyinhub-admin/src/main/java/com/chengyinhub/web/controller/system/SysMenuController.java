@@ -131,11 +131,11 @@ public class SysMenuController extends BaseController
     {
         if (menuService.hasChildByMenuId(menuId))
         {
-            return warn("存在子菜单,不允许删除");
+            return warn("存在子菜单，不允许删除");
         }
         if (menuService.checkMenuExistRole(menuId))
         {
-            return warn("菜单已分配,不允许删除");
+            return warn("菜单已分配，不允许删除");
         }
         return toAjax(menuService.deleteMenuById(menuId));
     }

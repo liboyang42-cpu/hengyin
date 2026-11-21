@@ -68,8 +68,8 @@ test('商家报名登录恢复只初始化当前前台，真实403明确权限�
  const h=mount(APPLY,'');h.page.onLoad({});h.page.retryLoadRegistration();h.owner('7');h.logins[0]({ok:true});await tick();assert.ok(h.requests.some(r=>r.url==='/api/merchant/info'));
  const p=mount(APPLY);p.page.loadMyShop();p.requests[0].successStatusAbnormal({code:403,msg:'无门店权限'},403);assert.equal(p.page.data.loadState,'permission');
 });
-test('游客搜索保留主题/活动/公开商家，不发需要登录的俱乐部请求',()=>{
- const h=mount(SEARCH,'');h.page.runSearch();assert.equal(h.requests.length,3);assert.ok(h.requests.every(r=>r.auth===false));assert.ok(!h.requests.some(r=>r.url==='/api/club/list'));
+test('2026-11-14 游客搜索全部六类公开目录，仍不请求私人资料或登录',()=>{
+ const h=mount(SEARCH,'');h.page.runSearch();assert.equal(h.requests.length,6);assert.deepEqual(h.requests.map(r=>r.url),['/api/topic/list','/api/activity/list','/api/club/list','/api/merchant/list','/api/template/topic-template/list','/api/template/list']);assert.equal(h.logins.length,0);
  for(const r of h.requests)r.success({code:200,data:[]});h.page.onUnload();
 });
 test('登录搜索仍包含俱乐部；账号/隐藏变化丢弃旧响应并保留当前公开搜索',()=>{

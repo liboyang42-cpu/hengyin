@@ -44,6 +44,10 @@ public class ApiConfigController extends BaseController {
     @Autowired(required = false)
     private com.chengyinhub.business.service.support.FreeExploreBundleSwitches freeExploreBundleSwitches;
 
+    /** T2 maps-backend read cache (optional: hand-built controllers in tests read sys_config directly). */
+    @Autowired(required = false)
+    private com.chengyinhub.business.readcache.ReadCache readCache;
+
     /**
      * 通用特性键(短名)；实际 sys_config key = "feature.flag." + 短名。
      *
@@ -58,13 +62,34 @@ public class ApiConfigController extends BaseController {
             "roamDemoPois",       // 小程序 utils/roam-demo-gate.js 读(开发版演示种子门)
             "finishNearbyRoute",  // 小程序 play/index.js 读
             "clubMembership",     // 两端都读(ClubMembershipFeatureGate + club 页)
-            "merchantDeskProducts" // 两端都读(MerchantDeskSwitch 写入口 + 商家工作台商品与履约段),D2 默认关
+            "merchantDeskProducts", // 两端都读(MerchantDeskSwitch 写入口 + 商家工作台商品与履约段),D2 默认关
+            "merchantNonMoney"    // Q1 merchant-reach:App 商家非资金写入(核销/资料/据点/店员/回复/CRM/售后)唯一开关;
+                                  // 同时打开工作台读与核销台(MerchantDeskSwitch)。默认关,owner 部署时打开。不含任何资金写入。
     };
 
     @Operation(summary = "M10 灰度功能开关:返回各特性 on/off")
     @Anonymous
     @PostMapping("/features")
     public AjaxResult features() {
+        // T2 maps-backend: everything except the two per-viewer community keys is shared and comes from sys_config
+        // (and static settings), so it is cached for everyone; the community keys are computed for this viewer.
+        // Key order is the same as before: head, the two community keys, tail.
+        Map<String, Map<String, Object>> shared = readCache == null ? sharedFeatures()
+                : readCache.read(com.chengyinhub.business.readcache.ReadCacheNamespace.FEATURES, "v2",
+                        readCache.json().getTypeFactory().constructMapType(LinkedHashMap.class,
+                                readCache.json().getTypeFactory().constructType(String.class),
+                                readCache.json().getTypeFactory().constructMapType(LinkedHashMap.class, String.class, Object.class)),
+                        this::sharedFeatures);
+        Map<String, Object> data = new LinkedHashMap<>(shared.get("head"));
+        Long memberId = viewer();
+        data.put("communityPostRead", communityPostFeatureGate.canRead(memberId));
+        data.put("communityPostWrite", communityPostFeatureGate.canWrite(memberId));
+        data.putAll(shared.get("tail"));
+        return success(data);
+    }
+
+    /** The viewer-independent part of {@link #features()}: "head" (keys before the community keys) and "tail". */
+    Map<String, Map<String, Object>> sharedFeatures() {
         Map<String, Object> data = new LinkedHashMap<>();
         for (String k : FLAG_KEYS) {
             data.put(k, readFlag("feature.flag." + k));
@@ -79,15 +104,23 @@ public class ApiConfigController extends BaseController {
         data.put("shopNpcVoice", shopNpcVoice);
         data.put("shopNpcVoiceAvailable", shopNpcVoice);
         data.put("merchantNpcChat", npcFeatureFlags.merchantChatOn());
-        Long memberId = viewer();
-        data.put("communityPostRead", communityPostFeatureGate.canRead(memberId));
-        data.put("communityPostWrite", communityPostFeatureGate.canWrite(memberId));
+        Map<String, Object> tail = new LinkedHashMap<>();
         // R11 p1 F-7:入口按服务端同一个闸显示 —— 功能关着就不摆「发票」「自由探索权益」入口(端点闸照旧)
-        data.put("userInvoice", complianceFeatureSwitches != null && complianceFeatureSwitches.userInvoiceOn());
-        data.put("freeExploreBundle", freeExploreBundleSwitches != null && freeExploreBundleSwitches.ledgerEnabled());
+        tail.put("userInvoice", complianceFeatureSwitches != null && complianceFeatureSwitches.userInvoiceOn());
+        tail.put("freeExploreBundle", freeExploreBundleSwitches != null && freeExploreBundleSwitches.ledgerEnabled());
         // P0-14 / P2-020:生成式 AI 算法备案号公示位;未配置为空串,小程序据此不显示
-        data.put("aigcFilingNo", aigcFilingNo());
-        return success(data);
+        tail.put("aigcFilingNo", aigcFilingNo());
+        // P1b SEC-16 / SEC-13 / SEC-14:App 备案号、客服联系方式、年龄政策。均来自 sys_config,未配置为空串 / adults,
+        // 客户端据此不显示备案行与联系方式;备案号永不写死在客户端。
+        tail.put("appFilingNo", configText(APP_FILING_NO_KEY, 64));
+        tail.put("supportContact", configText(SUPPORT_CONTACT_KEY, 128));
+        tail.put("agePolicy", agePolicy());
+        // MERCHANT-14:商家入驻审核时长的公示文案(如「1-3 个工作日」);未配置为空串,App 据此不写具体时长。
+        tail.put("merchantReviewSla", configText(MERCHANT_REVIEW_SLA_KEY, 32));
+        Map<String, Map<String, Object>> shared = new LinkedHashMap<>();
+        shared.put("head", data);
+        shared.put("tail", tail);
+        return shared;
     }
 
     private Long viewer() {
@@ -112,6 +145,32 @@ public class ApiConfigController extends BaseController {
     }
 
     static final String AIGC_FILING_NO_KEY = "aigc.algorithm.filing-no";
+    /** App 备案号(工信部 ICP/App 备案,形如「陕ICP备xxxxxxxx号-xA」);在 beian.miit.gov.cn 可查。 */
+    static final String APP_FILING_NO_KEY = "app.filing.icp-no";
+    /** MERCHANT-14:商家入驻审核时长(运营承诺的原文,如「1-3 个工作日」)。 */
+    static final String MERCHANT_REVIEW_SLA_KEY = "merchant.onboarding.review-sla";
+    /** 玩家可见的客服联系方式(电话或邮箱原文)。 */
+    static final String SUPPORT_CONTACT_KEY = "app.support.contact";
+
+    /** sys_config 原文(去首尾空白、按上限截断);缺失或读失败为空串。 */
+    String configText(String key, int max) {
+        try {
+            String value = configService.selectConfigByKey(key);
+            if (value == null) return "";
+            value = value.trim();
+            return value.length() > max ? value.substring(0, max) : value;
+        } catch (RuntimeException e) {
+            return "";
+        }
+    }
+
+    /** {@code app.agePolicy} 规范化为 adults / guardian;guardian 流程未建,执行口径见 AgeGatePolicy。 */
+    String agePolicy() {
+        String raw = configText(com.chengyinhub.business.service.compliance.AgeGatePolicy.CONFIG_KEY, 16).toLowerCase(java.util.Locale.ROOT);
+        return com.chengyinhub.business.service.compliance.AgeGatePolicy.GUARDIAN.equals(raw)
+                ? com.chengyinhub.business.service.compliance.AgeGatePolicy.GUARDIAN
+                : com.chengyinhub.business.service.compliance.AgeGatePolicy.ADULTS;
+    }
 
     private boolean readFlag(String key) {
         return NpcFeatureFlags.flagOn(configService.selectConfigByKey(key));

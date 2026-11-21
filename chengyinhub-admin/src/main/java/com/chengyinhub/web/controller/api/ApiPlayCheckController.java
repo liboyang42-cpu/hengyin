@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.service.ITopicRouteRuntimeService;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.constant.HttpStatus;
@@ -45,8 +47,8 @@ public class ApiPlayCheckController extends BaseController {
     @PostMapping("/roll")
     public AjaxResult roll(String topicId, Long activityId, String nodeId, String checkId, Long sessionId) {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
-        if (topicRouteRuntimeService == null) return error("参数有误");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (topicRouteRuntimeService == null) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         try {
             return success(CheckReceiptProjection.project(sessionId == null
                     ? topicRouteRuntimeService.roll(memberId, Long.valueOf(topicId), activityId, Long.valueOf(nodeId), checkId)
@@ -62,8 +64,8 @@ public class ApiPlayCheckController extends BaseController {
     @PostMapping("/reroll")
     public AjaxResult reroll(String topicId, Long activityId, String nodeId, String checkId, Long sessionId) {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
-        if (topicRouteRuntimeService == null) return error("参数有误");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (topicRouteRuntimeService == null) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         try {
             return success(CheckReceiptProjection.project(sessionId == null
                     ? topicRouteRuntimeService.reroll(memberId, Long.valueOf(topicId), activityId, Long.valueOf(nodeId), checkId)
@@ -79,8 +81,8 @@ public class ApiPlayCheckController extends BaseController {
     @PostMapping("/settle")
     public AjaxResult settle(String topicId, Long activityId, String nodeId, String checkId, Long sessionId) {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
-        if (topicRouteRuntimeService == null) return error("参数有误");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (topicRouteRuntimeService == null) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         try {
             return success(CheckReceiptProjection.project(sessionId == null
                     ? topicRouteRuntimeService.settle(memberId, Long.valueOf(topicId), activityId, Long.valueOf(nodeId), checkId)
@@ -96,8 +98,8 @@ public class ApiPlayCheckController extends BaseController {
     @PostMapping("/rest")
     public AjaxResult rest(String topicId, Long activityId, String nodeId) {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
-        if (topicRouteRuntimeService == null) return error("参数有误");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (topicRouteRuntimeService == null) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         try {
             return success(CheckReceiptProjection.project(topicRouteRuntimeService.rest(memberId, Convert.toLong(topicId, 0L), activityId,
                     Convert.toLong(nodeId, 0L))));

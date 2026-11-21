@@ -44,4 +44,11 @@ class ApiLoginE2eSessionStubTest {
         assertThrows(RuntimeException.class, () -> controller(new E2eTestWeChatMiniSessionService()).getOpenID("real-code"));
         assertEquals(1, httpCalls.get());
     }
+
+    /** The controller finds the stub by bean name (admin must not reference the e2e module's class); keep the name in step. */
+    @Test
+    void qualifierMatchesTheStubBeanName() {
+        assertEquals(java.beans.Introspector.decapitalize(E2eTestWeChatMiniSessionService.class.getSimpleName()),
+                ApiLoginController.E2E_MINI_SESSION_BEAN);
+    }
 }

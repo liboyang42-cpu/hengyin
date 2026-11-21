@@ -51,9 +51,20 @@ public class MerchantCommerceService implements IMerchantCommerceService {
         this.selfCheckoutEnabled = selfCheckoutEnabled;
     }
 
+    /**
+     * R1 MKT-01:推广曝光位卖的是「地图/搜索/官方活动优先展示」,但没有任何查询读取这项权益,
+     * 且业主决定付费位永不进入迷雾地图。默认下架:拒绝新单,已有订单照常可读、可退款。
+     */
+    @Value("${merchant.promotionSlot.onSale:false}")
+    private boolean promotionSlotOnSale;
+
     @Override
     public boolean isSelfCheckoutEnabled() {
         return selfCheckoutEnabled;
+    }
+
+    public boolean isPromotionSlotOnSale() {
+        return promotionSlotOnSale;
     }
 
     @Override
@@ -74,6 +85,9 @@ public class MerchantCommerceService implements IMerchantCommerceService {
             requireRequestId(requestId);
             OmsOrder replay = orderMapper.selectCommerceOrderByRequest(memberId, merchantId, bizType, requestId);
             if (replay != null) return replay;
+            if (BIZ_PROMOTION_SLOT.equals(bizType) && !promotionSlotOnSale) {
+                throw new IllegalStateException("推广曝光位已下架，暂不接受新订单");
+            }
             SettlementRule rule = settlementRuleService.getActiveRule(0L, bizType);
             if (rule == null || rule.getUnitPrice() == null || rule.getUnitPrice().compareTo(BigDecimal.ZERO) <= 0) {
                 throw new IllegalStateException("该权益尚未配置价格，请联系官方");

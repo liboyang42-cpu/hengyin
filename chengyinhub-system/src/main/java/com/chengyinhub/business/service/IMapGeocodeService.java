@@ -34,4 +34,12 @@ public interface IMapGeocodeService {
      * 供应商不可用或没有结果时返回空列表,调用方按「这附近没有搜到」处理。
      */
     List<Map<String, Object>> searchPlaces(String keyword, double longitude, double latitude);
+
+    /**
+     * GAME-13:坐标所在的区县 {areaCode: 6 位 adcode, areaName}。只用于玩家点「用我现在所在的区」那一次,
+     * 不缓存坐标、不落库坐标;供应商不可用或拿不到区县时返回 null。
+     */
+    default Map<String, String> resolveDistrict(double longitude, double latitude) {
+        return null;
+    }
 }

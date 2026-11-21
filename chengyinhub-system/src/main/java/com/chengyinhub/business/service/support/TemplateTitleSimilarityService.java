@@ -65,7 +65,7 @@ public class TemplateTitleSimilarityService {
             if (score >= WARN_THRESHOLD) {
                 issues.add(TopicPublishCheckService.PublishCheckIssue.warn(CODE_TEMPLATE_TITLE_SIMILAR, null,
                         "标题与模板广场已有模板「" + row.getTitle() + "」高度相似(相似度 "
-                                + Math.round(score * 100) + "%),建议换个更有辨识度的名字;本提示不影响发布"));
+                                + Math.round(score * 100) + "%)，建议换个更有辨识度的名字；本提示不影响发布"));
                 if (issues.size() >= MAX_MATCHES) break;
             }
         }

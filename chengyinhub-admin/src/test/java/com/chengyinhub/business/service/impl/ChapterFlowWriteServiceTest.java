@@ -427,11 +427,14 @@ class ChapterFlowWriteServiceTest
         TopicUpdateDTO dto = update(legacyChapter());
         dto.setPublishMode("simple");
 
-        com.chengyinhub.common.exception.ServiceException error = assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+        // A business refusal, coded 409 (CONFLICT) so clients and the smoke triage can tell it from a system fault.
+        com.chengyinhub.common.exception.ServiceException error = assertThrows(
+                com.chengyinhub.common.exception.ServiceException.class,
                 () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(dto, MEMBER_ID, "tester"));
 
         assertEquals(com.chengyinhub.common.constant.HttpStatus.CONFLICT, error.getCode());
         assertTrue(error.getMessage().contains("审核中"));
+        org.junit.jupiter.api.Assertions.assertEquals(Integer.valueOf(409), error.getCode());
         verify(bundleReviewService, never()).freezeForSubmission(any(), any());
     }
 

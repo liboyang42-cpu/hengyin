@@ -275,4 +275,22 @@ class ClubLeaderboardWeightingTest {
         org.junit.jupiter.api.Assertions.assertTrue(daysAgo >= 0 && daysAgo <= 6,
                 "窗口起点必须是**本**周一 —— 距今 " + daysAgo + " 天,超出 0~6");
     }
+
+    // ---- club-ops CLB-13:到场 / 打卡 / 带队三个计数榜 ----
+
+    @Test
+    void countBoards_rankByCountAndDropZeros() {
+        List<Map<String, Object>> rows = new ArrayList<>();
+        Map<String, Object> a = row(ACE, 0, "0.00", 0, 0);
+        a.put("attendedCount", 3L); a.put("checkinCount", 1L); a.put("hostedSessions", 0L);
+        Map<String, Object> b = row(MID, 0, "0.00", 0, 0);
+        b.put("attendedCount", 5L); b.put("checkinCount", 0L); b.put("hostedSessions", 2L);
+        Map<String, Object> z = row(ZERO, 0, "0.00", 0, 0);
+        z.put("attendedCount", 0L); z.put("checkinCount", 0L); z.put("hostedSessions", 0L);
+        rows.add(a); rows.add(b); rows.add(z);
+        Mockito.when(clubMemberMapper.selectClubContribution(Mockito.eq(CLUB), Mockito.any())).thenReturn(rows);
+        assertEquals(List.of(MID, ACE), idsOf(service.selectClubLeaderboard(CLUB, "events")));
+        assertEquals(List.of(ACE), idsOf(service.selectClubLeaderboard(CLUB, "checkins")));
+        assertEquals(List.of(MID), idsOf(service.selectClubLeaderboard(CLUB, "hosted")));
+    }
 }
