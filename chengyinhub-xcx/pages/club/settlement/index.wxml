@@ -39,10 +39,12 @@
 
       <!-- CU-C-92:可提现余额为 0(或还没取到)时主按钮不得再冒充提现 —— 与商家侧同款禁用,
            并把可提现条件写在按钮下面。余额数由下方 cy-funds-stages 自己拉的 /api/wallet/stages 给出。 -->
-      <button class="withdraw-btn" loading="{{withdrawing}}" disabled="{{withdrawing || withdrawState !== 'positive'}}"
-        aria-disabled="{{withdrawing || withdrawState !== 'positive'}}"
-        aria-label="{{withdrawState === 'zero' ? '联系平台客服提现，当前可提现为 0' : (withdrawState === 'unknown' ? '联系平台客服提现，可提现余额待确认' : '联系平台客服提现')}}"
-        bindtap="goWithdraw">联系平台客服提现</button>
+      <!-- 1121:原生 <button disabled> 会吞掉点击 → cy-btn;置灰时点它由 onWithdrawBlockedTap 说明为什么还不能提 -->
+      <view class="withdraw-cta">
+        <cy-btn variant="primary" loading="{{withdrawing}}" disabled="{{withdrawing || withdrawState !== 'positive'}}"
+          accessibilityLabel="{{withdrawState === 'zero' ? '联系平台客服提现，当前可提现为 0' : (withdrawState === 'unknown' ? '联系平台客服提现，可提现余额待确认' : '联系平台客服提现')}}"
+          bindtap="goWithdraw" bind:disabledtap="onWithdrawBlockedTap">联系平台客服提现</cy-btn>
+      </view>
       <text class="withdraw-hint" wx:if="{{withdrawState === 'zero' && complaintWaiting}}">客诉期结束后可提现</text>
       <text class="withdraw-hint" wx:elif="{{withdrawState === 'unknown' && summary.isOwner === false && !summary.personal}}">仅主理人可发起提现</text>
       <!-- 2026-09-04 截图走查改:原文案是「已入账金额待确认」,而它正上方那张卡

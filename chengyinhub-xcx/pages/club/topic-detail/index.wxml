@@ -568,7 +568,7 @@
           </view>
         </view>
       </view>
-      <text class="tset-foot">商家接受后显示联系方式</text>
+      <!-- 1121:未确认的行自己就写着「未确认，暂无联系方式」,底部那句同义说明撤掉 -->
     </block>
   </view>
 </cy-scene-sheet>

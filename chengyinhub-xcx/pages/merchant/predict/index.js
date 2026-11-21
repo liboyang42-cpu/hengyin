@@ -174,6 +174,8 @@ Page({
     this.setData({ openId: rid, pickedKey: '' });
   },
   onCancelPick() { this.setData({ openId: '', pickedKey: '' }); },
+  // 没选答案时「就是这个」置灰;点到灰按钮说明原因,不静默吞掉
+  onPickRequired() { cyToast('先选出正确答案'); },
   onPickOption(e) {
     this.setData({ pickedKey: e.currentTarget.dataset.key || '' });
   },

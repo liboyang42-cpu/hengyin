@@ -68,7 +68,7 @@
       </view>
 
       <cy-empty wx:if="{{keyword && !groups.length}}" size="lg" kind="not-found" title="没有找到"
-                sub="换个关键词试试" cta="清除搜索" bind:cta="clearSearch" />
+                cta="清除搜索" bind:cta="clearSearch" />
       <text class="acl-more" wx:if="{{loadingMore}}">正在加载更多…</text>
       <text class="acl-more" wx:elif="{{!hasMore && items.length && groups.length}}">已经到底了</text>
     </view>

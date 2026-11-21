@@ -51,10 +51,9 @@
           <view class="ccl-metric"><text class="ccl-metric-num">{{detail.recipientCount != null ? detail.recipientCount : 0}}</text><text class="ccl-metric-label">名单人数</text></view>
           <view class="ccl-metric"><text class="ccl-metric-num">{{detail.deliveredCount != null ? detail.deliveredCount : 0}}</text><text class="ccl-metric-label">已送达</text></view>
           <view class="ccl-metric"><text class="ccl-metric-num">{{detail.noConsentCount != null ? detail.noConsentCount : 0}}</text><text class="ccl-metric-label">未同意</text></view>
-          <view class="ccl-metric"><text class="ccl-metric-num">{{detail.frequencySkippedCount != null ? detail.frequencySkippedCount : 0}}</text><text class="ccl-metric-label">频控跳过</text></view>
+          <view class="ccl-metric"><text class="ccl-metric-num">{{detail.frequencySkippedCount != null ? detail.frequencySkippedCount : 0}}</text><text class="ccl-metric-label">频次受限</text></view>
           <view class="ccl-metric"><text class="ccl-metric-num">{{(detail.failedCount || 0) + (detail.retryableCount || 0)}}</text><text class="ccl-metric-label">未送达</text></view>
         </view>
-        <text class="ccl-note">名单不含联系方式</text>
         <view class="fin-card ccl-card cy-fade-in" wx:if="{{detail.recipients.length}}">
           <view class="fin-row ccl-row" wx:for="{{detail.recipients}}" wx:key="key"
                 aria-label="{{item.nameText}}，{{item.statusText}}{{item.reasonText ? '，' + item.reasonText : ''}}">

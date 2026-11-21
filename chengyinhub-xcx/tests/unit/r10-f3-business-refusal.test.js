@@ -38,11 +38,12 @@ test('业务拒绝与加载失败分得开:有原因的非 200 → 原因;401/�
 test('拒绝态是可见的原因 + 返回,不是 load-failure 空白', () => {
   assert.match(read('pages/templatedetail/templatedetail.wxml'), /<cy-empty wx:if="\{\{refusal\}\}"[^>]*title="\{\{refusal\}\}" cta="返回" bind:cta="goBack"/);
   assert.match(read('pages/templatedetail/topic-detail/index.wxml'), /<cy-empty wx:if="\{\{refusal\}\}"[^>]*title="\{\{refusal\}\}" cta="返回" bind:cta="goBack"/);
-  assert.match(read('pages/templatedetail/topic-preview/index.wxml'), /wx:if="\{\{ errorRefused \}\}"[^>]*bindtap="goBack"[^>]*>返回</);
+  // 2026-11-21:topic-preview 的手搓错误态收进 cy-empty(一个动作),拒绝态仍是「原因 + 返回」
+  assert.match(read('pages/templatedetail/topic-preview/index.wxml'), /<cy-empty wx:if="\{\{ errorRefused \}\}"[^>]*title="\{\{ errorMsg \}\}" cta="返回" bind:cta="goBack"/);
   assert.match(read('pages/club/topic-detail/index.wxml'), /<cy-empty wx:if="\{\{loadError && \(missingParam \|\| loadRefusal\)\}\}"[^>]*\n[^>]*cta="返回" bind:cta="goBack"/);
   assert.match(read('pages/club/checkin-detail/index.wxml'), /<cy-empty wx:elif="\{\{state === 'missing'\}\}" kind="not-found"[^>]*cta="返回"/);
   assert.match(read('pages/club/customer-detail/index.wxml'), /<cy-empty wx:elif="\{\{state === 'refused'\}\}" kind="not-found"[^>]*cta="返回"/);
-  for (const rel of ['pages/templatedetail/templatedetail.json', 'pages/templatedetail/topic-detail/index.json']) {
+  for (const rel of ['pages/templatedetail/templatedetail.json', 'pages/templatedetail/topic-detail/index.json', 'pages/templatedetail/topic-preview/index.json']) {
     assert.equal(JSON.parse(read(rel)).usingComponents['cy-empty'], '/components/cy/empty/index', rel);
   }
 });

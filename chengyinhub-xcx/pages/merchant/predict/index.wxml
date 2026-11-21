@@ -7,7 +7,7 @@
   <cy-modal-host id="cy-modal-host" />
   <cy-nav-bar title="预测待答" custom-back bind:back="onNavBack" />
 
-  <cy-empty wx:if="{{pageState === 'login'}}" title="登录后查看预测" cta="去登录" bind:cta="onLogin" />
+  <cy-empty wx:if="{{pageState === 'login'}}" kind="no-permission" fill size="lg" title="登录后查看预测" cta="登录" bind:cta="onLogin" />
   <cy-skeleton wx:elif="{{pageState === 'loading'}}" type="list" count="3" />
   <cy-error load-failure="{{!accessErrorIsDenied}}" wx:elif="{{pageState === 'error'}}" fill size="lg"
             title="待答列表加载失败" sub="{{errorMessage}}"
@@ -50,11 +50,9 @@
             <cy-icon wx:if="{{pickedKey === opt.key}}" name="check" size="30" />
           </view>
           <view class="pdm-actions">
-            <view class="pdm-btn pdm-btn--ghost" bindtap="onCancelPick"
-                  aria-role="button" aria-label="先不给" hover-class="cy-pressed" hover-stay-time="80">先不给</view>
-            <view class="pdm-btn pdm-btn--primary {{pickedKey ? '' : 'is-disabled'}}"
-                  data-rid="{{item.rid}}" bindtap="onAskConfirm"
-                  aria-role="button" aria-label="就是这个" hover-class="cy-pressed" hover-stay-time="80">就是这个</view>
+            <cy-btn class="pdm-btn" variant="secondary" bindtap="onCancelPick">先不给</cy-btn>
+            <cy-btn class="pdm-btn" variant="primary" disabled="{{!pickedKey}}"
+                    data-rid="{{item.rid}}" bindtap="onAskConfirm" bind:disabledtap="onPickRequired">就是这个</cy-btn>
           </view>
         </block>
 

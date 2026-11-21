@@ -26,7 +26,7 @@
           <!-- 档期(主题起止)2026-08-10 从主题详情弹窗迁来:用户「档期与商家池不是在这里配置」。
                ⚠️ 不能只删不搬:票种编辑器的「与主题日期一致」拿的就是这两个值,删了它就没来源。 -->
           <view class="node-card">
-            <view class="node-card__row" id="fieldDates" bindtap="showStartTimePicker" hover-class="cy-pressed" hover-stay-time="80">
+            <view class="node-card__row" id="fieldDates" bindtap="showStartTimePicker" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">
               <view class="node-card__ico"><cy-icon name="calendar" size="32" /></view>
               <view class="node-card__main">
                 <text class="node-card__title">开始日期<text class="g-req">*</text></text>
@@ -34,7 +34,7 @@
               <text class="node-card__rv {{(startDateTime == '开始时间' ? '未设置' : startDateTime) === '未设置' ? 'is-empty' : ''}}">{{startDateTime == '开始时间' ? '未设置' : startDateTime}}</text><cy-icon name="chevron-right" size="24" />
             </view>
             <view class="node-card__hr"></view>
-            <view class="node-card__row" bindtap="showEndTimePicker" hover-class="cy-pressed" hover-stay-time="80">
+            <view class="node-card__row" bindtap="showEndTimePicker" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">
               <view class="node-card__ico"><cy-icon name="calendar" size="32" /></view>
               <view class="node-card__main">
                 <text class="node-card__title">结束日期<text class="g-req">*</text></text>
@@ -124,8 +124,8 @@
               <view class="tk-field">
                 <text class="tk-label">入口时机</text>
                 <view class="tk-segment">
-                  <view class="tk-segment__item {{formData.teamMode === 1 ? 'is-active' : ''}}" bindtap="onTeamModeSelect" data-mode="1" hover-class="cy-pressed" hover-stay-time="80">报名时</view>
-                  <view class="tk-segment__item {{formData.teamMode === 2 ? 'is-active' : ''}}" bindtap="onTeamModeSelect" data-mode="2" hover-class="cy-pressed" hover-stay-time="80">报名后</view>
+                  <view class="tk-segment__item {{formData.teamMode === 1 ? 'is-active' : ''}}" bindtap="onTeamModeSelect" aria-role="button" data-mode="1" hover-class="cy-pressed" hover-stay-time="80">报名时</view>
+                  <view class="tk-segment__item {{formData.teamMode === 2 ? 'is-active' : ''}}" bindtap="onTeamModeSelect" aria-role="button" data-mode="2" hover-class="cy-pressed" hover-stay-time="80">报名后</view>
                 </view>
               </view>
               <view class="node-card__hr"></view>
@@ -142,7 +142,7 @@
 
           <view class="pd-sec-hd"><view class="pd-section-title">票务</view><view class="req-left" wx:if="{{ticketMissing.tickets}}" data-anchor="ticketSection" bindtap="onReqLeftTap" aria-role="button" aria-label="票务还有 {{ticketMissing.tickets || 0}} 项未填，去填写" hover-class="cy-pressed" hover-stay-time="80"><text class="req-left__star">*</text> 还有 {{ticketMissing.tickets || 0}} 项未填</view></view>
           <view id="ticketSection">
-            <view class="node-card" wx:for="{{formData.tickets}}" wx:key="index" wx:for-item="ticket" wx:for-index="ti" bindtap="openTicketEditor" data-index="{{ti}}" hover-class="cy-pressed" hover-stay-time="80">
+            <view class="node-card" wx:for="{{formData.tickets}}" wx:key="index" wx:for-item="ticket" wx:for-index="ti" bindtap="openTicketEditor" aria-role="button" data-index="{{ti}}" hover-class="cy-pressed" hover-stay-time="80">
               <view class="node-card__row">
                 <view class="node-card__ico"><cy-icon name="coupon" size="32" /></view>
                 <view class="node-card__main">
@@ -176,7 +176,7 @@
           <view class="tk-editor">
             <view class="tk-editor__hd">
               <text class="tk-editor__label">{{editingTicket.editIndex >= 0 ? '编辑票种' : '添加票种'}}</text>
-              <view class="node-pill" bindtap="closeTicketEditor" hover-class="cy-pressed" hover-stay-time="80">收起</view>
+              <view class="node-pill" bindtap="closeTicketEditor" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">收起</view>
             </view>
             <view class="node-card">
               <view class="tk-field">
@@ -202,7 +202,7 @@
             </view>
 
             <view class="node-card">
-              <view class="node-card__row" bindtap="showTicketTimePicker" data-field="saleStartTime" data-mode="date" hover-class="cy-pressed" hover-stay-time="80">
+              <view class="node-card__row" bindtap="showTicketTimePicker" aria-role="button" data-field="saleStartTime" data-mode="date" hover-class="cy-pressed" hover-stay-time="80">
                 <view class="node-card__ico"><cy-icon name="clock" size="32" /></view>
                 <view class="node-card__main">
                   <text class="node-card__title">售票开始<text class="g-req">*</text></text>
@@ -210,7 +210,7 @@
                 <text class="node-card__rv {{(editingTicket.saleStartTime || '未设置') === '未设置' ? 'is-empty' : ''}}">{{editingTicket.saleStartTime || '未设置'}}</text><cy-icon name="chevron-right" size="24" />
               </view>
               <view class="node-card__hr"></view>
-              <view class="node-card__row" bindtap="showTicketTimePicker" data-field="saleEndTime" data-mode="date" hover-class="cy-pressed" hover-stay-time="80">
+              <view class="node-card__row" bindtap="showTicketTimePicker" aria-role="button" data-field="saleEndTime" data-mode="date" hover-class="cy-pressed" hover-stay-time="80">
                 <view class="node-card__ico"><cy-icon name="clock" size="32" /></view>
                 <view class="node-card__main">
                   <text class="node-card__title">售票结束<text class="g-req">*</text></text>
@@ -230,14 +230,14 @@
 
               <block wx:if="{{editingTicket.mode === 1}}">
                 <view class="node-card__hr"></view>
-                <view class="node-card__row" bindtap="showTicketTimePicker" data-field="startTime" data-mode="datetime" hover-class="cy-pressed" hover-stay-time="80">
+                <view class="node-card__row" bindtap="showTicketTimePicker" aria-role="button" data-field="startTime" data-mode="datetime" hover-class="cy-pressed" hover-stay-time="80">
                   <view class="node-card__main">
                     <text class="node-card__title">集合时间<text class="g-req">*</text></text>
                     </view>
                   <text class="node-card__rv {{(editingTicket.startTime || '未设置') === '未设置' ? 'is-empty' : ''}}">{{editingTicket.startTime || '未设置'}}</text><cy-icon name="chevron-right" size="24" />
                 </view>
                 <view class="node-card__hr"></view>
-                <view class="node-card__row" bindtap="showTicketTimePicker" data-field="endTime" data-mode="datetime" hover-class="cy-pressed" hover-stay-time="80">
+                <view class="node-card__row" bindtap="showTicketTimePicker" aria-role="button" data-field="endTime" data-mode="datetime" hover-class="cy-pressed" hover-stay-time="80">
                   <view class="node-card__main">
                     <text class="node-card__title">集合结束<text class="g-req">*</text></text>
                     </view>
@@ -249,7 +249,7 @@
                   <input class="tk-input" type="number" placeholder="不限" placeholder-class="slopes-story-placeholder" value="{{editingTicket.teamSize}}" bindinput="onEditTicketChange" data-field="teamSize" />
                 </view>
                 <view class="node-card__hr"></view>
-                <view class="node-card__row" bindtap="chooseTicketMeetingPoint" hover-class="cy-pressed" hover-stay-time="80">
+                <view class="node-card__row" bindtap="chooseTicketMeetingPoint" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">
                   <view class="node-card__main">
                     <text class="node-card__title">集合地点<text class="g-req">*</text></text>
                     </view>
@@ -267,14 +267,14 @@
                 </view>
                 <block wx:if="{{!editingTicket.syncWithTheme}}">
                   <view class="node-card__hr"></view>
-                  <view class="node-card__row" bindtap="showTicketTimePicker" data-field="startTime" data-mode="datetime" hover-class="cy-pressed" hover-stay-time="80">
+                  <view class="node-card__row" bindtap="showTicketTimePicker" aria-role="button" data-field="startTime" data-mode="datetime" hover-class="cy-pressed" hover-stay-time="80">
                     <view class="node-card__main">
                       <text class="node-card__title">开始日期<text class="g-req">*</text></text>
                       </view>
                     <text class="node-card__rv {{(editingTicket.startTime || '未设置') === '未设置' ? 'is-empty' : ''}}">{{editingTicket.startTime || '未设置'}}</text><cy-icon name="chevron-right" size="24" />
                   </view>
                   <view class="node-card__hr"></view>
-                  <view class="node-card__row" bindtap="showTicketTimePicker" data-field="endTime" data-mode="datetime" hover-class="cy-pressed" hover-stay-time="80">
+                  <view class="node-card__row" bindtap="showTicketTimePicker" aria-role="button" data-field="endTime" data-mode="datetime" hover-class="cy-pressed" hover-stay-time="80">
                     <view class="node-card__main">
                       <text class="node-card__title">结束日期<text class="g-req">*</text></text>
                       </view>

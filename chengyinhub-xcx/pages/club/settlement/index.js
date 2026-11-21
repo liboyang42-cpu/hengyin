@@ -262,6 +262,16 @@ Page({
 
   // 2026-09-15 收款模型定稿 §3:平台不打款。本页不再跳银行卡表单页,也不自己发提现请求,
   // 一律弹平台客服微信线下处理。后端 /api/club/settlement/withdraw 保留,不再由本页触达。
+  // 1121:置灰的提现键被点时说清原因(与按钮下方提示同一口径),不再无声吞掉
+  onWithdrawBlockedTap() {
+    if (this.data.withdrawing) return
+    const summary = this.data.summary || {}
+    let reason = '可提现余额还在确认'
+    if (this.data.withdrawState === 'zero') reason = this.data.complaintWaiting ? '客诉期结束后可提现' : '当前没有可提现余额'
+    else if (summary.isOwner === false && !summary.personal) reason = '仅主理人可发起提现'
+    wx.showToast({ title: reason, icon: 'none' })
+  },
+
   goWithdraw() {
     if (!this._hasCurrentData()) return
     if (this.data.withdrawState !== 'positive') return   // CU-C-92:零余额/余额未知不得发起

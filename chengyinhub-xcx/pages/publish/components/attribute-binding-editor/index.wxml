@@ -12,7 +12,9 @@
     </view>
   </checkbox-group>
   <cy-inline-error wx:if="{{error}}" kind="error" title="{{error}}" />
-  <button class="binding__btn" wx:if="{{ready && !readOnly}}" bindtap="confirm">确认启用与定义选择</button>
-  <button class="binding__btn" bindtap="refresh">重新读取注册版本</button>
-  <button class="binding__btn" bindtap="manage">查看或调整注册定义</button>
+  <view class="binding__actions">
+    <cy-btn class="binding__act" wx:if="{{ready && !readOnly}}" variant="primary" bindtap="confirm">确认启用</cy-btn>
+    <cy-btn class="binding__act" variant="secondary" bindtap="refresh">重新读取</cy-btn>
+    <cy-btn class="binding__act" variant="ghost" bindtap="manage">调整定义</cy-btn>
+  </view>
 </view>

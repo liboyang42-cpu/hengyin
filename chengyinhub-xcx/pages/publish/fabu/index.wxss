@@ -1280,6 +1280,10 @@ page { background: var(--cy-btn-solid-bg); }
 .slopes-sheet-bottom {
   height: calc(160rpx + env(safe-area-inset-bottom)); /* x-fix4 A-3:票务页最后一行「添加票种/收起」被整宽完成钮压住,尾部净空再抬 60rpx */
 }
+/* 「节点已删除 / 撤销」条出现期间,尾部再让出一条撤销条的高度,滚到底时最后一张卡不被它盖住 */
+.slopes-sheet-bottom--undo {
+  height: calc(160rpx + var(--cy-btn-h) + var(--cy-space-2) + env(safe-area-inset-bottom));
+}
 
 .slopes-map-editbar {
   position: fixed;
@@ -3076,7 +3080,9 @@ page { background: var(--cy-btn-solid-bg); }
   z-index: 280;
   left: var(--cy-page-x);
   right: var(--cy-page-x);
-  bottom: calc(var(--cy-btn-h) + var(--cy-space-6) + env(safe-area-inset-bottom));
+  /* 停在底栏(.slopes-tabbar,min-height 210rpx,已含安全区)上沿之上:原来按「按钮高 + 间距 + 安全区」
+     算,无安全区的机型只抬到 152rpx,整条压在底栏的内容/地图切换和主按钮上。 */
+  bottom: calc(210rpx + var(--cy-space-2)); /* ds-ok: 210rpx = .slopes-tabbar 的 min-height */
   min-height: var(--cy-btn-h);
   display: flex;
   align-items: center;
@@ -3093,6 +3099,8 @@ page { background: var(--cy-btn-solid-bg); }
   min-height: var(--cy-btn-h);
   display: flex;
   align-items: center;
+  padding: 0 var(--cy-space-3);
+  margin-right: calc(var(--cy-space-3) * -1);
   color: var(--cy-color-action-primary-bg);
   font-weight: 800;
 }
@@ -4022,14 +4030,6 @@ page { background: var(--cy-btn-solid-bg); }
   left: var(--cy-page-x);
   right: var(--cy-page-x);
   bottom: calc(env(safe-area-inset-bottom) + var(--cy-space-4));
-}
-
-.pd-edit-gate__hint {
-  display: block;
-  margin-top: var(--cy-space-3);
-  color: var(--cy-text-secondary);
-  font-size: var(--cy-font-label);
-  text-align: center;
 }
 
 .slopes-submit-error {

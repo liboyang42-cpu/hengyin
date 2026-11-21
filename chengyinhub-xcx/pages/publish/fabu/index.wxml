@@ -25,7 +25,6 @@
   <view class="pd-edit-gate" wx:if="{{editingTopicId && !editLoaded}}" style="padding-top:calc({{chrome.contentTop}}px + var(--cy-space-4))">
     <view class="pd-edit-gate__panel" wx:if="{{editLoading}}">
       <cy-skeleton type="detail" />
-      <text class="pd-edit-gate__hint">加载中</text>
     </view>
     <!-- E2(稿 S15 回填闸·加载失败):「重新加载」是这一屏的唯一出路,按稿钉在**底部整宽**,
          不是正文中间那颗居中小钮。
@@ -98,7 +97,7 @@
         <text class="fe-pricing__unit">¥</text>
         <input class="fe-pricing__input" type="digit" value="{{item.price}}" placeholder="0.00" disabled="{{fePricing.disabled}}" data-index="{{index}}" bindinput="onFePriceInput" aria-label="{{item.name}} 票价" />
       </view>
-      <cy-btn variant="primary" class="fe-pricing__cta" loading="{{fePublishing}}" disabled="{{fePricing.disabled || fePublishing}}" bindtap="onFePublish" aria-label="发布开售">发布</cy-btn>
+      <cy-btn variant="primary" class="fe-pricing__cta" loading="{{fePublishing}}" disabled="{{fePricing.disabled || fePublishing}}" bindtap="onFePublish" bind:disabledtap="onFePublishDisabledTap" aria-label="发布开售">发布</cy-btn>
     </view>
 
     <!-- 命名放在第一屏第一位:名称是必填,原先却埋在第三步,第一步顶上只显示一个改不了的
@@ -231,7 +230,7 @@
               <text class="pending-materials__title">待编排区</text>
               <text class="pending-materials__count">{{pendingMaterials.length || 0}} 个素材尚未进入章节</text>
             </view>
-            <text class="pending-materials__continue" wx:if="{{creationAnchor === 'place'}}" bindtap="startClubPlaceCapture" hover-class="cy-pressed" hover-stay-time="80">继续录入地点</text>
+            <text class="pending-materials__continue" wx:if="{{creationAnchor === 'place'}}" bindtap="startClubPlaceCapture" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">继续录入地点</text>
           </view>
           <cy-card class="pending-material" wx:for="{{pendingMaterials}}" wx:key="_localId">
             <view class="pending-material__x" bindtap="removePendingMaterial" data-localid="{{item._localId}}" aria-role="button" aria-label="删除素材" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="trash-2" size="28" /></view>
@@ -252,11 +251,11 @@
             </view>
             </view>
             <view class="pending-material__actions">
-              <view class="pending-material__action" bindtap="editPendingMaterial" data-localid="{{item._localId}}" hover-class="cy-pressed" hover-stay-time="80">补内容</view>
+              <view class="pending-material__action" bindtap="editPendingMaterial" aria-role="button" data-localid="{{item._localId}}" hover-class="cy-pressed" hover-stay-time="80">补内容</view>
               <cy-dropdown topic-editor="{{true}}" wx:if="{{formData.chapters.length}}" range="{{formData.chapters}}" range-key="name" bind:change="arrangePendingIntoChapter" data-localid="{{item._localId}}">
                 <view class="pending-material__action">{{formData.productType === 1 ? '选择章节与插入点' : '放入已有章节'}}</view>
               </cy-dropdown>
-              <view class="pending-material__action" bindtap="createChapterForPending" data-localid="{{item._localId}}" hover-class="cy-pressed" hover-stay-time="80">{{formData.productType === 1 ? '新建章节并编排' : '新建章节并放入'}}</view>
+              <view class="pending-material__action" bindtap="createChapterForPending" aria-role="button" data-localid="{{item._localId}}" hover-class="cy-pressed" hover-stay-time="80">{{formData.productType === 1 ? '新建章节并编排' : '新建章节并放入'}}</view>
             </view>
           </cy-card>
         </view>
@@ -372,7 +371,7 @@
                        长按 = 起拖换顺序。两个手势分开,不和下面的照片/地点点击撞车。 -->
                   <view
                     class="slopes-node-rail slopes-node-rail--handle {{selectedNodeLid === node._localId ? 'is-selected' : ''}}"
-                    catchtap="selectNode"
+                    catchtap="selectNode" aria-role="button" aria-label="第 {{nodeIndex + 1}} 个节点"
                     catchlongpress="onNodeDragStart"
                     data-nodelid="{{node._localId}}"
                     data-chapterindex="{{chapterIndex}}"
@@ -401,7 +400,7 @@
                     </view>
                     <view
                       class="slopes-node-loc"
-                      catchtap="pickNodeLocation"
+                      catchtap="pickNodeLocation" aria-role="button"
                       data-chapterindex="{{chapterIndex}}"
                       data-nodeindex="{{nodeIndex}}" hover-class="cy-pressed" hover-stay-time="80">
                       <text class="slopes-node-loc-name">{{node.name || '添加地点'}}</text>
@@ -469,7 +468,7 @@
     <text class="submit-error-why__body" wx:if="{{submitErrorWhy}}">{{submitErrorNeedsEdit ? '修改后重试' : '草稿已存本机，可稍后重试'}}</text>
   </view>
   </view>
-    <view class="slopes-sheet-bottom"></view>
+    <view class="slopes-sheet-bottom {{pendingUndo.show ? 'slopes-sheet-bottom--undo' : ''}}"></view>
   </scroll-view>
 
   <!-- 城市定向故事流：唯一写入口。插入点在动作前可见，节点配置跨二级页时锚点留在 page.data。 -->
@@ -740,7 +739,7 @@
             <view class="story-block-x" wx:if="{{storyEditor.selectedBlockKey === block.key}}" data-blockkey="{{block.key}}" catchtap="removeStoryMedia" aria-role="button" aria-label="删除分割线" hover-class="cy-pressed" hover-stay-time="80"><view class="story-block-x__glyph"><cy-icon name="close" size="36" /></view></view>
           </view>
 
-          <view class="story-node-block {{block._nodeName ? '' : 'is-blank'}}" wx:else bindtap="editStoryNode" data-blockkey="{{block.key}}" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="story-node-block {{block._nodeName ? '' : 'is-blank'}}" wx:else bindtap="editStoryNode" aria-role="button" data-blockkey="{{block.key}}" hover-class="cy-pressed" hover-stay-time="80">
             <view class="story-node-block__num">{{block._nodeNumber}}</view>
             <view class="story-node-block__card">
               <view class="story-node-block__thumb">
@@ -845,7 +844,7 @@
     <!-- 底部「已移到… / 撤销」条(编辑器原型 v2):移动、插入、删除、拆段后出现 5 秒 -->
     <view class="pending-undo story-undo cy-rise-in" wx:if="{{storyUndo.show}}">
       <text>{{storyUndo.text}}</text>
-      <text class="pending-undo__action" wx:if="{{storyUndo.canUndo}}" bindtap="undoStoryStep" hover-class="cy-pressed" hover-stay-time="80">撤销</text>
+      <text class="pending-undo__action" wx:if="{{storyUndo.canUndo}}" bindtap="undoStoryStep" aria-role="button" aria-label="撤销" hover-class="cy-pressed" hover-stay-time="80">撤销</text>
     </view>
     <cy-option-sheet show="{{storyOptions.show}}" title="{{storyOptions.title}}" items="{{storyOptions.items}}" immediate bind:select="onStoryOptionPick" bind:cancel="closeStoryOptions" />
     <view class="sx-sheet-mask" wx:if="{{storySheet}}" catchtap="closeStorySheet" catchtouchmove="noop" hover-class="none"></view>
@@ -904,7 +903,7 @@
 
   <view class="pending-undo cy-rise-in" wx:if="{{pendingUndo.show}}">
     <text>{{pendingUndo.text}}</text>
-    <text class="pending-undo__action" bindtap="undoPendingRemoval" hover-class="cy-pressed" hover-stay-time="80">撤销</text>
+    <text class="pending-undo__action" bindtap="undoPendingRemoval" aria-role="button" aria-label="撤销" hover-class="cy-pressed" hover-stay-time="80">撤销</text>
   </view>
 
 
@@ -1149,7 +1148,7 @@
         <cy-inline-error class="node-binding__error" wx:if="{{feVisit.error}}" kind="error" title="{{feVisit.error}}" />
       </view>
 
-      <view class="node-card node-card--danger" bindtap="deleteNode" wx:if="{{popChapterNodesAction==1}}" hover-class="cy-pressed" hover-stay-time="80">删除节点</view>
+      <view class="node-card node-card--danger" bindtap="deleteNode" aria-role="button" wx:if="{{popChapterNodesAction==1}}" hover-class="cy-pressed" hover-stay-time="80">删除节点</view>
     </block>
 
     <!-- 玩法模板选择。2026-08-11:原来只列 /api/template/my-list(我自己建的),
@@ -1162,9 +1161,9 @@
       <cy-inline-error wx:if="{{templateAdoptionError}}" kind="error" title="{{templateAdoptionError}}" action="查看我的玩法" bind:action="inspectAdoptedTemplates" />
       <view class="temp-seg">
         <text class="temp-seg__tit">公共模板</text>
-        <text class="temp-seg__sub" wx:if="{{publicTempState === 'loading'}}">加载中…</text>
-        <text class="temp-seg__sub" wx:elif="{{publicTempState === 'ready' && !publicTempList.length}}">暂无公共模板</text>
+        <text class="temp-seg__sub" wx:if="{{publicTempState === 'ready' && !publicTempList.length}}">暂无公共模板</text>
       </view>
+      <cy-skeleton wx:if="{{publicTempState === 'loading' && !publicTempList.length}}" type="list" count="3" />
       <cy-inline-error wx:if="{{publicTempState === 'error'}}" kind="network" title="公共模板加载失败" action="重试" bind:action="getPublicTempList" />
       <!-- l-editor(编辑器原型 v2 · 4):模板选择改成列表,一行一个模板(图 / 名 / 人数·时长 / 来源 / 勾);
            公共模板 → 我的模板(第一行「自己建一个」),不再横滑卡 -->
@@ -1422,7 +1421,7 @@
         </view>
 
         <view class="node-card" wx:if="{{popChapterAction == 1 && chapterNumbers[popChapterIndex] == 1}}" bindtap="openInitialState" aria-role="button" aria-label="配置第一章初始状态" hover-class="cy-pressed" hover-stay-time="80"><view class="node-card__row"><view class="node-card__main"><text class="node-card__title">初始状态</text><text class="node-card__value">第一章开局数值</text></view><view class="node-pill">配置<cy-icon name="chevron-right" size="24" /></view></view></view>
-        <view class="node-card"><view class="node-card__row" bindtap="openChapterBackpack" hover-class="cy-pressed" hover-stay-time="80"><view class="node-card__ico"><view class="rt-bag-glyph"></view></view><view class="node-card__main"><text class="node-card__title">背包</text></view><view class="node-pill">配置<cy-icon name="chevron-right" size="24" /></view></view><view class="node-card__hr"></view><view class="node-card__row" bindtap="openChapterEggs" hover-class="cy-pressed" hover-stay-time="80"><view class="node-card__ico"><cy-icon name="gift" size="32" /></view><view class="node-card__main"><text class="node-card__title">途中彩蛋</text></view><view class="node-pill">配置<cy-icon name="chevron-right" size="24" /></view></view></view>
+        <view class="node-card"><view class="node-card__row" bindtap="openChapterBackpack" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><view class="node-card__ico"><view class="rt-bag-glyph"></view></view><view class="node-card__main"><text class="node-card__title">背包</text></view><view class="node-pill">配置<cy-icon name="chevron-right" size="24" /></view></view><view class="node-card__hr"></view><view class="node-card__row" bindtap="openChapterEggs" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><view class="node-card__ico"><cy-icon name="gift" size="32" /></view><view class="node-card__main"><text class="node-card__title">途中彩蛋</text></view><view class="node-pill">配置<cy-icon name="chevron-right" size="24" /></view></view></view>
         <!-- 由工作人员开幕：行内开关（协调者设计），不再另开弹层 -->
         <view class="node-card">
           <view class="node-card__row">

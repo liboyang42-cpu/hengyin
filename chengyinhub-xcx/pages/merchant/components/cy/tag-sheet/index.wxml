@@ -21,7 +21,7 @@
             aria-role="checkbox"
             aria-checked="{{item.checked}}"
             aria-label="{{item.label}}"
-            hover-class="ts--pressed"
+            hover-class="ts--pressed" hover-stay-time="80"
           >
             <image wx:if="{{item.iconSrc}}" class="ts__icon" src="{{item.iconSrc}}" mode="aspectFit" />
             <text class="ts__label">{{item.label}}</text>
@@ -32,7 +32,7 @@
       </view>
     </scroll-view>
     <view slot="footer" class="ts__footer">
-      <view class="ts__save {{(saving || loading) ? 'ts__save--busy' : ''}}" bindtap="onConfirm" aria-role="button" hover-class="ts--pressed">{{saving ? '保存中…' : confirmText}}</view>
+      <view class="ts__save {{(saving || loading) ? 'ts__save--busy' : ''}}" bindtap="onConfirm" aria-role="button" hover-class="ts--pressed" hover-stay-time="80">{{saving ? '保存中…' : confirmText}}</view>
     </view>
   </cy-sheet>
 </view>

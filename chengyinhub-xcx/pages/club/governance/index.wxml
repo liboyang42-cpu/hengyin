@@ -30,9 +30,9 @@
           </view>
         </view>
       </view>
-      <text class="action-note">请提交可核实的事实</text>
-      <view class="platform-button {{actingKey ? 'disabled' : ''}}" bindtap="reportTarget"
-        aria-role="button" aria-disabled="{{actingKey !== ''}}" hover-class="{{actingKey ? 'none' : 'cy-pressed'}}" hover-stay-time="80">填写事实并提交平台</view>
+      <!-- 1121:去掉「请提交可核实的事实」一行 —— 按钮本身就说了「填写事实」;页内自绘药丸 → cy-btn,
+           本模式只有这一个动作,actingKey 非空即它在提交,用 loading 转圈而不是灰掉无声 -->
+      <view class="platform-cta"><cy-btn variant="primary" loading="{{actingKey !== ''}}" bindtap="reportTarget">填写事实并提交平台</cy-btn></view>
     </view>
 
     <!-- CU-C-84:能否申诉的前提是「本人当前有没有有效封禁」,判据来自 /cases/mine 的 activeBan。
@@ -55,8 +55,7 @@
         </view>
       </view>
       <text class="action-note">申诉通过后解封，需重新入会</text>
-      <view class="platform-button {{actingKey ? 'disabled' : ''}}" bindtap="appealBan"
-        aria-role="button" aria-disabled="{{actingKey !== ''}}" hover-class="{{actingKey ? 'none' : 'cy-pressed'}}" hover-stay-time="80">填写理由并提交申诉</view>
+      <view class="platform-cta"><cy-btn variant="primary" loading="{{actingKey !== ''}}" bindtap="appealBan">填写理由并提交申诉</cy-btn></view>
     </view>
 
     <!-- Figma 290:621「治理记录」在最上面，「对成员执行」第二——manage 模式下把顺序对齐；

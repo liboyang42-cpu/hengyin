@@ -27,9 +27,9 @@
     <block wx:if="{{accessState !== 'denied'}}">
 
     <view class="marketing-sync" wx:if="{{(funnelLoading && marketingLoaded) || (merchantLoading && marketingLoaded)}}"
-          aria-role="status" aria-live="polite" aria-label="正在确认商家身份与最新营销数据">
+          aria-role="status" aria-live="polite" aria-label="正在更新营销数据">
       <view class="marketing-sync-rail" aria-hidden="true"></view>
-      <text class="marketing-sync-text">正在确认商家身份与最新数据…</text>
+      <text class="marketing-sync-text">正在更新营销数据…</text>
     </view>
 
     <!-- Hero:全页唯一的主角数字 = 近 N 天报名(4-10:数字来自窗口 stages,写「累计」就是假口径)。

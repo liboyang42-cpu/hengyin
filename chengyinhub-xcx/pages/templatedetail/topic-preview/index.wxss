@@ -6,9 +6,7 @@ page { background: #000; } /* ds-ok 预览页固定纯黑底(原型 .px) */
 /* 2026-10-30 P-4:上一行把 fixed 的按钮条改成了 relative(按钮出屏),按钮条单独回到 fixed */
 .tp > view.tp-cta { position: fixed; } /* 与上一行同权重,写在后面生效 */
 
-.tp-state { padding: 240rpx 32rpx 0; display: flex; flex-direction: column; align-items: center; gap: 24rpx; }
-.tp-state__t { font-size: 28rpx; color: rgba(255, 255, 255, 0.62); } /* ds-ok 原型深色次级字 */
-.tp-state__btn { height: 64rpx; padding: 0 36rpx; border-radius: 32rpx; background: rgba(255, 255, 255, 0.08); display: flex; align-items: center; font-size: 26rpx; font-weight: 600; } /* ds-ok 原型 .sbtn */
+.tp-state { padding: 240rpx var(--cy-page-x) 0; } /* ds-ok 原型状态区顶距 */
 
 /* ---- 卡堆 ---- */
 .stk { position: relative; height: 528rpx; }
@@ -55,8 +53,6 @@ page { background: #000; } /* ds-ok 预览页固定纯黑底(原型 .px) */
 /* ---- 商家侧浅色(业主规则：商家一律浅色)—— 只换颜色，版式不变；色值同货架 .shelf--light ---- */
 .tp--light { background: #FFFFFF; color: #111114; } /* ds-ok 同货架商家浅色 */
 .tp--light .tp-glow { opacity: .35; }
-.tp--light .tp-state__t { color: rgba(17, 17, 20, 0.55); } /* ds-ok 同货架商家浅色 */
-.tp--light .tp-state__btn { background: rgba(17, 17, 20, 0.06); } /* ds-ok 同货架商家浅色 */
 .tp--light .fc, .tp--light .bk { box-shadow: 0 24rpx 60rpx rgba(17, 17, 20, 0.16); } /* ds-ok 浅底卡面阴影 */
 .tp--light .fc { background: #E9E9EE; } /* ds-ok 同货架商家浅色 */
 .tp--light .fc__err, .tp--light .bk__no, .tp--light .bk__ft { color: rgba(17, 17, 20, 0.45); } /* ds-ok 同货架商家浅色 */
@@ -67,7 +63,6 @@ page { background: #000; } /* ds-ok 预览页固定纯黑底(原型 .px) */
 .tp--light .tp-cta__btn { background: #111114; color: #FFFFFF; } /* ds-ok 浅底主按钮反色 */
 
 /* 细节打磨二期 L1/L5/L7 */
-.tp-state__btn { transition: var(--cy-tr-press); }
 .tp-cta__btn { transition: var(--cy-tr-press); }
 .tp-cta__btn--sec { flex: none; padding: 0 44rpx; background: rgba(255, 255, 255, 0.12); color: #F8F8F8; } /* ds-ok 原型 .btn.sec 次按钮 */
 .tp--light .tp-cta__btn--sec { background: rgba(17, 17, 20, 0.06); color: #111114; } /* ds-ok 浅底次按钮 */

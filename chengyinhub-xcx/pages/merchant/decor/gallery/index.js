@@ -233,6 +233,12 @@ Page({
     this.setData({ gallery: gallery, dirty: true });
   },
 
+  // 相册没有改动时「保存相册」置灰;点灰按钮说明原因
+  onSaveBlocked() {
+    if (this.data.saving || this.data.refreshing || this.data.dirty) return;
+    toast('相册还没有改动');
+  },
+
   save() {
     if (!this._canEdit() || !this.data.dirty) return;
     const owner = this._dataIdentity;

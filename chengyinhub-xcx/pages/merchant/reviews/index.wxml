@@ -129,7 +129,7 @@
         <cy-inline-error wx:if="{{submitError}}" class="review-error" kind="error"
                          title="评价未提交" sub="{{submitError}}" />
         <cy-btn class="review-submit" variant="primary" loading="{{submitting}}"
-                disabled="{{!canSubmit || submitting}}" bindtap="submitReview">
+                disabled="{{!canSubmit || submitting}}" bindtap="submitReview" bind:disabledtap="onSubmitBlocked">
           {{submitting ? '提交中…' : '提交真实评价'}}
         </cy-btn>
       </view>

@@ -35,20 +35,20 @@ cy-page-title + .section { margin-top: 0; } /* 2026-11-02 r2:页标题直接接�
 .option--active { border-color: var(--cy-brand); background: var(--cy-brand-soft); color: var(--cy-brand); font-weight: 700; }
 .date-row { display: flex; gap: var(--cy-space-1-5); margin-bottom: var(--cy-space-1-5); }
 .date-picker { flex: 1; }
-.remove-date, .add-date { min-height: 72rpx; display: flex; align-items: center; justify-content: center; color: var(--cy-brand); font-size: var(--cy-font-label); }
+.remove-date, .add-date { min-height: var(--cy-btn-h); display: flex; align-items: center; justify-content: center; color: var(--cy-brand); font-size: var(--cy-font-label); }
 .remove-date { width: 100rpx; }
-.add-date { gap: 8rpx; border: 1rpx dashed var(--cy-border-card); border-radius: var(--cy-radius-sm); }
+.add-date { gap: var(--cy-space-1); border: 1rpx dashed var(--cy-border-card); border-radius: var(--cy-radius-sm); }
 .field-help { display: block; margin-top: var(--cy-space-1-5); color: var(--cy-color-text-tertiary); font-size: var(--cy-font-caption); line-height: 1.5; }
 .field-help--warning { color: var(--cy-color-status-warning); }
 .switch-row { min-height: 100rpx; display: flex; align-items: center; justify-content: space-between; margin-top: var(--cy-space-3); padding: 0 4rpx; border-top: 1rpx solid var(--cy-border-card); }
 .switch-title { display: block; font-size: var(--cy-font-body); font-weight: 700; }
 .switch-note { display: block; margin-top: 4rpx; color: var(--cy-color-text-secondary); font-size: var(--cy-font-caption); }
-/* button. 前缀是必须的:style/lib.wxss 的 `wx-button:not([size=mini]){background:none}` 特异度 (0,1,1)
-   压过裸 class (0,1,0),实心底会被静默吃掉(截图实测:主按钮只剩一行暗字)。同 pages/coop/nearby 写法。 */
-button.primary-btn { width: 100%; box-sizing: border-box; height: var(--cy-btn-h); margin-top: var(--cy-space-3-5); border: 0; border-radius: var(--cy-radius-sm); background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); font-size: var(--cy-font-body); font-weight: 800; line-height: var(--cy-btn-h); }
-button.primary-btn::after { border: 0; }
+/* 1121:主按钮换成 cy-btn,原生 button 的特异度覆写随之退场 */
+.primary-cta { margin-top: var(--cy-space-3-5); }
 .editing-rail { min-height: 72rpx; display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-2); margin-top: var(--cy-space-1-5); padding: 0 var(--cy-space-2-5); border-radius: var(--cy-radius-sm); background: var(--cy-brand-soft); color: var(--cy-color-text-secondary); font-size: var(--cy-font-caption); }
 .editing-exit { color: var(--cy-brand); font-weight: 700; }
+/* 1121:文字动作命中区补到 88rpx,负外距抵消,条高不变 */
+.editing-exit { padding: var(--cy-space-3) var(--cy-space-2); margin: calc(-1 * var(--cy-space-3)) calc(-1 * var(--cy-space-2)); }
 .field-picker--locked { color: var(--cy-color-text-secondary); }
 .roster-section { margin-top: var(--cy-space-2-5); }
 .roster-filter { display: block; margin: var(--cy-space-1-5) 0 var(--cy-space-3); }
@@ -57,10 +57,10 @@ button.primary-btn::after { border: 0; }
 .member-main { min-width: 0; flex: 1; margin-left: var(--cy-space-2); }
 .member-name { display: block; font-size: var(--cy-font-body); font-weight: 700; }
 .member-meta { display: block; margin-top: 4rpx; color: var(--cy-color-text-secondary); font-size: var(--cy-font-caption); }
-.correct-btn { min-height: 60rpx; display: flex; align-items: center; padding: 0 var(--cy-space-2-5); border: 1rpx solid var(--cy-border-card); border-radius: var(--cy-radius-sm); color: var(--cy-color-text-primary); font-size: var(--cy-font-caption); }
-.danger-btn { height: var(--cy-btn-h); margin-top: var(--cy-space-2-5); border: 1rpx solid var(--cy-color-status-danger); border-radius: var(--cy-radius-sm); background: transparent; color: var(--cy-color-status-danger); font-size: var(--cy-font-body); font-weight: 800; line-height: calc(var(--cy-btn-h) - 2rpx); }
-.danger-btn::after { border: 0; }
-.readback-btn { min-height: 72rpx; display: flex; align-items: center; justify-content: center; margin-top: var(--cy-space-2-5); border: 1rpx solid var(--cy-border-card); border-radius: var(--cy-radius-sm); color: var(--cy-color-text-primary); font-size: var(--cy-font-label); font-weight: 700; }
+.correct-btn { position: relative; min-height: 60rpx; display: flex; align-items: center; padding: 0 var(--cy-space-2-5); border: 1rpx solid var(--cy-border-card); border-radius: var(--cy-radius-sm); color: var(--cy-color-text-primary); font-size: var(--cy-font-caption); }
+/* 1121:描边小钮视觉 60rpx 不变,透明伪元素把命中区上下各撑 14rpx 到 88rpx */
+.correct-btn::after { content: ""; position: absolute; left: 0; right: 0; top: -14rpx; bottom: -14rpx; }
+.row-cta { margin-top: var(--cy-space-2-5); }
 .disabled { opacity: .45; pointer-events: none; }
 
 /* ——— Figma E1「日期清单」——— */

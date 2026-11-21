@@ -61,11 +61,9 @@
   <cy-empty wx:if="{{creatorLoginRequired}}" title="登录后编辑玩法模板" cta="去登录" bind:cta="onCreatorLogin" />
   <view class="cg-load-state" wx:elif="{{editorLoading}}">
     <cy-skeleton type="detail" />
-    <view class="cg-load-state__hint">加载中</view>
   </view>
   <view class="cg-load-state" wx:elif="{{loadError}}">
-    <view wx:if="{{loadErrorIsOperation}}" bindtap="inspectAdoptionTemplates" aria-role="button" aria-label="查看我的玩法" hover-class="cy-pressed" hover-stay-time="80">查看我的玩法</view>
-    <cy-error load-failure="{{!loadErrorIsOperation && !loadErrorIsAccess}}" title="{{loadErrorIsOperation ? '采用尚未确认' : loadErrorIsAccess ? '当前请求无法读取玩法' : '玩法详情加载失败'}}" sub="{{loadError}}" retry="重新加载" bind:retry="retryGetData" />
+    <cy-error load-failure="{{!loadErrorIsOperation && !loadErrorIsAccess}}" title="{{loadErrorIsOperation ? '采用尚未确认' : loadErrorIsAccess ? '当前请求无法读取玩法' : '玩法详情加载失败'}}" sub="{{loadError}}" retry="重新加载" bind:retry="retryGetData" secondary="{{loadErrorIsOperation ? '查看我的玩法' : ''}}" bind:secondary="inspectAdoptionTemplates" />
   </view>
 
   <!-- ============ 编辑态 ============ -->
@@ -146,7 +144,7 @@
     <input class="cg-cfg-input" type="number" value="{{item.weight}}" placeholder="权重" data-index="{{ri}}" data-field="weight" data-numeric="1" bindinput="updateRandomItem" />
     <textarea class="cg-cfg-textarea" value="{{item.content}}" placeholder="抽中后展示的内容" data-index="{{ri}}" data-field="content" bindinput="updateRandomItem" />
     </view>
-    <view class="cg-adv-add" bindtap="addRandomItem" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加卡片</view>
+    <view class="cg-adv-add" bindtap="addRandomItem" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加卡片</view>
       </view>
     </view>
     <view class="cg-gcfg" wx:if="{{gameSection === 'steps'}}">
@@ -197,7 +195,7 @@
       <text>{{item.correct ? '这张是正确答案' : '设为正确答案'}}</text>
     </view>
     </view>
-    <view class="cg-adv-add" data-path="pricePair.items" bindtap="addAdvancedRow" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加一张</view>
+    <view class="cg-adv-add" data-path="pricePair.items" bindtap="addAdvancedRow" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加一张</view>
       </view>
     </view>
     <view class="cg-gcfg" wx:if="{{gameSection === 'hiddenObject'}}">
@@ -240,7 +238,7 @@
       <text class="cg-ho-state">{{item.x >= 0 && item.y >= 0 ? '已标好' : '还没标'}}</text>
     </view>
     </view>
-    <view class="cg-adv-add" data-path="hiddenObject.hotspots" bindtap="addAdvancedRow" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加目标</view>
+    <view class="cg-adv-add" data-path="hiddenObject.hotspots" bindtap="addAdvancedRow" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加目标</view>
       </view>
     </view>
     <view class="cg-gcfg" wx:if="{{gameSection === 'qa' || segmentOn.qa}}">
@@ -268,7 +266,7 @@
       <view class="cg-adv-del" data-index="{{index}}" bindtap="qzAliasDel" aria-role="button" aria-label="删除写法 {{index + 1}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
     </view>
     <cy-inline-error class="cg-qz-err" wx:if="{{qzAliasError}}" kind="field" title="{{qzAliasError}}" />
-    <view class="cg-adv-add" bindtap="qzAliasAdd" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加写法</view>
+    <view class="cg-adv-add" bindtap="qzAliasAdd" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加写法</view>
     </block>
 
     <block wx:elif="{{advanced.qa.mode === 'PICK'}}">
@@ -324,7 +322,7 @@
     </view>
     <cy-inline-error kind="error" class="cg-inline-error" wx:if="{{advanced.qa.judge !== false && qaAnswerError}}" title="{{qaAnswerError}}" />
     <cy-inline-error kind="field" class="cg-inline-error" wx:if="{{errors.advanced && advancedErrorField === 'qa.options'}}" title="{{errors.advanced}}" />
-    <view class="cg-adv-add" wx:if="{{advanced.qa.options.length < 4}}" data-path="qa.options" bindtap="addAdvancedRow" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加选项</view>
+    <view class="cg-adv-add" wx:if="{{advanced.qa.options.length < 4}}" data-path="qa.options" bindtap="addAdvancedRow" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加选项</view>
     <block wx:if="{{advanced.qa.judge !== false && !advanced.qa.multi}}">
     <view class="cg-qa-sec">指认结案</view>
     <view class="cg-rw-line"><view class="cg-rw-meta"><view class="cg-rw-name">把选项做成人物指认</view></view><cy-switch checked="{{qzAccusationOn}}" bindchange="qzAccusationToggle" accessibility-label="把选项做成人物指认" /></view>
@@ -346,7 +344,7 @@
           </view>
           <input class="cg-cfg-input cg-qz-key" value="{{tm.key}}" placeholder="拿到哪条线索后显示" data-index="{{si}}" data-row="{{ti}}" data-field="key" bindinput="qzTestimonyField" />
         </view>
-        <view class="cg-adv-add" data-index="{{si}}" bindtap="qzTestimonyAdd" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加证词</view>
+        <view class="cg-adv-add" data-index="{{si}}" bindtap="qzTestimonyAdd" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加证词</view>
       </view>
       <view class="cg-cfg-label">线索板</view>
       <view class="cg-qmedia cg-qmedia--one cg-qa-imgs">
@@ -392,7 +390,7 @@
       <input class="cg-cfg-input" value="{{item}}" placeholder="例如 NICOLAS AND PERNELLE" data-index="{{index}}" bindinput="qzHangmanAlias" />
       <view class="cg-adv-del" data-index="{{index}}" bindtap="qzHangmanDelAlias" aria-role="button" aria-label="删除写法 {{index + 1}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
     </view>
-    <view class="cg-adv-add" wx:if="{{!(advanced.hangman.aliases.length >= 10)}}" bindtap="qzHangmanAddAlias" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加写法</view>
+    <view class="cg-adv-add" wx:if="{{!(advanced.hangman.aliases.length >= 10)}}" bindtap="qzHangmanAddAlias" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加写法</view>
     <view class="cg-rw-line"><view class="cg-rw-meta"><view class="cg-rw-name">区分大小写</view></view><cy-switch checked="{{advanced.hangman.caseSensitive}}" bindchange="qzHangmanCase" accessibility-label="区分大小写" /></view>
       </view>
     </view>
@@ -409,7 +407,7 @@
     </view>
     <input class="cg-cfg-input" value="{{item.label}}" placeholder="玩家看到的文案" data-path="predict.options" data-index="{{oi}}" data-field="label" bindinput="updateAdvancedRow" />
     </view>
-    <view class="cg-adv-add" data-path="predict.options" bindtap="addAdvancedRow" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加选项</view>
+    <view class="cg-adv-add" data-path="predict.options" bindtap="addAdvancedRow" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加选项</view>
     <view class="cg-adv-grid">
     <view><view class="cg-cfg-label">当天截止（点）</view><cy-dropdown portal="{{false}}" range="{{predictHourOptions}}" data-section="predict" data-field="closeAtHour" data-options="predictHourOptions" bind:change="onAdvancedPicker"><view class="cg-pick">{{advanced.predict.closeAtHour || 0}} 点<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown></view>
     <view><view class="cg-cfg-label">第几天揭晓</view><cy-dropdown portal="{{false}}" range="{{predictDayOptions}}" data-section="predict" data-field="revealDays" data-options="predictDayOptions" bind:change="onAdvancedPicker"><view class="cg-pick">{{predictDayLabel}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown></view>
@@ -501,7 +499,7 @@
     <view class="cg-cfg-label">目标方位（度） <text class="req" aria-hidden="true">*</text></view>
     <view class="cg-adv-grid">
     <view><input class="cg-cfg-input" type="number" value="{{advanced.compass.bearing}}" placeholder="0 至 359，正北是 0" data-section="compass" data-field="bearing" data-numeric="1" bindinput="onAdvancedField" /></view>
-    <view><view class="cg-adv-add" bindtap="onCompassCapture" hover-class="cy-pressed" hover-stay-time="80">对准方向取值</view></view>
+    <view><view class="cg-adv-add" bindtap="onCompassCapture" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">对准方向取值</view></view>
     </view>
     <view class="cg-adv-grid">
     <view><view class="cg-cfg-label">容差（度） <text class="req" aria-hidden="true">*</text></view><input class="cg-cfg-input" type="number" value="{{advanced.compass.tolerance}}" placeholder="5 至 90" data-section="compass" data-field="tolerance" data-numeric="1" bindinput="onAdvancedField" /></view>
@@ -557,7 +555,7 @@
     </view>
     <input class="cg-cfg-input" value="{{item.label}}" placeholder="例如 先温杯" data-path="sort.items" data-index="{{si}}" data-field="label" bindinput="updateAdvancedRow" />
     </view>
-    <view class="cg-adv-add" bindtap="addSortItem" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加一步</view>
+    <view class="cg-adv-add" bindtap="addSortItem" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加一步</view>
       </view>
     </view>
     <view class="cg-gcfg" wx:if="{{gameSection === 'match' || segmentOn.match}}">
@@ -576,7 +574,7 @@
       <input class="cg-cfg-input" value="{{advanced.match.right[mi].label}}" placeholder="右，如 装水" data-path="match.right" data-index="{{mi}}" data-field="label" bindinput="updateAdvancedRow" />
     </view>
     </view>
-    <view class="cg-adv-add" bindtap="addMatchPair" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加一对</view>
+    <view class="cg-adv-add" bindtap="addMatchPair" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加一对</view>
       </view>
     </view>
     <view class="cg-gcfg" wx:if="{{gameSection === 'classify' || segmentOn.classify}}">
@@ -592,7 +590,7 @@
     </view>
     <input class="cg-cfg-input" value="{{binRow.label}}" placeholder="例如 器具 / 耗材" data-path="classify.bins" data-index="{{bi}}" data-field="label" bindinput="updateAdvancedRow" />
     </view>
-    <view class="cg-adv-add" bindtap="addClassifyBin" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加类别</view>
+    <view class="cg-adv-add" bindtap="addClassifyBin" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加类别</view>
     <view class="cg-cfg-label">条目（2 至 10 条，每条选一个类别） <text class="req" aria-hidden="true">*</text></view>
     <view class="cg-adv-repeat" wx:for="{{advanced.classify.items}}" wx:key="id" wx:for-index="ci" wx:for-item="itemRow">
     <view class="cg-adv-repeat-head">
@@ -603,7 +601,7 @@
     <cy-dropdown portal="{{false}}" range="{{opt.names(advanced.classify.bins, '类别 ')}}" value="{{opt.idx(advanced.classify.bins, advanced.classify.answer[itemRow.id], 'id')}}" data-item="{{itemRow.id}}" bind:change="setClassifyBin"><view class="cg-pick {{opt.idx(advanced.classify.bins, advanced.classify.answer[itemRow.id], 'id') < 0 ? 'empty' : ''}}"><text>{{opt.label(advanced.classify.bins, advanced.classify.answer[itemRow.id], 'id', '类别 ')}}</text><view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
     <view class="cg-cfg-hint" wx:if="{{!advanced.classify.answer[itemRow.id]}}">未选择类别</view>
     </view>
-    <view class="cg-adv-add" bindtap="addClassifyItem" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加条目</view>
+    <view class="cg-adv-add" bindtap="addClassifyItem" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加条目</view>
       </view>
     </view>
     <cy-dropdown wx:if="{{segmentAddOptions.length}}" topic-editor columns="{{2}}" range="{{segmentAddOptions}}" range-key="label" value="{{-1}}" bind:change="addSegment">
@@ -664,9 +662,9 @@
                  data-path="{{'profile.questions.' + qi + '.options.' + oi + '.effects'}}" data-index="{{ei}}" data-field="value" bindinput="updateEffectField" />
           </block>
         </view>
-        <view class="cg-adv-add" wx:if="{{o.effects.length < 16}}" data-path="{{'profile.questions.' + qi + '.options.' + oi + '.effects'}}" bindtap="addEffectRow" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加加成</view>
+        <view class="cg-adv-add" wx:if="{{o.effects.length < 16}}" data-path="{{'profile.questions.' + qi + '.options.' + oi + '.effects'}}" bindtap="addEffectRow" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加加成</view>
       </view>
-      <view class="cg-adv-add" wx:if="{{q.options.length < 6}}" data-qindex="{{qi}}" bindtap="addProfileOption" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加选项</view>
+      <view class="cg-adv-add" wx:if="{{q.options.length < 6}}" data-qindex="{{qi}}" bindtap="addProfileOption" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加选项</view>
       <!-- 咔哒:本局某个状态够了,玩家选什么都被改写成作者定的那一项 -->
       <view class="cg-rw-line compact"><view class="cg-rw-name">咔哒 · 条件够了改写成标准答案</view><cy-switch checked="{{q.kaccha.enabled}}" data-index="{{qi}}" bindchange="toggleProfileKaccha" /></view>
       <block wx:if="{{q.kaccha.enabled}}">
@@ -681,7 +679,7 @@
       </block>
     </block>
     </view>
-    <view class="cg-adv-add" wx:if="{{advanced.profile.questions.length < 8}}" bindtap="addProfileQuestion" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加问题</view>
+    <view class="cg-adv-add" wx:if="{{advanced.profile.questions.length < 8}}" bindtap="addProfileQuestion" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加问题</view>
       </view>
     </view>
 
@@ -898,7 +896,7 @@
     <view class="cg-adv-repeat-head"><text>短句 {{pi + 1}}</text><view class="cg-adv-del" data-index="{{pi}}" bindtap="removeNotePreset" aria-role="button" aria-label="删除" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view></view>
     <input class="cg-cfg-input" value="{{item}}" placeholder="例如 天是灰的" data-index="{{pi}}" bindinput="updateNotePreset" />
     </view>
-    <view class="cg-adv-add" wx:if="{{advanced.note.presets.length < 6}}" bindtap="addNotePreset" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加短句</view>
+    <view class="cg-adv-add" wx:if="{{advanced.note.presets.length < 6}}" bindtap="addNotePreset" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加短句</view>
       </view>
     </view>
 
@@ -951,7 +949,7 @@
       <text>{{advanced.blindTaste.answerKey === item.key ? '正确答案' : '设为正确答案'}}</text>
     </view>
     </view>
-    <view class="cg-adv-add" bindtap="addBlindOption" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加选项</view>
+    <view class="cg-adv-add" bindtap="addBlindOption" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加选项</view>
       </view>
     </view>
     <view class="cg-gcfg cg-adv-section" wx:if="{{advanced.dailySign.enabled}}">
@@ -965,7 +963,7 @@
     </view>
     <textarea class="cg-cfg-textarea" value="{{item}}" placeholder="一行一句，最多 4 行，每行 24 字以内" data-index="{{pi}}" bindinput="updateDailyPoem" />
     </view>
-    <view class="cg-adv-add" bindtap="addDailyPoem" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加开场签</view>
+    <view class="cg-adv-add" bindtap="addDailyPoem" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加开场签</view>
     <view class="cg-cfg-label">开场签落款</view>
     <input class="cg-cfg-input" value="{{advanced.dailySign.signer}}" placeholder="例如 店主老王" data-section="dailySign" data-field="signer" bindinput="onAdvancedField" />
       </view>
@@ -1070,7 +1068,7 @@
           <cy-icon name="close-sm" size="28" />
         </view>
       </view>
-      <view class="cg-qmedia-add" wx:else bindtap="uploadQuestionImg" hover-class="cy-pressed" hover-stay-time="80">
+      <view class="cg-qmedia-add" wx:else bindtap="uploadQuestionImg" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">
         <cy-icon name="image" size="40" /><text class="cg-qmedia-t">配图</text>
       </view>
 
@@ -1080,7 +1078,7 @@
           <cy-icon name="close-sm" size="28" />
         </view>
       </view>
-      <view class="cg-qmedia-add" wx:else bindtap="uploadQuestionAudio" hover-class="cy-pressed" hover-stay-time="80">
+      <view class="cg-qmedia-add" wx:else bindtap="uploadQuestionAudio" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">
         <cy-icon name="play" size="40" /><text class="cg-qmedia-t">配音</text>
       </view>
     </view>
@@ -1149,10 +1147,10 @@
         <cy-dropdown topic-editor columns="{{2}}" range="{{r5Editor.feedbackStepOptions}}" range-key="label" reason-key="reason" value="{{opt.idx(r5Editor.feedbackStepOptions, option.nextStepId)}}" data-stepindex="{{si}}" data-optionindex="{{oi}}" bind:change="pickBranchNextStep"><view class="cg-pick">{{opt.label(r5Editor.feedbackStepOptions, option.nextStepId)}}<cy-icon name="back" size="28" /></view></cy-dropdown>
         <input class="cg-cfg-input" wx:if="{{advanced.branch.enabled && advanced.outcomeRules.version !== 1}}" type="number" value="{{option.score}}" placeholder="得分" data-stepindex="{{si}}" data-optionindex="{{oi}}" data-field="score" data-numeric="1" bindinput="updateBranchOption" />
       </view>
-      <view class="cg-adv-add" data-index="{{si}}" bindtap="addBranchOption" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加选项</view>
+      <view class="cg-adv-add" data-index="{{si}}" bindtap="addBranchOption" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加选项</view>
     </view>
     </view>
-    <view class="cg-adv-add" bindtap="addBranchStep" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加反馈分段</view>
+    <view class="cg-adv-add" bindtap="addBranchStep" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加反馈分段</view>
       </view>
     </view>
 
@@ -1202,14 +1200,14 @@
                     </view>
                   </view>
                 </block>
-                <view class="pgrid-cell pgrid-add" wx:if="{{ beat.imgs.length < 6 }}" bindtap="uploadStoryBeatImg" data-index="{{ bi }}" hover-class="cy-pressed" hover-stay-time="80">
+                <view class="pgrid-cell pgrid-add" wx:if="{{ beat.imgs.length < 6 }}" bindtap="uploadStoryBeatImg" aria-role="button" aria-label="添加图片" data-index="{{ bi }}" hover-class="cy-pressed" hover-stay-time="80">
                   <view class="pgrid-add-plus"><cy-icon name="plus" size="32" /></view>
                   <text class="pgrid-add-txt">加图</text>
                 </view>
               </view>
             </view>
           </cy-card>
-          <view class="cg-beat-add" bindtap="addStoryBeat" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加时间节点 · 延长时间线</view>
+          <view class="cg-beat-add" bindtap="addStoryBeat" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加时间节点 · 延长时间线</view>
         </view>
       </cy-card>
 
@@ -1286,7 +1284,7 @@
       <!-- 商铺类型只给商家(scope=MERCHANT);所需材料收进「高级设置」(2026-11-19 主人) -->
       <view class="cg-field cg-divider" wx:if="{{ operationScope === 'MERCHANT' }}">
         <view class="cg-label">商铺类型</view>
-        <view class="cg-pick {{ formData.usageLocation ? '' : 'empty' }}" bindtap="openVenueSheet" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="cg-pick {{ formData.usageLocation ? '' : 'empty' }}" bindtap="openVenueSheet" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">
           <text class="cg-pick-text">{{ formData.usageLocation || '请选择' }}</text><view class="cg-caret"><cy-icon name="back" size="28" /></view>
         </view>
       </view>
@@ -1383,7 +1381,7 @@
           </view>
           <view class="cg-qz-err" wx:if="{{item.error}}">{{item.error}}</view>
         </view>
-        <view class="cg-adv-add" wx:if="{{qzHintRows.length < 6}}" bindtap="qzHintAdd" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加一层</view>
+        <view class="cg-adv-add" wx:if="{{qzHintRows.length < 6}}" bindtap="qzHintAdd" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加一层</view>
       </block>
     </view>
     </block>
@@ -1480,11 +1478,11 @@
 
     <!-- 空态 / 添加模块 -->
     <cy-card class="cg-empty" wx:if="{{ moduleList.length === 0 }}">
-      <cy-empty title="还没有添加玩法模块" sub="先设置完成方式" cta="添加模块" bind:cta="openAddSheet" />
+      <cy-empty title="还没有添加玩法模块" cta="添加模块" bind:cta="openAddSheet" />
     </cy-card>
-    <view class="cg-addmod" wx:elif="{{ availableModules.length > 0 }}" hover-class="cg-addmod--pressed" hover-stay-time="80" bindtap="openAddSheet"><cy-icon name="plus" size="28" />添加模块</view>
+    <view class="cg-addmod" wx:elif="{{ availableModules.length > 0 }}" hover-class="cg-addmod--pressed" hover-stay-time="80" bindtap="openAddSheet" aria-role="button"><cy-icon name="plus" size="28" />添加模块</view>
 
-    <view class="cg-scroll-pad"></view>
+    <view class="cg-scroll-pad {{!previewMode && !previewVisible && submitError ? 'cg-scroll-pad--err' : ''}}"></view>
   </scroll-view>
 
   <!-- 编辑态底部栏 -->
@@ -1576,7 +1574,7 @@
               <!-- 选项问答 -->
               <view wx:elif="{{ formData.validationMethod === 3 }}" class="cg-pv-choices">
                 <view class="cg-pv-choice {{ pvSelected === oi ? 'on' : '' }}" wx:for="{{ optionItems }}" wx:key="letter" wx:for-index="oi" wx:for-item="opt"
-                  bindtap="onPvSelectChoice" data-index="{{ oi }}" hover-class="cy-pressed" hover-stay-time="80"><text class="cg-pv-choice-l">{{ opt.letter }}</text>{{ opt.text || '选项 ' }}</view>
+                  bindtap="onPvSelectChoice" aria-role="button" data-index="{{ oi }}" hover-class="cy-pressed" hover-stay-time="80"><text class="cg-pv-choice-l">{{ opt.letter }}</text>{{ opt.text || '选项 ' }}</view>
               </view>
               <!-- 拍照 -->
               <view wx:elif="{{ formData.validationMethod === 2 }}" class="cg-pv-photo">拍照上传</view>
@@ -1644,7 +1642,7 @@
     <view class="cg-sheet-bar"></view>
     <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="cgDismiss" data-close="closeAddSheet" data-out="add" aria-role="button" aria-label="退出添加模块" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">添加模块</view><view class="cg-edit-head__done" bindtap="closeAddSheet" aria-role="button" aria-label="完成添加模块" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
     <view class="cg-sheet-list">
-      <view class="cg-sheet-card" wx:for="{{ availableModules }}" wx:key="key" hover-class="cg-sheet-card--pressed" hover-stay-time="80" bindtap="addModule" data-key="{{ item.key }}">
+      <view class="cg-sheet-card" wx:for="{{ availableModules }}" wx:key="key" hover-class="cg-sheet-card--pressed" hover-stay-time="80" bindtap="addModule" aria-role="button" data-key="{{ item.key }}">
         <view class="cg-sheet-meta">
           <view class="cg-sheet-name">{{ item.name }}<text class="cg-tag {{ item.tagClass }}" wx:if="{{ item.tag }}">{{ item.tag }}</text></view>
           <view class="cg-sheet-desc">{{ item.desc }}</view>
@@ -1717,7 +1715,7 @@
               <view class="cg-audio-del" bindtap="clearAudio" aria-role="button" aria-label="删除导览音频" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
             </view>
           </cy-card>
-          <view class="cg-audio-empty" wx:else bindtap="uploadAudio" hover-class="cy-pressed" hover-stay-time="80">上传音频文件</view>
+          <view class="cg-audio-empty" wx:else bindtap="uploadAudio" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">上传音频文件</view>
           <view wx:if="{{ formData.audioUrl }}">
             <view class="cg-cfg-label">时长（秒，选填）</view>
             <input class="cg-cfg-input" type="number" value="{{ formData.audioDuration }}" bindinput="onAudioDurationChange"
@@ -1954,10 +1952,10 @@
             <input class="cg-cfg-input" type="number" value="{{cost.amount}}" placeholder="数量 1 至 999" data-group="{{gi}}" data-row="{{ri}}" data-field="amount" bindinput="updateCostRow" />
             <cy-inline-error kind="error" wx:if="{{toolError && toolError.group === gi && toolError.row === ri}}" title="{{toolError.error}}" />
           </view>
-          <view class="cg-adv-add" data-group="{{gi}}" bindtap="addCostRow" wx:if="{{group.rows.length < 32}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加费用</view>
+          <view class="cg-adv-add" data-group="{{gi}}" bindtap="addCostRow" aria-role="button" wx:if="{{group.rows.length < 32}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加费用</view>
           <cy-inline-error kind="error" wx:if="{{toolError && toolError.group === gi && toolError.row == null}}" title="{{toolError.error}}" />
         </view>
-        <view class="cg-adv-add" wx:if="{{toolDraft.mode === 'OPTIONS' && toolDraft.groups.length < 4}}" bindtap="addCostGroup" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加费用组</view>
+        <view class="cg-adv-add" wx:if="{{toolDraft.mode === 'OPTIONS' && toolDraft.groups.length < 4}}" bindtap="addCostGroup" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加费用组</view>
       </view>
       <view wx:elif="{{toolKey === 'reward'}}">
         <view class="cg-rw-line compact"><view class="cg-rw-name">任选一组奖励</view><cy-switch checked="{{toolDraft.mode === 'OPTIONS'}}" data-field="mode" bindchange="updateToolField" /></view>
@@ -1971,10 +1969,10 @@
             <input class="cg-cfg-input" type="number" value="{{grant.amount}}" placeholder="数量 1 至 999" data-group="{{gi}}" data-row="{{ri}}" data-field="amount" bindinput="updateCostRow" />
             <cy-inline-error kind="error" wx:if="{{toolError && toolError.group === gi && toolError.row === ri}}" title="{{toolError.error}}" />
           </view>
-          <view class="cg-adv-add" data-group="{{gi}}" bindtap="addCostRow" wx:if="{{group.rows.length < 32}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加物资</view>
+          <view class="cg-adv-add" data-group="{{gi}}" bindtap="addCostRow" aria-role="button" wx:if="{{group.rows.length < 32}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加物资</view>
           <cy-inline-error kind="error" wx:if="{{toolError && toolError.group === gi && toolError.row == null}}" title="{{toolError.error}}" />
         </view>
-        <view class="cg-adv-add" wx:if="{{toolDraft.mode === 'OPTIONS' && toolDraft.groups.length < 4}}" bindtap="addCostGroup" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加奖励组</view>
+        <view class="cg-adv-add" wx:if="{{toolDraft.mode === 'OPTIONS' && toolDraft.groups.length < 4}}" bindtap="addCostGroup" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加奖励组</view>
       </view>
       <view wx:elif="{{toolKey === 'clue'}}">
         <view class="cg-adv-repeat" wx:for="{{toolDraft.rows}}" wx:key="index" wx:for-item="clue" wx:for-index="ci">
@@ -1984,7 +1982,7 @@
           <view class="cg-rw-line compact"><view class="cg-rw-name">全场公开</view><cy-switch checked="{{clue.public}}" data-index="{{ci}}" data-field="public" bindchange="updateClueRow" /></view>
           <cy-inline-error kind="error" wx:if="{{toolError && toolError.row === ci}}" title="{{toolError.error}}" />
         </view>
-        <view class="cg-adv-add" wx:if="{{toolDraft.rows.length < 10}}" bindtap="addClueRow" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加线索</view>
+        <view class="cg-adv-add" wx:if="{{toolDraft.rows.length < 10}}" bindtap="addClueRow" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加线索</view>
         <view class="cg-rw-line compact"><view class="cg-rw-name">只首次生效</view><cy-switch checked="{{toolDraft.publicOnce}}" data-field="publicOnce" bindchange="updateToolField" /></view>
         <cy-inline-error kind="error" wx:if="{{toolError && toolError.field === 'publicOnce'}}" title="{{toolError.error}}" />
       </view>
@@ -2009,16 +2007,16 @@
             <input class="cg-cfg-input" type="number" value="{{material.quantity}}" placeholder="数量 1 至 999" data-plan="{{pi}}" data-material="{{mi}}" data-field="quantity" bindinput="updateVotePlan" />
             <cy-inline-error kind="error" wx:if="{{toolError && toolError.plan === pi && toolError.material === mi}}" title="{{toolError.error}}" />
           </view>
-          <view class="cg-adv-add" data-plan="{{pi}}" bindtap="addVoteMaterial" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加投入物资</view>
+          <view class="cg-adv-add" data-plan="{{pi}}" bindtap="addVoteMaterial" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加投入物资</view>
           <view class="cg-cfg-label">需要的线索</view>
           <view class="cg-adv-repeat" wx:for="{{plan.clueNames}}" wx:key="index" wx:for-item="clueName" wx:for-index="ci">
             <view class="cg-adv-repeat-head">线索 {{ci + 1}}<view data-plan="{{pi}}" data-index="{{ci}}" bindtap="removePlanClue" aria-role="button" aria-label="移除需要的线索" hover-class="cy-pressed" hover-stay-time="80">移除</view></view>
             <input class="cg-cfg-input" value="{{clueName}}" maxlength="20" placeholder="与公开线索同名" data-plan="{{pi}}" data-index="{{ci}}" bindinput="updatePlanClue" />
           </view>
-          <view class="cg-adv-add" wx:if="{{plan.clueNames.length < 10}}" data-plan="{{pi}}" bindtap="addPlanClue" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加需要的线索</view>
+          <view class="cg-adv-add" wx:if="{{plan.clueNames.length < 10}}" data-plan="{{pi}}" bindtap="addPlanClue" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加需要的线索</view>
           <cy-inline-error kind="error" wx:if="{{toolError && toolError.plan === pi && toolError.material == null}}" title="{{toolError.error}}" />
         </view>
-        <view class="cg-adv-add" bindtap="addVotePlan" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加投票选项</view>
+        <view class="cg-adv-add" bindtap="addVotePlan" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加投票选项</view>
         <view class="cg-adv-repeat" wx:if="{{toolDraft.plans.length}}">
           <view class="cg-adv-repeat-head">没有方案执行时</view>
           <input class="cg-cfg-input" value="{{toolDraft.fallbackTitle}}" placeholder="标题" data-field="fallbackTitle" bindinput="updateToolField" />

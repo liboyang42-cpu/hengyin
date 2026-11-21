@@ -10,7 +10,7 @@
        而 .session-picker 只有 padding-bottom、没有横向 padding ——
        加了 flush 标题就贴出屏幕左边缘（实拍 C51 里「选」字被切掉半个）。 -->
   <cy-page-title title="选择场次" safe-top="{{false}}" />
-  <view wx:for="{{activityOptions}}" wx:key="id" wx:if="{{state === 'selecting'}}" class="session-picker__item" bindtap="onSelectActivity" data-id="{{item.id}}" data-name="{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
+  <view wx:for="{{activityOptions}}" wx:key="id" wx:if="{{state === 'selecting'}}" class="session-picker__item" bindtap="onSelectActivity" data-id="{{item.id}}" data-name="{{item.name}}" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">
     <text>{{item.name}}</text><cy-icon name="arrow-right" size="32" />
   </view>
   <cy-empty wx:if="{{state === 'empty'}}" fill kind="empty" title="暂无可带队的场次" />

@@ -66,11 +66,12 @@
           <text class="row-pick">{{customerPhoneVisible ? '是' : '否'}}</text><cy-icon class="row-pick-arrow" name="slide-arrow" size="28" />
         </view>
       </view>
-      <view class="assign-btn {{(!selectedMemberId || !selectedRoleCode || actingKey) ? 'disabled' : ''}}"
-        bindtap="assignRole" aria-role="button"
-        aria-disabled="{{!selectedMemberId || !selectedRoleCode || actingKey !== ''}}"
-        hover-class="{{(!selectedMemberId || !selectedRoleCode || actingKey) ? 'none' : 'cy-pressed'}}"
-        hover-stay-time="80">分配</view>
+      <!-- 1121:页内自绘药丸 → cy-btn;置灰被点时 assignRole 自己会说缺哪一项(先选成员 / 先选角色),
+           提交中(actingKey)它直接返回,不重复提示 -->
+      <view class="assign-cta">
+        <cy-btn variant="primary" disabled="{{!selectedMemberId || !selectedRoleCode || actingKey !== ''}}"
+          bindtap="assignRole" bind:disabledtap="assignRole">分配</cy-btn>
+      </view>
       <cy-empty wx:if="{{members.length === 0}}" size="sm" title="暂无成员" />
     </view>
 

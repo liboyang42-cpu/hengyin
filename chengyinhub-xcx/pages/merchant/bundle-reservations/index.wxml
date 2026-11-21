@@ -20,7 +20,7 @@
             <text class="bres-time">{{item.timeText}}</text>
             <text class="bres-status bres-status--{{item.status}}">{{item.statusText}}</text>
           </view>
-          <cy-btn wx:if="{{item.canNoShow}}" variant="secondary" loading="{{busyId === item.id}}" data-id="{{item.id}}" bindtap="markNoShow">记未到店</cy-btn>
+          <cy-btn wx:if="{{item.canNoShow}}" variant="secondary" size="sm" loading="{{busyId === item.id}}" data-id="{{item.id}}" bindtap="markNoShow">记未到店</cy-btn>
         </view>
       </view>
     </view>

@@ -2,6 +2,7 @@
   "navigationStyle": "custom",
   "enablePullDownRefresh": true,
   "usingComponents": {
+    "cy-btn": "/components/cy/btn/index",
     "cy-date-field": "/components/cy/date-field/index",
     "cy-dropdown": "/components/cy/dropdown/index",
     "cy-error": "/components/cy/error/index",

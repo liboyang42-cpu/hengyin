@@ -62,8 +62,13 @@ page { background: var(--cy-bg-page); }
   color: var(--cy-btn-solid-fg);
   font-size: var(--cy-font-label);
   line-height: var(--cy-btn-h-sm);
+  position: relative;
+  overflow: visible;
+  transition: var(--cy-tr-press);
 }
 .tm-share-btn::after { border: 0; }
+/* 小号胶囊视觉高 btn-h-sm;热区上下外扩到 88rpx,不改外观 */
+.tm-share-btn::before { content: ''; position: absolute; left: 0; right: 0; top: calc((var(--cy-btn-h-sm) - 88rpx) / 2); bottom: calc((var(--cy-btn-h-sm) - 88rpx) / 2); }
 
 .tm-invite-landing {
   margin: var(--cy-space-4) 0 0;

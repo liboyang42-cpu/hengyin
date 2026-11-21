@@ -761,6 +761,12 @@ Page({
    * 它要关掉弹层留在原地,而不是像形象页那样退回 home。wxml 的 bindtap 会把事件对象
    * 当第一个参数传进来,所以只认函数。
    */
+  // 「保存形象」因还没选照片置灰时,点灰按钮说明原因(同 save 内的口径)
+  onSaveBlocked() {
+    if (this.data.saving || this.data.processing) return;
+    if (this.data.source === 'photo' && !this.data.photoReady) toast('先选择一张照片');
+  },
+
   save(onSaved) {
     const memberId = String(app.getUserID() || '');
     const current = () => !this._destroyed && String(app.getUserID() || '') === memberId;
@@ -1211,6 +1217,12 @@ Page({
     audio.play();
     this.setData({ voicePlaying: true });
   },
+  // 「确认并生成声音」因未勾选授权置灰时,点灰按钮把授权提示写到原错误位(同录音前的口径)
+  onUploadVoiceBlocked() {
+    if (this.data.voiceBusy || this.data.voiceUnknown || this.data.voiceConsent) return;
+    this.setData({ voiceError: '请确认这是本人声音或已获得声音使用授权' });
+  },
+
   uploadVoice() {
     if (this.data.voiceBusy || this.data.voiceStatus === 1 || this.data.voiceUnknown || !this.data.voiceFile) return;
     let context, pending;
