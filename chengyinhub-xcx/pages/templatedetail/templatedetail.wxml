@@ -85,7 +85,7 @@
           <text>{{ isTopicTemplate ? '剧情' : '简介' }}</text>
         </view>
         <view id="tpl-desc" class="xb-body xb-body--soft {{ descExpanded ? '' : 'xb-body--clamp' }}">{{ info.description }}</view>
-        <view class="xb-link-more" wx:if="{{ descNeedMore || descExpanded }}" bindtap="toggleDescMore" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="xb-link-more" wx:if="{{ descNeedMore || descExpanded }}" bindtap="toggleDescMore" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">
           {{ descExpanded ? '收起' : '更多' }}
         </view>
       </view>
@@ -118,7 +118,7 @@
             </view>
           </view>
         </view>
-        <view class="xb-link-more" wx:if="{{ ruleNeedMore || ruleExpanded }}" bindtap="toggleRuleMore" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="xb-link-more" wx:if="{{ ruleNeedMore || ruleExpanded }}" bindtap="toggleRuleMore" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">
           {{ ruleExpanded ? '收起' : '更多' }}
         </view>
       </view>
@@ -305,13 +305,13 @@
           </view>
           <view class="david_tk_sr_tgb">
             <view class="david_tk_sr_tgb_li {{ selectedOptionKey === 'A' ? 'on' : '' }}"
-              wx:if="{{ info.questionA }}" bindtap="onSelectOption" data-option="A" data-value="{{ info.questionA }}" hover-class="cy-pressed" hover-stay-time="80">A.{{ info.questionA }}</view>
+              wx:if="{{ info.questionA }}" bindtap="onSelectOption" aria-role="button" data-option="A" data-value="{{ info.questionA }}" hover-class="cy-pressed" hover-stay-time="80">A.{{ info.questionA }}</view>
             <view class="david_tk_sr_tgb_li {{ selectedOptionKey === 'B' ? 'on' : '' }}"
-              wx:if="{{ info.questionB }}" bindtap="onSelectOption" data-option="B" data-value="{{ info.questionB }}" hover-class="cy-pressed" hover-stay-time="80">B.{{ info.questionB }}</view>
+              wx:if="{{ info.questionB }}" bindtap="onSelectOption" aria-role="button" data-option="B" data-value="{{ info.questionB }}" hover-class="cy-pressed" hover-stay-time="80">B.{{ info.questionB }}</view>
             <view class="david_tk_sr_tgb_li {{ selectedOptionKey === 'C' ? 'on' : '' }}"
-              wx:if="{{ info.questionC }}" bindtap="onSelectOption" data-option="C" data-value="{{ info.questionC }}" hover-class="cy-pressed" hover-stay-time="80">C.{{ info.questionC }}</view>
+              wx:if="{{ info.questionC }}" bindtap="onSelectOption" aria-role="button" data-option="C" data-value="{{ info.questionC }}" hover-class="cy-pressed" hover-stay-time="80">C.{{ info.questionC }}</view>
             <view class="david_tk_sr_tgb_li {{ selectedOptionKey === 'D' ? 'on' : '' }}"
-              wx:if="{{ info.questionD }}" bindtap="onSelectOption" data-option="D" data-value="{{ info.questionD }}" hover-class="cy-pressed" hover-stay-time="80">D.{{ info.questionD }}</view>
+              wx:if="{{ info.questionD }}" bindtap="onSelectOption" aria-role="button" data-option="D" data-value="{{ info.questionD }}" hover-class="cy-pressed" hover-stay-time="80">D.{{ info.questionD }}</view>
           </view>
           <cy-btn variant="primary" disabled="{{!canSubmitPreview}}" style="width:580rpx;margin:50rpx auto;display:block" bindtap="completePreview" bind:disabledtap="onPreviewDisabledTap">完成预览</cy-btn>
         </block>

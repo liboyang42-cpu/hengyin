@@ -20,9 +20,9 @@
     <!-- 冷启动进来的没有上一页,只给「返回」等于把人困死;所以回首页恒在,返回按栈深出。 -->
     <view class="pr-exits cy-fade-in">
       <text wx:if="{{state === 'network-error'}}" class="pr-exit" bindtap="goHome"
-            aria-role="button" aria-label="回首页" hover-class="cy-pressed">回首页</text>
+            aria-role="button" aria-label="回首页" hover-class="cy-pressed" hover-stay-time="80">回首页</text>
       <text wx:if="{{canBack}}" class="pr-exit" bindtap="goBack"
-            aria-role="button" aria-label="返回上一页" hover-class="cy-pressed">返回上一页</text>
+            aria-role="button" aria-label="返回上一页" hover-class="cy-pressed" hover-stay-time="80">返回上一页</text>
     </view>
   </block>
 </view>

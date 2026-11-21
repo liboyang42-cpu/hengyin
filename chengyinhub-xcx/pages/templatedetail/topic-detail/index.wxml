@@ -70,7 +70,7 @@
           <text>剧情</text>
         </view>
         <view id="td-opening" class="xb-body xb-body--soft {{ openingExpanded ? '' : 'td-opening--clamp' }}" wx:if="{{ opening }}">{{ opening }}</view>
-        <view class="xb-link-more" wx:if="{{ openingNeedMore || openingExpanded }}" bindtap="toggleOpening" hover-class="cy-pressed" hover-stay-time="80">{{ openingExpanded ? '收起' : '展开' }}</view>
+        <view class="xb-link-more" wx:if="{{ openingNeedMore || openingExpanded }}" bindtap="toggleOpening" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">{{ openingExpanded ? '收起' : '展开' }}</view>
         <view class="st-ch" wx:for="{{ chapters }}" wx:key="key">
           <view class="st-ch__no" wx:if="{{ item.no }}">{{ item.no }}</view>
           <view class="st-ch__main">

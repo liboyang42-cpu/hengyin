@@ -9,9 +9,8 @@
 
   <cy-skeleton wx:if="{{state === 'loading'}}" type="card" count="4" loading-label="正在加载客户详情" />
   <!-- K2-D 无客户权限 -->
-  <cy-error wx:elif="{{state === 'no-permission'}}" fill size="lg"
-            title="当前身份不能查看客户" sub="{{errorText}}"
-            retry="" bind:back="goBack" auto-back custom-back class="cy-fade-in" />
+  <cy-empty wx:elif="{{state === 'no-permission'}}" kind="no-permission" fill size="lg"
+            title="当前身份不能查看客户" cta="返回" bind:cta="goBack" class="cy-fade-in" />
   <cy-empty wx:elif="{{state === 'refused'}}" kind="not-found" fill size="lg" title="{{errorText}}" cta="返回" bind:cta="goBack" class="cy-fade-in" />
   <!-- K2-E 加载失败 -->
   <cy-error load-failure wx:elif="{{state === 'network-error'}}" fill size="lg" title="客户详情加载失败"

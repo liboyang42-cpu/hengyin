@@ -3,6 +3,10 @@
 .fabu {
   padding-bottom: 250rpx; /* ds-ok: 底部固定CTA栏预留高度,不是排版间距 */
 }
+/* 失败说明叠在底部 CTA 栏里时,栏变高一截;尾部同样让出,最后一行不被盖住 */
+.fabu.fabu--err {
+  padding-bottom: calc(250rpx + var(--cy-space-8)); /* ds-ok: 250rpx 同上 */
+}
 
 .publish-access-state { min-height: calc(100vh - 96rpx); display: flex; flex-direction: column; }
 .publish-access-state > cy-skeleton { margin: 0 var(--cy-page-x); }
@@ -154,7 +158,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--cy-color-overlay);
   /* 2026-09-02:原 999 越过 token 档(压过 celebrate 990)。居中弹窗 = modal 档。 */
   z-index: var(--cy-z-modal);
 }

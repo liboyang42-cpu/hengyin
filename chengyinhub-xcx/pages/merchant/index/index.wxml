@@ -120,7 +120,7 @@
     <!-- 售后是有时效的交易待办：只在真实待回应数大于 0 时直达，不挤占四个固定快捷位。 -->
     <view class="rv-aftercare-alert"
           wx:if="{{merchantAccess.canReadAftercare && todo.refundCount > 0}}"
-          bindtap="goAftercare" hover-class="rv-tap"
+          bindtap="goAftercare" hover-class="rv-tap" hover-stay-time="80"
           aria-role="button" aria-label="有 {{todo.refundCount || 0}} 笔售后待回应，打开退款售后">
       <view class="rv-aftercare-alert__mark"></view>
       <text class="rv-aftercare-alert__text">有 {{todo.refundCount || 0}} 笔售后待回应</text>
@@ -132,7 +132,7 @@
          (2026-09-17 拍板 #23)。超时作废后后端不再下发这个数,入口随 0 消失。 -->
     <view class="rv-aftercare-alert"
           wx:if="{{merchantAccess.canManageProjects && todo.pendingPredict > 0}}"
-          bindtap="goPredictInbox" hover-class="rv-tap"
+          bindtap="goPredictInbox" hover-class="rv-tap" hover-stay-time="80"
           aria-role="button" aria-label="有 {{todo.pendingPredict || 0}} 轮预测待给答案，打开预测待办">
       <view class="rv-aftercare-alert__mark"></view>
       <text class="rv-aftercare-alert__text">有 {{todo.pendingPredict || 0}} 轮预测待给答案</text>
@@ -165,7 +165,7 @@
           <view class="rv-project-item" wx:for="{{projectCards}}" wx:key="key">
           <view class="rv-project-card" bindtap="openProjectCard"
                 data-role="{{item.role}}" data-id="{{item.id}}" data-topicid="{{item.ownerId}}" data-biztype="{{item.bizType}}" data-source="{{item.projectSource}}" data-gameactivityid="{{item.gameStationCard ? item.id : ''}}"
-                hover-class="rv-tap" aria-role="button"
+                hover-class="rv-tap" hover-stay-time="80" aria-role="button"
                 aria-label="打开{{item.roleLabel || ''}}项目{{item.title}}{{item.statusLabel ? '，' + item.statusLabel : ''}}{{item.verifyCount ? '，' + item.verifyCount + ' 张待核销' : ''}}">
             <image class="rv-project-cover" wx:if="{{img.first(item.thumb)}}"
                    src="{{img.first(item.thumb)}}" mode="aspectFill" lazy-load="true" />
@@ -187,7 +187,7 @@
           </view>
           </view>
           <view class="rv-project-item rv-project-more" wx:if="{{joinTotal + hostProjectTotal > projectCards.length}}"
-                bindtap="goPublishedProjects" hover-class="rv-tap" aria-role="button"
+                bindtap="goPublishedProjects" hover-class="rv-tap" hover-stay-time="80" aria-role="button"
                 aria-label="查看全部项目，还有 {{(joinTotal + hostProjectTotal - projectCards.length) || 0}} 个">
             <view class="rv-project-more-c rv-project-more-c--3"></view>
             <view class="rv-project-more-c rv-project-more-c--2"></view>
@@ -225,7 +225,7 @@
       <view wx:else class="rv-msg-card rv-msg-card--ns {{inboxItems.length > 1 ? (msgOpen ? 'rv-msg-stack rv-msg-stack--open' : 'rv-msg-stack rv-msg-stack--n' + inboxItems.length) : ''}}">
         <block wx:if="{{inboxItems.length}}">
           <view class="rv-msg-item {{msgOpen ? 'cy-fly-in' : ''}}" style="{{msgOpen ? 'animation-delay:' + index * 50 + 'ms' : ''}}" wx:for="{{inboxItems}}" wx:key="key"
-                bindtap="openInboxItem" data-key="{{item.key}}" hover-class="rv-tap" aria-role="button" aria-label="{{(inboxItems.length > 1 && !msgOpen) ? '展开 ' + inboxItems.length + ' 条消息' : '查看消息：' + item.title}}">
+                bindtap="openInboxItem" data-key="{{item.key}}" hover-class="rv-tap" hover-stay-time="80" aria-role="button" aria-label="{{(inboxItems.length > 1 && !msgOpen) ? '展开 ' + inboxItems.length + ' 条消息' : '查看消息：' + item.title}}">
             <view class="rv-msg-ico">
               <cy-icon name="{{item.icon}}" size="34" />
             </view>
@@ -240,7 +240,7 @@
             </view>
           </view>
         </block>
-        <view class="rv-msg-item" wx:elif="{{inboxLoaded}}" bindtap="goInbox" hover-class="rv-tap" aria-role="button" aria-label="{{inboxError ? '消息暂时没读到，打开站内消息' : '还没有消息，打开站内消息'}}">
+        <view class="rv-msg-item" wx:elif="{{inboxLoaded}}" bindtap="goInbox" hover-class="rv-tap" hover-stay-time="80" aria-role="button" aria-label="{{inboxError ? '消息暂时没读到，打开站内消息' : '还没有消息，打开站内消息'}}">
           <view class="rv-msg-ico">
             <cy-icon name="bell" size="34" />
           </view>
@@ -306,7 +306,6 @@
   <view class="scene-host" wx:if="{{sceneCurrent && sceneCurrent.id === 'merchant-chapter-picker'}}" catchtouchmove="blockSceneTouch">
     <cy-scene-sheet show="{{true}}" variant="{{sceneCurrent.variant}}" theme="{{sceneCurrent.theme}}" title="{{sceneCurrent.title}}" mask-closable="{{sceneCurrent.maskClosable}}" bind:requestclose="onChapterSheetClose">
     <view class="chpick">
-      <view class="chpick__hint">选择本次核销的章节</view>
       <view class="chpick__item" wx:for="{{chapterSheet.items}}" wx:key="id"
             data-id="{{item.id}}" bindtap="onChapterPick" aria-role="button" aria-label="选择核销章节{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
         <text class="chpick__name">{{item.name}}{{item.replayed ? '（已核销，请勿重复提供权益）' : ''}}</text>
@@ -320,7 +319,6 @@
   <view class="scene-host" wx:if="{{sceneCurrent && sceneCurrent.id === 'merchant-station-picker'}}" catchtouchmove="blockSceneTouch">
     <cy-scene-sheet show="{{true}}" variant="{{sceneCurrent.variant}}" theme="{{sceneCurrent.theme}}" title="{{sceneCurrent.title}}" mask-closable="{{sceneCurrent.maskClosable}}" bind:requestclose="onStationSheetClose">
     <view class="chpick">
-      <view class="chpick__hint">选择本次核销的节点</view>
       <view class="chpick__item" wx:for="{{stationSheet.items}}" wx:key="registrationMerchantId"
             data-registration-merchant-id="{{item.registrationMerchantId}}" bindtap="onStationPick" aria-role="button" aria-label="选择实际核销节点{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
         <text class="chpick__name">{{item.name}}</text>

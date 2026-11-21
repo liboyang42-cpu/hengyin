@@ -2,6 +2,7 @@
   "navigationStyle": "custom",
   "usingComponents": {
     "cy-avatar": "/components/cy/avatar/index",
+    "cy-btn": "/components/cy/btn/index",
     "cy-empty": "/components/cy/empty/index",
     "cy-error": "/components/cy/error/index",
     "cy-nav-bar": "/components/cy/nav-bar/index",

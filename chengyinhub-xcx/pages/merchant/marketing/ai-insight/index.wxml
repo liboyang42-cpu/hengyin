@@ -78,8 +78,7 @@
 
     <!-- 未知和明确为零是两件事：字段缺失只能重试，服务端明确全零才给业务空态。 -->
     <cy-state-shell wx:if="{{factState === 'unknown'}}" kind="data"
-                    title="基础数据暂未完整返回"
-                    sub="数据暂缺"
+                    title="店铺数据没加载完整"
                     primary="重新加载" bind:primary="retry" />
     <!-- 2026-10-23 业主:服务端明确全零时不再出零数据引导卡(业务空态 + 跳合作中心按钮),
          上方三格照常显示 0,下方各分区按「没有就不显示」各自隐藏(empty 与 ready 走同一分支)。
@@ -275,7 +274,7 @@
 
   <!-- 推荐主题详情弹层:卡片原位形变(ghost)→ 弹层;按钮带 topicId 去合作中心 -->
   <block wx:if="{{sheetPhase}}">
-    <view class="ts-scrim {{scrimOn ? 'ts-scrim--on' : ''}}" bindtap="closeTopic" hover-class="ts-scrim--press" catchtouchmove="noop"></view>
+    <view class="ts-scrim {{scrimOn ? 'ts-scrim--on' : ''}}" bindtap="closeTopic" hover-class="ts-scrim--press" hover-stay-time="80" catchtouchmove="noop"></view>
     <view class="ts-ghost" wx:if="{{ghostStyle}}" style="{{ghostStyle}}"></view>
     <view id="topic-sheet" class="ts-sheet ts-sheet--{{sheetPhase}}" catchtouchmove="noop"
           aria-role="dialog" aria-label="主题详情 {{sheetTopic.name}}">
@@ -295,9 +294,9 @@
         <text class="ts-k">场次 · 主办</text><text class="ts-v">{{sheetTopic.metaText}}</text>
       </view>
       <view class="ts-btns">
-        <view class="ts-btn ts-btn--ghost" bindtap="closeTopic" hover-class="cy-pressed" hover-stay-time="80" aria-role="button">先不用</view>
-        <view class="ts-btn" bindtap="applyTopic" data-topic-id="{{sheetTopic.topicId}}" hover-class="cy-pressed" hover-stay-time="80"
-              aria-role="button" aria-label="申请承接主题{{sheetTopic.name}}">去申请承接</view>
+        <cy-btn class="ts-btn ts-btn--ghost" variant="secondary" bindtap="closeTopic">先不用</cy-btn>
+        <cy-btn class="ts-btn" variant="primary" bindtap="applyTopic" data-topic-id="{{sheetTopic.topicId}}"
+                accessibility-label="申请承接主题{{sheetTopic.name}}">去申请承接</cy-btn>
       </view>
     </view>
   </block>

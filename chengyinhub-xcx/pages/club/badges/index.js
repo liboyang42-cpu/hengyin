@@ -305,6 +305,11 @@ Page({
     this.setData({ createError: '列表里还没看到这枚勋章。可下拉刷新再确认；确认确实没建成后，点「我已确认」再提交' })
   },
 
+  // 1121:「创建」因上次结果未确认而置灰时,点它要说清卡在哪 —— 原因就在按钮上方的红字条里
+  onCreateBlockedTap() {
+    if (this.data.createUnknown) toast('先核对上次的创建结果')
+  },
+
   confirmCreateChecked() {
     if (!this.data.createUnknown) return
     this._createUnknown = null

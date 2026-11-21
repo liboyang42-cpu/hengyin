@@ -18,10 +18,9 @@
   <cy-nav-bar title="{{pageState === 'ready' ? '' : pageTitle}}" custom-back bind:back="onNavBack" />
 
   <cy-skeleton wx:if="{{pageState === 'loading'}}" type="card" count="4" />
-  <!-- 未登录不再整屏拦:管理态静默登录后自动加载;拒权/失败只留这条内联错误 + 重试。 -->
-  <cy-inline-error class="review-inline-error cy-fade-in" wx:elif="{{pageState === 'no-permission'}}" kind="data"
-                   title="没有口碑管理权限" sub=""
-                   action="重新加载" bind:action="retry" />
+  <!-- 未登录不再整屏拦:管理态静默登录后自动加载;失败只留内联错误 + 重试。拒权与其他商家页同一无权限态。 -->
+  <cy-empty wx:elif="{{pageState === 'no-permission'}}" kind="no-permission" fill size="lg"
+            title="当前身份不能管理口碑" cta="返回" bind:cta="onNavBack" class="cy-fade-in" />
   <cy-inline-error class="review-inline-error cy-fade-in" wx:elif="{{pageState === 'login-required'}}" kind="data"
                    title="登录后查看口碑管理" sub="{{errorMessage}}" action="重新登录" bind:action="retryLogin" />
   <cy-inline-error load-failure class="review-inline-error cy-fade-in" wx:elif="{{pageState === 'error'}}" kind="error"
@@ -129,7 +128,7 @@
         <cy-inline-error wx:if="{{submitError}}" class="review-error" kind="error"
                          title="评价未提交" sub="{{submitError}}" />
         <cy-btn class="review-submit" variant="primary" loading="{{submitting}}"
-                disabled="{{!canSubmit || submitting}}" bindtap="submitReview">
+                disabled="{{!canSubmit || submitting}}" bindtap="submitReview" bind:disabledtap="onSubmitBlocked">
           {{submitting ? '提交中…' : '提交真实评价'}}
         </cy-btn>
       </view>

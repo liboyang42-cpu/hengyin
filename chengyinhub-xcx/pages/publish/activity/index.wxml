@@ -1,5 +1,5 @@
 <wxs src="../../../utils/time-format.wxs" module="tf" />
-<view class="fabu theme-topic-editor {{step === 2 ? 'fabu--review' : ''}}">
+<view class="fabu theme-topic-editor {{step === 2 ? 'fabu--review' : ''}} {{submitError ? 'fabu--err' : ''}}">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
@@ -70,7 +70,7 @@
         <view class="li">
           <view class="item-tit">活动类型<text>*</text></view>
           <view class="item-cont {{errors.categoryIds ? 'is-error' : ''}}">
-            <view class="picker picker2 flex-cb" bindtap="navigateToCategorySelect" hover-class="cy-pressed" hover-stay-time="80">
+            <view class="picker picker2 flex-cb" bindtap="navigateToCategorySelect" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">
               <view class="tit {{selectedCategoryNames.length > 0 ? 'selected-text' : 'placeholder-text'}}">
                 <text wx:if="{{selectedCategoryNames.length > 0}}">{{selectedCategoryNamesStr}}</text>
                 <text wx:else>请选择活动类型</text>
@@ -118,7 +118,7 @@
       <view class="li" id="field-template">
         <view class="item-tit">选择模板</view>
         <view class="item-cont {{errors.templateId ? 'is-error' : ''}}">
-          <view class="picker picker2 flex-cb" bindtap="showTemp" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="picker picker2 flex-cb" bindtap="showTemp" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">
             <view class="tit {{selectedTempInfo ? 'selected-text' : 'placeholder-text'}}">
               {{selectedTempInfo ? selectedTempInfo.title : '请选择模板'}}
             </view>
@@ -159,7 +159,7 @@
       <view class="ticket" id="field-ticket" wx:for="{{formData.tickets}}" wx:key="index" wx:for-item="ticket" wx:for-index="ticketIndex">
         <view class="li">
           <view class="item-tit">票单名称{{ticketIndex + 1}}<text>*</text>
-            <view wx:if="{{ticketIndex>0}}" class="david_del" bindtap="removeTicket" data-index="{{ticketIndex}}" hover-class="cy-pressed" hover-stay-time="80">删除</view>
+            <view wx:if="{{ticketIndex>0}}" class="david_del" bindtap="removeTicket" aria-role="button" data-index="{{ticketIndex}}" hover-class="cy-pressed" hover-stay-time="80">删除</view>
           </view>
           <view class="item-cont {{focusField === 'ticketName' + ticketIndex ? 'is-focused' : ''}} {{errors['ticketName' + ticketIndex] ? 'is-error' : ''}}">
             <input type="text" placeholder="请输入票单名称" placeholder-class="fld-ph" value="{{ticket.name}}" bindinput="onTicketChange" bindfocus="onFieldFocus" bindblur="onFieldBlur" data-focuskey="ticketName{{ticketIndex}}" data-field="name" data-index="{{ticketIndex}}" />

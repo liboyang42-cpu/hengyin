@@ -12,14 +12,20 @@ cy-empty, cy-error { display: flex !important; flex: 1 !important; min-height: 0
 }
 
 /* 筛选 chip 排:选中 = 星白底深墨字;未选 = bg-interactive 上只能配 text-primary */
-.cus-chips { margin-top: var(--cy-space-4); }
+/* 1121:chip 视觉 68rpx 不变,上下各 10rpx 透明边把命中区撑到 88rpx;外距同量收回,版面零位移 */
+.cus-chips { margin-top: calc(var(--cy-space-4) - 10rpx); }
 .cus-chiprow { display: flex; gap: var(--cy-space-2-5); padding: 0 var(--cy-page-x); white-space: nowrap; }
 .cus-chip {
   flex-shrink: 0;
-  height: 68rpx;
+  height: 88rpx;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
-  padding: 0 28rpx;
+  padding: 0 var(--cy-space-3-5);
+  border-style: solid;
+  border-color: transparent;
+  border-width: 10rpx 0;
+  background-clip: padding-box;
   border-radius: var(--cy-radius-pill);
   background: var(--cy-color-bg-interactive);
   color: var(--cy-color-text-primary);
@@ -28,7 +34,7 @@ cy-empty, cy-error { display: flex !important; flex: 1 !important; min-height: 0
 }
 .cus-chip--on { background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); }
 
-.cus-search { display: block; padding: 0 var(--cy-page-x); margin-top: var(--cy-space-3); }
+.cus-search { display: block; padding: 0 var(--cy-page-x); margin-top: calc(var(--cy-space-3) - 10rpx); }
 
 /* 列表行 */
 .cus-list { padding: 0 var(--cy-page-x); margin-top: var(--cy-space-4); }
@@ -56,7 +62,7 @@ cy-empty, cy-error { display: flex !important; flex: 1 !important; min-height: 0
 }
 .cus-remarktag {
   flex-shrink: 0;
-  padding: 2rpx 10rpx;
+  padding: 2rpx var(--cy-space-1);
   border-radius: var(--cy-radius-sm);
   background: var(--cy-color-bg-raised);
   color: var(--cy-color-text-tertiary);

@@ -11,11 +11,8 @@ cy-page-title + .section { margin-top: 0; } /* 2026-11-02 r2:页标题直接接�
 .settled-amount { display: block; margin-top: var(--cy-space-2-5); color: var(--cy-color-text-primary); font-size: var(--cy-type-data-xl); font-weight: 800; font-family: var(--cy-font-numeric); }
 
 
-button.withdraw-btn { width: 100%; box-sizing: border-box; height: var(--cy-btn-h); margin-top: var(--cy-space-4); border: 0; border-radius: var(--cy-radius-pill); background: var(--cy-color-text-primary); color: var(--cy-color-bg-surface); font-size: var(--cy-font-body); font-weight: 800; line-height: var(--cy-btn-h); }
-button.withdraw-btn::after { border: 0; }
-/* CU-C-92:可提现为 0 或余额未取到时主按钮不再冒充主行动(次级面 + 次级前景),
-   原生 button[disabled] 默认样式被显式盖掉,不靠透明度。 */
-button.withdraw-btn[disabled] { background: var(--cy-color-action-secondary-bg); color: var(--cy-color-text-secondary); opacity: 1; }
+/* 1121:提现主按钮换成 cy-btn —— 置灰形态由组件 disabled 档统一给,原生 button 的覆写退场 */
+.withdraw-cta { margin-top: var(--cy-space-4); }
 .withdraw-hint { display: block; margin-top: var(--cy-space-2); color: var(--cy-color-text-tertiary); font-size: var(--cy-font-micro); text-align: center; }
 
 .topic-row { padding: var(--cy-space-4); border-radius: var(--cy-radius-md); background: var(--cy-bg-elevated); }
@@ -24,7 +21,7 @@ button.withdraw-btn[disabled] { background: var(--cy-color-action-secondary-bg);
 .topic-row-name { color: var(--cy-color-text-primary); font-size: var(--cy-font-subtitle); font-weight: 800; }
 .topic-row-amount { color: var(--cy-color-text-primary); font-size: var(--cy-font-subtitle); font-weight: 800; font-family: var(--cy-font-numeric); }
 .topic-row-body { display: flex; align-items: center; margin-top: var(--cy-space-2-5); }
-.topic-row-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4rpx; }
+.topic-row-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--cy-space-1); }
 .topic-row-meta-line { color: var(--cy-color-text-tertiary); font-size: var(--cy-font-micro); }
 .topic-row-chip { flex-shrink: 0; margin-right: var(--cy-space-1-5); padding: 0 var(--cy-space-1-5); height: 44rpx; line-height: 44rpx; border-radius: var(--cy-radius-pill); color: var(--cy-color-text-tertiary); font-size: var(--cy-font-micro); font-weight: 700; }
 .topic-row-chip--settled { background: var(--cy-color-status-success-soft); color: var(--cy-color-status-success); }

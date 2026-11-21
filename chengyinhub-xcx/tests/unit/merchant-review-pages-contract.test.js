@@ -203,28 +203,29 @@ test('manage permission denial has a dedicated truthful state', () => {
   assert.equal(classifyLoadFailure('manage', { code: 500 }), 'error');
   assert.equal(classifyLoadFailure('public', { code: 403 }), 'error');
 
-  // 2026-09-16 去闸:拒权/失败改成页内 cy-inline-error + 重试,不再整屏 cy-empty/cy-error。
+  // 2026-11-21 #890 DevTools 走查:拒权与其他商家页同一无权限态(锁 + 当前身份 + 一个动作,居中)。
   const wxml = read('pages/merchant/reviews/index.wxml');
-  const inlineError = wxml.match(/<cy-inline-error\b[^>]*wx:elif="\{\{pageState === 'no-permission'\}\}"[^>]*\/>/);
-  assert.ok(inlineError, '拒权必须有页内内联错误');
-  assert.match(inlineError[0], /没有口碑管理权限/);
-  assert.match(inlineError[0], /bind:action="retry"/);
+  assertReviewDeniedState(wxml);
   // 公开态的「登录后查看评价资格」是玩家侧资格说明,不在本次商家闸范围内。
   assert.doesNotMatch(wxml, /登录后查看商家|登录后处理|cta="去登录"/, '商家整屏登录闸文案必须删除');
 });
 
-test('负控:管理态拒权退回整屏 cy-empty 时必须判红', () => {
+function assertReviewDeniedState(wxml) {
+  const denied = wxml.match(/<cy-empty\b[^>]*wx:elif="\{\{pageState === 'no-permission'\}\}"[^>]*\/>/);
+  assert.ok(denied, '拒权必须是统一无权限态');
+  assert.match(denied[0], /kind="no-permission" fill size="lg"/);
+  assert.match(denied[0], /title="当前身份不能管理口碑" cta="返回" bind:cta="onNavBack"/);
+  assert.doesNotMatch(wxml, /<cy-inline-error\b[^>]*pageState === 'no-permission'/, '拒权不得再是内联横幅');
+}
+
+test('负控:管理态拒权退回内联横幅时必须判红', () => {
   const wxml = read('pages/merchant/reviews/index.wxml');
   const mutated = wxml.replace(
-    /<cy-inline-error\b[^>]*wx:elif="\{\{pageState === 'no-permission'\}\}"[^>]*\/>/,
-    '<cy-empty wx:elif="{{pageState === \'no-permission\'}}" title="没有口碑管理权限" cta="去登录" />',
+    /<cy-empty\b[^>]*wx:elif="\{\{pageState === 'no-permission'\}\}"[^>]*\/>/,
+    '<cy-inline-error wx:elif="{{pageState === \'no-permission\'}}" title="没有口碑管理权限" action="重新加载" bind:action="retry" />',
   );
   assert.notEqual(mutated, wxml, '负控锚点失效');
-  assert.throws(() => {
-    const inlineError = mutated.match(/<cy-inline-error\b[^>]*wx:elif="\{\{pageState === 'no-permission'\}\}"[^>]*\/>/);
-    assert.ok(inlineError, '拒权必须有页内内联错误');
-    assert.doesNotMatch(mutated, /cta="去登录"/);
-  }, /拒权必须有页内内联错误/);
+  assert.throws(() => assertReviewDeniedState(mutated), /拒权必须是统一无权限态/);
 });
 
 // M-14(2026-09-22 走查):空态说明直接露出状态码 ACTIVE。给商家看的文案不得出现工程枚举。

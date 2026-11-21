@@ -31,21 +31,8 @@
   padding: 0 var(--cy-page-x); /* 与标题同一左边(原 12px 对 20px 两条边) */
 }
 
-.cu-inline-button {
-  min-height: 64rpx;
-  margin: 0;
-  padding: 0 var(--cy-space-3);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--cy-radius-md);
-  background: var(--cy-bg-card);
-  color: var(--cy-text-body);
-  font-size: var(--cy-font-caption);
-  line-height: 1;
-}
-.cu-inline-button::after { border: 0; }
-.cu-inline-button--primary { background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); }
+/* 批量 / 导出条里的行内动作:统一走 cy-btn(sm),宿主行内排布,不再自绘原生 button */
+.cu-inline-button { display: inline-block; vertical-align: middle; }
 .cu-batch, .cu-export {
   margin-top: var(--cy-space-2);
   padding: var(--cy-space-3);
@@ -337,8 +324,6 @@
 
 /* 细节打磨二期 L1/L5/L7 */
 .cu-seg { transition: var(--cy-tr-press); }
-.cu-inline-button { transition: var(--cy-tr-press); }
-.cu-inline-button--primary { transition: var(--cy-tr-press); }
 .cu-phone { transition: var(--cy-tr-press); }
 .cu-copy { transition: var(--cy-tr-press); }
 .cu-fx-hd__btn { transition: var(--cy-tr-press); }

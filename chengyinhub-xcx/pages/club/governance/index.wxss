@@ -1,12 +1,13 @@
 page { background: var(--cy-bg-page); }
 .page { min-height: 100vh; box-sizing: border-box; padding-bottom: calc(var(--cy-space-6) + var(--cy-safe-bottom)); background: var(--cy-bg-page); color: var(--cy-color-text-primary); } /* 浅色作用域内铺底：page{} 在 .theme-merchant 之外取不到浅色变量 */
+.page--fill { display: flex; flex-direction: column; box-sizing: border-box; } /* 无权限 cy-empty fill 在顶栏下方剩余空间居中 */
 /* 区块之间 20px(手册写 32,存量已知不一致,按 20 做);分区标题→本组 16px。 */
 .section { margin: 40rpx var(--cy-page-x) 0; } /* ds-ok: 40rpx = Figma 区块间距 20px，无匹配半步 token 见 style/TOKEN-MAPPING.md */
 cy-page-title + .section { margin-top: 0; } /* 打磨第 3 轮 §4-3:20px 是区块之间,不是标题→首块;与结算/运营/勋章同一口径(约 9px) */
 .section-title { display: block; color: var(--cy-text-title); font-size: var(--cy-font-body); font-weight: 700; }
 .action-section { display: flex; flex-direction: column; padding: var(--cy-space-4); border-radius: var(--cy-comp-card-radius); background: var(--cy-comp-card-bg); }
 .action-note { margin-top: var(--cy-space-2); color: var(--cy-text-secondary); font-size: var(--cy-font-caption); line-height: 1.55; }
-.platform-button { display: flex; min-height: var(--cy-btn-h); align-items: center; justify-content: center; margin-top: var(--cy-space-3); border-radius: var(--cy-radius-pill); background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); font-size: var(--cy-font-body); font-weight: 700; }
+.platform-cta { margin-top: var(--cy-space-3); }
 
 /* Figma「卡」= bg-elevated(#1c1c1e)+ 行内发丝分隔，取代原先各自独立描边的卡片。 */
 .ds-card { margin-top: var(--cy-space-4); padding: 0 28rpx; border-radius: var(--cy-comp-card-radius); background: var(--cy-comp-card-bg); } /* ds-ok: 28rpx = Figma 卡片左右内距 14px */
@@ -20,8 +21,9 @@ cy-page-title + .section { margin-top: 0; } /* 打磨第 3 轮 §4-3:20px 是区
 .row-value--ACTIVE { color: var(--cy-color-status-danger); }
 .row-value--PENDING { color: var(--cy-color-status-warning); }
 .row-link { flex: none; color: var(--cy-text-title); font-size: var(--cy-font-label); font-weight: 700; }
+/* 1121:「解封」命中区补到 88rpx;负外距抵消内距,右栏版面不动 */
+.row-link { padding: var(--cy-space-3) var(--cy-space-2); margin: calc(-1 * var(--cy-space-3)) calc(-1 * var(--cy-space-2)); }
 .row-link--disabled { opacity: .45; pointer-events: none; }
-.disabled { background: var(--cy-color-action-secondary-bg); color: var(--cy-color-text-disabled); pointer-events: none; }
 
 /* 稿 R6 290:621:行内选择器 + 行内动作(与角色页 R1 同形态) */
 .row-pick { flex: none; margin-left: auto; color: var(--cy-text-secondary); font-size: var(--cy-font-label); }
@@ -30,7 +32,7 @@ cy-page-title + .section { margin-top: 0; } /* 打磨第 3 轮 §4-3:20px 是区
 .row-act--danger { color: var(--cy-color-status-danger); }
 .row-act--warning { color: var(--cy-color-status-warning); }
 .row--disabled { opacity: .45; }
-.picker { padding: 0 0 24rpx; /* cy-sheet 面板已带页边距,内容不再重复内缩 */ }
+.picker { padding: 0 0 var(--cy-space-3); /* cy-sheet 面板已带页边距,内容不再重复内缩 */ }
 .picker-row { display: flex; align-items: center; gap: var(--cy-space-3); padding: var(--cy-space-3) 0;
   border-top: 1rpx solid var(--cy-color-border-subtle); }
 .picker-row--on .picker-mark { color: var(--cy-color-status-success); }

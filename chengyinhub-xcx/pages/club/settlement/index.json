@@ -2,6 +2,7 @@
   "navigationStyle": "custom",
   "enablePullDownRefresh": true,
   "usingComponents": {
+    "cy-btn": "/components/cy/btn/index",
     "cy-club-direct-ledger": "/components/cy/club-direct-ledger/index",
     "cy-fe-reference-settlement": "/components/cy/fe-reference-settlement/index",
     "cy-empty": "/components/cy/empty/index",

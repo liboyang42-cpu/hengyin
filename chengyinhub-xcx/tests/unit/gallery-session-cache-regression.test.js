@@ -39,7 +39,7 @@ test('游客相册不读私有资料，页面有正常登录恢复入口', () =>
   const h = mount('', ''); h.page.onLoad(); h.page.onShow();
   assert.equal(h.requests.length, 0); assert.equal(h.page.data.loadState, 'login');
   const wxml = fs.readFileSync(filename.replace(/\.js$/, '.wxml'), 'utf8');
-  assert.match(wxml, /loadState === 'login'[\s\S]*?cta="去登录"[^>]*bind:cta="onLogin"/);
+  assert.match(wxml, /loadState === 'login'[\s\S]*?cta="登录"[^>]*bind:cta="onLogin"/);
 });
 test('相册已加载后换号返回，清旧图片和编辑结果再读当前账号', () => {
   const h = mount(); ready(h); h.page.data.dirty = true;

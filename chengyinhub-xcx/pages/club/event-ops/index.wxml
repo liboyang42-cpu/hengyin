@@ -4,7 +4,7 @@
   <cy-access-gate kind="login" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
-<view class="page" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+<view class="page {{state === 'no-permission' ? 'page--fill' : ''}}" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
   <cy-nav-bar custom-back bind:back="goBack" />
   <cy-page-title title="活动运营" safe-top="{{false}}" />
 
@@ -12,8 +12,8 @@
   <cy-empty wx:elif="{{state === 'missing-param'}}" fill size="lg" kind="missing-param" cta="返回" bind:cta="goBack" class="cy-fade-in" />
   <!-- 2026-08-26:权限拒绝原来和加载失败共用一个 error 态,渲染成「暂时不可用 + 重新加载」——
        给了一个永远点不成功的重试按钮,用户不会知道是权限问题。现在拆成三条。 -->
-  <cy-error wx:elif="{{state === 'no-permission'}}" fill size="lg" retry=""
-            title="你没有活动运营的权限" sub="{{errorText || '需「活动运营」或「本场核销」权限'}}" auto-back class="cy-fade-in" />
+  <cy-empty wx:elif="{{state === 'no-permission'}}" kind="no-permission" fill size="lg"
+            title="当前身份不能运营活动" cta="返回" bind:cta="goBack" class="cy-fade-in" />
   <cy-error load-failure wx:elif="{{state === 'network-error'}}" title="网络连接失败" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" class="cy-fade-in" />
   <cy-error load-failure wx:elif="{{state === 'error'}}" title="活动运营暂时不可用" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" class="cy-fade-in" />
 
@@ -59,16 +59,19 @@
         </view>
         <view class="row row--column" wx:elif="{{cancellationState === 'error' || cancellationState === 'readback-error'}}">
           <cy-inline-error kind="data" title="本场取消未完成" sub="{{cancellationError}}" />
-          <view class="readback-btn" wx:if="{{cancellationState === 'readback-error'}}"
-            bindtap="retryCancellationReadback" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">刷新</view>
-          <button class="danger-btn" wx:else loading="{{cancellationSubmitting}}" disabled="{{cancellationSubmitting}}"
-            bindtap="cancelCurrentOccurrence">重试取消本场</button>
+          <!-- 1121:页内自绘 / 原生 <button> → cy-btn(命中区、按压、提交转圈全站一致) -->
+          <view class="row-cta" wx:if="{{cancellationState === 'readback-error'}}">
+            <cy-btn variant="secondary" size="sm" bindtap="retryCancellationReadback">刷新</cy-btn>
+          </view>
+          <view class="row-cta" wx:else>
+            <cy-btn variant="danger" loading="{{cancellationSubmitting}}" bindtap="cancelCurrentOccurrence">重试取消本场</cy-btn>
+          </view>
         </view>
         <view class="row" wx:else bindtap="cancelCurrentOccurrence" aria-role="button"
           hover-class="{{cancellationSubmitting ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
+          <!-- 1121:后果写在确认弹窗里(下方 cy-modal content),行内不再重复一遍说明 -->
           <view class="row-text">
             <text class="row-title">取消本场</text>
-            <text class="row-meta">会下架本场、处理退款并终止候补</text>
           </view>
         </view>
       </view>
@@ -102,7 +105,7 @@
           </view>
           <view wx:if="{{rosterTab !== 'waitlist'}}" class="correct-btn {{actingMemberId || !correctionOperable ? 'disabled' : ''}}"
             data-member-id="{{item.memberId}}" data-version="{{item.correctionVersion}}"
-            data-arrived="{{rosterTab !== 'arrived'}}" bindtap="correctAttendance" hover-class="{{actingMemberId || !correctionOperable ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
+            data-arrived="{{rosterTab !== 'arrived'}}" bindtap="correctAttendance" aria-role="button" hover-class="{{actingMemberId || !correctionOperable ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
             {{rosterTab === 'arrived' ? '更正未到' : '标记到场'}}
           </view>
         </view>
@@ -177,7 +180,7 @@
       
 
       <view class="editing-rail" wx:if="{{editingSeriesId}}">
-        <text>已锁定主题与负责人策略；退出编辑可换系列</text>
+        <text>编辑中</text>
         <text class="editing-exit" bindtap="cancelSeriesEdit" aria-role="button" hover-class="{{submitting ? 'none' : 'cy-pressed'}}" hover-stay-time="80">退出编辑</text>
       </view>
 
@@ -220,7 +223,7 @@
             <cy-date-field class="date-picker" mode="date" value="{{item}}" start="{{editingSeriesId ? futureMinDate : minDate}}" data-index="{{index}}" bind:change="onCustomDateChange">
               <view class="field-picker">{{item}}<cy-icon class="field-chevron" name="back" size="24" /></view>
             </cy-date-field>
-            <view class="remove-date {{customDates.length <= 1 ? 'disabled' : ''}}" data-index="{{index}}" bindtap="removeCustomDate" hover-class="{{submitting || customDates.length <= 1 ? 'none' : 'cy-pressed'}}" hover-stay-time="80">移除</view>
+            <view class="remove-date {{customDates.length <= 1 ? 'disabled' : ''}}" data-index="{{index}}" bindtap="removeCustomDate" aria-role="button" aria-label="移除 {{item}}" hover-class="{{submitting || customDates.length <= 1 ? 'none' : 'cy-pressed'}}" hover-stay-time="80">移除</view>
           </view>
           <view class="add-date" bindtap="addCustomDate" aria-role="button" hover-class="{{submitting || customDates.length >= 64 ? 'none' : 'cy-pressed'}}" hover-stay-time="80"><cy-icon name="plus" size="24" /><text>添加日期</text></view>
         </view>
@@ -261,14 +264,14 @@
         <input class="field-input" type="number" value="{{offerMinutes}}" bindinput="onOfferInput" placeholder="5 分钟 – 1 天" />
       </view>
 
-      <button class="primary-btn" loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitSeries">
-        {{submitting ? '正在创建…' : '创建系列场次'}}
-      </button>
+      <view class="primary-cta">
+        <cy-btn variant="primary" loading="{{submitting}}" loading-label="正在创建…" bindtap="submitSeries">创建系列场次</cy-btn>
+      </view>
     </view>
     <view class="section cy-fade-in" wx:if="{{canManage && editingSeriesId}}">
-      <button class="primary-btn" loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitSeries">
-        {{submitting ? '正在更新…' : '保存未来场次'}}
-      </button>
+      <view class="primary-cta">
+        <cy-btn variant="primary" loading="{{submitting}}" loading-label="正在更新…" bindtap="submitSeries">保存未来场次</cy-btn>
+      </view>
     </view>
   </block>
 

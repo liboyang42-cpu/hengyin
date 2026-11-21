@@ -43,7 +43,7 @@
               bindtap="choosePhoto"
               aria-role="button"
               aria-disabled="{{saving || processing}}"
-              hover-class="cy-pressed"
+              hover-class="cy-pressed" hover-stay-time="80"
             >
               上传照片
             </view>
@@ -51,7 +51,7 @@
               bindtap="openPresets"
               aria-role="button"
               aria-disabled="{{saving || processing}}"
-              hover-class="cy-pressed"
+              hover-class="cy-pressed" hover-stay-time="80"
             >
               选现成的
             </view>
@@ -106,6 +106,7 @@
           bindtap="save"
           loading="{{saving}}"
           disabled="{{processing || (!photoReady && source === 'photo')}}"
+          bind:disabledtap="onSaveBlocked"
         >
           {{saveError ? '重试保存' : '保存形象'}}
         </cy-btn>
@@ -148,7 +149,7 @@
           aria-role="radio"
           aria-checked="{{pickId === item}}"
           aria-label="{{presetNames[item]}}"
-          hover-class="cy-pressed"
+          hover-class="cy-pressed" hover-stay-time="80"
         >
           <view class="npc-tile {{pickId === item ? 'npc-tile--selected' : ''}}"><canvas id="{{'tile-' + item}}" type="2d" class="npc-tile-canvas" /></view><text class="npc-tile-name">{{presetNames[item]}}</text>
         </view>
@@ -280,7 +281,7 @@
           <cy-btn variant="secondary" bindtap="resetVoiceRecording" disabled="{{voiceBusy || voiceUnknown}}">
             重新录音
           </cy-btn>
-          <cy-btn bindtap="uploadVoice" loading="{{voiceBusy}}" disabled="{{voiceUnknown || !voiceConsent}}">
+          <cy-btn bindtap="uploadVoice" loading="{{voiceBusy}}" disabled="{{voiceUnknown || !voiceConsent}}" bind:disabledtap="onUploadVoiceBlocked">
             确认并生成声音
           </cy-btn>
         </view>

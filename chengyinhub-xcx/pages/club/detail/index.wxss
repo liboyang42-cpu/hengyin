@@ -806,7 +806,7 @@ page { background: var(--cy-bg-page); }
 .post-edit-sheet, .post-history-sheet { padding: 0; }
 .post-edit-input { width: 100%; min-height: 220rpx; padding: var(--cy-space-3); box-sizing: border-box; border-radius: var(--cy-radius-sm); background: var(--cy-color-input-idle-bg); color: var(--club-text); font-size: var(--cy-font-body); line-height: var(--cy-leading-normal); }
 .post-edit-input.is-filled { background: var(--cy-color-input-filled-bg); }
-.post-edit-note, .post-history-state { margin-top: var(--cy-space-2); color: var(--club-text-muted); font-size: var(--cy-font-caption); line-height: var(--cy-leading-normal); }
+.post-edit-note { margin-top: var(--cy-space-2); color: var(--club-text-muted); font-size: var(--cy-font-caption); line-height: var(--cy-leading-normal); }
 .post-history-row { padding: var(--cy-space-3) 0; border-bottom: 1rpx solid var(--cy-border-card); }
 .post-history-meta { color: var(--club-text-muted); font-size: var(--cy-font-caption); }
 .post-history-content { margin-top: var(--cy-space-1); color: var(--club-text); font-size: var(--cy-font-body); line-height: var(--cy-leading-normal); white-space: pre-wrap; }
