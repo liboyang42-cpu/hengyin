@@ -14,7 +14,7 @@
       <text class="gf-hero__title">{{state === 'claimed' ? '已领取' : state === 'failed' ? reason : '好友送你一份通行证'}}</text>
     </view>
     <view class="gf__bar" wx:if="{{state === 'ready' || state === 'claimed' || state === 'unknown'}}">
-      <view class="gf__note" wx:if="{{state === 'unknown'}}">结果待确认，再点一次查询原结果</view>
+      <view class="gf__note" wx:if="{{state === 'unknown'}}">还在确认结果，再点一次看看</view>
       <cy-btn wx:if="{{state !== 'claimed'}}" variant="primary" loading="{{claiming}}" disabled="{{claiming}}" bindtap="claim">领取</cy-btn>
       <cy-btn wx:else variant="primary" bindtap="goOrder">查看</cy-btn>
     </view>

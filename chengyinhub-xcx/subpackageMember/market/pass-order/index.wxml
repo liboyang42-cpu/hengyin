@@ -33,12 +33,12 @@
         </view>
         <cy-field wx:if="{{refunding}}" variant="textarea" label="退款原因" placeholder="请填写退款原因" value="{{reason}}" maxlength="200" show-count bind:input="onReason" class="cy-fade-in" />
         <cy-inline-error wx:if="{{notice}}" kind="field" title="{{notice}}" class="cy-fade-in" />
-        <view class="mk-btn {{busy ? 'is-off' : ''}} cy-fade-in" wx:if="{{row.canResume}}" bindtap="onResume" aria-role="button" aria-label="{{words.RESUME}}" hover-class="cy-pressed" hover-stay-time="80">{{busy ? '处理中…' : words.RESUME}}</view>
-        <view class="mk-btn mk-btn--ghost {{busy ? 'is-off' : ''}} cy-fade-in" wx:if="{{row.canCancel}}" bindtap="onCancelOrder" aria-role="button" aria-label="取消订单" hover-class="cy-pressed" hover-stay-time="80">取消订单</view>
-        <view class="mk-btn cy-fade-in" wx:if="{{row.canRefund && !refunding}}" bindtap="onRefund" aria-role="button" aria-label="申请退款" hover-class="cy-pressed" hover-stay-time="80">申请退款</view>
+        <cy-btn class="cy-fade-in" wx:if="{{row.canResume}}" loading="{{busy}}" bindtap="onResume">{{words.RESUME}}</cy-btn>
+        <cy-btn class="cy-fade-in" wx:if="{{row.canCancel}}" variant="secondary" disabled="{{busy}}" bindtap="onCancelOrder">取消订单</cy-btn>
+        <cy-btn class="cy-fade-in" wx:if="{{row.canRefund && !refunding}}" bindtap="onRefund">申请退款</cy-btn>
         <block wx:if="{{refunding}}">
-          <view class="mk-btn {{busy ? 'is-off' : ''}} cy-fade-in" bindtap="onRefundSubmit" aria-role="button" aria-label="提交申请" hover-class="cy-pressed" hover-stay-time="80">{{busy ? '提交中…' : '提交申请'}}</view>
-          <view class="mk-btn mk-btn--ghost cy-fade-in" bindtap="onRefundCancel" aria-role="button" aria-label="取消" hover-class="cy-pressed" hover-stay-time="80">取消</view>
+          <cy-btn class="cy-fade-in" loading="{{busy}}" loading-label="提交中" bindtap="onRefundSubmit">提交申请</cy-btn>
+          <cy-btn class="cy-fade-in" variant="secondary" bindtap="onRefundCancel">取消</cy-btn>
         </block>
       </block>
     </view>

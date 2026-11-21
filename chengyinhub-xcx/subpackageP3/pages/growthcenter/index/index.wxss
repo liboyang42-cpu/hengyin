@@ -45,8 +45,6 @@ page { background: var(--cy-bg-page); }
 .gc-badge-empty, .gc-badge-loading { display: flex; flex-direction: column; gap: var(--gc-space-3); padding: var(--gc-space-4); border-radius: var(--gc-radius-lg); background: var(--cy-color-bg-elevated); }
 .gc-empty-heading { display: flex; align-items: center; gap: var(--gc-space-2); font-size: var(--gc-font-body); line-height: 22px; font-weight: 500; }
 .gc-star-icon { width: 20px; height: 20px; flex: none; }
-.gc-empty-copy { color: var(--cy-color-text-secondary); font-size: var(--gc-font-body); line-height: 22px; white-space: pre-line; }
-.gc-explore-button { display: flex; align-items: center; justify-content: center; width: 100%; height: 44px; border-radius: var(--cy-radius-pill); background: var(--cy-color-action-primary-bg); color: var(--cy-color-bg-page); font-size: var(--gc-font-body); line-height: 22px; font-weight: 500; }
 .gc-score-skeleton, .gc-skeleton-label, .gc-skeleton-value, .gc-badge-skeleton { background: var(--cy-color-bg-raised); }
 .gc-score-skeleton { width: 92px; height: 42px; border-radius: var(--gc-radius-placeholder); }
 .gc-skeleton-label { width: 70px; height: 10px; border-radius: var(--gc-radius-placeholder-small); }

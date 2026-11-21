@@ -82,9 +82,9 @@
         </view>
       </view>
       <view wx:if="{{contentEnabled}}" class="content-pagination">
-        <button wx:if="{{contentHasMore && !contentError}}" loading="{{contentLoading}}" disabled="{{contentLoading}}" bindtap="loadMoreContent">{{contentLoading ? '加载中' : '加载更多内容'}}</button>
-        <text wx:elif="{{!contentHasMore}}">内容已加载完</text>
-        <button bindtap="runSearch" disabled="{{searchLoading || contentLoading}}">刷新搜索结果</button>
+        <cy-btn wx:if="{{contentHasMore && !contentError}}" variant="secondary" loading="{{contentLoading}}" loading-label="加载中" bindtap="loadMoreContent">加载更多</cy-btn>
+        <text wx:elif="{{!contentHasMore}}" class="content-pagination__end">没有更多了</text>
+        <cy-btn variant="ghost" disabled="{{searchLoading || contentLoading}}" bindtap="runSearch">重新搜索</cy-btn>
       </view>
     </view>
   </view>

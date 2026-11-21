@@ -135,14 +135,14 @@ Page({
       if (pending.length) this.recover();
     } catch (error) {
       this._pending = [];
-      this.setData({ pending: { kind: 'STORAGE' }, notice: '待办无法读取，请检查本机存储后刷新；暂不提交新操作' });
+      this.setData({ pending: { kind: 'STORAGE' }, notice: '这台手机上的记录读不出来，刷新试试' });
     }
   },
   recover() {
     if (this._recovering || this.data.busy || !this._pending || !this._pending.length) return;
     const pending = this._pending[0];
     if (!pending.requestId) {
-      this.setData({ notice: '历史操作缺少原请求编号，不能确认或重放。可提交人工核对，处理进度会显示在本局记录中。' }); return;
+      this.setData({ notice: '这一步没法自动确认，可以请人工核对' }); return;
     }
     const capture = this.capture(), sessionId = this.data.score && this.data.score.sessionId;
     if (!sessionId) return;
@@ -150,7 +150,7 @@ Page({
     const unknown = () => {
       if (!this.current(capture)) return;
       this._recovering = false;
-      this.setData({ notice: '操作结果仍待确认；暂未查到记录不代表提交失败，请勿重复操作。' });
+      this.setData({ notice: '还没查到结果，不代表没提交成功，先别重复操作' });
     };
     app.sendRequest({ url: BASE + '/receipt', method: 'GET', data: { kind: pending.kind, sessionId, idempotencyKey: pending.requestId }, hideLoading: true,
       success: response => {
@@ -161,14 +161,14 @@ Page({
             || !this._workflow.confirmRequest(pending.key, pending.requestId)) { unknown(); return; }
         this._pending.shift();
         this.setData({ pending: this._pending[0] || null, form: '', reason: '', entryId: '', nodeId: '',
-          notice: pending.kind === 'SYNC' ? '已查到原任务同步结果' : pending.kind === 'SETTLE' ? '已查到本局结算结果' : '已查到原申请记录，处理进度以列表为准' });
+          notice: pending.kind === 'SYNC' ? '同步结果已确认' : pending.kind === 'SETTLE' ? '结算结果已确认' : '申请已收到' });
         if (this._pending.length) this.recover();
         else this.load();
       }, fail: (body, status) => {
         if (!this.current(capture)) return;
         this._recovering = false;
         if (view.failure(body, status).kind !== 'offline') { this.readFailure(body, status); return; }
-        this.setData({ notice: '操作结果仍待确认，请勿重复操作' });
+        this.setData({ notice: '结果还在确认中，先别重复操作' });
       }, successStatusAbnormal: (body, status) => {
         if (!this.current(capture)) return;
         if (view.failure(body, status).kind !== 'offline') { this._recovering = false; this.readFailure(body, status); return; }
@@ -200,7 +200,7 @@ Page({
           if (ok(body) && row && view.id(row.id) && view.id(row.sessionId) === sessionId
               && view.id(row.memberId) === capture.owner && row.kind === kind && [0, 1].includes(row.status)) {
             this.load();
-          } else this.setData({ notice: '人工核对登记结果尚未确认，请刷新本局记录。原待办仍保留。' });
+          } else this.setData({ notice: '核对申请还没确认，稍后刷新看看' });
         };
         app.sendRequest({ url: BASE + '/session/' + sessionId + '/recovery', method: 'POST', write: true,
           data: { kind }, header: { 'content-type': 'application/x-www-form-urlencoded' }, hideLoading: true,
@@ -217,8 +217,8 @@ Page({
         || this._identity.auth !== capture.auth) { this.load(); return; }
     this._confirming = true;
     let confirmed = false;
-    modal.show({ title: '继续原任务同步', content: '保留原请求编号继续同步。已入账任务不会重复计分，结果确认前仍不能提交新操作。',
-      confirmText: '继续原同步', cancelText: '取消', success: result => {
+    modal.show({ title: '接着同步刚才的任务', content: '已经算过的分不会重复计。确认结果前，先不能做新的操作。',
+      confirmText: '继续同步', cancelText: '取消', success: result => {
         if (confirmed || !this.current(capture)) return;
         confirmed = true;
         this._confirming = false;
@@ -231,10 +231,10 @@ Page({
           this.setData({ busy: false });
           if (success && ok(body) && view.receiptMatches(body.data, pending, capture.owner, sessionId)
               && this._workflow.confirmRequest(pending.key, pending.requestId)) {
-            this.setData({ pending: null, notice: '原任务同步已确认' });
+            this.setData({ pending: null, notice: '同步结果已确认' });
             this.load();
           } else {
-            this.setData({ notice: '原任务同步仍待确认，已保留原请求编号，请查询原操作结果。' });
+            this.setData({ notice: '刚才的任务还没确认，稍后再看看结果' });
           }
         };
         app.sendRequest({ url: BASE + '/session/' + sessionId + '/sync', method: 'POST', write: true,
@@ -271,7 +271,7 @@ Page({
     if (kind === 'APPEAL') {
       if (this.data.entryId) data.entryId = this.data.entryId;
       else if (view.id(this.data.nodeId)) data.nodeId = view.id(this.data.nodeId);
-      else { this.setData({ formError: '请选择流水，或填写漏记任务的节点编号' }); return; }
+      else { this.setData({ formError: '选一条计分，或填写漏记任务的节点编号' }); return; }
       if (this.data.score.appeals.some(row => row.status === 0
           && (data.entryId ? row.entryId === data.entryId : row.nodeId === data.nodeId))) {
         this.setData({ formError: '该条目已有待处理申诉，请等待复核' }); return;
@@ -323,7 +323,7 @@ Page({
       } else if (result.status === 'failed') {
         const state = view.failure(result.response, result.httpStatus);
         if (state.kind !== 'offline') this.readFailure(result.response, result.httpStatus);
-        else this.setData({ notice: '请求未受理，请刷新计分后核对当前状态' });
+        else this.setData({ notice: '没有提交成功，刷新后再试' });
       } else {
         this.setData({ notice: result.status === 'blocked' ? '待办未能保存，本次未提交，请检查本机存储' : '操作结果待确认，请勿重复提交' });
         this.restorePending();
