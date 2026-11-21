@@ -132,6 +132,6 @@ test('创作域所有可点 view/text 都带按压反馈与按钮语义', () => 
     }
   }
   const fabu = read('pages/publish/fabu/index.wxml')
-  assert.match(fabu, /catchtap="selectNode" aria-role="button" aria-label="第 \{\{nodeIndex \+ 1\}\} 个节点"/)
+  assert.match(fabu, /catchtap="selectNode" aria-role="button" aria-label="第 \{\{\(nodeIndex \+ 1\) \|\| 1\}\} 个节点"/)
   assert.match(read('pages/publish/temp/index.wxml'), /bindtap="uploadStoryBeatImg" aria-role="button" aria-label="添加图片"/)
 })
