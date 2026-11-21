@@ -1505,7 +1505,7 @@ page { background: var(--cy-btn-solid-bg); }
   display: flex;
   flex-direction: column;
   justify-content: center;
-  border: 2rpx solid #3a3a3c;
+  border: 2rpx solid var(--cy-color-bg-surface-strong);
 }
 
 .slopes-node-loc:active {
@@ -1679,7 +1679,7 @@ page { background: var(--cy-btn-solid-bg); }
 
 
 .slopes-node-card--bound .slopes-node-card-divider {
-  background: #3a3a3c;
+  background: var(--cy-color-bg-surface-strong);
 }
 
 .slopes-node-card--bound .slopes-node-card-name {
@@ -1701,7 +1701,7 @@ page { background: var(--cy-btn-solid-bg); }
 .slopes-info-page .stat-box,
 .slopes-info-page .g-card {
   background: #2c2c2e;
-  border-color: #3a3a3c;
+  border-color: var(--cy-color-bg-surface-strong);
   box-shadow: none;
 }
 

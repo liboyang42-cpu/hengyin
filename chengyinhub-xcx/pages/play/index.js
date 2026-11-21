@@ -3,6 +3,7 @@
 // 数据:GET /api/play/nodes(现网) — 缺坐标/章节/模板呈现字段时做降级;扫码 /checkin、答题 /answer、到达 /arrive。
 const { stationLabel, playerTitle } = require('./utils/play-stage-pops.js'); const cyModal = require('../../utils/modal.js'); const { keepNumerals, keepMeasure } = require('./utils/keep-numerals.js');
 const cyLoading = require('../../utils/loading.js');
+const { safeDecode } = require('../../utils/safe-decode.js');
 const cyToast = require('../../utils/toast.js');
 const motion = require('../../utils/motion.js');
 const app = getApp();
@@ -689,7 +690,7 @@ Page({
     this._playLoginContext = this._capturePlayLoginContext();
     this._playDisposed = false;
     options = options || {};
-    this._entryTopicName = options.topicName ? decodeURIComponent(options.topicName) : '';
+    this._entryTopicName = options.topicName ? safeDecode(options.topicName) : '';
     this._routeState = normalizeRouteState(null);
     const sys = wx.getSystemInfoSync();
     const win = (wx.getWindowInfo && wx.getWindowInfo()) || sys;
