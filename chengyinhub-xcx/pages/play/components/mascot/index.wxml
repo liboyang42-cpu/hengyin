@@ -1,3 +1,0 @@
-<image class="ms" src="{{src}}" mode="aspectFit"
-       style="width:{{size || 240}}rpx;height:{{boxH || 220}}rpx"
-       aria-hidden="true" />

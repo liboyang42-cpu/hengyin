@@ -358,7 +358,13 @@
       "network": "wifi",
       "packages": [
         "subpackageA",
-        "subpackageTemplateDetail"
+        "subpackageTopic"
+      ]
+    },
+    "pages/topic/index/index": {
+      "network": "wifi",
+      "packages": [
+        "subpackageMember"
       ]
     },
     "subpackageMember/signup/index": {

@@ -800,6 +800,26 @@
       "from": "utils/roam-team-recovery.js",
       "to": "subpackageRoam/utils/roam-team-recovery.js",
       "sourceBlob": "52a1fb193c1e8f9e9b4859be0672776e8c3ae91b"
+    },
+    {
+      "from": "utils/features/exploration-goals.js",
+      "to": "subpackageTools/lib/exploration-goals.js",
+      "sourceBlob": "6bd17e65c8796b0099369a2f58443432594b07e1"
+    },
+    {
+      "from": "utils/user-invoice.js",
+      "to": "subpackageMember/invoice/user-invoice.js",
+      "sourceBlob": "0e56be4ef79097126da97ab00f56eb538f1dcc34"
+    },
+    {
+      "from": "utils/answer-text.js",
+      "to": "pages/publish/utils/answer-text.js",
+      "sourceBlob": "2d64dad83142a719fd1dab62b73efd51743fb6da"
+    },
+    {
+      "from": "utils/chapter-count.js",
+      "to": "pages/topic/utils/chapter-count.js",
+      "sourceBlob": "53354c75b8042c65ba745374e4e88a48a8704c5d"
     }
   ]
 }

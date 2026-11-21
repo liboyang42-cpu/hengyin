@@ -1235,16 +1235,16 @@ Page({
 
   _storyCommand(command, uiPatch) {
     const chapterIndex = Number(this.data.storyEditor.chapterIndex);
-    const chapters = JSON.parse(JSON.stringify((this.data.formData && this.data.formData.chapters) || []));
-    const chapter = chapters[chapterIndex];
+    // 性能(2026-11-21):每敲一个字都会走到这里。applyStoryCommand 自己会深拷贝入参,
+    // 所以不再 JSON 往返整个章节数组,也不再整表回传 formData.chapters —— 只发当前这一章的路径。
+    const chapter = ((this.data.formData && this.data.formData.chapters) || [])[chapterIndex];
     if (!chapter) throw new Error('未找到故事流章节');
     const result = proEditorStory.applyStoryCommand({
       chapter,
       pendingMaterials: this.data.pendingMaterials || [],
     }, command);
-    chapters[chapterIndex] = result.draft.chapter;
     this.setData(Object.assign({
-      'formData.chapters': chapters,
+      ['formData.chapters[' + chapterIndex + ']']: result.draft.chapter,
       pendingMaterials: result.draft.pendingMaterials,
     }, this._storyDerived(result.draft.chapter), uiPatch || {}));
     this.updateAllStatistics();

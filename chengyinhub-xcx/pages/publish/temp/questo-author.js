@@ -10,7 +10,7 @@
  * 界面不露这些键名。就地校验只挡服务端必拒的形状,其余仍以服务端保存/发布校验为准。
  */
 
-const answerText = require('../../../utils/answer-text.js');
+const answerText = require('../utils/answer-text.js');
 
 const HINT_TYPES = [
   { value: 'TEXT', label: '文字' },

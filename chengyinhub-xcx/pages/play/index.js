@@ -174,7 +174,7 @@ const storyScene = require('./utils/story-scene.js'); const themeLook = require(
 const lifeArchive = require('./utils/life-archive.js');
 const storyResume = require('./utils/story-resume.js');
 const { rightMoment, RIGHT_AUTO_MS } = require('./utils/answer-right-moment');
-const { leadHoldsChapter, releaseCue } = require('./utils/lead-chapter-hold'); const chapterTrail = require('./utils/chapter-trail.js');   /* P-29:换章前先读完本章收尾 */
+const { leadHoldsChapter, releaseCue, sameLeadSnapshot } = require('./utils/lead-chapter-hold'); const chapterTrail = require('./utils/chapter-trail.js');   /* P-29:换章前先读完本章收尾 */
 const { puzzleHintLabel } = require('./utils/puzzle-hint-label');
 const { hangmanStationText } = require('./utils/playkit-questo.js');
 const finishShown = require('./utils/finish-shown.js');
@@ -5599,18 +5599,22 @@ Page({
       const openedWhileWaiting = Number(d.status) === 2
         && Number(that.data.lead.status) !== 2 && that._playable === false;
       const prevLead = that.data.lead;
-      that.setData({
-        lead: {
-          exists: true, status: d.status || 1, isLeader: !!d.isLeader, freeEntry: d.freeEntry === true,
-          arrived: d.arrived || 0, total: d.total || 0, meArrived: !!d.meArrived,
-          chapterName: d.chapterName || '', currentChapterId: d.currentChapterId, nextChapterId: d.nextChapterId, broadcast: d.broadcast || '', directorRun: d.directorRun === true, ended: d.sessionEnded === true,
-          members: (d.members || []).slice(0, 8),
-          // P-23:只发给队长 —— 谁在罗盘站读取失败两次、等着放行
-          skipRequests: that._leadSkipRequests(d.skipRequests),
-        },
-        leadLoadError: false,
-        leadUnlockChecking: unlockAuditDone ? false : !!that._leadUnlockChecking,
-      });
+      const nextLead = {
+        exists: true, status: d.status || 1, isLeader: !!d.isLeader, freeEntry: d.freeEntry === true,
+        arrived: d.arrived || 0, total: d.total || 0, meArrived: !!d.meArrived,
+        chapterName: d.chapterName || '', currentChapterId: d.currentChapterId, nextChapterId: d.nextChapterId, broadcast: d.broadcast || '', directorRun: d.directorRun === true, ended: d.sessionEnded === true,
+        members: (d.members || []).slice(0, 8),
+        // P-23:只发给队长 —— 谁在罗盘站读取失败两次、等着放行
+        skipRequests: that._leadSkipRequests(d.skipRequests),
+      };
+      // 性能(2026-11-21):4 秒一轮的轮询,进度没变时不再整份回传 lead(含成员列表),只补变了的标志位。
+      const nextUnlockChecking = unlockAuditDone ? false : !!that._leadUnlockChecking;
+      if (!sameLeadSnapshot(prevLead, nextLead)) {
+        that.setData({ lead: nextLead, leadLoadError: false, leadUnlockChecking: nextUnlockChecking });
+      } else if (that.data.leadLoadError !== false) {
+        // leadUnlockChecking 无渲染、无读取(死字段登记在 u4-dead-setdata-field),随下一次真实 setData 一并同步即可
+        that.setData({ leadLoadError: false, leadUnlockChecking: nextUnlockChecking });
+      }
       if (unlockAuditDone) that._leadUnlockChecking = false;
       if (openedWhileWaiting) that.loadData(false);
       // P-35:队长放行了新的一章,给玩家一句;P-08:门前正在等的那一章放行了就接着进正文
