@@ -3,7 +3,7 @@
 <view class="lk-popwrap" wx:if="{{kitStart.show}}" catchtouchmove="noop" aria-role="dialog" aria-label="玩法">
   <view class="lk-pop-mask" bindtap="closeKitStart" hover-class="none" aria-role="button" aria-label="关闭"></view>
   <view class="lk-pop ks">
-    <view class="ks__h"><text class="ks__t lk-title">玩法</text><view class="ks__x" bindtap="closeKitStart" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="32" /></view></view>
+    <view class="ks__h"><text class="ks__t lk-title">{{kitStart.station || '玩法'}}</text><view class="ks__x" bindtap="closeKitStart" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="32" /></view></view>
     <scroll-view class="ks__b" scroll-y enhanced show-scrollbar="{{false}}">
       <image wx:if="{{kitStart.cover}}" class="ks__cov" src="{{img.first(kitStart.cover)}}" mode="aspectFill" />
       <view wx:else class="ks__cov ks__cov--illus"><cy-illus name="clue" size="200" reduced-motion="{{reducedMotion}}" /></view>

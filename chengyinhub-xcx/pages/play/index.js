@@ -7918,7 +7918,7 @@ Page({
     if ((kit.type === 'profile' || kit.type === 'note') && !this.data.isPreview && !this.data.isMock) kit.draftKey = storyResume.draftKey(this._runSessionScope(), active.node.nodeId);
     // 故事里的玩法站也有提示阶梯:每站读一次(没有阶梯时 enabled=false,什么都不出)
     const loadKitHelp = !kit.done && !this.data.isPreview && String(this.data.helpPanel.nodeId) !== String(active.node.nodeId);
-    this.setData({ playKit: kitCard.playKitState(this.data.playKit, kit, inline, ready, this._kitStartFull === String(active.node.nodeId), this._castOn()) }, () => { if (loadKitHelp && current()) this.loadHelpLadder(); });   // V3-10/53/11:要整屏的玩法在流里只放入口卡;l-play:玩法开始弹窗选了「全屏」就整屏开
+    this.setData({ playKit: this._withShellHead(kitCard.playKitState(this.data.playKit, kit, inline, ready, this._kitStartFull === String(active.node.nodeId), this._castOn())) }, () => { if (loadKitHelp && current()) this.loadHelpLadder(); });   // V3-10/53/11:要整屏的玩法在流里只放入口卡;l-play:玩法开始弹窗选了「全屏」就整屏开
     if (advanceStory) {
       const nodeId = String(active.node.nodeId);
       setTimeout(() => {

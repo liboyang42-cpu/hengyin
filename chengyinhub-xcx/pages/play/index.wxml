@@ -19,7 +19,7 @@
 <wxs src="../../utils/wxs/list-key.wxs" module="lk" /><wxs src="../../utils/wxs/station-title.wxs" module="stationTitle" />
 <wxs src="../../utils/wxs/display-label.wxs" module="dl" />
 
-<cy-advanced-game id="advancedGame" hide-panel="{{(!!playKit.kit && (chapterFull || playKit.show)) || (journeyCheck.r5 && journeyCheck.show)}}" show="{{advancedPlay.show}}" node="{{advancedPlay.node}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)"
+<cy-advanced-game id="advancedGame" hide-panel="{{(!!playKit.kit && (chapterFull || playKit.show)) || (journeyCheck.r5 && journeyCheck.show)}}" show="{{advancedPlay.show}}" node="{{advancedPlay.node}}" continue-label="{{chapterFull ? '继续故事' : ''}}" reduced-motion="{{reducedMotion}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)"
   activity-id="{{activityId}}" topic-id="{{topicId}}" preview="{{isPreview}}" mock="{{isMock}}"
   bind:ready="onAdvancedReady" bind:close="onAdvancedClose" bind:session="onAdvancedSession"
   bind:actionfail="onAdvancedActionFail" bind:bgm="onAdvancedBgm" />
@@ -251,10 +251,10 @@
             <view class="chfull__kitcard-play" aria-hidden="true"><view class="chfull__kitcard-tri"></view></view>
           </view>
           <cy-playkit wx:else kit="{{playKit.kit}}" show="{{true}}" inline="{{true}}" bind:kitaction="onPlayKitAction" />
-          <view class="chfull__continue" wx:if="{{playKit.readyForBase && advancedPlay.show && (playKit.kit.type === 'qa' || playKit.kit.type === 'hangman')}}" bindtap="continueStoryGame"
-                aria-role="button" aria-label="继续" hover-class="cy-pressed" hover-stay-time="80">继续</view>
-          <view class="chfull__continue" wx:elif="{{playKit.readyForBase && advancedPlay.show}}" bindtap="continueStoryGame"
-                aria-role="button" aria-label="继续故事" hover-class="cy-pressed" hover-stay-time="80">继续故事</view>
+          <!-- 外壳(2026-11-21):「继续故事」玩的时候不在屏上(不出灰掉的死按钮,玩法自己的钮是唯一主按钮);
+               玩完(readyForBase)那一刻从玩法结果下面淡入升起。位置一直占着 = 出现时下面的段落不跳。 -->
+          <view class="chfull__continue chfull__continue--morph {{playKit.readyForBase ? 'is-ready' : ''}}" wx:if="{{advancedPlay.show && playKit.kit}}" bindtap="continueStoryGame"
+                aria-role="button" aria-hidden="{{!playKit.readyForBase}}" aria-label="{{playKit.kit.type === 'qa' || playKit.kit.type === 'hangman' ? '继续' : '继续故事'}}" hover-class="cy-pressed" hover-stay-time="80">{{playKit.kit.type === 'qa' || playKit.kit.type === 'hangman' ? '继续' : '继续故事'}}</view>
         </view>
         <view wx:elif="{{item.kind === 'journeyCheck'}}" class="chfull__kit">
           <view class="chfull__kit-anchor" id="{{'chapter-kit-' + item.nodeId}}" style="top:calc(0px - max(var(--chfull-fade-end), calc({{chrome.contentTop}}px + var(--cy-btn-h) + var(--cy-space-3))))"></view>
@@ -1838,8 +1838,8 @@
 <view class="rolemask" catchtouchmove="noop" wx:if="{{roleCard.show}}" bindtap="closeRoleCard" aria-role="button" aria-label="关闭身份卡" hover-class="none"></view>
 <!-- v5.1/v5.2 新玩法分发器:kit 由 cy-advanced-game 抛上来的权威会话视图派生
      (见 utils/playkit-view.js)。这些壳是独立 sheet,套不进面板自己那层 sheet,所以渲染在这里。 -->
-<cy-playkit id="playKit" class="pk-lookhost {{lookClass}}" kit="{{playKit.kit}}" show="{{playKit.show && !playKit.pop}}" bind:kitaction="onPlayKitAction" /><!-- l-play:分支剧情在居中弹窗里(play-stage.wxml),不盖整屏 -->
-<cy-play-verdict class="pk-lookhost {{lookClass}}" show="{{r5Verdict.show}}" kind="{{r5Verdict.kind}}" text="{{r5Verdict.text}}" images="{{r5Verdict.images}}" closable="{{true}}" bind:close="closeR5Verdict" />
+<cy-playkit id="playKit" class="pk-lookhost {{lookClass}}" kit="{{playKit.kit}}" show="{{playKit.show && !playKit.pop}}" shell-head="{{playKit.head}}" bind:kitaction="onPlayKitAction" /><!-- l-play:分支剧情在居中弹窗里(play-stage.wxml),不盖整屏 -->
+<cy-play-verdict class="pk-lookhost {{lookClass}}" show="{{r5Verdict.show}}" kind="{{r5Verdict.kind}}" text="{{r5Verdict.text}}" images="{{r5Verdict.images}}" remember="{{r5Verdict.remember}}" cta-label="{{r5Verdict.cta}}" closable="{{true}}" bind:close="closeR5Verdict" />
 
 <!-- R14 旅程检定(入口在 encounter.allowedActions,与 playKit 是两套;
      失败也推进:结算前后都能退出,不拦节点完成) -->

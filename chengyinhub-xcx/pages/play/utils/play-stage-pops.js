@@ -62,7 +62,7 @@ function sheetFacts(node, distText) {
 function nextIndex(i, n) { return n ? (((i || 0) + 1) % n) : 0; }
 
 const data = {
-  kitStart: { show: false, nodeId: '', origin: 'story', cover: '', title: '', type: '', place: '', arrived: false, lede: '', mode: 'embed', modes: true },
+  kitStart: { show: false, nodeId: '', origin: 'story', cover: '', title: '', type: '', place: '', arrived: false, lede: '', station: '', mode: 'embed', modes: true },
   extDeck: { idx: 0, flipping: false },
 };
 
@@ -87,13 +87,14 @@ function methods() {
         if (!entry || !this._isStoryGame(node) || node.done) { this.startStoryGame(e); return; }
       }
       const place = origin === 'story' ? ((this.data.nodes || []).find((n) => String(n.nodeId) === String(node.placeNodeId)) || null) : null;
-      const story = String(node.story || node.hookText || '');
-      const sentence = story.match(/^[^。！？!?]*[。！？!?]?/)[0];
+      // 外壳(2026-11-21):弹窗抬头写「第N站 · 站名」、说明用这一站的引子 —— 与开始后整屏台面左上那一行同一份(utils/game-shell.js)
+      const shell = require('./game-shell.js');
+      const station = shell.stationHead(node, this.data.chapter, this.data.nodes).station;
       this.setData({ kitStart: {
         show: true, nodeId: String(node.nodeId), origin,
         cover: firstImg(node.imgUrl), title: playerTitle(node.gameTitle || node.name || (pk.kit && pk.kit.title)) || '玩法', type: origin === 'card' ? (pk.cardLabel || kitTypeLabel(node)) : kitTypeLabel(node),
         place: origin === 'sheet' ? (node.lat ? node.name || '' : '') : (place ? place.name || '' : ''), arrived: !!(place ? place.arrived || place.done : node.arrived),
-        lede: sentence.length <= 40 ? sentence : sentence.slice(0, 38) + '…',
+        lede: shell.storyLead(node, pk.kit), station,
         mode: 'embed', modes: origin === 'story',
       } });
     },
