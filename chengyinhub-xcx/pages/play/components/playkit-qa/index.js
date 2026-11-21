@@ -34,7 +34,6 @@ const HEAD_SHOT = '拍好了';   // 第十二轮 k7 F16:拍照打卡没有对错
 /* 打字题答错的兜底说法(与服务端通用错答同一句,句末不带句号)。服务端给了话就用服务端的 */
 const RETRY_TEXT = '还不对，再看看题面';
 /* 一进来题目占满一屏,一秒后选项才淡进来 */
-const INTRO_MS = 1000;
 
 /* 打字题的判定在服务端(AnswerNormalizer);客户端不再留一份本地比对,避免两边规则漂移。
    多答案分隔符与向量见 utils/answer-text.js、tests/unit/answer-text-vectors.test.js。 */
@@ -125,7 +124,6 @@ Component({
     shownFeedbackImages: [],
     submitted: false,
     fbHead: HEAD_NO,
-    intro: true,
     burning: false,
     triesCap: 0,
     ctaLabel: '提交',
@@ -177,7 +175,6 @@ Component({
       this._qaIdentity = identity;
       if (fresh) this._submittedText = '';
       this._qaVisible = !!show;
-      if (this._introTimer) { clearTimeout(this._introTimer); this._introTimer = null; }
       if (!show) return;
       const chosen = this.data.lastOptionIds && this.data.lastOptionIds.length
         ? this.data.lastOptionIds : [this.data.lastOptionId];
@@ -210,7 +207,7 @@ Component({
         shownFeedbackImages: (passed || finished || this.data.attempts > 0)
           ? (this.data.feedbackImages || []).slice() : [],
         submitted: false,
-        fbHead: passed ? (mode === 'shot' ? HEAD_SHOT : HEAD_OK) : HEAD_NO, playing: false, intro: !passed && !finished,
+        fbHead: passed ? (mode === 'shot' ? HEAD_SHOT : HEAD_OK) : HEAD_NO, playing: false,
         burning: fresh ? false : !!this.data.burning,
         triesCap: this.data.judge === false || finished ? 0 : cappedTries(this.data.maxTries, opts.length),
         ctaLabel: passed ? '继续' : (confirmPick ? '确认选择' : (mode === 'shot' ? '拍一张' : '提交')),
@@ -224,15 +221,13 @@ Component({
         if (finished) stage._stopAll();
         else stage.begin();
       }
-      // rAF 在这儿不行:页面不渲染时它不走,题会永远停在「只有题干」那一屏
-      const context = this._qaContext();
-      this._introTimer = setTimeout(() => { if (this._isQaContextCurrent(context)) this.setData({ intro: false }); }, INTRO_MS);
+      /* 2026-11-21 主人「游戏要顺」:题、选项、按钮首帧一起出 —— 原来先藏 1 秒选项再淡入,
+         叠上入场错峰,选项问答(路线里用得最多的玩法)实测近 3 秒才能点。 */
     },
   },
   lifetimes: {
     detached() {
       this._qaDisposed = true; this._qaVisible = false; this._qaEpoch = (this._qaEpoch || 0) + 1;
-      if (this._introTimer) { clearTimeout(this._introTimer); this._introTimer = null; }
     },
   },
   methods: {

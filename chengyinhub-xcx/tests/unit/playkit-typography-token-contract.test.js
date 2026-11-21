@@ -103,7 +103,6 @@ test('negative control:老代玩法屏(playkit.wxss)不在本条管辖内,不许
 test('玩法主按钮使用按钮语义字号，标题调整不能改变按钮', () => {
   for (const [file, selector] of [
     ['pages/play/style/play-surface.wxss', '.g-btn'],
-    ['pages/play/components/playkit-stopwatch/index.wxss', '.sw__btn'],
   ]) {
     const source = fs.readFileSync(path.join(ROOT, file), 'utf8')
     const body = source.slice(source.indexOf(selector + ' {')).split('}')[0]
@@ -177,10 +176,12 @@ function assertDeviation(readSource = file => fs.readFileSync(path.join(ROOT, fi
       count++
     }
   }
-  assert.equal(count, 136, '原始 136 处基线不能缩小')
+  // 2026-11-21:弹球 / 罗盘 / 倒计时 / 内嵌骰子 / 安静 / 喊一嗓子六颗自带主按钮并入统一的 .g-btn,基线随之去掉这 6 处;
+  // 停表 / 计步两颗主按钮并入 .g-btn、九宫格与找东西两行说明删除,再去掉 4 处
+  assert.equal(count, 126, '基线 126 处不能缩小')
 }
 
-test('136 处字号相对原稿的偏差不超过 4px（375px / scale=1）', () => {
+test('126 处字号相对原稿的偏差不超过 4px（375px / scale=1）', () => {
   assertDeviation()
 })
 

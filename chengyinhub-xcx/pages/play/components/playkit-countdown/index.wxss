@@ -6,7 +6,9 @@
  */
 .oc {
   position: var(--pk-col-pos, absolute);   /* 故事流内嵌 = 定高卡片(同 ballshake 的 bl--embed),整屏不变 */
-  min-height: var(--pk-card-h, 0);
+  /* 子元素全是绝对定位:内嵌(--pk-col-pos:relative、--pk-card-h:auto)时没有东西撑高,
+     整块塌成 0 高 = 预览里一片空白(2026-11-21 走查)。给一个固定的最小高;整屏时四边贴死,这条不起作用。 */
+  min-height: 760rpx;                     /* ds-ok 一钟油内嵌的油面高度 */
   border-radius: var(--pk-card-radius, 0);
   left: 0; right: 0; top: 0; bottom: 0;
   overflow: hidden;
@@ -84,22 +86,3 @@
   color: #fff;                            /* ds-ok 同上 */
   mix-blend-mode: difference;
 }
-
-/* 按钮不混合 —— 它得一直看得清是个能按的东西。白底 + 黑描边,油上油下都成立 */
-.oc__b {
-  position: absolute;
-  left: 52rpx; right: 52rpx;              /* ds-ok 原型 26px */
-  bottom: calc(env(safe-area-inset-bottom) + 68rpx);   /* ds-ok 原型 34px */
-  z-index: 5;
-  height: 104rpx;                         /* ds-ok 原型 52px */
-  display: flex; align-items: center; justify-content: center;
-  border: 4rpx solid #0B0B0C;             /* ds-ok 原型 2px:油漫上来之后白底会糊掉,靠这圈描边把它托住 */
-  border-radius: 52rpx;                   /* ds-ok 原型 26px */
-  box-sizing: border-box;
-  background: #fff;                       /* ds-ok */
-  color: #0B0B0C;                         /* ds-ok */
-  font-size: var(--cy-type-card-title);
-  font-weight: 800;
-}
-.oc__b--press { opacity: .88; }
-.oc__b--busy { opacity: .55; }

@@ -227,5 +227,5 @@ test('弹球超时/本队手动提交都发送本次部分 hits，一次跑动�
   }
   const wxml = read('pages/play/components/playkit-ballshake/index.wxml');
   assert.match(wxml, /challenge\.progress/); assert.match(wxml, /challenge\.goal/);
-  assert.match(wxml, /bindtap="onSubmitHits"[\s\S]*?hover-class="bl__b--press"/);
+  assert.match(wxml, /bindtap="onSubmitHits"[\s\S]*?hover-class="g-btn--press"/);
 });

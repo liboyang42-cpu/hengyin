@@ -247,22 +247,6 @@
   line-height: 1.55;
   max-width: 22em;
 }
-/* 内嵌版的主按钮:道具色里的深底浅字,与整屏版的白底深字刻意不同 ——
-   同一屏里它必须一眼看出是「按这里掷」,而不是又一枚骰子。 */
-.dzi__roll {
-  flex: none;
-  min-height: 84rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 56rpx;
-  border-radius: 999rpx;  /* ds-ok 道具胶囊 */
-  background: var(--pk-embed-ink, #2a2540);   /* ds-ok */
-  color: var(--atmo-bg, var(--lk-bg, #F8F6F3));             /* ds-ok 按钮字取章节底色(--pk-embed-bg 可能是 transparent) */
-  font-size: var(--cy-type-body);
-  font-weight: 800;
-}
-.dzi__roll--press { opacity: .86; }
 
 /* 细节打磨二期 L1/L5/L7 */
 .d20__total { font-variant-numeric: tabular-nums; }

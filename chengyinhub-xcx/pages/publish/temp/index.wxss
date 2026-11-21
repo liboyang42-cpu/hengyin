@@ -1438,11 +1438,9 @@ page {
 .cg-pv-inline-kit { flex:1 0 auto; display:flex; flex-direction:column; }
 /* 2026-10-23 复查:用上下 auto 外边距居中,不用 justify-content:center —— 内容比容器高时(D20 掷出后多一条难度线)
    后者会往上溢出,把标题顶到退出键底下;auto 外边距只在有余量时才居中 */
-.cg-pv-inline-kit > cy-playkit, .cg-pv-inline-kit > cy-playkit-journey-check { margin-top: auto; margin-bottom: auto; }
-.cg-pv-inline-end { padding:var(--cy-space-6) var(--cy-page-x) 300rpx; } /* ds-ok 300rpx 让开底部翻页条 */
-/* 同玩家故事流 .chfull__continue(白底深字全圆角)。预览里只是示意,不可点。 */
-.cg-pv-inline-continue { height:88rpx; border-radius:var(--cy-radius-pill); display:flex; align-items:center; justify-content:center;
-  background:#FFFFFF; color:#111111; font-size:29rpx; font-weight:700; opacity:.5; } /* ds-ok 29rpx 同 .chfull__continue */
+/* 2026-11-21 lead 走查:玩法 + 「继续故事」(玩完才出)作为一块居中,按钮紧跟玩法内容,不钉在屏幕下沿 */
+.cg-pv-inline-body { margin-top: auto; margin-bottom: auto; padding-bottom: var(--cy-space-6); display: flex; flex-direction: column; }
+.cg-pv-inline-end { padding-top: var(--cy-space-6); }
 
 /* ===== R5 模板编辑器（2026-10-10 主人批准原型 template-editor-v2-proto.html）=====
    首页每项同一种行：图标 + 名称 + 一行摘要 + 右侧「配置 ›」药丸；配置都在底部面板，
@@ -1602,6 +1600,15 @@ page {
   display: flex; align-items: center; justify-content: center;
   background: rgba(127, 127, 127, .24); color: var(--cy-color-text-inverse);  /* ds-ok 叠在深浅两种玩法皮肤上都看得清的中性半透明 */
 }
+/* 「试玩 · 不计成绩」小标(2026-11-21 lead 走查):原来钉在右上,压在微信胶囊(⋯ ◎)底下被裁。
+   现在是玩法内容最上面一枚左对齐的小标;整屏玩法时浮在退出键与胶囊下沿之下(top 由 pvSimTop 给)。 */
+.cg-pv-sim {
+  align-self: flex-start; margin-bottom: var(--cy-space-3);
+  padding: var(--cy-space-1) var(--cy-space-3); border-radius: var(--cy-radius-pill);
+  background: rgba(127, 127, 127, .24); color: var(--cy-color-text-inverse);  /* ds-ok 与 .cg-pv-exit 同一层中性半透明 */
+  font-size: var(--cy-type-micro); font-weight: 600;
+}
+.cg-pv-sim--float { position: fixed; left: var(--cy-page-x); z-index: var(--cy-z-popover); margin-bottom: 0; }
 
 /* ============ 2026-10-23 主人走查:间距照原型 gameplay-create-proto-20261022(1px = 2rpx) ============
    分区标题 22/4/10、卡片内边距 16、圆角 14、页边 13;开关行上分隔线 + 16 间距;字段之间 16。 */

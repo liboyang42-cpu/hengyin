@@ -3,13 +3,13 @@
 <cy-play-stage id="cy-play-stage" skin="qadark" show="{{show}}" back-label="退出"
                bind:back="onClose">
   <view class="g-col so {{reducedMotion ? 'so--reduced' : ''}}">
-    <view class="so__prompt pe pe--blur" style="--pe-d:.05s">{{prompt}}</view>
+    <view class="so__prompt pe pe--blur" style="--pe-d:.05s;--pe-dur:.2s">{{prompt}}</view>
 
     <view class="so__list">
       <!-- 回执只有整体对错:判错时**不**逐行标红(服务端不给逐位置对错,
            整列红等于假装知道错在第几位),整列抖一下并给整体提示,让人继续排 -->
       <view class="so__row {{verdict === 'ok' ? 'is-right' : ''}} {{dragging === index ? 'is-dragging' : ''}} {{picked === index ? 'is-pick' : ''}} pe pe--up"
-            style="--pe-d:.25s;--pe-i:{{index}};{{dragging === index ? 'transform:translateY(' + dragOffset + 'px) scale(1.03)' : ''}}"
+            style="--pe-d:.1s;--pe-i:{{index}};{{dragging === index ? 'transform:translateY(' + dragOffset + 'px) scale(1.03)' : ''}};--pe-dur:.2s"
             wx:for="{{rows}}" wx:key="id" data-i="{{index}}"
             bindtouchstart="onDragStart" bindtouchmove="onDragMove" bindtouchend="onDragEnd" bindtouchcancel="onDragEnd" bindtap="onTapRow"
             aria-role="button" aria-label="第 {{index + 1}} 位：{{item.label}}。点一下选中，再点另一条对调"
@@ -23,16 +23,16 @@
 
     <!-- 反馈条:判错也要说清楚「这一次不扣生命」,不然玩家不知道自己损失了什么 -->
     <view class="so__fb {{verdict === 'ok' ? 'is-ok' : 'is-no'}}" wx:if="{{verdict}}">
-      {{verdict === 'ok' ? '排好了 · 这一题过了' : (finished ? '次数用完了 · 这次不扣生命' : '还没排对 · 挪一挪再交')}}
+      {{verdict === 'ok' ? '全排对了' : (finished ? '次数用完了，这次不扣生命' : '还没排对，挪一挪再交')}}
     </view>
   </view>
 
   <!-- 过了之后大按钮不再是一枚灰掉的「就这个顺序」:玩家只看见死按钮、找不到路,改成「继续」,和左上返回同一动作;故事流内嵌时下面已有「继续故事」,不再出这枚(实走复核) -->
-  <view wx:if="{{verdict === 'ok' && !inline}}" class="g-btn pe pe--up" style="--pe-d:.8s" bindtap="onClose"
+  <view wx:if="{{verdict === 'ok' && !inline}}" class="g-btn pe pe--up" style="--pe-d:.1s;--pe-dur:.2s" bindtap="onClose"
         aria-role="button" aria-label="继续" hover-class="g-btn--press" hover-stay-time="80">
     继续
   </view>
-  <view wx:elif="{{verdict !== 'ok'}}" class="g-btn {{rows.length && verdict !== 'ok' ? '' : 'g-btn--disabled'}} pe pe--up" style="--pe-d:.8s" bindtap="onSubmit"
+  <view wx:elif="{{verdict !== 'ok'}}" class="g-btn {{rows.length && verdict !== 'ok' ? '' : 'g-btn--disabled'}} pe pe--up" style="--pe-d:.1s;--pe-dur:.2s" bindtap="onSubmit"
         aria-role="button" aria-label="提交排好的顺序" hover-class="g-btn--press" hover-stay-time="80">
     就这个顺序
   </view>
