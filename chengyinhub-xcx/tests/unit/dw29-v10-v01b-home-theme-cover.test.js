@@ -25,7 +25,7 @@ test('V-10 主题没有图片才落占位', () => {
   const [card] = decorateFeedCards([{ imgArr: '', imgUrl: '' }], https)
   assert.equal(card.cover, '')
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/index/index.wxml'), 'utf8')
-  assert.equal((wxml.match(/<image class="v2-fcover[^"]*"[^>]*src="\{\{item\.cover \|\| '\/images\/home-route-city-placeholder\.jpg'\}\}"/g) || []).length, 2)
+  assert.equal((wxml.match(/<image class="v2-fcover[^"]*"[^>]*src="\{\{img\.fit\(item\.cover, imgCtx, 'card', true\) \|\| '\/images\/home-route-city-placeholder\.jpg'\}\}"/g) || []).length, 2)
 })
 
 test('V-01b 首页卡片占位不再用自带灰色骨架胶囊的 route_city_cover，且占位图会被打包', () => {

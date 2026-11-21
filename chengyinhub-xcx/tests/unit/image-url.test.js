@@ -95,9 +95,7 @@ test('默认取 App 的接口域名与窗口 DPR', () => {
     global.wx = { getWindowInfo: () => ({ pixelRatio: 3 }) }
     imageUrl.resetForTest()
     assert.equal(imageUrl.sized(SIGNED, 'half'), 'https://test.example/api/api/common/img/640/orig/upload/' + HEX + '.jpg?' + QUERY)
-    assert.deepEqual(imageUrl.wxsContext(), { base: 'https://test.example/api', dpr: 3 })
-    global.getApp = () => ({ globalData: { siteBaseUrl: 'http://insecure.example' } })
-    assert.ok(imageUrl.sized(SIGNED, 'half').startsWith('https://www.chengyinhub.com/prod-api/api/common/img/'))
+    assert.deepEqual(imageUrl.wxsContext(), { base: 'https://test.example/api', dpr: 3, off: false, skip: {} })
   } finally {
     global.getApp = prevApp
     global.wx = prevWx
@@ -122,4 +120,151 @@ test('img.wxs fit() 与 sized() 逐条对拍', () => {
   }
   assert.equal(wxs.fit(SIGNED, null, 'hero'), SIGNED, '没有上下文时不改写')
   assert.equal(wxs.fit(null, { base: BASE, dpr: 2 }, 'hero'), '')
+})
+
+function withEnv(globalData, wxApi, fn) {
+  const prevApp = global.getApp
+  const prevWx = global.wx
+  try {
+    global.getApp = globalData === undefined ? undefined : () => (globalData === null ? null : { globalData })
+    global.wx = wxApi
+    imageUrl.resetForTest()
+    return fn()
+  } finally {
+    global.getApp = prevApp
+    global.wx = prevWx
+    imageUrl.resetForTest()
+  }
+}
+
+test('基址跟 app.sendRequest 同源:http 测试服照用,正式服不变,完全没配才回落正式域名', () => {
+  const wxNoExt = { getWindowInfo: () => ({ pixelRatio: 2 }) }
+  // 测试 / 开发构建:http 回环测试服也必须用它,不能把图片请求打到正式服
+  withEnv({ siteBaseUrl: 'http://127.0.0.1:18080/dev-api/' }, wxNoExt, () => {
+    assert.equal(imageUrl.sized(SIGNED, 'half'), 'http://127.0.0.1:18080/dev-api/api/common/img/480/orig/upload/' + HEX + '.jpg?' + QUERY)
+    assert.equal(imageUrl.wxsContext().base, 'http://127.0.0.1:18080/dev-api')
+    assert.equal(loadImgWxs().fit(SIGNED, imageUrl.wxsContext(), 'half', false), imageUrl.sized(SIGNED, 'half'))
+  })
+  withEnv({ siteBaseUrl: 'https://staging.example/stage-api' }, wxNoExt, () => {
+    assert.equal(imageUrl.wxsContext().base, 'https://staging.example/stage-api')
+  })
+  // release:siteBaseUrl 就是正式域名,结果与改动前完全一致
+  const config = require('../../utils/config.js')
+  const release = config.resolveRuntimeConfig('release', {})
+  withEnv({ siteBaseUrl: release.apiBaseUrl, runtimeConfig: release }, wxNoExt, () => {
+    assert.equal(imageUrl.wxsContext().base, 'https://www.chengyinhub.com/prod-api')
+    assert.equal(imageUrl.sized(SIGNED, 'hero'), 'https://www.chengyinhub.com/prod-api/api/common/img/750/orig/upload/' + HEX + '.jpg?' + QUERY)
+  })
+  // siteBaseUrl 缺失时先用 globalData.runtimeConfig
+  withEnv({ runtimeConfig: { apiBaseUrl: 'http://10.0.0.2:8080' } }, wxNoExt, () => {
+    assert.equal(imageUrl.wxsContext().base, 'http://10.0.0.2:8080')
+  })
+  // App 未就绪:按同一份运行配置(ext.json)解析
+  const wxDevExt = {
+    getWindowInfo: () => ({ pixelRatio: 2 }),
+    getAccountInfoSync: () => ({ miniProgram: { envVersion: 'develop' } }),
+    getExtConfigSync: () => ({ apiEnvironments: { develop: 'https://dev.example/dev-api' } }),
+  }
+  withEnv(null, wxDevExt, () => {
+    assert.equal(imageUrl.wxsContext().base, 'https://dev.example/dev-api')
+  })
+  // 完全没配(无 App、无 wx)才回落正式域名
+  withEnv(undefined, undefined, () => {
+    assert.equal(imageUrl.wxsContext().base, imageUrl.DEFAULT_API_BASE)
+  })
+  withEnv({ siteBaseUrl: '   ' }, undefined, () => {
+    assert.equal(imageUrl.wxsContext().base, imageUrl.DEFAULT_API_BASE)
+  })
+})
+
+const signedOf = (n) => 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/' + String(n).repeat(32).slice(0, 32) + '.jpg?' + QUERY
+
+function fakePage(ctx) {
+  const page = { data: { imgCtx: ctx }, calls: 0 }
+  page.setData = function (patch) { page.calls += 1; Object.assign(page.data, patch) }
+  return page
+}
+
+function fireError(page, raw) {
+  imageUrl.onImgRenditionError.call(page, { currentTarget: { dataset: { raw } } })
+}
+
+test('binderror:缩略图出错该图退回原签名图,只换一次,原图再错不循环', () => {
+  withEnv({ siteBaseUrl: 'http://127.0.0.1:18080' }, { getWindowInfo: () => ({ pixelRatio: 2 }) }, () => {
+    const wxs = loadImgWxs()
+    const page = fakePage(imageUrl.wxsContext())
+    const other = signedOf('b')
+    assert.ok(wxs.fit(SIGNED, page.data.imgCtx, 'hero', true).includes('/api/common/img/'), '先改写')
+
+    fireError(page, SIGNED)
+    assert.equal(page.calls, 1)
+    assert.equal(wxs.fit(SIGNED, page.data.imgCtx, 'hero', true), SIGNED, '出错后同一张图换回原签名地址')
+    assert.equal(wxs.fit(SIGNED.replace('https:', 'http:'), page.data.imgCtx, 'card', false), SIGNED, '该文件其他槽位也用原图')
+    assert.ok(wxs.fit(other, page.data.imgCtx, 'hero', true).includes('/api/common/img/'), '其他图照常改写')
+    assert.equal(imageUrl.sized(SIGNED, 'hero'), SIGNED, 'JS 侧同步跳过该文件')
+
+    // 原图本身也坏:不再 setData,不计数
+    fireError(page, SIGNED)
+    fireError(page, SIGNED)
+    assert.equal(page.calls, 1, '只换一次,不循环')
+    assert.equal(imageUrl.breakerTripped(), false)
+
+    // 别的页面拿着旧 ctx 出错同一文件:换成新 ctx,但不重复计数
+    const stale = fakePage({ base: 'http://127.0.0.1:18080', dpr: 2, off: false, skip: {} })
+    fireError(stale, SIGNED)
+    assert.equal(stale.calls, 1)
+    assert.equal(wxs.fit(SIGNED, stale.data.imgCtx, 'hero', true), SIGNED)
+
+    // 非改写图(本地图 / 外域 / 空)出错一概不处理
+    for (const raw of ['/images/a.png', 'https://example.com/a.jpg', '', undefined]) fireError(page, raw)
+    assert.equal(page.calls, 1)
+    // 本来就没改写(无 ctx)的页面也不处理
+    const plain = fakePage(null)
+    fireError(plain, SIGNED)
+    assert.equal(plain.calls, 0)
+    assert.equal(imageUrl.breakerTripped(), false)
+  })
+})
+
+test('熔断:本会话累计 BREAKER_LIMIT 个文件缩略图出错后不再改写任何图片', () => {
+  withEnv({ siteBaseUrl: 'https://www.chengyinhub.com/prod-api' }, { getWindowInfo: () => ({ pixelRatio: 2 }) }, () => {
+    const wxs = loadImgWxs()
+    assert.equal(imageUrl.BREAKER_LIMIT, 3)
+    const page = fakePage(imageUrl.wxsContext())
+    const files = ['1', '2', '3', '4'].map(signedOf)
+    fireError(page, files[0])
+    fireError(page, files[1])
+    assert.equal(imageUrl.breakerTripped(), false)
+    assert.ok(wxs.fit(files[3], page.data.imgCtx, 'hero', true).includes('/api/common/img/'), '未到阈值照常改写')
+    fireError(page, files[2])
+    assert.equal(imageUrl.breakerTripped(), true)
+    assert.equal(page.data.imgCtx.off, true)
+    for (const f of files) assert.equal(wxs.fit(f, page.data.imgCtx, 'hero', true), f, '熔断后模板全部用原图')
+    assert.equal(imageUrl.sized(files[3], 'card', { webp: true }), files[3], '熔断后 JS 侧也不改写')
+    assert.equal(imageUrl.wxsContext().off, true, '之后新开页面拿到的 ctx 也是熔断态')
+    // 熔断后出错的是原图,不再 setData
+    const calls = page.calls
+    fireError(page, files[3])
+    assert.equal(page.calls, calls)
+  })
+})
+
+test('改写过的 <image> 都挂了 binderror 退回原图,页面 / 组件都接了共用处理', () => {
+  const targets = {
+    'pages/index/index': 'page', 'pages/play/index': 'page', 'pages/topic/index/index': 'page', 'components/cy/post-card/index': 'component',
+  }
+  for (const [base, kind] of Object.entries(targets)) {
+    const wxml = fs.readFileSync(path.join(root, base + '.wxml'), 'utf8')
+    const tags = (wxml.match(/<image\b[\s\S]*?(?:\/>|<\/image>)/g) || []).filter((t) => t.includes('img.fit('))
+    assert.ok(tags.length > 0, base)
+    for (const tag of tags) {
+      assert.match(tag, /binderror="onImgRenditionError"/, base + ': ' + tag.slice(0, 120))
+      const arg = tag.match(/src="\{\{\s*img\.fit\((.*?), imgCtx,/)
+      assert.ok(arg, base + ': fit 用 imgCtx ' + tag.slice(0, 120))
+      assert.ok(tag.includes('data-raw="{{' + arg[1] + '}}"'), base + ': data-raw 与 fit 首参一致 ' + tag.slice(0, 120))
+    }
+    const js = fs.readFileSync(path.join(root, base + '.js'), 'utf8')
+    if (kind === 'page') assert.match(js, /onImgRenditionError\(e\) \{ imageUrl\.onImgRenditionError\.call\(this, e\) \}/, base)
+    else assert.match(js, /onImgRenditionError\(e\) \{ if \(imageUrl\) imageUrl\.onImgRenditionError\.call\(this, e\)/, base)
+  }
 })

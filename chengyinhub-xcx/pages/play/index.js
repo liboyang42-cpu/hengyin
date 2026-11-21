@@ -451,6 +451,7 @@ const chapterVideo = require('./chapter-video.js'); const packDetail = require('
 Page({
   ...chapterVideo.methods, ...kitCard.methods(), ...stagePops.methods(), ...castPlay.methods(req),
   ...journeyCheckRecovery.methods(req),
+  onImgRenditionError(e) { imageUrl.onImgRenditionError.call(this, e) }, // 缩略图出错退回原图一次 + 会话熔断(utils/image-url.js)
   ...orientLifecycle.methods((url, method, data) => {
     const header = { 'content-type': 'application/x-www-form-urlencoded' };
     switch (url) {

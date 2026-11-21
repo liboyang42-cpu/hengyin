@@ -2075,6 +2075,7 @@ Page({
   
   // 预览图片
   onImgFadeLoad(e) { imgFade.onImgFadeLoad.call(this, e) },
+  onImgRenditionError(e) { imageUrl.onImgRenditionError.call(this, e) }, // 缩略图出错退回原图一次 + 会话熔断(utils/image-url.js)
 
   previewImage(e) {
     const src = e.currentTarget.dataset.src;

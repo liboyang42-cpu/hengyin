@@ -79,6 +79,7 @@ Component({
     },
   },
   methods: {
+    onImgRenditionError(e) { if (imageUrl) imageUrl.onImgRenditionError.call(this, e); }, // 缩略图出错退回原图一次 + 会话熔断
     toggleText() { this.setData({ textExpanded: !this.data.textExpanded }); },
     eventDetail() {
       const post = this.data.post || {};

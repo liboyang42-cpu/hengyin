@@ -96,7 +96,7 @@ for (const kind of ['coinflip', 'diceroll']) {
 test('顶部缺图:主题开场标题卡后面压主题封面(原型 gp-start),封面链与本页其他底图同一口径', () => {
   const wxml = read('pages/play/index.wxml');
   const intro = wxml.slice(wxml.indexOf('<view class="st-intro '), wxml.indexOf('<view class="st-intro__go"'));
-  assert.match(intro, /<view class="st-intro__bg" wx:if="\{\{topicCover \|\| chapter\.cover\}\}" aria-hidden="true"><image class="st-intro__im" src="\{\{img\.fit\(topicCover \|\| chapter\.cover, imgCtx, 'hero', true\)\}\}" webp="\{\{true\}\}" mode="aspectFill" \/><\/view>/);
+  assert.match(intro, /<view class="st-intro__bg" wx:if="\{\{topicCover \|\| chapter\.cover\}\}" aria-hidden="true"><image class="st-intro__im" src="\{\{img\.fit\(topicCover \|\| chapter\.cover, imgCtx, 'hero', true\)\}\}" data-raw="\{\{topicCover \|\| chapter\.cover\}\}" binderror="onImgRenditionError" webp="\{\{true\}\}" mode="aspectFill" \/><\/view>/);
   assert.ok(intro.indexOf('st-intro__bg') < intro.indexOf('st-intro__body'), '封面在标题下面一层');
   const wxss = read('pages/play/index.wxss');
   const block = wxss.slice(wxss.indexOf('.st-intro__bg{'), wxss.indexOf('.st-intro__body{'));

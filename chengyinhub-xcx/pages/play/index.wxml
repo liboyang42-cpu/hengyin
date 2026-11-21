@@ -173,8 +173,8 @@
            selectAll('.chfull__para') 按下标对齐 chapterParas,少一个就整屏焦点错位。 -->
       <view wx:for="{{chapterParas}}" wx:key="i" id="{{item.nodeId ? 'chapter-game-' + item.nodeId : 'chapter-block-' + item.i}}" class="chfull__para st-line {{item.kind !== 'text' ? 'chfull__para--wide' : 'cy-story-hand'}} {{item.who ? 'chfull__para--who' : ''}} {{item.drop && !item.chars ? 'chfull__para--drop' : ''}} {{item.in ? 'is-in' : ''}} {{item.dir === 'down' ? 'from-top' : ''}} {{item.odd ? 'odd' + item.odd : ''}} {{oddFlick === item.i ? 'is-flick' : ''}} {{item.fx ? 'tfx tfx--' + item.fx : ''}}"
             style="--d:{{item.d}}s">
-        <image wx:if="{{item.kind === 'cover'}}" class="chfull__cover" src="{{img.fit(item.url, imgCtx, 'hero', true)}}" webp="{{true}}" mode="aspectFit" />
-        <image wx:elif="{{item.kind === 'image'}}" class="chfull__img" src="{{img.fit(item.url, imgCtx, 'card', true)}}" webp="{{true}}" mode="widthFix" lazy-load="true"
+        <image wx:if="{{item.kind === 'cover'}}" class="chfull__cover" src="{{img.fit(item.url, imgCtx, 'hero', true)}}" data-raw="{{item.url}}" binderror="onImgRenditionError" webp="{{true}}" mode="aspectFit" />
+        <image wx:elif="{{item.kind === 'image'}}" class="chfull__img" src="{{img.fit(item.url, imgCtx, 'card', true)}}" data-raw="{{item.url}}" binderror="onImgRenditionError" webp="{{true}}" mode="widthFix" lazy-load="true"
                aria-role="img" aria-label="{{item.altText || '章节配图'}}" />
         <!-- 相册(块类型 dream;2026-09-24 用户):故事流里一条圆角照片带,一直匀速往前滚,下面带镜面倒影;点一下打开白底全屏(下方 .album)。
              连续滚动用 swiper 线性缓动 + 时长等于间隔做,不加 keyframes(门禁只减不增)。
@@ -524,7 +524,7 @@
      9-22 删掉的是通用起始页(play-intro,带路线骨架),这一页只给故事主题,内容全来自主题本身。 -->
 <view class="st-intro atmosphere--default {{storyIntro.out ? 'st-intro--out' : ''}}" wx:if="{{storyIntro.show}}">
   <!-- f-play 顶部缺图:原型 gp-start 标题卡后面压着主题封面(半透明、轻模糊、去饱和);主题封面优先,没有退回章节封面链,都缺不渲染 -->
-  <view class="st-intro__bg" wx:if="{{topicCover || chapter.cover}}" aria-hidden="true"><image class="st-intro__im" src="{{img.fit(topicCover || chapter.cover, imgCtx, 'hero', true)}}" webp="{{true}}" mode="aspectFill" /></view>
+  <view class="st-intro__bg" wx:if="{{topicCover || chapter.cover}}" aria-hidden="true"><image class="st-intro__im" src="{{img.fit(topicCover || chapter.cover, imgCtx, 'hero', true)}}" data-raw="{{topicCover || chapter.cover}}" binderror="onImgRenditionError" webp="{{true}}" mode="aspectFill" /></view>
   <view class="st-intro__body">
     <text class="st-intro__k">城瘾 · {{modeLabel}}{{topicAiGenerated ? ' · AI 生成' : ''}}</text>
     <text class="st-intro__t">{{storyIntro.title}}</text>
@@ -575,7 +575,7 @@
   <view class="chpick__row {{index==chapterPick.cur?'is-on':''}} {{chapterPick.states[index] === 'locked' ? 'is-locked' : ''}} {{chapterPick.states[index] === 'visit' ? 'is-visit' : ''}}" wx:for="{{chapterCards}}" wx:key="key"
         data-idx="{{index}}" bindtap="onPickChapter" aria-role="button" aria-label="{{item.title}}{{chapterPick.states[index] === 'completed' ? '，已完成' : (chapterPick.states[index] === 'locked' ? '，未解锁' : (chapterPick.states[index] === 'visit' ? (storyExpired ? '，已过期，不能再解锁' : '，到访后解锁') : ''))}}" aria-disabled="{{chapterPick.states[index] === 'locked'}}" hover-class="cy-pressed" hover-stay-time="80">
     <view class="chpick__cover">
-      <image wx:if="{{item.cover}}" src="{{img.fit(img.first(item.cover), imgCtx, 'half', true)}}" webp="{{true}}" mode="aspectFill" />
+      <image wx:if="{{item.cover}}" src="{{img.fit(img.first(item.cover), imgCtx, 'half', true)}}" data-raw="{{img.first(item.cover)}}" binderror="onImgRenditionError" webp="{{true}}" mode="aspectFill" />
       <cy-icon wx:else name="flag" size="40" />
     </view>
     <view class="chpick__copy">
@@ -619,7 +619,7 @@
     <!-- 页面底:主题封面 + 模糊 + 压暗蒙版。主题封面(topicCover)优先,没有退回章节封面链;都缺时整层不渲染,退回纯深色底。
          图放大到 120% 是因为 blur 会把边缘糊出透明边,不撑开就露出一圈亮边。减淡档判据见 wxss .fx-bg--pack。 -->
     <view class="fx-bg {{headIn || packOpen ? '' : 'fx-bg--pack'}}" wx:if="{{topicCover || chapter.cover}}">
-      <image class="fx-bg__im" src="{{img.fit(topicCover || chapter.cover, imgCtx, 'hero', true)}}" webp="{{true}}" mode="aspectFill" />
+      <image class="fx-bg__im" src="{{img.fit(topicCover || chapter.cover, imgCtx, 'hero', true)}}" data-raw="{{topicCover || chapter.cover}}" binderror="onImgRenditionError" webp="{{true}}" mode="aspectFill" />
       <view class="fx-bg__veil"></view>
     </view>
 
@@ -667,7 +667,7 @@
             style="{{tileH ? 'height:' + tileH + 'px;' : ''}}--tx0:{{item.tx0 || '0px'}};--ty0:{{item.ty0 || '0px'}};--tx1:{{item.tx1 || '0px'}};--ty1:{{item.ty1 || '0px'}};--rot:{{item.rot || '0deg'}}"
             aria-role="button" aria-label="{{item.chapterLabel ? item.chapterLabel + '，' : ''}}{{item.name}}{{item.done ? '，已体验' : ''}}{{item.storyLocked ? '，未解锁' : ''}}" hover-class="cy-pressed" hover-stay-time="80">
         <!-- 配图兜底链(utils/station-image.js):站点图 → 章节图 → 路线封面 → 深色纹理底,不再留白或放人形剪影 -->
-        <image class="fx-tile__im" wx:if="{{item.photo}}" src="{{img.fit(item.photo, imgCtx, 'half', true)}}" webp="{{true}}" mode="aspectFill" lazy-load="true" />
+        <image class="fx-tile__im" wx:if="{{item.photo}}" src="{{img.fit(item.photo, imgCtx, 'half', true)}}" data-raw="{{item.photo}}" binderror="onImgRenditionError" webp="{{true}}" mode="aspectFill" lazy-load="true" />
         <view class="fx-tile__ph photo-tex" wx:else aria-hidden="true"></view>
         <view class="fx-tile__shade"></view>
         <view class="fx-tile__lock" wx:if="{{item.locked}}"><cy-icon name="lock" size="28" /><text>前路未知</text></view>
@@ -773,11 +773,11 @@
         aria-role="dialog" aria-modal="true" aria-label="{{hero.node.name}}">
     <!-- 背景不接 tap:关闭走左上返回钮和物理返回。整屏背景挂 hover-class 会在按下时闪一下,不挂又是裸可点元素 -->
     <view class="fx-hero__bg">
-      <image class="fx-hero__bgim" wx:if="{{hero.node.photo}}" src="{{img.fit(hero.node.photo, imgCtx, 'hero', true)}}" webp="{{true}}" mode="aspectFill" />
+      <image class="fx-hero__bgim" wx:if="{{hero.node.photo}}" src="{{img.fit(hero.node.photo, imgCtx, 'hero', true)}}" data-raw="{{hero.node.photo}}" binderror="onImgRenditionError" webp="{{true}}" mode="aspectFill" />
       <view class="fx-hero__veil"></view>
     </view>
     <view class="fx-hero__hdr {{hero.collapsed ? 'is-on' : ''}}" style="top:{{chrome.actionTop}}px">
-      <image class="fx-hero__hdr-th" wx:if="{{hero.node.photo}}" src="{{img.fit(hero.node.photo, imgCtx, 'avatar', true)}}" webp="{{true}}" mode="aspectFill" />
+      <image class="fx-hero__hdr-th" wx:if="{{hero.node.photo}}" src="{{img.fit(hero.node.photo, imgCtx, 'avatar', true)}}" data-raw="{{hero.node.photo}}" binderror="onImgRenditionError" webp="{{true}}" mode="aspectFill" />
       <view class="fx-hero__hdr-c">
         <view class="fx-hero__hdr-n">{{hero.node.name}}</view>
         <view class="fx-hero__hdr-m">{{hero.node.chapNo}}{{hero.node.chapNo && hero.node.chapName ? ' · ' : ''}}{{hero.node.chapName}}</view>
@@ -794,7 +794,7 @@
             aria-role="button" aria-label="读这一章的剧情；左右拖可以转动卡片"
             hover-class="cy-pressed" hover-stay-time="80">
         <view class="fx-card3d__face fx-card3d__front">
-          <image class="fx-hero__im" wx:if="{{hero.node.photo}}" src="{{img.fit(hero.node.photo, imgCtx, 'card', true)}}" webp="{{true}}" mode="aspectFill" />
+          <image class="fx-hero__im" wx:if="{{hero.node.photo}}" src="{{img.fit(hero.node.photo, imgCtx, 'card', true)}}" data-raw="{{hero.node.photo}}" binderror="onImgRenditionError" webp="{{true}}" mode="aspectFill" />
           <view class="fx-hero__ph cy-cover-fb" wx:else aria-hidden="true"><image class="cy-cover-fb__art" src="/images/cover-route.svg" mode="aspectFit" /></view>
         </view>
         <!-- 背面只写章节介绍:玩法归游戏、核销与权益归下面的正文 -->
@@ -919,7 +919,7 @@
       <view class="fx-story__pad"></view>
       <block wx:for="{{chapStory.lines}}" wx:key="id">
         <image wx:if="{{item.img}}" class="st-line st-line--img {{item.in ? 'is-in' : ''}} {{item.dir === 'down' ? 'from-top' : ''}}"
-               style="--d:{{item.d}}s" src="{{img.fit(img.first(item.img), imgCtx, 'card', true)}}" webp="{{true}}" mode="aspectFill" />
+               style="--d:{{item.d}}s" src="{{img.fit(img.first(item.img), imgCtx, 'card', true)}}" data-raw="{{img.first(item.img)}}" binderror="onImgRenditionError" webp="{{true}}" mode="aspectFill" />
         <view wx:elif="{{item.title}}" class="st-line st-line--ttl {{item.in ? 'is-in' : ''}} {{item.dir === 'down' ? 'from-top' : ''}}" style="--d:{{item.d}}s">
           <view class="st-line__meta" wx:if="{{item.meta}}">{{item.meta}}</view>
           <view class="st-line__ttl">{{item.title}}</view>
@@ -1077,7 +1077,7 @@
 <view class="sheet {{chapterFull ? 'sheet--story' : ''}} {{mode!=2 ? 'sheet--game' : ''}} {{sheetOut ? 'is-out' : ''}}" wx:if="{{sheet.show}}"><view class="sheet-x" wx:if="{{mode!=2}}" style="top:{{chrome.contentTop}}px" bindtap="closeSheet" aria-role="button" aria-label="返回，关闭{{sheet.node.name}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="back" size="32" /></view>
   <!-- 配图兜底链(utils/station-image.js):站点图 → 章节图 → 路线封面 → 深色纹理底;封面区高度固定,不随图收起 -->
   <view class="sheet-cover" bindtap="previewNodeImages" data-imgs="{{sheet.node.imgUrl}}" hover-class="cy-pressed" hover-stay-time="80">
-    <image wx:if="{{sheet.node.photo}}" src="{{img.fit(sheet.node.photo, imgCtx, 'card', true)}}" webp="{{true}}" mode="aspectFill" lazy-load="true"></image>
+    <image wx:if="{{sheet.node.photo}}" src="{{img.fit(sheet.node.photo, imgCtx, 'card', true)}}" data-raw="{{sheet.node.photo}}" binderror="onImgRenditionError" webp="{{true}}" mode="aspectFill" lazy-load="true"></image>
     <view wx:else class="sheet-cover__ss photo-tex" aria-hidden="true"></view>
     
     <view class="cover-photos" wx:if="{{img.list(sheet.node.imgUrl).length > 1}}"><cy-icon name="image" size="22" />{{img.list(sheet.node.imgUrl).length}} 图 · 点击查看</view>
@@ -1119,7 +1119,7 @@
       <!-- l-play 城市定向:这一站绑定的那一个玩法是一张横卡(封面 · 名字 · 类型),点开先看玩法开始弹窗;底部「导航」「开始任务」一排 -->
       <block wx:if="{{mode!=2}}">
         <view class="sheet-kit lk-card" data-origin="sheet" bindtap="openKitStart" aria-role="button" aria-label="玩法 {{sheet.node.gameTitle}}" hover-class="sheet-kit--press" hover-stay-time="80">
-          <image wx:if="{{sheet.node.gamePhoto}}" class="sheet-kit__img" src="{{img.fit(sheet.node.gamePhoto, imgCtx, 'half', true)}}" webp="{{true}}" mode="aspectFill" lazy-load="true" />
+          <image wx:if="{{sheet.node.gamePhoto}}" class="sheet-kit__img" src="{{img.fit(sheet.node.gamePhoto, imgCtx, 'half', true)}}" data-raw="{{sheet.node.gamePhoto}}" binderror="onImgRenditionError" webp="{{true}}" mode="aspectFill" lazy-load="true" />
           <view wx:else class="sheet-kit__img photo-tex" aria-hidden="true"></view>
           <view class="sheet-kit__copy"><text class="sheet-kit__t">{{sheet.node.gameTitle}}</text><text class="sheet-kit__s" wx:if="{{sheet.node.gameLede}}">{{sheet.node.gameLede}}</text></view>
           <cy-illus name="key" size="80" bare="{{true}}" reduced-motion="{{reducedMotion}}" />
@@ -1535,7 +1535,7 @@
   <view class="finish-photos-title" wx:if="{{finishPhotos.length}}">我的旅途照片</view>
   <scroll-view class="finish-stamps" wx:if="{{finishPhotos.length}}" scroll-x enhanced show-scrollbar="{{false}}">
     <view class="finish-stamp" wx:for="{{finishPhotos}}" wx:key="nodeId">
-      <image src="{{img.fit(img.first(item.picUrl), imgCtx, 'thumb', true)}}" webp="{{true}}" mode="aspectFill"></image>
+      <image src="{{img.fit(img.first(item.picUrl), imgCtx, 'thumb', true)}}" data-raw="{{img.first(item.picUrl)}}" binderror="onImgRenditionError" webp="{{true}}" mode="aspectFill"></image>
       <view class="finish-stamp__mark"><cy-icon name="check" size="24" /></view>
     </view>
   </scroll-view>
@@ -1565,7 +1565,7 @@
   </view>
   <view class="finsheet__retry" wx:if="{{endingError}}">城市故事暂未加载，不影响本次足迹。<text class="finsheet__retry-act" bindtap="retryEnding" hover-class="cy-pressed" hover-stay-time="80">重新加载</text></view>
   <view class="finish-route-recommendation" wx:if="{{finishRouteRecommendation}}" bindtap="goFinishRouteRecommendation" aria-role="button" aria-label="查看附近路线{{finishRouteRecommendation.title}}并购票" hover-class="cy-pressed" hover-stay-time="80">
-    <image wx:if="{{finishRouteRecommendation.cover}}" class="finish-route-recommendation__cover" src="{{img.fit(finishRouteRecommendation.cover, imgCtx, 'thumb', true)}}" webp="{{true}}" mode="aspectFill" />
+    <image wx:if="{{finishRouteRecommendation.cover}}" class="finish-route-recommendation__cover" src="{{img.fit(finishRouteRecommendation.cover, imgCtx, 'thumb', true)}}" data-raw="{{finishRouteRecommendation.cover}}" binderror="onImgRenditionError" webp="{{true}}" mode="aspectFill" />
     <view class="finish-route-recommendation__body">
       <view class="finish-route-recommendation__eyebrow">附近下一程</view>
       <view class="finish-route-recommendation__title">{{finishRouteRecommendation.title}}</view>

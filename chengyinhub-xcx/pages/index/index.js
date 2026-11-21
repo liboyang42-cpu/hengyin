@@ -190,15 +190,9 @@ function buildRecoCardStyles(count, current, target, progress) {
 
 // feed/卡片多图:发布页(publish/fabu)写入的 imgArr 与章节同为 "," 分隔，历史数据也有 ";"。
 // 两种分隔符都吃，避免把整串 "a.jpg,b.jpg" 当成一个坏 URL。
-// 2026-11-21:卡片封面按显示槽位出缩略图(附近卡是半宽,其余整宽);imgList 仍是原图,预览/分享照旧。
-function sizeCovers(list, slot) {
-  if (!Array.isArray(list)) return list;
-  return list.map(function (item) {
-    return item && item.cover ? Object.assign({}, item, { cover: imageUrl.sized(item.cover, slot, { webp: true }) }) : item;
-  });
-}
-
-function decorateImgs(list, slot) {
+// 2026-11-21:卡片封面按显示槽位出缩略图在模板里做(img.wxs fit + imgCtx),数据里保留原图,
+// 缩略图出错时 binderror 能退回原图(utils/image-url.js onImgRenditionError)。
+function decorateImgs(list) {
   // 首页五类列表共用这条图片消费者链：
   // 统一拆分逗号/分号格式，避免整串落成一个坏 URL；
   // 统一补全后端相对路径，附近活动不再出现有数据无图；
@@ -210,10 +204,10 @@ function decorateImgs(list, slot) {
   };
 
   // 页面入口只注入 URL 规则，不复制纯函数里的卡片判定。
-  return sizeCovers(decorateFeedCards(
+  return decorateFeedCards(
     list,
     normalizeImage,
-  ), slot || 'card');
+  );
 }
 
 Page({
@@ -222,6 +216,7 @@ Page({
    */
   data: {
     imgOn: {}, // 2026-11-21:卡片封面在占位底色上淡入(utils/img-fade.js)
+    imgCtx: null, // 2026-11-21:卡片封面按槽位出缩略图(img.wxs fit;utils/image-url.js wxsContext)
     locationPrompt: null,
     // 下拉刷新转圈态(scroll-view refresher)
     refreshing: false,
@@ -311,6 +306,7 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad(options) {
+    this.setData({ imgCtx: imageUrl.wxsContext() });
     const that = this;
     this._unloaded = false;
     // V-15 / G-5:个人资料换头像、改昵称保存成功即换掉问候区,不等 onShow 回读
@@ -865,10 +861,10 @@ Page({
       return {
         id: item.id,
         name: item.name,
-        cover: item.cover || imageUrl.sized(item.imgUrl, 'card', { webp: true }),
+        cover: item.cover || item.imgUrl,
         tags: tags,
         clubLabel: item.clubName || item.merchantName || tags[0] || '',
-        clubAvatar: imageUrl.sized(item.clubAvatar || item.merchantAvatar, 'avatar', { webp: true }) || item.cover,
+        clubAvatar: item.clubAvatar || item.merchantAvatar || item.cover,
         statusLabel: '',
         betaFlag: item.betaFlag == 1 ? 1 : 0,
         metaLine: metaParts.join(' · ') || item.addressName || '',
@@ -1008,6 +1004,7 @@ Page({
   },
 
   onImgFadeLoad(e) { imgFade.onImgFadeLoad.call(this, e) },
+  onImgRenditionError(e) { imageUrl.onImgRenditionError.call(this, e) }, // 缩略图出错退回原图一次 + 会话熔断
   goTopic: function (e) {
     wx.navigateTo({
       url: '/pages/topic/index/index?id=' + e.currentTarget.dataset.id,
@@ -1220,7 +1217,7 @@ Page({
           }
   
           list = that.processTopicDate(list);
-          list = decorateImgs(list, listName === 'nearbyActivityList' ? 'half' : 'card');   // 多图拆分 imgArr → imgList/cover
+          list = decorateImgs(list);   // 多图拆分 imgArr → imgList/cover
 
           const dataObj = {};
           dataObj[listName] = list;

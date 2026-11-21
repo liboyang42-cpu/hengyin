@@ -10,10 +10,19 @@
  *  - 槽位宽 × DPR 向上取到固定档位(与后端 IMAGE_RENDITION_WIDTHS 同一组),同图变体有限,缓存可命中;
  *  - webp 只在 <image webp> 的位置开(iOS 不带 webp 属性不解码),PNG 透明在两种格式下都保留;
  *  - 本地图、外域图、未签名图、已带处理参数的图、GIF 等一律原样返回(只做自有域名 http→https)。
+ * 后端基址 = 本次运行 app.sendRequest 用的同一个 globalData.siteBaseUrl(测试/开发服可能是 http),
+ * 只有完全没配时才回落正式域名;release 构建 siteBaseUrl 就是正式域名,行为不变。
+ * 部署顺序兜底:后端没有 /api/common/img(小程序先于 jar 发布)或返回 404/403 时,
+ * 改写过的 <image> 走 binderror="onImgRenditionError"(data-raw = 改写前地址),该文件本会话内退回原签名图,只换一次;
+ * 本会话累计 BREAKER_LIMIT 个文件出错即熔断,之后不再改写任何图片。
  * 模板里直接拼的地方用 utils/wxs/img.wxs 的 fit(),规则与这里逐条对齐,tests/unit/image-url.test.js 做两边对拍。 */
+
+const config = require('./config.js')
 
 const OSS_HOST = 'chengyin-oss.oss-cn-shanghai.aliyuncs.com'
 const DEFAULT_API_BASE = 'https://www.chengyinhub.com/prod-api'
+/** 本会话缩略图出错多少个文件后熔断(之后全部用原图)。 */
+const BREAKER_LIMIT = 3
 /** 与后端 FileOssUploadUtils.IMAGE_RENDITION_WIDTHS 一致;改这里要同步改后端。 */
 const WIDTHS = [160, 240, 320, 480, 640, 750, 960, 1080, 1280]
 
@@ -43,13 +52,71 @@ function pixelRatio() {
   return cachedDpr
 }
 
+function configuredBase(value) {
+  return typeof value === 'string' && value.trim() ? value.trim().replace(/\/+$/, '') : ''
+}
+
+/** 与 app.sendRequest 同一个后端基址(任何协议);App 未就绪时按同一份运行配置解析;都没有才用正式域名。 */
 function apiBase() {
   try {
     const app = typeof getApp === 'function' ? getApp() : null
-    const base = app && app.globalData && app.globalData.siteBaseUrl
-    if (typeof base === 'string' && /^https:\/\/[^/?#]+/i.test(base)) return base.replace(/\/+$/, '')
-  } catch (e) { /* App 未就绪时用正式域名 */ }
+    const g = app && app.globalData
+    const base = g && (configuredBase(g.siteBaseUrl) || configuredBase(g.runtimeConfig && g.runtimeConfig.apiBaseUrl))
+    if (base) return base
+  } catch (e) { /* App 未就绪,往下按运行配置解析 */ }
+  try {
+    if (typeof wx !== 'undefined') {
+      const base = configuredBase(config.resolveFromWx(wx).apiBaseUrl)
+      if (base) return base
+    }
+  } catch (e) { /* 取不到运行配置 */ }
   return DEFAULT_API_BASE
+}
+
+// ---- 会话级出错记录:文件名(32hex.ext) → true;累计 BREAKER_LIMIT 个即熔断 ----
+let failed = {}
+let failCount = 0
+let tripped = false
+
+function secure(src) {
+  return String(src).trim().replace(OWN_HTTP, 'https://$1$2')
+}
+
+/** 能被改写的本桶签名原图 → 文件名;其余 ''。 */
+function renditionKey(src) {
+  if (typeof src !== 'string' || !src) return ''
+  const m = secure(src).match(SIGNED_OSS)
+  return m && signedQuery(m[2]) ? m[1] : ''
+}
+
+/** 这个 ctx 渲染时有没有把该文件改写成缩略地址(与 img.wxs fit() 同口径)。 */
+function rewrittenUnder(ctx, key) {
+  return !!(ctx && ctx.base && !ctx.off && !(ctx.skip && ctx.skip[key]))
+}
+
+/**
+ * 一张改写过的图加载失败:记下该文件(本会话后续都用原图),计数到 BREAKER_LIMIT 熔断。
+ * @param {string} raw 改写前的原地址(模板 data-raw)
+ * @param {object} ctx 出错时页面正在用的 imgCtx
+ * @returns 需要换上的新 imgCtx;原图本身也坏 / 本来就没改写 → null(不再换,杜绝循环)
+ */
+function noteRenditionError(raw, ctx) {
+  const key = renditionKey(raw)
+  if (!key || !rewrittenUnder(ctx, key)) return null
+  if (!failed[key]) {
+    failed[key] = true
+    failCount += 1
+    if (failCount >= BREAKER_LIMIT) tripped = true
+  }
+  return wxsContext()
+}
+
+/** 页面 / 组件共用的 binderror 处理:Page({ onImgRenditionError: imageUrl.onImgRenditionError }) 或放进组件 methods。 */
+function onImgRenditionError(e) {
+  const ds = e && e.currentTarget && e.currentTarget.dataset
+  if (!ds || !this || typeof this.setData !== 'function') return
+  const next = noteRenditionError(ds.raw, this.data && this.data.imgCtx)
+  if (next) this.setData({ imgCtx: next })
 }
 
 /** 槽位名或 CSS 宽 → 档位像素宽。 */
@@ -85,9 +152,10 @@ function signedQuery(query) {
 function sized(src, slot, opts) {
   if (typeof src !== 'string' || !src) return src
   const o = opts || {}
-  const url = src.trim().replace(OWN_HTTP, 'https://$1$2')
+  const url = secure(src)
   const m = url.match(SIGNED_OSS)
   if (!m || !signedQuery(m[2])) return url
+  if (tripped || failed[m[1]]) return url
   const width = renditionWidth(slot, o.dpr)
   if (!width) return url
   const base = o.base ? String(o.base).replace(/\/+$/, '') : apiBase()
@@ -96,9 +164,14 @@ function sized(src, slot, opts) {
 
 /** 给 img.wxs fit() 用的上下文:模板没有 getApp / wx,由页面放进 data。 */
 function wxsContext() {
-  return { base: apiBase(), dpr: pixelRatio() }
+  return { base: apiBase(), dpr: pixelRatio(), off: tripped, skip: Object.assign({}, failed) }
 }
 
-function resetForTest() { cachedDpr = 0 }
+function breakerTripped() { return tripped }
 
-module.exports = { sized, renditionWidth, wxsContext, SLOTS, WIDTHS, OSS_HOST, resetForTest }
+function resetForTest() { cachedDpr = 0; failed = {}; failCount = 0; tripped = false }
+
+module.exports = {
+  sized, renditionWidth, wxsContext, renditionKey, noteRenditionError, onImgRenditionError, breakerTripped,
+  SLOTS, WIDTHS, OSS_HOST, BREAKER_LIMIT, DEFAULT_API_BASE, resetForTest
+}
