@@ -84,6 +84,7 @@ public class ShopGamePlayService {
     private Function<String, String> configLookup;
     private Clock clock = Clock.system(ZONE);
 
+    @org.springframework.beans.factory.annotation.Autowired
     public ShopGamePlayService(JdbcTemplate jdbc, ShopGameProfileService profiles) {
         this.jdbc = jdbc;
         this.profiles = profiles;

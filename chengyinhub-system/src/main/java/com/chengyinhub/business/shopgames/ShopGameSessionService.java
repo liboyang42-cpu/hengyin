@@ -52,6 +52,7 @@ public class ShopGameSessionService {
     @Autowired(required = false)
     private IAdvancedGameRuntimeService runtime;
 
+    @org.springframework.beans.factory.annotation.Autowired
     public ShopGameSessionService(JdbcTemplate jdbc, ShopGamePlayService plays) {
         this.jdbc = jdbc;
         this.plays = plays;
