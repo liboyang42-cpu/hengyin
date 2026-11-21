@@ -28,6 +28,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import com.chengyinhub.common.annotation.RateLimiter;
 import com.chengyinhub.common.enums.LimitType;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -291,6 +293,30 @@ public class ApiCommonController extends BaseController {
         return success(cmsInfomation);
     }
 
+
+    /**
+     * 2026-11-21 图片按显示槽位出图:小程序 utils/image-url.js 把本桶签名原图链接换成这里,
+     * 路径带档位宽度与格式,查询串原样带原链接的 Expires/OSSAccessKeyId/Signature。
+     * 只有本存储签出、未过期的原图签名才换得到缩略版(302 到带 x-oss-process 的新签名),其余一律 404;
+     * 不读登录态、不访问 OSS 网络,只做本地 HMAC 重算。随 /api/common/** 匿名放行(image 组件请求不带 token)。
+     */
+    @GetMapping("/img/{width:\\d+}/{format:orig|webp}/upload/{file:[0-9a-f]+\\.(?:jpg|jpeg|png)}")
+    public ResponseEntity<Void> imageRendition(@PathVariable("width") int width, @PathVariable("format") String format,
+            @PathVariable("file") String file, @RequestParam(value = "Expires", required = false) String expires,
+            @RequestParam(value = "OSSAccessKeyId", required = false) String accessKeyId,
+            @RequestParam(value = "Signature", required = false) String signature) {
+        String location;
+        try {
+            location = FileOssUploadUtils.imageRenditionUrl("upload/" + file, expires, accessKeyId, signature,
+                    width, "webp".equals(format));
+        } catch (IllegalArgumentException invalid) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .header(org.springframework.http.HttpHeaders.LOCATION, location)
+                .header(org.springframework.http.HttpHeaders.CACHE_CONTROL, "public, max-age=86400")
+                .build();
+    }
 
     // P0-28 安全:原 /api/common/topic_clear、/activity_clear 无 @PreAuthorize、
     // 落在 /api/ App 鉴权命名空间下,任何登录会员即可 POST 触发全平台结算(越权)。

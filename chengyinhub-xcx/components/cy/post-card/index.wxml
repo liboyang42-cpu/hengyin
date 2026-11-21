@@ -99,7 +99,7 @@
     <!-- 帖文第三轮(业主定稿 P-1,Threads 版):单图按原比例放在正文列里;多图横滑,能滑过头像那一栏到屏幕边缘,
          不显示「1/3」,下一张总露出一截。点图全屏看大图(在大图里继续左右滑),双击图片点赞。 -->
     <view class="post-card__one" wx:if="{{!post.isCompletionShare && post.picList.length === 1}}">
-      <image class="post-card__one-img" src="{{post.picList[0]}}" mode="widthFix" lazy-load="true" data-picindex="0"
+      <image class="post-card__one-img" src="{{img.fit(post.picList[0], imgCtx, 'card', true)}}" webp="{{true}}" mode="widthFix" lazy-load="true" data-picindex="0"
              catchtap="onPicTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="查看大图，双击点赞" hover-stop-propagation="true" />
       <view class="post-card__bigheart {{bigHeart}}" wx:if="{{bigHeart}}" aria-hidden="true"><cy-icon name="heart-filled" size="168" /></view>
     </view>
@@ -110,7 +110,7 @@
                  src="{{post.routePreviewImg || post.sportCover}}" mode="aspectFill" lazy-load="true" catchtap="emitDetail"
                  aria-role="button" aria-label="查看路线图" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true" />
           <image wx:for="{{post.picList}}" wx:for-item="pic" wx:for-index="picIndex" wx:key="picIndex" lazy-load="true"
-                 class="post-card__strip-pic" src="{{pic}}" mode="heightFix" data-picindex="{{picIndex}}"
+                 class="post-card__strip-pic" src="{{img.fit(pic, imgCtx, 'card', true)}}" webp="{{true}}" mode="heightFix" data-picindex="{{picIndex}}"
                  catchtap="onPicTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="查看第 {{picIndex + 1 || 1}} 张大图，双击点赞" hover-stop-propagation="true" />
         </view>
       </scroll-view>

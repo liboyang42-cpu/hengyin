@@ -18,7 +18,7 @@
       </view>
       <!-- v13:故事扇形卡滑出后收成返回键右边的一叠小卡,主题名跟在后面 -->
       <view wx:if="{{storyCards.length}}" class="story-mini {{storyDocked && activeTab == '1' ? 'on' : ''}}" aria-hidden="true">
-        <image wx:for="{{storyCards}}" wx:key="index" wx:if="{{index < 3}}" class="story-mini__c story-mini__c--{{index}}" src="{{item.img}}" mode="aspectFill" />
+        <image wx:for="{{storyCards}}" wx:key="index" wx:if="{{index < 3}}" class="story-mini__c story-mini__c--{{index}}" src="{{img.fit(item.img, imgCtx, 'avatar', true)}}" webp="{{true}}" mode="aspectFill" />
       </view>
       <text class="tnav__t" wx:if="{{currentScreen === 1}}">{{info.name}}</text>
     </view>
@@ -63,9 +63,9 @@
   <view class="slide1 screen cy-fade-in {{coverImages.length || info.imgUrl ? 'cy-img-ph' : ''}}" id="screen1">
     <!-- 2026-10-22 业主:封面照片慢慢放大并交叉淡入淡出(参考 uiuxjosh 三屏的第一屏);只有一张时就是一张慢推 -->
     <view class="kb cy-img-fade {{imgOn.kb ? 'cy-img-fade--on' : ''}}" wx:if="{{coverImages.length}}">
-      <image wx:for="{{coverImages}}" wx:key="index" class="kb__im {{index === kbIdx ? 'is-on' : ''}} {{index % 2 ? 'kb__im--b' : 'kb__im--a'}}" src="{{item}}" mode="aspectFill" data-fade-key="{{index === 0 ? 'kb' : ''}}" bindload="onImgFadeLoad" />
+      <image wx:for="{{coverImages}}" wx:key="index" class="kb__im {{index === kbIdx ? 'is-on' : ''}} {{index % 2 ? 'kb__im--b' : 'kb__im--a'}}" src="{{img.fit(item, imgCtx, 'hero', true)}}" webp="{{true}}" mode="aspectFill" data-fade-key="{{index === 0 ? 'kb' : ''}}" bindload="onImgFadeLoad" />
     </view>
-    <image wx:elif="{{ info.imgUrl }}" lazy-load="true" class="cy-img-fade {{imgOn.cv ? 'cy-img-fade--on' : ''}}" src="{{ info.imgUrl }}" mode="aspectFill" data-fade-key="cv" bindload="onImgFadeLoad" />
+    <image wx:elif="{{ info.imgUrl }}" lazy-load="true" class="cy-img-fade {{imgOn.cv ? 'cy-img-fade--on' : ''}}" src="{{ img.fit(info.imgUrl, imgCtx, 'hero', true) }}" webp="{{true}}" mode="aspectFill" data-fade-key="cv" bindload="onImgFadeLoad" />
     <view wx:else class="cy-cover-fb" aria-hidden="true"><image class="cy-cover-fb__art" src="/images/cover-route.svg" mode="aspectFit" /></view>
     <!-- CU-M-191:没有封面时这一屏原本只有那张放大的黑白路线画 + 一枚白色下滑箭头,
          整屏一个字都没有,玩家从工作台打开预览会当成页面没加载出来。商家版
@@ -94,11 +94,11 @@
     <view class="det1 dt" id="heroTop">
       <swiper class="bgt-swiper dt__trk cy-img-ph" circular="{{true}}" bindchange="onHeroSwipe">
         <swiper-item wx:if="{{!img.list(info.imgArr).length}}">
-          <image wx:if="{{img.first(info.imgUrl)}}" src="{{img.first(info.imgUrl)}}" mode="aspectFill" class="bgt cy-img-fade {{imgOn.hc ? 'cy-img-fade--on' : ''}}" data-fade-key="hc" bindload="onImgFadeLoad" />
+          <image wx:if="{{img.first(info.imgUrl)}}" src="{{img.fit(img.first(info.imgUrl), imgCtx, 'hero', true)}}" webp="{{true}}" mode="aspectFill" class="bgt cy-img-fade {{imgOn.hc ? 'cy-img-fade--on' : ''}}" data-fade-key="hc" bindload="onImgFadeLoad" />
           <view wx:else class="bgt cy-cover-fb" aria-hidden="true"><image class="cy-cover-fb__art" src="/images/cover-route.svg" mode="aspectFit" /></view>
         </swiper-item>
         <swiper-item wx:for="{{img.list(info.imgArr)}}" wx:key="index">
-          <image src="{{item}}" mode="aspectFill" class="bgt cy-img-fade {{imgOn['h' + index] ? 'cy-img-fade--on' : ''}}" data-fade-key="h{{index}}" bindload="onImgFadeLoad" />
+          <image src="{{img.fit(item, imgCtx, 'hero', true)}}" webp="{{true}}" mode="aspectFill" class="bgt cy-img-fade {{imgOn['h' + index] ? 'cy-img-fade--on' : ''}}" data-fade-key="h{{index}}" bindload="onImgFadeLoad" />
         </swiper-item>
       </swiper>
       <view class="dt__shade"></view>
@@ -205,7 +205,7 @@
                   data-key="{{card.key}}" bindtap="onChapterCardTap" hover-class="cy-pressed" hover-stay-time="80"
                   aria-role="button" aria-label="{{card.name}}" aria-expanded="{{openChapterKey === card.key}}">
                   <view class="item">
-                    <image lazy-load="true" src="{{ card.img }}" mode="aspectFill" class="pic" />
+                    <image lazy-load="true" src="{{ img.fit(card.img, imgCtx, 'half', true) }}" webp="{{true}}" mode="aspectFill" class="pic" />
                     <view class="item-txt">
                       <view class="tit ep1">{{ card.name }}</view>
                       <view class="david_mbxi" wx:if="{{card.meta}}">
@@ -367,7 +367,7 @@
           <view class="det-type">人物</view>
           <scroll-view class="castrow" scroll-x enhanced show-scrollbar="{{false}}">
             <view class="castrow__i" wx:for="{{castRow}}" wx:key="id">
-              <image wx:if="{{item.face.url}}" class="castrow__face" src="{{item.face.url}}" mode="aspectFill" lazy-load="true" />
+              <image wx:if="{{item.face.url}}" class="castrow__face" src="{{img.fit(item.face.url, imgCtx, 'avatar', true)}}" webp="{{true}}" mode="aspectFill" lazy-load="true" />
               <view wx:else class="castrow__face castrow__face--i" style="background:{{item.face.color}}">{{item.face.initial}}</view>
               <text class="castrow__n">{{item.name}}</text>
               <text class="castrow__s" wx:if="{{item.identity}}">{{item.identity}}</text>
@@ -378,7 +378,7 @@
         <view class="story-cards {{docked ? 'is-docked' : ''}}" wx:if="{{storyCards.length}}">
           <view class="story-cc {{openChapter === index || item.locked ? 'is-open' : ''}}{{item.locked ? ' is-locked' : ''}}" style="{{tabRun ? 'transition-delay: 0s, ' + (300 + index * 80) + 'ms, ' + (300 + index * 80) + 'ms;' : ''}}" wx:for="{{storyCards}}" wx:key="index" data-i="{{index}}" bindtap="onChapterCard"
                 aria-role="button" aria-label="{{item.label}} {{item.title}}，{{item.locked ? '未解锁，点按解锁' : (openChapter === index ? '收起' : '展开')}}" hover-class="cy-pressed" hover-stay-time="80">
-            <image wx:if="{{item.img}}" class="story-cc__img" src="{{item.img}}" mode="aspectFill" lazy-load="true" />
+            <image wx:if="{{item.img}}" class="story-cc__img cy-img-fade {{imgOn['sc' + index] ? 'cy-img-fade--on' : ''}}" src="{{img.fit(item.img, imgCtx, 'card', true)}}" webp="{{true}}" mode="aspectFill" lazy-load="true" data-fade-key="sc{{index}}" bindload="onImgFadeLoad" />
             <view class="story-cc__blur"></view><view class="story-cc__sh"></view>
             <view class="story-cc__hd"><text class="story-cc__k" wx:if="{{item.label}}">{{item.label}}</text><text class="story-cc__t">{{item.title}}</text></view>
             <view class="story-cc__chev"><cy-icon name="{{item.locked ? 'lock' : 'chevron-right'}}" size="28" /></view>
@@ -446,7 +446,7 @@
                 data-latitude="{{ node.latitude }}" data-longitude="{{ node.longitude }}" hover-class="cy-pressed" hover-stay-time="80">
                 <view class="xh">{{ node.seq || nodeIndex+1 }}</view>
                 <image class="item-pic" lazy-load="true"
-                  src="{{ node.registrationMerchantList && node.registrationMerchantList.length > 0 ? img.first(node.registrationMerchantList[0].picUrl) : (img.first(node.imgUrl) || img.first(info.imgUrl)) }}"
+                  src="{{ img.fit(node.registrationMerchantList && node.registrationMerchantList.length > 0 ? img.first(node.registrationMerchantList[0].picUrl) : (img.first(node.imgUrl) || img.first(info.imgUrl)), imgCtx, 'thumb', true) }}" webp="{{true}}"
                   mode="aspectFill" wx:if="{{ (node.registrationMerchantList && node.registrationMerchantList.length > 0) || img.first(node.imgUrl) || img.first(info.imgUrl) }}" />
                 <view class="item-pic item-pic--blank" wx:else></view>
                 <view class="node-card-foot">
@@ -524,7 +524,7 @@
     <text class="bsheet__h">自玩门票</text>
     <text class="bsheet__sub">{{selfPlayValidText}}，不用选场次</text>
     <view class="hticket">
-      <image class="hticket__im" src="{{(coverImages && coverImages[0]) || info.imgUrl}}" mode="aspectFill" />
+      <image class="hticket__im" src="{{img.fit((coverImages && coverImages[0]) || info.imgUrl, imgCtx, 'half', true)}}" webp="{{true}}" mode="aspectFill" />
       <view class="hticket__perf"></view>
       <view class="hticket__in"><text class="hticket__k">城瘾 · 主题门票</text><text class="hticket__b">{{info.name}}</text><text class="hticket__p">{{buyOpts[buySel].priceText}}</text><text class="hticket__u">{{buyOpts[buySel].name}}</text></view>
       <view class="hticket__holo"></view><view class="hticket__glare"></view>

@@ -692,3 +692,4 @@ page {
 .v3-locprompt__acts { display: flex; gap: var(--cy-space-3); margin-top: var(--cy-space-2); }
 .v3-locprompt__btn { flex: 1; min-height: 88rpx; display: flex; align-items: center; justify-content: center; border-radius: var(--cy-comp-btn-radius); font-size: var(--cy-type-body); font-weight: 600; background: var(--cy-color-bg-surface); color: var(--cy-color-text-primary); }
 .v3-locprompt__btn--p { background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); }
+.v3--reduced-motion .cy-img-fade { transition: none; } /* 2026-11-21:App 内减少动效时卡片封面直接落地 */

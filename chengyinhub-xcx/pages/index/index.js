@@ -1,5 +1,5 @@
 const modal = require('../../utils/modal.js'); const pageMotion = require('../../utils/page-motion.js');
-const cyLoading = require('../../utils/loading.js');
+const cyLoading = require('../../utils/loading.js'); const imageUrl = require('../../utils/image-url.js'); const imgFade = require('../../utils/img-fade.js');
 const cyToast = require('../../utils/toast.js'); function openAddress() { return require('../../utils/open-address.js') }
 const { readPageStyle } = require('../../utils/font-scale.js');
 const { toTimestamp } = require('../../utils/datetime');
@@ -190,7 +190,15 @@ function buildRecoCardStyles(count, current, target, progress) {
 
 // feed/卡片多图:发布页(publish/fabu)写入的 imgArr 与章节同为 "," 分隔，历史数据也有 ";"。
 // 两种分隔符都吃，避免把整串 "a.jpg,b.jpg" 当成一个坏 URL。
-function decorateImgs(list) {
+// 2026-11-21:卡片封面按显示槽位出缩略图(附近卡是半宽,其余整宽);imgList 仍是原图,预览/分享照旧。
+function sizeCovers(list, slot) {
+  if (!Array.isArray(list)) return list;
+  return list.map(function (item) {
+    return item && item.cover ? Object.assign({}, item, { cover: imageUrl.sized(item.cover, slot, { webp: true }) }) : item;
+  });
+}
+
+function decorateImgs(list, slot) {
   // 首页五类列表共用这条图片消费者链：
   // 统一拆分逗号/分号格式，避免整串落成一个坏 URL；
   // 统一补全后端相对路径，附近活动不再出现有数据无图；
@@ -202,10 +210,10 @@ function decorateImgs(list) {
   };
 
   // 页面入口只注入 URL 规则，不复制纯函数里的卡片判定。
-  return decorateFeedCards(
+  return sizeCovers(decorateFeedCards(
     list,
     normalizeImage,
-  );
+  ), slot || 'card');
 }
 
 Page({
@@ -213,6 +221,7 @@ Page({
    * 页面的初始数据
    */
   data: {
+    imgOn: {}, // 2026-11-21:卡片封面在占位底色上淡入(utils/img-fade.js)
     locationPrompt: null,
     // 下拉刷新转圈态(scroll-view refresher)
     refreshing: false,
@@ -856,10 +865,10 @@ Page({
       return {
         id: item.id,
         name: item.name,
-        cover: item.cover || item.imgUrl,
+        cover: item.cover || imageUrl.sized(item.imgUrl, 'card', { webp: true }),
         tags: tags,
         clubLabel: item.clubName || item.merchantName || tags[0] || '',
-        clubAvatar: item.clubAvatar || item.merchantAvatar || item.cover,
+        clubAvatar: imageUrl.sized(item.clubAvatar || item.merchantAvatar, 'avatar', { webp: true }) || item.cover,
         statusLabel: '',
         betaFlag: item.betaFlag == 1 ? 1 : 0,
         metaLine: metaParts.join(' · ') || item.addressName || '',
@@ -998,6 +1007,7 @@ Page({
     if (id) openScene('play-activity-detail', { id });
   },
 
+  onImgFadeLoad(e) { imgFade.onImgFadeLoad.call(this, e) },
   goTopic: function (e) {
     wx.navigateTo({
       url: '/pages/topic/index/index?id=' + e.currentTarget.dataset.id,
@@ -1210,7 +1220,7 @@ Page({
           }
   
           list = that.processTopicDate(list);
-          list = decorateImgs(list);   // 多图拆分 imgArr → imgList/cover
+          list = decorateImgs(list, listName === 'nearbyActivityList' ? 'half' : 'card');   // 多图拆分 imgArr → imgList/cover
 
           const dataObj = {};
           dataObj[listName] = list;

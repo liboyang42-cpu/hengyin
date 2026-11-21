@@ -79,7 +79,7 @@ test('封面卡左上类型与左下标签消费独立字段', () => {
 
 test('附近活动和即将上线都以真实图片作为卡片主视觉', () => {
   const wxml = read('pages/index/index.wxml');
-  assert.match(wxml, /class="v3-nearby-bg"[^>]*src="\{\{item\.cover/);
+  assert.match(wxml, /class="v3-nearby-bg[ "][^>]*src="\{\{item\.cover/);
   assert.match(wxml, /class="v3-upreview-bg"[^>]*src="\{\{item\.cover/);
   assert.match(wxml, /class="v3-upreview-mask"/);
 });

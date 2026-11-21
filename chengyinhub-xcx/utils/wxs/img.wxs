@@ -28,8 +28,45 @@ var list = function (s) {
 var one = function (s) {
   return s ? secure('' + s) : '';
 };
+// 按显示槽位出图(与 utils/image-url.js sized() 同一规则,tests/unit/image-url.test.js 对拍):
+// 本桶 v1 签名原图 → {base}/api/common/img/{档位宽}/{orig|webp}/upload/<文件>?<原签名>;其余原样(只升 https)。
+// ctx = 页面 data 里的 imgCtx(utils/image-url.js wxsContext():{ base, dpr }),缺省时不改写。
+var WIDTHS = [160, 240, 320, 480, 640, 750, 960, 1080, 1280];
+var SLOTS = { hero: 375, card: 343, half: 172, thumb: 96, avatar: 48, preview: 1280 };
+var SIGNED_OSS = getRegExp('^https://chengyin-oss\\.oss-cn-shanghai\\.aliyuncs\\.com/upload/([0-9a-f]{32}\\.(?:jpg|jpeg|png))\\?([^#]*)$');
+var signedQuery = function (q) {
+  var pairs = ('' + q).split('&');
+  if (pairs.length !== 3) return false;
+  var seen = {};
+  for (var i = 0; i < pairs.length; i++) {
+    var at = pairs[i].indexOf('=');
+    if (at <= 0 || at === pairs[i].length - 1) return false;
+    var name = pairs[i].slice(0, at);
+    if (name !== 'Expires' && name !== 'OSSAccessKeyId' && name !== 'Signature') return false;
+    if (seen[name]) return false;
+    seen[name] = true;
+  }
+  return true;
+};
+var fit = function (s, ctx, slot, webp) {
+  if (!s) return '';
+  var url = secure(('' + s).trim());
+  if (!ctx || !ctx.base) return url;
+  var m = url.match(SIGNED_OSS);
+  if (!m || !signedQuery(m[2])) return url;
+  var css = typeof slot === 'number' ? slot : SLOTS[slot];
+  if (!(css > 0)) return url;
+  var dpr = ctx.dpr > 0 ? ctx.dpr : 2;
+  var px = Math.ceil(css * dpr);
+  var width = WIDTHS[WIDTHS.length - 1];
+  for (var i = 0; i < WIDTHS.length; i++) {
+    if (WIDTHS[i] >= px) { width = WIDTHS[i]; break; }
+  }
+  return ('' + ctx.base).replace(getRegExp('/+$'), '') + '/api/common/img/' + width + '/' + (webp ? 'webp' : 'orig') + '/upload/' + m[1] + '?' + m[2];
+};
 module.exports = {
   first: first,
   list: list,
-  one: one
+  one: one,
+  fit: fit
 };
