@@ -12,20 +12,18 @@
     <!-- 01 准备 · 开局不套白框:这一屏只有两个数,框住反而像一段说明文字 -->
     <block wx:if="{{phase === 'intro'}}">
       <view class="sw__mid sw__mid--intro">
-        <view class="sw__eyebrow pe pe--blur" style="--pe-d:.05s">{{eyebrow}}</view>
+        <view class="sw__eyebrow pe pe--blur" style="--pe-d:.05s;--pe-dur:.2s">{{eyebrow}}</view>
         <view class="sw__lbl sw__lbl--target">目标</view>
-        <view class="sw__target pe pe--roll" style="--pe-d:.2s">{{targetText}}<text class="sw__unit">秒</text></view>
+        <view class="sw__target pe pe--roll" style="--pe-d:.1s;--pe-dur:.2s">{{targetText}}<text class="sw__unit">秒</text></view>
         <view class="sw__lbl sw__lbl--tol">误差</view>
-        <view class="sw__tol pe pe--roll" style="--pe-d:.35s">±{{tolText}}<text class="sw__unit2">秒</text></view>
-        <view class="sw__tip pe pe--up" style="--pe-d:.7s">
-          <view>本机测量读数，仅供娱乐参考。</view>
-          <view>切到后台会中断本机计时，返回后请重新开始。</view>
+        <view class="sw__tol pe pe--roll" style="--pe-d:.1s;--pe-dur:.2s">±{{tolText}}<text class="sw__unit2">秒</text></view>
+        <view class="sw__tip pe pe--up" style="--pe-d:.1s;--pe-dur:.2s">
           <view wx:if="{{rewardNote}}">{{rewardNote}}</view>
         </view>
       </view>
       <view class="sw__foot">
-        <view class="sw__btn pe pe--up" style="--pe-d:.85s" bindtap="onStart" aria-role="button" aria-label="开始"
-              hover-class="sw__btn--press" hover-stay-time="80">开始</view>
+        <view class="g-btn pe pe--up" style="--pe-d:.1s;--pe-dur:.2s" bindtap="onStart" aria-role="button" aria-label="开始"
+              hover-class="g-btn--press" hover-stay-time="80">开始</view>
       </view>
     </block>
 
@@ -37,7 +35,6 @@
         <!-- 暂停卡片放在内容区里,不和退出 / 胶囊挤导航那一行 -->
         <view class="sw__hat" wx:if="{{phase === 'paused'}}">
           <view class="sw__hat-t">已暂停</view>
-          <view class="sw__hat-s">数字不会放出来</view>
         </view>
         <view class="sw__read {{phase === 'paused' ? 'sw__mid--dim' : ''}}">
           <view class="sw__miss" wx:if="{{phase === 'over'}}"><view class="sw__miss-i"><cy-icon name="close-sm" size="28" /></view>没停准</view>
@@ -45,7 +42,7 @@
           <!-- 盲停:1 秒后只藏走动的数字,目标和容差一直挂着 -->
           <view class="sw__giant" wx:if="{{!hidden}}">{{big}}</view>
           <view class="sw__dash" wx:else>—— · ——</view>
-          <view class="sw__pill">目标 {{targetText}} 秒 · 容差 ±{{tolText}} 秒</view>
+          <view class="sw__pill">目标 {{targetText}} 秒 · 允许差 ±{{tolText}} 秒</view>
           <block wx:if="{{phase === 'over'}}">
             <view class="sw__dev">{{dev}}</view>
             <view class="sw__cap" wx:if="{{left > 0}}">还有 {{left}} 次机会</view>
@@ -56,8 +53,8 @@
 
       <!-- 没停准还有机会:底部换成「再来一局」,暂停在这一屏已经没有意义 -->
       <view class="sw__foot" wx:if="{{phase === 'over'}}">
-        <view class="sw__btn" bindtap="onStop" aria-role="button" aria-label="再来一局"
-              hover-class="sw__btn--press" hover-stay-time="80">再来一局</view>
+        <view class="g-btn" bindtap="onStop" aria-role="button" aria-label="再来一局"
+              hover-class="g-btn--press" hover-stay-time="80">再来一局</view>
       </view>
       <!-- 底部计时跟着一起藏 —— 大数字藏了、这里还在走秒,等于没藏 -->
       <view class="sw__bar" wx:else>

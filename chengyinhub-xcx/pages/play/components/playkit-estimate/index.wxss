@@ -65,11 +65,14 @@
 }
 .es__ind { height: 336rpx; }
 
+/* 单位贴着中间那个数,基线对齐(原来单独一行落在左下角,和数字分了家) */
+.es__num { display: block; white-space: nowrap; }
 .es__unit {
-  font-size: var(--cy-type-body);
-  font-weight: 500;
+  margin-left: 12rpx;
+  font-size: var(--cy-type-section-title);
+  font-weight: 700;
+  letter-spacing: 0;
   color: var(--sub);
-  letter-spacing: .22em;
 }
 /* 判定就是一行字,不套底色块 —— 原型 .verdict-line 是裸的一行。
    给它一个灰底会把「差多少」做成一个可点的东西,而它只是结果。 */

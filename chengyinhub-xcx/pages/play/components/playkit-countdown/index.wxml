@@ -11,14 +11,16 @@
 
     <!-- 眉标和数字都压在油面上,所以都走差值混合:
          露在白底上算出来是黑的,泡在油里自动翻白。这样只需要一层文字。 -->
-    <view class="oc__k pe pe--blur" style="--pe-d:.1s">{{kicker}}</view>
-    <view class="oc__n pe pe--flap" style="--pe-d:.25s">{{clock}}</view>
+    <view class="oc__k pe pe--blur" style="--pe-d:.05s;--pe-dur:.2s">{{kicker}}</view>
+    <view class="oc__n pe pe--blur" style="--pe-d:.05s;--pe-dur:.2s">{{clock}}</view>
     <view class="oc__done" wx:if="{{finished && doneText}}">{{doneText}}</view>
 
-    <view class="oc__b {{running ? 'oc__b--busy' : ''}} pe pe--up" style="--pe-d:.75s" bindtap="onStart"
-          aria-role="button" aria-label="{{running ? '倒计时进行中' : '开始倒计时'}}"
-          hover-class="oc__b--press" hover-stay-time="80">
-      {{running ? '静默中' : (finished ? '再来一次' : '开始')}}
-    </view>
+  </view>
+
+  <!-- 主按钮与其它玩法同一颗 .g-btn,排在台面后面:整屏贴底,内嵌跟在油面那块下面 -->
+  <view class="g-btn {{running ? 'g-btn--disabled' : ''}}" bindtap="onStart"
+        aria-role="button" aria-label="{{running ? '倒计时进行中' : '开始倒计时'}}" aria-disabled="{{running}}"
+        hover-class="g-btn--press" hover-stay-time="80">
+    {{running ? '计时中' : (finished ? '再来一次' : '开始')}}
   </view>
 </cy-play-stage>

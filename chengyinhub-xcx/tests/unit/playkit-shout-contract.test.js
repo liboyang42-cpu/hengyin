@@ -191,7 +191,7 @@ test('喊满秒数:判一次,交的是 submit + { heldMs },并且停表停麦', 
   assert.ok(submits[0].detail.heldMs >= 5000 && submits[0].detail.heldMs <= 5300,
     'payload 只有毫秒数:实得 ' + JSON.stringify(submits[0].detail));
   assert.ok(vm.events.includes('rec.stop'), '用完即弃:停麦');
-  assert.match(vm.stageCalls.join('|'), /本机相对阈值持续过线 5 秒/);
+  assert.match(vm.stageCalls.join('|'), /连续喊满 5 秒/);
 });
 
 test('帧间断流中断测量，后台大间隔不送分', () => {
@@ -231,10 +231,11 @@ test('切后台中止:表停麦停,回来不许接着攒', () => {
   assert.ok(vm.events.includes('rec.stop'));
 });
 
-test('本机相对阈值文案与舒适音量提示', () => {
-  assert.match(SOURCE, /本机相对阈值持续过线/);
-  assert.match(WXML, /过线了，保持舒适音量/);
-  assert.match(WXML, /不适请停止/);
+test('屏上只说人话:过线时一句「别停」,安全提示只留一句短话,不出现相对音量 / 分贝这类读数说明', () => {
+  assert.match(SOURCE, /stage\.win\('连续喊满 '/);
+  assert.match(WXML, /就是这样，别停/);
+  assert.equal((WXML.match(/别对着人喊/g) || []).length, 1);
+  assert.doesNotMatch(WXML, /相对音量|分贝|使用舒适音量/);
 });
 
 test('wxss:只有 transition 没有 keyframes,无 tag 选择器', () => {

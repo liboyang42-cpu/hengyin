@@ -124,7 +124,7 @@ const methods = {
     if (kind === 'win' || !kit) { if (this.data.pvStep >= this.data.pvSteps.length - 1) this.closePreview(); else this.pvNext(); return; }
     // 玩法组件的「已提交」是它自己的状态,卸掉重挂才回到开局那一屏(判定屏盖着,看不到这一下)
     this._pvTypeStartedAt = 0;
-    this.setData({ pvKit: null }, () => this.setData({ pvKit: Object.assign({}, kit, { passed: false, attempts: 0, startConfirmed: false, result: null, receipt: null, selectedKey: '' }) }));
+    this.setData({ pvKit: null, pvDone: false }, () => this.setData({ pvKit: Object.assign({}, kit, { passed: false, attempts: 0, startConfirmed: false, result: null, receipt: null, selectedKey: '' }, kit.type === 'hidden' ? { targets: (kit.targets || []).map(t => ({ id: t.id, label: t.label })) } : null) }));
   },
   _takeR5Snapshot(kind) { this['_r5Snapshot_' + kind] = clone({ advanced: this.data.advanced, formData: this.data.formData, dirty: this.data.dirty || false, gameKey: this.data.gameKey, gameCurrent: this.data.gameCurrent, gameSection: this.data.gameSection, timerAvailable: this.data.timerAvailable, presentChoice: this.data.presentChoice, presentInlineLocked: this.data.presentInlineLocked, presentLockReason: this.data.presentLockReason, pvMethodLabel: this.data.pvMethodLabel, pvMethodIconName: this.data.pvMethodIconName, participationChanged: !!this._r5ParticipationChanged }); },
   _restoreR5Snapshot(kind) { const saved = this['_r5Snapshot_' + kind]; if (!saved) return; this._r5ParticipationChanged = saved.participationChanged; delete saved.participationChanged; this._setFormState(saved, null, { pristine: true }); delete this['_r5Snapshot_' + kind]; },

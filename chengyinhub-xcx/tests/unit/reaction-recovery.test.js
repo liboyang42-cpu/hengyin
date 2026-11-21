@@ -94,7 +94,7 @@ for(const rounds of [1,2,3,5]) test(`normal ${rounds} round session: units, exac
   for(let i=0;i<rounds;i++) {
     h.tap();assert.equal(h.component.data.unit,'');assert.equal(h.component.data.phase,'wait');
     h.tick(1400);assert.equal(h.component.data.unit,'');h.tick(values[i]);h.tap();
-    assert.equal(h.component.data.unit,'毫秒 · 本机测量');
+    assert.equal(h.component.data.unit,'毫秒');
     if(i<rounds-1)assert.match(h.component.data.sub,new RegExp(`${i+1}/${rounds}`));
   }
   assert.equal(h.component.data.phase,'done');assert.match(h.component.data.sub,new RegExp(`${rounds} 轮`));
@@ -131,7 +131,7 @@ test('late stage verdict while hidden cannot report a local result',()=>{
 test('view explains local measurement, consumes numeric unit separately and does not promise anti-cheat or rewards',()=>{
   const view=fs.readFileSync(path.join(ROOT,FILE+'.wxml'),'utf8');
   assert.match(view,/wx:if="{{unit}}"[^>]*>{{unit}}/);
-  assert.match(view,/本机.*屏幕变绿.*点击.*时间差/);
+  assert.doesNotMatch(view,/本机|时间差/);   // 2026-11-21 业主:不留系统说明行
   assert.doesNotMatch(view,/防作弊|保障奖励|保证奖励|三轮/);
 });
 test('synchronous hide from real stage verdict prevents a late submit from the interrupted call stack',()=>{
