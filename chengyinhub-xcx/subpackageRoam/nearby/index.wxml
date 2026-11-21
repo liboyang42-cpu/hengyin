@@ -218,7 +218,7 @@
           </view>
           <view class="pc__nm"><text class="pc__nmb">{{poiCard.title}}</text><text class="pc__nms" wx:if="{{poiCard.subName}}">{{poiCard.subName}}</text></view>
         </view>
-        <view class="pc__meta"><text class="pc__ml" wx:if="{{poiCard.metaLine}}">{{poiCard.metaLine}}</text><text class="pc__ml"><text class="pc__st" wx:if="{{poiCard.metaStrong}}">{{poiCard.metaStrong}} · </text>点卡片看详情</text></view>
+        <view class="pc__meta"><text class="pc__ml" wx:if="{{poiCard.metaLine}}">{{poiCard.metaLine}}</text><text class="pc__ml" wx:if="{{poiCard.metaStrong}}"><text class="pc__st">{{poiCard.metaStrong}}</text></text></view>
       </view>
       <view class="pc__b">
         <view class="pb__hd"><text class="pb__t">{{poiCard.title}}</text><view class="pb__x" bindtap="closePoiCard" aria-role="button" aria-label="收起" hover-class="cy-pressed" hover-stay-time="80"><view class="pb__xi"></view></view></view>

@@ -5,17 +5,20 @@ const mv = require('../../utils/market-view.js')
 const { enter, beats } = require('../../../utils/page-motion.js')
 const { safeDecode } = require('../../../utils/safe-decode.js')
 
+// 领取码缺失或无法识别 = 链接本身坏了,与其它缺参页同一个缺参态
+const MISSING_LINK_CODES = { TOKEN_REQUIRED: true, GIFT_TOKEN_INVALID: true }
+
 Page({
   data: {
     statusBarHeight: app.globalData.statusBarHeight,
     navBarHeight: app.globalData.navBarHeight,
-    state: 'ready', // ready | claimed | failed | unknown
+    state: 'ready', // ready | claimed | failed | unknown | missing
     reason: '',
     claiming: false
   },
   onLoad(options) {
     this._token = options && options.token ? safeDecode(options.token) : ''
-    if (!this._token) this.setData({ state: 'failed', reason: mv.claimReasonText('TOKEN_REQUIRED') })
+    if (!this._token) this.setData({ state: 'missing' })
     // 徽章弹入、光圈循环外扩:transition 分段重放,减少动态效果时都不播(光圈停在隐身)
     enter(this, 'gfIn')
     this._glow = beats(this, 'gfGlow', [[0, 34], [1, 2366]], { rest: 1 })
@@ -35,7 +38,9 @@ Page({
           this.setData({ claiming: false, state: 'claimed' })
           return
         }
-        this.setData({ claiming: false, state: 'failed', reason: mv.claimReasonText(res && res.reasonCode) })
+        const code = res && res.reasonCode
+        if (MISSING_LINK_CODES[code]) { this.setData({ claiming: false, state: 'missing' }); return }
+        this.setData({ claiming: false, state: 'failed', reason: mv.claimReasonText(code) })
       },
       fail: () => this.setData({ claiming: false, state: 'unknown' })
     })

@@ -158,9 +158,9 @@ test('R30 切换章节只关闭视频，选择章节仍保留真实旁白的真�
   assert.equal(inferActionClass('onPickChapter',
     expandHandlerBody('onPickChapter', stopped, null, { modules: true }), helpers), 'external')
   for (const controls of [ledger.controls, readCurrentLedger().controls]) {
-    const tools = controls.find(item => item.id === 'pages/play/index.wxml:382:bindtap:openStackOrChaptersFromTools:65')   // 2026-11-21 故事页外观:站点页脚移进章末流(+1 行注释),381 → 382(仅位移)   // 2026-11-19 角色 Cast v1:故事流段内页边名字 / 配音行 / 行内选项三个 bindtap、工具菜单「人物表」一行,371 → 381、序号 61 → 65(仅位移)   // 2026-11-19 CG-01-P2-7:工具菜单加「证据卡」一行(+2 行),369 → 371、序号 60 → 61(仅位移)   // 2026-11-18 code-d:故事流延伸阅读卡(+1 个 bindtap)与设置抽屉旁白行增行,357 → 369、序号 59 → 60(仅位移)   // 2026-11-12 DEC-UI-1 D-38:删紧急求助行,354 → 353、序号 57 → 56(仅位移); 2026-11-11 f-play2:队长五种行提到菜单最前(+3 行说明注释),选章入口 323 → 354、序号 52 → 57(仅位移); l-play:顶部多一行 include,321 → 322;f-compliance 工具菜单加「紧急求助」一行,322 → 323、序号 51 → 52(仅位移)
+    const tools = controls.find(item => item.id === 'pages/play/index.wxml:382:bindtap:openStackOrChaptersFromTools:64')   // 2026-11-21 故事页外观:站点页脚移进章末流(+1 行注释),381 → 382(仅位移)   // 2026-11-21 玩法外壳:故事流「继续」/「继续故事」两颗 bindtap 并成一颗淡入钮,序号 65 → 64(仅位移)   // 2026-11-19 角色 Cast v1:故事流段内页边名字 / 配音行 / 行内选项三个 bindtap、工具菜单「人物表」一行,371 → 381、序号 61 → 65(仅位移)   // 2026-11-19 CG-01-P2-7:工具菜单加「证据卡」一行(+2 行),369 → 371、序号 60 → 61(仅位移)   // 2026-11-18 code-d:故事流延伸阅读卡(+1 个 bindtap)与设置抽屉旁白行增行,357 → 369、序号 59 → 60(仅位移)   // 2026-11-12 DEC-UI-1 D-38:删紧急求助行,354 → 353、序号 57 → 56(仅位移); 2026-11-11 f-play2:队长五种行提到菜单最前(+3 行说明注释),选章入口 323 → 354、序号 52 → 57(仅位移); l-play:顶部多一行 include,321 → 322;f-compliance 工具菜单加「紧急求助」一行,322 → 323、序号 51 → 52(仅位移)
     // 2026-11-10 qx-s2 staging 合并树:play/index.wxml 各线增行后选章行 525 → 530(仅行号位移,同一 bindtap 与序号)
-    const pick = controls.find(item => item.id === 'pages/play/index.wxml:577:bindtap:onPickChapter:87')   // 2026-11-21 故事页外观同上,576 → 577(仅位移)   // 2026-11-19 角色 Cast v1 同上,566 → 576、序号 83 → 87(仅位移)   // 2026-11-19 CG-01-P2-7 同上,564 → 566、序号 82 → 83(仅位移)   // 2026-11-18 code-d:延伸阅读卡 / 旁白行 / 店铺语音「播放」增行,547 → 564、序号 80 → 82(仅位移)   // 2026-11-13 play-ui-1113c:本局档案站名改列表,结局段 +3 行,540 → 543(仅行号位移)   // 2026-11-12 DEC-UI-1 D-38:删紧急求助行,541 → 540、序号 78 → 77(仅位移)   // 2026-11-11 x-fix2:卡包 / 开场 / 加载遮罩补返回键,540 → 541、序号 77 → 78(仅位移)   // 2026-11-11 f-play2:工具菜单加 3 行注释,537 → 540(仅位移); 2026-11-11 f-play V3-08:选章弹窗挪出 allDone 守卫块并加一行说明注释,535 → 537(仅位移,同一 bindtap 与序号)
+    const pick = controls.find(item => item.id === 'pages/play/index.wxml:577:bindtap:onPickChapter:86')   // 2026-11-21 故事页外观同上,576 → 577(仅位移)   // 2026-11-21 玩法外壳 同上,序号 87 → 86(仅位移)   // 2026-11-19 角色 Cast v1 同上,566 → 576、序号 83 → 87(仅位移)   // 2026-11-19 CG-01-P2-7 同上,564 → 566、序号 82 → 83(仅位移)   // 2026-11-18 code-d:延伸阅读卡 / 旁白行 / 店铺语音「播放」增行,547 → 564、序号 80 → 82(仅位移)   // 2026-11-13 play-ui-1113c:本局档案站名改列表,结局段 +3 行,540 → 543(仅行号位移)   // 2026-11-12 DEC-UI-1 D-38:删紧急求助行,541 → 540、序号 78 → 77(仅位移)   // 2026-11-11 x-fix2:卡包 / 开场 / 加载遮罩补返回键,540 → 541、序号 77 → 78(仅位移)   // 2026-11-11 f-play2:工具菜单加 3 行注释,537 → 540(仅位移); 2026-11-11 f-play V3-08:选章弹窗挪出 allDone 守卫块并加一行说明注释,535 → 537(仅位移,同一 bindtap 与序号)
     //   // l-play:include + 地点卡 / 结局段增行,530 → 534;f-compliance 紧急求助行 534 → 535、序号 76 → 77(仅位移)
     assert.ok(tools)
     assert.equal(tools.actionClass, 'state')
@@ -1319,9 +1319,9 @@ test('批准稿控件差分保留草稿双分支与成长中心真实绑定及�
     assert.deepEqual(refusal.targets.primaryApis, [])
   }
   const growth = ledger.controls.filter(item => item.route === 'subpackageP3/pages/growthcenter/index/index')
-  assert.equal(growth.length, 6) // motion-1118 v2:头像、徽章图标各一处 bindload 加载淡入
+  assert.equal(growth.length, 5) // motion-1118 v2:头像、徽章图标各一处 bindload 加载淡入;徽章行直接显示获得日期,不再有展开动作
   assert.deepEqual(growth.map(item => `${item.control.event}:${item.control.handler}`).sort(),
-    ['bind:cta:onLoginGrowth', 'bindload:onImgFadeLoad', 'bindload:onImgFadeLoad', 'bindtap:goExplore', 'bindtap:goLeaderboard', 'bindtap:onBadgeTap'])
+    ['bind:cta:onLoginGrowth', 'bindload:onImgFadeLoad', 'bindload:onImgFadeLoad', 'bindtap:goExplore', 'bindtap:goLeaderboard'])
   assert.equal(growth.some(item => ['loadOverview', 'retryRank'].includes(item.control.handler)), false)
 })
 

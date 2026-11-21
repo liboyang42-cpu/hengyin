@@ -87,7 +87,7 @@
       <view class="search-actions">
         <cy-btn variant="ghost" class="search-actions__map" bindtap="goMap">
           <cy-icon name="gps" size="32" />
-          在地图上找活动与主题节点
+          在地图上找
         </cy-btn>
       </view>
     </view>

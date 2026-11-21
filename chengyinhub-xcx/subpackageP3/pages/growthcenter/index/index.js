@@ -19,15 +19,15 @@ function initial(name) {
   return name ? String(name).trim().charAt(0) : '?'
 }
 
-// 「获得时刻」的时间一面。后端 selectMemberBadges 下发的是 unlock_time(不带时区的中国时间串),
+// 徽章行直接显示获得日期(没有 unlock_time 就不显示,不写「查看获得时刻」之类的说明)。后端 selectMemberBadges 下发的是 unlock_time(不带时区的中国时间串),
 // 用 chinaParts 锚定后再格式化 —— 直接 new Date().getHours() 在非 +8 环境会整体偏移。
 // ⚠️ 地点一面:member_badge 只有 source_type / source_id,没有任何地点名字段,
 // 所以这里只展示时间,不去凑一个「在某地解锁」的假句子。
-function unlockMoment(value) {
+function unlockDate(value) {
   const p = chinaParts(value)
   if (!p) return ''
   const pad = (n) => (n < 10 ? '0' + n : String(n))
-  return p.year + '年' + p.month + '月' + p.day + '日 ' + pad(p.hours) + ':' + pad(p.minutes)
+  return p.year + '.' + pad(p.month) + '.' + pad(p.day)
 }
 
 function requestGrowthData(url, onFailure) {
@@ -161,7 +161,6 @@ Page({
     scoreText: '—',
     rankLoaded: false,
     badges: [],
-    expandedBadge: '',   // 当前展开「获得时刻」的徽章码,空串=全部收起
     badgeCountText: '0',
     showBadges: false,
     showBadgeEmpty: false,
@@ -251,7 +250,7 @@ Page({
       this._rankLoading = false; this._overviewLoading = false; this._badgeCodes = null
       this.setData({ me: null, rankLoaded: false, scoreText: '—', overviewLoaded: false, badges: [],
         overview: buildGrowthOverview({}), overviewAvailable: {center:false,play:false,completed:false},
-        showBadges: false, showBadgeEmpty: false, expandedBadge: '', badgeAnnouncement: '', celebrationEvent: '',
+        showBadges: false, showBadgeEmpty: false, badgeAnnouncement: '', celebrationEvent: '',
         growthAuthRequired: !owner || owner === '0', growthAccessDenied: false })
     }
     return owner && owner !== '0' ? owner : ''
@@ -464,8 +463,8 @@ Page({
           code: b.badgeCode || name,
           initial: initial(name),
           iconUrl: b.iconUrl || '',
-          // 展开后的「获得时刻」:拿不到 unlock_time 就整块不展示,不填占位符
-          unlockText: unlockMoment(b.obtainTime || b.unlockTime)
+          // 获得日期:拿不到 unlock_time 就不显示,不填占位符
+          unlockText: unlockDate(b.obtainTime || b.unlockTime)
         }
       })
       const newlyUnlocked = hasBadgeSource ? this._trackNewlyUnlocked(badges) : []
@@ -473,13 +472,11 @@ Page({
         : (hadOverview ? 'stale-error' : (successCount > 0 ? 'partial' : 'error'))
       const networkFailure = failedErrors.some(isTransportFailure)
       let nextBadges = this.data.badges
-      let nextExpandedBadge = this.data.expandedBadge
       let nextBadgeCountText = this.data.badgeCountText
       let nextShowBadges = this.data.showBadges
       let nextShowBadgeEmpty = this.data.showBadgeEmpty
       if (hasBadgeSource) {
         nextBadges = badges
-        nextExpandedBadge = ''
         nextBadgeCountText = String(badges.length)
         nextShowBadges = badges.length > 0
         nextShowBadgeEmpty = badges.length === 0
@@ -508,7 +505,6 @@ Page({
         // 第十二轮 k9(p1 N-7):新玩家的足迹四行全是 0 时不画这一节,空的徽章卡已经说明还没开始
         footprintEmpty: allSuccess && (overview.stats || []).every((item) => !Number(item && item.value)),
         badges: nextBadges,
-        expandedBadge: nextExpandedBadge,
         badgeCountText: nextBadgeCountText,
         showBadges: nextShowBadges,
         showBadgeEmpty: nextShowBadgeEmpty,
@@ -518,12 +514,6 @@ Page({
       if (allSuccess) this.setData({ growthAuthRequired: false, growthAccessDenied: false })
       if (typeof done === 'function') done()
     })
-  },
-
-  // 徽章 = 一个「获得时刻」,不是孤立图标(ADA §二F)。点一枚展开它的时刻,再点收起。
-  onBadgeTap(e) {
-    const code = e.currentTarget.dataset.code
-    this.setData({ expandedBadge: this.data.expandedBadge === code ? '' : code })
   },
 
   // 全屏庆祝的接线点(ADA §二F)。这里只负责「算出这次真的新点亮了哪几枚」——

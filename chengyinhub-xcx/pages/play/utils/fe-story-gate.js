@@ -194,14 +194,17 @@ function methods(req) {
     _applyFeStoryBook(book, opts) {
       const o = opts || {};
       const expired = o.expired === true;
+      if (typeof this._noteStationImageContext === 'function') this._noteStationImageContext(book);
       const nodes = book.nodes.map((n, i) => this.normNode(n, i, 2));
+      const chapterCards = this.buildChapterCards({ chapters: book.chapters }, this.data.chapter);
+      if (typeof this._fillStationPhotos === 'function') this._fillStationPhotos([nodes], { chapter: this.data.chapter, chapterCards, topicCover: book.topicCover || '' });
       if (expired) this._playable = false;
       this.setData({ loading: false, emptyTip: '', emptyKind: '', mode: 2, serverMode: 2, modeLabel: '自由探索',
         topicName: book.topicName || this.data.topicName, topicCover: book.topicCover || '',
         storyGate: true, storyOffline: !expired && o.offline === true, storyExpired: expired,
         storyUnlocked: book.storyUnlocked, storyTotal: book.storyTotal,
         nodes, total: nodes.length, doneCount: nodes.filter((n) => n.done).length, packOpen: true, headIn: true,
-        chapterCards: this.buildChapterCards({ chapters: book.chapters }, this.data.chapter) }, () => this.rebuild());
+        chapterCards }, () => this.rebuild());
       return true;
     },
     /**

@@ -6,6 +6,8 @@
 //      收进故事流末尾一行「延伸任务」,点开半屏列出,点一行打开那一站的地点卡。
 // index.js 的 UI 门禁基线按行号登记,新方法都放这里,index.js 只留单行挂钩。
 
+const gameShell = require('./game-shell.js');
+
 const KIT_FULLSCREEN_FROM_CARD = ['album', 'ballshake', 'reaction', 'countdown', 'predict', 'random', 'stopwatch', 'hidden'];
 /* l-play(proto pop-branch):分支剧情在流里也是一张入口卡,点开不是整屏而是居中弹窗(index.wxml 的 playKit.pop) */
 const KIT_POP_FROM_CARD = ['branch'];
@@ -48,6 +50,7 @@ const data = { storyTasks: { show: false, rows: [] } };
 function methods() {
   // 写成 const 对象再返回:台账 / 处理器门禁只扫模块里 `const X = {` 的键
   const api = {
+    ...gameShell.methods(),   // 玩法外壳:整屏抬头 + 引子、回故事流的淡入(utils/game-shell.js)
     /** 入口卡 → 整屏打开同一个玩法(同一局、同一个 kit,不另开会话) */
     expandPlayKit() {
       const pk = this.data.playKit || {};
@@ -61,7 +64,9 @@ function methods() {
       if (!pk.card && !full) return false;
       if (full) this._kitStartFull = '';
       this.setData({ 'playKit.show': false });
+      this._storyCrossFade();   // 外壳:整屏收起,故事流淡入(≤200ms,减弱动态直接出现)
       if (pk.readyForBase && this.data.advancedPlay && this.data.advancedPlay.show) this.continueStoryGame();
+      else this._aimKitBlock(pk.kit && pk.kit.nodeId);   // 没玩完:回到流里这一站那一段,不停在别处
       return true;
     },
     /** openChapterFull 的收尾:有延伸任务就在流末尾放一行入口(一个 .chfull__para,measureChapter 按下标对齐) */
@@ -73,6 +78,14 @@ function methods() {
       const rows = show ? tasks.map((n, i) => ({ nodeId: n.nodeId, name: n.name || '', no: i + 1, img: n.imgUrl || '', imgHidden: !n.imgUrl && !!n.imgHidden, photo: n.photo || '', address: n.address || '', desc: String(n.description || n.story || '').slice(0, 80) })) : [];   // l-play:翻页卡上的一句说明(节点字段原样,没有不出)
       if (rows.length) items.push({ kind: 'tasks', count: rows.length, mood });
       this.setData({ storyTasks: { show: false, rows } });
+    },
+    /** 回到故事流时对准这一站玩法块(块内锚点 chapter-kit-<nodeId>,让出顶栏与渐隐);先清空再设,同值 scroll-into-view 不会再对准 */
+    _aimKitBlock(nodeId) {
+      const id = nodeId != null ? nodeId : this._playKitNodeId;
+      if (id == null || !this.data.chapterFull) return;
+      const anchor = 'chapter-kit-' + id;
+      if (!(this.data.chapterParas || []).some((p) => p.kind === 'kit' && String(p.nodeId) === String(id))) return;
+      this.setData({ chapterGameAnchor: '' }, () => { if (!this._playDisposed && this.data.chapterFull) this.setData({ chapterGameAnchor: anchor }); });
     },
     openStoryTasks() {
       if ((this.data.storyTasks.rows || []).length) this.setData({ 'storyTasks.show': true, extDeck: { idx: 0, flipping: false } });   // l-play:翻页卡从第一张开始

@@ -58,6 +58,8 @@
     </block>
     <view class="ag__pad"></view>
   </scroll-view>
-  <view class="ag__footer" wx:if="{{state}}"><cy-btn variant="primary" disabled="{{!state.readyForBase}}" bindtap="continueBase">{{state.readyForBase ? '继续基础任务' : '先完成上面的玩法'}}</cy-btn></view>
+  <!-- 外壳(2026-11-21):玩的时候底部不再摆一颗灰掉的死按钮(和上面玩法自己的钮抢主按钮);
+       玩完(readyForBase)才从底边升起继续钮(故事流里由页面传「继续故事」)。没玩完时不可见、不可点、读屏跳过。 -->
+  <view class="ag__footer {{state.readyForBase ? 'is-ready' : ''}} {{reducedMotion ? 'ag__footer--still' : ''}}" wx:if="{{state}}" aria-hidden="{{!state.readyForBase}}"><cy-btn variant="primary" disabled="{{!state.readyForBase}}" bindtap="continueBase">{{continueLabel || '继续基础任务'}}</cy-btn></view>
 </view>
 </block>

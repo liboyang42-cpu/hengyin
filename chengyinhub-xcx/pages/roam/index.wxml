@@ -497,7 +497,7 @@
 
 <!-- 底图首帧看门狗兜底:黑屏不再无解释 -->
 <view class="maptip" wx:if="{{mapLoad=='slow'}}" bindtap="onMapRetry" hover-class="cy-pressed" hover-stay-time="80">
-  <text>地图加载异常 · 点击重试</text>
+  <text>地图没加载出来 · 重试</text>
 </view>
 
 <!-- BL-02 静止提示:只说明状态,不改计时;无操作,不可点 -->
@@ -511,7 +511,7 @@
 <view class="maptip maptip--offline maptip--recovery" wx:if="{{(revealWriteUnknown || recoveryError) && mapLoad!='slow'}}" aria-role="alert" aria-live="polite">
   <view class="maptip__act" bindtap="recoverRoam" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="确认漫游记录">
     <cy-icon name="warning" size="24" />
-    <text>{{recoveryError ? recoveryError + ' · 点击确认' : '点亮同步结果待确认 · 点击确认'}}</text>
+    <text>{{recoveryError ? recoveryError + ' · 确认' : '点亮的格子还没确认 · 确认'}}</text>
   </view>
 </view>
 <!-- BL-03 位置上报连续网络失败 / 系统断网:只提示,格子仍先记在本机;上报成功或网络恢复即消失。 -->
@@ -1039,8 +1039,8 @@
     <view wx:if="{{recoveryCanContinue}}" class="settle__minor-act" bindtap="continueUnstartedRoam" aria-role="button" aria-label="继续本次探索" hover-class="cy-pressed" hover-stay-time="80">继续本次探索</view>
     <view class="settle__err" wx:if="{{finish.resultIncomplete}}">已确认本次探索值；历史记录不完整，无法显示当次勋章与回顾</view>
     <view class="settle__err" wx:if="{{finish.eventErr}}">
-      <cy-error title="{{finish.eventErr === 'unknown' ? '活动进度响应异常，请先确认' : '这次没能计入活动进度'}}"
-                sub="{{finish.eventErr === 'unknown' ? '活动进度未确认，请稍后查看' : '漫游已保存，活动进度未上报'}}"
+      <cy-error title="{{finish.eventErr === 'unknown' ? '活动进度还没确认' : '这次没能计入活动进度'}}"
+                sub="{{finish.eventErr === 'unknown' ? '漫游已保存，稍后在活动里看进度' : '漫游已保存，活动进度未上报'}}"
                 retry="{{finish.eventErr === 'unknown' ? '' : '重新上报'}}" bind:retry="retryEventReport" />
     </view>
     <view class="settle__places" wx:if="{{finish.places.length}}"><view wx:for="{{finish.places}}" wx:key="id" class="pc-body">{{item.name}}</view></view>

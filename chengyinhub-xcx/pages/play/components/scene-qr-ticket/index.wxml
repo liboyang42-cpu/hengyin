@@ -1,5 +1,6 @@
 <view class="ticket-scene">
-  <cy-error load-failure wx:if="{{state === 'error'}}" fill="{{true}}" size="lg" title="入场码没生成出来" sub="{{errorText}}" retry="重试" bind:retry="retry" />
+  <cy-empty wx:if="{{state === 'missing'}}" fill="{{true}}" size="lg" kind="missing-param" cta="返回" bind:cta="close" />
+  <cy-error load-failure wx:elif="{{state === 'error'}}" fill="{{true}}" size="lg" title="入场码没生成出来" sub="{{errorText}}" retry="重试" bind:retry="retry" />
 
   <view wx:elif="{{state === 'choose'}}" class="seat-choice">
     <text class="seat-choice__title">选择本次出示的席位</text>

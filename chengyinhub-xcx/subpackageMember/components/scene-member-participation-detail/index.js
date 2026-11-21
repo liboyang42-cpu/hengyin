@@ -47,9 +47,9 @@ Component({
       // loadState: loading | missing-param | error | ready —— 四态互斥由 WXML 承接。
       loadState: 'loading',
       loadErrorText: '',
-      missingTitle: '缺少参与记录',
+      missingTitle: '链接已失效',
       // R2-C04:错误态动作槽的**标签**。cy-error 只有一个动作位,所以标签必须跟着这一档
-      // 真正能做的事变:有 id ⇒ 「重试」,缺 id ⇒ 「返回参与列表」。
+      // 真正能做的事变:有 id ⇒ 「重试」,缺 id ⇒ 「返回」(与其它缺参页同一个「链接已失效 · 返回」)。
       // ⚠️ 不许再退回 R1 的 retry="{{id ? '重试' : ''}}" —— 空标签 = 缺参数时整屏无按钮,
       //   用户被钉在一段死文字上(2026-07-30 受控截图 05 实证)。
       errorActionText: '重试'
@@ -69,8 +69,8 @@ Component({
         // 没有 id 就永远拿不到详情:既不能停在「一直加载中」,也不能把缺参伪装成加载失败
         this.setData({
           loadState: 'missing-param',
-          loadErrorText: '请返回列表重新进入',
-          errorActionText: '返回参与列表',
+          missingTitle: '链接已失效',
+          errorActionText: '返回',
         })
         return
       }

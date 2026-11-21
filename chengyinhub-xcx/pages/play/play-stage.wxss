@@ -10,11 +10,17 @@
 
 /* ===== 玩法开始弹窗(proto pop-kitstart / .kstart) ===== */
 .ks__h { display: flex; align-items: center; justify-content: space-between; padding: 36rpx 36rpx 0; flex: none; }
-.ks__t { font-size: 40rpx; } /* ds-ok 原型 px×2;圆角随外观 --lk-r */
+.ks__hk { display: flex; align-items: baseline; gap: var(--cy-space-2); min-width: 0; flex: 1; }
+.ks__t { flex: none; font-size: 40rpx; } /* ds-ok 原型 px×2;圆角随外观 --lk-r */
+.ks__c { flex: 1; min-width: 0; font-size: var(--cy-type-caption); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* 章名小字:站序后面另起,不和站名挤一串 */
 .ks__x { width: 64rpx; height: 64rpx; border-radius: 50%; background: var(--lk-ctl); color: var(--lk-ink); display: flex; align-items: center; justify-content: center; }
 .look--stardust .ks__x { background: rgba(var(--lk-ink-rgb), .16); }
 .ks__b { flex: 1; min-height: 0; padding: 28rpx 36rpx 12rpx; box-sizing: border-box; }
 .ks__cov { display: block; width: 100%; height: 300rpx; border-radius: calc(var(--lk-r) - 4rpx); background: var(--lk-ctl); } /* ds-ok 原型 px×2;圆角随外观 --lk-r */
+.ks__cov { position: relative; overflow: hidden; }
+.ks__cov-img { display: block; width: 100%; height: 100%; opacity: 0; transition: opacity var(--cy-motion-fade-swap) var(--cy-ease-out); } /* 占位底色(--lk-ctl)先在,图到了淡入;尺寸固定,不跳 */
+.ks__cov-img.is-in { opacity: 1; }
+.ks__cov-img.is-still { opacity: 1; transition: none; } /* 减弱动态:直接出现 */
 .ks__cov--illus { display: flex; align-items: center; justify-content: center; }
 .look--stardust .ks__cov { -webkit-mask-image: linear-gradient(#000 70%, transparent); mask-image: linear-gradient(#000 70%, transparent); } /* ds-ok 原型:星尘封面下沿融进玻璃 */
 .ks__meta { display: flex; flex-wrap: wrap; gap: 16rpx; margin: 24rpx 0 8rpx; }
@@ -139,3 +145,4 @@
 .sheet.sheet--game .sheet-body.lk-pop::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 220rpx; z-index: -1; pointer-events: none; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.22), rgba(255,255,255,0)) top / 100% 2rpx no-repeat, radial-gradient(ellipse 70% 100% at 50% 0%, rgba(var(--lk-a-rgb, 255,255,255), .24), rgba(var(--lk-a-rgb, 255,255,255), 0)); } /* ds-ok G1 顶边 1px 内高光 + 外观强调色 24% 顶边柔光;::before 留给星尘玻璃的原有高光 */
 .sheet-dist__n { font-variant-numeric: tabular-nums; }
 .sheet-row .lk-btn { transition: var(--cy-tr-press); }
+.ks__t { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } /* 外壳:抬头写「第N站 · 站名」,长站名一行省略,不挤掉关闭钮 */

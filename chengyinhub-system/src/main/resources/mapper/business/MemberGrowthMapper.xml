@@ -4,22 +4,25 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.chengyinhub.business.mapper.MemberGrowthMapper">
 
+    <!-- 等级按 growth_level_config(M7 探索值→等级梯度,migration_m7_xp_budget.sql)由累计探索值现算:
+         原先写入时按 floor(exp/100)+1 递增、没有上限(126,806 EXP ⇒ Lv.1269),也不随扣回探索值回落。
+         配置表没有可用档位时兜底 Lv.1。level_no 列不再作为展示真源。 -->
     <select id="selectByMemberId" resultType="MemberGrowth">
-        select id, member_id as memberId, level_no as levelNo, exp_value as expValue,
-               last_active_time as lastActiveTime, create_time as createTime, update_time as updateTime
-        from member_growth
-        where member_id = #{memberId}
+        select g.id, g.member_id as memberId, coalesce((select max(c.level) from growth_level_config c where c.need_exp is not null and c.need_exp &lt;= g.exp_value), 1) as levelNo, g.exp_value as expValue,
+               g.last_active_time as lastActiveTime, g.create_time as createTime, g.update_time as updateTime
+        from member_growth g
+        where g.member_id = #{memberId}
         limit 1
     </select>
 
     <select id="selectAdminGrowthList" parameterType="MemberGrowth" resultType="MemberGrowth">
-        select id, member_id as memberId, level_no as levelNo, exp_value as expValue,
-               last_active_time as lastActiveTime, create_time as createTime, update_time as updateTime
-        from member_growth
+        select g.id, g.member_id as memberId, coalesce((select max(c.level) from growth_level_config c where c.need_exp is not null and c.need_exp &lt;= g.exp_value), 1) as levelNo, g.exp_value as expValue,
+               g.last_active_time as lastActiveTime, g.create_time as createTime, g.update_time as updateTime
+        from member_growth g
         <where>
-            <if test="memberId != null"> and member_id = #{memberId}</if>
+            <if test="memberId != null"> and g.member_id = #{memberId}</if>
         </where>
-        order by update_time desc, id desc
+        order by g.update_time desc, g.id desc
     </select>
 
     <insert id="insertMemberGrowth" parameterType="MemberGrowth" useGeneratedKeys="true" keyProperty="id">
@@ -32,8 +35,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <update id="updateMemberGrowthReward" parameterType="MemberGrowth">
         update member_growth
-        set level_no = greatest(level_no, floor((exp_value + #{expValue}) / 100) + 1),
-            exp_value = exp_value + #{expValue},
+        set exp_value = exp_value + #{expValue},
             last_active_time = #{lastActiveTime},
             update_time = #{updateTime}
         where member_id = #{memberId}

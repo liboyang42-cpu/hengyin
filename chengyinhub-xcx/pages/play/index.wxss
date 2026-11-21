@@ -1993,23 +1993,27 @@ page { background: var(--cy-color-bg-page); }
 /* 故事流字体:手写走 story-font.js 在线加载的 CyStoryHand,其余三种用系统自带字体,不额外下载 */
 .story-font--song .cy-story-hand { font-family: "Songti SC", "STSong", "Noto Serif SC", serif; } /* ds-ok 系统宋体 */
 .story-font--kai .cy-story-hand { font-family: "Kaiti SC", "STKaiti", "KaiTi", "Noto Serif SC", serif; } /* ds-ok 系统楷体 */
+/* 同一份字族也写成 --cy-story-font:整屏玩法台面(isolated,够不着 .cy-story-hand)的引子行读它,与故事流同字 */
+.story-font--song { --cy-story-font: "Songti SC", "STSong", "Noto Serif SC", serif; } .story-font--kai { --cy-story-font: "Kaiti SC", "STKaiti", "KaiTi", "Noto Serif SC", serif; } .story-font--hei, .story-font--bold { --cy-story-font: -apple-system, "PingFang SC", "Noto Sans SC", sans-serif; } /* ds-ok 同上三行字族 */
 .story-font--hei .cy-story-hand { font-family: -apple-system, "PingFang SC", "Noto Sans SC", sans-serif; } /* ds-ok 系统黑体 */ .story-font--bold .cy-story-hand { font-family: -apple-system, "PingFang SC", "Noto Sans SC", sans-serif; font-weight: 900; font-style: italic; letter-spacing: -.01em; } /* ds-ok 粗斜(NRC 式);中文由系统合成斜体 */
 /* 纸本:纸色 + 纸纹 + 压暗四角 */
 .look--paper { --look-bg: #E6DCC4; --look-a: #A3281D; } /* ds-ok 牛皮纸 */
 .look--paper.look-paper--xuan .look-tex { opacity: .6; } /* 宣纸:纸纹更淡;底色只由主题配色决定(原型 v7) */
 .look--paper.look-paper--card .look-tex { background-color: rgba(0,0,0,.25); } /* ds-ok 深色卡纸:压暗一层(原型 v7) */
-.look--paper .look-tex { background: radial-gradient(rgba(90,70,40,.10) 1px, transparent 1.4px) 0 0 / 7rpx 7rpx, radial-gradient(rgba(90,70,40,.08) 1px, transparent 1.6px) 3rpx 4rpx / 11rpx 11rpx, radial-gradient(ellipse 80% 70% at 50% 45%, transparent 55%, rgba(60,40,10,.32) 100%); mix-blend-mode: multiply; } /* ds-ok 纸纹 */
+.look--paper { --lk-tex: radial-gradient(rgba(90,70,40,.10) 1px, transparent 1.4px) 0 0 / 7rpx 7rpx, radial-gradient(rgba(90,70,40,.08) 1px, transparent 1.6px) 3rpx 4rpx / 11rpx 11rpx, radial-gradient(ellipse 80% 70% at 50% 45%, transparent 55%, rgba(60,40,10,.32) 100%); --lk-tex-blend: multiply; } /* ds-ok 纸纹;写成变量:整屏玩法台面(play-stage .st__tex)读同一份 */
+.look--paper .look-tex { background: var(--lk-tex); mix-blend-mode: var(--lk-tex-blend); }
 .look--paper.look-paper--kraft .look-tex { background-color: rgba(176,140,90,.12); } /* ds-ok */
 .look--paper.look-grain--light .look-tex { opacity: .5; }
 .look--paper.look-grain--heavy .look-tex { filter: contrast(1.4); }
 /* 末世:四角压暗;气候决定底色调,风格层的天气在 canvas 上 */
 .look--survival { --look-bg: #0E1012; --look-a: #FF8A3D; --look-b: #8A9196; } /* ds-ok 末世默认(飓风) */
-.look--survival .look-tex { background: radial-gradient(ellipse 80% 70% at 50% 45%, transparent 50%, rgba(0,0,0,.55) 100%); } /* ds-ok */
+.look--survival { --lk-tex: radial-gradient(ellipse 80% 70% at 50% 45%, transparent 50%, rgba(0,0,0,.55) 100%); } /* ds-ok 暗角;整屏玩法台面读同一份 */
+.look--survival .look-tex { background: var(--lk-tex); }
 /* 末世:气候只管天气与屏幕边缘,底色由主题配色决定(原型 v7) */
 /* 沙尘暴:见下方 .look-tex 泛黄 */
-.look--survival.look-climate--sand .look-tex { background: radial-gradient(ellipse 80% 70% at 50% 45%, transparent 45%, rgba(214,170,110,.28) 100%); } /* ds-ok 沙尘暴:四周泛黄 */
+.look--survival.look-climate--sand { --lk-tex: radial-gradient(ellipse 80% 70% at 50% 45%, transparent 45%, rgba(214,170,110,.28) 100%); } /* ds-ok 沙尘暴:四周泛黄 */
 /* 雷暴:见下方 .look-tex 压暗 */
-.look--survival.look-climate--storm .look-tex { background: radial-gradient(ellipse 80% 70% at 50% 45%, transparent 40%, rgba(0,0,0,.65) 100%); } /* ds-ok 雷暴:四周更暗 */
+.look--survival.look-climate--storm { --lk-tex: radial-gradient(ellipse 80% 70% at 50% 45%, transparent 40%, rgba(0,0,0,.65) 100%); } /* ds-ok 雷暴:四周更暗 */
 .look--survival.look-climate--rain.look-edge--hp .look-tex, .look--survival.look-climate--rain.look-edge--fixed .look-tex, .look--survival.look-climate--storm.look-edge--hp .look-tex { box-shadow: inset 0 0 120rpx rgba(200,215,235,.18); } /* ds-ok 雨:玻璃边起雾 */
 .look--survival.look-edge--off .look-tex { display: none; }
 /* 夜城:霓虹两色 + 扫描线 + 一道缓慢的扫光 */
@@ -2295,3 +2299,9 @@ page { background: var(--cy-color-bg-page); }
 /* 站点 / 玩法配图兜底链的最后一级(utils/station-image.js):没有任何图时铺一层深色纹理底,只用玩家域 token,不放人形剪影 */
 .photo-tex { background: radial-gradient(ellipse 90% 80% at 30% 20%, var(--cy-color-bg-raised), transparent 70%), linear-gradient(160deg, var(--cy-color-play-surface-subtle), var(--cy-color-play-surface-solid)); }
 .fx-tile__im, .fx-hero__im, .chfull__kitcard-img { background: var(--cy-color-play-surface-subtle); }
+
+/* 玩法外壳(2026-11-21):「继续故事」从玩法结果下面淡入升起(只用过渡,不加 keyframes);没玩完时不可见、不可点、读屏跳过。
+   位置一直占着,出现那一下下面的段落不跳。减弱动态:直接出现。 */
+.chfull__continue.chfull__continue--morph { transition: opacity var(--cy-motion-standard) var(--cy-ease-out), transform var(--cy-motion-standard) var(--cy-ease-out), visibility 0s linear 0s; }
+.chfull__continue.chfull__continue--morph:not(.is-ready) { opacity: 0; transform: translateY(16rpx); visibility: hidden; pointer-events: none; transition-delay: 0s, 0s, var(--cy-motion-standard); }
+.play--reduced-motion .chfull__continue.chfull__continue--morph { transition: none; transform: none; }
