@@ -55,7 +55,7 @@ public class MemberIdentityService {
     private static final int NAME_MAX = 30;
 
     /** 身份证号不合法的统一文案。不带入参,不回显用户填的号码。 */
-    public static final String MSG_ID_CARD_INVALID = "身份证号格式不正确,请核对后重填";
+    public static final String MSG_ID_CARD_INVALID = "身份证号格式不正确，请核对后重填";
     public static final String MSG_IDENTITY_REQUIRED = "请填写真实姓名与身份证号";
 
     @Autowired
