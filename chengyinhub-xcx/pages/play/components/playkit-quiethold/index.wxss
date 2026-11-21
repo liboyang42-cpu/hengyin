@@ -58,3 +58,6 @@
 }
 .qt--mid .qt__n { color: #d9a327; }                                 /* ds-ok 黄档 */
 .qt--hot .qt__n { color: #e0464c; }                                 /* ds-ok 红档 */
+
+/* 开局先听这儿有多吵:数字先淡着,听完再亮 —— 不写「正在校准」,台面已有那一句 */
+.qt--listening .qt__n { opacity: .4; transition: opacity var(--cy-motion-fade-swap, 200ms) ease; }
