@@ -23,11 +23,11 @@ const graph = require('../../scripts/lib/package-graph.js');
 const ROOT = path.resolve(__dirname, '../..');
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 const KB = 1024;
+const baseline = require('../../scripts/baselines/package-size.json').est;
 const PLAY_EST_LIMIT = 1950 * KB;
-// 主包:est 2177KB(本 PR 前后相同,只多了 app.json 几行)。真编译器在同一棵树上只拒了 pages/play,
-// 主包未报超限;est 对主包偏高且没有主包真值可校准,所以这里先按「不得增长」棚住,
-// 降到 1950KB 以下需要单独的主包瘦身(见 PR 说明)。只许往下调。
-const MAIN_EST_CEILING = 2177 * KB + 512;
+// 主包:真编译器在 #891 树上只拒了 pages/play,主包未报超限;est 对主包没有真值可校准,
+// 所以按「不得增长」棚住(基线 + 不超过 16KB 余量,只许往下调),降到 1950KB 以下需要单独的主包瘦身(见 PR #895)。
+const MAIN_EST_CEILING = baseline.mainCeilingBytes;
 const PRELOAD_LIMIT = 2048 * KB;
 
 let cached = null;
@@ -38,6 +38,8 @@ function measure() {
 
 test('体积:pages/play est < 1950KB,主包 est 不增长,新分包在 2MB 内', () => {
   const { est } = measure();
+  assert.equal(baseline.playLimitBytes, PLAY_EST_LIMIT);
+  assert.ok(MAIN_EST_CEILING - baseline.mainBytes <= 16 * KB, '主包 est 棘轮余量不超过 16KB');
   const kb = (n) => (n / KB).toFixed(1) + 'KB';
   assert.ok(est['pages/play'] < PLAY_EST_LIMIT, `pages/play est ${kb(est['pages/play'])} ≥ 1950KB(真编译上限 2048KB,需留余量)`);
   assert.ok(est.MAIN <= MAIN_EST_CEILING, `主包 est ${kb(est.MAIN)} 超过基线 ${kb(MAIN_EST_CEILING)}`);
