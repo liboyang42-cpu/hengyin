@@ -386,7 +386,103 @@ class MarketingProductPurchaseServiceTest {
         assertEquals("PAYMENT_OWNER_ROUTE_NOT_WIRED", rejection.getReasonCode());
     }
 
+    @Test
+    void cashPrepayDescriptionUsesFrozenSnapshotNameNotLiveProduct() {
+        service.purchase(MEMBER, signed(request(), 120));
+        String frozen = inserted.get().getProductSnapshotJson();
+        product.setProductName("改名后的商品");
+
+        assertEquals("城市 7 日通行证·7天", jsapiDescription(pendingCash(frozen)));
+        assertEquals("城市 7 日通行证·7天", appDescription(pendingCash(frozen)));
+    }
+
+    @Test
+    void cashPrepayDescriptionPerProductType() {
+        assertEquals("城瘾通行证·30天", jsapiDescription(pendingCash(snapshot("城瘾通行证",
+                MarketingProduct.VALIDITY_RELATIVE_DAYS, 30, MarketingProductOrder.FULFILLMENT_SELF, 1, 1))));
+        assertEquals("城市 7 日通行证·7天", jsapiDescription(pendingCash(snapshot("城市 7 日通行证",
+                MarketingProduct.VALIDITY_ACTIVATE_ON_FIRST_USE, 7, MarketingProductOrder.FULFILLMENT_SELF, 1, 1))));
+        assertEquals("国庆年卡", jsapiDescription(pendingCash(snapshot("国庆年卡",
+                MarketingProduct.VALIDITY_FIXED_WINDOW, null, MarketingProductOrder.FULFILLMENT_SELF, 1, 1))));
+        assertEquals("单线解谜·外滩", jsapiDescription(pendingCash(snapshot("单线解谜·外滩",
+                MarketingProduct.VALIDITY_NONE, null, MarketingProductOrder.FULFILLMENT_SELF, 1, 1))));
+        assertEquals("外滩夜探团队票·4人", jsapiDescription(pendingCash(snapshot("外滩夜探团队票",
+                MarketingProduct.VALIDITY_NONE, null, MarketingProductOrder.FULFILLMENT_SELF, 2, 2))));
+        assertEquals("城瘾通行证·30天·赠送", jsapiDescription(pendingCash(snapshot("城瘾通行证",
+                MarketingProduct.VALIDITY_RELATIVE_DAYS, 30, MarketingProductOrder.FULFILLMENT_GIFT, 1, 1))));
+        assertEquals("城瘾通行证·加座", appDescription(pendingCash(snapshot("城瘾通行证",
+                MarketingProduct.VALIDITY_NONE, null, MarketingProductOrder.FULFILLMENT_EXTRA_SEAT, 1, 1))));
+    }
+
+    @Test
+    void cashPrepayDescriptionFallsBackOnlyWhenSnapshotHasNoName() {
+        assertEquals("城瘾商品", jsapiDescription(pendingCash(null)));
+        assertEquals("城瘾商品", jsapiDescription(pendingCash("not-json")));
+        assertEquals("城瘾商品", appDescription(pendingCash(snapshot("  ",
+                MarketingProduct.VALIDITY_RELATIVE_DAYS, 30, MarketingProductOrder.FULFILLMENT_SELF, 1, 1))));
+    }
+
     // ------------------------------------------------------------------ fixtures
+
+    private MarketingProductOrder pendingCash(String snapshotJson) {
+        MarketingProductOrder order = paidOrder();
+        order.setOrderNo("MKO-CASH");
+        order.setStatus(MarketingProductOrder.STATUS_PENDING_CASH);
+        order.setPayMode(MarketingProductOrder.PAY_MODE_CASH);
+        order.setProductSnapshotJson(snapshotJson);
+        return order;
+    }
+
+    private String snapshot(String name, int validityKind, Integer validDays, int fulfillmentKind,
+                            int quantity, int seatCount) {
+        Map<String, Object> snapshot = new java.util.LinkedHashMap<>();
+        snapshot.put("productName", name);
+        snapshot.put("validityKind", validityKind);
+        snapshot.put("validDays", validDays);
+        snapshot.put("fulfillmentKind", fulfillmentKind);
+        snapshot.put("quantity", quantity);
+        snapshot.put("seatCount", seatCount);
+        return com.alibaba.fastjson2.JSON.toJSONString(snapshot);
+    }
+
+    private String jsapiDescription(MarketingProductOrder order) {
+        WechatPaymentOperations pay = cashPayService(order);
+        when(pay.createGenericOrder(anyString(), any(), anyString(), anyString())).thenReturn(Map.of());
+        UmsMember member = member(500L);
+        member.setWxOpenId("openid-7");
+        when(members.selectUmsMemberById(MEMBER)).thenReturn(member);
+        cashService(pay).prepareCashPayment(MEMBER, order.getOrderNo(), null);
+        ArgumentCaptor<String> description = ArgumentCaptor.forClass(String.class);
+        verify(pay).createGenericOrder(eq(order.getOrderNo()), eq(order.getTotalCashAmount()),
+                description.capture(), eq("openid-7"));
+        return description.getValue();
+    }
+
+    private String appDescription(MarketingProductOrder order) {
+        WechatPaymentOperations pay = cashPayService(order);
+        when(pay.createGenericAppOrder(anyString(), any(), anyString())).thenReturn(Map.of());
+        cashService(pay).prepareCashPayment(MEMBER, order.getOrderNo(), "APP");
+        ArgumentCaptor<String> description = ArgumentCaptor.forClass(String.class);
+        verify(pay).createGenericAppOrder(eq(order.getOrderNo()), eq(order.getTotalCashAmount()),
+                description.capture());
+        return description.getValue();
+    }
+
+    private WechatPaymentOperations cashPayService(MarketingProductOrder order) {
+        WechatPaymentOperations pay = mock(WechatPaymentOperations.class);
+        when(pay.isReady()).thenReturn(true);
+        when(orders.selectByOrderNo(order.getOrderNo())).thenReturn(order);
+        return pay;
+    }
+
+    private MarketingProductPurchaseServiceImpl cashService(WechatPaymentOperations pay) {
+        CmsTopicMapper topics = mock(CmsTopicMapper.class);
+        MarketingProductRules rules = new MarketingProductRules(products, orders, topics,
+                mock(IOmsTicketService.class));
+        return new MarketingProductPurchaseServiceImpl(products, orders, gifts, members, points,
+                rules, PointsValuePolicy.codeDefaults(), signer, new MarketingCashChannel(true), giftService,
+                fulfillment, extraSeatService, verifiedFacts, pay);
+    }
 
     private MarketingProduct product() {
         MarketingProduct product = new MarketingProduct();
