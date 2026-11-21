@@ -15,9 +15,9 @@ const test = require('node:test')
 
 const ROOT = path.resolve(__dirname, '../..')
 const VIEW_REL = 'pages/play/utils/playkit-view.js'
-const COMPONENT_REL = 'pages/play/components/playkit-photocheck/index.js'
-const COMPONENT_WXML = 'pages/play/components/playkit-photocheck/index.wxml'
-const DISPATCH_REL = 'pages/play/components/playkit/index.wxml'
+const COMPONENT_REL = 'pages/playkit/components/playkit-photocheck/index.js'
+const COMPONENT_WXML = 'pages/playkit/components/playkit-photocheck/index.wxml'
+const DISPATCH_REL = 'pages/playkit/components/playkit/index.wxml'
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8')
 
 /** 只喂一个 photoCheck 段，拿玩家端视图。 */

@@ -6,7 +6,7 @@ const path = require('node:path');
 const vm = require('../helpers/ui-sandbox-vm.js');
 const { pickPlayKit, serverAction, serverPayload } = require('../../pages/play/utils/playkit-view.js');
 const ROOT = path.resolve(__dirname, '../..');
-const file = 'pages/play/components/playkit-qa/index.js';
+const file = 'pages/playkit/components/playkit-qa/index.js';
 const code = fs.readFileSync(path.join(ROOT, file), 'utf8');
 const plain = value => JSON.parse(JSON.stringify(value));
 
@@ -26,7 +26,7 @@ function componentFactory() {
       if (id.endsWith('/utils/toast.js')) return () => {};
       if (id.includes('playkit-questo')) return require('../../pages/play/utils/playkit-questo.js');
       // F03 字符池的纯状态函数(不判对错、不发请求)
-      if (id.endsWith('/utils/letter-pool.js')) return require('../../pages/play/utils/letter-pool.js');
+      if (id.endsWith('/utils/letter-pool.js')) return require('../../pages/playkit/utils/letter-pool.js');
       throw new Error('Unexpected component port ' + id);
     },
   }, { filename: file });

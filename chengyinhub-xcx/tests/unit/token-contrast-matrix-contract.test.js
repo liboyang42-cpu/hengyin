@@ -199,8 +199,8 @@ function fixedStorySurfaceContrasts(vars) {
     assert.ok(parsed, '颜色声明无法解析 ' + name)
     return parsed
   }
-  const terminal = css('pages/play/components/playkit-typein/index.wxss')
-  const paper = css('pages/play/components/playkit-profile/index.wxss')
+  const terminal = css('pages/playkit/components/playkit-typein/index.wxss')
+  const paper = css('pages/playkit/components/playkit-profile/index.wxss')
   const rows = []
   for (const [source, selector] of [[terminal, '.terminal'], [terminal, '.terminal__key'], [paper, '.pf__summary']]) {
     const body = rule(source, selector)

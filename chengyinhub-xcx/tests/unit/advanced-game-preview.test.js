@@ -85,9 +85,9 @@ test('★每个转换器产出的 type 都要在分发器白名单里,否则预�
   const fs = require('node:fs')
   const path = require('node:path')
   const dispatcher = fs.readFileSync(
-    path.resolve(__dirname, '../../pages/play/components/playkit/index.js'), 'utf8')
+    path.resolve(__dirname, '../../pages/playkit/components/playkit/index.js'), 'utf8')
   const listed = (dispatcher.match(/const KIT_TYPES = \[([\s\S]*?)\];/) || [])[1] || ''
-  const dispatcherWxml = fs.readFileSync(path.resolve(__dirname, '../../pages/play/components/playkit/index.wxml'), 'utf8')
+  const dispatcherWxml = fs.readFileSync(path.resolve(__dirname, '../../pages/playkit/components/playkit/index.wxml'), 'utf8')
   const known = new Set([...listed.matchAll(/'([^']+)'/g)].map((m) => m[1]))
   const c = base()
   for (const key of Object.keys(pv._builders)) {
@@ -161,7 +161,7 @@ test('建档、输入挑战、拍照与留言都有样例及当前配置预览�
 // 预览投影少了 goalLocked(正式投影 playkit-view.buildSteps 有)。判定按作者配的数,预览也得锁死。
 test('计步预览组件原样显示锁定目标100、800和默认6000,个人目标仍按500步增减', () => {
   let component
-  vm.runInNewContext(fs.readFileSync(require.resolve('../../pages/play/components/playkit-walk/index.js'), 'utf8'), {
+  vm.runInNewContext(fs.readFileSync(require.resolve('../../pages/playkit/components/playkit-walk/index.js'), 'utf8'), {
     Component: value => { component = value }, require: () => ({}),
   })
   const screen = {

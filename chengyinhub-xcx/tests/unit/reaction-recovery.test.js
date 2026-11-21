@@ -5,7 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { serverPayload } = require('../../pages/play/utils/playkit-view.js');
 const ROOT = path.resolve(__dirname, '../..');
-const FILE = 'pages/play/components/playkit-reaction/index';
+const FILE = 'pages/playkit/components/playkit-reaction/index';
 
 function host(props = {}) {
   let now = 1000, nextId = 0;
@@ -27,7 +27,7 @@ function host(props = {}) {
     Object.assign(data,JSON.parse(JSON.stringify(def.data)),props);
     return Object.assign({data,setData(patch,cb) {Object.assign(data,patch);if(cb)cb();}},def.methods);
   }
-  const def = load(FILE), stageDef = load('pages/play/components/play-stage/index');
+  const def = load(FILE), stageDef = load('pages/playkit/components/play-stage/index');
   const component = instance(def,{show:true,...props});
   const stage = instance(stageDef,{show:true,reducedMotion:true});
   stage.triggerEvent = (name,detail) => {if(name==='verdict') component.onVerdict({detail});};

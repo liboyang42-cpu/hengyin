@@ -7,7 +7,7 @@ function host() {
   let definition, pending;
   global.Component = value => { definition = value; };
   global.wx = { getStorageSync: () => '', scanCode: options => { pending = options; }, vibrateShort() {} };
-  const file = require.resolve('../../pages/play/components/playkit-scan/index.js'); delete require.cache[file]; require(file);
+  const file = require.resolve('../../pages/playkit/components/playkit-scan/index.js'); delete require.cache[file]; require(file);
   const events = [];
   const component = { ...definition.methods, data: { ...definition.data, show: true, sessionId: 51, reply: '', imageUrl: '', audioUrl: '', overlayUrl: '' },
     triggerEvent: (name, detail) => events.push({ name, detail }) };

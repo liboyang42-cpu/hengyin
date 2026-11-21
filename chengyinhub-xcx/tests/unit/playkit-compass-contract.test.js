@@ -19,9 +19,9 @@ const path = require('node:path');
 const Module = require('node:module');
 
 const ROOT = path.resolve(__dirname, '../..');
-const COMPONENT_PATH = path.join(ROOT, 'pages/play/components/playkit-compass/index.js');
-const WXML = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-compass/index.wxml'), 'utf8');
-const WXSS = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-compass/index.wxss'), 'utf8');
+const COMPONENT_PATH = path.join(ROOT, 'pages/playkit/components/playkit-compass/index.js');
+const WXML = fs.readFileSync(path.join(ROOT, 'pages/playkit/components/playkit-compass/index.wxml'), 'utf8');
+const WXSS = fs.readFileSync(path.join(ROOT, 'pages/playkit/components/playkit-compass/index.wxss'), 'utf8');
 const VIEW_SRC = path.join(ROOT, 'pages/play/utils/playkit-view.js');
 const { pickPlayKit, serverAction, serverPayload } = require('../../pages/play/utils/playkit-view.js');
 
@@ -354,9 +354,9 @@ test('负控:ACTION_OF 删掉 compass:submit 行,动作线必须断', () => {
 });
 
 test('分发器两块登记都在:json 注册 + wxml 分支按 kit.type 接上', () => {
-  const dispatcherJson = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit/index.json'), 'utf8');
-  const dispatcherWxml = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit/index.wxml'), 'utf8');
-  assert.match(dispatcherJson, /"cy-playkit-compass":\s*"\/pages\/play\/components\/playkit-compass\/index"/);
+  const dispatcherJson = fs.readFileSync(path.join(ROOT, 'pages/playkit/components/playkit/index.json'), 'utf8');
+  const dispatcherWxml = fs.readFileSync(path.join(ROOT, 'pages/playkit/components/playkit/index.wxml'), 'utf8');
+  assert.match(dispatcherJson, /"cy-playkit-compass":\s*"\/pages\/playkit\/components\/playkit-compass\/index"/);
   assert.match(dispatcherWxml, /<cy-playkit-compass wx:elif="\{\{kit\.type === 'compass'\}\}"/);
   assert.match(dispatcherWxml, /target="\{\{kit\.bearing\}\}"/, '服务端叫 bearing、组件叫 target,接线处必须对上');
 });

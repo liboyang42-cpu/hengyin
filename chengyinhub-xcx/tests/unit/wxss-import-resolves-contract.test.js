@@ -1,7 +1,7 @@
 /* 全仓 WXSS 的 @import 必须真的指得到一个文件 —— 2026-09-22
  *
  * 为什么有这条:playkit-sort / match / classify 三个屏的第一行写的是
- * `@import "/style/play-surface.wxss"`,而那份皮面在 `/pages/play/style/` 下。
+ * `@import "/style/play-surface.wxss"`,而那份皮面在 `/pages/playkit/style/` 下。
  * 路径指空的后果不是报错,是**整份皮面没加载** —— `--ink`/`--sub`/`--soft` 全成了未定义 var,
  * 凡是用到它们的声明按 WXSS 规则**整条静默作废**(见 memory
  * feedback-undefined-css-var-kills-whole-declaration)。屏还在、字还在,就是颜色排版全不对,
@@ -71,16 +71,16 @@ test('冻结基线只能减不能加:修好的必须从 FROZEN_BROKEN 里删掉'
 })
 
 test('negative control:把一条 @import 改指到不存在的文件必须判红', () => {
-  const target = path.join('pages', 'play', 'components', 'playkit-sort', 'index.wxss')
+  const target = path.join('pages', 'playkit', 'components', 'playkit-sort', 'index.wxss')
   const src = fs.readFileSync(path.join(ROOT, target), 'utf8')
-  const mutated = src.replace('/pages/play/style/play-surface.wxss', '/style/play-surface.wxss')
+  const mutated = src.replace('/pages/playkit/style/play-surface.wxss', '/style/play-surface.wxss')
   assert.notEqual(mutated, src, '负控锚点失效:那一行的写法变了，判据要跟着改')
   const { broken } = survey({ [target]: mutated })
   assert.ok(broken.includes(`${target} -> /style/play-surface.wxss`), '门禁没认出被改坏的 @import')
 })
 
 test('negative control:注释里的用法示例不算违规 —— 判据看声明不看说明', () => {
-  const target = path.join('pages', 'play', 'components', 'playkit-sort', 'index.wxss')
+  const target = path.join('pages', 'playkit', 'components', 'playkit-sort', 'index.wxss')
   const src = fs.readFileSync(path.join(ROOT, target), 'utf8')
   const mutated = `/* 用法:@import '/完全不存在的/路径.wxss'; */\n${src}`
   const { broken } = survey({ [target]: mutated })

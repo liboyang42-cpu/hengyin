@@ -33,20 +33,20 @@ test('E-B6 media-denied:只有系统拒绝才弹去设置,取消不弹', () => {
   const Module = require('module'); const orig = Module._load
   Module._load = function (req, ...r) { return req.endsWith('utils/modal.js') ? modal : orig.call(this, req, ...r) }
   let md
-  try { delete require.cache[require.resolve('../../pages/play/utils/media-denied.js')]; md = require('../../pages/play/utils/media-denied.js') } finally { Module._load = orig }
+  try { delete require.cache[require.resolve('../../pages/playkit/utils/media-denied.js')]; md = require('../../pages/playkit/utils/media-denied.js') } finally { Module._load = orig }
   assert.strictEqual(md.guideIfDenied({ errMsg: 'chooseMedia:fail cancel' }), false)
   assert.strictEqual(shown.length, 0)
   assert.strictEqual(md.guideIfDenied({ errMsg: 'chooseMedia:fail auth deny' }), true)
   assert.strictEqual(shown[0].confirmText, '去设置')
   let opened = 0; global.wx = { openSetting: () => { opened++ } }
   shown[0].success({ confirm: true }); assert.strictEqual(opened, 1)
-  assert.match(read('pages/play/components/playkit-qa/index.js'), /fail: \(err\) => \{[^}]*mediaDenied\.guideIfDenied\(err\)/)
-  assert.match(read('pages/play/components/playkit-photocheck/index.js'), /mediaDenied\.guideIfDenied\(err\)/)
+  assert.match(read('pages/playkit/components/playkit-qa/index.js'), /fail: \(err\) => \{[^}]*mediaDenied\.guideIfDenied\(err\)/)
+  assert.match(read('pages/playkit/components/playkit-photocheck/index.js'), /mediaDenied\.guideIfDenied\(err\)/)
 })
 
 test('E-B4/B5 photocheck:提交失败改「重新提交」不重拍;判分中忙态', () => {
   const noop = () => ({})
-  const def = loadComponent('../../pages/play/components/playkit-photocheck/index.js', {
+  const def = loadComponent('../../pages/playkit/components/playkit-photocheck/index.js', {
     'reduced-motion.js': {}, 'replay-motion.js': {}, 'utils/motion.js': { haptic() {} }, 'utils/toast.js': () => {},
     'keep-numerals.js': { tidyText: (x) => x }, 'sensor-contract.js': { PHOTO_VERIFIED_NOTE: '', PHOTO_FALLBACK_VERDICT: '', rewardNote: () => '' },
     'media-denied.js': { guideIfDenied: () => false },
@@ -65,7 +65,7 @@ test('E-B4/B5 photocheck:提交失败改「重新提交」不重拍;判分中忙
   const j = instance(def, { judging: true })
   j.onShoot(); assert.deepStrictEqual(j._ev, [])
   def.observers.judging.call(c, true); assert.strictEqual(c.data.resubmit, false)
-  assert.match(read('pages/play/components/playkit-photocheck/index.wxml'), /judging \? \(recordOnly \? '保存中…' : '审核中…'\)/)
+  assert.match(read('pages/playkit/components/playkit-photocheck/index.wxml'), /judging \? \(recordOnly \? '保存中…' : '审核中…'\)/)
 })
 
 test('E-B4/B5 页面:提交失败走 submit 并保留地址,判分期间 photoJudging', () => {
@@ -76,7 +76,7 @@ test('E-B4/B5 页面:提交失败走 submit 并保留地址,判分期间 photoJu
   assert.match(js, /'playKit\.kit\.photoJudging': on/)
   // CG-ALL-12(#866):重新提交按站别取动作名 —— 只记录站 SUBMIT_PHOTO_RECORD,判定站 SUBMIT_PHOTO_CHECK
   assert.match(js, /game\.action\(photoSubmitAction\(kit\), \{ imageUrl: url \}\)/)
-  assert.match(read('pages/play/components/playkit/index.wxml'), /photo-fail-kind="\{\{kit\.photoFailKind\}\}" judging="\{\{kit\.photoJudging\}\}"/)
+  assert.match(read('pages/playkit/components/playkit/index.wxml'), /photo-fail-kind="\{\{kit\.photoFailKind\}\}" judging="\{\{kit\.photoJudging\}\}"/)
 })
 
 test('E-B11 pass-reveal:点按直接落终态,已落定/已飞走不动', () => {

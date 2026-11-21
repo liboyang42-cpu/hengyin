@@ -11,7 +11,7 @@ const assert = require('node:assert/strict')
 const path = require('node:path')
 
 const PLAY_PAGE = '../../pages/play/index.js'
-const QA_COMPONENT = '../../pages/play/components/playkit-qa/index.js'
+const QA_COMPONENT = '../../pages/playkit/components/playkit-qa/index.js'
 const upload = require('../../utils/transport/upload-client.js')
 
 const MIB = 1024 * 1024
@@ -147,7 +147,7 @@ function chooseAndShoot(comp, file) {
   return evt.detail
 }
 
-/** 复刻 wrapper(pages/play/components/playkit/index.js:73)的转发:kitaction{type,action,detail}。 */
+/** 复刻 wrapper(pages/playkit/components/playkit/index.js:73)的转发:kitaction{type,action,detail}。 */
 function dispatchShoot(page, detail, type = 'qa') {
   page.onPlayKitAction({ detail: { type, action: 'shoot', detail } })
 }

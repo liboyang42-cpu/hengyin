@@ -165,7 +165,7 @@ test('慢任务到期进入可领取态_不得显示还有0天', () => {
   const fs = require('node:fs')
   const path = require('node:path')
   const wxml = fs.readFileSync(path.resolve(__dirname,
-    '../../pages/play/components/playkit-slowtask/body.wxml'), 'utf8')
+    '../../pages/playkit/components/playkit-slowtask/body.wxml'), 'utf8')
   assert.match(wxml, /wx:elif="\{\{!claimed && daysLeft > 0\}\}"/)
 })
 
@@ -320,7 +320,7 @@ test('负控:把某一段从优先级表里摘掉,上一条必须判红', () => 
 })
 
 /* ★ 第二条链路:分发器 wxml 绑的每个 `kit.X`,pickPlayKit 必须真的产出。
-   kit 的属性**只**由 pages/play/components/playkit/index.wxml 从 kit.* 喂,
+   kit 的属性**只**由 pages/playkit/components/playkit/index.wxml 从 kit.* 喂,
    没产出的那个属性会静默回落到组件默认值 —— 不报错、不打日志、只是那行字不出现。
    2026-09-15 实证:竞猜屏要的是原型那套 closeMode/closeDays(「第 N 天揭晓」),
    而我们全链路(配置、校验、后端投影、pickPlayKit)产出的是 closeAtHour(当天几点截止收注),
@@ -332,7 +332,7 @@ function boundKeysByType() {
   const fs = require('node:fs')
   const path = require('node:path')
   const wxml = fs.readFileSync(
-    path.resolve(__dirname, '../../pages/play/components/playkit/index.wxml'), 'utf8')
+    path.resolve(__dirname, '../../pages/playkit/components/playkit/index.wxml'), 'utf8')
   return tagsToBound(wxml.match(/<cy-playkit-[\s\S]*?\/>/g) || [])
 }
 
@@ -453,7 +453,7 @@ test('★分发器里不许有「谁也到不了」的分支 —— 组件白建
   const fs = require('node:fs')
   const path = require('node:path')
   const root = path.resolve(__dirname, '../..')
-  const wxml = fs.readFileSync(path.join(root, 'pages/play/components/playkit/index.wxml'), 'utf8')
+  const wxml = fs.readFileSync(path.join(root, 'pages/playkit/components/playkit/index.wxml'), 'utf8')
   const view = fs.readFileSync(path.join(root, 'pages/play/utils/playkit-view.js'), 'utf8')
 
   const branches = [...wxml.matchAll(/kit\.type === '([a-z]+)'/g)].map((m) => m[1])

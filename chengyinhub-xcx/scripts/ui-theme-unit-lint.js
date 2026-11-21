@@ -62,12 +62,19 @@ const EXCLUDED_DESIGN_DOMAINS = [
     owner: '用户'
   },
   {
+    // 2026-11-21 play 分包超 2MB 拆分:玩法组件从 pages/play/components 原样移到只放组件的 pages/playkit 分包,
+    // 仍是同一个游玩设计域、同一批文件,排除范围不变。
+    pathPrefix: 'pages/playkit/',
+    reason: '用户自维护的游玩设计域(玩法组件分包，自 pages/play/components 原样移出)，主题由该域自身的 intro / 运行态方案管理',
+    owner: '用户'
+  },
+  {
     pathPrefix: 'pages/roam/',
     reason: '用户自维护的漫游设计域，主题由该域自身的 intro / 运行态方案管理',
     owner: '用户'
   }
 ];
-const EXCLUSION_PATH_CONTRACT = /^pages\/(?:play|roam)\/$/;
+const EXCLUSION_PATH_CONTRACT = /^pages\/(?:play|playkit|roam)\/$/;
 // PG-020:topicadd 兼容壳已删除;无主题重定向壳登记保留为空集,新增须显式登记。
 const THEMELESS_REDIRECT_SHELLS = new Set();
 
@@ -170,8 +177,8 @@ function assertExclusionContract() {
   const validRecords = EXCLUDED_DESIGN_DOMAINS.every(({ pathPrefix, reason, owner }) => (
     EXCLUSION_PATH_CONTRACT.test(pathPrefix) && reason && owner === '用户'
   ));
-  if (paths.length !== 2 || new Set(paths).size !== 2 || !validRecords) {
-    throw new Error('设计域排除项只能是 pages/play/、pages/roam/，且必须记录原因与负责人');
+  if (paths.length !== 3 || new Set(paths).size !== 3 || !validRecords) {
+    throw new Error('设计域排除项只能是 pages/play/、pages/playkit/、pages/roam/，且必须记录原因与负责人');
   }
 }
 

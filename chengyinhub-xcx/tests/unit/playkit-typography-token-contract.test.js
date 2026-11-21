@@ -20,8 +20,8 @@ const fs = require('node:fs')
 const path = require('node:path')
 
 const ROOT = path.join(__dirname, '..', '..')
-const KITS = path.join(ROOT, 'pages', 'play', 'components')
-const SURFACE = path.join(ROOT, 'pages', 'play', 'style', 'play-surface.wxss')
+const KITS = path.join(ROOT, 'pages', 'playkit', 'components')
+const SURFACE = path.join(ROOT, 'pages', 'playkit', 'style', 'play-surface.wxss')
 
 /** 新代玩法屏 = 吃 play-surface 那套皮面的。老代(playkit.wxss)另算,见下面的说明。 */
 function newGenWxss() {
@@ -102,7 +102,7 @@ test('negative control:老代玩法屏(playkit.wxss)不在本条管辖内,不许
 
 test('玩法主按钮使用按钮语义字号，标题调整不能改变按钮', () => {
   for (const [file, selector] of [
-    ['pages/play/style/play-surface.wxss', '.g-btn'],
+    ['pages/playkit/style/play-surface.wxss', '.g-btn'],
   ]) {
     const source = fs.readFileSync(path.join(ROOT, file), 'utf8')
     const body = source.slice(source.indexOf(selector + ' {')).split('}')[0]
@@ -193,7 +193,7 @@ test('偏差负控：显示档超限必须判红，恰好 4px 仍通过', () => 
 })
 
 test('偏差负控：丢声明、未知表达式、缺失或循环 token 不得跳过', () => {
-  const file = 'pages/play/components/playkit-diceroll/index.wxss'
+  const file = 'pages/playkit/components/playkit-diceroll/index.wxss'
   const original = fs.readFileSync(path.join(ROOT, file), 'utf8')
   for (const replacement of ['', 'font-size: var(--cy-not-defined);', 'font-size: calc(112rpx + 2rpx);']) {
     const changed = original.replace(/font-size:\s*var\(--cy-play-display-xl\);/, replacement)
@@ -207,7 +207,7 @@ test('偏差负控：丢声明、未知表达式、缺失或循环 token 不得�
 
 
 test('偏差负控：追加覆盖字号或同名规则必须判红', () => {
-  const file = 'pages/play/components/playkit-diceroll/index.wxss'
+  const file = 'pages/playkit/components/playkit-diceroll/index.wxss'
   const original = fs.readFileSync(path.join(ROOT, file), 'utf8')
   for (const changed of [
     original.replace('font-size: var(--cy-play-display-xl);',

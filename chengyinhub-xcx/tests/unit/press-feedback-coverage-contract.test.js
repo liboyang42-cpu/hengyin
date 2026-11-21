@@ -171,7 +171,7 @@ const SWALLOWER_CEILING = {
   'components/cy/dropdown/index.wxml': 1,
   'components/cy/date-sheet/index.wxml': 1,
   // 2026-08-26 v5.1 今日城市签:全屏签卡的防穿透挡板
-  'pages/play/components/playkit-dailysign/index.wxml': 1,
+  'pages/playkit/components/playkit-dailysign/index.wxml': 1,
   // 2026-09-10 漫游四模式脱离 DS 壳:两屏改用原型自己的 .sheet,
   //   本体各带一个 catchtap="noop" 防穿透挡板(点正文不该把自己关掉)——
   //   与 cy-scene-sheet 那一个同性质,只是这四个模式不再走那件组件。

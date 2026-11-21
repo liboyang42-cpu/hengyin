@@ -24,13 +24,13 @@ const path = require('node:path')
 
 const ROOT = path.resolve(__dirname, '../..')
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8')
-const JS = read('pages/play/components/scratch/index.js')
-const WXML = read('pages/play/components/scratch/index.wxml')
-const { sampledAlphaProgress, CLEARED_ALPHA } = require('../../pages/play/utils/scratch-progress.js')
+const JS = read('pages/playkit/components/scratch/index.js')
+const WXML = read('pages/playkit/components/scratch/index.wxml')
+const { sampledAlphaProgress, CLEARED_ALPHA } = require('../../pages/playkit/utils/scratch-progress.js')
 
 /** 载入组件定义,拿到 methods(不把实现复制一份到测试里) */
 function load() {
-  const abs = path.join(ROOT, 'pages/play/components/scratch/index.js')
+  const abs = path.join(ROOT, 'pages/playkit/components/scratch/index.js')
   const prevC = global.Component
   const prevB = global.Behavior
   let captured = null
@@ -137,12 +137,12 @@ test('揭开只发生一次 —— 重复 _finish 不该抛第二次 reveal', ()
 })
 
 test('★调用方:今日城市签把签文盖在刮层下,并透传显隐状态', () => {
-  const wxml = read('pages/play/components/playkit-dailysign/index.wxml')
+  const wxml = read('pages/playkit/components/playkit-dailysign/index.wxml')
   assert.match(wxml, /<cy-scratch[^>]*revealed="\{\{revealed\}\}"/)
   assert.match(wxml, /<cy-scratch[\s\S]*?ds__poem[\s\S]*?<\/cy-scratch>/,
     '签文必须在 cy-scratch 里面 —— 在外面就是没盖住')
-  assert.match(read('pages/play/components/playkit-dailysign/index.json'), /"cy-scratch"/, '组件没注册会静默不渲染')
-  assert.match(read('pages/play/components/playkit/index.wxml'), /revealed="\{\{kit\.revealed\}\}"/,
+  assert.match(read('pages/playkit/components/playkit-dailysign/index.json'), /"cy-scratch"/, '组件没注册会静默不渲染')
+  assert.match(read('pages/playkit/components/playkit/index.wxml'), /revealed="\{\{kit\.revealed\}\}"/,
     '分发器必须透传视图层算出的显隐状态，首次领取与重新进入不能混成同一状态')
 })
 

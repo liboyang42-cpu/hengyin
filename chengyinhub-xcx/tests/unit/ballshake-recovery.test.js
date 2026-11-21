@@ -4,8 +4,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const ROOT = path.resolve(__dirname, '../..');
-const BALL = 'pages/play/components/playkit-ballshake/index';
-const STAGE = 'pages/play/components/play-stage/index';
+const BALL = 'pages/playkit/components/playkit-ballshake/index';
+const STAGE = 'pages/playkit/components/play-stage/index';
 
 // Load both production components. The view host preserves keyed child instances,
 // so a stopped old stage can still deliver its captured callbacks in negative controls.

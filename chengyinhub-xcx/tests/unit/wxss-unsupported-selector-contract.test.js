@@ -3,7 +3,7 @@
  *
  * 2026-09-16 实证:抽卡按钮的三尖角流光用了 `.dk__ch > * + *`,
  * ui-integrity / js-scope 全绿、单测全绿,开发者工具一编译:
- *   ./pages/play/components/playkit-random/index.wxss(130:11): error at token `*`
+ *   ./pages/playkit/components/playkit-random/index.wxss(130:11): error at token `*`
  * 连带整个渲染层起不来(__route__ is not defined),那一轮截图全废。
  */
 const assert = require('node:assert/strict')

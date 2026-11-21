@@ -17,7 +17,7 @@ function loadComponent(rel) {
 }
 
 test('CG-ALL-13 题图读不出来:换成替代文字 + 重试,不留破图', () => {
-  const def = loadComponent('pages/play/components/playkit-qa/index.js')
+  const def = loadComponent('pages/playkit/components/playkit-qa/index.js')
   const vm = { data: { imgFailed: false, imageUrl: 'https://x/a.png' }, setData(p) { Object.assign(this.data, p) } }
   def.methods.onQuestionImgError.call(vm)
   assert.equal(vm.data.imgFailed, true)
@@ -26,11 +26,11 @@ test('CG-ALL-13 题图读不出来:换成替代文字 + 重试,不留破图', ()
   vm.data.imgFailed = true
   def.observers.imageUrl.call(vm)
   assert.equal(vm.data.imgFailed, false, '换题复位')
-  const wxml = read('pages/play/components/playkit-qa/index.wxml')
+  const wxml = read('pages/playkit/components/playkit-qa/index.wxml')
   assert.match(wxml, /<image wx:if="\{\{!imgFailed\}\}" class="qa__img"[^>]*binderror="onQuestionImgError"/)
   assert.match(wxml, /\{\{imageAlt \|\| '图片没加载出来'\}\}/)
   assert.match(wxml, /bindtap="onRetryQuestionImg"[^>]*>重试</)
-  assert.match(read('pages/play/components/playkit/index.wxml'), /image-alt="\{\{kit\.imageAlt\}\}"/)
+  assert.match(read('pages/playkit/components/playkit/index.wxml'), /image-alt="\{\{kit\.imageAlt\}\}"/)
 })
 
 test('CG-ALL-13 服务端给 imageAlt 才带,没给为空串(组件用通用一句)', () => {
@@ -45,18 +45,18 @@ test('CG-01-P2-5 逐字猜词题面下常驻「怎么填」入口(含 V＝ü),�
   const { hangmanKit } = require('../../pages/play/utils/playkit-questo.js')
   assert.equal(hangmanKit({ slots: [], howto: ' 一格一个字母 ' }).howto, '一格一个字母')
   assert.equal(hangmanKit({ slots: [] }).howto, '')
-  const def = loadComponent('pages/play/components/playkit-hangman/index.js')
+  const def = loadComponent('pages/playkit/components/playkit-hangman/index.js')
   assert.match(def.data.DEFAULT_HOWTO, /ü 用 V 代替/)
   const vm = { data: { howtoOpen: false }, setData(p) { Object.assign(this.data, p) } }
   def.methods.onToggleHowto.call(vm)
   assert.equal(vm.data.howtoOpen, true)
   def.methods.onToggleHowto.call(vm)
   assert.equal(vm.data.howtoOpen, false, '可反复开合')
-  const wxml = read('pages/play/components/playkit-hangman/index.wxml')
+  const wxml = read('pages/playkit/components/playkit-hangman/index.wxml')
   assert.match(wxml, /<view class="hm__how pk-in" wx:if="\{\{!solved\}\}">/)
   assert.match(wxml, /bindtap="onToggleHowto"[^>]*>怎么填</)
   assert.match(wxml, /\{\{howto \|\| DEFAULT_HOWTO\}\}/)
-  assert.match(read('pages/play/components/playkit/index.wxml'), /howto="\{\{kit\.howto\}\}"/)
+  assert.match(read('pages/playkit/components/playkit/index.wxml'), /howto="\{\{kit\.howto\}\}"/)
 })
 
 test('CG-07-P2-2 结算总览单独数出辅助完成(跳过 / 看过答案)的节点,没有就不出格子', () => {
@@ -111,7 +111,7 @@ test('CG-ALL-12 只记录拍照(#866):读 photoCheck.mode=RECORD,提交走 SUBMI
   assert.equal(confirmed.textConfirmed, true)
   assert.equal(kit.textConfirmed, false)
 
-  const def = loadComponent('pages/play/components/playkit-photocheck/index.js')
+  const def = loadComponent('pages/playkit/components/playkit-photocheck/index.js')
   const obs = def.observers['show, tries, maxTries, passed, flagged, degraded, fallback, lastReason']
   const vm = { data: Object.assign({}, def.data, { recordOnly: true }), setData(p) { Object.assign(this.data, p) }, replayMotion() {} }
   obs.call(vm, true, 1, 3, true, false, false, 'retake', '')
@@ -123,10 +123,10 @@ test('CG-ALL-12 只记录拍照(#866):读 photoCheck.mode=RECORD,提交走 SUBMI
   const judge = { data: Object.assign({}, def.data), setData(p) { Object.assign(this.data, p) }, replayMotion() {} }
   obs.call(judge, true, 1, 3, true, false, false, 'retake', '')
   assert.equal(judge.data.verdict, '这张过了', '审核模式不变')
-  const wxml = read('pages/play/components/playkit-photocheck/index.wxml')
+  const wxml = read('pages/playkit/components/playkit-photocheck/index.wxml')
   assert.match(wxml, /judging \? \(recordOnly \? '保存中…' : '审核中…'\)/)
-  assert.match(read('pages/play/components/playkit/index.wxml'), /record-only="\{\{kit\.recordOnly\}\}" text-confirmed="\{\{kit\.textConfirmed\}\}"\n  bind:shoot="onShoot" bind:resubmit="onResubmit" bind:textconfirm="onTextConfirm"/)
-  assert.match(read('pages/play/components/playkit/index.js'), /onTextConfirm\(\) \{ this\._emit\('textconfirm'\); \}/)
+  assert.match(read('pages/playkit/components/playkit/index.wxml'), /record-only="\{\{kit\.recordOnly\}\}" text-confirmed="\{\{kit\.textConfirmed\}\}"\n  bind:shoot="onShoot" bind:resubmit="onResubmit" bind:textconfirm="onTextConfirm"/)
+  assert.match(read('pages/playkit/components/playkit/index.js'), /onTextConfirm\(\) \{ this\._emit\('textconfirm'\); \}/)
   // 页面:拍照提交与重新提交都按站别取动作名;只记录站不走模型同意;失败同样回到那一屏
   const page = read('pages/play/index.js')
   assert.match(page, /name: photoSubmitAction\(kit\),/)
@@ -140,7 +140,7 @@ test('CG-ALL-12 / CG-ALL-29 只记录站相机被拒:亮出「不拍照，继续
   const modalPath = require.resolve(path.join(ROOT, 'utils/modal.js'))
   const saved = require.cache[modalPath]
   require.cache[modalPath] = { id: modalPath, filename: modalPath, loaded: true, exports: { show: (o) => shown.push(o) } }
-  const def = loadComponent('pages/play/components/playkit-photocheck/index.js')
+  const def = loadComponent('pages/playkit/components/playkit-photocheck/index.js')
   const inst = { data: Object.assign({}, def.data, { recordOnly: true }), events: [] }
   inst.setData = (p) => Object.assign(inst.data, p)
   inst.triggerEvent = (n, d) => inst.events.push([n, d])
@@ -174,7 +174,7 @@ test('CG-ALL-12 / CG-ALL-29 只记录站相机被拒:亮出「不拍照，继续
     inst.onShoot()
   } finally { global.wx = prevWx }
   assert.deepEqual(inst.events, [['shoot', { tempFilePath: 'wxfile://a.jpg', size: 1 }]])
-  assert.match(read('pages/play/components/playkit-photocheck/index.wxml'), /wx:elif="\{\{recordOnly && skipOffer && !passed && !judging\}\}" bindtap="onTextConfirm"/)
+  assert.match(read('pages/playkit/components/playkit-photocheck/index.wxml'), /wx:elif="\{\{recordOnly && skipOffer && !passed && !judging\}\}" bindtap="onTextConfirm"/)
   if (saved) require.cache[modalPath] = saved; else delete require.cache[modalPath]
 })
 
@@ -185,7 +185,7 @@ test('CG-09-P2-5 / CG-10-D-3 题面下常驻「看不清？查看资料图」:�
   const { hangmanKit } = require('../../pages/play/utils/playkit-questo.js')
   assert.equal(hangmanKit({ slots: [], referenceImage: 'https://x/r.png' }).referenceUrl, 'https://x/r.png')
   assert.equal(hangmanKit({ slots: [] }).referenceUrl, '')
-  for (const rel of ['pages/play/components/playkit-qa/index.js', 'pages/play/components/playkit-hangman/index.js']) {
+  for (const rel of ['pages/playkit/components/playkit-qa/index.js', 'pages/playkit/components/playkit-hangman/index.js']) {
     const def = loadComponent(rel)
     const previews = []
     const events = []
@@ -198,8 +198,8 @@ test('CG-09-P2-5 / CG-10-D-3 题面下常驻「看不清？查看资料图」:�
     assert.deepEqual(previews, ['https://x/r.png'], rel)
     assert.deepEqual(events, ['reference'], rel)
   }
-  assert.match(read('pages/play/components/playkit-qa/index.wxml'), /wx:if="\{\{referenceUrl\}\}" bindtap="onOpenReference"[^>]*>看不清？查看资料图</)
-  assert.match(read('pages/play/components/playkit-hangman/index.wxml'), /wx:if="\{\{referenceUrl\}\}" bindtap="onOpenReference"[^>]*>看不清？查看资料图</)
+  assert.match(read('pages/playkit/components/playkit-qa/index.wxml'), /wx:if="\{\{referenceUrl\}\}" bindtap="onOpenReference"[^>]*>看不清？查看资料图</)
+  assert.match(read('pages/playkit/components/playkit-hangman/index.wxml'), /wx:if="\{\{referenceUrl\}\}" bindtap="onOpenReference"[^>]*>看不清？查看资料图</)
   // #866 白名单里看资料图是 material_view(不是 hint_open)
   assert.match(read('pages/play/index.js'), /case 'reference': this\._stageEvent\('material_view', \(this\._kit\(\) \|\| \{\}\)\.nodeId\); return;/)
 })

@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { createD20Renderer, faces, orientFace, rotate } = require('../../pages/play/utils/d20-renderer.js');
+const { createD20Renderer, faces, orientFace, rotate } = require('../../pages/playkit/utils/d20-renderer.js');
 
 test('D20 是闭合的二十面体，每个权威点数都能朝向玩家且相对面之和为 21', () => {
   assert.equal(faces.length, 20);
@@ -92,7 +92,7 @@ test('画布错误不拦截检定请求；慢回包进入落面动画时取消�
   const fs = require('node:fs');
   const vm = require('node:vm');
   let definition;
-  vm.runInNewContext(fs.readFileSync(require.resolve('../../pages/play/components/playkit-diceroll/index.js'), 'utf8'), {
+  vm.runInNewContext(fs.readFileSync(require.resolve('../../pages/playkit/components/playkit-diceroll/index.js'), 'utf8'), {
     Component(config) { definition = config; }, require() { return {}; }, setTimeout, clearTimeout,
   });
   function instance(renderer) {

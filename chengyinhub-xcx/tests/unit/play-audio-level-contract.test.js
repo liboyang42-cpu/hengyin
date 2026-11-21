@@ -14,9 +14,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '../..');
-const MODULE_PATH = path.join(ROOT, 'pages/play/utils/play-audio-level.js');
-const QUIETHOLD_JS = path.join(ROOT, 'pages/play/components/playkit-quiethold/index.js');
-const level = require('../../pages/play/utils/play-audio-level.js');
+const MODULE_PATH = path.join(ROOT, 'pages/playkit/utils/play-audio-level.js');
+const QUIETHOLD_JS = path.join(ROOT, 'pages/playkit/components/playkit-quiethold/index.js');
+const level = require('../../pages/playkit/utils/play-audio-level.js');
 
 function pcm(values) {
   const buf = new Int16Array(values.length);

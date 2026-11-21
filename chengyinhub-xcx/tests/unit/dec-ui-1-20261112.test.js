@@ -24,8 +24,8 @@ function accusation() {
   let def
   global.Component = (d) => { def = d }
   global.Behavior = (o) => o; global.wx = global.wx || {}
-  delete require.cache[require.resolve('../../pages/play/components/playkit-accusation/index.js')]
-  require('../../pages/play/components/playkit-accusation/index.js')
+  delete require.cache[require.resolve('../../pages/playkit/components/playkit-accusation/index.js')]
+  require('../../pages/playkit/components/playkit-accusation/index.js')
   const timers = []
   const realSet = global.setTimeout
   global.setTimeout = (fn) => { timers.push(fn); return timers.length }
@@ -51,8 +51,8 @@ test('D-56:翻页卡左滑 = 下一位,右滑 = 上一位;短滑与竖向滑动�
     inst.onFlipNext(); while (timers.length) timers.shift()()
     assert.equal(inst.data.cur, 1, '点按仍翻下一位')
   } finally { restore() }
-  const wxml = read('pages/play/components/playkit-accusation/index.wxml')
+  const wxml = read('pages/playkit/components/playkit-accusation/index.wxml')
   assert.match(wxml, /class="ac__deck"[^>]*bindtouchstart="onDeckTouchStart" bindtouchend="onDeckTouchEnd"/)
   assert.match(wxml, /bindtap="onFlipNext"/)
-  assert.doesNotMatch(read('pages/play/components/playkit-accusation/index.wxss'), /@keyframes/)
+  assert.doesNotMatch(read('pages/playkit/components/playkit-accusation/index.wxss'), /@keyframes/)
 })

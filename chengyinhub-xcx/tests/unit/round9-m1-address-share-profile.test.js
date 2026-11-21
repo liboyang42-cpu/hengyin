@@ -163,7 +163,7 @@ test('点地址开地图:各页面都走 utils/open-address.js', () => {
     'pages/topic/merchantinfo/merchantinfo.js', 'pages/topic/merchantapply/index.js',
     'pages/topic/components/project-join/index.js', 'pages/topic/components/project-host/index.js',
     'pages/merchant/apply/index.js', 'pages/merchant/decor/index.js', 'pages/merchant/citynode/create/index.js',
-    'pages/topic/components/cy/chapter-node-form/index.js', 'pages/play/components/playkit-dailysign/index.js',
+    'pages/topic/components/cy/chapter-node-form/index.js', 'pages/playkit/components/playkit-dailysign/index.js',
     'subpackageMember/components/cy/scene-member-order-history/index.js', 'subpackageMember/components/cy/scene-game-coupon-wallet/index.js',
     'subpackageRoam/nearby/index.js', 'subpackageRoam/official-route/index.js',
     'subpackageB/pages/im/chat/index.js', 'components/cy/merchant-card/index.js',

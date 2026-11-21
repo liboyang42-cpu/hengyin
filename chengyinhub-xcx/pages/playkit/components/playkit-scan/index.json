@@ -1,0 +1,8 @@
+{
+  "component": true,
+  "styleIsolation": "isolated",
+  "usingComponents": {
+    "cy-play-stage": "/pages/playkit/components/play-stage/index",
+    "cy-scan-ar": "/pages/playkit/components/playkit-scan/ar/index"
+  }
+}

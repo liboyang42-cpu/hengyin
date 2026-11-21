@@ -6,7 +6,7 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
 
-const pool = require('../../pages/play/utils/letter-pool.js')
+const pool = require('../../pages/playkit/utils/letter-pool.js')
 const questo = require('../../pages/play/utils/playkit-questo.js')
 const { pickPlayKit, serverAction, serverPayload } = require('../../pages/play/utils/playkit-view.js')
 
@@ -126,13 +126,13 @@ test('会话视图:pool 模式把 inputMode / pool 带进 kit;键盘模式照旧
   const plain = questo.hangmanKit({ slots: SLOTS })
   assert.equal(plain.inputMode, 'keyboard')
   assert.deepEqual(plain.pool, [])
-  const wxml = read('pages/play/components/playkit/index.wxml')
+  const wxml = read('pages/playkit/components/playkit/index.wxml')
   assert.match(wxml, /input-mode="\{\{kit\.inputMode\}\}" pool="\{\{kit\.pool\}\}"/)
   assert.match(wxml, /letter-pool="\{\{kit\.letterPool\}\}"/)
 })
 
 test('逐字猜词组件 pool 模式:点字填、点格退回、清空、提交 {slots};错答后已填的字保留', () => {
-  const def = loadComponent('pages/play/components/playkit-hangman/index.js')
+  const def = loadComponent('pages/playkit/components/playkit-hangman/index.js')
   const c = mount(def, {})
   c.update({ show: true, slots: SLOTS, solved: false, inputMode: 'pool', pool: POOL })
   assert.equal(c.data.poolOn, true)
@@ -166,14 +166,14 @@ test('逐字猜词组件 pool 模式:点字填、点格退回、清空、提交 
 })
 
 test('逐字猜词组件:键盘模式不受影响(没有候选字、系统键盘输入框仍在)', () => {
-  const def = loadComponent('pages/play/components/playkit-hangman/index.js')
+  const def = loadComponent('pages/playkit/components/playkit-hangman/index.js')
   const c = mount(def, {})
   c.update({ show: true, slots: SLOTS, solved: false, inputMode: 'keyboard', pool: [] })
   assert.equal(c.data.poolOn, false)
   c.onInput({ detail: { value: 'ABC' } })
   c.onSubmit()
   assert.deepEqual(c.events.pop().detail, { slots: { 0: 'A', 3: 'B', 4: 'C' } })
-  const wxml = read('pages/play/components/playkit-hangman/index.wxml')
+  const wxml = read('pages/playkit/components/playkit-hangman/index.wxml')
   assert.match(wxml, /wx:if="\{\{!solved && poolOn\}\}"/)
   assert.match(wxml, /<block wx:elif="\{\{!solved\}\}">\s*<!--[^>]*-->\s*<input class="hm__in/, '输入框只在非 pool 模式出现')
 })
@@ -186,7 +186,7 @@ test('打字题字符池:answerLength 个空格 + 候选字,提交 SUBMIT_QA {in
   assert.equal(pickPlayKit({ sessionId: 's2', version: 1, playKit: { qa: { mode: 'TYPE', title: 'x' } } }, NOW).letterPool, null)
   assert.equal(questo.qaLetterPool({ mode: 'PICK', letterPool: seg.letterPool }), null, '只有打字题才有字符池')
 
-  const def = loadComponent('pages/play/components/playkit-qa/index.js')
+  const def = loadComponent('pages/playkit/components/playkit-qa/index.js')
   const c = mount(def, { mode: 'type', judge: true, attempts: 0, passed: false, finished: false, feedbackText: '', authoredOutcome: '', sessionId: 's2', nodeId: '7' })
   c.update({ show: true, options: [], attempts: 0, letterPool: kit.letterPool })
   assert.equal(c.data.poolOn, true)
@@ -212,21 +212,21 @@ test('打字题字符池:answerLength 个空格 + 候选字,提交 SUBMIT_QA {in
   // 去掉干扰字后重读:池变小
   c.update({ letterPool: { chars: ['C', 'A', 'B'], answerLength: 3 } })
   assert.equal(c.data.poolRows[0].keys.length, 3)
-  const wxml = read('pages/play/components/playkit-qa/index.wxml')
+  const wxml = read('pages/playkit/components/playkit-qa/index.wxml')
   assert.match(wxml, /<block wx:if="\{\{mode === 'type' && poolOn\}\}">/)
   assert.match(wxml, /aria-label="候选字 \{\{item\.ch\}\}/)
 })
 
 test('无障碍与样式:候选字 / 清空命中区 ≥ 44px;颜色只读皮肤变量,不新造色', () => {
-  const css = read('pages/play/style/letter-pool.wxss')
+  const css = read('pages/playkit/style/letter-pool.wxss')
   const rule = (sel) => (css.match(new RegExp('\\' + sel + ' \\{([^}]*)\\}')) || [])[1] || ''
   assert.match(rule('.lp__key'), /width: 88rpx;[\s\S]*height: 88rpx;/)
   assert.match(rule('.lp__clear'), /min-height: 88rpx;/)
   assert.doesNotMatch(css, /#[0-9a-fA-F]{3,8}\b/, '不写死颜色')
-  for (const rel of ['pages/play/components/playkit-hangman/index.wxss', 'pages/play/components/playkit-qa/index.wxss']) {
-    assert.match(read(rel), /@import "\/pages\/play\/style\/letter-pool\.wxss";/, rel)
+  for (const rel of ['pages/playkit/components/playkit-hangman/index.wxss', 'pages/playkit/components/playkit-qa/index.wxss']) {
+    assert.match(read(rel), /@import "\/pages\/playkit\/style\/letter-pool\.wxss";/, rel)
   }
-  const hm = read('pages/play/components/playkit-hangman/index.wxml')
+  const hm = read('pages/playkit/components/playkit-hangman/index.wxml')
   assert.match(hm, /bindtap="onClearPool"[^>]*aria-label="清空"/)
   assert.match(hm, /aria-label="候选字 \{\{item\.ch\}\}/)
 })

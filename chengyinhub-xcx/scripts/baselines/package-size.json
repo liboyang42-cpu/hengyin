@@ -5,5 +5,11 @@
     "assetCeilingBytes": 341176,
     "rawBytes": 3391325,
     "rawCeilingBytes": 3424093
+  },
+  "est": {
+    "note": "2026-11-21 play 分包拆分:编译后粗估(scripts/lib/package-graph.js estimate)棘轮。pages/play 硬上限 1950KB(真编译上限 2048KB,留余量);主包 est 只许往下调,余量不超过 16KB——主包真值未取证,降到 1950KB 以下需单独瘦身车道。",
+    "mainBytes": 2236640,
+    "mainCeilingBytes": 2253024,
+    "playLimitBytes": 1996800
   }
 }

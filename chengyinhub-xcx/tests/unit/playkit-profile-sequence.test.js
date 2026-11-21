@@ -7,7 +7,7 @@ const drafts = {};
 const draftStub = { read: k => drafts[k] || {}, write: (k, v) => { if (k) drafts[k] = v; }, clear: k => { delete drafts[k]; } };
 function profile(questions, avatar = {}, draftKey = '') {
   let spec;
-  vm.runInNewContext(fs.readFileSync(require.resolve('../../pages/play/components/playkit-profile/index.js'), 'utf8'), {
+  vm.runInNewContext(fs.readFileSync(require.resolve('../../pages/playkit/components/playkit-profile/index.js'), 'utf8'), {
     Component: value => { spec = value; }, require: p => (/kit-draft/.test(p) ? draftStub : { haptic() {} }), wx: {},
     setTimeout: (fn, ms) => setTimeout(fn, ms), clearTimeout: id => clearTimeout(id),
   });

@@ -9,7 +9,7 @@ const assert = require('node:assert/strict')
 const path = require('node:path')
 
 const PLAY_PAGE = '../../pages/play/index.js'
-const QA_COMPONENT = '../../pages/play/components/playkit-qa/index.js'
+const QA_COMPONENT = '../../pages/playkit/components/playkit-qa/index.js'
 const ADVANCED_GAME = '../../pages/play/components/advanced-game/index.js'
 const upload = require('../../utils/transport/upload-client.js')
 

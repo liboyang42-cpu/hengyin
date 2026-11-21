@@ -79,7 +79,7 @@ test('private XR preview uses existing fit math, rotates and cancels its bounded
   const model = { calcTotalBoundBox: () => ({ center: { x: 2, y: 1, z: 0 }, size: { x: 4, y: 2, z: 1 } }) };
   const sys = { GLTF: 'gltf', Transform: 'transform' };
   vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'pages/privacy/components/media-model-preview/index.js'), 'utf8'), {
-    require: () => require(path.join(ROOT, 'pages/play/components/playkit-scan/ar/ar-math.js')),
+    require: () => require(path.join(ROOT, 'pages/playkit/components/playkit-scan/ar/ar-math.js')),
     Component: value => { definition = value; }, wx: { getXrFrameSystem: () => sys },
     setTimeout: callback => { timer = callback; return 1; }, clearTimeout: () => { cleared++; },
   });
@@ -93,7 +93,7 @@ test('private XR preview uses existing fit math, rotates and cancels its bounded
 test('private XR refuses malformed geometry and emits recoverable error instead of displaying NaN', () => {
   const vm = require('node:vm'); let definition; const events = [];
   vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'pages/privacy/components/media-model-preview/index.js'), 'utf8'), {
-    require: () => require(path.join(ROOT, 'pages/play/components/playkit-scan/ar/ar-math.js')),
+    require: () => require(path.join(ROOT, 'pages/playkit/components/playkit-scan/ar/ar-math.js')),
     Component: value => { definition = value; }, wx: { getXrFrameSystem: () => ({ GLTF: 'gltf' }) },
     setTimeout: () => 1, clearTimeout() {},
   });

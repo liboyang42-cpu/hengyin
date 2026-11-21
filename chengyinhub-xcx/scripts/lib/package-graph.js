@@ -268,14 +268,51 @@ function mainOnlyUsedBySubpackages(g) {
   return out.sort((a, b) => b.size - a.size);
 }
 
-module.exports = { ROOT, build, loadConfig, mainOnlyUsedBySubpackages, stripJsComments };
+/* ---- est:编译后体积粗估(无第三方依赖,CI 可跑) ----------------------------------------
+ * 微信编译(project.config.json:es6 + minified + minifyWXSS + minifyWXML)= babel 转 ES5 再压缩。
+ * 这里不带 babel/terser,用「去注释 + 折叠空白」的轻量压缩量出每个代码文件,再乘 EST_CODE_FACTOR;
+ * 图片 / 音频等非代码文件按原字节计。
+ * 校准(2026-11-21,#891 树):
+ *   - DevTools CLI preview 真值:pages/play 2157KB(超 2048KB 被拒)。本函数给 2181KB(高 1%,偏保守)。
+ *   - 用 @babel/preset-env + terser 在本机模拟微信流水线:play 2162KB(与真值差 5KB);
+ *     各包「模拟值 / 轻量压缩值」(只算代码)稳定在 0.91–0.92,取 0.92 偏保守。
+ * 仍是估算:发版前以 DevTools --info-output 为准(scripts/wechat-release-contract.js)。
+ */
+const EST_CODE_FACTOR = 0.92;
+
+function lightMinify(rel, src) {
+  const ext = path.posix.extname(rel);
+  if (ext === '.js' || ext === '.wxs') return stripJsComments(src).replace(/^[ \t]+|[ \t]+$/gm, '').replace(/\n+/g, '\n');
+  if (ext === '.wxss') return src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ').replace(/\s*([{};:,>])\s*/g, '$1');
+  if (ext === '.wxml') return src.replace(/<!--[\s\S]*?-->/g, '').replace(/>\s+</g, '><').replace(/\s+/g, ' ');
+  if (ext === '.json') { try { return JSON.stringify(JSON.parse(src)); } catch (_) { return src; } }
+  return src;
+}
+
+/** estimate(g) ⇒ { <pkg>: estBytes } —— 每个包可达文件的编译后粗估字节 */
+function estimate(g, root = ROOT) {
+  const out = {};
+  for (const k of Object.keys(g.packages)) out[k] = 0;
+  for (const [f, info] of g.files) {
+    if (!g.reach.has(f)) continue;
+    const ext = path.posix.extname(f);
+    const n = CODE_EXT.includes(ext)
+      ? Math.ceil(Buffer.byteLength(lightMinify(f, fs.readFileSync(path.join(root, f), 'utf8'))) * EST_CODE_FACTOR)
+      : info.size;
+    out[info.owner] += n;
+  }
+  return out;
+}
+
+module.exports = { ROOT, build, loadConfig, mainOnlyUsedBySubpackages, stripJsComments, estimate, EST_CODE_FACTOR };
 
 if (require.main === module) {
   const g = build();
   const kb = (n) => (n / 1024).toFixed(1) + 'KB';
-  console.log('package'.padEnd(26), 'raw'.padStart(10), 'reachable'.padStart(10));
+  const est = estimate(g);
+  console.log('package'.padEnd(26), 'raw'.padStart(10), 'reachable'.padStart(10), 'est'.padStart(10));
   for (const k of Object.keys(g.packages).sort((a, b) => g.raw[b] - g.raw[a])) {
-    console.log(k.padEnd(26), kb(g.raw[k]).padStart(10), kb(g.packages[k].bytes).padStart(10));
+    console.log(k.padEnd(26), kb(g.raw[k]).padStart(10), kb(g.packages[k].bytes).padStart(10), kb(est[k]).padStart(10));
   }
   const total = Object.values(g.packages).reduce((s, p) => s + p.bytes, 0);
   console.log('TOTAL reachable', kb(total));

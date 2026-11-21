@@ -6,7 +6,7 @@ const vm = require('node:vm');
 
 function typein(props) {
   let spec;
-  vm.runInNewContext(fs.readFileSync(require.resolve('../../pages/play/components/playkit-typein/index.js'), 'utf8'), {
+  vm.runInNewContext(fs.readFileSync(require.resolve('../../pages/playkit/components/playkit-typein/index.js'), 'utf8'), {
     Component: value => { spec = value; }, require: () => ({ haptic() {} }),
     setTimeout: (fn, ms) => setTimeout(fn, ms), clearTimeout: id => clearTimeout(id),
   });

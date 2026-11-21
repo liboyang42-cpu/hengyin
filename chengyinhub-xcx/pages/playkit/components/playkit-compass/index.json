@@ -1,0 +1,9 @@
+{
+  "component": true,
+  "styleIsolation": "isolated",
+  "usingComponents": {
+    "cy-icon": "/components/cy/icon/index",
+    "cy-play-stage": "/pages/playkit/components/play-stage/index",
+    "cy-ring-meter": "/pages/playkit/components/ring-meter/index"
+  }
+}

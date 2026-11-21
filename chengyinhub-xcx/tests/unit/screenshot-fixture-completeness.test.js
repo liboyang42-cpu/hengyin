@@ -699,7 +699,7 @@ test('角色态与编辑器深层证据必须真正进入截图视口', () => {
 
 test('所有当前注册玩法都有玩家实际游玩填充态截图，不能只拍通用游玩页', () => {
   const shotsById = Object.fromEntries(SHOTS.map((shot) => [shot.id, shot]))
-  const dispatcher = read('pages/play/components/playkit/index.js')
+  const dispatcher = read('pages/playkit/components/playkit/index.js')
   const registryBody = dispatcher.match(/const KIT_TYPES = \[([\s\S]*?)\];/)
   assert.ok(registryBody, '无法从 cy-playkit 读取 KIT_TYPES 注册表')
   const registeredKits = [...registryBody[1].matchAll(/'([^']+)'/g)].map((match) => match[1])

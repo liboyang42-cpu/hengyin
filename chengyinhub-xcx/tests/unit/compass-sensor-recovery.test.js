@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const ROOT = path.resolve(__dirname, '../..');
-const FILE = 'pages/play/components/playkit-compass/index';
+const FILE = 'pages/playkit/components/playkit-compass/index';
 function host(options={}) {
   let now=1000,id=0,stage;const tasks=new Map(),history=[],handlers=new Set(),starts=[],events=[],toasts=[],stageCalls=[];
   const timer=(fn,ms,repeat)=>{const t={id:++id,fn,due:now+ms,ms,repeat};tasks.set(t.id,t);history.push(t);return t.id;};
@@ -15,7 +15,7 @@ function host(options={}) {
   };
   if(options.missingStart)delete wx.startCompass;if(options.missingListen)delete wx.onCompassChange;if(options.missingOff)delete wx.offCompassChange;if(options.missingStop)delete wx.stopCompass;
   function load(file){let definition;vm.runInNewContext(fs.readFileSync(path.join(ROOT,file+'.js'),'utf8'),{Component:x=>definition=x,require:name=>name.endsWith('/sensor-contract.js')?require('../../pages/play/utils/sensor-contract.js'):name.endsWith('/toast.js')?title=>toasts.push(title):{haptic(){},readReducedMotion:()=>false},wx,Date:{now:()=>now},Math,Number,setTimeout:(fn,ms)=>timer(fn,ms,false),clearTimeout:x=>tasks.delete(x),setInterval:(fn,ms)=>timer(fn,ms,true),clearInterval:x=>tasks.delete(x)},{filename:file});return definition;}
-  const def=load(FILE),stageDef=load('pages/play/components/play-stage/index');
+  const def=load(FILE),stageDef=load('pages/playkit/components/play-stage/index');
   function instance(d,props){const data={};for(const [key,value]of Object.entries(d.properties))data[key]=value.value;Object.assign(data,JSON.parse(JSON.stringify(d.data)),props);return Object.assign({data,setData(p,cb){Object.assign(data,p);if(cb)cb();}},d.methods);}
   const kit=instance(def,{show:true,target:0,holdSeconds:1,...options.props});
   const keyed=/wx:for="{{stageKeys}}"/.test(fs.readFileSync(path.join(ROOT,FILE+'.wxml'),'utf8'));

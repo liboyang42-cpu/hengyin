@@ -49,7 +49,7 @@ test('C-03 留言标题、提示空着前端就拦,文案与服务端一致', ()
 /** 从分发器模板里抽某个 type 那一块用到的 kit.xxx —— 这才是组件真吃的字段。 */
 function dispatcherFields(type) {
   // 先剥注释:注释里的「kit.X」不是绑定
-  const wxml = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit/index.wxml'), 'utf8')
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/playkit/components/playkit/index.wxml'), 'utf8')
     .replace(/<!--[\s\S]*?-->/g, '')
   const start = wxml.indexOf("kit.type === '" + type + "'")
   assert.ok(start > 0, '分发器里没有 ' + type)

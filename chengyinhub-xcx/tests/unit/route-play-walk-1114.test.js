@@ -66,7 +66,7 @@ test('结算使用可滚动内容区，保留真实成就和勋章，离屏导�
 });
 
 test('题卡直接按 imageUrl 渲染，图片后到也不依赖旧的 hasImage 缓存', () => {
-  const wxml = read('pages/play/components/playkit-qa/index.wxml');
+  const wxml = read('pages/playkit/components/playkit-qa/index.wxml');
   assert.match(wxml, /qa__media" wx:if="\{\{imageUrl\}\}"/);
   assert.match(wxml, /class="qa__img"[^>]*mode="widthFix"/);
 });

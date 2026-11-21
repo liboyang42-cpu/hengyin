@@ -10,7 +10,7 @@ global.wx = { getStorageSync: () => '', getWindowInfo: () => ({ statusBarHeight:
 global.getApp = () => ({ globalData: {} });
 let def;
 global.Component = value => { def = value; };
-require('../../pages/play/components/playkit-qa/index');
+require('../../pages/playkit/components/playkit-qa/index');
 const observer = def.observers['show, options, mode, multi, passed, finished, judge, lastOptionId, lastOptionIds, feedbackText, feedbackImages, sessionId, nodeId'];
 // Shape: AdvancedGameRuntimeServiceImpl.buildPlayKit qa projection (options only id/label).
 // New receipt fields follow the QA-BE contract; zeroview fixtures contain no QA views.
@@ -169,12 +169,12 @@ test('F04:单选答错后标红保留,另选一条再确认;选中项带 aria-se
   assert.deepEqual(inst.data.optionList.map(o => o.state), ['is-wrong', '', 'is-on']);
   inst.onCta();
   assert.deepEqual(events.map(e => e.detail.optionId), ['a', 'c']);
-  const source = fs.readFileSync(path.join(__dirname, '../../pages/play/components/playkit-qa/index.wxml'), 'utf8');
+  const source = fs.readFileSync(path.join(__dirname, '../../pages/playkit/components/playkit-qa/index.wxml'), 'utf8');
   assert.equal((source.match(/aria-selected="\{\{item.state === 'is-on'\}\}"/g) || []).length, 2);
 });
 
 test('completed choice label and preview handler are reachable in WXML; no tries or reveal for judge=false', () => {
-  const source = fs.readFileSync(path.join(__dirname, '../../pages/play/components/playkit-qa/index.wxml'), 'utf8');
+  const source = fs.readFileSync(path.join(__dirname, '../../pages/playkit/components/playkit-qa/index.wxml'), 'utf8');
   assert.match(source, /wx:if="\{\{item.chosen\}\}">你的选择/);
   assert.match(source, /wx:if="\{\{item.answer\}\}">正确答案/);
   // 两个标签不能复用占满宽度的 .qa__opt-t,否则交卷后选项文案被挤成窄栏(2026-11-01 VPS 实测)
@@ -185,7 +185,7 @@ test('completed choice label and preview handler are reachable in WXML; no tries
 });
 
 test('dispatcher binds the receipt fields to the real QA component', () => {
-  const source = fs.readFileSync(path.join(__dirname, '../../pages/play/components/playkit/index.wxml'), 'utf8');
+  const source = fs.readFileSync(path.join(__dirname, '../../pages/playkit/components/playkit/index.wxml'), 'utf8');
   const qa = source.match(/<cy-playkit-qa[\s\S]*?\/>/)[0];
   for (const field of ['judge', 'lastOptionId', 'lastOptionIds', 'feedbackImages', 'answerId', 'answerIds', 'reveal']) assert.ok(qa.includes('kit.' + field));
 });

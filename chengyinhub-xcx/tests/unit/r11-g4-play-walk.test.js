@@ -7,13 +7,13 @@ const ROOT = path.join(__dirname, '../..')
 const read = rel => fs.readFileSync(path.join(ROOT, rel), 'utf8')
 
 test('预测「不选，继续」之后:卡面不再说「转到想选的那张，点它」,也不出「就选这个」', () => {
-  const wxml = read('pages/play/components/playkit-predict/index.wxml')
+  const wxml = read('pages/playkit/components/playkit-predict/index.wxml')
   assert.match(wxml, /class="pd__hint" wx:if="\{\{!revealKind && !skipped\}\}"/)
   assert.match(wxml, /wx:elif="\{\{!skipped\}\}" class="g-btn/)
-  const js = read('pages/play/components/playkit-predict/index.js')
+  const js = read('pages/playkit/components/playkit-predict/index.js')
   assert.match(js, /skipped: \{ type: Boolean, value: false \}/)
   assert.match(js, /if \(this\.data\.committed \|\| this\.data\.closed \|\| this\.data\.skipped\) return;/)
-  assert.match(read('pages/play/components/playkit/index.wxml'), /skipped="\{\{kit\.skipped\}\}"/)
+  assert.match(read('pages/playkit/components/playkit/index.wxml'), /skipped="\{\{kit\.skipped\}\}"/)
   const view = require(path.join(ROOT, 'pages/play/utils/playkit-view.js'))
   const src = read('pages/play/utils/playkit-view.js')
   assert.match(src, /shopAnswers: seg\.shopAnswers !== false,\n\s*\/\/[^\n]*\n\s*skipped: seg\.skipped === true,/)
@@ -21,8 +21,8 @@ test('预测「不选，继续」之后:卡面不再说「转到想选的那张�
 })
 
 test('预测故事流内嵌:提示行落到卡和按钮之间,不压在卡底', () => {
-  assert.match(read('pages/play/components/playkit-predict/index.wxss'), /bottom: calc\(env\(safe-area-inset-bottom\) \+ var\(--pk-hint-bottom, 190rpx\)\)/)
-  assert.match(read('pages/play/components/playkit/index.wxml'), /--pk-btn-bottom:40rpx;--pk-hint-bottom:140rpx/)
+  assert.match(read('pages/playkit/components/playkit-predict/index.wxss'), /bottom: calc\(env\(safe-area-inset-bottom\) \+ var\(--pk-hint-bottom, 190rpx\)\)/)
+  assert.match(read('pages/playkit/components/playkit/index.wxml'), /--pk-btn-bottom:40rpx;--pk-hint-bottom:140rpx/)
 })
 
 test('j3 F15:结局页「这一生」只给有角色建档的主题,其它主题说「本局」', () => {

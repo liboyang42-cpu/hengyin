@@ -1,0 +1,70 @@
+@import "/pages/playkit/style/play-surface.wxss";
+
+/* cy-playkit-sort · 排序(2026-10-23 主人定稿:城瘾 排序连线分类试玩原型)
+   每行一张深色卡、行与行留缝;左边大号斜体序号;按住拖动那行抬起跟手。 */
+.so { color: var(--ink); text-align: left; align-items: stretch; }
+.so__prompt { font-size: var(--cy-type-sheet-title); font-weight: 800; line-height: 1.4; }
+.so__hint { margin-top: var(--cy-space-2); font-size: var(--cy-type-label); color: var(--sub); }
+.so__list { width: 100%; margin-top: var(--cy-space-5); }
+.so__row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 28rpx;
+  height: 128rpx;
+  margin-bottom: 20rpx;
+  padding: 0 28rpx 0 32rpx;
+  box-sizing: border-box;
+  border-radius: 32rpx;                    /* ds-ok 原型 .srow 16px */
+  background: var(--soft);
+}
+.so__no {
+  flex: none;
+  width: 52rpx;
+  font-family: var(--cy-font-numeric);
+  font-size: var(--cy-type-section-title);
+  font-style: italic;
+  font-weight: 800;
+  color: var(--sub);
+  transition: color .2s ease;
+}
+.so__img { flex: none; width: 72rpx; height: 72rpx; border-radius: var(--cy-radius-sm); }
+.so__label {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--cy-type-body);
+  font-weight: 600;
+  line-height: 1.35;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+/* 把手:三道细杠,整行都能拖,这里只是告诉人「能拖」 */
+.so__grip { flex: none; width: 36rpx; display: flex; flex-direction: column; gap: 6rpx; opacity: .5; }
+.so__grip-i { height: 4rpx; border-radius: 2rpx; background: var(--ink); }   /* ds-ok 玩法屏装饰细节圆角,照原型 */
+.so__press { opacity: .88; }
+.g-btn--press { opacity: .88; }
+/* 点选:描一圈白边,序号亮起来 */
+.so__row.is-pick { box-shadow: inset 0 0 0 4rpx var(--ink); }
+.so__row.is-pick .so__no { color: var(--ink); }
+/* 正在拖的那一行:抬起来、带投影、压在别的行上面(跟手的位移由 wxml 内联 transform 给) */
+.so__row.is-dragging {
+  z-index: 3;
+  background: rgba(255, 255, 255, .12);       /* ds-ok 暗台面上抬一级 */
+  box-shadow: 0 36rpx 80rpx rgba(0, 0, 0, .6);   /* ds-ok 抬起那行的投影,照原型 */
+  transition: none;
+}
+/* 只有整体通过才逐行变绿(那意味着每一位都对);判错不逐行标红 —— 服务端不给逐位置对错 */
+.so__row.is-right { background: rgba(18, 160, 111, .18); }   /* ds-ok 成功色软底,与 --ok 同源 */
+.so__row.is-right .so__no { color: var(--ok); }
+.so__fb {
+  margin-top: var(--cy-space-2);
+  padding: var(--cy-space-3) var(--cy-space-4);
+  border-radius: var(--cy-radius-md);
+  font-size: var(--cy-type-body);
+  font-weight: 700;
+}
+.so__fb.is-ok { background: rgba(18, 160, 111, .16); color: var(--ok); }   /* ds-ok 同上 */
+.so__fb.is-no { background: var(--cy-color-status-danger-soft); color: var(--accent); }
+.so--reduced .so__no { transition: none; }

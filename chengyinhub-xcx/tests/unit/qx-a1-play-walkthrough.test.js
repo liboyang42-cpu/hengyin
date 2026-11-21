@@ -97,7 +97,7 @@ test('V3-10/53:故事流内嵌块不再撑满一屏、不再垫台面底色;滚�
   const vars = wxss.match(/\.chfull__kit\{ width:100%;[^}]*\}/)[0]
   for (const need of ['--pk-card-h:auto', '--pk-card-h-tall:auto', '--pk-card-bg:transparent']) assert.ok(vars.includes(need), need)
   for (const kit of ['coinflip', 'shout', 'walk']) {
-    assert.match(read('pages/play/components/playkit-' + kit + '/index.wxss'), /background: var\(--pk-card-bg, /, kit + ' 内嵌应透明')
+    assert.match(read('pages/playkit/components/playkit-' + kit + '/index.wxss'), /background: var\(--pk-card-bg, /, kit + ' 内嵌应透明')
   }
   const wxml = read('pages/play/index.wxml')
   assert.match(wxml, /class="chfull__kit-anchor" id="\{\{'chapter-kit-' \+ item\.nodeId\}\}"/)

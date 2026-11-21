@@ -46,8 +46,8 @@ test('B48 创作四步提示已从发布器拿掉', () => {
 })
 
 test('F39 城市签不再放上面的猫', () => {
-  const wxml = read('pages/play/components/playkit-dailysign/index.wxml')
-  const json = read('pages/play/components/playkit-dailysign/index.json')
+  const wxml = read('pages/playkit/components/playkit-dailysign/index.wxml')
+  const json = read('pages/playkit/components/playkit-dailysign/index.json')
   assert.doesNotMatch(wxml, /cy-mascot/)
   assert.doesNotMatch(json, /cy-mascot/)
 })
@@ -188,7 +188,7 @@ test('第2批错误态夹具不再把出错了写进可见文案', () => {
 
 test('post-card 与 scratch 不再引用未定义 token', () => {
   const post = read('components/cy/post-card/index.wxss')
-  const scratch = read('pages/play/components/scratch/index.wxss')
+  const scratch = read('pages/playkit/components/scratch/index.wxss')
   assert.doesNotMatch(post, /var\(--cy-warning\)/)
   assert.match(post, /var\(--cy-color-status-warning\)/)
   assert.doesNotMatch(scratch, /var\(--cy-color-surface-raised\)/)

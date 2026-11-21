@@ -12,8 +12,8 @@ const path = require('node:path')
 const test = require('node:test')
 
 const ROOT = path.resolve(__dirname, '../..')
-const REL = 'pages/play/components/playkit-photocheck/index.js'
-const WXML = 'pages/play/components/playkit-photocheck/index.wxml'
+const REL = 'pages/playkit/components/playkit-photocheck/index.js'
+const WXML = 'pages/playkit/components/playkit-photocheck/index.wxml'
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8')
 
 /** 载入组件定义:stub Component/Behavior,拿 methods 与 observers(与 playkit-v51-contract 同一手法)。 */
@@ -109,7 +109,7 @@ test('负控:把 reason 的 wxml 节点摘掉,上一条必须红', () => {
 })
 
 test('★分发器把 degraded / lastReason 传给组件 —— 少一个绑定,降级与理由都到不了这一屏', () => {
-  const wxml = read('pages/play/components/playkit/index.wxml')
+  const wxml = read('pages/playkit/components/playkit/index.wxml')
   const start = wxml.indexOf('cy-playkit-photocheck');
   const block = wxml.slice(start, wxml.indexOf('bind:shoot', start));
   assert.ok(block.length > 0, '分发器里没有 photocheck 分支')

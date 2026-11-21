@@ -46,7 +46,7 @@ test('B1 page retains only server-accepted own input across photo and QA compone
   result(p, game, 1, true, false); await Promise.resolve(); assert.equal(p._kit().type, 'photocheck');
   result(p, game, 2, true, true); assert.equal(p._kit().acceptedInput, '041');
   let qa; global.Component = def => { qa = def; };
-  const file = require.resolve('../../pages/play/components/playkit-qa/index.js'); delete require.cache[file]; require(file);
+  const file = require.resolve('../../pages/playkit/components/playkit-qa/index.js'); delete require.cache[file]; require(file);
   const kit = p._kit(), c = Object.assign({}, qa.methods, { data: Object.assign({}, qa.data, kit, { show: true }),
     setData(v) { Object.assign(this.data,v); }, selectComponent: () => null });
   const observer = Object.keys(qa.observers).find(k => k.startsWith('show, options'));

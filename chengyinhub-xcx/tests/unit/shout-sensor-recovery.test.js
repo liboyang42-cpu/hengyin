@@ -4,8 +4,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const ROOT = path.resolve(__dirname, '../..');
-const FILE = 'pages/play/components/playkit-shout/index';
-const audio = require('../../pages/play/utils/play-audio-level.js');
+const FILE = 'pages/playkit/components/playkit-shout/index';
+const audio = require('../../pages/playkit/utils/play-audio-level.js');
 function pcm(value=0) { const a=new Int16Array(4);a[0]=Math.round(value*32767);return a.buffer; }
 function host(options={}) {
  let now=1000,id=0,stage,definition;
@@ -24,7 +24,7 @@ function host(options={}) {
  if(options.noRecorder)delete wx.getRecorderManager;
  function schedule(fn,ms,repeat){const n=++id,t={id:n,fn,ms,due:now+ms,repeat};tasks.set(n,t);history.push(t);return n;}
  function load(file){let def;vm.runInNewContext(fs.readFileSync(path.join(ROOT,file+'.js'),'utf8'),{Component:x=>{def=x;},wx,Date:{now:()=>now},Math,Number,ArrayBuffer,Int16Array,require:p=>p.endsWith('play-audio-level.js')?audio:p.endsWith('/sensor-contract.js')?require('../../pages/play/utils/sensor-contract.js'):p.endsWith('/toast.js')?message=>toasts.push(message):p.endsWith('motion-preference.js')?{readReducedMotion:()=>true}:{haptic(){}},setTimeout:(fn,ms)=>schedule(fn,ms,false),clearTimeout:n=>tasks.delete(n),setInterval:(fn,ms)=>schedule(fn,ms,true),clearInterval:n=>tasks.delete(n)},{filename:file});return def;}
- definition=load(FILE);const stageDef=load('pages/play/components/play-stage/index');
+ definition=load(FILE);const stageDef=load('pages/playkit/components/play-stage/index');
  function instance(def,props){const data={};for(const[k,v]of Object.entries(def.properties))data[k]=v.value;Object.assign(data,JSON.parse(JSON.stringify(def.data)),props);return Object.assign({data,setData(p,cb){Object.assign(data,p);if(cb)cb();}},def.methods);}
  const c=instance(definition,{show:true,seconds:options.seconds||1});
  const view=fs.readFileSync(path.join(ROOT,FILE+'.wxml'),'utf8');const keyed=/wx:for="{{stageKeys}}"/.test(view);

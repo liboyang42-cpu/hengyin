@@ -8,8 +8,8 @@ const path = require('node:path')
 const test = require('node:test')
 
 const ROOT = path.resolve(__dirname, '../..')
-const WXML = 'pages/play/components/playkit-scan/index.wxml'
-const JS = 'pages/play/components/playkit-scan/index.js'
+const WXML = 'pages/playkit/components/playkit-scan/index.wxml'
+const JS = 'pages/playkit/components/playkit-scan/index.js'
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8')
 
 function loadComponent() {
@@ -106,7 +106,7 @@ test('叠加图装进固定高度的框:不再是 widthFix(图越高越往下长
   const over = (wxml.match(/<image class="sc__over[^>]*>/) || [''])[0]
   assert.match(over, /mode="aspectFit"/, '固定框 + aspectFit,多高的图都不越界')
   assert.doesNotMatch(over, /widthFix/, 'widthFix 让高度跟着图走，高图直接压到底部气泡')
-  const wxss = read('pages/play/components/playkit-scan/index.wxss')
+  const wxss = read('pages/playkit/components/playkit-scan/index.wxss')
   const rule = (wxss.match(/\.sc__over \{[^}]*\}/) || [''])[0]
   assert.match(rule, /height: \d+rpx/, '框高要写死，不然 aspectFit 没有边界可 fit')
 })
@@ -115,7 +115,7 @@ test('叠加图装进固定高度的框:不再是 widthFix(图越高越往下长
 // 用户原话:「这个没有上面的地址输入 而且应该是全屏的 不能只有中间正方块」
 
 test('显形档的相机铺满整屏,不是中间一块方洞', () => {
-  const wxss = read('pages/play/components/playkit-scan/index.wxss')
+  const wxss = read('pages/playkit/components/playkit-scan/index.wxss')
   const rule = (wxss.match(/\.sc__cam \{[^}]*\}/) || [''])[0]
   assert.match(rule, /position: fixed/, '要整屏就得脱离这一列的流')
   for (const edge of ['left: 0', 'top: 0', 'right: 0', 'bottom: 0']) {
@@ -126,7 +126,7 @@ test('显形档的相机铺满整屏,不是中间一块方洞', () => {
 
 test('准星小而轻;说明收进底部一条半透明条,不压在画面中间', () => {
   // Apple HIG:环境里的文字越少越好;必要说明放在屏幕固定位置、用半透明控件,别挡画面
-  const wxss = read('pages/play/components/playkit-scan/index.wxss')
+  const wxss = read('pages/playkit/components/playkit-scan/index.wxss')
   const aim = (wxss.match(/\.sc__aim \{[^}]*\}/) || [''])[0]
   const w = Number((aim.match(/width: (\d+)rpx/) || [])[1])
   assert.ok(w > 0 && w <= 200, '准星框宽 ' + w + 'rpx —— 超过 200rpx 就又成了扫码框')
@@ -156,7 +156,7 @@ test('显形档整屏取景时不出现玩法页的「输入地址」(用户 202
 })
 
 test('显形档动效只走 transition,不新增 keyframes(全仓只减不增)', () => {
-  const wxss = read('pages/play/components/playkit-scan/index.wxss')
+  const wxss = read('pages/playkit/components/playkit-scan/index.wxss')
   const frames = (wxss.match(/@keyframes\s+[\w-]+/g) || [])
   assert.deepEqual(frames, ['@keyframes sc-scan'], '只允许原有的扫描线那一条')
 })

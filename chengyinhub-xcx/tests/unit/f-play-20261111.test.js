@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
-const shake = require('../../pages/play/utils/play-shake.js');
+const shake = require('../../pages/playkit/utils/play-shake.js');
 
 const ROOT = path.join(__dirname, '../..');
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
@@ -22,7 +22,7 @@ function fakeWx() {
 function mountKit(kind, wx, props) {
   let config;
   const events = [];
-  const file = path.join(ROOT, 'pages/play/components/playkit-' + kind + '/index.js');
+  const file = path.join(ROOT, 'pages/playkit/components/playkit-' + kind + '/index.js');
   vm.runInNewContext(fs.readFileSync(file, 'utf8'), {
     Component(value) { config = value; }, wx, Date, Math, setTimeout, clearTimeout,
     require(name) {

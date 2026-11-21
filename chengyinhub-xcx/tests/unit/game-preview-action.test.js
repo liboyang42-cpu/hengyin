@@ -58,7 +58,7 @@ test('D20 作者预览标为试玩不计成绩（一句玩家话，无开发说�
   const result = previewD20Result({ rollMode: 'normal', modifier: 3, dc: 10, successText: '成', failText: '败' });
   assert.equal(result.sandbox, true);
   assert.equal(result.modifierSource, 'TEMPLATE_FIXED');
-  const wxml = fs.readFileSync(path.join(__dirname, '../../pages/play/components/playkit-diceroll/index.wxml'), 'utf8');
+  const wxml = fs.readFileSync(path.join(__dirname, '../../pages/playkit/components/playkit-diceroll/index.wxml'), 'utf8');
   assert.match(wxml, /wx:if="\{\{preview\}\}"[^>]*>\s*<text>试玩，不计成绩<\/text>\s*<\/view>/);
   assert.doesNotMatch(wxml, /沙盒|加值为作者/);
   const source = fs.readFileSync(path.join(__dirname, '../../pages/play/utils/playkit-view.js'), 'utf8');

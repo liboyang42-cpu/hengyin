@@ -85,7 +85,7 @@ test('1) pvSimTop 取退出键下沿与微信胶囊下沿的较大者,再空 8px
 });
 
 test('2) 翻卡卡面眉标用卡面 token(与详情 .dk__pill 同组),不再是近白字配近白底', () => {
-  const css = read('pages/play/components/playkit-random/index.wxss');
+  const css = read('pages/playkit/components/playkit-random/index.wxss');
   const tag = rule(css, '.dk__tag');
   assert.doesNotMatch(tag, /--lk-bg|--pk-embed-accent/, '这两个在试玩里都是近白');
   assert.match(tag, /color:\s*var\(--lk-dim,/);
@@ -96,11 +96,11 @@ test('2) 翻卡卡面眉标用卡面 token(与详情 .dk__pill 同组),不再是
 });
 
 test('2) 翻卡有正文就把这句写大在卡面上,图案退成右下角小角标', () => {
-  const wxml = read('pages/play/components/playkit-random/index.wxml');
+  const wxml = read('pages/playkit/components/playkit-random/index.wxml');
   const card = wxml.match(/<view class="dk__card[\s\S]*?<\/view>\s*<\/view>/)[0];
   assert.match(card, /<view class="dk__line" wx:if="\{\{item\.body\}\}">\{\{item\.body\}\}<\/view>/);
   assert.match(card, /class="dk__art \{\{item\.body \? 'dk__art--corner' : ''\}\}"/);
-  const css = read('pages/play/components/playkit-random/index.wxss');
+  const css = read('pages/playkit/components/playkit-random/index.wxss');
   const line = rule(css, '.dk__line');
   assert.match(line, /font-size:\s*var\(--cy-type-sheet-title\)/, '正文要写大,不是正文字号');
   const corner = rule(css, '.dk__art--corner');
@@ -111,11 +111,11 @@ test('2) 翻卡有正文就把这句写大在卡面上,图案退成右下角小�
   const kit = preview.buildPreviewKit(draft, { title: '', limitSeconds: 0 });
   assert.ok(kit.cards.length && kit.cards.every((c) => c.title && c.body));
   // 组件把 body 带进牌堆每张卡
-  assert.match(read('pages/play/components/playkit-random/index.js'), /id: c\.id \|\| \('c' \+ i\), title: c\.title \|\| '', body: c\.body \|\| ''/);
+  assert.match(read('pages/playkit/components/playkit-random/index.js'), /id: c\.id \|\| \('c' \+ i\), title: c\.title \|\| '', body: c\.body \|\| ''/);
 });
 
 test('3) 找东西图区内嵌时有最小高(不再塌成 0 高只剩标题和清单),范例图带固有尺寸', () => {
-  const css = read('pages/play/components/playkit-hidden/index.wxss');
+  const css = read('pages/playkit/components/playkit-hidden/index.wxss');
   const scene = rule(css, '.hd__scene');
   const min = Number((scene.match(/min-height:\s*(\d+)rpx/) || [])[1]);
   assert.ok(min >= 600, '.hd__scene 内嵌时会塌成 0 高');
@@ -146,7 +146,7 @@ test('3) 找东西试玩可以点:本机按范例热区判中,命中写回 targe
 });
 
 test('3) 找东西组件按带 found 的 targets 画点、计数,全找到由台面判赢', () => {
-  const file = require.resolve('../../pages/play/components/playkit-hidden/index.js');
+  const file = require.resolve('../../pages/playkit/components/playkit-hidden/index.js');
   let def = null;
   const saved = { Component: global.Component, wx: global.wx, Behavior: global.Behavior };
   global.Component = (d) => { def = d; };

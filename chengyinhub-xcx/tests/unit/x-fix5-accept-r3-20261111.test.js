@@ -21,15 +21,15 @@ test('R3-2 整屏玩法 / 相册 / 判定 / 检定宿主都挂外观类,look-tok
 })
 
 test('R3-2 相册查看器 / 抽卡 / 弹球 / 抛硬币 / 主按钮读外观 token,无外观时回落原色', () => {
-  const alb = read('pages/play/components/playkit-album/index.wxss')
+  const alb = read('pages/playkit/components/playkit-album/index.wxss')
   assert.match(alb, /background:var\(--alb-bg, #F4F4F6\)/)
   assert.doesNotMatch(alb, /background:#1C1C1E; color:#FFFFFF/)
-  const rj = read('pages/play/components/playkit-random/index.js')
+  const rj = read('pages/playkit/components/playkit-random/index.js')
   assert.match(rj, /const THEMES = \['var\(--pk-embed-bg, #0b6adc\)', 'var\(--lk-card, #d99a16\)', 'var\(--lk-pop, #c5372f\)'\]/)
-  const bl = read('pages/play/components/playkit-ballshake/index.wxss')
+  const bl = read('pages/playkit/components/playkit-ballshake/index.wxss')
   assert.match(bl, /background: var\(--pk-embed-bg, #0a0a0b\)/)
-  assert.match(read('pages/play/components/playkit-coinflip/index.wxss'), /var\(--pk-card-bg, var\(--pk-embed-bg, #000\)\)/)
-  assert.match(read('pages/play/style/play-surface.wxss'), /background: var\(--lk-a, var\(--cy-comp-btn-primary-bg, #FFF\)\);/)
+  assert.match(read('pages/playkit/components/playkit-coinflip/index.wxss'), /var\(--pk-card-bg, var\(--pk-embed-bg, #000\)\)/)
+  assert.match(read('pages/playkit/style/play-surface.wxss'), /background: var\(--lk-a, var\(--cy-comp-btn-primary-bg, #FFF\)\);/)
 })
 
 test('R3-1 开始准备被拒时把后端原因原话回给队长', () => {

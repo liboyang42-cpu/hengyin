@@ -15,7 +15,7 @@ test('N-1 故事流「继续探索」避开 Home 条:收尾区与底垫都含安
 })
 
 test('N-6 骰子内嵌块与整屏台面读外观色,不再是暗色外观里的白矩形', () => {
-  const w = read('pages/play/components/playkit-diceroll/index.wxss')
+  const w = read('pages/playkit/components/playkit-diceroll/index.wxss')
   const dzi = w.match(/\.dzi \{[^}]+\}/)[0]
   assert.match(dzi, /background: var\(--pk-embed-bg, radial-gradient/)
   assert.match(dzi, /color: var\(--pk-embed-ink, #2a2540\)/)
@@ -23,7 +23,7 @@ test('N-6 骰子内嵌块与整屏台面读外观色,不再是暗色外观里的
   assert.match(w.match(/\.dz \{[^}]+\}/)[0], /background: var\(--pk-embed-bg, radial-gradient/)
   // 2026-11-21 内嵌掷骰按钮并入统一主按钮 .g-btn(原 .dzi__roll 的字色读 --atmo-bg,预览里与底同色看不见)
   assert.doesNotMatch(w, /\.dzi__roll \{/)
-  assert.match(read('pages/play/components/playkit-diceroll/index.wxml'), /class="g-btn [^"]*" bindtap="onRoll"/)
+  assert.match(read('pages/playkit/components/playkit-diceroll/index.wxml'), /class="g-btn [^"]*" bindtap="onRoll"/)
 })
 
 test('N-7 玩家页根在 look 下给出 --pk-embed-*;抽卡屏/详情读外观色,不再亮蓝/浅灰', () => {
@@ -32,16 +32,16 @@ test('N-7 玩家页根在 look 下给出 --pk-embed-*;抽卡屏/详情读外观�
     assert.match(t, /\.play\[class\*="look--"\](, \.pk-lookhost\[class\*="look--"\])? \{ --pk-embed-bg:var\(--lk-bg\); --pk-embed-ink:var\(--lk-ink\);/)
     assert.match(t, /--pk-embed-accent:var\(--lk-a\);/)
   }
-  const r = read('pages/play/components/playkit-random/index.wxss')
+  const r = read('pages/playkit/components/playkit-random/index.wxss')
   assert.doesNotMatch(r, /background: #0b6adc;/)
   assert.doesNotMatch(r, /background: #(e6e3e4|f1f0f0|e0dede);/)
   assert.match(r, /background: var\(--lk-card, #e6e3e4\)/)
   assert.match(r, /background: var\(--lk-card, #f1f0f0\)/)
-  assert.match(read('pages/play/style/play-surface.wxss'), /--ci-scrim:var\(--pk-embed-scrim,/)
+  assert.match(read('pages/playkit/style/play-surface.wxss'), /--ci-scrim:var\(--pk-embed-scrim,/)
   // 其余弹层与玩法台面一并读外观色
-  assert.match(read('pages/play/components/playkit-bingo/index.wxss'), /\.bg__cell\.pale \{ background: var\(--lk-ink/)
+  assert.match(read('pages/playkit/components/playkit-bingo/index.wxss'), /\.bg__cell\.pale \{ background: var\(--lk-ink/)
   assert.match(read('pages/play/components/fragment/index.wxss'), /var\(--lk-pop,/)
-  assert.doesNotMatch(read('pages/play/components/playkit-stopwatch/index.wxss'), /background: rgba\(255, 255, 255, \.92\);/)
+  assert.doesNotMatch(read('pages/playkit/components/playkit-stopwatch/index.wxss'), /background: rgba\(255, 255, 255, \.92\);/)
 })
 
 test('N-9 结算页没带 topicName 时按主题 id 补主题名,标题不落「本局」', () => {

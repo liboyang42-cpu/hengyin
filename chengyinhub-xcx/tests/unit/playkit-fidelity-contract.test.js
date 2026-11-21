@@ -15,9 +15,9 @@ const fs = require('node:fs')
 const path = require('node:path')
 
 const ROOT = path.resolve(__dirname, '../..')
-const DIR = path.join(ROOT, 'pages/play/components')
+const DIR = path.join(ROOT, 'pages/playkit/components')
 const readC = (name, ext) => fs.readFileSync(
-  path.join(ROOT, 'pages/play/components', name, 'index.' + ext), 'utf8')
+  path.join(ROOT, 'pages/playkit/components', name, 'index.' + ext), 'utf8')
 const wxss = (n) => readC(n, 'wxss')
 /* hex 的大小写没有含义,只对**颜色**做不区分大小写的比对。
    ⚠️ 别图省事把整份文件 toLowerCase 再比:translateY / rotateX / scaleY 这些
@@ -39,7 +39,7 @@ test('共享玩法组件的 WXSS import 必须指向真实文件，否则整个�
 })
 
 test('皮肤表逐字对应原型 .phone[data-skin=…]', () => {
-  const s = fs.readFileSync(path.join(ROOT, 'pages/play/style/play-surface.wxss'), 'utf8')
+  const s = fs.readFileSync(path.join(ROOT, 'pages/playkit/style/play-surface.wxss'), 'utf8')
   const WANT = {
     'skin-estimate': ['#fcfcfc', '#111114', '#6c6c6c', '#e7e7e7', '#fc3f3f', '#12a06f'],
     'skin-guess':    ['#0e0e0e', '#f0ece5', '#8a857d', '#1b1b1a', '#e4ddd2', '#3ecf8e'],

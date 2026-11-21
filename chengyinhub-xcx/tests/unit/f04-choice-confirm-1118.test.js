@@ -13,7 +13,7 @@ function load(kit) {
   const prevC = global.Component, prevB = global.Behavior
   global.Behavior = (b) => b
   global.Component = (d) => { def = d }
-  const file = path.join(ROOT, 'pages/play/components/playkit-' + kit + '/index.js')
+  const file = path.join(ROOT, 'pages/playkit/components/playkit-' + kit + '/index.js')
   delete require.cache[require.resolve(file)]
   require(file)
   global.Component = prevC; global.Behavior = prevB
@@ -37,7 +37,7 @@ test('branch:多个选项时点选项不提交、可以换,确认后报最后选
   assert.equal(inst.data.chosen, 1)
   inst.onConfirm(); inst.onConfirm(); tap(inst, 0)
   assert.deepEqual(events, [{ name: 'choose', detail: { index: 1, optionId: 'r' } }])
-  const wxml = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-branch/index.wxml'), 'utf8')
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/playkit/components/playkit-branch/index.wxml'), 'utf8')
   assert.match(wxml, /bindtap="onConfirm"/)
   assert.match(wxml, /aria-selected="\{\{chosen === index\}\}"/)
 })
@@ -71,7 +71,7 @@ test('blindTaste:睁眼作答先选、可以换,确认才作答,确认后不再�
 
 test('确认前的选择只在本机,不广播;路线说明不再需要「选定后不可更改」', () => {
   for (const kit of ['qa', 'branch', 'pricepair', 'blindtaste']) {
-    const js = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-' + kit + '/index.js'), 'utf8')
+    const js = fs.readFileSync(path.join(ROOT, 'pages/playkit/components/playkit-' + kit + '/index.js'), 'utf8')
     assert.doesNotMatch(js, /选定后不可更改/)
   }
 })

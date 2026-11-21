@@ -43,11 +43,11 @@ global.wx = { getStorageSync: key => storage[key] || '', setStorageSync: (key, v
 global.Page = value => { pageDef = value; };
 require('../../pages/play/index.js');
 global.Component = value => { albumDef = value; };
-require('../../pages/play/components/playkit-album/index.js');
+require('../../pages/playkit/components/playkit-album/index.js');
 global.Component = value => { branchDef = value; };
-require('../../pages/play/components/playkit-branch/index.js');
+require('../../pages/playkit/components/playkit-branch/index.js');
 global.Component = value => { wrapperDef = value; };
-require('../../pages/play/components/playkit/index.js');
+require('../../pages/playkit/components/playkit/index.js');
 global.Component = value => { advancedDef = value; };
 require('../../pages/play/components/advanced-game/index.js');
 
@@ -141,7 +141,7 @@ function reviewAlbum(album) {
 
 test('相册审核：pending 一句状态，CTA 与 aria 明示审核及批准后提交', () => {
   const fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
-  const wxml = fs.readFileSync(path.join(__dirname, '../../pages/play/components/playkit-album/index.wxml'), 'utf8');
+  const wxml = fs.readFileSync(path.join(__dirname, '../../pages/playkit/components/playkit-album/index.wxml'), 'utf8');
   const pending = wxml.match(/<text wx:if="\{\{uploadFailure === 'review_pending'\}\}" aria-live="polite">([^<]+)<\/text>/);
   assert.ok(pending);
   assert.equal(pending[1], '照片审核中');
@@ -198,7 +198,7 @@ test('相册审核：REJECTED 沿共享上传器原资产重审，拒绝 URL 不
 
 test('相册审核：REJECTED 与审核中区分，拒绝后提供重新选图出口', () => {
   const fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
-  const wxml = fs.readFileSync(path.join(__dirname, '../../pages/play/components/playkit-album/index.wxml'), 'utf8');
+  const wxml = fs.readFileSync(path.join(__dirname, '../../pages/playkit/components/playkit-album/index.wxml'), 'utf8');
   const status = wxml.match(/<text wx:elif="\{\{uploadFailure === 'rejected'\}\}" aria-live="polite">([^<]+)<\/text>/);
   assert.ok(status); assert.match(status[1], /未通过审核/); assert.doesNotMatch(status[1], /审核中/);
   const cta = wxml.match(/<view bindtap="onCta"[^>]+>([^<]+)<\/view>/)[0]
@@ -516,9 +516,9 @@ test('相册 X019：HTTP 5xx 可重传同一张，业务拒绝请玩家重新选
 
 test('相册 X019：已提交后组件显示只读说明，不再提供拍照入口', () => {
   const fs = require('node:fs'); const path = require('node:path');
-  const wxml = fs.readFileSync(path.join(__dirname, '../../pages/play/components/playkit-album/index.wxml'), 'utf8');
+  const wxml = fs.readFileSync(path.join(__dirname, '../../pages/playkit/components/playkit-album/index.wxml'), 'utf8');
   assert.match(wxml, /wx:if="\{\{completionEnabled && done\}\}"[^>]*>照片已提交，相册仅供查看，不能再更换</);
-  assert.match(fs.readFileSync(path.join(__dirname, '../../pages/play/components/playkit/index.wxml'), 'utf8'), /upload-failure="\{\{kit\.uploadFailure\}\}"/);
+  assert.match(fs.readFileSync(path.join(__dirname, '../../pages/playkit/components/playkit/index.wxml'), 'utf8'), /upload-failure="\{\{kit\.uploadFailure\}\}"/);
   const done = component(albumDef, { completionEnabled: true, done: true, uploaded: true, uploadFailure: 'retry' });
   let closed = false; done.triggerEvent = name => { if (name === 'close') closed = true; };
   done.onCta(); done.choosePhoto();

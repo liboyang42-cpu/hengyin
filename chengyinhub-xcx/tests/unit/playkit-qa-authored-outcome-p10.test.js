@@ -16,7 +16,7 @@ function loadQa() {
   const prevC = global.Component, prevB = global.Behavior
   global.Behavior = (b) => b
   global.Component = (d) => { def = d }
-  const file = path.join(ROOT, 'pages/play/components/playkit-qa/index.js')
+  const file = path.join(ROOT, 'pages/playkit/components/playkit-qa/index.js')
   delete require.cache[require.resolve(file)]
   require(file)
   global.Component = prevC; global.Behavior = prevB
