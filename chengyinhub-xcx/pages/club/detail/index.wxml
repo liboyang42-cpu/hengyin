@@ -151,6 +151,8 @@
         </view>
       </block>
       <!-- E-09:失败不能渲染成「还没有帖子」——错误态给重试,空态只在成功且真的为空时出 -->
+      <!-- 1121:首读帖文期间给骨架,别先空着再整列弹出 -->
+      <cy-skeleton wx:elif="{{!postsLoaded}}" type="feed-card" count="2" loading-label="正在加载帖文" />
       <cy-error load-failure wx:elif="{{postsError}}" size="sm" title="帖文加载失败" sub="{{postsError}}" retry="重试" bind:retry="loadPosts" />
       <cy-empty wx:elif="{{postsLoaded}}" title="暂无帖文" sub="{{canSeeMembers ? '' : '入会后可发布'}}" />
     </view>
@@ -162,7 +164,7 @@
       <!-- 活动卡 / Event card(Figma 281:360):封面通栏,标签叠在封面左上;下面标题、地点类别、三列数字块。
            出示团码是稿没画但现码有的治理入口,保留在卡内动作行。 -->
       <template name="clubEventCard">
-        <view class="ev-card" data-id="{{item.id}}" bindtap="goTopic" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="ev-card" data-id="{{item.id}}" bindtap="goTopic" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">
           <view class="ev-coverslot">
             <image class="ev-cover" src="{{item.imgUrl || '/images/route_free_cover.png'}}" mode="aspectFill" lazy-load="true" />
             <view class="ev-status ev-status--{{item.statusTone}}">{{item.tagText}}</view>
@@ -290,7 +292,7 @@
           <block wx:elif="{{membersState === 'ready'}}">
             <view class="member cy-fade-in" wx:for="{{members}}" wx:key="id">
               <cy-avatar class="member-avatar" size="72" src="{{item.avatar || '/images/d_profile.png'}}" name="{{item.nickname || '城瘾玩家'}}" clickable="{{true}}" catchtap="goMemberProfile" data-member-id="{{item.memberId}}" aria-role="button" aria-label="打开成员主页" hover-class="cy-pressed" hover-stay-time="80" />
-              <view class="member-info" catchtap="goMemberProfile" data-member-id="{{item.memberId}}" hover-class="cy-pressed" hover-stay-time="80">
+              <view class="member-info" catchtap="goMemberProfile" data-member-id="{{item.memberId}}" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">
                 <view class="member-name">{{item.nickname || '城瘾玩家'}}<text wx:if="{{item.isOwner}}" class="member-owner">主理人</text><text wx:elif="{{item.role == 1}}" class="member-admin">管理员</text></view>
                 <view class="member-meta"><text wx:if="{{item.levelId != null && item.levelId > 0}}">Lv.{{item.levelId}} · </text><text>公开资料</text><cy-icon class="member-meta-arrow" name="arrow-right" size="20" /><text wx:if="{{item.isOwner}}"> · 创建俱乐部</text><text wx:elif="{{item.joinTime}}"> · 加入 {{item.joinTime}}</text></view>
               </view>
@@ -452,7 +454,7 @@
         <cy-skeleton wx:if="{{topicState === 'loading'}}" type="list" count="2" />
         <cy-error load-failure class="cy-fade-in" wx:elif="{{topicState === 'error'}}" title="项目列表加载失败" retry="重新加载" bind:retry="loadTopics" />
         <view wx:elif="{{manageTopics.length}}" class="manage-project-list cy-fade-in">
-          <view class="manage-project" wx:for="{{manageTopics}}" wx:key="id" data-id="{{item.id}}" bindtap="goManageTopic" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="manage-project" wx:for="{{manageTopics}}" wx:key="id" data-id="{{item.id}}" bindtap="goManageTopic" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">
             <image class="manage-project-cover" src="{{item.imgUrl || '/images/route_free_cover.png'}}" mode="aspectFill" lazy-load="true" />
             <view class="manage-project-main">
               <view class="manage-project-name">{{item.name || '未命名项目'}}</view>
@@ -461,9 +463,9 @@
             <!-- F-W5-11:两枚工具按钮收进第二行,不再与标题/报名数抢同一行的宽度。 -->
             <view wx:if="{{club.isOwner || club.viewerIsAdmin || canManageActivities || canOperateEvents || hasEventScope}}" class="manage-project-tools">
               <view wx:if="{{club.isOwner && item.id && item.gameModuleEnabled}}" class="manage-project-director"
-                catchtap="goGameDirector" data-topic-id="{{item.id}}" data-game-module-enabled="{{item.gameModuleEnabled}}" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">活动导演台</view>
+                catchtap="goGameDirector" data-topic-id="{{item.id}}" data-game-module-enabled="{{item.gameModuleEnabled}}" aria-role="button" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">活动导演台</view>
               <view wx:elif="{{club.viewerIsAdmin && item.id && item.gameModuleEnabled}}" class="manage-project-director"
-                catchtap="goGameDirector" data-topic-id="{{item.id}}" data-game-module-enabled="{{item.gameModuleEnabled}}" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">活动导演台</view>
+                catchtap="goGameDirector" data-topic-id="{{item.id}}" data-game-module-enabled="{{item.gameModuleEnabled}}" aria-role="button" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">活动导演台</view>
               <view wx:if="{{club.isOwner || club.viewerIsAdmin || canManageActivities || canOperateEvents || hasEventScope}}" class="manage-project-director"
                 catchtap="openActivityTools" data-id="{{item.id}}" aria-role="button" aria-label="打开 {{item.name || '该项目'}} 的场次工具" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">场次工具</view>
             </view>
@@ -639,7 +641,7 @@
         <cy-skeleton wx:if="{{inviteFeedbackState === 'loading'}}" type="list" count="2" />
         <cy-error load-failure class="cy-fade-in" wx:elif="{{inviteFeedbackState === 'error'}}" title="邀约反馈加载失败" retry="重新加载" bind:retry="reloadInviteFeedback" />
         <view wx:elif="{{sentInvites.length}}" class="manage-invite-list cy-fade-in">
-          <view class="manage-invite" wx:for="{{sentInvites}}" wx:key="id" bindtap="goCooperation" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="manage-invite" wx:for="{{sentInvites}}" wx:key="id" bindtap="goCooperation" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">
             <view class="manage-invite-main">
               <text class="manage-invite-partner">{{item.partnerName}}</text>
               <text class="manage-invite-topic">{{item.topicText}}</text>
@@ -726,13 +728,13 @@
       </view>
       <view class="cset-panel" wx:if="{{settingsPanel === 'tools'}}">
         <view class="manage-tools">
-          <view class="manage-tool" wx:if="{{club.isOwner}}" catchtap="onCreateTeam" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="route" size="40" /><text>发布主题</text></view>
-          <view class="manage-tool" wx:if="{{club.isOwner}}" catchtap="onOpenClubSession" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="flag" size="40" /><text>开一场</text></view>
+          <view class="manage-tool" wx:if="{{club.isOwner}}" catchtap="onCreateTeam" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="route" size="40" /><text>发布主题</text></view>
+          <view class="manage-tool" wx:if="{{club.isOwner}}" catchtap="onOpenClubSession" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="flag" size="40" /><text>开一场</text></view>
           <!-- 2026-08-25：四类工时自报已整条退役（线下无法核实）。
                2026-09-09：质量证据页按用户裁决整页删除,这里的入口一并撤走。
                ⚠️ 它原来是 Q 结算的唯一入口 —— 现在没有任何地方能交质量证据了,
                Q 会不会因此结不出钱,要产品那边确认。 -->
-          <view class="manage-tool" catchtap="onClubAiOpen" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="star" size="40" /><text>AI 策划</text></view>
+          <view class="manage-tool" catchtap="onClubAiOpen" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="star" size="40" /><text>AI 策划</text></view>
         </view>
       </view>
       <text class="cset-group" wx:if="{{club.isOwner || club.viewerIsAdmin || canApproveMembers || canReadMembers || canManageMembers || canManageRoles || canSendNotify}}">成员与权限</text>
@@ -767,7 +769,7 @@
         <block wx:elif="{{membersState === 'ready'}}">
           <view class="member member--managed cy-fade-in" wx:for="{{members}}" wx:key="id">
             <cy-avatar class="member-avatar" size="72" src="{{item.avatar || '/images/d_profile.png'}}" name="{{item.nickname || '城瘾玩家'}}" clickable="{{true}}" catchtap="goMemberProfile" data-member-id="{{item.memberId}}" aria-role="button" aria-label="打开成员主页" hover-class="cy-pressed" hover-stay-time="80" />
-            <view class="member-info" catchtap="goMemberProfile" data-member-id="{{item.memberId}}" hover-class="cy-pressed" hover-stay-time="80">
+            <view class="member-info" catchtap="goMemberProfile" data-member-id="{{item.memberId}}" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">
               <view class="member-name">{{item.nickname || '城瘾玩家'}}<text wx:if="{{item.isOwner}}" class="member-owner">主理人</text><text wx:elif="{{item.role == 1}}" class="member-admin">管理员</text></view>
               <view class="member-meta"><text wx:if="{{item.levelId != null && item.levelId > 0}}">Lv.{{item.levelId}} · </text><text>公开资料</text><cy-icon class="member-meta-arrow" name="arrow-right" size="20" /><text wx:if="{{item.isOwner}}"> · 创建俱乐部</text><text wx:elif="{{item.joinTime}}"> · 加入 {{item.joinTime}}</text></view>
             </view>
@@ -883,7 +885,7 @@
 
 
   <cy-sheet show="{{ownerPickerShow}}" title="选择要管理的俱乐部" bind:close="closeOwnerPicker">
-    <view class="owner-picker-item" wx:for="{{ownerClubs}}" wx:key="id" data-id="{{item.id}}" catchtap="onPickOwnerClub" hover-class="cy-pressed" hover-stay-time="80">{{item.name || item.clubName || ('俱乐部 ' + item.id)}}</view>
+    <view class="owner-picker-item" wx:for="{{ownerClubs}}" wx:key="id" data-id="{{item.id}}" catchtap="onPickOwnerClub" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">{{item.name || item.clubName || ('俱乐部 ' + item.id)}}</view>
   </cy-sheet>
 
   <!-- CU-C-106:panel 只挡住了遮罩与拖拽关闭,右上 ✕ 走的是 close —— 原来 closePostEdit
@@ -899,7 +901,7 @@
 
   <cy-sheet variant="full" show="{{postHistoryShow}}" title="编辑历史" bind:close="closePostHistory">
     <view class="post-history-sheet">
-      <view class="post-history-state" wx:if="{{postHistoryState === 'loading'}}">正在读取…</view>
+      <cy-skeleton wx:if="{{postHistoryState === 'loading'}}" type="list" count="3" loading-label="正在读取编辑历史" />
       <!-- F-R2U-01:编辑历史读取失败按加载失败留白(不显示错误文案) -->
       <view class="post-history-row" wx:for="{{postHistoryRows}}" wx:key="id">
         <view class="post-history-meta">{{item.versionText}} · {{item.timeText}}</view>
@@ -914,7 +916,7 @@
     <view class="ai-plan">
 
       <view class="ai-plan-chips">
-        <view class="ai-plan-chip" wx:for="{{aiIdeaChips}}" wx:key="*this" data-c="{{item}}" catchtap="onClubAiChip" hover-class="cy-pressed" hover-stay-time="80">{{item}}</view>
+        <view class="ai-plan-chip" wx:for="{{aiIdeaChips}}" wx:key="*this" data-c="{{item}}" catchtap="onClubAiChip" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">{{item}}</view>
       </view>
 
       <textarea class="ai-plan-idea" value="{{aiIdea}}" bindinput="onClubAiIdea" maxlength="200"
@@ -934,13 +936,13 @@
       <view class="ai-plan-acts">
         <block wx:if="{{aiState === 'generating'}}">
           <view class="ai-plan-gen ai-plan-gen--busy">生成中…</view>
-          <view class="ai-plan-ghost" catchtap="onClubAiCancel" hover-class="cy-pressed" hover-stay-time="80">取消</view>
+          <view class="ai-plan-ghost" catchtap="onClubAiCancel" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">取消</view>
         </block>
         <block wx:elif="{{aiState === 'error'}}">
-          <view class="ai-plan-gen" wx:if="{{aiCanRetry}}" catchtap="onClubAiGenerate" hover-class="cy-pressed" hover-stay-time="80">重试</view>
+          <view class="ai-plan-gen" wx:if="{{aiCanRetry}}" catchtap="onClubAiGenerate" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">重试</view>
         </block>
         <block wx:else>
-          <view class="ai-plan-gen" catchtap="onClubAiGenerate" hover-class="cy-pressed" hover-stay-time="80">{{aiState === 'done' ? '换一版' : '生成方案'}}</view>
+          <view class="ai-plan-gen" catchtap="onClubAiGenerate" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">{{aiState === 'done' ? '换一版' : '生成方案'}}</view>
         </block>
       </view>
       <cy-inline-error class="ai-plan-err" wx:if="{{aiState === 'error'}}" kind="data"
@@ -974,12 +976,12 @@
           <view class="ai-plan-msug" wx:for="{{aiMerchantSuggestions}}" wx:key="index">· {{item}}</view>
 
           <block wx:if="{{aiPromoCopy}}">
-            <view class="ai-plan-lbl">宣传文案<text class="ai-plan-copy" catchtap="onClubAiCopy" hover-class="cy-pressed" hover-stay-time="80">复制</text></view>
+            <view class="ai-plan-lbl">宣传文案<text class="ai-plan-copy" catchtap="onClubAiCopy" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">复制</text></view>
             <view class="ai-plan-promo">{{aiPromoCopy}}</view>
           </block>
         </view>
 
-        <view class="ai-plan-adopt" catchtap="onClubAiAdopt" hover-class="cy-pressed" hover-stay-time="80">用这个方案去发布</view>
+        <view class="ai-plan-adopt" catchtap="onClubAiAdopt" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">用这个方案去发布</view>
         <view class="ai-plan-adopt-note">发布前需补充封面和分类</view>
       </block>
     </view>
@@ -989,14 +991,14 @@
        两者互斥展示,从不同时叠加,不在 sheet 里再嵌一层弹窗 -->
   <cy-sheet show="{{groupCodeVisible && groupCodeState === 'selecting'}}" title="选择场次" bind:close="onCloseGroupCode">
     <view class="gc-hint">仅限本场次</view>
-    <view class="gc-item" wx:for="{{groupCodeActivityOptions}}" wx:key="id" bindtap="onGroupCodeSelectActivity" data-id="{{item.id}}" data-name="{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
+    <view class="gc-item" wx:for="{{groupCodeActivityOptions}}" wx:key="id" bindtap="onGroupCodeSelectActivity" data-id="{{item.id}}" data-name="{{item.name}}" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">
       <text>{{item.name}}</text><cy-icon name="arrow-right" size="28" />
     </view>
   </cy-sheet>
   <cy-sheet show="{{directorActivityPickerShow}}" title="选择导演场次" bind:close="closeDirectorActivityPicker">
     
     <view class="gc-item" wx:for="{{directorActivityOptions}}" wx:key="id"
-      bindtap="onDirectorActivitySelect" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
+      bindtap="onDirectorActivitySelect" data-id="{{item.id}}" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">
       <text>{{item.name}}</text>
     </view>
   </cy-sheet>

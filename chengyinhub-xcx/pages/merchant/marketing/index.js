@@ -150,7 +150,6 @@ Page({
     // checking / ready / denied(明确无权限)。
     // 未登录不再是一种整屏态:静默登录后加载,登录/身份确认失败落 entryError 页内重试。
     accessState: 'checking',
-    accessError: '',
     entryError: '',
     // 岗位权限真源 = /api/merchant/access/me。聚合层的错误码只说明「这次请求没成」,
     // 不能拿来推断岗位有没有权限(见 merchant-marketing-state-contract 的 403 用例)。
@@ -217,6 +216,8 @@ Page({
     this._scopeMemberId = currentMemberId();
     this.loadMerchantAccess();
   },
+
+  onDenyCta() { require('../../../utils/merchant-no-permission.js').followDenyCta(this, false); },
 
   onGuestLogin() { retryLogin(this, app, function () { this.enterMarketing(false); }); },
 
@@ -313,7 +314,6 @@ Page({
           marketingDataState: that._resolveMarketingDataState(home),
           marketingLoaded: true,
           accessState: 'ready',
-          accessError: '',
           entryError: '',
         });
       },
@@ -437,7 +437,9 @@ Page({
         }
         const access = normalizeMerchantAccess(res.data);
         if (!access.active || !access.canReadMarketing) {
-          that._denyAccess('denied', '');
+          // 不是在营商家成员 → 与其他商家页同一「当前身份不能查看」+ 申请入驻;
+          // 成员但岗位没有 marketing:read → 岗位说明 + 重新确认。
+          that._denyAccess(access.active ? 'denied' : 'not-member');
           that.setData({ merchantAccess: access, entries: entriesForAccess(access) });
           return;
         }
@@ -445,7 +447,6 @@ Page({
           merchantAccess: access,
           entries: entriesForAccess(access),
           accessState: 'ready',
-          accessError: '',
           entryError: '',
         });
         that.loadMarketingHome();
@@ -463,14 +464,13 @@ Page({
   },
 
   // 重新确认 = 从权限真源重来一遍。★旧结论必须**先**失效:
-  // 不清掉旧的 funnelError/accessError,一次断网重试会让页面继续显示上一次的拒权文案,
+  // 不清掉旧的 funnelError/accessState,一次断网重试会让页面继续显示上一次的拒权文案,
   // 用户看到的是「我明明重试了,它还说我没权限」。
   retryAll() {
     this.setData({
       // M-22:还没有内容时重试也直接回骨架;已有内容时保持(刷新只出右上角胶囊)
       funnelLoading: this.data.funnelLoading || !this.data.marketingLoaded,
       accessState: 'checking',
-      accessError: '',
       funnelError: '',
       entryError: '',
     });
@@ -484,16 +484,16 @@ Page({
     this._scopeMemberId = memberId;
     this._marketingEpoch = (this._marketingEpoch || 0) + 1;
     this._merchantEpoch = (this._merchantEpoch || 0) + 1;
-    this._clearScopedState('checking', '');
+    this._clearScopedState('checking');
   },
 
-  // 明确拒权(商家成员但没有营销读权限)。未登录不在这里收口 —— 静默重登,失败走 entryError。
-  // 文案与 wxml 的岗位说明同源:没有权限时页面只留这一句,不再渲染「—/数据待同步」占位
-  // (2026-09-17 拍板 #25 —— 拿未知当数据画,员工会以为系统坏了而不是自己没开通)。
-  _denyAccess(kind, message) {
+  // 明确拒权:kind='not-member'(不是在营商家成员)或 'denied'(成员但岗位没有营销读权限)。
+  // 未登录不在这里收口 —— 静默重登,失败走 entryError。两种拒权都只留居中无权限态,
+  // 不再渲染「—/数据待同步」占位(2026-09-17 拍板 #25)。
+  _denyAccess(kind) {
     this._marketingEpoch = (this._marketingEpoch || 0) + 1;
     this._merchantEpoch = (this._merchantEpoch || 0) + 1;
-    this._clearScopedState('denied', message || '');
+    this._clearScopedState(kind === 'not-member' ? 'not-member' : 'denied');
   },
 
   // 清掉不可信的旧指标,但**不动 accessState** —— 这不是拒权,是这次请求身份没过。
@@ -514,7 +514,7 @@ Page({
     });
   },
 
-  _clearScopedState(accessState, accessError) {
+  _clearScopedState(accessState) {
     this.setData({
       merchantId: 0,
       hero: heroPlaceholder(this.data.windowDays),
@@ -522,7 +522,6 @@ Page({
       funnelError: '',
       marketingLoaded: false,
       accessState,
-      accessError: accessError || '',
       entryError: '',
       merchantAccess: inactiveAccess(),
       entries: entriesForAccess(inactiveAccess()),

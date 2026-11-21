@@ -36,7 +36,6 @@
       kind="empty"
       fill
       title="暂时无法编辑承接设置"
-      sub="完成商家入驻后可用"
       cta="去商家入驻"
       bind:cta="goApply"
     />
@@ -87,7 +86,7 @@
           bindtap="editField"
           data-k="demand"
           aria-role="{{editing ? 'button' : 'text'}}"
-          hover-class="{{editing ? 'cy-pressed' : 'none'}}"
+          hover-class="{{editing ? 'cy-pressed' : 'none'}}" hover-stay-time="80"
         >
           {{form.demand || '想要什么样的合作'}}
         </view>

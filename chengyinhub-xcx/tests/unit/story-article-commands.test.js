@@ -155,9 +155,12 @@ test('existing page snapshot undo restores commands, pending intents and route g
   require('../../pages/publish/fabu/index.js')
   const input = draft()
   const page = Object.assign({}, pageConfig, { data: { formData: { chapters: [input.chapter], imgArr: '' }, pendingMaterials: input.pendingMaterials, storyEditor: { chapterIndex: 0 } }, _routeGraph: { frozen: 'original' } })
+  // 与真机 setData 一致支持路径写入(_storyCommand 只回传当前章 formData.chapters[i])
   page.setData = patch => Object.entries(patch).forEach(([path, value]) => {
-    if (path === 'formData.chapters') page.data.formData.chapters = value
-    else page.data[path] = value
+    const keys = path.replace(/\[(\d+)\]/g, '.$1').split('.')
+    let cursor = page.data
+    keys.slice(0, -1).forEach(key => { cursor = cursor[key] })
+    cursor[keys[keys.length - 1]] = value
   })
   page.updateAllStatistics = () => {}
   page._parseImgArr = () => []

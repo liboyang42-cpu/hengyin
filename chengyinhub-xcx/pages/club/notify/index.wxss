@@ -1,5 +1,6 @@
 page { background: var(--cy-bg-page); }
 .page { min-height: 100vh; box-sizing: border-box; padding-bottom: calc(var(--cy-space-6) + var(--cy-safe-bottom)); /* PG-054:同 governance/badges 底部安全区 */ background: var(--cy-bg-page); color: var(--cy-text-title); }
+.page--fill { display: flex; flex-direction: column; box-sizing: border-box; } /* 无权限 cy-empty fill 在顶栏下方剩余空间居中 */
 
 /* 区块之间 20px(手册写 32,存量已知不一致,按 20 做);分区标题→本组 16px。 */
 .section { margin: 40rpx var(--cy-page-x) 0; } /* ds-ok: 40rpx = Figma 区块间距 20px，无匹配半步 token 见 style/TOKEN-MAPPING.md */
@@ -28,25 +29,19 @@ cy-page-title + .section { margin-top: 0; } /* 打磨第 3 轮 §4-3:20px 是区
 .field-input, .field-textarea { width: 100%; box-sizing: border-box; padding: var(--cy-space-2-5); border: 1rpx solid var(--cy-border-card); border-radius: var(--cy-radius-sm); background: var(--cy-bg-subtle); color: var(--cy-text-title); font-size: var(--cy-font-body); }
 .field-input { height: 84rpx; }
 .field-textarea { height: 240rpx; line-height: 1.55; }
-.preview-btn { height: 72rpx; display: flex; align-items: center; justify-content: center; margin-top: var(--cy-space-3); border: 1rpx solid var(--cy-border-card); border-radius: var(--cy-radius-sm); color: var(--cy-text-title); font-size: var(--cy-font-label); font-weight: 700; }
-.preview-card { display: flex; align-items: center; gap: 14rpx; margin-top: var(--cy-space-2); padding: var(--cy-space-2-5); border-radius: var(--cy-radius-sm); background: var(--cy-bg-subtle); }
+.preview-cta { margin-top: var(--cy-space-3); }
+.preview-card { display: flex; align-items: center; gap: var(--cy-space-1-5); margin-top: var(--cy-space-2); padding: var(--cy-space-2-5); border-radius: var(--cy-radius-sm); background: var(--cy-bg-subtle); }
 .preview-card--error { justify-content: space-between; color: var(--cy-danger); font-size: var(--cy-font-caption); }
 .inline-retry { color: var(--cy-brand); font-weight: 700; }
+/* 1121:文字动作命中区补到 88rpx,负外距抵消,版面不动 */
+.inline-retry { padding: var(--cy-space-3) var(--cy-space-2); margin: calc(-1 * var(--cy-space-3)) calc(-1 * var(--cy-space-2)); }
 .preview-count { color: var(--cy-brand); font-size: var(--cy-font-subtitle); font-weight: 900; }
 .preview-note { flex: 1; color: var(--cy-text-secondary); font-size: var(--cy-font-caption); line-height: 1.45; }
-/* ⚠️ 必须带 `.page ` 前缀:style/lib.wxss 的全局 `wx-button:not([size=mini])` 特异度是 (0,1,1),
-   压得过裸类名 (0,1,0),会把 background 抹成 none、margin 归零 —— 主 CTA 在暗底上就成了
-   一行看不见的深灰字、宽度只剩一半(2026-09-02 截图 + 实测 184px 坐实,存量问题)。
-   加一级祖先选择器到 (0,2,0) 才拿得回来。 */
-/* ⚠️ 2026-09-02 二次修正:上一轮只加了 .page 前缀,拿回了 background/margin,
-   但同一块全局规则里的 display:flex 没被覆盖,按钮实测仍只有内容区的 51% 宽
-   (294px vs 574px)—— 「白药丸出来了」不等于「宽度对了」。
-   这次显式写死 display 与 width,不再依赖全局规则给的盒模型。 */
-.page .send-btn { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: calc(100% - var(--cy-page-x) * 2); height: var(--cy-btn-h); margin: 40rpx auto 0; border: 0; border-radius: var(--cy-radius-pill); background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); font-size: var(--cy-font-body); font-weight: 800; line-height: var(--cy-btn-h); } /* ds-ok: 40rpx = Figma 区块间距 20px */
-.page .retry-btn { height: 72rpx; margin: var(--cy-space-3) 0 0; border: 0; border-radius: var(--cy-radius-pill); background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); font-size: var(--cy-font-label); font-weight: 800; line-height: 72rpx; } /* 主行动键走中性反色,品牌紫只作选中/装饰(品牌铁律) */
-.send-btn::after, .retry-btn::after { border: 0; }
-.page .send-btn[disabled] { opacity: .48; }
-.disabled { opacity: .42; pointer-events: none; }
+/* 1121:发送 / 只重试失败项由原生 <button> 换成 cy-btn —— 原来那一串为压过全局 wx-button 规则而写的
+   .page 前缀覆写(display / width / background / ::after)随之退场。 */
+.send-cta { margin: 40rpx var(--cy-page-x) 0; } /* ds-ok: 40rpx = Figma 区块间距 20px */
+.retry-cta { margin-top: var(--cy-space-3); }
+
 
 /* 稿 R4 每一行右侧的人数。比「已选/选择」低一档 —— 它是事实不是动作。 */
 .row-count { flex: none; margin-right: var(--cy-space-2); font-size: var(--cy-font-caption); color: var(--cy-color-text-tertiary); }

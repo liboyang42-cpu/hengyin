@@ -216,6 +216,7 @@
         loading="{{saving}}"
         disabled="{{!canSave || saveReadbackPending}}"
         bindtap="save"
+        bind:disabledtap="onSaveBlocked"
         accessibilityLabel="保存常备权益"
       >
         保存权益

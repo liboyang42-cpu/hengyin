@@ -30,7 +30,7 @@
         <text class="fin-row__v fin-row__v--neg">{{item.amountDisplay}}</text>
       </view>
       <view class="fin-row" wx:if="{{!detail.earningEntries.length && !detail.adjustments.length}}">
-        <view class="fin-row__main"><text class="fin-row__t1">本批次没有可列明的条目</text><view class="fin-row__t2">明细在履约成立后逐条计入</view></view>
+        <view class="fin-row__main"><text class="fin-row__t1">本批次没有可列明的条目</text></view>
       </view>
       <view class="fin-kv fin-kv--total"><text class="fin-kv__k">批次净额</text><text class="fin-kv__v">{{detail.batch.amountDisplay || detail.batch.amountFallback}}</text></view>
     </view>

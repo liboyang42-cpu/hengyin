@@ -9,7 +9,7 @@ const NBSP = String.fromCharCode(0xA0);
 const U3000 = String.fromCharCode(0x3000);
 const ZW = String.fromCharCode(0x200B);
 const BOM = String.fromCharCode(0xFEFF);
-const at = require('../../utils/answer-text.js');
+const at = require('../../pages/publish/utils/answer-text.js');
 
 test('归一向量:全角、NBSP、U+3000、零宽、首尾标点', () => {
   assert.strictEqual(at.normalize('３号线ＡＢＣ'), '3号线abc');

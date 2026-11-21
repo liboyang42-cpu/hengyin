@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const root = path.join(__dirname, '../..');
-const { chapterCountText, isEndingChapter } = require('../../utils/chapter-count.js');
+const { chapterCountText, isEndingChapter } = require('../../pages/topic/utils/chapter-count.js');
 const motion = require('../../pages/topic/utils/topic-motion.js');
 const { headPills, checkoutView } = require('../../pages/topic/utils/checkout-view.js');
 

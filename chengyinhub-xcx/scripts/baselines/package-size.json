@@ -1,0 +1,9 @@
+{
+  "note": "2026-11-21 startup-perf: 主包源码字节棘轮(口径 = scripts/lib/package-graph.js 的 raw:不在任何分包 root 下、且未被 project.config.json packOptions.ignore 排除的文件)。只许往下调;要调高必须在 PR 里写明原因。真实判据仍是 DevTools 编译值(主包 / 每个分包 2MB)。",
+  "main": {
+    "assetBytes": 341176,
+    "assetCeilingBytes": 341176,
+    "rawBytes": 3391325,
+    "rawCeilingBytes": 3424093
+  }
+}

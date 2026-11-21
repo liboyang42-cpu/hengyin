@@ -28,6 +28,8 @@ Page({
     total: 0,
     hasMore: true,
     loading: false,
+    // 首屏回包前为 false:先画骨架,不把「还没有节点玩法」空态抢先露出来
+    listLoaded: false,
     loadingMore: false,
     errorMsg: '',
     loadMoreError: '',
@@ -324,7 +326,7 @@ Page({
       complete: function () {
         if (!current()) return;
         if (isLoadMore) that.setData({ loadingMore: false });
-        else that.setData({ loading: false });
+        else that.setData({ loading: false, listLoaded: true });
         if (!isLoadMore && that._pullDownRefreshing) {
           that._pullDownRefreshing = false;
           wx.stopPullDownRefresh();

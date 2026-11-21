@@ -19,7 +19,7 @@
       <text class="node-sheet__name node-sheet__name--static">{{formData.name || '未命名主题'}}</text>
     </view>
 
-    <view class="node-card" id="fieldSubtitle"><view class="node-card__row"><view class="node-card__ico"><cy-icon name="edit" size="32" /></view><view class="node-card__main"><text class="node-card__title">主题描述<text class="g-req">*</text></text><text wx:if="{{!subtitleEditing && formData.subtitle}}" class="node-card__value">{{formData.subtitle}}</text></view><view class="node-pill" bindtap="toggleSubtitleEditing" hover-class="cy-pressed" hover-stay-time="80">编辑<cy-icon name="chevron-right" size="24" /></view></view><textarea wx:if="{{subtitleEditing}}" class="pd-card-textarea" placeholder="填写主题描述" value="{{formData.subtitle}}" bindinput="onSubtitleChange" maxlength="20" fixed /><text wx:if="{{subtitleEditing}}" class="pd-card-count">{{formData.subtitle.length || 0}}/20</text></view>
+    <view class="node-card" id="fieldSubtitle"><view class="node-card__row"><view class="node-card__ico"><cy-icon name="edit" size="32" /></view><view class="node-card__main"><text class="node-card__title">主题描述<text class="g-req">*</text></text><text wx:if="{{!subtitleEditing && formData.subtitle}}" class="node-card__value">{{formData.subtitle}}</text></view><view class="node-pill" bindtap="toggleSubtitleEditing" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">编辑<cy-icon name="chevron-right" size="24" /></view></view><textarea wx:if="{{subtitleEditing}}" class="pd-card-textarea" placeholder="填写主题描述" value="{{formData.subtitle}}" bindinput="onSubtitleChange" maxlength="20" fixed /><text wx:if="{{subtitleEditing}}" class="pd-card-count">{{formData.subtitle.length || 0}}/20</text></view>
     <view class="node-card" id="fieldCategory" bindtap="navigateToCategorySelect" aria-role="button" aria-label="选择主题类别" hover-class="cy-pressed" hover-stay-time="80">
       <view class="node-card__row">
         <view class="node-card__ico"><cy-icon name="filter" size="32" /></view>
@@ -213,7 +213,7 @@
     <!-- 文档二 L1:可玩时段(俱乐部带队的主题整行不出现)、开局前准备,各一行,右边是当前值 -->
     <view class="node-card" wx:if="{{clubIndex < 0}}" bindtap="openPlayWindow" aria-role="button" aria-label="可玩时段 {{playWindowLabel}}" hover-class="cy-pressed" hover-stay-time="80"><view class="node-card__row"><view class="node-card__ico"><cy-icon name="clock" size="32" /></view><view class="node-card__main"><text class="node-card__title">可玩时段</text></view><view class="node-pill"><text>{{playWindowLabel}}</text><cy-icon name="chevron-right" size="24" /></view></view></view>
     <view class="node-card" bindtap="openPrepSheet" aria-role="button" aria-label="开局前准备 {{prepItems.length ? prepItems.length + ' 项' : '未设置'}}" hover-class="cy-pressed" hover-stay-time="80"><view class="node-card__row"><view class="node-card__ico"><cy-icon name="check" size="32" /></view><view class="node-card__main"><text class="node-card__title">开局前准备</text></view><view class="node-pill"><text>{{prepItems.length ? prepItems.length + ' 项' : '未设置'}}</text><cy-icon name="chevron-right" size="24" /></view></view></view>
-    <view class="node-card" id="fieldCompleteReward" bindtap="openThemeRewards" hover-class="cy-pressed" hover-stay-time="80"><view class="node-card__row"><view class="node-card__ico"><cy-icon name="gift" size="32" /></view><view class="node-card__main"><text class="node-card__title">主题通关奖励</text></view><view class="node-pill">配置<cy-icon name="chevron-right" size="24" /></view></view></view>
+    <view class="node-card" id="fieldCompleteReward" bindtap="openThemeRewards" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><view class="node-card__row"><view class="node-card__ico"><cy-icon name="gift" size="32" /></view><view class="node-card__main"><text class="node-card__title">主题通关奖励</text></view><view class="node-pill">配置<cy-icon name="chevron-right" size="24" /></view></view></view>
     <!-- 主题级 N/M：自由探索继续认商家权益核销，不能被节点数量覆盖。 -->
     <view class="node-card" id="fieldCompletionRule">
       <view class="node-card__row">
@@ -234,7 +234,7 @@
       </block>
     </view>
 
-    <view class="node-card" id="fieldBingo" bindtap="openThemeBingo" hover-class="cy-pressed" hover-stay-time="80"><view class="node-card__row"><view class="node-card__ico"><view class="rt-grid-glyph"><view wx:for="{{[1,2,3,4,5,6,7,8,9]}}" wx:key="*this"></view></view></view><view class="node-card__main"><text class="node-card__title">宾果九宫格</text></view><view class="node-pill">配置<cy-icon name="chevron-right" size="24" /></view></view></view>
+    <view class="node-card" id="fieldBingo" bindtap="openThemeBingo" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><view class="node-card__row"><view class="node-card__ico"><view class="rt-grid-glyph"><view wx:for="{{[1,2,3,4,5,6,7,8,9]}}" wx:key="*this"></view></view></view><view class="node-card__main"><text class="node-card__title">宾果九宫格</text></view><view class="node-pill">配置<cy-icon name="chevron-right" size="24" /></view></view></view>
     <!-- 举办方式。设计源码里这张卡是「需要商家参与 / 发布到创意广场」两个开关,
          但商家承接在本仓是【章节级】字段、且发布后才配得准(招商要等商家看得到主题),
          主题层没有这个开关 —— 不凭空造一个点了不生效的假开关,只留真有的那两项。 -->

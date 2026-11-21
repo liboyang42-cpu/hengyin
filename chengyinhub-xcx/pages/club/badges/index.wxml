@@ -55,7 +55,7 @@
                      action="我已确认" bind:action="confirmCreateChecked" />
     <cy-inline-error wx:elif="{{createError}}" title="勋章没有创建" sub="{{createError}}" />
   </view>
-  <cy-btn slot="footer" variant="primary" loading="{{creating}}" disabled="{{createUnknown}}" bindtap="submitCreate">创建</cy-btn>
+  <cy-btn slot="footer" variant="primary" loading="{{creating}}" disabled="{{createUnknown}}" bindtap="submitCreate" bind:disabledtap="onCreateBlockedTap">创建</cy-btn>
 </cy-sheet>
 
 <cy-sheet show="{{memberPickerVisible}}" title="颁给谁？" closable maskClosable bind:close="closeMemberPicker" class="theme-merchant">

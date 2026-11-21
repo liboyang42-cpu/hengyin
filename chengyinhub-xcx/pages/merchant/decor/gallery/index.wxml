@@ -7,14 +7,14 @@
   <cy-access-gate wx:if="{{loadState !== 'login'}}" id="cy-access-gate" kind="merchant" need="canWriteProfile" back-url="/pages/merchant/decor/index" />
   <cy-nav-bar title="门店相册" custom-back bind:back="onNavBack" />
   <view style="height: {{statusBarHeight + navBarHeight}}px; flex-shrink: 0;"></view>
-  <cy-empty wx:if="{{loadState === 'login'}}" title="登录后编辑门店相册" cta="去登录" bind:cta="onLogin" />
+  <cy-empty wx:if="{{loadState === 'login'}}" kind="no-permission" fill size="lg" title="登录后编辑门店相册" cta="登录" bind:cta="onLogin" />
 <cy-skeleton type="grid" count="6" wx:elif="{{loadState === 'loading'}}" />
   <cy-empty size="lg" fill wx:elif="{{loadState === 'permission'}}" kind="no-permission"
     title="当前身份不能编辑门店相册" cta="返回" bind:cta="onNavBack" />
   <cy-error load-failure class="dg-retry cy-fade-in" size="lg" fill wx:elif="{{loadState === 'error'}}"
     icon="empty-state" title="{{loadErrorKind === 'network' ? '网络没连上' : '相册加载失败'}}" sub="{{loadError}}" retry="重试" bind:retry="retryLoad" auto-back />
   <cy-empty size="lg" fill wx:elif="{{loadState === 'empty'}}" kind="empty"
-    title="暂时无法上传门店相册" sub="完成商家入驻后可用" cta="去商家入驻" bind:cta="goApply" />
+    title="暂时无法上传门店相册" cta="去商家入驻" bind:cta="goApply" />
 
   <scroll-view scroll-y class="dg-scroll" wx:elif="{{loadState === 'ready'}}" enhanced show-scrollbar="{{false}}">
     <view class="dg-refreshing" wx:if="{{refreshing}}" aria-role="status" aria-live="polite">正在刷新门店相册…</view>
@@ -36,7 +36,7 @@
                      sub="{{saveError}}" action="重新保存" bind:action="save" />
     <view class="dg-save-receipt" wx:if="{{saveReceipt}}" aria-role="status" aria-live="polite">{{saveReceipt}}</view>
     <cy-btn variant="primary" disabled="{{!dirty || saving || refreshing}}" loading="{{saving}}"
-            accessibilityLabel="{{saving ? '正在保存门店相册' : '保存门店相册'}}" bindtap="save">保存相册</cy-btn>
+            accessibilityLabel="{{saving ? '正在保存门店相册' : '保存门店相册'}}" bindtap="save" bind:disabledtap="onSaveBlocked">保存相册</cy-btn>
   </view>
 <cy-sheet inset show="{{discardVisible}}" title="还没有保存" bind:close="keepEditing"><view class="dc-sheet-content"><text class="dc-muted">离开后，本次相册修改不会保留。</text><view class="dc-sheet-actions"><cy-btn variant="secondary" bindtap="discardChanges">放弃修改</cy-btn><cy-btn bindtap="keepEditing">继续编辑</cy-btn></view></view></cy-sheet>
 </view>

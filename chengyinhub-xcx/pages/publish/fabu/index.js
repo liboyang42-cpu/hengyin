@@ -1235,16 +1235,16 @@ Page({
 
   _storyCommand(command, uiPatch) {
     const chapterIndex = Number(this.data.storyEditor.chapterIndex);
-    const chapters = JSON.parse(JSON.stringify((this.data.formData && this.data.formData.chapters) || []));
-    const chapter = chapters[chapterIndex];
+    // 性能(2026-11-21):每敲一个字都会走到这里。applyStoryCommand 自己会深拷贝入参,
+    // 所以不再 JSON 往返整个章节数组,也不再整表回传 formData.chapters —— 只发当前这一章的路径。
+    const chapter = ((this.data.formData && this.data.formData.chapters) || [])[chapterIndex];
     if (!chapter) throw new Error('未找到故事流章节');
     const result = proEditorStory.applyStoryCommand({
       chapter,
       pendingMaterials: this.data.pendingMaterials || [],
     }, command);
-    chapters[chapterIndex] = result.draft.chapter;
     this.setData(Object.assign({
-      'formData.chapters': chapters,
+      ['formData.chapters[' + chapterIndex + ']']: result.draft.chapter,
       pendingMaterials: result.draft.pendingMaterials,
     }, this._storyDerived(result.draft.chapter), uiPatch || {}));
     this.updateAllStatistics();
@@ -5725,6 +5725,13 @@ Page({
     const index = Number(e.currentTarget.dataset.index);
     if (!(index >= 0) || this.data.fePricing.disabled) return;
     this.setData({ ['fePricing.rows[' + index + '].price']: String(e.detail.value == null ? '' : e.detail.value) });
+  },
+
+  // 置灰的「发布」被点:把面板上那句「还有 N 个位置待承接 / 加载失败」再说一遍,不让一次点击石沉大海
+  onFePublishDisabledTap() {
+    const panel = this.data.fePricing;
+    if (!panel || !panel.show || this.data.fePublishing) return;
+    cyToast(panel.hint || '还有位置待承接');
   },
 
   onFePublish() {

@@ -19,7 +19,7 @@
         aria-role="checkbox"
         aria-checked="{{item.on}}"
         aria-label="周{{item.label}}"
-        hover-class="cy-pressed"
+        hover-class="cy-pressed" hover-stay-time="80"
       >
         <text class="hours-day-dot {{item.on ? 'hours-on' : ''}}">{{item.label}}</text>
       </view>
@@ -32,7 +32,7 @@
           bindtap="openStart"
           aria-role="button"
           aria-label="开始时间 {{draft.start}}"
-          hover-class="cy-pressed"
+          hover-class="cy-pressed" hover-stay-time="80"
         >{{draft.start}}</view>
       </view>
       <view class="hours-half">
@@ -42,7 +42,7 @@
           bindtap="openEnd"
           aria-role="button"
           aria-label="结束时间 {{draft.end}}"
-          hover-class="cy-pressed"
+          hover-class="cy-pressed" hover-stay-time="80"
         >{{draft.end}}</view>
       </view>
     </view>
@@ -57,7 +57,7 @@
           class="hours-option {{index === hourIndex ? 'hours-on' : ''}}"
           aria-role="button"
           aria-label="{{item}}时"
-          hover-class="cy-pressed"
+          hover-class="cy-pressed" hover-stay-time="80"
         >
           {{item}}
         </view>
@@ -71,7 +71,7 @@
           class="hours-option {{index === minuteIndex ? 'hours-on' : ''}}"
           aria-role="button"
           aria-label="{{item}}分"
-          hover-class="cy-pressed"
+          hover-class="cy-pressed" hover-stay-time="80"
         >
           {{item}}
         </view>

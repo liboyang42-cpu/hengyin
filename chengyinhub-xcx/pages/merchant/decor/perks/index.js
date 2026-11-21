@@ -30,6 +30,19 @@ function isValidAmount(value, allowZero) {
   return Number.isFinite(amount) && (allowZero ? amount >= 0 : amount > 0);
 }
 
+// 第四轮(业主:输入问题只在字段下方红字说):各栏各自报,不再弹提示。
+// CU-M-79:过期权益模板不得创建(后端同口径重校)。选择器有下限,这里兜住跨天与旧草稿。
+// save 与「保存权益」置灰时的 disabledtap 共用这一份校验口径。
+function formFieldErrors(form, minValidEnd) {
+  return {
+    name: (form.name || '').trim() ? '' : '请填写权益名称',
+    retailValue: isValidAmount(form.retailValue, false) ? '' : '零售价最多8位整数和2位小数',
+    unitCost: form.unitCost !== '' && !isValidAmount(form.unitCost, true) ? '成本价最多8位整数和2位小数' : '',
+    quota: !Number.isInteger(Number(form.quota)) || Number(form.quota) <= 0 ? '请填写正整数可接待份数' : '',
+    validEnd: form.validEnd && form.validEnd < minValidEnd ? '有效期至少要到明天' : '',
+  };
+}
+
 function isUsableTemplate(template) {
   const quota = template && template.quota;
   const perkType = template && template.perkType;
@@ -242,6 +255,12 @@ Page({
     if (canSave !== this.data.canSave) this.setData({ canSave });
   },
 
+  // 必填没填齐时「保存权益」置灰;点灰按钮把缺的那几栏在字段下方标红(同 save 的校验口径)
+  onSaveBlocked() {
+    if (this.data.saving || this.data.deleting || this.data.refreshing || this.data.saveReadbackPending) return;
+    this.setData({ fieldErrors: formFieldErrors(this.data.form, this.data.minValidEnd) });
+  },
+
   save() {
     if (this.data.saveReadbackPending) return this.retrySaveReadback();
     if (!this.data.canSave || this.data.saving || this.data.deleting || this.data.refreshing) return;
@@ -250,15 +269,7 @@ Page({
       this._loadInFlight = false;
     }
     const form = this.data.form;
-    // 第四轮(业主:输入问题只在字段下方红字说):各栏各自报,不再弹提示。
-    // CU-M-79:过期权益模板不得创建(后端同口径重校)。选择器有下限,这里兜住跨天与旧草稿。
-    const fieldErrors = {
-      name: (form.name || '').trim() ? '' : '请填写权益名称',
-      retailValue: isValidAmount(form.retailValue, false) ? '' : '零售价最多8位整数和2位小数',
-      unitCost: form.unitCost !== '' && !isValidAmount(form.unitCost, true) ? '成本价最多8位整数和2位小数' : '',
-      quota: !Number.isInteger(Number(form.quota)) || Number(form.quota) <= 0 ? '请填写正整数可接待份数' : '',
-      validEnd: form.validEnd && form.validEnd < this.data.minValidEnd ? '有效期至少要到明天' : '',
-    };
+    const fieldErrors = formFieldErrors(form, this.data.minValidEnd);
     this.setData({ fieldErrors });
     if (Object.keys(fieldErrors).some(function (k) { return fieldErrors[k]; })) return;
     const that = this;

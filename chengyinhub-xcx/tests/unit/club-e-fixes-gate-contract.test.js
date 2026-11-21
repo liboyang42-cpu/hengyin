@@ -176,7 +176,8 @@ test('E-12 group-code:权限失败单列 no-permission 态,给「进入俱乐部
   assert.equal(requests.length, before, '无权限时重试不许再打必失败的接口');
   const wxml = read('pages/club/group-code/index.wxml');
   assert.match(wxml, /wx:elif="\{\{state === 'no-permission'\}\}"/);
-  assert.match(wxml, /state === 'no-permission'[\s\S]{0,400}bindtap="goManage"/, '必须带进入俱乐部管理的出路');
+  assert.match(wxml, /state === 'no-permission'[\s\S]{0,400}<cy-empty kind="no-permission" fill size="lg" title="当前身份不能出码" cta="进入俱乐部管理" bind:cta="goManage"/,
+    '必须是商家/俱乐部统一无权限态,唯一出路是进入俱乐部管理');
 });
 
 // ───────── E-10/E-13:守卫 need 与后端准入对齐 ─────────
