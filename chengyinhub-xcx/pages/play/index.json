@@ -33,7 +33,7 @@
     "cy-advanced-game": "/pages/play/components/advanced-game/index",
     "cy-role-card": "/pages/play/components/role-card/index",
     "cy-play-roadmap": "/pages/play/components/roadmap/index",
-    "cy-playkit": "/pages/play/components/playkit/index",
+    "cy-playkit": "/pages/playkit/components/playkit/index",
     "cy-play-verdict": "/pages/play/components/play-verdict/index",
     "cy-ai-score-card": "/pages/play/components/ai-score-card/index",
     "cy-toast": "/components/cy/toast/index",
@@ -42,10 +42,10 @@
     "cy-option-sheet": "/components/cy/option-sheet/index",
     "cy-map-address-search": "/components/cy/map-address-search/index",
     "cy-empty": "/components/cy/empty/index",
-    "cy-playkit-journey-check": "/pages/play/components/playkit-journey-check/index",
+    "cy-playkit-journey-check": "/pages/playkit/components/playkit-journey-check/index",
     "cy-chapter-flip": "/pages/play/components/chapter-flip/index",
     "cy-inline-error": "/components/cy/inline-error/index",
-    "cy-playkit-album": "/pages/play/components/playkit-album/index",
+    "cy-playkit-album": "/pages/playkit/components/playkit-album/index",
     "cy-sheet": "/components/cy/sheet/index",
     "cy-theme-records": "/components/cy/theme-records/index",
     "cy-dropdown": "/components/cy/dropdown/index",
@@ -58,6 +58,9 @@
     "cy-scene-play-activity-detail": "view",
     "cy-scene-roam-poi-detail": "view",
     "cy-scene-qr-coupon": "view",
-    "cy-scene-game-coupon-wallet": "view"
+    "cy-scene-game-coupon-wallet": "view",
+    "cy-playkit": "view",
+    "cy-playkit-journey-check": "view",
+    "cy-playkit-album": "view"
   }
 }

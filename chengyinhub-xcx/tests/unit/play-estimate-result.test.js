@@ -12,8 +12,8 @@ function loadEstimate() {
   global.Behavior = (d) => d;
   if (!global.wx) global.wx = { getSystemInfoSync: () => ({}), getAppBaseInfo: () => ({}) };
   try {
-    delete require.cache[require.resolve('../../pages/play/components/playkit-estimate/index.js')];
-    require('../../pages/play/components/playkit-estimate/index.js');
+    delete require.cache[require.resolve('../../pages/playkit/components/playkit-estimate/index.js')];
+    require('../../pages/playkit/components/playkit-estimate/index.js');
   } finally { global.Component = prev; global.Behavior = prevB; global.wx = prevWx; }
   return def;
 }
@@ -51,9 +51,9 @@ test('结果一行:中 / 差一点 / 差得远,带差多少', () => {
 });
 
 test('playkit 容器把结果字段接到猜数字组件', () => {
-  const wxml = fs.readFileSync(path.join(__dirname, '../../pages/play/components/playkit/index.wxml'), 'utf8');
+  const wxml = fs.readFileSync(path.join(__dirname, '../../pages/playkit/components/playkit/index.wxml'), 'utf8');
   assert.match(wxml, /submitted="\{\{kit\.submitted\}\}" tier="\{\{kit\.tier\}\}" guess="\{\{kit\.guess\}\}" answer="\{\{kit\.answer\}\}" reveal="\{\{kit\.reveal\}\}"/);
-  const own = fs.readFileSync(path.join(__dirname, '../../pages/play/components/playkit-estimate/index.wxml'), 'utf8');
+  const own = fs.readFileSync(path.join(__dirname, '../../pages/playkit/components/playkit-estimate/index.wxml'), 'utf8');
   assert.match(own, /\{\{result\.head\}\}/);
   assert.match(own, /\{\{title\}\}/);
 });
@@ -76,7 +76,7 @@ test('P-09 第三轮:内嵌玩法块的上内边距至少到故事流顶部渐�
 test('P-09 第三轮:交过之后滚筒收矮,只留中间那个数', () => {
   const fs = require('node:fs')
   const path = require('node:path')
-  const dir = path.join(__dirname, '../../pages/play/components/playkit-estimate')
+  const dir = path.join(__dirname, '../../pages/playkit/components/playkit-estimate')
   assert.match(fs.readFileSync(path.join(dir, 'index.wxml'), 'utf8'), /<view class="g-col es \{\{result \? 'es--done' : ''\}\}">/)
   const css = fs.readFileSync(path.join(dir, 'index.wxss'), 'utf8')
   const done = Number(css.match(/\.es--done \.es__reel \{ height: (\d+)rpx; \}/)[1])

@@ -1,0 +1,13 @@
+{
+  "component": true,
+  "styleIsolation": "isolated",
+  "usingComponents": {
+    "cy-play-verdict": "/pages/play/components/play-verdict/index",
+    "cy-play-countin": "/pages/playkit/components/play-countin/index",
+    "cy-play-calibrate": "/pages/playkit/components/play-calibrate/index",
+    "cy-icon": "/components/cy/icon/index"
+  },
+  "componentPlaceholder": {
+    "cy-play-verdict": "view"
+  }
+}

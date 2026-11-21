@@ -3,7 +3,7 @@
   "navigationBarTextStyle": "white",
   "backgroundColor": "#000000",
   "usingComponents": {
-    "cy-playkit-qa": "/pages/play/components/playkit-qa/index",
+    "cy-playkit-qa": "/pages/playkit/components/playkit-qa/index",
     "cy-medal-screen": "/pages/play/components/medal-screen/index",
     "cy-error": "/components/cy/error/index",
     "cy-empty": "/components/cy/empty/index",
@@ -12,5 +12,8 @@
     "cy-loading-mask": "/components/cy/loading-mask/index",
     "cy-privacy-gate": "/components/cy/privacy-gate/index",
     "cy-inline-error": "/components/cy/inline-error/index"
+  },
+  "componentPlaceholder": {
+    "cy-playkit-qa": "view"
   }
 }

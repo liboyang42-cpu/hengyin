@@ -94,7 +94,7 @@ test('完成卡只留一条成就气泡,按 徽章 > 券 > 最快一段 > 首达
 });
 
 test('浅底整屏玩法把状态栏字换黑', () => {
-  const src = read('pages/play/components/playkit/index.js');
+  const src = read('pages/playkit/components/playkit/index.js');
   assert.match(src, /LIGHT_KITS = \['estimate', 'countdown', 'stopwatch'/);
   assert.match(src, /frontColor: light \? '#000000' : '#ffffff'/);
 });

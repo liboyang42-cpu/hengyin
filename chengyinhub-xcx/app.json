@@ -18,6 +18,11 @@
       ]
     },
     {
+      "root": "pages/playkit",
+      "name": "subpackagePlaykit",
+      "pages": []
+    },
+    {
       "root": "pages/activity",
       "name": "subpackageActivity",
       "pages": [
@@ -364,7 +369,20 @@
     "pages/topic/index/index": {
       "network": "wifi",
       "packages": [
-        "subpackageMember"
+        "subpackageMember",
+        "subpackagePlaykit"
+      ]
+    },
+    "pages/play/index": {
+      "network": "all",
+      "packages": [
+        "subpackagePlaykit"
+      ]
+    },
+    "pages/play/poi-challenge/index": {
+      "network": "all",
+      "packages": [
+        "subpackagePlaykit"
       ]
     },
     "subpackageMember/signup/index": {

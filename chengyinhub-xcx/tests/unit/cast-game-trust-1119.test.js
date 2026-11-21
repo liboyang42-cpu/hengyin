@@ -130,12 +130,12 @@ test('结果反馈:回包 trustChanged → 会话事件 → 问答 kit.remember 
   assert.match(game, /trustChanged: \(state && Array\.isArray\(state\.trustChanged\)\) \? state\.trustChanged\.slice\(\) : null/);
   const page = read('pages/play/index.js');
   assert.match(page, /kit\.type === 'qa'\) kit\.remember = \(this\._castRemember \? this\._castRemember\(view\.trustChanged\) : ''\) \|\| \(previous && previous\.sessionId != null && String\(previous\.sessionId\) === String\(kit\.sessionId\) && previous\.remember\) \|\| ''/);
-  assert.match(strip(read('pages/play/components/playkit/index.wxml')), /<cy-playkit-qa [\s\S]*?remember="\{\{kit\.remember\}\}"/);
-  const qaJs = read('pages/play/components/playkit-qa/index.js');
+  assert.match(strip(read('pages/playkit/components/playkit/index.wxml')), /<cy-playkit-qa [\s\S]*?remember="\{\{kit\.remember\}\}"/);
+  const qaJs = read('pages/playkit/components/playkit-qa/index.js');
   assert.match(qaJs, /remember: \{ type: String, value: '' \}/);
-  const qaWxml = strip(read('pages/play/components/playkit-qa/index.wxml'));
+  const qaWxml = strip(read('pages/playkit/components/playkit-qa/index.wxml'));
   assert.match(qaWxml, /<view wx:if="\{\{remember && \(finished \|\| passed\)\}\}" class="qa__remember" aria-live="polite">\{\{remember\}\}<\/view>/);
-  const css = read('pages/play/components/playkit-qa/index.wxss');
+  const css = read('pages/playkit/components/playkit-qa/index.wxss');
   const rule = css.slice(css.indexOf('.qa__remember {'));
   assert.match(rule, /font-size: var\(--cy-type-caption\)/);
   assert.match(rule, /text-align: center/);

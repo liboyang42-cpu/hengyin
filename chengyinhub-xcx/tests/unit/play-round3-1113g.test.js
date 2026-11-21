@@ -29,13 +29,13 @@ test('判定文字:汉字数字不断行、句间双空格并成一个', () => {
   assert.equal(out.replace(/⁠/g, ''), '拍摄于一九一四年。门牌清晰')   // 1113h:中文句号后的空格一并去掉
   assert.notEqual(out, '拍摄于一九一四年。门牌清晰')
   assert.equal(keepNumerals('一个人'), '一个人')
-  assert.match(read('pages/play/components/playkit-photocheck/index.js'), /tidyText\(String\(lastReason/)
+  assert.match(read('pages/playkit/components/playkit-photocheck/index.js'), /tidyText\(String\(lastReason/)
   assert.match(read('pages/play/utils/playkit-view.js'), /answerText: seg\.finished \? tidyText\(/)
 })
 
 test('答完只留一个「继续」:内嵌时只留故事流那一颗「继续」', () => {
-  assert.match(read('pages/play/components/playkit-hangman/index.wxml'), /wx:if="\{\{solved && !inline\}\}"/)
-  assert.match(read('pages/play/components/playkit-qa/index.wxml'), /inline && \(passed \|\| finished \|\| ctaLabel === '继续'\)/)
+  assert.match(read('pages/playkit/components/playkit-hangman/index.wxml'), /wx:if="\{\{solved && !inline\}\}"/)
+  assert.match(read('pages/playkit/components/playkit-qa/index.wxml'), /inline && \(passed \|\| finished \|\| ctaLabel === '继续'\)/)
 })
 
 test('结算「继续」不去空故事页:只回看有正文的已完成章', () => {
@@ -64,17 +64,17 @@ test('浅色纸面:退出叉、打字、答对回执条读外观墨色,暗色外
   const tokens = read('pages/play/look-tokens.wxss')
   assert.match(tokens, /look--paper\.look-palette--white[^{]*\{ --pk-embed-back:var\(--lk-ink\); --pk-embed-typed:var\(--lk-ink\); --pk-embed-fb-bg:/)
   assert.equal(read('pages/publish/fabu/look-tokens.wxss'), tokens)
-  assert.match(read('pages/play/components/play-stage/index.wxss'), /\.skin-qadark:not\(\.st--verdict\) \.st__back \{ color: var\(--pk-embed-back, var\(--cy-color-play-accent\)\)/)
-  const qa = read('pages/play/components/playkit-qa/index.wxss')
+  assert.match(read('pages/playkit/components/play-stage/index.wxss'), /\.skin-qadark:not\(\.st--verdict\) \.st__back \{ color: var\(--pk-embed-back, var\(--cy-color-play-accent\)\)/)
+  const qa = read('pages/playkit/components/playkit-qa/index.wxss')
   assert.match(qa, /color: var\(--pk-embed-typed, var\(--ink\)\)/)
   assert.match(qa, /\.qa__fb--ok \{ background: var\(--pk-embed-fb-bg, var\(--cy-color-status-success-soft\)\)/)
 })
 
 test('拍照检查:新一次尝试与通过都清掉旧的上传失败', () => {
-  const pc = read('pages/play/components/playkit-photocheck/index.js')
+  const pc = read('pages/playkit/components/playkit-photocheck/index.js')
   assert.match(pc, /uploadFail: passed \? '' : this\.data\.uploadFail/)
   assert.match(pc, /busy: false, framing: false, uploadFail: ''/)
-  assert.match(read('pages/play/components/playkit-photocheck/index.wxml'), /uploadFail && !verdict && !passed/)
+  assert.match(read('pages/playkit/components/playkit-photocheck/index.wxml'), /uploadFail && !verdict && !passed/)
 })
 
 test('本局档案照片说明单行省略,不再孤字换行', () => {

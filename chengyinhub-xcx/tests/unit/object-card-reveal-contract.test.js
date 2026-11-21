@@ -93,14 +93,14 @@ test('负控:cardStyle 缺失时落回 foil —— 与组件默认、后端默�
 })
 
 test('★回执一路到组件:分发器把 kit.card 传下去,组件收得到', () => {
-  const dispatcher = read('../../pages/play/components/playkit/index.wxml')
+  const dispatcher = read('../../pages/playkit/components/playkit/index.wxml')
   const block = (dispatcher.match(/<cy-playkit-photocheck[\s\S]*?\/>/) || [''])[0]
   assert.ok(block, '分发器里找不到 photocheck 那一块，这条断言就是恒真的')
   assert.ok(/card="\{\{kit\.card\}\}"/.test(block), 'kit.card 没传给组件:投影再对也到不了屏')
 })
 
 test('★组件里那张卡真的渲出来,而且只在「判过 + 有卡」时渲,并且跟陀螺仪', () => {
-  const dir = '../../pages/play/components/playkit-photocheck/'
+  const dir = '../../pages/playkit/components/playkit-photocheck/'
   const wxml = strip(read(dir + 'index.wxml'))
   const json = JSON.parse(read(dir + 'index.json'))
   assert.equal(json.usingComponents['cy-spin-card'], '/components/cy/spin-card/index',
@@ -159,8 +159,8 @@ test('★提交失败信号 photoFailSeq 由 kit 恒产出(页面在上传失败
 })
 
 test('★拍物成卡模式分到新的一屏,普通拍照审核还是原来那一屏', () => {
-  const dispatcher = read('../../pages/play/components/playkit/index.wxml')
-  const json = JSON.parse(read('../../pages/play/components/playkit/index.json'))
+  const dispatcher = read('../../pages/playkit/components/playkit/index.wxml')
+  const json = JSON.parse(read('../../pages/playkit/components/playkit/index.json'))
   const oc = (dispatcher.match(/<cy-playkit-objectcard\s[\s\S]*?\/>/) || [''])[0]
   assert.ok(oc, '分发器里没有拍物成卡那一屏')
   assert.ok(/kit\.type === 'photocheck' && kit\.mode === 'CARD'/.test(oc), '拍物成卡的闸不对:' + oc)
@@ -169,7 +169,7 @@ test('★拍物成卡模式分到新的一屏,普通拍照审核还是原来那�
   for (const key of ['card', 'place', 'passed', 'tries', 'degraded', 'flagged', 'photoFailSeq']) {
     assert.ok(new RegExp('\\{\\{kit\\.' + key + '\\}\\}').test(oc), '没把 kit.' + key + ' 传给拍物成卡那一屏')
   }
-  assert.equal(json.usingComponents['cy-playkit-objectcard'], '/pages/play/components/playkit-objectcard/index')
+  assert.equal(json.usingComponents['cy-playkit-objectcard'], '/pages/playkit/components/playkit-objectcard/index')
 })
 
 test('★游玩页把「主题名 · 节点名」交给 pickPlayKit —— 会话视图里只有 nodeId', () => {
@@ -192,7 +192,7 @@ test('★上传/提交失败时通知拍物成卡那一屏回取景,且这一模
 })
 
 test('★拍物成卡那一屏:不用 Behavior、不加 keyframes、减弱动效挂在组件自己的根上', () => {
-  const dir = '../../pages/play/components/playkit-objectcard/'
+  const dir = '../../pages/playkit/components/playkit-objectcard/'
   const js = strip(read(dir + 'index.js'))
   const wxss = read(dir + 'index.wxss').replace(/\/\*[\s\S]*?\*\//g, '')
   const wxml = read(dir + 'index.wxml')
@@ -213,7 +213,7 @@ test('★玩法组件报「这一步没提交成功」时,页面让拍物成卡�
 })
 
 test('★预览标记一路到拍物成卡那一屏;编辑页预览收到拍照事件明说不判定', () => {
-  const dispatcher = read('../../pages/play/components/playkit/index.wxml')
+  const dispatcher = read('../../pages/playkit/components/playkit/index.wxml')
   const oc = (dispatcher.match(/<cy-playkit-objectcard\s[\s\S]*?\/>/) || [''])[0]
   assert.ok(/preview="\{\{kit\.preview\}\}"/.test(oc), '分发器没把 kit.preview 传给拍物成卡那一屏')
   const temp = strip(read('../../pages/publish/temp/index.js'))
@@ -235,8 +235,8 @@ test('★编辑页预览演拍物成卡时宿主挂 theme-dark,别被编辑页�
    拍物成卡改成整屏:没有顶部圆角面板、没有抓手、面板外不露遮罩;取景框整块圆角,不压白色角标。
    内容区仍从胶囊下面开始(面板 top = topSafe),不越过微信导航栏。 */
 test('★拍物成卡是整屏不是弹窗:无抓手、无角标、底色铺满、面板不带顶部圆角、取景框整块圆角', () => {
-  const wxml = read('../../pages/play/components/playkit-objectcard/index.wxml')
-  const wxss = read('../../pages/play/components/playkit-objectcard/index.wxss')
+  const wxml = read('../../pages/playkit/components/playkit-objectcard/index.wxml')
+  const wxss = read('../../pages/playkit/components/playkit-objectcard/index.wxss')
   assert.ok(!/oc__grab/.test(wxml + wxss), '还留着弹窗抓手')
   assert.ok(!/oc__corner/.test(wxml + wxss), '取景框四角还压着白色角标')
   const rule = (sel) => ((wxss.match(new RegExp('\\n' + sel.replace(/\./g, '\\.') + ' \\{([^}]*)\\}')) || [])[1] || '')

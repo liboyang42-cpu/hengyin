@@ -20,7 +20,7 @@ test('compact runtime properties stay declared while unknown props remain absent
 })
 
 test('main-package shared helpers and original subpackage callers use the same implementation', () => {
-  assert.equal(require('../../utils/ar-math'), require('../../pages/play/components/playkit-scan/ar/ar-math'))
+  assert.equal(require('../../utils/ar-math'), require('../../pages/playkit/components/playkit-scan/ar/ar-math'))
   assert.equal(require('../../utils/play-run-session'), require('../../pages/play/utils/play-run-session'))
   assert.equal(require('../../utils/play-run-session').pausedRunStorageKey({ memberId: 42, topicId: 7 }), 'play_paused_run_v2:m42:t7')
 })

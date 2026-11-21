@@ -31,13 +31,13 @@ const ALLOW = new Set([
   //   于是背景画在子层、或刻意不画底的两类都被扫进来。逐条写明背景落在哪一层。
   // (2026-09-20 合批:cy-popover 随 #1103 主包瘦身下沉到 pages/square/ 下,等量换 key、理由一字未改)
   'pages/square/components/cy/popover/index.wxss::.pop__catch',       // 只接「点外面」的捕获层,源码注释:刻意无背景不压暗
-  'pages/play/components/playkit-dailysign/index.wxss::.ds',          // 满屏模态根,不透明底在同文件 .ds__bg
+  'pages/playkit/components/playkit-dailysign/index.wxss::.ds',          // 满屏模态根,不透明底在同文件 .ds__bg
   'pages/play/index.wxss::.fx-bg',                                    // 满屏背景层(pointer-events:none),图与蒙版在 .fx-bg__im / .fx-bg__veil
   'pages/play/index.wxss::.fx-hero',                                  // 满屏展开层,兜底底色在 .fx-hero__bg
   'pages/roam/index.wxss::cy-proto-cam',                              // 满屏取景浮层(pointer-events:none),不是一根条
   // ↓ 2026-11-10 qx-green 逐条读过:上线波次的满屏模态根(top:0 且 bottom:0),压暗在子层 mask,不是底栏
-  'pages/play/components/playkit-accusation/index.wxss::.ac--full .ac__end', // 满屏结局层,不透明底在同文件 .ac__end 基础规则
-  'pages/play/components/playkit-accusation/index.wxss::.ac-cf',            // 指认确认模态根,压暗在 .ac-cf__mask
+  'pages/playkit/components/playkit-accusation/index.wxss::.ac--full .ac__end', // 满屏结局层,不透明底在同文件 .ac__end 基础规则
+  'pages/playkit/components/playkit-accusation/index.wxss::.ac-cf',            // 指认确认模态根,压暗在 .ac-cf__mask
   'pages/play/play-help.wxss::.phl-pop',                                     // 提示面板模态根,压暗在 .phl-pop-mask
   'pages/play/play-stage.wxss::.lk-popwrap',                                 // 玩法开始 / 岔路模态根,压暗在 .lk-pop-mask
   'subpackageJourney/pages/settle/index.wxss::.st-pop',                      // 评价已提交模态根,压暗在 .st-pop__mask

@@ -88,7 +88,7 @@ test('N4:内嵌检定段到时还没显形 ⇒ 换整屏检定卡,并把那一�
 })
 
 test('N1:点中一张就停到正中;选定时印盖在发出去的那张上', () => {
-  const config = loadComponent('pages/play/components/playkit-predict/index.js')
+  const config = loadComponent('pages/playkit/components/playkit-predict/index.js')
   const { ctx, events } = ctxOf(config, { options: [{ key: 'A', label: '会' }, { key: 'B', label: '不会' }], reducedMotion: true, show: true },
     { _spin() {}, _stop() {} })
   ctx._slices = []; ctx._n = 2; ctx._angle = 7   // 转盘停在两张之间的某处
@@ -99,15 +99,15 @@ test('N1:点中一张就停到正中;选定时印盖在发出去的那张上', (
   ctx.onCommit()
   assert.equal(ctx._cardAngle(1, ctx._angle, 2), 0, '落印时正中就是选中的那张')
   assert.deepEqual(events.pop(), { name: 'submit', detail: { key: 'B', index: 1 } })
-  const wxml = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-predict/index.wxml'), 'utf8')
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/playkit/components/playkit-predict/index.wxml'), 'utf8')
   const ring = wxml.slice(wxml.indexOf('pd__ring'), wxml.indexOf('<!-- 揭晓'))
   assert.ok(ring.includes('pd__seal'), '印在转盘里、落在正中那张上')
-  const wxss = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-predict/index.wxss'), 'utf8')
+  const wxss = fs.readFileSync(path.join(ROOT, 'pages/playkit/components/playkit-predict/index.wxss'), 'utf8')
   assert.match(wxss, /\.pd__seal \{\s*position: absolute; left: 50%; top: 50%/)
 })
 
 test('N1:重进时服务端已记下本人选项 ⇒ 转盘停在那张、已盖印、不能再选', () => {
-  const config = loadComponent('pages/play/components/playkit-predict/index.js')
+  const config = loadComponent('pages/playkit/components/playkit-predict/index.js')
   let spun = false
   const { ctx } = ctxOf(config, { options: [{ key: 'A', label: '会' }, { key: 'B', label: '不会' }], myOptionKey: 'B', reducedMotion: false },
     { _spin() { spun = true }, _stop() {}, _paint() {} })
@@ -119,7 +119,7 @@ test('N1:重进时服务端已记下本人选项 ⇒ 转盘停在那张、已盖
 })
 
 test('N2:服务端把猜数字这一局重开 ⇒ 解锁,「就这个数」能再交', () => {
-  const config = loadComponent('pages/play/components/playkit-estimate/index.js')
+  const config = loadComponent('pages/playkit/components/playkit-estimate/index.js')
   const { ctx, events } = ctxOf(config, { unit: '米' }, { _paint() {} })
   ctx._ticks = [1, 2, 3]; ctx._index = 1
   observe(config, ctx, 'submitted', true, 'MISS', 9, 5, '', '米')

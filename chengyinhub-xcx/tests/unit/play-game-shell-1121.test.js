@@ -147,7 +147,7 @@ test('整屏收回故事流:淡入 + 没玩完时对准这一站那一段;玩完
 })
 
 test('整屏台面:抬头沿宿主找 cy-playkit 的 shellHead,与 show 同一拍写进 data(第一帧就画出来,不跳)', () => {
-  const def = loadComponent('pages/play/components/play-stage/index.js')
+  const def = loadComponent('pages/playkit/components/play-stage/index.js')
   const head = { station: '第2站', chapter: '雾起', lead: '风从江面上吹过来。', label: 'x' }
   const wrapper = { data: { shellHead: head } }
   const kit = { data: { head: '把物品放进框里' }, selectOwnerComponent: () => wrapper }   // 拍物成卡自己的 head 是字符串,不认
@@ -161,10 +161,10 @@ test('整屏台面:抬头沿宿主找 cy-playkit 的 shellHead,与 show 同一�
   const bare = instance(def, {}, { selectOwnerComponent: () => ({ data: {}, selectOwnerComponent: () => ({ data: {} }) }) })
   assert.equal(def.methods._shellHeadOf(bare), null)
   assert.equal(def.methods._shellHeadOf(instance(def, {}, {})), null, '基础库没有 selectOwnerComponent 也不炸')
-  const wxml = read('pages/play/components/play-stage/index.wxml')
+  const wxml = read('pages/playkit/components/play-stage/index.wxml')
   assert.match(wxml, /<view class="st__head" wx:if="\{\{head\}\}" style="top:\{\{topPad \+ 12\}\}px"/, '与返回钮同一行,不挪内容起点')
   assert.match(wxml, /<view class="st__tex" aria-hidden="true"><\/view>/)
-  const wxss = read('pages/play/components/play-stage/index.wxss')
+  const wxss = read('pages/playkit/components/play-stage/index.wxss')
   assert.match(wxss, /\.st__head \{[^}]*display: var\(--pk-back-display, flex\);/, '内嵌在故事流里与返回钮一起收起')
   assert.match(wxss, /\.st__tex \{[^}]*background: var\(--lk-tex, none\);/, '纸纹 / 暗角读外观变量,没有外观 = 原样')
   assert.match(wxss, /\.st__head-l \{[^}]*font-family: var\(--cy-story-font, 'CyStoryHand'/, '引子用故事流同一个字')

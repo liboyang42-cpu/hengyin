@@ -7,7 +7,7 @@ const vm = require('node:vm');
 
 function glass(props) {
   let spec;
-  const dir = path.dirname(require.resolve('../../pages/play/components/album-glass/index.js'));
+  const dir = path.dirname(require.resolve('../../pages/playkit/components/album-glass/index.js'));
   vm.runInNewContext(fs.readFileSync(path.join(dir, 'index.js'), 'utf8'), {
     Component: value => { spec = value; },
     require: (p) => require(path.resolve(dir, p)),

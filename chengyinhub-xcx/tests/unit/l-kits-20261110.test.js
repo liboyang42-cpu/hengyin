@@ -37,7 +37,7 @@ test('判定屏:赢 = cy-illus 成功插图(不再画对勾),输 = 失败插图 
 
 test('本 lane 四个组件不新增 @keyframes、不写 transition: all、不写裸字号', () => {
   for (const c of ['playkit-qa', 'playkit-hangman', 'playkit-accusation', 'playkit-diceroll', 'play-verdict']) {
-    const css = read('pages/play/components/' + c + '/index.wxss').replace(/\/\*[\s\S]*?\*\//g, '')
+    const css = read((c.startsWith('playkit-') ? 'pages/playkit' : 'pages/play') + '/components/' + c + '/index.wxss').replace(/\/\*[\s\S]*?\*\//g, '')
     assert.doesNotMatch(css, /transition:\s*all/, c)
     const frames = (css.match(/@keyframes/g) || []).length
     // qa 的 qa-fb / qa-burn、verdict 的 pv-slide / pv-rise、骰子的 dz-roll 系列是存量;本 lane 新写的 hangman / accusation 为 0

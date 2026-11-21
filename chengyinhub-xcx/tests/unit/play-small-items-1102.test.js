@@ -20,8 +20,8 @@ test('P-24:普通拍照审核上传失败,屏上写「上传失败，请重拍�
   const prevC = global.Component, prevB = global.Behavior;
   global.Component = (d) => { def = d; }; global.Behavior = (d) => d;
   try {
-    delete require.cache[require.resolve('../../pages/play/components/playkit-photocheck/index.js')];
-    require('../../pages/play/components/playkit-photocheck/index.js');
+    delete require.cache[require.resolve('../../pages/playkit/components/playkit-photocheck/index.js')];
+    require('../../pages/playkit/components/playkit-photocheck/index.js');
   } finally { global.Component = prevC; global.Behavior = prevB; }
   const ctx = { data: { uploadFail: '', busy: true }, setData(p) { Object.assign(this.data, p); } };
   const onFail = def.observers['photoFailSeq, photoFailKind'];
@@ -35,9 +35,9 @@ test('P-24:普通拍照审核上传失败,屏上写「上传失败，请重拍�
   onFail.call(ctx, 2, 'submit');   // 提交失败(照片已传上去)不叫「请重拍」,走「重新提交」
   assert.equal(ctx.data.uploadFail, '提交失败，照片已保留');
   assert.equal(ctx.data.resubmit, true);
-  const wxml = read('pages/play/components/playkit-photocheck/index.wxml');
+  const wxml = read('pages/playkit/components/playkit-photocheck/index.wxml');
   assert.match(wxml, /wx:if="\{\{uploadFail && !verdict && !passed\}\}"/);
-  assert.match(read('pages/play/components/playkit/index.wxml'), /photo-fail-seq="\{\{kit\.photoFailSeq\}\}" photo-fail-kind="\{\{kit\.photoFailKind\}\}"[^>]*bind:shoot="onShoot"[^>]*bind:close="onClose" \/>/);
+  assert.match(read('pages/playkit/components/playkit/index.wxml'), /photo-fail-seq="\{\{kit\.photoFailSeq\}\}" photo-fail-kind="\{\{kit\.photoFailKind\}\}"[^>]*bind:shoot="onShoot"[^>]*bind:close="onClose" \/>/);
 });
 
 test('P-26:开始游戏时问定位(每次游玩仍逐次明示用途,不跨次记住同意)', () => {
@@ -58,8 +58,8 @@ test('P-10:故事流打字题答错(只回流 attempts)也描红并写一句;首
   const prevC = global.Component, prevB = global.Behavior;
   global.Component = (d) => { def = d; }; global.Behavior = (d) => d;
   try {
-    delete require.cache[require.resolve('../../pages/play/components/playkit-qa/index.js')];
-    require('../../pages/play/components/playkit-qa/index.js');
+    delete require.cache[require.resolve('../../pages/playkit/components/playkit-qa/index.js')];
+    require('../../pages/playkit/components/playkit-qa/index.js');
   } finally { global.Component = prevC; global.Behavior = prevB; }
   const ctx = { data: { mode: 'type', passed: false, finished: false, feedbackText: '', typed: '黄浦江', typeWrong: false },
     setData(p) { Object.assign(this.data, p); } };

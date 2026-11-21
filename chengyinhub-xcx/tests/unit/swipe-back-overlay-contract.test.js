@@ -71,7 +71,7 @@ test('负控:不限左缘时,非左缘用例必须判红', () => {
 })
 
 test('相册接线:根层挂 edge* 处理器,关闭方法就是「收起相册」的 close;读减动效', () => {
-  const wxml = read('pages/play/components/playkit-album/index.wxml')
+  const wxml = read('pages/playkit/components/playkit-album/index.wxml')
   assert.match(wxml, /<wxs module="gs" src="\.\.\/\.\.\/\.\.\/\.\.\/utils\/wxs\/gesture\.wxs" \/>/)
   const root = /<view class="album" wx:if="\{\{show\}\}"[\s\S]*?>/.exec(wxml)
   assert.ok(root)
@@ -79,11 +79,11 @@ test('相册接线:根层挂 edge* 处理器,关闭方法就是「收起相册�
     'bindtouchcancel="{{gs.edgeEnd}}"', 'bindtransitionend="{{gs.edgeSettle}}"', 'data-glayer="1"', 'data-close="close"', 'data-rm="{{reducedMotion}}"']) {
     assert.ok(root[0].includes(k), `相册根层缺 ${k}`)
   }
-  assert.match(read('pages/play/components/playkit-album/index.js'), /behaviors: \[reducedMotionBehavior\]/)
+  assert.match(read('pages/playkit/components/playkit-album/index.js'), /behaviors: \[reducedMotionBehavior\]/)
 })
 
 test('相册翻页让出左缘:从左缘起手不翻页', () => {
-  const js = read('pages/play/components/album-glass/index.js')
+  const js = read('pages/playkit/components/album-glass/index.js')
   assert.match(js, /const \{ EDGE \} = require\('\.\.\/\.\.\/\.\.\/\.\.\/utils\/gesture-physics\.js'\);/)
   assert.match(js, /if \(t\.clientX <= EDGE\) return;/)
 })

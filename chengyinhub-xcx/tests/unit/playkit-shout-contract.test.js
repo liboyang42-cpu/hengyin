@@ -19,9 +19,9 @@ const path = require('node:path');
 const Module = require('node:module');
 
 const ROOT = path.resolve(__dirname, '../..');
-const COMPONENT_PATH = path.join(ROOT, 'pages/play/components/playkit-shout/index.js');
-const WXML = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-shout/index.wxml'), 'utf8');
-const WXSS = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-shout/index.wxss'), 'utf8');
+const COMPONENT_PATH = path.join(ROOT, 'pages/playkit/components/playkit-shout/index.js');
+const WXML = fs.readFileSync(path.join(ROOT, 'pages/playkit/components/playkit-shout/index.wxml'), 'utf8');
+const WXSS = fs.readFileSync(path.join(ROOT, 'pages/playkit/components/playkit-shout/index.wxss'), 'utf8');
 const SOURCE = fs.readFileSync(COMPONENT_PATH, 'utf8');
 
 // 组件里的 setInterval 由测试手动喂拍,别让 node 事件循环真挂着表
@@ -151,7 +151,7 @@ test('开跑先开表:submit 之前必有 start 事件(成绩按服务器时间�
 test('校准:2 秒采样取 80 分位当底噪,线 = thresholds 的红档', () => {
   const vm = load();
   vm.onStart();
-  const level = require('../../pages/play/utils/play-audio-level.js');
+  const level = require('../../pages/playkit/utils/play-audio-level.js');
   for (let i = 0; i < 20; i++) { vm.frame(0.05); vm.onSample(); }
   vm.frame(0.9); vm.onSample();   // 校准期混进一声大的,不许抬走底噪
   vm.onCalibrated();

@@ -23,7 +23,7 @@ const ROOT = path.resolve(__dirname, '../..')
 /* vm 沙箱里造出来的对象是**另一个 realm** 的:原型不是宿主的 Object.prototype,
    deepStrictEqual 会判「结构一样但不是同一个原型」而红。断言前先往返一次 JSON。 */
 const plain = (v) => JSON.parse(JSON.stringify(v))
-const DISPATCH_WXML = 'pages/play/components/playkit/index.wxml'
+const DISPATCH_WXML = 'pages/playkit/components/playkit/index.wxml'
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8')
 
 /** 载入组件定义:stub 掉 Component / Behavior,拿到真 options。
@@ -77,11 +77,11 @@ function mount(rel) {
 const NOT_FED = new Set(['show', 'reducedMotion', 'inline'])
 
 const SHELLS = [
-  { type: 'sort', rel: 'pages/play/components/playkit-sort/index.js' },
-  { type: 'match', rel: 'pages/play/components/playkit-match/index.js' },
-  { type: 'classify', rel: 'pages/play/components/playkit-classify/index.js' },
+  { type: 'sort', rel: 'pages/playkit/components/playkit-sort/index.js' },
+  { type: 'match', rel: 'pages/playkit/components/playkit-match/index.js' },
+  { type: 'classify', rel: 'pages/playkit/components/playkit-classify/index.js' },
   // 2026-10-30 实走复核补上的时间轴对照,与排序 / 连线同一份接线合同
-  { type: 'compare', rel: 'pages/play/components/playkit-compare/index.js' },
+  { type: 'compare', rel: 'pages/playkit/components/playkit-compare/index.js' },
 ]
 
 test('★属性契约:三个组件声明的每个属性都从分发器的 kit.* 喂进来', () => {
@@ -220,7 +220,7 @@ test('★分类:没分完按钮拦得住 + 还差几条说得出来;分满才发
 })
 
 test('★qa 多选:勾多个再提交,发的是 optionIds 全集', () => {
-  const { def, inst, events } = mount('pages/play/components/playkit-qa/index.js')
+  const { def, inst, events } = mount('pages/playkit/components/playkit-qa/index.js')
   Object.assign(inst.data, { show: true, mode: 'pick', multi: true, sessionId: 'qa-multi', nodeId: '21' })
   def.observers['show, options, mode, multi, passed, finished, judge, lastOptionId, lastOptionIds, feedbackText, feedbackImages, sessionId, nodeId'].call(inst, true,
     [{ id: 'a', t: '冷萃' }, { id: 'b', t: '拿铁' }, { id: 'c', t: '冰滴' }], 'pick', true, false, false)
@@ -240,7 +240,7 @@ test('★qa 多选:勾多个再提交,发的是 optionIds 全集', () => {
 })
 
 test('★qa 单选:先选、确认才提交(F04),仍然是单个 optionId', () => {
-  const { def, inst, events } = mount('pages/play/components/playkit-qa/index.js')
+  const { def, inst, events } = mount('pages/playkit/components/playkit-qa/index.js')
   Object.assign(inst.data, { show: true, mode: 'pick', multi: false, sessionId: 'qa-single', nodeId: '22' })
   def.observers['show, options, mode, multi, passed, finished, judge, lastOptionId, lastOptionIds, feedbackText, feedbackImages, sessionId, nodeId'].call(inst, true,
     [{ id: 'a', t: '冷萃' }, { id: 'b', t: '拿铁' }], 'pick', false, false, false)

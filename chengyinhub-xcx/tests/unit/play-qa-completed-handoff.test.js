@@ -9,7 +9,7 @@ global.wx = { getStorageSync: () => '', getWindowInfo: () => ({ statusBarHeight:
 global.getApp = () => ({ globalData: { features: {} }, isDevEnv: () => false, sendRequest() {} });
 let qaDef, pageDef;
 global.Component = value => { qaDef = value; };
-require('../../pages/play/components/playkit-qa/index.js');
+require('../../pages/playkit/components/playkit-qa/index.js');
 global.Page = value => { pageDef = value; };
 require('../../pages/play/index.js');
 
@@ -72,7 +72,7 @@ test('关闭高级面板总是清理旧题面，避免题面继续写入已关�
 });
 
 test('分发器递交权威通过状态和继续事件', () => {
-  const source = fs.readFileSync(path.join(__dirname, '../../pages/play/components/playkit/index.wxml'), 'utf8');
+  const source = fs.readFileSync(path.join(__dirname, '../../pages/playkit/components/playkit/index.wxml'), 'utf8');
   const qaBlock = source.match(/<cy-playkit-qa[\s\S]*?\/>/)[0];
   assert.match(qaBlock, /passed="\{\{kit\.passed\}\}"/);
   assert.match(qaBlock, /finished="\{\{kit\.finished\}\}"/);

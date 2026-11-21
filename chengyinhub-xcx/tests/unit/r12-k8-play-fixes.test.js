@@ -26,7 +26,7 @@ test('N2:没交过(服务端不给真值)就不出这一行', () => {
 })
 
 test('N7:终局屏不再有「原结果已保留」说明行,得分 / 完成项为 0 不显示', () => {
-  const wxml = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit/index.wxml'), 'utf8')
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/playkit/components/playkit/index.wxml'), 'utf8')
   const tpl = wxml.slice(0, wxml.indexOf('</template>'))
   assert.ok(!/<text[^>]*>[^<]*原结果已保留/.test(tpl))
   assert.match(tpl, /kit\.sessionScore > 0/)
@@ -69,7 +69,7 @@ test('N4 rig 复走:检定点数正好等于难度读「正好过线」,不写�
   const prev = { Behavior: global.Behavior, Component: global.Component }
   let c = null
   global.Behavior = (b) => b; global.Component = (x) => { c = x }
-  try { require('../../pages/play/components/playkit-journey-check/index.js') } finally { Object.assign(global, prev) }
+  try { require('../../pages/playkit/components/playkit-journey-check/index.js') } finally { Object.assign(global, prev) }
   const m = c.methods._marginText
   assert.equal(m({ total: 13, dc: 13, success: true }), '正好过线')
   assert.equal(m({ total: 15, dc: 13, success: true }), '过线 2 点')
@@ -81,29 +81,29 @@ for (const [comp, fail] of [['playkit-quiethold', '_micFailure'], ['playkit-shou
     const prev = { Behavior: global.Behavior, Component: global.Component, wx: global.wx }
     let c = null
     global.Behavior = (b) => b; global.Component = (x) => { c = x }; global.wx = global.wx || {}
-    try { delete require.cache[require.resolve(path.join(ROOT, `pages/play/components/${comp}/index.js`))]; require(path.join(ROOT, `pages/play/components/${comp}/index.js`)) } finally { Object.assign(global, prev) }
+    try { delete require.cache[require.resolve(path.join(ROOT, `pages/playkit/components/${comp}/index.js`))]; require(path.join(ROOT, `pages/playkit/components/${comp}/index.js`)) } finally { Object.assign(global, prev) }
     const events = []
     const ctx = Object.assign({ data: Object.assign({}, c.data, { show: true }), setData(p) { Object.assign(this.data, p) },
       triggerEvent(n) { events.push(n) } }, c.methods)
     ctx._micDenied()
     assert.equal(ctx.data.micDenied, true)
     assert.deepEqual(events, ['micdenied'])
-    const wxml = fs.readFileSync(path.join(ROOT, `pages/play/components/${comp}/index.wxml`), 'utf8')
+    const wxml = fs.readFileSync(path.join(ROOT, `pages/playkit/components/${comp}/index.wxml`), 'utf8')
     assert.match(wxml, /wx:if="\{\{micDenied && !skipped && !running\}\}"[^>]*>需要授权麦克风才能开始</)
-    const src = fs.readFileSync(path.join(ROOT, `pages/play/components/${comp}/index.js`), 'utf8')
+    const src = fs.readFileSync(path.join(ROOT, `pages/playkit/components/${comp}/index.js`), 'utf8')
     assert.ok(!src.includes("this.triggerEvent('micdenied')\n") && src.includes('this._micDenied()'))
     assert.match(src, /onStart\(\) \{\n\s+if \(this\.data\.skipped\) return;[^\n]*\n\s+if \(this\.data\.micDenied\) this\.setData\(\{ micDenied: false \}\)/)
   })
 }
 
 test('N11:相册主动作画成主按钮,收起相册退成次按钮;开着相册交完照片后自动收起,重开已完成的相册不自动收', () => {
-  const wxml = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-album/index.wxml'), 'utf8')
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/playkit/components/playkit-album/index.wxml'), 'utf8')
   assert.match(wxml, /bindtap="onCta" class="album__cta"/)
   assert.match(wxml, /album__back \{\{completionEnabled && !done \? 'album__back--ghost' : ''\}\}/)
   const prev = { Component: global.Component }
   let c = null
   global.Component = (x) => { c = x }
-  try { delete require.cache[require.resolve(path.join(ROOT, 'pages/play/components/playkit-album/index.js'))]; require(path.join(ROOT, 'pages/play/components/playkit-album/index.js')) } finally { Object.assign(global, prev) }
+  try { delete require.cache[require.resolve(path.join(ROOT, 'pages/playkit/components/playkit-album/index.js'))]; require(path.join(ROOT, 'pages/playkit/components/playkit-album/index.js')) } finally { Object.assign(global, prev) }
   const timers = []
   const realSet = global.setTimeout
   global.setTimeout = (fn) => { timers.push(fn); return timers.length }
@@ -131,7 +131,7 @@ test('N9:精准停表重进时剩余次数扣掉服务端已记的失手(以前�
   const prev = { Behavior: global.Behavior, Component: global.Component, wx: global.wx }
   let c = null
   global.Behavior = (b) => b; global.Component = (x) => { c = x }; global.wx = global.wx || {}
-  try { delete require.cache[require.resolve(path.join(ROOT, 'pages/play/components/play-stage/index.js'))]; require(path.join(ROOT, 'pages/play/components/play-stage/index.js')) } finally { Object.assign(global, prev) }
+  try { delete require.cache[require.resolve(path.join(ROOT, 'pages/playkit/components/play-stage/index.js'))]; require(path.join(ROOT, 'pages/playkit/components/play-stage/index.js')) } finally { Object.assign(global, prev) }
   const ctx = Object.assign({ data: Object.assign({}, c.data), setData(p) { Object.assign(this.data, p) } }, c.methods)
   const key = Object.keys(c.observers).find((k) => k.includes('tries'))
   assert.match(key, /used/)
@@ -140,6 +140,6 @@ test('N9:精准停表重进时剩余次数扣掉服务端已记的失手(以前�
   assert.equal(ctx.data.triesLeft, 1)
   c.observers[key].call(ctx, true, 3, 0, 0)
   assert.equal(ctx.data.triesLeft, 3)
-  const wxml = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-stopwatch/index.wxml'), 'utf8')
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/playkit/components/playkit-stopwatch/index.wxml'), 'utf8')
   assert.match(wxml, /tries="\{\{tries\}\}" used="\{\{used\}\}"/)
 })

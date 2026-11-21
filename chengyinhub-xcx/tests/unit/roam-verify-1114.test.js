@@ -164,7 +164,7 @@ test('2077 重新挂原生地图，旧 updated 无法撤掉新占位', (t) => {
 })
 
 test('照片未通过只保留一个可重拍反馈，不触发通关', () => {
-  const { instance } = component('pages/play/components/playkit-qa/index.js')
+  const { instance } = component('pages/playkit/components/playkit-qa/index.js')
   instance.data.mode = 'pick'; instance.data.optionList = [{ id: 'a' }]
   let wins = 0, continued = 0
   instance.selectComponent = () => ({ win() { wins++ } })

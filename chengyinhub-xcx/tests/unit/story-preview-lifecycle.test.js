@@ -21,9 +21,9 @@ function component(file, timers) {
 test('输入挑战收到完成/次数耗尽结果后取消截止计时且禁止再开始', () => {
   for (const passed of [true, false]) {
     const timers = new Map();
-    const stage = component('pages/play/components/play-stage/index.js', timers).instance;
+    const stage = component('pages/playkit/components/play-stage/index.js', timers).instance;
     stage.data.limitSeconds = 10; stage._run();
-    const { instance: input, spec } = component('pages/play/components/playkit-typein/index.js', timers);
+    const { instance: input, spec } = component('pages/playkit/components/playkit-typein/index.js', timers);
     input.selectComponent = () => stage;
     input.data.tries = 1; input.data.attempts = 1; input.data.passed = passed;
     const lifecycle = Object.keys(spec.observers).find(key => key.replace(/\s/g, '').startsWith('show,attempts,passed'));

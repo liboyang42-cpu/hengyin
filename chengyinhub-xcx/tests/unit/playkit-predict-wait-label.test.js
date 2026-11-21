@@ -10,7 +10,7 @@ const test = require('node:test')
 /** 在 node 里把这个组件的定义抓出来:补三个小程序全局,不引真运行时 */
 function loadConfig() {
   const path = require('node:path')
-  const file = path.resolve(__dirname, '../../pages/play/components/playkit-predict/index.js')
+  const file = path.resolve(__dirname, '../../pages/playkit/components/playkit-predict/index.js')
   const prev = { Behavior: global.Behavior, Component: global.Component, wx: global.wx }
   let captured = null
   global.Behavior = (behavior) => behavior

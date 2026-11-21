@@ -102,7 +102,7 @@ test('pickPlayKit 原样搬服务端 attemptId / rewardCeiling,缺失即空', ()
 })
 
 test('分发器把 attemptId / rewardCeiling / photoVerified 绑到组件上', () => {
-  const wxml = read('pages/play/components/playkit/index.wxml')
+  const wxml = read('pages/playkit/components/playkit/index.wxml')
   for (const tag of ['quiethold', 'shout', 'compass', 'stopwatch']) {
     const block = wxml.split('<cy-playkit-' + tag + ' ')[1].split('/>')[0]
     assert.match(block, /attempt-id="\{\{kit\.attemptId\}\}"/, tag)
@@ -114,7 +114,7 @@ test('分发器把 attemptId / rewardCeiling / photoVerified 绑到组件上', (
 })
 
 function photoVerdict(fields) {
-  const component = loadComponent('pages/play/components/playkit-photocheck/index.js')
+  const component = loadComponent('pages/playkit/components/playkit-photocheck/index.js')
   const inst = instanceOf(component)
   component.observers['show, tries, maxTries, passed, flagged, degraded, fallback, lastReason'].call(inst, true,
     fields.tries || 1, fields.maxTries || 1, !!fields.passed, !!fields.flagged, !!fields.degraded,
@@ -145,9 +145,9 @@ test('视觉模型真判 PASS 才显示已核验；字段缺失时什么都不�
 })
 
 test('扫码这一屏有一行说清是任务码匹配，不是到场核验', () => {
-  const wxml = read('pages/play/components/playkit-scan/index.wxml')
+  const wxml = read('pages/playkit/components/playkit-scan/index.wxml')
   assert.match(wxml, /\{\{matchNote\}\}/)
-  const component = loadComponent('pages/play/components/playkit-scan/index.js')
+  const component = loadComponent('pages/playkit/components/playkit-scan/index.js')
   assert.equal(component.data.matchNote, contract.SCAN_MATCH_NOTE)
   assert.match(contract.SCAN_MATCH_NOTE, /任务码/)
   assert.match(contract.SCAN_MATCH_NOTE, /仅确认这一站的任务码/)
@@ -156,7 +156,7 @@ test('扫码这一屏有一行说清是任务码匹配，不是到场核验', ()
 test('六个组件里「已核验」只走服务端 photoVerified 那一条，不许写死承诺奖励的话', () => {
   for (const name of SENSOR_COMPONENTS) {
     for (const ext of ['js', 'wxml']) {
-      const src = read('pages/play/components/playkit-' + name + '/index.' + ext)
+      const src = read('pages/playkit/components/playkit-' + name + '/index.' + ext)
       assert.doesNotMatch(src, /已核验/, name + '.' + ext + ' 不许直接写「已核验」')
       assert.doesNotMatch(src, /(?:可|能|将)(?:获得|领取)(?:积分|券|优惠券|奖励)/, name + '.' + ext + ' 不许承诺奖励')
     }
@@ -164,7 +164,7 @@ test('六个组件里「已核验」只走服务端 photoVerified 那一条，�
 })
 
 test('安静挑战:校准由台面统一出屏,本屏不再印「已校准 · 本机阈值」读数(2026-11-21 业主:无系统说明);阈值文案仍按相对口径', () => {
-  const wxml = read('pages/play/components/playkit-quiethold/index.wxml')
+  const wxml = read('pages/playkit/components/playkit-quiethold/index.wxml')
   assert.match(wxml, /calibrate-label="先听一下这儿有多吵"/)
   assert.doesNotMatch(wxml, /thresholdText|已校准|分贝/)
   assert.match(contract.relativeThresholdText(0.27), /^本机阈值 27%（相对满幅振幅，不是分贝）$/)
@@ -181,7 +181,7 @@ test('reaction / ballShake 的 kit 原样搬服务端 attemptId,分发器绑到�
   assert.equal(pickPlayKit(view({ ballShake: { goal: 20, attemptId: 42 } }), now).attemptId, 42)
   assert.equal(pickPlayKit(view({ reaction: { rounds: 3, goalMs: 300 } }), now).attemptId, 0)
   assert.equal(pickPlayKit(view({ ballShake: { goal: 20, attemptId: 'forged' } }), now).attemptId, 0)
-  const wxml = read('pages/play/components/playkit/index.wxml')
+  const wxml = read('pages/playkit/components/playkit/index.wxml')
   for (const tag of ['reaction', 'ballshake', 'compass']) {
     const block = wxml.split('<cy-playkit-' + tag + ' ')[1].split('/>')[0]
     assert.match(block, /attempt-id="\{\{kit\.attemptId\}\}"/, tag)

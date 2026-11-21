@@ -64,7 +64,7 @@ const LAYOUT_ANIMATION_CEILING = 9 // 2026-10-29 pages/square/list 整页删除(
    按门禁自己的规矩压到实测值,不放回、不新增。 */
 /* 2026-09-22 147 → 149:《预制人生》那批新玩法屏(D20 检定 / 角色建档 / 留言 /
    限时打字 / 拍照审核)此前**一条动效都没有**,原版十九个每屏都有。补两条,只两条:
-   · `pk-in`(pages/play/style/play-surface.wxss)—— **五屏共用**的入场,
+   · `pk-in`(pages/playkit/style/play-surface.wxss)—— **五屏共用**的入场,
      逐值照原型「十九个玩法屏」的 rise:.34s cubic-bezier(.2,.9,.3,1)、translateY 18px + 淡入。
    · `jc-die`(playkit-journey-check)—— D20 骰子逐颗落定,带回弹。
      这一条不共用:掷骰的张力全在「掷→停→读数」,共用入场表达不出「一颗一颗停下」。

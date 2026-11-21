@@ -157,7 +157,7 @@ test('★kit 段的外层仍是循环里那个唯一的 .chfull__para —— 少
 // ===== ③ play-stage 内嵌档:在流里 + 退出钮隐藏 + z-index/skin 不走样 =====
 
 test('play-stage 内嵌档在流里渲染、退出钮走变量隐藏;z-index 仍走 token,不写死数字', () => {
-  const wxss = read('pages/play/components/play-stage/index.wxss')
+  const wxss = read('pages/playkit/components/play-stage/index.wxss')
   const pageWxss = read('pages/play/index.wxss')
 
   // 切档靠变量(变量能穿组件边界,所以 24 个 kit 一个都不用改)
@@ -174,7 +174,7 @@ test('play-stage 内嵌档在流里渲染、退出钮走变量隐藏;z-index 仍
   assert.match(stageRule[0], /z-index:\s*var\(--cy-z-sheet\)/, 'z-index 必须走 --cy-z-sheet token')
   assert.equal(/z-index:\s*\d/.test(stageRule[0]), false, '台面根节点出现了手写数字 z-index')
   // skin 认领:play-surface 必须还在 import 里,否则 --bg 解析成空、整层透明且不报错
-  assert.ok(wxss.includes('@import "/pages/play/style/play-surface.wxss"'),
+  assert.ok(wxss.includes('@import "/pages/playkit/style/play-surface.wxss"'),
     'play-surface 的皮肤表没被 import:skin-xxx 无人认领,--bg 空，内嵌态同样整层透明')
 
   // 故事流那层把变量给到位(名字对不上就不生效且不报错)
@@ -189,11 +189,11 @@ test('play-stage 内嵌档在流里渲染、退出钮走变量隐藏;z-index 仍
 // ===== diceRoll 例外:两套呈现都保留 =====
 
 test('★diceRoll 两套呈现都在:整屏(摇一摇)与内嵌(故事流里直接掷)不许删任何一版', () => {
-  const wxml = read('pages/play/components/playkit-diceroll/index.wxml')
-  const wxss = read('pages/play/components/playkit-diceroll/index.wxss')
-  const js = read('pages/play/components/playkit-diceroll/index.js')
-  const dispatcherWxml = read('pages/play/components/playkit/index.wxml')
-  const dispatcherJs = read('pages/play/components/playkit/index.js')
+  const wxml = read('pages/playkit/components/playkit-diceroll/index.wxml')
+  const wxss = read('pages/playkit/components/playkit-diceroll/index.wxss')
+  const js = read('pages/playkit/components/playkit-diceroll/index.js')
+  const dispatcherWxml = read('pages/playkit/components/playkit/index.wxml')
+  const dispatcherJs = read('pages/playkit/components/playkit/index.js')
 
   // 两套构图各占一条分支
   assert.match(wxml, /wx:if="\{\{inline\}\}"/, '内嵌那套构图被删了')
@@ -229,8 +229,8 @@ function pkDecls(rule) {
 }
 
 test('内嵌档换掉台面底色与铺满几何;整屏档缺省值逐字不变', () => {
-  const stage = read('pages/play/components/play-stage/index.wxss')
-  const surface = read('pages/play/style/play-surface.wxss')
+  const stage = read('pages/playkit/components/play-stage/index.wxss')
+  const surface = read('pages/playkit/style/play-surface.wxss')
   const stageRule = stage.match(/\.st\s*\{[^}]*\}/)[0]
   assert.match(stageRule, /background:\s*var\(--pk-stage-bg,\s*var\(--bg\)\)/, '台面底色没有内嵌通道(缺省仍须是皮肤 --bg)')
   assert.match(stageRule, /overflow:\s*var\(--pk-stage-overflow,\s*hidden\)/, '台面裁切没有内嵌通道(缺省仍须 hidden)')

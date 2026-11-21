@@ -1,7 +1,7 @@
 // 相册全屏几何:照片一圈的透视投影 + 屏幕边缘固定玻璃的拉伸
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { offsetOf, cardColumns, lensColumns } = require('../../pages/play/utils/album-lens.js');
+const { offsetOf, cardColumns, lensColumns } = require('../../pages/playkit/utils/album-lens.js');
 
 const geom = { cx: 375, cy: 450, cardW: 420, cardH: 620, sideX: 420, P: 640, radius: 0 };
 

@@ -10,7 +10,7 @@ let config;
 global.Behavior = (b) => b;
 global.Component = (c) => { config = c; };
 global.wx = { createSelectorQuery: () => ({}) };
-require('../../pages/play/components/playkit-hidden/index.js');
+require('../../pages/playkit/components/playkit-hidden/index.js');
 const { _containFrame: containFrame, _toPercent: toPercent } = config.methods;
 
 function parse(style) {

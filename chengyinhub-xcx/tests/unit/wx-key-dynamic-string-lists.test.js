@@ -20,7 +20,7 @@ function loadWxs(rel) {
 // 文件 → 这些动态数组表达式(作者/服务端文本,可以同文重复)
 const FIXED = {
   'pages/play/index.wxml': ['item.lines', 'hero.node.howto', 'shownHints', 'newLifeOS.actions7Days', 'newLifeOS.actions30Days'],
-  'pages/play/components/playkit-dailysign/index.wxml': ['lines'],
+  'pages/playkit/components/playkit-dailysign/index.wxml': ['lines'],
   'components/cy/theme-records/index.wxml': ['card.exhibits'],
   'pages/deregister/components/scene-settings-deregister/index.wxml': ['blockers'],
 }

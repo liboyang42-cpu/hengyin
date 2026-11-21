@@ -1803,7 +1803,7 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定�
   // 两类录音失败链现在真实读取 getSetting：2 tap +4事件移入 external，不是删除动作。
   for (const kind of ['quiethold', 'shout']) {
     for (const [handler, event] of [['onStart', 'bindtap'], ['onCalibrated', 'bind:calibrated'], ['onRun', 'bind:run']]) {
-      const permission = ledger.controls.filter(item => item.entry.wxml === `pages/play/components/playkit-${kind}/index.wxml`
+      const permission = ledger.controls.filter(item => item.entry.wxml === `pages/playkit/components/playkit-${kind}/index.wxml`
         && item.control.handler === handler && item.control.event === event)
       assert.equal(permission.length, 1, `${kind}.${handler} 真实录音动作必须保留`)
       assert.equal(permission[0].actionClass, 'external')

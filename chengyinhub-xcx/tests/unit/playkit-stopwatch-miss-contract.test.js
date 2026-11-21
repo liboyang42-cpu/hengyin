@@ -10,7 +10,7 @@ const path = require('node:path');
 const Module = require('node:module');
 
 const ROOT = path.resolve(__dirname, '../..');
-const DIR = path.join(ROOT, 'pages/play/components/playkit-stopwatch');
+const DIR = path.join(ROOT, 'pages/playkit/components/playkit-stopwatch');
 const COMPONENT_PATH = path.join(DIR, 'index.js');
 const WXML = fs.readFileSync(path.join(DIR, 'index.wxml'), 'utf8');
 

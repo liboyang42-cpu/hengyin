@@ -43,7 +43,7 @@ const methodsOf = (rel) => {
 }
 
 test('ring-meter:百分比 → 点亮段数与角度', () => {
-  const build = methodsOf('pages/play/components/ring-meter/index.js')._buildSegments
+  const build = methodsOf('pages/playkit/components/ring-meter/index.js')._buildSegments
 
   const zero = build(0, 40)
   assert.equal(zero.length, 40)
@@ -64,7 +64,7 @@ test('ring-meter:百分比 → 点亮段数与角度', () => {
 })
 
 test('timewindow:剩余秒 → HH:MM:SS,负数归零', () => {
-  const fmt = methodsOf('pages/play/components/playkit-timewindow/index.js')._formatClock
+  const fmt = methodsOf('pages/playkit/components/playkit-timewindow/index.js')._formatClock
   assert.equal(fmt(13282), '03:41:22')   // 稿 45:301 的示例值
   assert.equal(fmt(0), '00:00:00')
   assert.equal(fmt(-5), '00:00:00', '负剩余不能显示成 -1:59:59')
@@ -73,14 +73,14 @@ test('timewindow:剩余秒 → HH:MM:SS,负数归零', () => {
 })
 
 test('silentorder:已表演时长只进位到分', () => {
-  const fmt = methodsOf('pages/play/components/playkit-silentorder/index.js')._formatElapsed
+  const fmt = methodsOf('pages/playkit/components/playkit-silentorder/index.js')._formatElapsed
   assert.equal(fmt(84), '01:24')          // 稿 46:316 的示例值
   assert.equal(fmt(0), '00:00')
   assert.equal(fmt(3661), '61:01', '超过一小时继续累加分钟，不悄悄回绕')
 })
 
 test('steps:千分位与封顶百分比', () => {
-  const m = methodsOf('pages/play/components/playkit-steps/index.js')
+  const m = methodsOf('pages/playkit/components/playkit-steps/index.js')
   assert.equal(m._groupThousands(4286), '4,286')
   assert.equal(m._groupThousands(6000), '6,000')
   assert.equal(m._groupThousands(0), '0')
@@ -92,7 +92,7 @@ test('steps:千分位与封顶百分比', () => {
 })
 
 test('musiccorner:播放进度 → 点亮波形条数', () => {
-  const lit = methodsOf('pages/play/components/playkit-musiccorner/index.js')._litBarCount
+  const lit = methodsOf('pages/playkit/components/playkit-musiccorner/index.js')._litBarCount
   assert.equal(lit(0, 206, 17), 0)
   assert.equal(lit(206, 206, 17), 17)
   assert.equal(lit(103, 206, 17), 9)
@@ -100,11 +100,11 @@ test('musiccorner:播放进度 → 点亮波形条数', () => {
 })
 
 test('分发器契约:白名单每种玩法都真有组件、真被注册、真被分发', () => {
-  const types = methodsOf('pages/play/components/playkit/index.js')._kitTypes()
+  const types = methodsOf('pages/playkit/components/playkit/index.js')._kitTypes()
   assert.ok(types.length >= 9, '至少覆盖稿里落到小程序的九种玩法壳')
 
-  const wxml = read('pages/play/components/playkit/index.wxml')
-  const json = JSON.parse(read('pages/play/components/playkit/index.json'))
+  const wxml = read('pages/playkit/components/playkit/index.wxml')
+  const json = JSON.parse(read('pages/playkit/components/playkit/index.json'))
   const registered = Object.values(json.usingComponents || {})
 
   types.forEach((type) => {
@@ -122,9 +122,9 @@ test('分发器契约:白名单每种玩法都真有组件、真被注册、真�
   })
   /* 同一种玩法按模式分到另一屏的,在这里记账:它们不是新的 kit 类型,wxml 里挂在同一个 type 的分支下。 */
   const VARIANT_SCREENS = {
-    '/pages/play/components/playkit-objectcard/index': 'photocheck 的 mode=CARD(拍物成卡):取景 → 点阵消散 → 信息卡',
+    '/pages/playkit/components/playkit-objectcard/index': 'photocheck 的 mode=CARD(拍物成卡):取景 → 点阵消散 → 信息卡',
     // 2026-10-23:不是新的玩家 kit 类型 —— 玩家页在故事流里直挂检定卡;这一支只给编辑页试玩(journeycheck)
-    '/pages/play/components/playkit-journey-check/index': 'D20 三档检定卡，编辑页试玩专用入口',
+    '/pages/playkit/components/playkit-journey-check/index': 'D20 三档检定卡，编辑页试玩专用入口',
   }
   const TERMINAL_UI = ['/components/cy/sheet/index', '/components/cy/btn/index']
   TERMINAL_UI.forEach((rel) => assert.ok(registered.includes(rel), '已结束玩法的共用结果入口缺少组件:' + rel))
@@ -134,7 +134,7 @@ test('分发器契约:白名单每种玩法都真有组件、真被注册、真�
 })
 
 test('已结束新版玩法不提交交互事件，重试仅接受服务端明确许可', () => {
-  const methods = methodsOf('pages/play/components/playkit/index.js')
+  const methods = methodsOf('pages/playkit/components/playkit/index.js')
   const events = []
   const instance = Object.assign({ data: { kit: { type: 'qa', terminal: true, canRetry: false } },
     triggerEvent(name, detail) { events.push({ name, detail }) } }, methods)
@@ -209,7 +209,7 @@ test('AI 参考分不是孤儿:有渲染位,也有生产代码真给它赋值', 
 })
 
 test('弹球超时/本队手动提交都发送本次部分 hits，一次跑动只发一次且不本地判成功', () => {
-  const def = loadComponent('pages/play/components/playkit-ballshake/index.js');
+  const def = loadComponent('pages/playkit/components/playkit-ballshake/index.js');
   const stage = { wins: 0, _stopAll() {}, win() { this.wins++; }, fail() { throw new Error('共享挑战不可本地判负'); } };
   for (const timed of [true, false]) {
     const events = [];
@@ -225,7 +225,7 @@ test('弹球超时/本队手动提交都发送本次部分 hits，一次跑动�
     def.observers.challenge.call(ball, { progress: 12, goal: 10, success: true });
     assert.equal(stage.wins, 1); stage.wins = 0;
   }
-  const wxml = read('pages/play/components/playkit-ballshake/index.wxml');
+  const wxml = read('pages/playkit/components/playkit-ballshake/index.wxml');
   assert.match(wxml, /challenge\.progress/); assert.match(wxml, /challenge\.goal/);
   assert.match(wxml, /bindtap="onSubmitHits"[\s\S]*?hover-class="g-btn--press"/);
 });

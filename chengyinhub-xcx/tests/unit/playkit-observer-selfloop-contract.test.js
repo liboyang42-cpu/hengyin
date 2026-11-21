@@ -18,7 +18,7 @@ const fs = require('node:fs')
 const path = require('node:path')
 
 const ROOT = path.resolve(__dirname, '../..')
-const DIR = path.join(ROOT, 'pages/play/components')
+const DIR = path.join(ROOT, 'pages/playkit/components')
 
 /** 只认「对象字面量里的键」:前面必须是 { 或 ,。
  *  ⚠️ 别用裸 `键\s*:` —— `left: (seconds > 0 ? seconds : 0)` 里那个三元会被当成写键,

@@ -168,7 +168,7 @@
     },
     {
       "from": "behaviors/replay-motion.js",
-      "to": "pages/play/behaviors/replay-motion.js",
+      "to": "pages/playkit/behaviors/replay-motion.js",
       "sourceBlob": "1978ee2a6c4fb3e657a384697fcc850555a62a7f"
     },
     {

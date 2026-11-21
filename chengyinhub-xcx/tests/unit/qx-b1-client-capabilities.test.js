@@ -76,8 +76,8 @@ test('F03 / F05 子能力只在渲染与提交路径真实存在时声明:hangma
   const keys = caps.keys()
   for (const key of ['hangman.pool', 'qa.letterPool', 'role.views']) assert.ok(keys.includes(key), key + ' 应声明')
   assert.deepEqual([...caps.FEATURES].sort(), ['hangman.pool', 'qa.letterPool', 'role.views'])
-  assert.match(read('pages/play/components/playkit-hangman/index.js'), /inputMode === 'pool'/, '逐字猜词有字母池分支')
-  assert.match(read('pages/play/components/playkit-qa/index.wxml'), /mode === 'type' && poolOn/, '打字题有字符池分支')
+  assert.match(read('pages/playkit/components/playkit-hangman/index.js'), /inputMode === 'pool'/, '逐字猜词有字母池分支')
+  assert.match(read('pages/playkit/components/playkit-qa/index.wxml'), /mode === 'type' && poolOn/, '打字题有字符池分支')
   assert.match(read('pages/play/index.wxml'), /<cy-role-card wx:if="\{\{stationRole/, '站点卡挂了角色卡')
   assert.ok(!/故意不声明|没有渲染器的段\(如 roleViews/.test(read('pages/play/utils/client-capabilities.js')), '「不声明 roleViews」的旧注释已删')
   // role.views 是服务端已推导的键(roleViews.enabled 时必需);键名逐字对齐

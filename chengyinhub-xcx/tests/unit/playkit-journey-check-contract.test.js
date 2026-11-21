@@ -16,7 +16,7 @@ const path = require('node:path')
 
 const ROOT = path.resolve(__dirname, '../..')
 const PLAY = '../../pages/play/index.js'
-const COMPONENT = 'pages/play/components/playkit-journey-check/index.js'
+const COMPONENT = 'pages/playkit/components/playkit-journey-check/index.js'
 
 const { pickJourneyCheck, checkReceiptView } = require('../../pages/play/utils/playkit-view.js')
 
@@ -114,7 +114,7 @@ test('重掷只在「掷过、没结算、没重掷、还有幸运」时可见',
 })
 
 test('★失败也推进:结算屏的退出入口不受成败影响(wxml 里没有按 success 包住的动作)', () => {
-  const wxml = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-journey-check/index.wxml'), 'utf8')
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/playkit/components/playkit-journey-check/index.wxml'), 'utf8')
   // 结算屏(else 分支)的「继续」必须无条件存在;成败只该换文案颜色,不该锁住出口
   assert.ok(/wx:else bindtap="onClose"/.test(wxml), '结算后必须有可点的「继续」')
   const successGuarded = wxml.split('\n').filter((line) => /bindtap="onClose"/.test(line) && /success/.test(line))
@@ -380,7 +380,7 @@ test('内嵌检定不越过前置节点，也不在已完成节点回放', () =>
 
 test('内嵌检定有真实 play-stage 壳和同一动作回执，独立全屏入口排除内嵌', () => {
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/play/index.wxml'), 'utf8')
-  const shell = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-journey-check/index.wxml'), 'utf8')
+  const shell = fs.readFileSync(path.join(ROOT, 'pages/playkit/components/playkit-journey-check/index.wxml'), 'utf8')
   assert.match(wxml, /item\.kind === 'journeyCheck'[\s\S]*?class="chfull__kit"[\s\S]*?cy-playkit-journey-check[\s\S]*?bind:action="onJourneyCheckAction"/)
   assert.match(wxml, /cy-playkit-journey-check class="pk-lookhost \{\{lookClass\}\}" show="\{\{journeyCheck\.show && journeyCheck\.present !== 'inline'\}\}"/)
   assert.match(shell, /<cy-play-stage/)

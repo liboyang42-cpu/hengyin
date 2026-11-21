@@ -74,7 +74,7 @@ test('逐字猜词范例是中文,抛硬币范例不写成店家请客', () => {
 });
 
 test('入场动效不再错峰也不再起步延时:统一 200ms token,首帧即内容', () => {
-  const css = read('pages/play/style/play-surface.wxss');
+  const css = read('pages/playkit/style/play-surface.wxss');
   const rule = css.match(/\.pe\.pe \{[\s\S]*?\n\}/)[0];
   assert.doesNotMatch(rule, /--pe-d|--pe-i|--pe-unfold|--pe-dur/, '各屏零件上的延时 / 错峰 / 长时长不再生效');
   assert.match(rule, /var\(--cy-motion-fade-swap, 200ms\)/);
@@ -85,7 +85,7 @@ test('入场动效不再错峰也不再起步延时:统一 200ms token,首帧即
 });
 
 test('标准主按钮 .g-btn 走 cy 主按钮 token,字色不读内嵌时可能透明的 --bg', () => {
-  const css = read('pages/play/style/play-surface.wxss');
+  const css = read('pages/playkit/style/play-surface.wxss');
   const rule = css.match(/\.g-btn \{[\s\S]*?\n\}/)[0];
   assert.match(rule, /background: var\(--lk-a, var\(--cy-comp-btn-primary-bg, #FFF\)\);/);
   assert.match(rule, /color: var\(--lk-bg, var\(--cy-comp-btn-primary-fg, #111114\)\);/);
@@ -93,9 +93,9 @@ test('标准主按钮 .g-btn 走 cy 主按钮 token,字色不读内嵌时可能�
 });
 
 test('选项问答首帧就有题和选项:不再有 1 秒的 intro 遮罩和选项延时', () => {
-  const wxml = read('pages/play/components/playkit-qa/index.wxml');
-  const js = read('pages/play/components/playkit-qa/index.js');
-  const wxss = read('pages/play/components/playkit-qa/index.wxss');
+  const wxml = read('pages/playkit/components/playkit-qa/index.wxml');
+  const js = read('pages/playkit/components/playkit-qa/index.js');
+  const wxss = read('pages/playkit/components/playkit-qa/index.wxss');
   assert.doesNotMatch(wxml, /qa--intro|qa__cta--hold|--pe-d:/);
   assert.doesNotMatch(js, /INTRO_MS|_introTimer|intro:/);
   assert.doesNotMatch(wxss, /qa--intro|qa__cta--hold/);

@@ -202,5 +202,5 @@ test('R19 时长由实际播放器回填，未知不写12，旧kit回调不改�
   const p = host({ playKit: { kit: { type: 'scan', audioUrl: '/audio.mp3' } } }, { _kit() { return this.data.playKit.kit; }, _isPlayAccountCurrent: () => true });
   method(play, '_togglePlayKitAudio', { audioSession: { register: () => audio, keepAwake() {} }, wx: { createInnerAudioContext: () => audio }, secureOwnMedia: value => value, cyToast() {} }).call(p, true);
   canplay(); assert.equal(p.data.playKit.kit.audioSeconds, 8); p.data.playKit.kit = { audioUrl: '/other.mp3' }; update(); assert.equal(p.data.playKit.kit.audioSeconds, undefined);
-  assert.doesNotMatch(read('pages/play/components/playkit-scan/index.js'), /seconds: 12/);
+  assert.doesNotMatch(read('pages/playkit/components/playkit-scan/index.js'), /seconds: 12/);
 });

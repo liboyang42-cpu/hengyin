@@ -7,7 +7,8 @@ const ROOT = path.resolve(__dirname, '../..');
 function component(name, data) {
   global.Behavior = x => x;
   let def; global.Component = x => { def = x; };
-  const file = path.join(ROOT, 'pages/play/components', name, 'index.js');
+  const pkg = fs.existsSync(path.join(ROOT, 'pages/play/components', name)) ? 'pages/play' : 'pages/playkit'; // 2026-11-21 玩法组件移到 pages/playkit 分包
+  const file = path.join(ROOT, pkg + '/components', name, 'index.js');
   delete require.cache[require.resolve(file)]; require(file);
   const instance = Object.assign({}, def.methods, { data: { ...def.data, ...data },
     setData(patch) { Object.assign(this.data, patch); }, selectComponent: () => null,
@@ -20,7 +21,7 @@ test('daily sign launch claims only after reveal and sends no note or photo', ()
   c.onAccept(); assert.deepEqual(c.events, []);
   c._unlock(); c.onAccept(); assert.deepEqual(c.events, [{ name: 'accept', detail: {} }]);
   assert.deepEqual(serverPayload('dailysign', 'accept', { text: 'discarded', photoUrl: '/discarded' }), {});
-  const wxml = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-dailysign/index.wxml'), 'utf8');
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/playkit/components/playkit-dailysign/index.wxml'), 'utf8');
   assert.doesNotMatch(wxml, /textarea|onTextInput|onShoot|myText|myPhotoUrl/);
 });
 test('guess-image replays only server verdict and keeps retry available until finished', () => {

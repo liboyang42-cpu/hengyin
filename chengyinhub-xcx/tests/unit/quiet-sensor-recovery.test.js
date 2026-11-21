@@ -5,7 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const {serverPayload} = require('../../pages/play/utils/playkit-view.js');
 const ROOT=path.resolve(__dirname,'../..');
-const FILE='pages/play/components/playkit-quiethold/index';
+const FILE='pages/playkit/components/playkit-quiethold/index';
 function host(options={}) {
   let now=1000, serial=0, stage, beginCount=0;
   const tasks=new Map(), history=[], callbacks={}, removed=[], events=[], messages=[];
@@ -23,12 +23,12 @@ function host(options={}) {
   function load(file) {
     let def;
     vm.runInNewContext(fs.readFileSync(path.join(ROOT,file+'.js'),'utf8'),{
-      Component:d=>{def=d;}, require:name=>name.includes('play-audio-level')?require('../../pages/play/utils/play-audio-level.js'):name.endsWith('/sensor-contract.js')?require('../../pages/play/utils/sensor-contract.js'):name.endsWith('/toast.js')?s=>messages.push(s):{haptic(){}},
+      Component:d=>{def=d;}, require:name=>name.includes('play-audio-level')?require('../../pages/playkit/utils/play-audio-level.js'):name.endsWith('/sensor-contract.js')?require('../../pages/play/utils/sensor-contract.js'):name.endsWith('/toast.js')?s=>messages.push(s):{haptic(){}},
       wx,Date:{now:()=>now},Math,Number,ArrayBuffer,Int16Array,
       setTimeout:(fn,ms)=>timer(fn,ms,false),clearTimeout:id=>tasks.delete(id),setInterval:(fn,ms)=>timer(fn,ms,true),clearInterval:id=>tasks.delete(id),
     },{filename:file});return def;
   }
-  const def=load(FILE), sd=load('pages/play/components/play-stage/index');
+  const def=load(FILE), sd=load('pages/playkit/components/play-stage/index');
   function make(d,props={}) {const data={};for(const [k,v]of Object.entries(d.properties))data[k]=v.value;Object.assign(data,JSON.parse(JSON.stringify(d.data)),props);return Object.assign({data,setData(p,cb){Object.assign(data,p);if(cb)cb();}},d.methods);}
   const c=make(def,{show:true,seconds:1,...options.props});
   const keyed=/wx:for="{{stageKeys}}"[\s\S]*?wx:key="\*this"/.test(fs.readFileSync(path.join(ROOT,FILE+'.wxml'),'utf8'));

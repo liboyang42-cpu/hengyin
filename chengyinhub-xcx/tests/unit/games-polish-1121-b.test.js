@@ -12,7 +12,7 @@ const { createRequire } = require('node:module')
 
 const ROOT = path.resolve(__dirname, '../..')
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8')
-const kit = (name, ext) => read(`pages/play/components/playkit-${name}/index.${ext}`)
+const kit = (name, ext) => read(`pages/playkit/components/playkit-${name}/index.${ext}`)
 const stripComments = (s) => s.replace(/<!--[\s\S]*?-->/g, '').replace(/\/\*[\s\S]*?\*\//g, '')
 
 function loadComponent(rel) {
@@ -59,7 +59,7 @@ test('连线:锚点代替空心圈;线按真实位置画;减弱动效不播画�
 })
 
 test('连线:几何纯函数 —— 两个锚点中心之间的长度与角度,相对画布原点', () => {
-  const { inst } = mount('pages/play/components/playkit-match/index.js')
+  const { inst } = mount('pages/playkit/components/playkit-match/index.js')
   const origin = { left: 10, top: 100, width: 300, height: 400 }
   const flat = inst._lineFor({ left: 100, top: 150, width: 8, height: 8 }, { left: 200, top: 150, width: 8, height: 8 }, origin)
   assert.deepEqual(JSON.parse(JSON.stringify(flat)), { x: 94, y: 54, len: 100, deg: 0 })
@@ -73,7 +73,7 @@ test('连线:配对后量锚点画线;量不到(选择器没结果)就清空,不
   const rect = (l, t) => ({ left: l, top: t, width: 8, height: 8 })
   let answer = null
   const query = { select() { return query }, selectAll() { return query }, boundingClientRect() { return query }, exec(cb) { cb(answer) } }
-  const { def, inst } = mount('pages/play/components/playkit-match/index.js', { createSelectorQuery: () => query })
+  const { def, inst } = mount('pages/playkit/components/playkit-match/index.js', { createSelectorQuery: () => query })
   inst.data.reducedMotion = true
   inst.data.left = [{ id: 'a', label: '老张咖啡' }]; inst.data.right = [{ id: 'b', label: '手冲耶加' }]
   answer = [{ left: 0, top: 0 }, [Object.assign(rect(100, 50), { dataset: { key: 'l:a' } }), Object.assign(rect(200, 90), { dataset: { key: 'r:b' } })]]

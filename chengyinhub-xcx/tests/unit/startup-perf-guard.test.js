@@ -121,7 +121,7 @@ test('预下载:首页拉主题详情分包、主题详情拉报名所在分包,
   const rule = app.preloadRule;
   assert.ok(rule['pages/index/index'].packages.includes('subpackageTopic'));
   assert.equal(rule['pages/index/index'].packages.includes('subpackageTemplateDetail'), false);
-  assert.deepEqual(rule['pages/topic/index/index'], { network: 'wifi', packages: ['subpackageMember'] });
+  assert.deepEqual(rule['pages/topic/index/index'], { network: 'wifi', packages: ['subpackageMember', 'subpackagePlaykit'] }); // 2026-11-21 play 分包拆分:玩法组件分包一并预下载
   const names = new Set(app.subPackages.map((s) => s.name || s.root));
   for (const [page, r] of Object.entries(rule)) for (const pkg of r.packages) assert.ok(names.has(pkg), page + ' → ' + pkg);
   // 首页真实会去的分包(主题详情 / 报名)

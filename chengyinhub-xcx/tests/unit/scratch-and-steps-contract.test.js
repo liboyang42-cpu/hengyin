@@ -9,7 +9,7 @@ const path = require('node:path')
 const test = require('node:test')
 
 const { scratchProgress, shouldReveal, PIXEL_STRIDE } =
-  require('../../pages/play/utils/scratch-progress.js')
+  require('../../pages/playkit/utils/scratch-progress.js')
 const { stepIcons, stepsA11yLabel, STEPS } = require('../../pages/play/utils/playkit-steps.js')
 
 const ROOT = path.resolve(__dirname, '../..')
@@ -58,8 +58,8 @@ test('阈值边界:刚好够就算,差一点不算', () => {
 })
 
 test('刮开组件必须留一条不用手势的退路', () => {
-  const wxml = read('pages/play/components/scratch/index.wxml')
-  const js = read('pages/play/components/scratch/index.js')
+  const wxml = read('pages/playkit/components/scratch/index.wxml')
+  const js = read('pages/playkit/components/scratch/index.js')
 
   // 运动障碍 / 戴手套 / 减动效的人不该被一个擦除手势挡在内容外面。
   assert.ok(/bindtap="onDirectReveal"/.test(wxml),
@@ -75,14 +75,14 @@ test('刮开组件必须留一条不用手势的退路', () => {
 })
 
 test('生产组件必须真调用被负控覆盖的进度判定', () => {
-  const js = read('pages/play/components/scratch/index.js')
+  const js = read('pages/playkit/components/scratch/index.js')
   assert.match(js, /scratch-progress\.js/, '不能测试一套纯函数、生产再自算另一套')
   assert.match(js, /sampledAlphaProgress\s*\(/)
   assert.match(js, /shouldReveal\s*\(/)
 })
 
 test('庆祝不在擦的过程里发生', () => {
-  const js = read('pages/play/components/scratch/index.js')
+  const js = read('pages/playkit/components/scratch/index.js')
   // 稿:金币庆祝只在结果确认后出现。组件自己只发 reveal,庆祝由调用方在之后做
   assert.ok(!/celebrate|confetti|庆祝动画/.test(js), '组件不该自带庆祝')
   assert.ok(/triggerEvent\('reveal'/.test(js), '揭示后要通知调用方，由它决定怎么庆祝')
@@ -136,7 +136,7 @@ test('读屏文案:服务端配了就用它,没配才用标签拼', () => {
 })
 
 test('图形化之后,读屏器仍然拿得到完整步骤', () => {
-  const wxml = read('pages/play/components/playkit-blindtaste/index.wxml')
+  const wxml = read('pages/playkit/components/playkit-blindtaste/index.wxml')
   assert.ok(wxml.includes('class="pk-steps"'), '图标步骤行必须真渲染')
   assert.ok(
     /aria-label="\{\{steps\}\}"/.test(wxml),

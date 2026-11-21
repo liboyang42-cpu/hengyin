@@ -42,10 +42,10 @@ function ballHost() {
     onAccelerometerChange(fn) { listeners.add(fn) }, offAccelerometerChange(fn) { listeners.delete(fn) },
     startAccelerometer(o) { starts.push(o) }, stopAccelerometer() { stops.push(1) },
   }
-  vm.runInNewContext(read('pages/play/components/playkit-ballshake/index.js'), {
+  vm.runInNewContext(read('pages/playkit/components/playkit-ballshake/index.js'), {
     Component: (x) => { def = x }, wx, Date, Math, Number, setTimeout, clearTimeout, setInterval, clearInterval,
     require: (name) => {
-      if (name.endsWith('/play-shake.js')) return require('../../pages/play/utils/play-shake.js')
+      if (name.endsWith('/play-shake.js')) return require('../../pages/playkit/utils/play-shake.js')
       if (name.endsWith('/sensor-contract.js')) return require('../../pages/play/utils/sensor-contract.js')
       if (name.endsWith('/motion.js')) return { haptic: (o) => haptics.push(o.type) }
       if (name.endsWith('/toast.js')) return () => {}

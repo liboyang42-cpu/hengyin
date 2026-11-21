@@ -18,8 +18,8 @@ const path = require('node:path');
 const Module = require('node:module');
 
 const ROOT = path.resolve(__dirname, '../..');
-const COMPONENT_PATH = path.join(ROOT, 'pages/play/components/playkit-scan/index.js');
-const WXML = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-scan/index.wxml'), 'utf8');
+const COMPONENT_PATH = path.join(ROOT, 'pages/playkit/components/playkit-scan/index.js');
+const WXML = fs.readFileSync(path.join(ROOT, 'pages/playkit/components/playkit-scan/index.wxml'), 'utf8');
 const { pickPlayKit } = require('../../pages/play/utils/playkit-view.js');
 
 const VIEW_AT = new Date(2026, 8, 22, 12, 0);

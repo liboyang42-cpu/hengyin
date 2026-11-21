@@ -14,8 +14,8 @@ function loadCompass() {
   const prevC = global.Component;
   global.Component = (d) => { def = d; };
   try {
-    delete require.cache[require.resolve('../../pages/play/components/playkit-compass/index.js')];
-    require('../../pages/play/components/playkit-compass/index.js');
+    delete require.cache[require.resolve('../../pages/playkit/components/playkit-compass/index.js')];
+    require('../../pages/playkit/components/playkit-compass/index.js');
   } finally { global.Component = prevC; }
   return def;
 }
@@ -38,17 +38,17 @@ test('跳过按钮只听服务端的 canSkip;跳过过的站显示「已跳过�
   assert.equal(pickPlayKit(view(Object.assign({}, base, { canSkip: true }))).canSkip, true);
   const skipped = pickPlayKit(view(Object.assign({}, base, { done: true, skipped: true })));
   assert.equal(skipped.skipped, true);
-  const wxml = read('pages/play/components/playkit-compass/index.wxml');
+  const wxml = read('pages/playkit/components/playkit-compass/index.wxml');
   assert.match(wxml, /wx:if="\{\{phase === 'idle' && !done && canSkip\}\}" class="cp__skip" bindtap="onSkip"/);
   assert.match(wxml, />跳过这一站</);
   assert.match(wxml, /wx:elif="\{\{done && skipped\}\}" class="g-sub cp__s">这一站已跳过</);
   assert.match(wxml, /wx:if="\{\{done && !skipped\}\}" class="cp__done"/);
   // 跳过的站不亮绿:绿色是「对准了」,跳过不是对准
   assert.match(wxml, /class="cp \{\{aligned \|\| \(done && !skipped\) \? 'cp--on' : ''\}\}/);
-  assert.match(read('pages/play/components/playkit/index.wxml'),
+  assert.match(read('pages/playkit/components/playkit/index.wxml'),
     /can-skip="\{\{kit\.canSkip\}\}" skipped="\{\{kit\.skipped\}\}"[\s\S]*?bind:readfail="onReadFail" bind:skip="onSkip"/);
   // 跳过按钮是可点的大小
-  assert.match(read('pages/play/components/playkit-compass/index.wxss'), /\.cp__skip \{[^}]*min-height: 88rpx;/);
+  assert.match(read('pages/playkit/components/playkit-compass/index.wxss'), /\.cp__skip \{[^}]*min-height: 88rpx;/);
 });
 
 test('读取失败时组件报一次 readfail;没有 canSkip 时点跳过不发', () => {

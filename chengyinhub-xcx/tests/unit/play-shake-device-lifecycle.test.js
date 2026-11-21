@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
-const shake = require('../../pages/play/utils/play-shake.js');
+const shake = require('../../pages/playkit/utils/play-shake.js');
 
 test('wx g readings retain the prototype physical threshold without triggering at rest or walking', () => {
   let count = 0;
@@ -47,7 +47,7 @@ function mount(kind, props = {}) {
     onAccelerometerChange(listener) { listeners.add(listener); },
     offAccelerometerChange(listener) { listeners.delete(listener); },
   };
-  const file = path.join(__dirname, '../../pages/play/components/playkit-' + kind + '/index.js');
+  const file = path.join(__dirname, '../../pages/playkit/components/playkit-' + kind + '/index.js');
   vm.runInNewContext(fs.readFileSync(file, 'utf8'), {
     Component(value) { config = value; }, wx, Date, Math, setTimeout, clearTimeout,
     require(name) {

@@ -213,9 +213,9 @@ test('typeIn:目标文本与限时下发,判定字段搬运;用时毫秒随提�
 
 test('★四个新 type 都要注册进分发器并真的有 wxml 分支 —— 少一处弹窗一声不响不出现', () => {
   const ROOT = path.resolve(__dirname, '../..')
-  const json = JSON.parse(fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit/index.json'), 'utf8'))
-  const wxml = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit/index.wxml'), 'utf8')
-  const js = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit/index.js'), 'utf8')
+  const json = JSON.parse(fs.readFileSync(path.join(ROOT, 'pages/playkit/components/playkit/index.json'), 'utf8'))
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/playkit/components/playkit/index.wxml'), 'utf8')
+  const js = fs.readFileSync(path.join(ROOT, 'pages/playkit/components/playkit/index.js'), 'utf8')
   for (const s of SECTIONS) {
     const tag = 'cy-playkit-' + s.type
     assert.ok(json.usingComponents[tag], tag + ' 没注册进 usingComponents')

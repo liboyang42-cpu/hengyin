@@ -28,7 +28,8 @@ function setData(patch, cb) {
 }
 function component(name, props = {}) {
   let spec;
-  const filename = require.resolve('../../pages/play/components/' + name + '/index.js');
+  const pkg = fs.existsSync(path.join(__dirname, '../../pages/play/components', name)) ? 'play' : 'playkit'; // 2026-11-21 玩法组件移到 pages/playkit 分包
+  const filename = require.resolve('../../pages/' + pkg + '/components/' + name + '/index.js');
   vm.runInNewContext(fs.readFileSync(filename, 'utf8'), {
     Component: value => { spec = value; }, getApp: () => app, wx: global.wx,
     require: p => p.includes('play-action-key') || p.includes('playkit-view') || p.includes('orient-score-view') ? require(path.resolve(path.dirname(filename), p)) : { haptic() {}, safeUserMessage: (_, fallback) => fallback },

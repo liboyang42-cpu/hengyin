@@ -31,7 +31,7 @@ test('对照组件:两侧按题面顺序画行,交上去的 marked 按题面顺�
   global.Component = (d) => { def = d; };
   global.wx = global.wx || {};
   global.Behavior = global.Behavior || ((b) => b);
-  require('../../pages/play/components/playkit-compare/index.js');
+  require('../../pages/playkit/components/playkit-compare/index.js');
   const sides = def.methods._paint(compare.left, compare.right, ['s1943', 'w1938']);
   assert.deepEqual(sides.map((s) => s.label), ['世界', '上海']);
   assert.deepEqual(def.methods._markedIds(sides), ['w1938', 's1943']);

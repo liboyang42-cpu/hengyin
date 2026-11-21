@@ -5,7 +5,7 @@
 const assert = require('node:assert/strict')
 const test = require('node:test')
 
-const PATH = require.resolve('../../pages/play/components/playkit-objectcard/index.js')
+const PATH = require.resolve('../../pages/playkit/components/playkit-objectcard/index.js')
 let definition
 {
   const prev = global.Component

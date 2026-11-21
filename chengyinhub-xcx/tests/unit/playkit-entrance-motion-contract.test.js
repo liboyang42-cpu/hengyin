@@ -15,8 +15,8 @@ const fs = require('node:fs')
 const path = require('node:path')
 
 const ROOT = path.join(__dirname, '..', '..')
-const COMPONENTS = path.join(ROOT, 'pages', 'play', 'components')
-const SURFACE = path.join(ROOT, 'pages', 'play', 'style', 'play-surface.wxss')
+const COMPONENTS = path.join(ROOT, 'pages', 'playkit', 'components')
+const SURFACE = path.join(ROOT, 'pages', 'playkit', 'style', 'play-surface.wxss')
 
 /** 全仓扫出哪些 kit 的 wxml 用了 pk-in —— 不写死清单,新加一个屏自动纳管 */
 function kitsUsingPkIn() {

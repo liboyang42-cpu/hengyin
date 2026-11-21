@@ -38,14 +38,14 @@ test('跳过按钮只听服务端的 canSkip;跳过的段算走完', () => {
 
 test('组件:读不出数报 readfail,跳过只发请求;分发器把两件事都接到页面', () => {
   for (const c of ['ballshake', 'quiethold', 'shout']) {
-    const js = read(`pages/play/components/playkit-${c}/index.js`);
+    const js = read(`pages/playkit/components/playkit-${c}/index.js`);
     assert.match(js, /triggerEvent\('readfail'\)/, c);
     assert.match(js, /onSkip\(\)/, c);
-    assert.match(read(`pages/play/components/playkit-${c}/index.wxml`), /bindtap="onSkip"[\s\S]*跳过这一站/, c);
+    assert.match(read(`pages/playkit/components/playkit-${c}/index.wxml`), /bindtap="onSkip"[\s\S]*跳过这一站/, c);
   }
-  assert.match(read('pages/play/components/playkit-walk/index.wxml'), /<cy-inline-error[^>]*kind="field" title="\{\{readError\}\}"/);
-  assert.match(read('pages/play/components/playkit-walk/index.wxml'), /bindtap="onSkip"/);
-  const dispatcher = read('pages/play/components/playkit/index.wxml');
+  assert.match(read('pages/playkit/components/playkit-walk/index.wxml'), /<cy-inline-error[^>]*kind="field" title="\{\{readError\}\}"/);
+  assert.match(read('pages/playkit/components/playkit-walk/index.wxml'), /bindtap="onSkip"/);
+  const dispatcher = read('pages/playkit/components/playkit/index.wxml');
   for (const tag of ['cy-playkit-ballshake', 'cy-playkit-quiethold', 'cy-playkit-shout', 'cy-playkit-walk']) {
     const block = dispatcher.slice(dispatcher.indexOf('<' + tag), dispatcher.indexOf('/>', dispatcher.indexOf('<' + tag)));
     assert.match(block, /can-skip="\{\{kit\.canSkip\}\}"/, tag);
@@ -62,7 +62,7 @@ test('计步:跳过与报失败不走微信运动同步那条路;读不到微信
 
 test('跳过之后主按钮收起、开局入口不再响应(rig 走查:跳过后「开始」仍可点,服务端回「这一站已经跳过了」)', () => {
   for (const [c, cls, h] of [['ballshake', 'g-btn', 'onStart'], ['quiethold', 'g-btn', 'onStart'], ['shout', 'g-btn', 'onStart'], ['walk', 'g-btn', 'onCta']]) {
-    assert.match(read(`pages/play/components/playkit-${c}/index.wxml`), new RegExp(`wx:(?:el)?if="\\{\\{!skipped\\}\\}" class="${cls} `), c);
-    assert.match(read(`pages/play/components/playkit-${c}/index.js`), new RegExp(`${h}\\(\\) \\{\\n      if \\(this\\.data\\.skipped\\) return;`), c);
+    assert.match(read(`pages/playkit/components/playkit-${c}/index.wxml`), new RegExp(`wx:(?:el)?if="\\{\\{!skipped\\}\\}" class="${cls} `), c);
+    assert.match(read(`pages/playkit/components/playkit-${c}/index.js`), new RegExp(`${h}\\(\\) \\{\\n      if \\(this\\.data\\.skipped\\) return;`), c);
   }
 });

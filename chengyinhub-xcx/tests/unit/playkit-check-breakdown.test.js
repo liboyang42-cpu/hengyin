@@ -75,7 +75,7 @@ test('settled receipts retain breakdown and the real component template renders 
   const view = checkReceiptView({ settled: true, text: '服务端结算文案', breakdown });
   assert.equal(view.text, '服务端结算文案');
   assert.equal(view.breakdownRows.length, 3);
-  const wxml = fs.readFileSync(path.resolve(__dirname, '../../pages/play/components/playkit-journey-check/index.wxml'), 'utf8');
+  const wxml = fs.readFileSync(path.resolve(__dirname, '../../pages/playkit/components/playkit-journey-check/index.wxml'), 'utf8');
   assert.match(wxml, /wx:if="\{\{landed && receipt.breakdownRows.length\}\}" aria-label="检定明细"/);
   assert.equal(wxml.match(/receipt\.breakdownRows\}\}/g).length, 1);
   assert.match(wxml, /wx:for="\{\{receipt.breakdownRows\}\}" wx:key="index"/);

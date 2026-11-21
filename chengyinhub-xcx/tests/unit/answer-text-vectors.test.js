@@ -44,7 +44,7 @@ test('共享分隔符与服务端 AnswerNormalizer.SEPARATOR_REGEX 一致', () =
 });
 
 test('playkit-qa 不再保留与服务端漂移的本地 matchesAnswer', () => {
-  const src = fs.readFileSync(path.join(__dirname, '../../pages/play/components/playkit-qa/index.js'), 'utf8');
+  const src = fs.readFileSync(path.join(__dirname, '../../pages/playkit/components/playkit-qa/index.js'), 'utf8');
   assert.ok(!/matchesAnswer/.test(src.replace(/本地 matchesAnswer/g, '')));
 });
 

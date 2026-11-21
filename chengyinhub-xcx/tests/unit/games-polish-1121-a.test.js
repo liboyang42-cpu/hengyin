@@ -8,7 +8,7 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '../..');
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
-const kit = (name, ext) => read(`pages/play/components/playkit-${name}/index.${ext}`);
+const kit = (name, ext) => read(`pages/playkit/components/playkit-${name}/index.${ext}`);
 const rule = (css, sel) => {
   const m = css.match(new RegExp(sel.replace(/[.*+?^${}()|[\]\\-]/g, '\\$&') + ' \\{([^}]*)\\}'));
   assert.ok(m, sel + ' 规则不存在');

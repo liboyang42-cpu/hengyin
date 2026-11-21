@@ -15,8 +15,8 @@ const path = require('node:path')
 const test = require('node:test')
 
 const ROOT = path.resolve(__dirname, '../..')
-const AR = 'pages/play/components/playkit-scan/ar/'
-const HOST = 'pages/play/components/playkit-scan/'
+const AR = 'pages/playkit/components/playkit-scan/ar/'
+const HOST = 'pages/playkit/components/playkit-scan/'
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8')
 
 function load(rel) {
@@ -217,7 +217,7 @@ test('分发器与 view 层把 AR 方式与识别图喂到组件', () => {
   assert.equal(kit.markerUrl, '/m.jpg')
   const none = pickPlayKit({ sessionId: 1, version: 1, playKit: { scan: { kind: 'OVERLAY', scanned: true, overlayUrl: '/a.png' } } }, new Date(2026, 8, 22))
   assert.equal(none.arMode, 'NONE', '缺省就是不开，不是 undefined')
-  const tag = (() => { const w = read('pages/play/components/playkit/index.wxml'); const s = w.slice(w.indexOf('<cy-playkit-scan ')); return s.slice(0, s.indexOf('/>')) })()
+  const tag = (() => { const w = read('pages/playkit/components/playkit/index.wxml'); const s = w.slice(w.indexOf('<cy-playkit-scan ')); return s.slice(0, s.indexOf('/>')) })()
   assert.match(tag, /ar-mode="\{\{kit\.arMode\}\}"/, '分发器不喂 = 组件永远是默认值，零报错')
   assert.match(tag, /marker-url="\{\{kit\.markerUrl\}\}"/)
 })
@@ -399,7 +399,7 @@ test('编辑页:开了 AR 才出「3D 模型」一栏,传 .glb 走统一上传�
 
 test('3D 模型一路喂到 AR 组件:view 层 → 分发器 → 扫码壳 → AR 组件', () => {
   assert.match(read('pages/play/utils/playkit-view.js'), /modelUrl: seg\.modelUrl \|\| ''/)
-  assert.match(read('pages/play/components/playkit/index.wxml'), /model-url="\{\{kit\.modelUrl\}\}"/)
+  assert.match(read('pages/playkit/components/playkit/index.wxml'), /model-url="\{\{kit\.modelUrl\}\}"/)
   assert.match(read(HOST + 'index.js'), /modelUrl: \{ type: String, value: '' \}/)
   assert.match(read(HOST + 'index.wxml'), /<cy-scan-ar[^>]*model-url="\{\{modelUrl\}\}"/)
 })

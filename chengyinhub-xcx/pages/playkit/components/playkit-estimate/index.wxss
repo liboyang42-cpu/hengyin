@@ -1,0 +1,96 @@
+@import "/pages/playkit/style/play-surface.wxss";
+
+/* cy-playkit-estimate · 猜数字(逐块照抄原型 playkit.html 的 .reelstack / .lane) */
+.es { color: var(--ink); }
+.es__q {
+  display: var(--pk-es-q-display, block);   /* 故事流内嵌时题目写在页面顶栏里(P-09 第四轮),这里由页面收起 */
+  font-size: var(--cy-type-sheet-title);
+  font-weight: 800;
+  line-height: 1.35;
+  letter-spacing: -.01em;
+}
+
+.es__reel {
+  position: relative;
+  width: 100%;
+  /* 原型实测:三个数分别落在 130~284 / 291~459 / 466~620(整块约 490px),
+     一格间距就是一个数的高度。560rpx 只够放一个半,上下两个会压在中间那个身上。 */
+  height: var(--pk-es-reel-h, 980rpx);          /* ds-ok 原型 ~490px;故事流内嵌时由页面给矮一点(P-09 第三轮) */
+  overflow: hidden;
+  /* 上下淡出,让滚筒看着是无头无尾的一条 */
+  mask-image: linear-gradient(to bottom, transparent 0, #000 13%, #000 87%, transparent 100%);  /* ds-ok 滚筒上下淡出的遮罩,照原型 */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 13%, #000 87%, transparent 100%);  /* ds-ok 滚筒上下淡出的遮罩,照原型 */
+}
+.es__lane {
+  position: absolute;
+  left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--cy-font-numeric);
+  font-weight: 800;
+  line-height: 1;
+  font-size: var(--cy-play-display-5xl);
+  letter-spacing: -.055em;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+.es__lane--mid {
+  top: 50%;
+  height: 336rpx;                          /* ds-ok 原型 .lane .item 168px */
+  margin-top: -168rpx;
+  color: var(--ink);
+}
+/* 上下两个数**不翻转**。原型那段渲染里写得很清楚:字形一个都不翻,
+   它第一版翻过来是错的(参考图里那个 0 上下对称,看不出翻没翻)。
+   邻数靠三样连续变化读出「离得远」:缩 8%、糊 7px、淡到 .34。 */
+.es__lane--up, .es__lane--down {
+  height: 336rpx;
+  color: var(--sub);
+  opacity: .34;
+  filter: blur(14rpx);                     /* ds-ok 原型 blur 7px */
+  transform: scale(.92);                   /* ds-ok 原型 1 - 1*0.08 */
+}
+/* 一格 = 一个数的高度(原型 ITEM_H ≈ 161px)。原来写的 124rpx 是半格都不到,
+   上下两个数会有一大半盖在中间那个上面 —— 截图里「500」后面那团重影就是它。 */
+.es__lane--up   { top: 50%; margin-top: -490rpx; }   /* -168 - 322 */
+.es__lane--down { top: 50%; margin-top: 154rpx;  }   /* -168 + 322 */
+
+/* 原生 picker-view 只负责收手势:惯性和吸附它做得比手写好,但它的外观改不动,
+   所以整块透明盖在上面,看到的是下面自己画的三个数 */
+.es__picker {
+  position: absolute;
+  left: 0; right: 0; top: 0; bottom: 0;
+  opacity: 0;
+}
+.es__ind { height: 336rpx; }
+
+/* 单位贴着中间那个数,基线对齐(原来单独一行落在左下角,和数字分了家) */
+.es__num { display: block; white-space: nowrap; }
+.es__unit {
+  margin-left: 12rpx;
+  font-size: var(--cy-type-section-title);
+  font-weight: 700;
+  letter-spacing: 0;
+  color: var(--sub);
+}
+/* 判定就是一行字,不套底色块 —— 原型 .verdict-line 是裸的一行。
+   给它一个灰底会把「差多少」做成一个可点的东西,而它只是结果。 */
+.es__fb {
+  width: 100%;
+  font-size: var(--cy-type-body);
+  font-weight: 700;
+  line-height: 1.6;
+  text-align: center;
+}
+
+/* P-09 / P-10 交过之后的结果:一行判定 + 一行数字 + 作者揭示。差了用红,中了用绿;只淡入,不抖 */
+.es__res { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 8rpx; text-align: center; transition: opacity .2s ease; }
+.es__res-h { font-size: var(--cy-type-body); font-weight: 700; }
+.es__res--hit .es__res-h { color: var(--cy-color-status-success); }
+.es__res--miss .es__res-h { color: var(--cy-color-status-danger); }
+.es__res-d { font-size: var(--cy-type-label); color: var(--sub); }
+.es__res-r { margin-top: 8rpx; font-size: var(--cy-type-body); line-height: 1.6; color: var(--ink); }
+/* P-09 第三轮:交过之后数已经定了,滚筒只留中间那个数(上下镜像收掉),
+   让下面的结果行和作者揭示在一屏里放得下,不再压在屏幕下沿被截掉。只换高度,不加动画。 */
+.es--done .es__reel { height: 400rpx; }   /* ds-ok 中间一格 336rpx + 上下留白 */

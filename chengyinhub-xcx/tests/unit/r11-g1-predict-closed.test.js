@@ -6,7 +6,7 @@ const path = require('node:path')
 const { pickPlayKit, serverAction, serverPayload } = require('../../pages/play/utils/playkit-view.js')
 
 function loadPredict() {
-  const file = path.resolve(__dirname, '../../pages/play/components/playkit-predict/index.js')
+  const file = path.resolve(__dirname, '../../pages/playkit/components/playkit-predict/index.js')
   const prev = { Behavior: global.Behavior, Component: global.Component, wx: global.wx }
   let captured = null
   global.Behavior = (b) => b

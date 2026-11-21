@@ -31,7 +31,7 @@ const path = require('node:path')
 
 const ROOT = path.join(__dirname, '..', '..')
 const CFG = path.join(ROOT, 'pages', 'publish', 'utils', 'publish', 'advanced-game-config.js')
-const KITS = path.join(ROOT, 'pages', 'play', 'components')
+const KITS = path.join(ROOT, 'pages', 'playkit', 'components')
 
 /** 从 advanced-game-config.js 读一张呈现方式名单(别在测试里抄,抄的那份一定会烂) */
 function presentList(name) {

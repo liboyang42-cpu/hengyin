@@ -24,9 +24,9 @@ const path = require('node:path')
 
 const ROOT = path.resolve(__dirname, '../..')
 // 2026-09-09 玩法壳整族搬进 pages/play 分包(主包只服务 play 的东西不该占主包预算)
-const DIR = path.join(ROOT, 'pages/play/components')
+const DIR = path.join(ROOT, 'pages/playkit/components')
 
-/* ⚠️ 只扫 `playkit-*`,**不含分发器 `pages/play/components/playkit`**:
+/* ⚠️ 只扫 `playkit-*`,**不含分发器 `pages/playkit/components/playkit`**:
    它只负责按 kind 把事件转给对应的壳,自己没有任何用户动作,不该有触感。 */
 function shells() {
   return fs.readdirSync(DIR)

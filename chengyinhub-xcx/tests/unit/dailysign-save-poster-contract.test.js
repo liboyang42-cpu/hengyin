@@ -24,7 +24,7 @@ const fs = require('node:fs')
 const path = require('node:path')
 
 const ROOT = path.resolve(__dirname, '../..')
-const DIR = path.join(ROOT, 'pages/play/components/playkit-dailysign')
+const DIR = path.join(ROOT, 'pages/playkit/components/playkit-dailysign')
 const JS = fs.readFileSync(path.join(DIR, 'index.js'), 'utf8')
 const WXML = fs.readFileSync(path.join(DIR, 'index.wxml'), 'utf8')
 const WXSS = fs.readFileSync(path.join(DIR, 'index.wxss'), 'utf8')

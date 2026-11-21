@@ -103,14 +103,14 @@ test('★六个挑战壳真的会抛 start,分发器真的接住,页面真的走
   const ROOT = path.resolve(__dirname, '../..')
   const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8')
   for (const k of ['reaction', 'ballshake', 'quiethold', 'shout', 'countdown', 'stopwatch']) {
-    const src = read('pages/play/components/playkit-' + k + '/index.js')
+    const src = read('pages/playkit/components/playkit-' + k + '/index.js')
     assert.match(src, /triggerEvent\('start'\)/,
       k + ' 开跑时没报 start —— 服务端没记起点，之后的提交一律判「还没开始」')
   }
   /* 组件抛了不等于到了。2026-09-19 实测:分发器只给 countdown / stopwatch 接了 bind:start,
      另三个玩法玩家能玩完、成绩永远不成立(后端 serverElapsedMs 抛「还没开始」),
      且全程静默 —— 所以这一半必须和上面那一半钉在同一条测试里。 */
-  const kit = read('pages/play/components/playkit/index.wxml').replace(/\s+/g, ' ')
+  const kit = read('pages/playkit/components/playkit/index.wxml').replace(/\s+/g, ' ')
   for (const k of ['reaction', 'ballshake', 'quiethold', 'shout', 'countdown', 'stopwatch']) {
     const tag = new RegExp('<cy-playkit-' + k + '\\b[^>]*\\bbind:start="onStart"')
     assert.match(kit, tag,
