@@ -230,7 +230,7 @@ const CONTRACTS = {
   },
   B68: {
     sources: ['subpackageP3/pages/growthcenter/index/index.js', 'subpackageP3/pages/growthcenter/index/index.wxml'],
-    paths: ['overviewState', 'overviewLoaded', 'overview.stats[].label', 'overview.stats[].value', 'badges[].name', 'badges[].code', 'badges[].initial', 'showBadges', 'showBadgeEmpty', 'badgeLoadError', 'badgeCountText'],
+    paths: ['overviewState', 'overviewLoaded', 'overview.stats[].label', 'overview.stats[].value', 'badges[].name', 'badges[].initial', 'badges[].unlockText', 'showBadges', 'showBadgeEmpty', 'badgeLoadError', 'badgeCountText'],
     arrays: ['badges'],
     equals: { overviewState: 'ready', overviewLoaded: true, showBadges: true, showBadgeEmpty: false, badgeLoadError: false },
   },

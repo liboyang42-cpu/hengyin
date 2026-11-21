@@ -117,7 +117,7 @@ const FIXTURE_OVERRIDES = {
         { key: 'distance', label: '探索距离', value: '42.6', unit: 'km' },
       ],
     },
-    badges: [{ code: 'FIRST_STEP', name: '初探', initial: '初', unlockText: '2026-08-18' }],
+    badges: [{ name: '初探', initial: '初', unlockText: '2026.08.18' }],
     badgeCountText: '1',
     badgeLoadError: false,
     showBadges: true,

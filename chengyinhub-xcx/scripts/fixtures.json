@@ -8103,10 +8103,9 @@
    "overviewLoaded": true,
    "badges": [
     {
-     "code": "FIRST_STEP",
      "name": "初探",
      "initial": "初",
-     "unlockText": "2026-08-18"
+     "unlockText": "2026.08.18"
     }
    ],
    "showBadges": true,

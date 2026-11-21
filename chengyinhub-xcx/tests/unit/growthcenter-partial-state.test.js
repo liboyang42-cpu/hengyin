@@ -287,7 +287,9 @@ test('成长中心：概览首载有同构骨架，刷新保留内容且新徽�
   assert.match(wxml, /wx:elif="\{\{showBadgeEmpty\}\}"[^>]*class="gc-badge-empty"/)
   assert.match(wxml, /wx:else[^>]*class="gc-badge-loading"[\s\S]*?class="gc-badge-skeleton"/)
   assert.match(wxml, /bindtap="goLeaderboard"/)
-  assert.match(wxml, /bindtap="onBadgeTap"/)
+  // 徽章行不再挂「查看获得时刻」说明和「查看/收起」展开:有获得日期就直接显示日期,没有就只剩名字
+  assert.doesNotMatch(wxml, /onBadgeTap|查看获得时刻|gc-badge-hint|gc-badge-arrow|获得时间未记录/)
+  assert.match(wxml, /<text class="gc-badge-moment" wx:if="\{\{item\.unlockText\}\}">\{\{item\.unlockText\}\}<\/text>/)
   assert.match(wxml, /bindtap="goExplore"/)
 
   const page = loadPage()
@@ -486,4 +488,16 @@ test('会话明确保存新昵称后，新排名请求的缓存旧昵称也不�
     page._syncGrowthOwner()
     assert.equal(page._growthProfileOverride, null, '换号后不复用旧账号的本地资料优先值')
   } finally { global.getApp = originalGetApp }
+})
+
+test('徽章行:有 unlock_time 显示获得日期,没有就不写占位说明', async () => {
+  const page = loadPage()
+  await loadOverview(page, [okCenter([
+    { badgeCode: 'A', badgeName: '先行者', unlockTime: '2026-08-18 21:05:00' },
+    { badgeCode: 'B', badgeName: '城市漫游者' },
+  ]), okPlay, okCompleted])
+  assert.equal(page.data.badges[0].unlockText, '2026.08.18')
+  assert.equal(page.data.badges[1].unlockText, '')
+  assert.equal('expandedBadge' in page.data, false)
+  assert.equal(typeof page.onBadgeTap, 'undefined')
 })

@@ -40,8 +40,7 @@ page { background: var(--cy-bg-page); }
 .gc-badge-icon { width: 38px; height: 38px; border-radius: 50%; }
 .gc-badge-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: var(--gc-space-1); }
 .gc-badge-name { overflow: hidden; font-size: var(--gc-font-subtitle); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
-.gc-badge-hint, .gc-badge-moment, .gc-badge-arrow { color: var(--cy-color-text-secondary); font-size: var(--gc-font-label); line-height: 18px; }
-.gc-badge-arrow { flex: none; }
+.gc-badge-moment { color: var(--cy-color-text-secondary); font-size: var(--gc-font-label); line-height: 18px; }
 .gc-badge-empty, .gc-badge-loading { display: flex; flex-direction: column; gap: var(--gc-space-3); padding: var(--gc-space-4); border-radius: var(--gc-radius-lg); background: var(--cy-color-bg-elevated); }
 .gc-empty-heading { display: flex; align-items: center; gap: var(--gc-space-2); font-size: var(--gc-font-body); line-height: 22px; font-weight: 500; }
 .gc-star-icon { width: 20px; height: 20px; flex: none; }

@@ -50,15 +50,12 @@
   <view class="gc-section gc-badge-sec">
     <view class="gc-section-head"><text class="gc-section-title">我的徽章</text><text wx:if="{{overviewAvailable.center}}" class="gc-section-meta">{{badgeCountText}}</text></view>
     <view wx:if="{{showBadges}}" class="gc-badge-list" aria-role="list" aria-label="我的徽章" style="{{pmPage === 1 ? '--pm-g:1;' : (pmPage === 2 ? '--pm-g-d:.32s;--pm-g-s:1;' : '')}}">
-      <view class="gc-badge-row {{expandedBadge === item.code ? 'is-open' : ''}}" wx:for="{{badges}}" wx:key="code" data-code="{{item.code}}" bindtap="onBadgeTap" aria-role="button" aria-label="{{item.name}}，查看获得时刻" hover-class="gc-row--press" hover-stay-time="80">
+      <view class="gc-badge-row" wx:for="{{badges}}" wx:key="code" aria-role="listitem" aria-label="{{item.unlockText ? item.name + '，' + item.unlockText : item.name}}">
         <view class="gc-badge-disc cy-img-ph"><image wx:if="{{item.iconUrl}}" class="gc-badge-icon cy-img-fade {{imgOn['b' + index] ? 'cy-img-fade--on' : ''}}" src="{{item.iconUrl}}" mode="aspectFit" data-fade-key="b{{index}}" bindload="onImgFadeLoad" /><text wx:else>{{item.initial}}</text></view>
         <view class="gc-badge-copy">
           <text class="gc-badge-name">{{item.name}}</text>
-          <text class="gc-badge-moment" wx:if="{{expandedBadge === item.code && item.unlockText}}">获得于 {{item.unlockText}}</text>
-          <text class="gc-badge-moment" wx:elif="{{expandedBadge === item.code}}">获得时间未记录</text>
-          <text class="gc-badge-hint" wx:else>查看获得时刻</text>
+          <text class="gc-badge-moment" wx:if="{{item.unlockText}}">{{item.unlockText}}</text>
         </view>
-        <text class="gc-badge-arrow">{{expandedBadge === item.code ? '收起' : '查看'}}</text>
       </view>
     </view>
     <view wx:elif="{{showBadgeEmpty}}" class="gc-badge-empty">

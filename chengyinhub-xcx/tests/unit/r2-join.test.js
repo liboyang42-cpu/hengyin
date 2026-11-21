@@ -92,6 +92,19 @@ test('购买被拒时按 playerText 显示,不把 topicId 给玩家看', () => {
 
 test('礼品领取页用礼物图标,不再用通用空态插画/警告三角', () => {
   const wxml = read('subpackageMember/market/gift/index.wxml')
-  assert.doesNotMatch(wxml, /<cy-empty/)
+  // 领取态不用通用空态;只有缺参(没有/认不出领取码)才用共享的「链接已失效 · 返回」
+  const empties = wxml.match(/<cy-empty\b[^>]*>/g) || []
+  assert.equal(empties.length, 1)
+  assert.match(empties[0], /wx:if="\{\{state === 'missing'\}\}"[^>]*kind="missing-param"[^>]*cta="返回"[^>]*bind:cta="goBack"/)
+  assert.doesNotMatch(empties[0], /\btitle=|\bsub=/)
+  assert.match(wxml, /<view wx:else class="gf-hero/)
   assert.match(wxml, /name="\{\{state === 'claimed' \? 'check' : 'gift'\}\}"/)
+})
+
+test('礼品领取页缺领取码 / 领取码无效 → 缺参态,不再是礼物图标 + 「缺少领取码」', () => {
+  const js = read('subpackageMember/market/gift/index.js')
+  assert.match(js, /if \(!this\._token\) this\.setData\(\{ state: 'missing' \}\)/)
+  assert.match(js, /MISSING_LINK_CODES = \{ TOKEN_REQUIRED: true, GIFT_TOKEN_INVALID: true \}/)
+  assert.doesNotMatch(read('subpackageMember/utils/market-view.js'), /缺少领取码|领取码无效/)
+  assert.ok(JSON.parse(read('subpackageMember/market/gift/index.json')).usingComponents['cy-empty'])
 })

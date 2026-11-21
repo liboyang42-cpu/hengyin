@@ -30,7 +30,7 @@ Component({
         this._loadedRegistrationId = ''
         this._loadToken = (this._loadToken || 0) + 1
         this.clearTimer()
-        this.setData({ state: 'error', qr: '', errorText: '缺少报名记录，无法生成入场码' })
+        this.setData({ state: 'missing', qr: '', errorText: '' })
         return
       }
       if (value !== this._loadedRegistrationId) this.load()
@@ -42,7 +42,7 @@ Component({
       this._attached = true
       this.setData({ expiry: passExpiryText(this.data.until) })
       if (this.data.registrationId) this.load()
-      else this.setData({ state: 'error', errorText: '缺少报名记录，无法生成入场码' })
+      else this.setData({ state: 'missing', errorText: '' })
     },
     detached() {
       this._attached = false
@@ -88,7 +88,7 @@ Component({
     load(silent) {
       const registrationId = this.data.registrationId
       if (!registrationId) {
-        this.setData({ state: 'error', errorText: '缺少报名记录，无法生成入场码' })
+        this.setData({ state: 'missing', errorText: '' })
         return
       }
       if (!this._ticketLogin) this._ticketLogin = captureLogin(app, wx)
