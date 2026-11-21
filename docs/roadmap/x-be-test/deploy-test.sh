@@ -234,6 +234,8 @@ local POST=(
 local f
 local TESTSQL=$SRC/docs/roadmap/x-be-test/sql
 sqlpath() { case "$1" in *.test.sql.txt) echo "$TESTSQL/$1" ;; *) echo "$SQL/$1" ;; esac; }
+# sys_job rows the POST files add (named in the manual-rollback hint; verified: without them the r3 jar starts)
+local POST_JOBS="'clubChannelDefaultsTask.backfill(200)','channelPurgeTask.purge(50)','growthWinbackTask.run()','cityMonopolyTask.settle()','cityMonopolyTask.nightly()','cityMonopolyTask.seasonSettle()','channelMembershipBackfillTask.backfill(200)'"
 for f in "${PRE[@]}" "${POST[@]}"; do [ -f "$(sqlpath "$f")" ] || die "migration file missing in the clone: $f"; done
 
 apply() { # file
@@ -291,7 +293,7 @@ wait_up() { # seconds
   local i code
   for i in $(seq 1 "$1"); do
     sleep 1
-    grep -q "APPLICATION FAILED TO START" "$APP/app.log" 2>/dev/null && return 1
+    grep -qE "APPLICATION FAILED TO START|Application run failed" "$APP/app.log" 2>/dev/null && return 1
     if grep -q "Started RuoYiApplication" "$APP/app.log" 2>/dev/null; then
       code=$(curl -s -o /dev/null -m 5 -w '%{http_code}' "http://127.0.0.1:$PORT/" || true)
       [ "$code" = "200" ] && { say "up after ${i}s: $(grep -m1 -o 'Started RuoYiApplication in [0-9.]* seconds' "$APP/app.log"), GET / = 200"; return 0; }
@@ -332,6 +334,7 @@ if ! wait_up 120; then
   say "the new jar did not start within 120 s"
   say "--- APPLICATION FAILED TO START block:"
   grep -A25 "APPLICATION FAILED TO START" "$APP/app.log" 2>/dev/null | head -40 || true
+  grep -A3 "Application run failed" "$APP/app.log" 2>/dev/null | cut -c1-300 | head -8 || true
   say "--- Caused by lines:"
   causes
   stop_app || say "WARNING: port $PORT still bound while rolling back"
@@ -359,7 +362,11 @@ say "tables at the end: $(table_count)"
 
 say "--- distinct Caused by lines in app.log (expected: the missing WeChat Pay apiclient_key.pem only):"
 causes
-say "rollback jar: $(basename "$PREV")  (rollback: stop java, cp $PREV $APP/app.jar, start start.sh; the migrations are additive and stay)"
+say "rollback jar: $(basename "$PREV")"
+say "manual rollback later: the old jar does not start while sys_job holds the post-deploy rows (task beans it lacks)."
+say "  1. docker exec $MYSQL mysql -uroot $DB -e \"DELETE FROM sys_job WHERE invoke_target IN ($POST_JOBS)\""
+say "  2. stop java, cp $PREV $APP/app.jar, start start.sh. Tables and columns are additive and stay."
+say "  Re-running the POST files (idempotent) puts the rows back when the new jar returns."
 say "dump: $DUMP"
 find "$SRC" -name target -type d -prune -exec rm -rf {} +
 rm -rf "$V/m2repo"
