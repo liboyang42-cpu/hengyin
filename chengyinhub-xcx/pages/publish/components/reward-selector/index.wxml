@@ -97,7 +97,7 @@
   </view>
 
   <view slot="footer" class="create-footer">
-    <cy-btn variant="primary" loading="{{isSubmitting}}" disabled="{{!canCreateCoupon}}" style="flex:1" bindtap="onCreateSubmit">发布{{rewardKind === 'PASS' ? '体验卡' : '优惠券'}}</cy-btn>
+    <cy-btn variant="primary" loading="{{isSubmitting}}" disabled="{{!canCreateCoupon}}" style="flex:1" bindtap="onCreateSubmit" bind:disabledtap="onCreateDisabledTap">发布{{rewardKind === 'PASS' ? '体验卡' : '优惠券'}}</cy-btn>
   </view>
 </cy-sheet>
 

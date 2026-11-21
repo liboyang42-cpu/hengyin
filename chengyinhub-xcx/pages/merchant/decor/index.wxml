@@ -45,7 +45,6 @@
       kind="empty"
       fill
       title="暂时无法装修店铺"
-      sub="完成商家入驻后可用"
       cta="去商家入驻"
       bind:cta="goApply"
     />
@@ -71,18 +70,18 @@
             bindtap="uploadLogo"
             aria-role="button"
             aria-label="修改店铺 Logo"
-            hover-class="cy-pressed"
+            hover-class="cy-pressed" hover-stay-time="80"
           >
             <image wx:if="{{m.logo}}" src="{{img.one(m.logo)}}" mode="aspectFill" />
             <text wx:else>{{m.name ? m.name[0] : '店'}}</text>
-          </view><view class="dc-edit-hit dc-edit-hit--avatar" catchtap="uploadLogo" aria-role="button" aria-label="编辑头像" hover-class="cy-pressed"><view class="dc-edit-badge"><cy-icon name="edit" size="30" /></view></view></view>
+          </view><view class="dc-edit-hit dc-edit-hit--avatar" catchtap="uploadLogo" aria-role="button" aria-label="编辑头像" hover-class="cy-pressed" hover-stay-time="80"><view class="dc-edit-badge"><cy-icon name="edit" size="30" /></view></view></view>
           <text class="dc-name">{{m.name || '填写店铺名称'}}</text>
         </view>
         <view class="dc-card">
-          <view class="dc-cover-wrap" bindtap="uploadCover" aria-role="button" aria-label="修改封面图" hover-class="cy-pressed">
+          <view class="dc-cover-wrap" bindtap="uploadCover" aria-role="button" aria-label="修改封面图" hover-class="cy-pressed" hover-stay-time="80">
             <image wx:if="{{m.coverImage}}" class="dc-cover" src="{{img.one(m.coverImage)}}" mode="aspectFill" />
             <view wx:else class="dc-cover dc-placeholder">添加店铺封面</view>
-            <view class="dc-edit-hit dc-edit-hit--cover" catchtap="uploadCover" aria-role="button" aria-label="编辑封面" hover-class="cy-pressed"><view class="dc-edit-badge"><cy-icon name="edit" size="30" /></view></view>
+            <view class="dc-edit-hit dc-edit-hit--cover" catchtap="uploadCover" aria-role="button" aria-label="编辑封面" hover-class="cy-pressed" hover-stay-time="80"><view class="dc-edit-badge"><cy-icon name="edit" size="30" /></view></view>
           </view>
           <view class="dc-status">
             <text>{{m.businessStatus == 0 ? '已打烊' : '营业中'}}</text>
@@ -97,7 +96,7 @@
               bindtap="goPreview"
               aria-role="button"
               aria-label="看公开主页"
-              hover-class="cy-pressed"
+              hover-class="cy-pressed" hover-stay-time="80"
             >
               看公开主页 <cy-icon name="chevron-right" size="24" />
             </view>
@@ -120,10 +119,10 @@
         </view></block>
       </block>
       <block wx:elif="{{view === 'brand'}}">
-        <view class="dc-heading-row"><text class="dc-brand-title">{{m.cityRole || m.name}}</text><view class="dc-edit-label" bindtap="openField" data-k="cityRole" aria-role="button" hover-class="cy-pressed">编辑</view></view>
+        <view class="dc-heading-row"><text class="dc-brand-title">{{m.cityRole || m.name}}</text><view class="dc-edit-label" bindtap="openField" data-k="cityRole" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">编辑</view></view>
         <view class="dc-card"><cy-cell arrow-icon="chevron-right" title="一句话介绍" value="编辑" required="{{false}}" bind:tap="openField" data-k="slogan" hairline="{{false}}" /></view>
         <view class="dc-card dc-inset dc-story">
-          <view class="dc-heading-row"><text class="dc-heading">品牌故事</text><view class="dc-edit-label" bindtap="goStory" aria-role="button" hover-class="cy-pressed">编辑</view></view>
+          <view class="dc-heading-row"><text class="dc-heading">品牌故事</text><view class="dc-edit-label" bindtap="goStory" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">编辑</view></view>
           <text class="dc-story-text">{{m.description || '把店铺和这座城市的故事，讲给路过的人听。'}}</text>
 
         </view>
@@ -153,7 +152,7 @@
                     data-t="{{item.value}}"
                     aria-role="checkbox"
                     aria-checked="{{item.checked}}"
-                    hover-class="cy-pressed"
+                    hover-class="cy-pressed" hover-stay-time="80"
                   >
                     <image wx:if="{{item.iconSrc}}" class="dc-tag-ico" src="{{item.iconSrc}}" mode="aspectFit" />{{item.value}}
                   </view>
@@ -168,12 +167,12 @@
                   bindtap="toggleTag"
                   aria-role="button"
                   aria-label="删除标签{{item}}"
-                  hover-class="cy-pressed"
+                  hover-class="cy-pressed" hover-stay-time="80"
                 >
                   {{item}} <cy-icon name="close" size="24" />
                 </view>
               </view>
-              <view class="dc-touch" bindtap="openCustomTag" aria-role="button" hover-class="cy-pressed">
+              <view class="dc-touch" bindtap="openCustomTag" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">
                 添加自定义标签 <cy-icon name="chevron-right" size="24" />
               </view>
               <cy-btn bindtap="confirmTags" loading="{{saving}}">完成</cy-btn>
@@ -190,7 +189,7 @@
         <!-- p2 F-10(第十轮 f3):删去「让合作发生在店里」头图与图标,页名由导航栏「合作经营」承担;各行无值只留箭头 -->
         <view class="dc-card dc-inset">
           <!-- M-30(m700):承接摘要(如「免费承接」)与下面「合作诉求」同一行式,标题左、摘要右对齐 -->
-          <view class="dc-heading" bindtap="goCoopSetting" aria-role="button" hover-class="cy-pressed">
+          <view class="dc-heading" bindtap="goCoopSetting" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">
             承接设置
             <text class="dc-muted">{{coopSummary || '完善你的承接能力'}}</text>
           </view>
@@ -221,7 +220,7 @@
               required="{{false}}"
             />
             <view slot="panel" class="dc-menu">
-              <view class="dc-choice" bindtap="clearFeatured" aria-role="button" hover-class="cy-pressed">
+              <view class="dc-choice" bindtap="clearFeatured" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">
                 不设置主推
               </view>
               <view wx:if="{{featuredState === 'loading'}}" class="dc-muted">正在载入活动…</view>
@@ -229,7 +228,7 @@
                 wx:if="{{featuredState === 'error'}}"
                 class="dc-choice"
                 bindtap="retryFeatured"
-                hover-class="cy-pressed"
+                hover-class="cy-pressed" hover-stay-time="80"
                 aria-role="button"
               >
                 {{featuredError}} · 重试
@@ -242,7 +241,7 @@
                 data-id="{{item.id}}"
                 data-name="{{item.name}}"
                 aria-role="button"
-                hover-class="cy-pressed"
+                hover-class="cy-pressed" hover-stay-time="80"
               >
                 {{item.name}}
               </view>
@@ -250,7 +249,7 @@
                 wx:if="{{featuredState === 'ready' && !featuredList.length}}"
                 class="dc-choice"
                 bindtap="goPublishActivity"
-                hover-class="cy-pressed"
+                hover-class="cy-pressed" hover-stay-time="80"
                 aria-role="button"
               >
                 去发布一个活动
@@ -315,7 +314,7 @@
                 data-key="{{item.key}}"
                 bindtap="tapTier"
                 aria-role="button"
-                hover-class="cy-pressed"
+                hover-class="cy-pressed" hover-stay-time="80"
               >
                 <view>
                   <text>{{item.name}}</text>
@@ -380,7 +379,7 @@
             bind:tap="onQrcodeTap"
           />
           <image wx:if="{{wechatQr}}" class="dc-qr-thumb" src="{{wechatQr}}" mode="aspectFit"
-            bindtap="previewQrcode" aria-role="button" aria-label="查看门店二维码" hover-class="cy-pressed" />
+            bindtap="previewQrcode" aria-role="button" aria-label="查看门店二维码" hover-class="cy-pressed" hover-stay-time="80" />
         </view>
         <view class="dc-card dc-fields">
           <cy-cell arrow-icon="chevron-right" arrow="{{basicEditing}}"
@@ -514,12 +513,12 @@
     </view>
   </cy-sheet>
   <view wx:if="{{imageEditor && !discardVisible}}" class="dc-image-layer">
-    <view aria-label="关闭图片编辑" class="dc-image-mask" catchtouchmove="noop" bindtap="closeImage" hover-class="dc-mask-pressed" />
+    <view aria-label="关闭图片编辑" class="dc-image-mask" catchtouchmove="noop" bindtap="closeImage" hover-class="dc-mask-pressed" hover-stay-time="80" />
     <!-- 顶边复查(2026-09-18):面板在幕布里垂直居中 ⇒ 可用高度要两头都让开胶囊行(2×sheetTop) -->
     <view class="dc-image-panel" style="max-height:calc(100vh - {{chrome.sheetTop * 2}}px)">
       <view class="dc-heading">
         <text>{{imageEditor.key === 'logo' ? '修改 Logo' : '修改封面图'}}</text>
-        <view class="dc-close" bindtap="closeImage" aria-role="button" aria-label="关闭图片编辑" hover-class="cy-pressed">
+        <view class="dc-close" bindtap="closeImage" aria-role="button" aria-label="关闭图片编辑" hover-class="cy-pressed" hover-stay-time="80">
           <cy-icon name="close-sm" size="44" />
         </view>
       </view>
@@ -530,7 +529,7 @@
         mode="aspectFill"
       />
       <!-- M-08(2026-10-27):没有图时不再留一大块空白 —— 占位与预览同尺寸(Logo 为居中圆),点它直接选图 -->
-      <view wx:else class="dc-image-preview dc-placeholder {{imageEditor.key === 'logo' ? 'dc-image-preview--logo' : ''}}" bindtap="chooseEditImage" aria-role="button" aria-label="选择图片" hover-class="cy-pressed"><cy-icon name="camera" size="44" /><text>选择一张图片</text></view>
+      <view wx:else class="dc-image-preview dc-placeholder {{imageEditor.key === 'logo' ? 'dc-image-preview--logo' : ''}}" bindtap="chooseEditImage" aria-role="button" aria-label="选择图片" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="camera" size="44" /><text>选择一张图片</text></view>
       <!-- 2026-10-28 业主 m686:不写 5:3 那句;Logo 那句同样是多余说明,一并去掉 -->
       <cy-inline-error kind="error" wx:if="{{saveError}}" title="暂未完成" sub="{{saveError}}" />
       <!-- 横排一行:从相册选择在左、使用确认在右(2026-09-18 用户定) -->

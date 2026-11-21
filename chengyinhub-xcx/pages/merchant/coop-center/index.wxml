@@ -50,7 +50,7 @@
           </view>
         </view>
         <view class="cc-list-scope" wx:if="{{routeScopeText}}" aria-role="status">{{routeScopeText}}</view>
-        <cy-empty wx:if="{{!routes.length}}" fill size="lg" title="还没有开放的路线"
+        <cy-empty wx:if="{{!routes.length}}" fill size="lg" kind="empty" title="还没有开放的路线"
           cta="刷新合作机会" bind:cta="loadAvailable" />
       </view>
     </block>
@@ -71,7 +71,7 @@
           </view>
           <view class="cc-link"><text>查看活动</text><cy-icon name="arrow-right" size="28" /></view>
         </view>
-        <cy-empty wx:if="{{!events.length}}" fill size="lg" title="还没有官方活动"
+        <cy-empty wx:if="{{!events.length}}" fill size="lg" kind="empty" title="还没有官方活动"
           cta="刷新合作机会" bind:cta="loadAvailable" />
       </view>
     </block>

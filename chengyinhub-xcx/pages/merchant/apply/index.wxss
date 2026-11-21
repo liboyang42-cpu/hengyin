@@ -91,7 +91,7 @@ page { background: var(--cy-color-bg-page); }
 }
 .up-del__glyph {
   position: absolute; top: 0; right: 0; width: 40rpx; height: 40rpx;
-  background: rgba(0,0,0,0.6); color: var(--cy-text-inverse); border-radius: 50%;
+  background: var(--cy-color-overlay); color: var(--cy-text-inverse); border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
 }
 
@@ -106,7 +106,7 @@ page { background: var(--cy-color-bg-page); }
 }
 .img-del__glyph {
   position: absolute; top: 0; right: 0; width: 40rpx; height: 40rpx;
-  background: rgba(0,0,0,0.6); color: var(--cy-text-inverse); border-radius: 50%;
+  background: var(--cy-color-overlay); color: var(--cy-text-inverse); border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
 }
 .img-add {
@@ -187,7 +187,7 @@ page { background: var(--cy-color-bg-page); }
 .tl-item.last::before { display: none; }
 .tl-dot {
   position: absolute; left: 0; top: var(--cy-legacy-4); width: 24rpx; height: 24rpx; border-radius: 50%;
-  background: rgba(120,120,128,0.3);
+  background: var(--cy-border-line);
 }
 .tl-item.done .tl-dot { background: var(--cy-accent); }
 .tl-item.cur .tl-dot { background: var(--cy-bg-card); border: 6rpx solid var(--cy-gold); }

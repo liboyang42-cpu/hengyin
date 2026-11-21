@@ -100,26 +100,8 @@ page { background: var(--cy-bg-page); }
 .pdm-opt-t { min-width: 0; }
 
 .pdm-actions { display: flex; gap: var(--cy-space-2); margin-top: var(--cy-space-4); }
-.pdm-btn {
-  flex: 1;
-  height: 88rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--cy-radius-pill);
-  font-size: var(--cy-font-body);
-  font-weight: 600;
-}
-.pdm-btn--ghost {
-  border: 2rpx solid var(--cy-color-border-subtle);
-  color: var(--cy-text-secondary);
-}
-.pdm-btn--primary { background: var(--cy-text-title); color: var(--cy-bg-card); }
-.pdm-btn--primary.is-disabled { opacity: .4; }
+.pdm-btn { flex: 1; min-width: 0; }
 
 /* 细节打磨二期 L1/L5/L7 */
 .pdm-opt { transition: var(--cy-tr-press); }
-.pdm-btn { transition: var(--cy-tr-press); }
-.pdm-btn--ghost { transition: var(--cy-tr-press); }
-.pdm-btn--primary { transition: var(--cy-tr-press); }
 .pdm-foot { transition: var(--cy-tr-press); }

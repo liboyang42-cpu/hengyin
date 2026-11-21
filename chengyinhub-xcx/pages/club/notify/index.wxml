@@ -3,7 +3,7 @@
   <cy-access-gate kind="login" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
-<view class="page" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+<view class="page {{state === 'no-permission' ? 'page--fill' : ''}}" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
   <cy-nav-bar custom-back bind:back="goBack" />
   <cy-page-title title="群发通知" safe-top="{{false}}" />
 
@@ -11,8 +11,8 @@
   <cy-empty wx:elif="{{state === 'missing-param'}}" fill size="lg" kind="missing-param" cta="返回" bind:cta="goBack" class="cy-fade-in" />
   <!-- 2026-08-26:权限拒绝原来和加载失败共用一个 error 态,渲染成「暂时不可用 + 重新加载」——
        给了一个永远点不成功的重试按钮,用户不会知道是权限问题。现在拆成三条。 -->
-  <cy-error wx:elif="{{state === 'no-permission'}}" fill size="lg" retry=""
-            title="你没有发通知的权限" sub="{{errorText || '需「通知成员」权限，请联系主理人'}}" auto-back class="cy-fade-in" />
+  <cy-empty wx:elif="{{state === 'no-permission'}}" kind="no-permission" fill size="lg"
+            title="当前身份不能发通知" cta="返回" bind:cta="goBack" class="cy-fade-in" />
   <cy-error load-failure wx:elif="{{state === 'network-error'}}" title="网络连接失败" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" auto-back class="cy-fade-in" />
   <cy-error load-failure wx:elif="{{state === 'error'}}" title="通知工具暂时不可用" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" auto-back class="cy-fade-in" />
 
@@ -52,13 +52,13 @@
 
       <!-- 发送前必须先拿到受众预览:Figma 静态稿没画这一步，但它是防止群发空任务/误发的
            既有业务闸门，对齐视觉时保留，不因稿子省了这步就删掉。 -->
-      <view class="preview-btn {{previewState === 'loading' ? 'disabled' : ''}}" bindtap="preview" aria-role="button"
-        hover-class="{{previewState === 'loading' || sending ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
-        {{previewState === 'loading' ? '正在预览…' : '预览受众'}}
+      <!-- 1121:页内自绘描边钮 → cy-btn secondary(命中区 88rpx,预览中转圈) -->
+      <view class="preview-cta">
+        <cy-btn variant="secondary" size="sm" loading="{{previewState === 'loading'}}" loading-label="正在预览…" bindtap="preview">预览受众</cy-btn>
       </view>
 
       <view class="preview-card preview-card--error" wx:if="{{previewState === 'error'}}">
-        <cy-inline-error kind="data" title="受众预览失败" sub="{{previewError}}" /><text class="inline-retry" bindtap="preview"
+        <cy-inline-error kind="data" title="受众预览失败" sub="{{previewError}}" /><text class="inline-retry" bindtap="preview" aria-role="button"
           hover-class="{{previewState === 'loading' || sending ? 'none' : 'cy-pressed'}}" hover-stay-time="80">重试</text>
       </view>
       <view class="preview-card" wx:elif="{{previewState === 'empty'}}">
@@ -74,7 +74,7 @@
            既没有「待投递」也没有再读的入口 ⇒ 数字永远停在 4/0/0,用户看不出是卡在哪儿。 -->
       <view class="section-head">
         <text class="section-title">投递状态</text>
-        <text class="inline-retry" bindtap="refreshCampaign"
+        <text class="inline-retry" bindtap="refreshCampaign" aria-role="button"
           hover-class="{{refreshing ? 'none' : 'cy-pressed'}}" hover-stay-time="80">{{refreshing ? '刷新中…' : '刷新'}}</text>
       </view>
       <view class="ds-card">
@@ -100,21 +100,19 @@
           <text class="row-value">{{campaign.pendingCount || 0}}</text>
         </view>
         <view class="row">
-          <view class="row-text">
-            <text class="row-title">失败</text>
-            <text class="row-desc" wx:if="{{campaign.failedCount > 0}}">重试</text>
-          </view>
+          <view class="row-text"><text class="row-title">失败</text></view>
           <text class="row-value row-value--danger">{{campaign.failedCount || 0}}</text>
         </view>
       </view>
-      <button class="retry-btn" wx:if="{{campaign.failedCount > 0}}" loading="{{retrying}}" disabled="{{retrying}}" bindtap="retryFailed">
-        {{retrying ? '正在重试…' : '只重试失败项'}}
-      </button>
+      <!-- 1121:原生 <button> → cy-btn(loading 自带转圈与「处理中」读屏,不再被全局 wx-button 规则抹样式) -->
+      <view class="retry-cta" wx:if="{{campaign.failedCount > 0}}">
+        <cy-btn variant="primary" size="sm" loading="{{retrying}}" loading-label="正在重试…" bindtap="retryFailed">只重试失败项</cy-btn>
+      </view>
     </view>
 
-    <button class="send-btn cy-fade-in" loading="{{sending}}" disabled="{{sending}}" bindtap="send">
-      {{sending ? '正在投递…' : '发送站内通知'}}
-    </button>
+    <view class="send-cta cy-fade-in">
+      <cy-btn variant="primary" loading="{{sending}}" loading-label="正在投递…" bindtap="send">发送站内通知</cy-btn>
+    </view>
   </block>
 </view>
 </view>

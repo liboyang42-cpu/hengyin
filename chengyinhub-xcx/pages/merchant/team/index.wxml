@@ -44,7 +44,7 @@
             <text class="tm-share-title">{{createdInvite.roleName}}邀请已创建</text>
             <text class="tm-share-sub">{{createdInvite.expiresAtText}} 前有效</text>
           </view>
-          <button wx:if="{{canShareCreatedInvite}}" class="tm-share-btn" open-type="share" aria-label="立即分享团队邀请">立即分享</button>
+          <button wx:if="{{canShareCreatedInvite}}" class="tm-share-btn" open-type="share" hover-class="cy-pressed" hover-stay-time="80" aria-label="立即分享团队邀请">立即分享</button>
         </view>
 
         <cy-inline-error load-failure wx:if="{{roleError}}" title="岗位列表暂未更新" sub="{{roleError}}"

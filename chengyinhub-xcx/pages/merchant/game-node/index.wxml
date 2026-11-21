@@ -195,7 +195,7 @@
       <text class="gn-sheet-tip">拒绝原因将告知主办方</text>
       <view class="gn-choice-grid">
         <view class="gn-choice {{declineDraft.reasonCode === item.code ? 'gn-choice--on' : ''}}"
-              wx:for="{{declineReasons}}" wx:key="code" data-code="{{item.code}}" bindtap="onDeclineReasonTap" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
+              wx:for="{{declineReasons}}" wx:key="code" data-code="{{item.code}}" bindtap="onDeclineReasonTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="radio" aria-checked="{{declineDraft.reasonCode === item.code}}">{{item.label}}</view>
       </view>
       <cy-btn variant="danger" loading="{{writeState === 'submitting'}}" bindtap="submitDecline">确认拒绝</cy-btn>
     </view>
@@ -206,7 +206,7 @@
       <text class="gn-sheet-tip">暂停后玩家立即不可预约本站</text>
       <view class="gn-choice-grid">
         <view class="gn-choice {{pauseDraft.reasonCode === item.code ? 'gn-choice--on' : ''}}"
-              wx:for="{{pauseReasons}}" wx:key="code" data-code="{{item.code}}" bindtap="onPauseReasonTap" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
+              wx:for="{{pauseReasons}}" wx:key="code" data-code="{{item.code}}" bindtap="onPauseReasonTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="radio" aria-checked="{{pauseDraft.reasonCode === item.code}}">{{item.label}}</view>
       </view>
       <view class="gn-field">
         <text class="gn-label">预计恢复<text class="form-required" aria-hidden="true">*</text></text>
@@ -243,12 +243,12 @@
                maxlength="19" bindinput="onSubmissionIdInput" />
       </view>
       <view class="gn-segment">
-        <view class="gn-segment-item {{verifyDraft.decision === 'APPROVE' ? 'gn-segment-item--on' : ''}}" data-decision="APPROVE" bindtap="onVerifyDecisionTap" hover-class="cy-pressed" hover-stay-time="80">通过</view>
-        <view class="gn-segment-item {{verifyDraft.decision === 'REJECT' ? 'gn-segment-item--on' : ''}}" data-decision="REJECT" bindtap="onVerifyDecisionTap" hover-class="cy-pressed" hover-stay-time="80">驳回</view>
+        <view class="gn-segment-item {{verifyDraft.decision === 'APPROVE' ? 'gn-segment-item--on' : ''}}" data-decision="APPROVE" bindtap="onVerifyDecisionTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="radio" aria-checked="{{verifyDraft.decision === 'APPROVE'}}">通过</view>
+        <view class="gn-segment-item {{verifyDraft.decision === 'REJECT' ? 'gn-segment-item--on' : ''}}" data-decision="REJECT" bindtap="onVerifyDecisionTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="radio" aria-checked="{{verifyDraft.decision === 'REJECT'}}">驳回</view>
       </view>
       <view class="gn-choice-grid" wx:if="{{verifyDraft.decision === 'REJECT'}}">
         <view class="gn-choice {{verifyDraft.reasonCode === item.code ? 'gn-choice--on' : ''}}"
-              wx:for="{{verifyRejectReasons}}" wx:key="code" data-code="{{item.code}}" bindtap="onRejectReasonTap" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
+              wx:for="{{verifyRejectReasons}}" wx:key="code" data-code="{{item.code}}" bindtap="onRejectReasonTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="radio" aria-checked="{{verifyDraft.reasonCode === item.code}}">{{item.label}}</view>
       </view>
       <cy-btn variant="primary" loading="{{writeState === 'submitting'}}" bindtap="submitVerification">提交核验结论</cy-btn>
     </view>

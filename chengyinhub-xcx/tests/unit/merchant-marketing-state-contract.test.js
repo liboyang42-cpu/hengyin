@@ -178,8 +178,12 @@ function assertStateMarkup(wxml) {
   assert.match(wxml, /<cy-empty wx:if="\{\{guestLogin\}\}"[^>]*title="登录后查看营销" cta="登录" bind:cta="onGuestLogin"/)
   assert.match(wxml, /<cy-inline-error[^>]*wx:if="\{\{entryError\}\}"[^>]*bind:action="retryAll"/,
     '登录/身份确认失败必须落页内内联错误并可重试')
-  assert.match(wxml, /<cy-inline-error[^>]*wx:elif="\{\{accessState === 'denied'\}\}"[^>]*bind:action="retryAll"/,
-    '明确拒权必须落页内说明,不再整屏')
+  // 2026-11-21 #890 DevTools 走查:拒权与其他商家页同一无权限态(锁 + 标题 + 一个动作,居中),不再是蓝条压空页。
+  assert.match(wxml, /<cy-empty wx:elif="\{\{accessState === 'not-member'\}\}" kind="no-permission" fill size="lg" title="当前身份不能查看营销" cta="申请入驻" bind:cta="onDenyCta" \/>/,
+    '非商家成员必须落统一无权限态 + 申请入驻')
+  assert.match(wxml, /<cy-empty wx:elif="\{\{accessState === 'denied'\}\}" kind="no-permission" fill size="lg" title="你的岗位还不能查看营销数据" cta="重新确认" bind:cta="retryAll" \/>/,
+    '岗位拒权必须落统一无权限态 + 重新确认')
+  assert.doesNotMatch(wxml, /<cy-inline-error[^>]*accessState/, '拒权不得再挂内联横幅')
 }
 
 test('首载呈现骨架;未确认的数字位写 0、状态位说实话', () => {
@@ -459,13 +463,16 @@ test('重新确认会清掉 entryError 并真的再走一次入口链路', async
 // 2026-09-17 拍板 #25:岗位没开营销权限时,页面只留一句说明,不再渲染
 // hero/券卡/我的内容的「—/数据待同步」占位 —— 拿未知当数据画,员工会以为系统坏了。
 function assertDeniedHidesData(wxml) {
-  assert.match(wxml, /title="你的岗位还没有营销数据权限"/,
-    '拒权必须说清是岗位没开权限')
+  const denied = "<cy-empty wx:elif=\"{{accessState === 'denied'}}\""
+  const deniedIndex = wxml.indexOf(denied)
+  assert.ok(deniedIndex > 0, '拒权必须是独立的整页无权限态')
+  assert.match(wxml, /title="你的岗位还不能查看营销数据"/, '拒权必须说清是岗位没开权限')
   assert.doesNotMatch(wxml, /请联系店主开通/, 'MC-046:不再挂「请联系店主开通」副文案,出路是「重新确认」')
-  assert.match(wxml, /action="重新确认"/)
-  const guard = "wx:if=\"{{accessState !== 'denied'}}\""
+  assert.match(wxml, /cta="重新确认" bind:cta="retryAll"/)
+  // 数据区挂在拒权态之后的 wx:else 上:拒权时整段不渲染。
+  const guard = '<view wx:else class="body"'
   const guardIndex = wxml.indexOf(guard)
-  assert.ok(guardIndex > 0, '数据区必须有一道「非拒权才渲染」的闸门')
+  assert.ok(guardIndex > deniedIndex, '数据区必须是拒权态之后的 wx:else 分支')
   const heroIndex = wxml.indexOf('class="hero"')
   assert.ok(heroIndex > guardIndex, 'hero 等数据区必须在闸门之内,拒权时不渲染')
   const deckIndex = wxml.indexOf('class="deck-slot"')
@@ -488,15 +495,27 @@ test('岗位没有营销数据权限时只留说明,不渲染数据占位', () =
   })
 
   assert.equal(page.data.accessState, 'denied')
-  assert.equal(page.data.accessError, '')
   assert.equal(marketingRequest(), undefined, '拒权后不得再拉营销聚合')
 
   const wxml = fs.readFileSync(WXML_PATH, 'utf8')
   assertDeniedHidesData(wxml)
-  // 负控:拆掉闸门后数据占位会重新露出,契约必须判红。
-  const mutated = wxml.replace("wx:if=\"{{accessState !== 'denied'}}\"", '')
+  // 负控:拆掉拒权态后数据占位会重新露出,契约必须判红。
+  const mutated = wxml.replace("<cy-empty wx:elif=\"{{accessState === 'denied'}}\"", '<cy-empty wx:elif="{{false}}"')
   assert.notEqual(mutated, wxml, '负控锚点失效')
   assert.throws(() => assertDeniedHidesData(mutated), assert.AssertionError)
+})
+
+test('不是商家成员时落统一无权限态,申请入驻去入驻页', () => {
+  const page = loadPage()
+  page.onLoad()
+  page.onShow()
+  const access = requests.find((request) => request.url === '/api/merchant/access/me')
+  access.success({ code: 200, data: { active: false, permissions: [] } })
+
+  assert.equal(page.data.accessState, 'not-member')
+  assert.equal(marketingRequest(), undefined, '非成员不得再拉营销聚合')
+  page.onDenyCta()
+  assert.equal(navigations.at(-1), '/pages/merchant/apply/index')
 })
 
 test('未知内容数量不会被当作零内容送去创建页', () => {
@@ -535,8 +554,8 @@ test('营销页状态组件、触达面积与状态播报均在页面内闭环',
 test('负控:恢复「未登录整屏态」必须让 wxml 契约转红', () => {
   const wxml = fs.readFileSync(WXML_PATH, 'utf8')
   const mutated = wxml.replace(
-    '<cy-inline-error class="m-inline-error"',
-    '<cy-state-shell wx:if="{{accessState === \'anonymous\'}}" title="登录后查看商家营销" primary="去登录" />\n    <cy-inline-error class="m-inline-error"',
+    '<cy-inline-error load-failure class="m-inline-error"',
+    '<cy-state-shell wx:if="{{accessState === \'anonymous\'}}" title="登录后查看商家营销" primary="去登录" />\n    <cy-inline-error load-failure class="m-inline-error"',
   )
   assert.notEqual(mutated, wxml, '负控锚点失效')
   assert.throws(() => assertStateMarkup(mutated), /整屏状态壳必须删除/)

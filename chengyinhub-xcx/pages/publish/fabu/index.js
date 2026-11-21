@@ -5727,6 +5727,13 @@ Page({
     this.setData({ ['fePricing.rows[' + index + '].price']: String(e.detail.value == null ? '' : e.detail.value) });
   },
 
+  // 置灰的「发布」被点:把面板上那句「还有 N 个位置待承接 / 加载失败」再说一遍,不让一次点击石沉大海
+  onFePublishDisabledTap() {
+    const panel = this.data.fePricing;
+    if (!panel || !panel.show || this.data.fePublishing) return;
+    cyToast(panel.hint || '还有位置待承接');
+  },
+
   onFePublish() {
     const panel = this.data.fePricing;
     if (!panel || !panel.show || panel.disabled || this.data.fePublishing) return;

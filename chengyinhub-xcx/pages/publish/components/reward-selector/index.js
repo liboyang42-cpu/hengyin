@@ -252,6 +252,13 @@ Component({
       });
     },
 
+    // 置灰的「发布」被点:说出第一处还没填的项
+    onCreateDisabledTap() {
+      if (this.data.isSubmitting) return;
+      const check = couponForm.validate(this.data.createForm);
+      if (!check.ok) cyToast(check.message);
+    },
+
     onCreateSubmit() {
       if (!couponForm.CREATION_ENABLED) return;
       if (this.data.isSubmitting) return;

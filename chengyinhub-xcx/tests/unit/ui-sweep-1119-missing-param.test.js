@@ -92,3 +92,16 @@ test('U2 journey 四页缺参态都有「返回」出口', () => {
   }
   assert.match(read('subpackageJourney/pages/seats/index.wxml'), /bind:cta="onStateCta"/);
 });
+
+test('领取礼品 / 入场码 / 参与详情:缺参同样落在「链接已失效 · 返回」', () => {
+  const gift = read('subpackageMember/market/gift/index.wxml');
+  assert.match(gift, /<cy-empty wx:if="\{\{state === 'missing'\}\}"[^>]*kind="missing-param"[^>]*cta="返回"[^>]*bind:cta="goBack"/);
+  assert.doesNotMatch(read('subpackageMember/market/gift/index.js'), /TOKEN_REQUIRED'\)/);
+  const ticket = read('pages/play/components/scene-qr-ticket/index.wxml');
+  assert.match(ticket, /<cy-empty wx:if="\{\{state === 'missing'\}\}"[^>]*kind="missing-param"[^>]*cta="返回"[^>]*bind:cta="close"/);
+  const ticketJs = read('pages/play/components/scene-qr-ticket/index.js');
+  assert.doesNotMatch(ticketJs, /缺少报名记录/);
+  assert.equal((ticketJs.match(/state: 'missing'/g) || []).length, 3);
+  const part = read('subpackageMember/components/scene-member-participation-detail/index.js');
+  assert.doesNotMatch(part, /missingTitle: '缺少参与记录'|loadErrorText: '请返回列表重新进入'|errorActionText: '返回参与列表'/);
+});

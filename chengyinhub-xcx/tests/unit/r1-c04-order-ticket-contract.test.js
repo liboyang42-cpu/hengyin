@@ -85,7 +85,9 @@ test('C04 mytemplate: loading、更多操作命中区与危险菜单语义明确
   const wxss = read('subpackageMember/mytemplate/mytemplate.wxss')
   // 2026-07-31 QA 复核(根因2+aaa追加):补 fill(剩余空间居中)+ size="lg"(文字/配图放大)
   // class="fill-slot":让宿主节点本身成为 flex 项(组件内部的 fill 撑不开宿主),整条 flex 链的最后一环
-  assert.match(wxml, /<cy-empty\s+wx:if="\{\{loading && list\.length === 0\}\}"\s+kind="loading"\s+fill\s+size="lg"\s+class="fill-slot"\s+title="正在加载你的节点玩法"\s*\/>/)
+  // 2026-11-21 一致性收口:首屏加载由 cy-empty kind="loading" 换成骨架;回包前(listLoaded=false)空态不抢先露出。
+  assert.match(wxml, /<cy-skeleton\s+wx:if="\{\{\(loading \|\| !listLoaded\) && !errorMsg && list\.length === 0\}\}"\s+type="card"/)
+  assert.match(wxml, /<cy-empty\s+wx:if="\{\{!loading && listLoaded && !errorMsg && list\.length === 0\}\}"\s+kind="empty"/)
   assert.match(wxml, /class="dot flex-cc"[^>]*aria-role="button"[^>]*aria-label="更多操作"/)
   assert.match(wxml, /class="dd dd--danger flex-ac"\s+bindtap="deleteItem"/)
   assert.match(rule(wxss, '.project .activity-list .li .item .item-txt2 .item-tit .dot'), /width:\s*88rpx[\s\S]*height:\s*88rpx/)
@@ -251,7 +253,7 @@ test('C04 mycanyuinfo: 缺参、接口失败、重试成功各自进入可观察
   ctx.page.onLoad()
   assert.equal(ctx.sandbox.requests.length, 0, '缺少 id 时不应发无效请求')
   assert.equal(ctx.page.data.loadState, 'missing-param', '缺参不能停在无限 loading')
-  assert.ok(ctx.page.data.loadErrorText)
+  assert.equal(ctx.page.data.missingTitle, '链接已失效', '缺参走统一缺参态')
 
   ctx = loadMyCanyuInfoPage()
   ctx.page.data.recordId = '33'

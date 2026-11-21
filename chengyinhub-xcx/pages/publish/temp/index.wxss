@@ -37,6 +37,8 @@ page {
   animation: cg-rise var(--cy-motion-slow) var(--cy-ease-out) var(--cy-motion-fast) backwards;
 }
 .cg-scroll-pad { height: calc(260rpx + env(safe-area-inset-bottom)); } /* 固定底栏 + 失败说明条之上要能把最后一行滚出来 */
+/* 失败说明条浮在底栏上方(bottom 160rpx)期间,尾部再让出说明条的高度,最后一行不被它盖住 */
+.cg-scroll-pad--err { height: calc(260rpx + var(--cy-space-8) + env(safe-area-inset-bottom)); } /* ds-ok: 260rpx 同上一行 */
 
 @keyframes cg-rise {
   0% { opacity: 0; transform: translateY(16rpx); }
@@ -567,13 +569,6 @@ page {
   box-sizing: border-box;
   min-height: 520rpx;
   padding: var(--cy-space-5) var(--cy-page-x);
-}
-
-.cg-load-state__hint {
-  margin-top: var(--cy-space-3);
-  color: var(--cy-text-secondary);
-  font-size: var(--cy-font-label);
-  text-align: center;
 }
 
 .cg-preview .cg-scroll-pad { height: var(--cy-space-6); }

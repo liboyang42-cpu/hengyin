@@ -3,7 +3,7 @@
   <cy-access-gate kind="login" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
-<view class="page" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+<view class="page {{state === 'no-permission' ? 'page--fill' : ''}}" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
   <cy-nav-bar custom-back bind:back="goBack" />
   <cy-page-title title="{{pageTitle}}" safe-top="{{false}}" />
 
@@ -11,8 +11,8 @@
   <cy-empty wx:elif="{{state === 'missing-param'}}" fill size="lg" kind="missing-param" cta="返回" bind:cta="goBack" class="cy-fade-in" />
   <!-- 2026-08-26:权限拒绝原来和加载失败共用一个 error 态,渲染成「暂时不可用 + 重新加载」——
        给了一个永远点不成功的重试按钮,用户不会知道是权限问题。现在拆成三条。 -->
-  <cy-error wx:elif="{{state === 'no-permission'}}" fill size="lg" retry=""
-            title="你没有成员治理的权限" sub="{{errorText || '仅主理人和管理员可用'}}" auto-back class="cy-fade-in" />
+  <cy-empty wx:elif="{{state === 'no-permission'}}" kind="no-permission" fill size="lg"
+            title="当前身份不能管理成员" cta="返回" bind:cta="goBack" class="cy-fade-in" />
   <cy-error load-failure wx:elif="{{state === 'network-error'}}" title="网络连接失败" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" auto-back class="cy-fade-in" />
   <cy-error load-failure wx:elif="{{state === 'error'}}" title="治理功能暂时不可用" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" auto-back class="cy-fade-in" />
   <cy-empty wx:elif="{{state === 'empty'}}" fill size="lg" title="暂无可治理成员" class="cy-fade-in" />
@@ -30,9 +30,9 @@
           </view>
         </view>
       </view>
-      <text class="action-note">请提交可核实的事实</text>
-      <view class="platform-button {{actingKey ? 'disabled' : ''}}" bindtap="reportTarget"
-        aria-role="button" aria-disabled="{{actingKey !== ''}}" hover-class="{{actingKey ? 'none' : 'cy-pressed'}}" hover-stay-time="80">填写事实并提交平台</view>
+      <!-- 1121:去掉「请提交可核实的事实」一行 —— 按钮本身就说了「填写事实」;页内自绘药丸 → cy-btn,
+           本模式只有这一个动作,actingKey 非空即它在提交,用 loading 转圈而不是灰掉无声 -->
+      <view class="platform-cta"><cy-btn variant="primary" loading="{{actingKey !== ''}}" bindtap="reportTarget">填写事实并提交平台</cy-btn></view>
     </view>
 
     <!-- CU-C-84:能否申诉的前提是「本人当前有没有有效封禁」,判据来自 /cases/mine 的 activeBan。
@@ -55,8 +55,7 @@
         </view>
       </view>
       <text class="action-note">申诉通过后解封，需重新入会</text>
-      <view class="platform-button {{actingKey ? 'disabled' : ''}}" bindtap="appealBan"
-        aria-role="button" aria-disabled="{{actingKey !== ''}}" hover-class="{{actingKey ? 'none' : 'cy-pressed'}}" hover-stay-time="80">填写理由并提交申诉</view>
+      <view class="platform-cta"><cy-btn variant="primary" loading="{{actingKey !== ''}}" bindtap="appealBan">填写理由并提交申诉</cy-btn></view>
     </view>
 
     <!-- Figma 290:621「治理记录」在最上面，「对成员执行」第二——manage 模式下把顺序对齐；

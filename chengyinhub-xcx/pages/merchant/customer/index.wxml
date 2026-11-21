@@ -30,9 +30,9 @@
 
     <view class="cu-batch" wx:if="{{selecting}}">
       <text class="cu-batch-count">已选 {{selectedIds.length}} / 100</text>
-      <button hover-class="cy-pressed" hover-stay-time="80" class="cu-inline-button" bindtap="toggleSelectMode">取消批量</button>
+      <cy-btn class="cu-inline-button" variant="secondary" size="sm" bindtap="toggleSelectMode">取消批量</cy-btn>
       <input class="cu-batch-input" value="{{batchTagName}}" maxlength="16" placeholder="输入标签名称" bindinput="onBatchTagInput" />
-      <button hover-class="cy-pressed" hover-stay-time="80" class="cu-inline-button cu-inline-button--primary" loading="{{batchSubmitting}}" bindtap="submitBatchTag">添加</button>
+      <cy-btn class="cu-inline-button" variant="primary" size="sm" loading="{{batchSubmitting}}" bindtap="submitBatchTag">添加</cy-btn>
       <cy-inline-error class="cu-batch-error" wx:if="{{batchError}}" kind="error"
         title="标签未添加" sub="{{batchError}}" />
     </view>
@@ -43,10 +43,10 @@
       <text wx:elif="{{exportState === 'DOWNLOAD_FAILED'}}">导出文件已生成，这台手机没能下载下来</text>
       <text wx:elif="{{exportState === 'EXPIRED'}}">导出已过期，请重新创建</text>
       <text wx:elif="{{exportState === 'FAILED'}}">导出失败</text>
-      <button hover-class="cy-pressed" hover-stay-time="80" wx:if="{{exportState === 'SUCCESS' || exportState === 'DOWNLOAD_FAILED'}}"
-              class="cu-inline-button" bindtap="downloadExport">{{exportState === 'DOWNLOAD_FAILED' ? '重新下载' : '下载并打开'}}</button>
-      <button hover-class="cy-pressed" hover-stay-time="80" wx:if="{{exportError && (exportState === 'PENDING' || exportState === 'RUNNING')}}"
-              class="cu-inline-button" bindtap="retryExportStatus">重新查询</button>
+      <cy-btn wx:if="{{exportState === 'SUCCESS' || exportState === 'DOWNLOAD_FAILED'}}"
+              class="cu-inline-button" variant="secondary" size="sm" bindtap="downloadExport">{{exportState === 'DOWNLOAD_FAILED' ? '重新下载' : '下载并打开'}}</cy-btn>
+      <cy-btn wx:if="{{exportError && (exportState === 'PENDING' || exportState === 'RUNNING')}}"
+              class="cu-inline-button" variant="secondary" size="sm" bindtap="retryExportStatus">重新查询</cy-btn>
       <cy-inline-error class="cu-batch-error" wx:if="{{exportError}}" kind="data"
         title="导出状态更新中" sub="{{exportError}}" />
     </view>

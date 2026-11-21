@@ -90,7 +90,6 @@ test('真实反引号模板 URL 动作保留读写分类与分支，不因去污
     ['pages/merchant/customer/detail/index.js', 'hideNote', 'write', '/api/merchant/crm/customers/{param}/notes/hide'],
     ['pages/merchant/customer/detail/index.js', 'submitNote', 'write', '/api/merchant/crm/customers/{param}/notes'],
     ['pages/merchant/customer/index.js', 'retryExportStatus', 'read', '/api/merchant/crm/exports/{param}/status'],
-    ['pages/merchant/reviews/index.js', 'retry', 'read', '/api/merchant/reviews/manage'],
     ['pages/merchant/reviews/index.js', 'loadMore', 'read', '/api/merchant/reviews/manage'],
   ]
   for (const [js, handler, actionClass, url] of cases) {

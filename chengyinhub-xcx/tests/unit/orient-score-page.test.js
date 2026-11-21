@@ -296,11 +296,11 @@ test('page component declarations and WXML actions resolve to real files and exe
 test('score recovery uses player-facing copy while keeping uncertainty explicit', () => {
   const js = fs.readFileSync(pagePath, 'utf8');
   const xml = fs.readFileSync(pagePath.replace(/\.js$/, '.wxml'), 'utf8');
-  assert.doesNotMatch(js + xml, /回执|服务端/);
+  assert.doesNotMatch(js + xml, /回执|服务端|原请求编号|冲正|流水/);
   const h = harness(); h.read(); h.page.sync(); h.confirm(); h.writes()[0].fail({ errMsg: 'network' });
   assert.equal(h.page.data.pending.kind, 'SYNC');
   h.respond(h.receipt(), { state: 'NOT_FOUND' });
-  assert.match(h.page.data.notice, /暂未查到记录不代表提交失败.*请勿重复操作/);
+  assert.match(h.page.data.notice, /还没查到结果.*不代表没提交成功.*先别重复操作/);
   h.page.sync(); assert.equal(h.writes().length, 1);
 });
 

@@ -406,6 +406,13 @@ Page({
     });
   },
 
+  // 星级/正文没填齐时「提交真实评价」置灰;点灰按钮在原错误位说清缺什么(同 submitReview 的校验口径)
+  onSubmitBlocked() {
+    if (this.data.submitting || !this.data.eligibility.canCreate) return;
+    const draft = buildCreateDraft(this.data);
+    if (!draft.valid) this.setData({ submitError: draft.error });
+  },
+
   submitReview() {
     if (this.data.submitting) return;
     if (!this.data.eligibility.canCreate) return;
