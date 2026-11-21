@@ -1,5 +1,5 @@
 const modal = require('../../utils/modal.js'); const pageMotion = require('../../utils/page-motion.js');
-const cyLoading = require('../../utils/loading.js');
+const cyLoading = require('../../utils/loading.js'); const imageUrl = require('../../utils/image-url.js'); const imgFade = require('../../utils/img-fade.js');
 const cyToast = require('../../utils/toast.js'); function openAddress() { return require('../../utils/open-address.js') }
 const { readPageStyle } = require('../../utils/font-scale.js');
 const { toTimestamp } = require('../../utils/datetime');
@@ -190,6 +190,8 @@ function buildRecoCardStyles(count, current, target, progress) {
 
 // feed/卡片多图:发布页(publish/fabu)写入的 imgArr 与章节同为 "," 分隔，历史数据也有 ";"。
 // 两种分隔符都吃，避免把整串 "a.jpg,b.jpg" 当成一个坏 URL。
+// 2026-11-21:卡片封面按显示槽位出缩略图在模板里做(img.wxs fit + imgCtx),数据里保留原图,
+// 缩略图出错时 binderror 能退回原图(utils/image-url.js onImgRenditionError)。
 function decorateImgs(list) {
   // 首页五类列表共用这条图片消费者链：
   // 统一拆分逗号/分号格式，避免整串落成一个坏 URL；
@@ -213,6 +215,8 @@ Page({
    * 页面的初始数据
    */
   data: {
+    imgOn: {}, // 2026-11-21:卡片封面在占位底色上淡入(utils/img-fade.js)
+    imgCtx: null, // 2026-11-21:卡片封面按槽位出缩略图(img.wxs fit;utils/image-url.js wxsContext)
     locationPrompt: null,
     // 下拉刷新转圈态(scroll-view refresher)
     refreshing: false,
@@ -302,6 +306,7 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad(options) {
+    this.setData({ imgCtx: imageUrl.wxsContext() });
     const that = this;
     this._unloaded = false;
     // V-15 / G-5:个人资料换头像、改昵称保存成功即换掉问候区,不等 onShow 回读
@@ -998,6 +1003,8 @@ Page({
     if (id) openScene('play-activity-detail', { id });
   },
 
+  onImgFadeLoad(e) { imgFade.onImgFadeLoad.call(this, e) },
+  onImgRenditionError(e) { imageUrl.onImgRenditionError.call(this, e) }, // 缩略图出错退回原图一次 + 会话熔断
   goTopic: function (e) {
     wx.navigateTo({
       url: '/pages/topic/index/index?id=' + e.currentTarget.dataset.id,

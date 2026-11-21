@@ -1,6 +1,7 @@
 // 城瘾 · 游玩页(深色地图沉浸版)
 // 视觉真值:设计原型工具「城瘾游玩页.dc.html」;对接说明见 docs/游玩页-深色地图沉浸版-对接说明.md
 // 数据:GET /api/play/nodes(现网) — 缺坐标/章节/模板呈现字段时做降级;扫码 /checkin、答题 /answer、到达 /arrive。
+const imageUrl = require('../../utils/image-url.js');
 const { stationLabel, playerTitle } = require('./utils/play-stage-pops.js'); const cyModal = require('../../utils/modal.js'); const { keepNumerals, keepMeasure } = require('./utils/keep-numerals.js');
 const cyLoading = require('../../utils/loading.js');
 const stationImage = require('../../utils/station-image.js');
@@ -148,18 +149,19 @@ const BLAST_SHARDS = 60;
 const HOLO = ['#BFE8E0', '#C9D8EE', '#D8C8E8', '#F5D6C8', '#F2E3B8'];
 
 const BRAND = '#FFFFFF';                                              // = --cy-color-play-accent
-// Canvas 不能读取 WXSS 变量；逐字同步 style/tokens.wxss 的 play-story 色板。
-// 这组只服务 Figma 220:1415/1437 完赛路线缩略图与保存卡，不改变游玩主舞台主题。
+// Canvas 不能读取 WXSS 变量；逐字同步 index.wxss「.finsheet」作用域里的深色 play-story 色板(2026-10-28 完成页整屏深色定稿)。
+// 完赛路线缩略图(finishSnap,路线卡快照失败时的兜底图)与保存卡都贴在这张深色完成页上,不能再是浅底白卡。
+// 对应:page/surface/text/muted = story-page/surface/text/muted;line = accent-soft(同 .finish-milestone__rail);ring = cta-fg(accent 上的字)。
 const PLAY_STORY_CARD = Object.freeze({
-  page: '#FFFFFF',
-  surface: '#F6F7FA',
-  text: '#111111',
-  muted: '#5E6470',
-  line: '#8B8F99',
-  accent: '#4B46F5',
-  fade: '#8C91A0',
-  ring: '#FFFFFF',
-  footer: 'rgba(17,17,17,.35)',
+  page: '#000000',
+  surface: '#1C1C1E',
+  text: '#FFFFFF',
+  muted: 'rgba(235,235,245,.6)',
+  line: 'rgba(255,255,255,.16)',
+  accent: '#FFFFFF',
+  fade: 'rgba(235,235,245,.6)',
+  ring: '#000000',
+  footer: 'rgba(235,235,245,.6)',
 });
 
 // 营业态是「状态」,即便在沉浸页也必须服从系统(迁移矩阵 §2.3)。
@@ -443,12 +445,13 @@ const themeTrade = require('./utils/theme-trade.js');
 const themePlans = require('./utils/theme-plans.js');
 const playerOps = require('./utils/theme-player-ops.js');
 const { loadStoryFont } = require('./utils/story-font.js'); const { storyFontUrl: STORY_FONT_URL } = require('../../utils/config.js');
-const playOverlays = require('./utils/play-hud-overlays.js'); const playTopbar = require('./utils/play-topbar.js'); const locOnce = require('./utils/play-location-once.js'); const { connectionFailure } = require('./utils/play-net-fail.js'); const playLook = require('./utils/play-look.js'); const stageEvents = require('./utils/stage-events.js'); const { perkOnlyOf } = require('./utils/perk-only.js'); const runStartMode = require('./utils/run-start-mode.js'); const evidenceKit = require('./utils/evidence-cards.js'); /* 故事流顶栏:罗盘⇄地图、背包、案件册、各站奖励 */
+const playOverlays = require('./utils/play-hud-overlays.js'); const playTopbar = require('./utils/play-topbar.js'); const locOnce = require('./utils/play-location-once.js'); const { connectionFailure } = require('./utils/play-net-fail.js'); const playLook = require('./utils/play-look.js'); const RM = require('../../utils/reading-motion.js'); const stageEvents = require('./utils/stage-events.js'); const { perkOnlyOf } = require('./utils/perk-only.js'); const runStartMode = require('./utils/run-start-mode.js'); const evidenceKit = require('./utils/evidence-cards.js'); /* 故事流顶栏:罗盘⇄地图、背包、案件册、各站奖励 */
 const feStoryGate = require('./utils/fe-story-gate.js'); const feVisit = require('./utils/fe-story-visit.js'); // 自由探索:只读已到访地点的章节
 const chapterVideo = require('./chapter-video.js'); const packDetail = require('./utils/pack-detail.js'); const menuOpen = require('./utils/menu-open.js'); const castPlay = require('./utils/cast-play.js'); /* 角色 Cast v1:页边名字 / 起名 / 人物表 / 角色卡 / 行内选项 */
 Page({
   ...chapterVideo.methods, ...kitCard.methods(), ...stagePops.methods(), ...castPlay.methods(req),
   ...journeyCheckRecovery.methods(req),
+  onImgRenditionError(e) { imageUrl.onImgRenditionError.call(this, e) }, // 缩略图出错退回原图一次 + 会话熔断(utils/image-url.js)
   ...orientLifecycle.methods((url, method, data) => {
     const header = { 'content-type': 'application/x-www-form-urlencoded' };
     switch (url) {
@@ -533,7 +536,7 @@ Page({
     // 自由探索选章弹窗:切换章节=先选章(cur=当前章下标),选完地点卡只出该章的点
     chapterPick: { show: false, cur: 0, states: [] },
     // 章节内容全屏态(Figma 3963:14970):一次一段、居中,滚动时按距屏心远近算 scale/opacity/blur
-    chapterFull: false, chapterParas: [],
+    chapterFull: false, chapterParas: [], readSkip: false,
     // 相册(2026-09-24 用户):故事流里一条一直滚动的圆角照片带,点开是白底全屏(3D 弯折卡 + 彩光 + 倒影)
     album: { show: false, cur: 0, title: '', images: [] },
     // 开场页(原型 game-intro,2026-09-24):故事主题开局先看这一页,这一局只看一次
@@ -685,6 +688,7 @@ Page({
   },
 
   onLoad(options) {
+    this.setData({ imgCtx: imageUrl.wxsContext() }); // 2026-11-21:站点/章节/剧情/完成页配图按槽位出缩略图(img.wxs fit)
     loadStoryFont(STORY_FONT_URL); /* P-60:故事流手写体(未配置 / 失败时 .cy-story-hand 回落系统字体) */ this._initTopbar(); /* 左上角上次选的显示(罗盘 / 地图) */
     this._playOwner = this._playMember();
     this._playLoginContext = this._capturePlayLoginContext();
@@ -1863,7 +1867,7 @@ Page({
     this._storyVel = Math.abs(top - (this._storyTop || 0)) / dt * 16;
     this._storyDir = top >= (this._storyTop || 0) ? 'up' : 'down';   // 往下滚 → 字从下方浮起
     this._storyTop = top;
-    this._storyAt = now;
+    this._storyAt = now; this._resumeReveal();   // 点一下落定之后再滚:新滑进来的段照常显形
     if (!this.data.chapStory.barAway) this.setData({ 'chapStory.barAway': true });   // 滑动时把底栏收下去
     if (this._settleTimer) clearTimeout(this._settleTimer);
     // 慢滑就地显形(样机是每次 scroll 都量一遍;这里量一次要跨线程查询,
@@ -1918,7 +1922,7 @@ Page({
           const cy = it.top + it.height / 2 - box.top;
           const inView = that.data.reducedMotion || (it.bottom > box.top + 80 && it.top < box.bottom - 40);
           if (ln.in && !inView) return { ...ln, in: false, dir: cy < 0 ? 'down' : 'up', d: 0 };
-          if (!ln.in && inView) { const d = (order++) * 0.35; if (chapterFull && ln.fx === 'decode') that._decodeLine(i); if (chapterFull && ln.typedKey) that._markTyped(ln.typedKey); return { ...ln, in: true, dir, d }; } /* 解码:滑进来时才开始还原 */
+          if (!ln.in && inView) { const d = (order++) * playLook.READ_STAGGER_S; if (chapterFull && ln.fx === 'decode') that._decodeLine(i); if (chapterFull && ln.typedKey) that._markTyped(ln.typedKey); return { ...ln, in: true, dir, d }; } /* 解码:滑进来时才开始还原 */
           return ln;
         });
         // 只发显形状态中真正改变的路径,不把文字、图片与玩法配置整表重传。
@@ -4175,7 +4179,7 @@ Page({
     const go = () => { this.setData({ 'storyIntro.show': false }); if (this._castGate(open)) return; open(); };
     if (this.data.reducedMotion) { go(); return; }
     this.setData({ 'storyIntro.out': true });
-    this._fxTimers = (this._fxTimers || []).concat(setTimeout(go, 400));
+    this._fxTimers = (this._fxTimers || []).concat(setTimeout(go, RM.READ_RISE_MS));   // 原 400
   },
   /** 初始状态页:这一局只看一次;没有可列的数值就不出 */
   _showStartState(rows) {
@@ -4191,7 +4195,7 @@ Page({
     const hide = () => this.setData({ 'startState.show': false });
     if (this.data.reducedMotion) { hide(); return; }
     this.setData({ 'startState.out': true });
-    this._fxTimers = (this._fxTimers || []).concat(setTimeout(hide, 400));
+    this._fxTimers = (this._fxTimers || []).concat(setTimeout(hide, RM.READ_RISE_MS));   // 原 400
   },
   /** 相册(块类型仍是 dream,面上叫「相册」):点故事流里那条照片带,打开白底全屏 */
   openAlbum(e) {
@@ -4402,7 +4406,7 @@ Page({
     this._booted = true;
     this._fxTimers = this._fxTimers || [];
     this.setData({ bootStage: 'on' });
-    [['line', 60], ['open', 520], ['fade', 1100], ['', 2000]].forEach(([stage, at]) => {
+    [['line', 30], ['open', 30 + RM.READ_RISE_MS], ['fade', 30 + 2 * RM.READ_RISE_MS], ['', 30 + 2 * RM.READ_RISE_MS + RM.READ_TRANSITION_MS]].forEach(([stage, at]) => {   // 2026-11-21 阅读面提速:原 60/520/1100/2000
       this._fxTimers.push(setTimeout(() => this.setData({ bootStage: stage }), at));
     });
   },
@@ -7425,7 +7429,7 @@ Page({
     // 飞字(双轨文案:探索值升等级,区别于可抵现积分)
     if (Number.isFinite(score) && score > 0 && data.firstTime !== false) {
       this.setData({ flyScore: true, flyText: '+' + score + ' 探索值' });
-      setTimeout(() => { if (effectsCurrent()) this.setData({ flyScore: false }); }, 1100);
+      setTimeout(() => { if (effectsCurrent()) this.setData({ flyScore: false }); }, RM.CAPS.waitMs);   // 原 1100;= --cy-motion-celebrate(飞分动画时长)
     }
     // 标记 just-wrote(手记写入)
     const justId = nodeId;
@@ -8876,8 +8880,8 @@ Page({
     // 结束「关机」(原型 bootout):整屏压成一条亮线,再收掉,然后进完成页
     this.setData({ 'previewEnding.off': 'off' });
     this._fxTimers = (this._fxTimers || []).concat(
-      setTimeout(() => { if (current()) this.setData({ 'previewEnding.off': 'gone' }); }, 480),
-      setTimeout(done, 820));
+      setTimeout(() => { if (current()) this.setData({ 'previewEnding.off': 'gone' }); }, RM.READ_SWEEP_MS - 60),   // 原 480 / 820
+      setTimeout(done, RM.READ_SWEEP_MS + RM.READ_RISE_MS - 60));
   },
   _finishKey() {
     return finishShown.finishShownKey(this._boundPlayOwner(), this.data.topicId, this.data.activityId, (this._routeState || {}).sessionId);
@@ -9140,7 +9144,7 @@ Page({
     const step = () => {
       this.setData({ fmPolyline: layers(i) });
       i += 1;
-      if (i <= pts.length) this._reviewTimer = setTimeout(step, 260);
+      if (i <= pts.length) this._reviewTimer = setTimeout(step, 2 * RM.READ_STAGGER_MS);   // 原 260/站;原生地图 polyline 每拍整层重绘,不压到 40
       else this._reviewTimer = null;
     };
     step();

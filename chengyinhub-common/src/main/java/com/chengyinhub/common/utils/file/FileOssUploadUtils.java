@@ -779,6 +779,90 @@ public class FileOssUploadUtils {
         return signedUrl.toString();
     }
 
+    /**
+     * 图片渲染档位(像素宽)。小程序按「显示槽位 CSS 宽 × DPR」向上取到这些档,
+     * 档位固定,同一张图最多这几种变体,OSS/微信图片缓存都能命中。
+     */
+    static final int[] IMAGE_RENDITION_WIDTHS = {160, 240, 320, 480, 640, 750, 960, 1080, 1280};
+    private static final Pattern IMAGE_RENDITION_KEY = Pattern.compile("upload/[0-9a-f]{32}\\.(jpg|jpeg|png)");
+
+    /**
+     * 2026-11-21 图片按槽位出图:玩家页原来直接拉 OSS 原图(几 MB),封面黑屏 5-10 秒。
+     * v1 预签名的 x-oss-process 属于签名子资源,客户端不能自己拼参数(拼了必 403),所以由这里重签:
+     * 先用同一 SDK 按原 key + 原 Expires 重算签名,只有本存储签出的、未过期的原图链接才换得到缩略版;
+     * 缩略版沿用原 Expires(链接确定、可缓存),不比原链接活得更久,也不暴露原图之外的任何对象。
+     */
+    public static String imageRenditionUrl(String objectKey, String expires, String accessKeyId,
+            String signature, int width, boolean webp) {
+        OSSClient client = createOssClient();
+        try {
+            return imageRenditionUrl(client, requiredEnv(OSS_BUCKET_NAME_ENV), objectKey, expires, accessKeyId,
+                    signature, width, webp, System.currentTimeMillis());
+        } finally {
+            client.shutdown();
+        }
+    }
+
+    /** SDK 缝:传入 client/桶名/当前时间,单测用真 SDK 本地签名验证,不触网。 */
+    static String imageRenditionUrl(OSSClient client, String bucket, String objectKey, String expires,
+            String accessKeyId, String signature, int width, boolean webp, long nowMillis) {
+        if (objectKey == null || !IMAGE_RENDITION_KEY.matcher(objectKey).matches()) {
+            throw new IllegalArgumentException("图片来源无效");
+        }
+        if (java.util.Arrays.binarySearch(IMAGE_RENDITION_WIDTHS, width) < 0) {
+            throw new IllegalArgumentException("图片尺寸无效");
+        }
+        long expiresSeconds;
+        try {
+            expiresSeconds = Long.parseLong(expires);
+        } catch (NumberFormatException | NullPointerException e) {
+            throw new IllegalArgumentException("图片链接无效", e);
+        }
+        if (expiresSeconds <= 0 || expiresSeconds > Long.MAX_VALUE / 1000L || expiresSeconds * 1000L <= nowMillis) {
+            throw new IllegalArgumentException("图片链接已过期");
+        }
+        if (StringUtils.isBlank(accessKeyId) || StringUtils.isBlank(signature)) {
+            throw new IllegalArgumentException("图片链接无效");
+        }
+        Date expiration = new Date(expiresSeconds * 1000L);
+        GeneratePresignedUrlRequest original = new GeneratePresignedUrlRequest(bucket, objectKey);
+        original.setExpiration(expiration);
+        URL expected = client.generatePresignedUrl(original);
+        if (expected == null) {
+            throw new IllegalStateException("OSS 未返回预签名 URL");
+        }
+        String expectedKey = decodedQueryParameter(expected.getQuery(), "OSSAccessKeyId");
+        String expectedSignature = decodedQueryParameter(expected.getQuery(), "Signature");
+        if (expectedKey == null || expectedSignature == null
+                || !MessageDigest.isEqual(expectedKey.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                        accessKeyId.getBytes(java.nio.charset.StandardCharsets.UTF_8))
+                || !MessageDigest.isEqual(expectedSignature.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                        signature.getBytes(java.nio.charset.StandardCharsets.UTF_8))) {
+            throw new IllegalArgumentException("图片链接签名无效");
+        }
+        GeneratePresignedUrlRequest rendition = new GeneratePresignedUrlRequest(bucket, objectKey);
+        rendition.setExpiration(expiration);
+        rendition.setProcess(imageRenditionProcess(width, webp));
+        return resolveGeneratedUrl(client, rendition);
+    }
+
+    /** 等比缩到不超过 width(不放大),质量 80;webp 只在客户端声明能显示时才转,PNG 透明度两种都保留。 */
+    static String imageRenditionProcess(int width, boolean webp) {
+        return "image/resize,w_" + width + ",m_lfit/quality,q_80" + (webp ? "/format,webp" : "");
+    }
+
+    private static String decodedQueryParameter(String rawQuery, String name) {
+        String raw = queryParameter(rawQuery, name);
+        if (raw == null) {
+            return null;
+        }
+        try {
+            return java.net.URLDecoder.decode(raw, java.nio.charset.StandardCharsets.UTF_8);
+        } catch (IllegalArgumentException malformed) {
+            return null;
+        }
+    }
+
     public static String getPresignedUrl(String url) {
         if(url==null) return "";
         String endpoint = ossProp(OSS_ENDPOINT_ENV);

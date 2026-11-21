@@ -29,7 +29,7 @@
 .castend__tick{ width:36rpx; height:8rpx; border-radius:4rpx; background:var(--cy-color-border-strong); } /* ds-ok 信任勾 18×4px 细条 */
 
 /* —— C 起名 / E1 登场人物:整屏深色,一屏一件事 —— */
-.cstart, .cbill{ position:fixed; inset:0; z-index:var(--cy-z-modal); display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box; padding:calc(var(--cy-space-8) * 2) var(--cy-space-6) calc(env(safe-area-inset-bottom) + var(--cy-space-6)); background:var(--cy-color-bg-page); color:var(--cy-color-text-primary); opacity:0; transition:opacity var(--cy-motion-slow, 350ms) var(--cy-ease-out, ease-out); }
+.cstart, .cbill{ position:fixed; inset:0; z-index:var(--cy-z-modal); display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box; padding:calc(var(--cy-space-8) * 2) var(--cy-space-6) calc(env(safe-area-inset-bottom) + var(--cy-space-6)); background:var(--cy-color-bg-page); color:var(--cy-color-text-primary); opacity:0; transition:opacity var(--cy-motion-read-rise, 180ms) var(--cy-ease-out, ease-out); }
 .cstart.is-in, .cbill.is-in{ opacity:1; }
 .play--reduced-motion .cstart, .play--reduced-motion .cbill{ transition:none; opacity:1; }
 .cstart__q{ font-size:var(--cy-type-page-title); font-weight:600; line-height:1.35; }
@@ -51,8 +51,8 @@
 .cbill__rule{ margin:var(--cy-space-3) 0; height:1px; background:var(--cy-color-border-strong); }
 
 /* —— E4 角色卡:深色半屏 —— */
-.ccard-mask{ position:fixed; inset:0; z-index:var(--cy-z-sheet); background:rgba(0,0,0,.5); opacity:0; transition:opacity var(--cy-motion-slow, 350ms) var(--cy-ease-out, ease-out); } /* ds-ok 遮罩 */
-.ccard{ position:fixed; left:0; right:0; bottom:0; z-index:var(--cy-z-sheet); box-sizing:border-box; max-height:80vh; overflow-y:auto; padding:var(--cy-space-6) var(--cy-space-5) calc(env(safe-area-inset-bottom) + var(--cy-space-6)); border-radius:var(--cy-radius-xl) var(--cy-radius-xl) 0 0; background:var(--cy-color-bg-elevated); color:var(--cy-color-text-primary); transform:translateY(100%); transition:transform var(--cy-motion-slow, 350ms) var(--cy-ease-out, ease-out); }
+.ccard-mask{ position:fixed; inset:0; z-index:var(--cy-z-sheet); background:rgba(0,0,0,.5); opacity:0; transition:opacity var(--cy-motion-read-rise, 180ms) var(--cy-ease-out, ease-out); } /* ds-ok 遮罩 */
+.ccard{ position:fixed; left:0; right:0; bottom:0; z-index:var(--cy-z-sheet); box-sizing:border-box; max-height:80vh; overflow-y:auto; padding:var(--cy-space-6) var(--cy-space-5) calc(env(safe-area-inset-bottom) + var(--cy-space-6)); border-radius:var(--cy-radius-xl) var(--cy-radius-xl) 0 0; background:var(--cy-color-bg-elevated); color:var(--cy-color-text-primary); transform:translateY(100%); transition:transform var(--cy-motion-read-transition, 320ms) var(--cy-ease-out, ease-out); }
 .ccard-mask.is-in{ opacity:1; }
 .ccard.is-in{ transform:none; }
 .play--reduced-motion .ccard, .play--reduced-motion .ccard-mask{ transition:none; }

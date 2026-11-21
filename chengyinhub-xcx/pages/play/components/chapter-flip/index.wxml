@@ -12,9 +12,9 @@
     <view class="cf__fade" aria-hidden="true"></view>
     <view class="cf__body">
       <view class="cf__ok" aria-hidden="true">
-        <cy-illus name="success" size="240" delay="{{400}}" reduced-motion="{{reducedMotion}}" />
-        <view class="cf__spk cf__spk--a"><cy-illus name="sparkles" size="88" delay="{{900}}" bare="{{true}}" reduced-motion="{{reducedMotion}}" /></view>
-        <view class="cf__spk cf__spk--b"><cy-illus name="sparkles" size="64" delay="{{1100}}" bare="{{true}}" reduced-motion="{{reducedMotion}}" /></view>
+        <cy-illus name="success" size="240" delay="{{120}}" reduced-motion="{{reducedMotion}}" />
+        <view class="cf__spk cf__spk--a"><cy-illus name="sparkles" size="88" delay="{{240}}" bare="{{true}}" reduced-motion="{{reducedMotion}}" /></view>
+        <view class="cf__spk cf__spk--b"><cy-illus name="sparkles" size="64" delay="{{280}}" bare="{{true}}" reduced-motion="{{reducedMotion}}" /></view>
       </view>
       <view class="cf__ek">{{endCard.kicker}}</view>
       <view class="cf__et" wx:if="{{endCard.title}}">{{endCard.title}}</view>

@@ -21,7 +21,8 @@ function rightMoment(input) {
   return { text, reveal, fragment, hold: !!(text || reveal || fragment) };
 }
 
-/** 只有「对了」时自动继续前停多久(毫秒)。够看清一行字,不拖节奏。 */
-const RIGHT_AUTO_MS = 1100;
+/** 只有「对了」时自动继续前停多久(毫秒)。够看清两个字,不拖节奏。
+ *  2026-11-21 业主「读得快的人会着急」:1100 → 600(阅读面自动前进上限 = reading-motion CAPS.waitMs)。 */
+const RIGHT_AUTO_MS = 600;
 
 module.exports = { rightMoment, RIGHT_AUTO_MS };

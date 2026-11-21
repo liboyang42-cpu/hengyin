@@ -11,14 +11,15 @@
 const E = require('./engine');
 const ambient = require('./ambient.js');
 const LC = require('../../utils/look-colors.js');
+const RM = require('../../../../utils/reading-motion.js');   // 2026-11-21 阅读面提速:章节门 / 通关的计时都按阅读档
 
 const AW = 360, AH = 378;                 // 面图分辨率(与 250×262 的面同比例)
 const NOISE = '░▒▓█▚▞■□';
 const LOGO_SRC = '/images/cy_logo_mark.png';
-const CARD_AT_MS = 3000;                  // 炸开后多久立起通关卡(标题、合计、两枚按钮)
+const CARD_AT_MS = 600;                   // 炸开后多久立起通关卡(标题、合计、两枚按钮);原 3000,2026-11-21 提速(点一下即立起,见 onTap)
 const CONFETTI_AFTER_CARD_MS = 2400;      // g20:卡立起来之后彩纸再撒多久
 // 2026-11-11 D-46 业主「点了才能进」:取代 2026-09-24「章节门停一下自己进」。章节完成屏(原 END_HOLD_MS 5.2s)与开场屏(原 START_AUTO_MS 3.6s)都不再自动前进,只在玩家点「下一站」/「读下去」(或屏上任意处)时前进。
-const DUST_MS = 1300;                     // l-play:细粉尘吹散时长(refs2/chapter-end-dissolve)
+const DUST_MS = 600;                      // l-play:细粉尘吹散时长(refs2/chapter-end-dissolve);原 1300。画布装饰,不挡下一章开场
 const COVER_H = 330;                      // 完成屏顶部照片高度(390 宽稿 px,与 .cf__cover 同值)
 const DOT = { cell: 11, r: 4.6, w: 330, h: 260, font: '800 236px sans-serif' };   // l-icons:圆点章节号(原型 dots.js chapter)
 const SEAL = { R1: 62, R2: 46, N1: 44, N2: 28, r1: 3, r2: 1.8, rg: 2.8, box: 100, cell: 7, font: '700 64px "Songti SC","STSong","Noto Serif SC",serif', spinMs: 9000 };
@@ -181,10 +182,10 @@ Component({
       this.setData({ start: true });
       if (info.number) ambient.start(this, { cx: this._cx, cy: this._cy });   /* 细节打磨 S2:章节号背后的光晕呼吸与星尘 */
       this._at(() => this.setData({ startIn: true }), 40);
-      const decodeEnd = this._decode(info, fromEnd ? 500 : 300);
+      const decodeEnd = this._decode(info, fromEnd ? RM.READ_RISE_MS : RM.READ_STAGGER_MS);   // 原 500 / 300
       // 文字逐字解码完才是真实高度(说明折行、数据行都是边解码边长高),等它落定再量,章节印才不压住「距离」等数据行
-      if (this._ctx && info.number) this._at(() => this._placeSeal(), Math.max(fromEnd ? 800 : 600, decodeEnd + 60));
-      this._at(() => this.setData({ cta: true }), fromEnd ? 1100 : 900);
+      if (this._ctx && info.number) this._at(() => this._placeSeal(), Math.max(RM.READ_TRANSITION_MS, decodeEnd + 60));
+      this._at(() => this.setData({ cta: true }), fromEnd ? RM.READ_TRANSITION_MS : RM.READ_RISE_MS);   // 原 1100 / 900;按钮一出现就能点,屏上任意处本来就能点
       // D-46:开场屏不再自己进正文,等玩家点「读下去」(onTap → _continue)。
     },
     _finale() {
@@ -198,12 +199,13 @@ Component({
       this.setData({ quiet: true });
       this._rot = 120;
       this._showScene();
-      this._at(() => this._turnTo(this._rot + 1080, 1500, E.easeInCubic, () => {
-        this._turnTo(1320, 560, E.easeOutBack, () => {
+      // 2026-11-21 提速:原 420 → 转 1500 → 回 560 → 420 才炸(≈2.9s),现 ≈1.1s;途中点一下直接落到通关卡(onTap → _skipFinale)
+      this._at(() => this._turnTo(this._rot + 1080, 600, E.easeInCubic, () => {
+        this._turnTo(1320, 240, E.easeOutBack, () => {
           this._rot = 240; this._flare = Date.now();
-          this._at(() => this._explode(), 420);
+          this._at(() => this._explode(), 120);
         });
-      }), 420);
+      }), 120);
     },
     _explode() {
       const q = E.faceQuad(2, 240, this._cx, this._cy, this._S);
@@ -216,7 +218,7 @@ Component({
       // g20 第三轮(业主「彩纸要回来,通关卡留着」):彩纸原来 2.6 秒就停撒、通关卡 3 秒才出,卡一立起来屏上就只剩零星几片。
       // 改成一直撒到卡出来之后 CONFETTI_AFTER_CARD_MS,卡和彩纸同屏;片子、颜色、下落都不变。
       this._confettiUntil = Date.now() + CARD_AT_MS + CONFETTI_AFTER_CARD_MS;
-      this._at(() => this._assembleLogo(false), 700);
+      this._at(() => this._assembleLogo(false), 240);
       this._at(() => { this.setData({ quiet: false, cta: true }); this._decode(this.data.info, 0); ambient.start(this, { cx: this._cx, cy: this._cy, rays: true }); }, CARD_AT_MS);   /* 细节打磨 S3:通关卡背后的光芒与光晕 */
     },
     /** 「读下去」/ 点任意处:方块炸散回星点,整屏淡出,交回正文(通关过场不走这里)。 */
@@ -227,14 +229,26 @@ Component({
       clearInterval(this._decodeTimer); this._decodeTimer = 0;
       this._scatter();
       this.setData({ out: true });
-      this._at(() => this.triggerEvent('continue'), 420);
+      this._at(() => this.triggerEvent('continue'), RM.READ_TRANSITION_MS);   // 原 420
     },
     /** 点任意处:章节完成屏 → 立刻吹散并浮现下一章开场;开场屏 → 进正文。通关过场中途不响应,等按钮出来。 */
     onTap() {
+      if (this.data.mode === 'finale') { this._skipFinale(); return; }
       if (this.data.mode !== 'gate') return;
       if (this._stage === 'end') { (this._timers || []).forEach(clearTimeout); this._timers = []; this._dissolve(); return; }
       if (this._stage === 'dissolve') return;
       this._continue();
+    },
+    /** 通关过场途中点一下:不等转完 / 炸完,直接落到通关卡(标志拼好、文字落定、按钮可点);卡已立起时不响应。 */
+    _skipFinale() {
+      if (this._stage !== 'finale' || this.data.cta || this._gone) return;
+      (this._timers || []).forEach(clearTimeout); this._timers = [];
+      this._turn = null; this._scene.show = false;
+      this._assembleLogo(true);
+      this._confettiUntil = Date.now() + CONFETTI_AFTER_CARD_MS;
+      this.setData({ quiet: false, cta: true });
+      this._decode(this.data.info, 0);
+      ambient.start(this, { cx: this._cx, cy: this._cy, rays: true });
     },
     /** 完成屏化成细粉尘:照片按像素取色成 1–2px 的粉尘,从右上角开始、带湍流往右上吹散;文字同步吹走;方块炸回星点。减弱动态时直接切。 */
     _dissolve() {
@@ -247,7 +261,7 @@ Component({
       this._spawnFineDust();
       this._scatter();
       this.setData({ endOut: true });
-      this._at(go, 1100);
+      this._at(go, RM.READ_TRANSITION_MS);   // 原 1100
     },
     /** 粉尘:照片缩到 cols×rows 取色(没有照片时用底色上的灰),每格一粒,延迟按「右上先走」排;每粒 1–2px,带正弦湍流,边飞边淡边变小。 */
     _spawnFineDust() {
@@ -295,16 +309,17 @@ Component({
     // ---------- 文字逐字解码(三棱锥转动时,标题、说明、数据从左到右一格格换上) ----------
     _decode(info, delay) {
       if (!info) return 0;
-      const fields = [['k', info.kicker, 22], ['t', info.title, 38], ['d', info.desc, 14]];
+      const C = RM.READ_CHAR_MS, G = RM.READ_STAGGER_MS, NOISE_MS = 60;   // 2026-11-21:原每字 22 / 38 / 14ms、行距 60、乱码 150ms
+      const fields = [['k', info.kicker, C], ['t', info.title, C], ['d', info.desc, C]];
       const stats = (info.stats || []).filter((s) => s && s.v !== '' && s.v != null);
       const plan = { k: [], t: [], d: [], stats: stats.map(() => ({ v: [], k: [] })) };
       const jobs = [];
-      fields.forEach(([key, text, step], f) => chars(text).forEach((c, i) => jobs.push({ set: (v) => { plan[key][i] = v; }, c, at: delay + f * 60 + i * step })));
+      fields.forEach(([key, text, step], f) => chars(text).forEach((c, i) => jobs.push({ set: (v) => { plan[key][i] = v; }, c, at: delay + f * G + i * step })));
       stats.forEach((s, j) => {
-        chars(s.v).forEach((c, i) => jobs.push({ set: (v) => { plan.stats[j].v[i] = v; }, c, at: delay + 280 + j * 90 + i * 40 }));
-        chars(s.k).forEach((c, i) => jobs.push({ set: (v) => { plan.stats[j].k[i] = v; }, c, at: delay + 320 + j * 90 + i * 30 }));
+        chars(s.v).forEach((c, i) => jobs.push({ set: (v) => { plan.stats[j].v[i] = v; }, c, at: delay + 3 * G + j * G + i * C }));
+        chars(s.k).forEach((c, i) => jobs.push({ set: (v) => { plan.stats[j].k[i] = v; }, c, at: delay + 4 * G + j * G + i * C }));
       });
-      const endAt = jobs.reduce((m, j) => Math.max(m, j.at + 150), 0);
+      const endAt = jobs.reduce((m, j) => Math.max(m, j.at + NOISE_MS), 0);
       clearInterval(this._decodeTimer);
       const start = Date.now(), reduced = this.data.reducedMotion;
       const step = () => {
@@ -312,7 +327,7 @@ Component({
         let pending = 0;
         jobs.forEach((j) => {
           if (t < j.at) { j.set({ c: '', n: 1 }); pending++; }
-          else if (t < j.at + 150 && j.c !== ' ') { j.set({ c: NOISE[Math.random() * NOISE.length | 0], n: 1 }); pending++; }
+          else if (t < j.at + NOISE_MS && j.c !== ' ') { j.set({ c: NOISE[Math.random() * NOISE.length | 0], n: 1 }); pending++; }
           else j.set({ c: j.c, n: 0 });
         });
         this.setData({ copy: plan });
