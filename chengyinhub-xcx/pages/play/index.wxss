@@ -508,6 +508,7 @@ page { background: var(--cy-color-bg-page); }
   mask-image:linear-gradient(to bottom, transparent 0, transparent var(--chfull-fade-end), #000 var(--chfull-fade-end)); } /* ds-ok 同上 */
 
 .chfull__pad{height:calc(440rpx + env(safe-area-inset-bottom));} /* x-fix4 N-1 底部留白含 Home 条安全区 */
+.chfull__pad:first-child{height:max(440rpx, calc(var(--chfull-fade-end) + var(--cy-space-6)));} /* ds-ok 正文第一段永远落在顶栏渐隐终点下方一档,不贴着罗盘 / 圆钮 */
 .chfull__cover{ display:block; width:100%; height:346rpx; border-radius:38rpx; background:#101418; } /* ds-ok 原型 图 180px / r20 / 底 #101418 */
 .chfull__para{display:block;min-height:0;padding:0;font-size:34rpx;line-height:1.95;color:var(--cy-color-text-primary);} /* ds-ok 用户指定原型正文 17px/1.95 */
 /* ★ 内嵌玩法(契约 §1.5):故事流里的这一块。三个变量把 cy-play-stage 从「四边贴死」
@@ -1741,7 +1742,11 @@ page { background: var(--cy-color-bg-page); }
 
 /* 用户指定故事流原型：复用探店日 st-line 显形及双层粒子，章节正文铺满视口。 */
 
-.chfull .st-line{margin-bottom:360rpx;} /* ds-ok 用户指定原型段间 180px */
+/* 2026-11-21 业主「字现在很乱」:章节故事流改成书页式阅读栏 —— 左对齐、段距一档 token、左宽右窄的页边(左边给说话人名字)。
+   居中 + 一屏一段(原 360rpx 段间)只留给自由探索的 .fx-story。宽块(玩法 / 图片)仍走 .chfull__para--wide 自己的边距。 */
+.chfull .st-line{margin-bottom:var(--cy-space-5);}
+.chfull .chfull__para:not(.chfull__para--wide){margin-left:var(--cy-space-8);margin-right:var(--cy-space-6);text-align:left;}
+.chfull .chfull__para--wide{margin-top:var(--cy-space-6);margin-bottom:var(--cy-space-6);}
 
 .chfull__para--wide{margin-left:40rpx;margin-right:40rpx;} /* ds-ok 原型游戏与图片块左右 20px */
 .chfull__img,.chfull__cover{width:100%;border-radius:var(--cy-radius-lg);}

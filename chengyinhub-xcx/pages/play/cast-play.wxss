@@ -2,22 +2,22 @@
    页边名字、配音行、记住这件事都用 currentColor + 透明度:跟着各外观的正文色走,深色底上即 rgba(255,255,255,.46)。
    动效只用过渡(token 时长),减弱动态时整层直接落定;不新增 @keyframes。 */
 
-/* —— 正文段:说话人在左侧页边,与首行齐平;段落左右各让 52rpx,名字永远不压字 —— */
-.chfull__para--who{ position:relative; padding-left:52rpx; padding-right:52rpx; }
-.chfull__who{ position:absolute; top:0; left:-80rpx; width:128rpx; font-size:20rpx; font-weight:400; line-height:66rpx; text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:.46; letter-spacing:.04em; font-family:-apple-system, "PingFang SC", "Noto Sans SC", sans-serif; } /* ds-ok 契约 10px/400/浅灰;66rpx = 正文 34rpx × 1.95 首行行高 */
-.chfull__vrow{ display:flex; align-items:center; justify-content:center; gap:var(--cy-space-1); margin:var(--cy-space-2) auto 0; padding:var(--cy-space-2) 0; font-size:22rpx; line-height:1.4; letter-spacing:.08em; text-align:center; opacity:.46; font-family:-apple-system, "PingFang SC", sans-serif; } /* ds-ok 契约 D1「▶︎ 0:08」小、居中、浅灰 */
-.chfull__remember{ display:block; margin-top:var(--cy-space-3); font-size:24rpx; line-height:1.5; text-align:center; opacity:.46; font-family:-apple-system, "PingFang SC", sans-serif; } /* ds-ok 契约 E3 12px 浅灰居中 */
+/* —— 正文段:说话人在左侧页边,与首行齐平;所有正文段同一条左边线,名字落在阅读栏左边的页边里(左 24rpx 起、64rpx 宽),永远不压字 —— */
+.chfull__para--who{ position:relative; }
+.chfull__who{ position:absolute; top:0; left:calc(var(--cy-space-3) - var(--cy-space-8)); width:calc(var(--cy-space-8) - var(--cy-space-3) - var(--cy-space-1)); font-size:20rpx; font-weight:400; line-height:66rpx; text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:.46; letter-spacing:.04em; font-family:-apple-system, "PingFang SC", "Noto Sans SC", sans-serif; } /* ds-ok 契约 10px/400/浅灰;66rpx = 正文 34rpx × 1.95 首行行高 */
+.chfull__vrow{ display:flex; align-items:center; justify-content:flex-start; gap:var(--cy-space-1); margin:var(--cy-space-2) 0 0; padding:var(--cy-space-2) 0; font-size:22rpx; line-height:1.4; letter-spacing:.08em; text-align:left; opacity:.46; font-family:-apple-system, "PingFang SC", sans-serif; } /* ds-ok 契约 D1「▶︎ 0:08」小、浅灰;跟正文同一条左边线 */
+.chfull__remember{ display:block; margin-top:var(--cy-space-3); font-size:24rpx; line-height:1.5; text-align:left; opacity:.46; font-family:-apple-system, "PingFang SC", sans-serif; } /* ds-ok 契约 E3 12px 浅灰,左对齐 */
 
 /* —— E2 首段首字下沉:约三行高,左浮;这一段改左对齐,首字才贴得住 —— */
 .chfull__para--drop{ text-align:left; }
 .chfull__drop{ float:left; margin:14rpx 18rpx 0 0; font-size:168rpx; line-height:.86; font-weight:600; } /* ds-ok 三行 ≈ 3 × 66rpx */
 
-/* —— E2 页脚:章名 · 第x站 / 共y站,11px,淡 —— */
-.chfull__runfoot{ position:absolute; left:var(--cy-space-5); right:var(--cy-space-5); bottom:calc(env(safe-area-inset-bottom) + var(--cy-space-3)); font-size:22rpx; line-height:1.4; letter-spacing:.06em; text-align:center; color:var(--atmo-muted, var(--cy-color-text-tertiary)); opacity:.6; pointer-events:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } /* ds-ok 契约 11px 淡 */
+/* —— E2 页脚:章名 · 第x站 / 共y站,11px,淡。2026-11-21 业主:原来钉在屏底、压在最后一段上;改成跟在章末流里,永远不叠正文 —— */
+.chfull__runfoot{ display:block; margin:var(--cy-space-5) var(--cy-space-6) 0; font-size:22rpx; line-height:1.4; letter-spacing:.06em; text-align:center; color:var(--atmo-muted, var(--cy-color-text-tertiary)); opacity:.6; pointer-events:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } /* ds-ok 契约 11px 淡 */
 
 /* —— E3 行内选项:阅读栏里,编号 1–3,发丝线分隔,16px —— */
 .chfull__choice{ text-align:left; }
-.chfull__choice-q{ margin-bottom:var(--cy-space-4); font-size:34rpx; line-height:1.95; text-align:center; } /* ds-ok 同正文 17px/1.95 */
+.chfull__choice-q{ margin-bottom:var(--cy-space-4); font-size:34rpx; line-height:1.95; text-align:left; } /* ds-ok 同正文 17px/1.95 */
 .chfull__choice-o{ display:flex; align-items:baseline; gap:var(--cy-space-3); padding:var(--cy-space-4) var(--cy-space-1); border-top:1px solid var(--cy-color-border-strong); transition:opacity var(--cy-motion-fast, 150ms) var(--cy-ease-out, ease-out); }
 .chfull__choice-o:last-child{ border-bottom:1px solid var(--cy-color-border-strong); }
 .chfull__choice-n{ flex:none; min-width:32rpx; font-size:26rpx; opacity:.46; font-variant-numeric:tabular-nums; font-family:-apple-system, "PingFang SC", sans-serif; } /* ds-ok 选项序号比选项字小一档(13px) */
