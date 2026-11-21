@@ -72,6 +72,8 @@ public class ShopGameProfileService {
     @Autowired(required = false)
     private MerchantPlanService plans;
 
+    /** The Spring constructor: with the package-private test constructor beside it, Spring needs to be told. */
+    @Autowired
     public ShopGameProfileService(JdbcTemplate jdbc, IMerchantAccessService access, OpsConsoleAudit audit) {
         this.jdbc = jdbc;
         this.access = access;
