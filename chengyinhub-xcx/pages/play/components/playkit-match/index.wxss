@@ -2,13 +2,12 @@
 
 /* cy-playkit-match · 连线(2026-10-23 主人定稿:城瘾 排序连线分类试玩原型)
    两列深色卡、中间一道缝画线;每一对一个颜色,圆点与线同色。
-   ⚠️ 卡片高、行缝、中缝宽是定值 —— index.js 的 ROW_H / ROW_GAP / GUTTER 按它们算线,改一边要改另一边。 */
+   线按 index.js 量到的锚点位置画,卡片高度可随文案变化。 */
 .ma { color: var(--ink); text-align: left; align-items: stretch; }
 .ma__prompt { font-size: var(--cy-type-sheet-title); font-weight: 800; line-height: 1.4; }
-.ma__hint { margin-top: var(--cy-space-2); font-size: var(--cy-type-label); color: var(--sub); }
-.ma__cols { margin-top: var(--cy-space-5); display: flex; align-items: flex-start; }
+.ma__cols { position: relative; margin-top: var(--cy-space-5); display: flex; align-items: flex-start; }
 .ma__col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 24rpx; }
-.ma__gutter { position: relative; flex: none; width: 96rpx; }
+.ma__gutter { flex: none; width: 96rpx; }
 .ma__card {
   height: 112rpx;
   display: flex;
@@ -32,27 +31,30 @@
   -webkit-box-orient: vertical;
 }
 .ma__card.is-sel { box-shadow: inset 0 0 0 4rpx var(--ink); }
-/* 圆点:没连是空心圈,连上了就是这一对的颜色,里面写第几条 */
-.ma__dot {
-  flex: none;
-  width: 36rpx; height: 36rpx;
+.ma__card.is-sel .ma__anchor { background: var(--ink); opacity: 1; }
+/* 锚点:贴在卡片内侧边上的小实心点(不是空心圈 —— 空心圈读起来像单选框)。连上了染成这一对的颜色,线就从它画出去 */
+.ma__card { position: relative; }
+.ma__anchor {
+  position: absolute;
+  top: 50%;
+  width: 16rpx; height: 16rpx;
+  margin-top: -8rpx;
   border-radius: 50%;
-  box-sizing: border-box;
-  border: 3rpx solid var(--sub);
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--cy-font-numeric);
-  font-size: var(--cy-type-caption);
-  font-weight: 800;
-  color: #0b0b0d;                             /* ds-ok 彩色圆点上的深色序号 */
-  transition: background .2s ease, border-color .2s ease;
+  background: var(--sub);
+  opacity: .5;
+  transition: background var(--cy-motion-fast) ease, opacity var(--cy-motion-fast) ease;
 }
+.ma__anchor--l { right: -8rpx; }
+.ma__anchor--r { left: -8rpx; }
+.ma__card.is-paired .ma__anchor { opacity: 1; }
+.ma__lines { position: absolute; left: 0; top: 0; right: 0; bottom: 0; pointer-events: none; z-index: 0; }
+.ma__col { position: relative; z-index: 1; }
 .ma__line {
   position: absolute;
-  left: 0;
   height: 6rpx;
   border-radius: 3rpx;   /* ds-ok 玩法屏装饰细节圆角,照原型 */
   transform-origin: 0 50%;
-  transition: transform .45s cubic-bezier(.2, .8, .2, 1), background .3s ease;
+  transition: transform var(--cy-motion-fade-swap) cubic-bezier(.2, .8, .2, 1), background var(--cy-motion-fast) ease;
 }
 .ma__line.is-new { transition: none; }
 /* 每一对一个颜色(原型 --p1..--p4 再补两色),线和两边圆点同色 */
@@ -63,7 +65,7 @@
 .ma__c4 { background: #F2C14E; border-color: transparent; }   /* ds-ok 同上 */
 .ma__c5 { background: #9AA0A6; border-color: transparent; }   /* ds-ok 同上 */
 /* 只有整体通过才全部变绿 */
-.ma__dot.is-right, .ma__line.is-right { background: var(--ok); border-color: transparent; }
+.ma__anchor.is-right, .ma__line.is-right { background: var(--ok); border-color: transparent; }
 .ma__press { opacity: .88; }
 .g-btn--press { opacity: .88; }
 .ma__fb {
@@ -75,7 +77,7 @@
 }
 .ma__fb.is-ok { background: rgba(18, 160, 111, .16); color: var(--ok); }   /* ds-ok 成功色软底,与 --ok 同源 */
 .ma__fb.is-no { background: var(--cy-color-status-danger-soft); color: var(--accent); }
-.ma--reduced .ma__line, .ma--reduced .ma__dot { transition: none; }
+.ma--reduced .ma__line, .ma--reduced .ma__anchor { transition: none; }
 
 /* 细节打磨二期 L1/L5/L7 */
 .ma__card { box-shadow: var(--cy-depth-rest); }

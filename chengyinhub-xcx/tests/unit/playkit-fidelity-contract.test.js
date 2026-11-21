@@ -171,8 +171,9 @@ test('★副标题一律不显示 —— 原型 .hdr .s{display:none},那是「�
 test('★精准停表照的是试玩台 #kit2 那块浅色玻璃屏,不是主手机的皮肤表', () => {
   const s = wxss('playkit-stopwatch')
   assert.ok(hasHex(s, '#F2F4F6'), '底色是 #F2F4F6 —— 走 skin-* 那套会变成深色屏')
-  assert.ok(/\.sw__btn \{[\s\S]{0,700}?background: #111111/.test(s),
-    '这一屏的主按钮是黑的，不是别的玩法那颗白胶囊 —— 浅玻璃底上白按钮会糊进背景')
+  // 2026-11-21 主人「所有玩法一种主按钮」:停表也用共享 .g-btn(白胶囊自带内描边与投影,浅底上托得住)
+  assert.match(wxml('playkit-stopwatch'), /class="g-btn[ "]/, '停表的主按钮走共享 .g-btn')
+  assert.doesNotMatch(s, /\.sw__btn \{/, '不再保留停表自己的一套黑按钮')
   assert.ok(/font-size: var\(--cy-play-display-4xl\)/.test(s), '走动的大数字使用 4xl 展示 token')
   assert.ok(/font-size: var\(--cy-play-display-2xl\)/.test(s), '准备屏的目标秒数使用 2xl 展示 token')
   assert.ok(/font-size: var\(--cy-type-data-xl\)/.test(s), '准备屏的误差使用 data-xl token')
@@ -183,7 +184,7 @@ test('★精准停表照的是试玩台 #kit2 那块浅色玻璃屏,不是主手
   assert.match(m, /\{\{targetText\}\}/)
   assert.match(m, /\{\{tolText\}\}/)
   assert.match(m, /aria-label="\{\{phase === 'over' \? '再来一局' : '点屏幕任意处停'\}\}"/)
-  assert.match(m, /本机测量读数/)
+  assert.doesNotMatch(m, /本机测量读数|切到后台会中断本机计时/, '不摆系统说明行')
 
   assert.ok(m.includes('目标') && m.includes('误差'), '目标 / 误差是一对带标签的数，不是一句说明')
   assert.ok(/—— · ——/.test(m), '数字藏了要有两道破折号占位，不能整块消失')

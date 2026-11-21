@@ -79,12 +79,6 @@
   box-shadow: 0 8rpx 0 #000;                                   /* ds-ok */
 }
 .bg__tally { font-size: var(--cy-type-label); color: var(--sub); }            /* ds-ok 原型 13px */
-.bg__foot {
-  font-size: var(--cy-type-body);
-  line-height: 1.6;
-  color: var(--sub);
-  max-width: 24em;
-}
 /* 点一格弹出来的说明。扫码格要说清楚为什么只认扫码 —— GPS 可以伪造 */
 .bg__panel {
   position: absolute;

@@ -84,7 +84,6 @@
   transition: border-color var(--cy-motion-fast) ease;
 }
 .hm__in.is-wrong { border-color: var(--accent); }
-.hm__ph { letter-spacing: 0; font-size: var(--cy-type-body); font-weight: 500; color: var(--sub); }
 /* 答错:红字落在输入框下,升 16rpx 淡入(规则:红字,不弹窗) */
 .hm__err {
   min-height: 36rpx;

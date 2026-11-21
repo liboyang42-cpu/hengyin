@@ -11,7 +11,9 @@
   position: relative;
   width: 100%;
   flex: 1 1 0;                            /* 原型 .scene 是撑开的,不是定高 */
-  min-height: 0;
+  /* 内嵌(故事流 / 编辑页试玩)时 --pk-card-h 是 auto,flex 撑不开,图区塌成 0 高 —— 试玩里只剩标题和清单、
+     一张图都看不到(2026-11-21 lead 走查)。给一个最小高;整屏时台面定高,flex 照旧撑满。 */
+  min-height: 720rpx;                     /* ds-ok 一张 3:4 场景图在内嵌宽度下看得清热区的高度 */
   border-radius: 36rpx;                   /* ds-ok 原型 18px */
   overflow: hidden;
   background: #0D0D10;                      /* ds-ok 底图没加载出来时的画布底 */
@@ -60,7 +62,6 @@
 .hd--reduced .hd__miss { animation: none; opacity: 0; }
 .hd__chips { display: flex; flex-wrap: wrap; gap: 14rpx; }   /* ds-ok 原型 7px,左对齐不居中 */
 .hd__prog { font-size: var(--cy-type-label); color: var(--sub); text-align: center; }   /* ds-ok 原型 13px */
-.hd__foot { font-size: var(--cy-type-body); color: var(--sub); }                       /* ds-ok 原型 14.5px */
 /* 提示:把藏着东西的那一象限泛一下琥珀。不直接指出位置 ——
    指出来这一关就没了,泛一片是「往这边找」。 */
 .hd__quad {
@@ -115,4 +116,3 @@
   position: absolute; left: -10rpx; right: -10rpx; bottom: -30rpx; height: 70rpx;
   border-radius: 50% 50% 0 0; background: rgba(255, 255, 255, .28);  /* ds-ok 场景图上的描边与占位,逐值照原型 */
 }
-.hd__ph-t { font-size: var(--cy-font-label); color: rgba(255, 255, 255, .5); }  /* ds-ok */

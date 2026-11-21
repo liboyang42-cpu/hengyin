@@ -91,7 +91,7 @@ Component({
       const done = this.data.phase === 'done';
       this.setData({
         phase: done ? 'done' : 'idle', big: '—', unit: '',
-        sub: done ? '本次测量已结束' : '刚才已中断，点一下重新测量',
+        sub: done ? '这一局结束了' : '刚才中断了，点一下重来',
       });
     },
 
@@ -146,7 +146,7 @@ Component({
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
 
       if (doneCount < (this.data.rounds || 3)) {
-        this.setData({ phase: 'idle', big: ms + '', unit: '毫秒 · 本机测量',
+        this.setData({ phase: 'idle', big: ms + '', unit: '毫秒',
           sub: doneCount + '/' + (this.data.rounds || 3) + ' 轮 · 点一下进入下一轮' });
         return;
       }
@@ -155,12 +155,12 @@ Component({
       const times = this._times.slice();
       const best = bestOf(times);
       const ok = passed(this._times, this.data.goalMs);
-      this.setData({ phase: 'done', big: best + '', unit: '毫秒 · 本机测量',
+      this.setData({ phase: 'done', big: best + '', unit: '毫秒',
         sub: doneCount + ' 轮里最快的一次' });
       // 判定屏由 stage 统一出:凡是「猜中了」都走同一张,答错不算通关
       const stage = this.selectComponent('#cy-play-stage');
       this._reporting = true;
-      if (stage) { if (ok) stage.win('最快 ' + best + ' 毫秒（本机测量）'); else stage.fail(false); }
+      if (stage) { if (ok) stage.win('最快 ' + best + ' 毫秒'); else stage.fail(false); }
       this._reporting = false;
       // 成绩报服务端,由它拿真实墙钟复核 —— 本地这几个数只是显示
       if (this._active(epoch)) this.triggerEvent('submit', withAttempt({ times: times, bestMs: best, passed: ok },

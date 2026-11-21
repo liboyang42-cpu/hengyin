@@ -68,4 +68,20 @@ function feedback(advanced, kind) {
   };
 }
 
-module.exports = { judge, feedback };
+/** 找东西试玩:点在图上的百分比坐标(0–100)→ 命中了哪个还没找到的热区 id,没中返回 ''。
+    热区坐标是 0–1 的比例,只来自作者本机这份配置,不进 kit。 */
+function hiddenHit(advanced, kit, point) {
+  const p = point || {};
+  if (!kit || !isFinite(p.x) || !isFinite(p.y)) return '';
+  const spots = (advanced && advanced.hiddenObject && Array.isArray(advanced.hiddenObject.hotspots)) ? advanced.hiddenObject.hotspots : [];
+  const found = {};
+  (kit.targets || []).forEach(t => { if (t && t.found) found[t.id] = true; });
+  const x = p.x / 100, y = p.y / 100;
+  const spot = spots.find((h, i) => {
+    const id = h.id || ('t' + i), r = Number(h.r) > 0 ? Number(h.r) : 0.08;
+    return !found[id] && Math.hypot(x - Number(h.x), y - Number(h.y)) <= r;
+  });
+  return spot ? (spot.id || ('t' + spots.indexOf(spot))) : '';
+}
+
+module.exports = { judge, feedback, hiddenHit };

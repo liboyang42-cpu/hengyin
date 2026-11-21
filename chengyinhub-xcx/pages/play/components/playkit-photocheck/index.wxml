@@ -2,16 +2,16 @@
      这一屏给一句人话判定、不过时的真实理由与剩余次数;降级(没能审)时只说没结论。 -->
 <cy-play-stage id="cy-play-stage" skin="qadark" show="{{show}}" back-label="退出" bind:back="onClose">
   <view class="pc g-col {{reducedMotion ? 'pk--reduced' : ''}} {{_motionReset ? 'pk--reset' : ''}}">
-    <view class="g-kicker pe pe--blur" style="--pe-d:.05s">{{title || '拍一张'}}</view>
-    <view class="pc__note pe pe--blur" style="--pe-d:.15s" wx:if="{{shotNote}}">{{shotNote}}</view>
+    <view class="g-kicker pe pe--blur" style="--pe-d:.05s;--pe-dur:.2s">{{title || '拍一张'}}</view>
+    <view class="pc__note pe pe--blur" style="--pe-d:.1s;--pe-dur:.2s" wx:if="{{shotNote}}">{{shotNote}}</view>
 
-    <view class="pc__frame is-filled pe pe--zoom" style="--pe-d:.2s;--pe-dur:.9s" wx:if="{{pendingPath}}">
+    <view class="pc__frame is-filled pe pe--zoom" style="--pe-d:.1s;--pe-dur:.2s" wx:if="{{pendingPath}}">
       <image class="pc__shot" src="{{pendingPath}}" mode="aspectFill" aria-role="img" aria-label="刚拍的照片，还没提交" />
     </view>
-    <view class="pc__frame {{lastUrl ? 'is-filled' : ''}} pe pe--zoom" style="--pe-d:.2s;--pe-dur:.9s" wx:elif="{{lastUrl}}">
+    <view class="pc__frame {{lastUrl ? 'is-filled' : ''}} pe pe--zoom" style="--pe-d:.1s;--pe-dur:.2s" wx:elif="{{lastUrl}}">
       <image class="pc__shot" src="{{lastUrl}}" mode="aspectFill" aria-role="img" aria-label="上一张提交的照片" />
     </view>
-    <view class="pc__frame pe pe--zoom" style="--pe-d:.2s;--pe-dur:.9s" wx:else>
+    <view class="pc__frame pe pe--zoom" style="--pe-d:.1s;--pe-dur:.2s" wx:else>
       <cy-icon class="pc__ph" name="camera" size="72" />
     </view>
 
@@ -34,7 +34,7 @@
     </view>
   </view>
 
-  <view class="g-btn {{busy || judging || passed ? 'g-btn--disabled' : ''}} pe pe--up" style="--pe-d:.9s" bindtap="onShoot"
+  <view class="g-btn {{busy || judging || passed ? 'g-btn--disabled' : ''}} pe pe--up" style="--pe-d:.1s;--pe-dur:.2s" bindtap="onShoot"
         aria-role="button" aria-label="{{judging ? (recordOnly ? '正在保存' : '正在审核') : (busy ? '正在处理照片' : (pendingPath ? '提交这张' : '拍一张'))}}" hover-class="g-btn--press" hover-stay-time="80">
     {{judging ? (recordOnly ? '保存中…' : '审核中…') : (busy ? '看一眼…' : (passed ? '这一张已定' : (pendingPath ? '提交这张' : (resubmit ? '重新提交' : (lastUrl ? '再拍一张' : '拍一张')))))}}
   </view>

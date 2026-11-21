@@ -2,9 +2,9 @@
                limit-seconds="{{limitSeconds}}" tries="{{maxTries}}"
                bind:back="onClose" bind:verdict="onVerdict">
   <view class="g-col hd {{reducedMotion ? 'hd--reduced' : ''}}">
-    <view class="hd__q pe pe--blur" style="--pe-d:.05s">{{title}}</view>
+    <view class="hd__q pe pe--blur" style="--pe-d:0s;--pe-dur:.2s">{{title}}</view>
 
-    <view class="hd__scene pe pe--zoom" style="--pe-d:.15s" bindtap="onTapScene"
+    <view class="hd__scene pe pe--zoom" style="--pe-d:.05s;--pe-dur:.2s" bindtap="onTapScene"
           hover-class="hd__scene--press" hover-stay-time="60"
           aria-role="button" aria-label="在图上点中藏起来的目标">
       <!-- 画框按底图原比例收在台面里(不裁),坐标都量这个框 —— 编辑页标点量的也是原图,
@@ -15,7 +15,6 @@
            读起来像加载失败,而这一屏的全部内容就是那张图。 -->
       <view class="hd__ph" wx:else>
         <view class="hd__ph-frame"><view class="hd__ph-sun"></view><view class="hd__ph-hill"></view></view>
-        <view class="hd__ph-t">这里会是你上传的那张图</view>
       </view>
       <!-- 命中的点留在图上,没命中的一圈涟漪就散了 —— 找过哪儿要看得见 -->
       <view class="hd__dot" wx:for="{{hits}}" wx:key="id"
@@ -28,9 +27,8 @@
 
     <!-- 待找清单:玩家要知道自己在找什么。label 是有意下发的,坐标不是 -->
     <view class="hd__chips">
-      <view class="hd__chip {{item.found ? 'is-found' : ''}} pe pe--pop" style="--pe-d:1s;--pe-i:{{index}}" wx:for="{{targets}}" wx:key="id">{{item.label}}</view>
+      <view class="hd__chip {{item.found ? 'is-found' : ''}} pe pe--pop" style="--pe-d:.1s;--pe-dur:.2s;--pe-s:.02s;--pe-i:{{index}}" wx:for="{{targets}}" wx:key="id" wx:if="{{item.label}}">{{item.label}}</view>
     </view>
-    <view class="hd__prog pe pe--up" style="--pe-d:1.2s">{{foundCount}} / {{total}}</view>
-    <view class="hd__foot pe pe--up" style="--pe-d:1.3s">点一下你觉得藏着的地方。</view>
+    <view class="hd__prog pe pe--up" style="--pe-d:.1s;--pe-dur:.2s">{{foundCount}} / {{total}}</view>
   </view>
 </cy-play-stage>

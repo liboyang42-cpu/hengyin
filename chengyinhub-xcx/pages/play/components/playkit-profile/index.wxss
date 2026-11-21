@@ -134,7 +134,7 @@
 .pf__opts { display:flex; flex-wrap:wrap; gap:16rpx; margin-top:16rpx; }
 .pf__opt { display:flex; align-items:center; box-sizing:border-box; min-height:var(--cy-btn-h); min-width:var(--cy-btn-h); padding:16rpx 24rpx; border-radius:var(--cy-radius-md); background:var(--soft); color:var(--ink); font-size:var(--cy-type-body); box-shadow:inset 0 0 0 1rpx var(--cy-color-play-field-line); }
 .pf__opt--press { opacity:.8; }
-.pf__opt.is-on { background:var(--ink); color:var(--bg); font-weight:700; }
+.pf__opt.is-on { box-shadow:inset 0 0 0 4rpx var(--ink); font-weight:700; }   /* 选中描粗边;原先反色字取 --bg,内嵌时 --bg 透明 → 选中项没字 */
 /* 原型 register 的红章:斜 8°,从放大模糊落下来(transition,不加 keyframes) */
 .pf__seal {
   align-self: flex-end;
