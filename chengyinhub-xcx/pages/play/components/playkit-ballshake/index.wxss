@@ -88,21 +88,6 @@
 .bl--reduced .bl__edge--on { animation: none; opacity: .5; }
 
 /* 玩法自己的按钮,照原型 .blb 的实测值 */
-.bl__b {
-  position: absolute;
-  left: 40rpx; right: 40rpx;              /* ds-ok 原型 20px */
-  bottom: calc(env(safe-area-inset-bottom) + 60rpx);
-  z-index: 5;
-  height: 104rpx;                         /* ds-ok 原型 52px */
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 52rpx;                   /* ds-ok 原型 26px */
-  background: var(--pk-embed-accent, #fff);  /* ds-ok R3-2 */
-  color: var(--pk-embed-bg, #0a0a0b);        /* ds-ok */
-  font-size: var(--cy-type-card-title);
-  font-weight: 800;
-}
-.bl__b--press { opacity: .88; }
-.bl__b--busy { opacity: .55; }
 
 /* 第十一轮 i1 跳过这一站:次要按钮,描边不填色,不抢「开始」;叠在主按钮上方 */
 .bl__skip {

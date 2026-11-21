@@ -28,10 +28,8 @@
   gap: 26rpx;                             /* ds-ok 原型 .qabody gap 13px */
   width: 100%;
   opacity: 1;
-  transition: opacity .5s ease;
+  transition: opacity var(--cy-motion-fade-swap, 200ms) ease;
 }
-.qa--intro .qa__body { opacity: 0; }
-.qa__cta--hold { opacity: 0; }        /* 按钮跟着一起等:题还没读完就给按钮,人只会扫按钮 */
 .qa--reduced .qa__body { transition: none; }
 
 .qa__media { width: 100%; }

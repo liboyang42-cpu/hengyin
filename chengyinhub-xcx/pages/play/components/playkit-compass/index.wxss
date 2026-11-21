@@ -12,7 +12,7 @@
   align-items: center;
   justify-content: center;
   gap: 40rpx;                                                       /* ds-ok 原型 20px */
-  padding: var(--pk-card-pad, 112rpx 56rpx 68rpx);                  /* ds-ok 原型 56px 28px 34px;内嵌由故事流给 */
+  padding: var(--pk-card-pad, 112rpx 56rpx 220rpx);                 /* ds-ok 原型 56px 28px;底部让出贴底的主按钮;内嵌由故事流给 */
   text-align: center;
 }
 
@@ -86,18 +86,6 @@
 }
 .cp__s { max-width: 24em; }
 
-.cp__b {
-  width: 100%;
-  height: 104rpx;                                                   /* ds-ok 原型 52px */
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 52rpx;                                             /* ds-ok 原型 26px */
-  background: #FFF;                                                 /* ds-ok 玩法屏主按钮统一白,同 .g-btn */
-  color: #111114;                                                   /* ds-ok 同上 */
-  box-shadow: inset 0 0 0 2rpx rgba(0, 0, 0, .10), 0 16rpx 40rpx rgba(0, 0, 0, .14); /* ds-ok 同 .g-btn */
-  font-size: var(--cy-type-card-title);
-  font-weight: 800;
-}
-.cp__b--press { opacity: .88; }
 
 /* P-23 跳过这一站:次要按钮,描边不填色,不抢「开始」 */
 .cp__skip {

@@ -14,7 +14,7 @@
         <view class="hm__how-link" wx:if="{{referenceUrl}}" bindtap="onOpenReference" aria-role="button" aria-label="看不清？查看资料图" hover-class="hm__press" hover-stay-time="80">看不清？查看资料图</view>
       </view>
 
-      <view class="hm__board pk-in {{solved ? 'is-ok' : ''}} {{verdict === 'no' ? 'is-no' : ''}}" aria-role="group" aria-label="{{solved ? '答案：' + display : (poolOn ? '答案格，点已填的格子把字退回' : '点格子，用系统键盘输入')}}">
+      <view class="hm__board pk-in {{solved ? 'is-ok' : ''}} {{verdict === 'no' ? 'is-no' : ''}}" aria-role="group" aria-label="{{solved ? '答案：' + display : (poolOn ? '答案格，点已填的格子把字退回' : '答案格')}}">
         <block wx:for="{{groups}}" wx:key="k" wx:for-item="g">
           <view wx:if="{{g.sep}}" class="hm__sep" aria-hidden="true">{{g.sep}}</view>
           <view wx:else class="hm__word-row">
@@ -47,7 +47,7 @@
         <!-- 系统键盘的接收框就在格子下面:输入什么,格子按顺序填什么 -->
         <input class="hm__in {{verdict === 'no' ? 'is-wrong' : ''}}" value="{{typedText}}" focus="{{focused}}" cursor="{{cursor}}" maxlength="{{blankCount}}"
                bindinput="onInput" bindfocus="onFocus" bindblur="onBlur" confirm-type="done" bindconfirm="onSubmit"
-               placeholder="点格子，用系统键盘输入" placeholder-class="hm__ph" aria-label="逐字猜词输入框" />
+               aria-label="逐字猜词输入框" />
         <view class="hm__err {{verdict === 'no' ? 'is-show' : ''}}" aria-live="polite">{{verdict === 'no' ? (wrongFeedback || '还不对，再看看题面') : ''}}</view>
       </block>
 

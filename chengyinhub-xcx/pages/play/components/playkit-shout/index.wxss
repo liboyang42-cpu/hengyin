@@ -36,18 +36,7 @@
   color: #e8f0ea;                                                   /* ds-ok */
   opacity: .75;
 }
-.sh__b {
-  width: 100%;
-  height: 104rpx;                                                   /* ds-ok 原型 52px */
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 52rpx;                                             /* ds-ok 原型 26px */
-  background: #e8f0ea;                                              /* ds-ok */
-  color: #0d1512;                                                   /* ds-ok */
-  font-size: var(--cy-type-card-title);
-  font-weight: 800;
-}
-.sh__b--press { opacity: .88; }
-.sh__b--busy { opacity: .55; }
+.sh__safe { font-size: var(--cy-type-caption); opacity: .6; }
 /* 第十一轮 i1 跳过这一站:次要按钮,描边不填色,不抢「开始」 */
 .sh__skip {
   width: 100%;

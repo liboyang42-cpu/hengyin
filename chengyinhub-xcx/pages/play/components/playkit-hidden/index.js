@@ -47,6 +47,17 @@ Component({
   observers: {
     'show, targets': function (show) {
       if (!show) return;
+      /* 编辑页试玩没有服务端:命中由作者本机按自己的配置判,写回 targets(found + 点的位置)。
+         带着这样的 target 就照它画点、计数,不重开一局;全找到由台面判赢。正式游玩下发的 targets 不带这些字段。 */
+      const found = (this.data.targets || []).filter(t => t && t.found && Number.isFinite(t.x) && Number.isFinite(t.y));
+      if (found.length) {
+        const hits = found.map(t => ({ id: t.id, x: t.x, y: t.y }));
+        this.setData({ hits, foundCount: hits.length, miss: null });
+        motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
+        const stage = this.selectComponent('#cy-play-stage');
+        if (hits.length >= this.data.total && stage) stage.win('全找到了');
+        return;
+      }
       this.setData({ hits: [], miss: null, foundCount: 0, quad: '' });
       const stage = this.selectComponent('#cy-play-stage');
       if (stage) stage.begin();

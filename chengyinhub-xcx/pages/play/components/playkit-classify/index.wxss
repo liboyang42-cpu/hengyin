@@ -4,7 +4,6 @@
    中间一摞浅色卡(一次一张),下面一排分类箱;点箱子,最上面那张飞进去。 */
 .cf { color: var(--ink); text-align: left; align-items: stretch; }
 .cf__prompt { font-size: var(--cy-type-sheet-title); font-weight: 800; line-height: 1.4; }
-.cf__hint { margin-top: var(--cy-space-2); font-size: var(--cy-type-label); color: var(--sub); }
 .cf__stack { position: relative; height: 460rpx; margin-top: var(--cy-space-3); flex: none; }
 .cf__card {
   position: absolute;
