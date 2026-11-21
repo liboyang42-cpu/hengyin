@@ -324,13 +324,55 @@ public class MarketingProductPurchaseServiceImpl implements IMarketingProductPur
             throw MarketingProductException.paymentRequired("PAYMENT_UNAVAILABLE", "支付服务暂不可用");
         }
         boolean appChannel = payChannel != null && "APP".equalsIgnoreCase(payChannel.trim());
+        String description = paymentDescription(order);
         Map<String, String> payParams = appChannel
-                ? wechatPayService.createGenericAppOrder(order.getOrderNo(), order.getTotalCashAmount(), "城瘾商品")
+                ? wechatPayService.createGenericAppOrder(order.getOrderNo(), order.getTotalCashAmount(), description)
                 : wechatPayService.createGenericOrder(order.getOrderNo(), order.getTotalCashAmount(),
-                        "城瘾商品", requireWxOpenId(callerMemberId));
+                        description, requireWxOpenId(callerMemberId));
         Map<String, Object> out = orderView(order);
         out.put("payParams", payParams);
         return out;
+    }
+
+    static final String DEFAULT_PAYMENT_DESCRIPTION = "城瘾商品";
+
+    /**
+     * 微信预下单 description：订单信息录入要求写明商品详情。只读成交时冻结的
+     * {@code productSnapshotJson}，不回读可变的商品配置；快照无商品名时才回落通用名。
+     * 长度截断仍由支付网关统一处理。
+     */
+    static String paymentDescription(MarketingProductOrder order) {
+        com.alibaba.fastjson2.JSONObject snapshot = null;
+        String json = order == null ? null : order.getProductSnapshotJson();
+        if (json != null && !json.trim().isEmpty()) {
+            try {
+                snapshot = JSON.parseObject(json);
+            } catch (RuntimeException broken) {
+                snapshot = null;
+            }
+        }
+        String name = snapshot == null ? null : snapshot.getString("productName");
+        if (name == null || name.trim().isEmpty()) return DEFAULT_PAYMENT_DESCRIPTION;
+        StringBuilder out = new StringBuilder(name.trim());
+        Integer validityKind = snapshot.getInteger("validityKind");
+        Integer validDays = snapshot.getInteger("validDays");
+        if (validDays != null && validDays > 0
+                && (Integer.valueOf(MarketingProduct.VALIDITY_RELATIVE_DAYS).equals(validityKind)
+                || Integer.valueOf(MarketingProduct.VALIDITY_ACTIVATE_ON_FIRST_USE).equals(validityKind))) {
+            out.append('·').append(validDays).append('天');
+        }
+        Integer fulfillmentKind = snapshot.getInteger("fulfillmentKind");
+        if (Integer.valueOf(MarketingProductOrder.FULFILLMENT_GIFT).equals(fulfillmentKind)) {
+            out.append("·赠送");
+        } else if (Integer.valueOf(MarketingProductOrder.FULFILLMENT_EXTRA_SEAT).equals(fulfillmentKind)) {
+            out.append("·加座");
+        }
+        Integer seatCount = snapshot.getInteger("seatCount");
+        Integer quantity = snapshot.getInteger("quantity");
+        long seats = (long) (seatCount == null || seatCount <= 0 ? 1 : seatCount)
+                * (quantity == null || quantity <= 0 ? 1 : quantity);
+        if (seats > 1) out.append('·').append(seats).append('人');
+        return out.toString();
     }
 
     private String requireWxOpenId(long memberId) {
