@@ -27,7 +27,7 @@ set -euo pipefail
 exec </dev/null
 
 # ---------------------------------------------------------------- pinned target (verified in the cloud run)
-local SHA=PINNED_SHA_PLACEHOLDER
+local SHA=9f06dba86c212ce753b66e82a0470fb1ae7dbabf
 local BRANCH=feature/r-x-be-test
 local REPO=https://github.com/liboyang42-cpu/hengyin
 
