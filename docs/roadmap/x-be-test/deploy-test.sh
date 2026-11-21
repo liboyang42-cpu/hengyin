@@ -179,7 +179,9 @@ local PRE=(
   migration_20261114_missing_topic_pricing_rule.sql
   migration_20261115_club_ops.sql
   migration_20261115_links_push.sql
-  migration_20261115_fog_map.sql
+  # TEST copy (docs/roadmap/x-be-test/sql/): the original's backfill fails with error 1055 under MySQL 8's default
+  # ONLY_FULL_GROUP_BY; the copy groups by one more derived column and writes the same rows.
+  migration_20261115_fog_map.test.sql
   migration_20261115_privacy_erasure.sql
   migration_20261115_seed_tools.sql
   migration_20261115_maps_backend.sql
@@ -230,11 +232,13 @@ local POST=(
   migration_20261116_stagger_channel_membership_job.sql
 )
 local f
-for f in "${PRE[@]}" "${POST[@]}"; do [ -f "$SQL/$f" ] || die "migration file missing in the clone: $f"; done
+local TESTSQL=$SRC/docs/roadmap/x-be-test/sql
+sqlpath() { case "$1" in *.test.sql) echo "$TESTSQL/$1" ;; *) echo "$SQL/$1" ;; esac; }
+for f in "${PRE[@]}" "${POST[@]}"; do [ -f "$(sqlpath "$f")" ] || die "migration file missing in the clone: $f"; done
 
 apply() { # file
   say "apply $1"
-  if ! docker exec -i "$MYSQL" mysql -uroot --default-character-set=utf8mb4 "$DB" < "$SQL/$1" > "$V/mig-$TS-$1.out" 2>&1; then
+  if ! docker exec -i "$MYSQL" mysql -uroot --default-character-set=utf8mb4 "$DB" < "$(sqlpath "$1")" > "$V/mig-$TS-$1.out" 2>&1; then
     sed -n '1,20p' "$V/mig-$TS-$1.out"
     return 1
   fi
