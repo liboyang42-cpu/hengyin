@@ -39,25 +39,38 @@ function instance(def, data, extra) {
   return inst
 }
 
+// 第 8 章一站、第 9 章两站 + 一个延伸站 + 一个故事玩法(没坐标,绑在外滩):站序按整条路线的地点数,跨章连续
 const NODES = [
-  { nodeId: 1, chapterId: 9, name: '1 · 老门' },
-  { nodeId: 2, chapterId: 9, name: '外滩', hookText: '风从江面上吹过来。后面的话不进引子' },
-  { nodeId: 3, chapterId: 9, num: 101, name: '延伸站' },
-  { nodeId: 4, chapterId: 8, name: '别章' },
+  { nodeId: 1, chapterId: 8, name: '1 · 老门', lat: 31, lng: 121 },
+  { nodeId: 2, chapterId: 9, name: '外滩', hookText: '风从江面上吹过来。后面的话不进引子', lat: 31, lng: 121 },
+  { nodeId: 3, chapterId: 9, num: 101, name: '延伸站', lat: 31, lng: 121 },
+  { nodeId: 4, chapterId: 9, name: '别章', lat: 31, lng: 121 },
+  { nodeId: 5, chapterId: 9, name: '江边的信', placeNodeId: 2 },
 ]
 
-test('抬头:第N站按本章主线排序,延伸站与别章不占站序;认不出站序只写站名', () => {
-  assert.deepEqual(shell.stationHead(NODES[1], { id: 9, name: '雾起' }, NODES), { station: '第2站 · 外滩', chapter: '雾起' })
-  assert.deepEqual(shell.stationHead(NODES[0], { id: 9, name: '雾起' }, NODES), { station: '第1站 · 老门', chapter: '雾起' })
+test('抬头:第N站是整条路线的站序(与地点卡角标「第 N 站」同号,跨章不重数),章名小字另起;站名不进抬头', () => {
+  assert.equal(shell.stationIndex(NODES[1], NODES), 2, '第 9 章第 1 站在整条路线里是第 2 站,不是章内的第 1 站')
+  assert.equal(shell.stationIndex(NODES[3], NODES), 4, '延伸站在地图上也占号(与 buildChapter placeNum 同口径)')
+  assert.equal(shell.stationIndex(NODES[2], NODES), 0, '延伸站自己不写站序')
+  assert.equal(shell.stationIndex(NODES[4], NODES), 2, '故事玩法借它绑定的地点的号')
+  assert.equal(shell.stationIndex(Object.assign({}, NODES[3], { placeNum: 7 }), NODES), 7, 'buildChapter 记过的 placeNum 优先')
+  assert.deepEqual(shell.stationHead(NODES[1], { id: 9, name: '雾起' }, NODES), { station: '第2站', chapter: '雾起' })
+  assert.deepEqual(shell.stationHead(NODES[0], { id: 8, name: '开场' }, NODES), { station: '第1站', chapter: '开场' })
   assert.equal(shell.stationHead(NODES[2], { id: 9 }, NODES).station, '延伸站')
-  assert.equal(shell.stationHead(NODES[3], { id: 8 }, NODES).station, '第1站 · 别章')
   assert.equal(shell.stationHead({ nodeId: 99, name: '路过' }, {}, NODES).station, '路过')
-  // 章节不是这一站的章 / 结局章:不写章名(不把别处的名字挂上来)
+  // 章名只写这一站所在的章;终章 / 别的章不写;没章名退章序
   assert.equal(shell.stationHead(NODES[1], { id: 8, name: '别的章' }, NODES).chapter, '')
   assert.equal(shell.stationHead(NODES[1], { id: 9, name: '尾声', ending: true }, NODES).chapter, '')
-  // 没章名退章序
   assert.equal(shell.stationHead(NODES[1], { id: 9, idxLabel: '第一章' }, NODES).chapter, '第一章')
   assert.deepEqual(shell.stationHead(null, {}, NODES), { station: '', chapter: '' })
+})
+
+test('标题只写一次:去掉路线名前缀 / 第N关 / 站号;地点行与标题是同一个站就不写', () => {
+  const node = { nodeId: 40, name: '4 · 这一拍怎样留下（量子晨 · 旧水塔外围）', gameTitle: '今晚轮到我们上场 · 第4关 这一拍怎样留下' }
+  assert.equal(shell.stationTitle(node), '这一拍怎样留下')
+  assert.equal(shell.stationTitle({ name: '4 · 这一拍怎样留下' }), '这一拍怎样留下')
+  assert.equal(shell.sameStation(node.name, '这一拍怎样留下'), true)
+  assert.equal(shell.sameStation('邮政大楼', '谁在钟楼留下了钥匙'), false)
 })
 
 test('引子:钩子 → 引语 → 描述(占位句不算)→ 故事首句 → 玩法 lead;一句一行,与题面同句不重复', () => {
@@ -76,7 +89,7 @@ test('引子:钩子 → 引语 → 描述(占位句不算)→ 故事首句 → �
 test('shellHead:什么都没有给 null(台面原样);有就带读屏整句', () => {
   assert.equal(shell.shellHead({ nodeId: 5 }, {}, [], {}), null)
   const head = shell.shellHead(NODES[1], { id: 9, name: '雾起' }, NODES, { type: 'qa', title: '几点了' })
-  assert.deepEqual(head, { station: '第2站 · 外滩', chapter: '雾起', lead: '风从江面上吹过来。', label: '第2站 · 外滩，雾起，风从江面上吹过来。' })
+  assert.deepEqual(head, { station: '第2站', chapter: '雾起', lead: '风从江面上吹过来。', label: '第2站，雾起，风从江面上吹过来。' })
 })
 
 test('「继续故事」只在玩完后出现;问答 / 猜词说「继续」;结果屏回故事流说「继续故事」', () => {
@@ -92,7 +105,7 @@ test('页面挂钩:会话视图刷新时 playKit 带上抬头;内嵌 / 没 kit �
   const api = kitCard.methods()
   const page = { data: { advancedPlay: { show: true, node: NODES[1] }, chapter: { id: 9, name: '雾起' }, nodes: NODES } }
   const state = api._withShellHead.call(page, { show: true, kit: { type: 'estimate', title: '多少级台阶' }, readyForBase: false })
-  assert.equal(state.head.station, '第2站 · 外滩')
+  assert.equal(state.head.station, '第2站')
   assert.equal(state.show, true, '原有字段原样保留')
   assert.equal(api._withShellHead.call(page, { show: false, kit: null }).head, null)
   assert.match(read('pages/play/index.js'), /playKit: this\._withShellHead\(kitCard\.playKitState\(/)
@@ -135,7 +148,7 @@ test('整屏收回故事流:淡入 + 没玩完时对准这一站那一段;玩完
 
 test('整屏台面:抬头沿宿主找 cy-playkit 的 shellHead,与 show 同一拍写进 data(第一帧就画出来,不跳)', () => {
   const def = loadComponent('pages/play/components/play-stage/index.js')
-  const head = { station: '第2站 · 外滩', chapter: '雾起', lead: '风从江面上吹过来。', label: 'x' }
+  const head = { station: '第2站', chapter: '雾起', lead: '风从江面上吹过来。', label: 'x' }
   const wrapper = { data: { shellHead: head } }
   const kit = { data: { head: '把物品放进框里' }, selectOwnerComponent: () => wrapper }   // 拍物成卡自己的 head 是字符串,不认
   const stage = instance(def, { reducedMotion: true }, { selectOwnerComponent: () => kit })
@@ -225,14 +238,62 @@ test('作者结果反馈带上角色信任那一句与「继续故事」', () =>
   assert.deepEqual(r5.data.r5Verdict, { show: false, kind: 'win', text: '', images: [], remember: '', cta: '' })
 })
 
-test('玩法开始弹窗:抬头写「第N站 · 站名」,说明与整屏台面的引子同一份', () => {
+test('玩法开始弹窗:抬头 = 路线全程站序 + 章名小字;站名只在大标题写一次;说明与整屏台面的引子同一份', () => {
   const pops = require('../../pages/play/utils/play-stage-pops.js')
   const api = pops.methods()
   const page = { data: { nodes: NODES, chapter: { id: 9, name: '雾起' }, chapterParas: [{ kind: 'game', nodeId: 2 }], playKit: {} },
     _isStoryGame: () => true }
   page.setData = (patch) => Object.assign(page.data, patch)
   api.openKitStart.call(page, { currentTarget: { dataset: { origin: 'story', nodeid: 2 } } })
-  assert.equal(page.data.kitStart.station, '第2站 · 外滩')
+  assert.equal(page.data.kitStart.station, '第2站')
+  assert.equal(page.data.kitStart.chapter, '雾起')
+  assert.equal(page.data.kitStart.title, '外滩')
   assert.equal(page.data.kitStart.lede, '风从江面上吹过来。')
-  assert.match(read('pages/play/play-stage.wxml'), /<text class="ks__t lk-title">\{\{kitStart\.station \|\| '玩法'\}\}<\/text>/)
+  const stage = read('pages/play/play-stage.wxml')
+  assert.match(stage, /<text class="ks__t lk-title">\{\{kitStart\.station \|\| '玩法'\}\}<\/text><text class="ks__c lk-dim" wx:if="\{\{kitStart\.chapter\}\}">\{\{kitStart\.chapter\}\}<\/text>/)
+})
+
+test('玩法开始弹窗(实走 9914701 第 4 站):站卡角标第 4 站 ⇒ 抬头「第4站」+ 章名;标题只写一次;不再重复一行站名', () => {
+  const pops = require('../../pages/play/utils/play-stage-pops.js')
+  const api = pops.methods()
+  const nodes = [
+    { nodeId: 1, chapterId: 1, name: '1 · 开场', lat: 31, lng: 121, placeNum: 1 },
+    { nodeId: 2, chapterId: 1, name: '2 · 第二站', lat: 31, lng: 121, placeNum: 2 },
+    { nodeId: 3, chapterId: 2, name: '3 · 那算了', lat: 31, lng: 121, placeNum: 3 },
+    { nodeId: 4, chapterId: 2, name: '4 · 这一拍怎样留下（量子晨 · 旧水塔外围）', gameTitle: '今晚轮到我们上场 · 第4关 这一拍怎样留下',
+      lat: 31, lng: 121, placeNum: 4, photo: 'https://x/chapter2.jpg', hookText: '鼓点停了一下。' },
+  ]
+  const page = { data: { nodes, chapter: { id: 2, name: '那算了' }, sheet: { node: nodes[3] }, playKit: {} } }
+  page.setData = (patch) => Object.keys(patch).forEach((k) => {   // 认「kitStart.coverIn」这种路径键,与小程序 setData 同
+    const keys = k.split('.'); let o = page.data
+    keys.slice(0, -1).forEach((x) => { o = o[x] })
+    o[keys[keys.length - 1]] = patch[k]
+  })
+  api.openKitStart.call(page, { currentTarget: { dataset: { origin: 'sheet' } } })
+  const ks = page.data.kitStart
+  assert.equal(ks.station, '第4站', '与站卡角标同号,不是章内第 2 站')
+  assert.equal(ks.chapter, '那算了')
+  assert.equal(ks.title, '这一拍怎样留下', '不带路线名、不带第N关')
+  assert.equal(ks.place, '', '地点行就是这一站本身:不再写第三遍')
+  const shown = [ks.station, ks.chapter, ks.title, ks.lede, ks.place].join('|')
+  assert.equal(shown.split('这一拍怎样留下').length - 1, 1, '站名只出现一次')
+  assert.equal(ks.cover, 'https://x/chapter2.jpg', '站点自己没图:走兜底链给的章节图,不放放大镜插图')
+  assert.equal(ks.coverIn, false)
+  api.onKitCoverLoad.call(page); assert.equal(page.data.kitStart.coverIn, true, '图到了再淡入')
+  api.onKitCoverError.call(page); assert.equal(page.data.kitStart.cover, '', '图挂了回插图,不留破图')
+})
+
+test('玩法开始弹窗封面:站点图 → 章节图 → 路线封面(页面 _stationPhotos);故事玩法借绑定地点;一张都没有才回插图', () => {
+  const pops = require('../../pages/play/utils/play-stage-pops.js')
+  assert.equal(pops.kitStartCover(null, { imgUrl: 'a.jpg,b.jpg' }, null), 'a.jpg')
+  assert.equal(pops.kitStartCover(null, { imgUrl: '' }, { photo: 'place.jpg' }), 'place.jpg')
+  const page = { _stationPhotos: () => ({ photo: 'route-cover.jpg' }) }
+  assert.equal(pops.kitStartCover(page, { imgUrl: '' }, null), 'route-cover.jpg')
+  assert.equal(pops.kitStartCover({ _stationPhotos: () => ({ photo: '' }) }, { imgUrl: '' }, null), '')
+  const stage = read('pages/play/play-stage.wxml')
+  assert.match(stage, /<view wx:if="\{\{kitStart\.cover\}\}" class="ks__cov"><image class="ks__cov-img [^"]*" src="\{\{img\.one\(kitStart\.cover\)\}\}" mode="aspectFill" bindload="onKitCoverLoad" binderror="onKitCoverError" \/><\/view>/)
+  assert.match(stage, /<view wx:else class="ks__cov ks__cov--illus">/)
+  const wxss = read('pages/play/play-stage.wxss')
+  assert.match(wxss, /\.ks__cov-img \{[^}]*opacity: 0;[^}]*transition: opacity var\(--cy-motion-fade-swap\)/)
+  assert.match(wxss, /\.ks__cov-img\.is-still \{ opacity: 1; transition: none; \}/)
 })

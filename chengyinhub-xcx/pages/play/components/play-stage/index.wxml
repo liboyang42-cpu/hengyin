@@ -10,7 +10,7 @@
         aria-role="button" aria-label="退出这个玩法"
         hover-class="st__press" hover-stay-time="80"><cy-icon name="back" size="40" /></view>
   <!-- 玩法外壳(2026-11-21):整屏玩法的纸纹 / 暗角跟主题外观走(--lk-tex,look-tokens.wxss);
-       返回钮右侧同一行写「第N站 · 站名 · 章名」,下一行是这一站的一句引子(故事字体)。
+       返回钮右侧同一行写「第N站」(路线全程站序,与地点卡角标同号)+ 章名小字,站名由玩法标题写一次;下一行是这一站的一句引子(故事字体)。
        数据由玩家页 cy-playkit 的 shell-head 给(utils/game-shell.js);没有(编辑页试玩 / 老主题)就整块不出。
        内嵌在故事流里时故事就在上面,与返回钮一起由 --pk-back-display:none 收起。占的是返回钮那一行本来空着的位置,不挪内容。 -->
   <view class="st__tex" aria-hidden="true"></view>

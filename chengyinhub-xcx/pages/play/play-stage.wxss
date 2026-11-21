@@ -10,11 +10,17 @@
 
 /* ===== 玩法开始弹窗(proto pop-kitstart / .kstart) ===== */
 .ks__h { display: flex; align-items: center; justify-content: space-between; padding: 36rpx 36rpx 0; flex: none; }
-.ks__t { font-size: 40rpx; } /* ds-ok 原型 px×2;圆角随外观 --lk-r */
+.ks__hk { display: flex; align-items: baseline; gap: var(--cy-space-2); min-width: 0; flex: 1; }
+.ks__t { flex: none; font-size: 40rpx; } /* ds-ok 原型 px×2;圆角随外观 --lk-r */
+.ks__c { flex: 1; min-width: 0; font-size: var(--cy-type-caption); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* 章名小字:站序后面另起,不和站名挤一串 */
 .ks__x { width: 64rpx; height: 64rpx; border-radius: 50%; background: var(--lk-ctl); color: var(--lk-ink); display: flex; align-items: center; justify-content: center; }
 .look--stardust .ks__x { background: rgba(var(--lk-ink-rgb), .16); }
 .ks__b { flex: 1; min-height: 0; padding: 28rpx 36rpx 12rpx; box-sizing: border-box; }
 .ks__cov { display: block; width: 100%; height: 300rpx; border-radius: calc(var(--lk-r) - 4rpx); background: var(--lk-ctl); } /* ds-ok 原型 px×2;圆角随外观 --lk-r */
+.ks__cov { position: relative; overflow: hidden; }
+.ks__cov-img { display: block; width: 100%; height: 100%; opacity: 0; transition: opacity var(--cy-motion-fade-swap) var(--cy-ease-out); } /* 占位底色(--lk-ctl)先在,图到了淡入;尺寸固定,不跳 */
+.ks__cov-img.is-in { opacity: 1; }
+.ks__cov-img.is-still { opacity: 1; transition: none; } /* 减弱动态:直接出现 */
 .ks__cov--illus { display: flex; align-items: center; justify-content: center; }
 .look--stardust .ks__cov { -webkit-mask-image: linear-gradient(#000 70%, transparent); mask-image: linear-gradient(#000 70%, transparent); } /* ds-ok 原型:星尘封面下沿融进玻璃 */
 .ks__meta { display: flex; flex-wrap: wrap; gap: 16rpx; margin: 24rpx 0 8rpx; }
