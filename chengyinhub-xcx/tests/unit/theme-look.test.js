@@ -167,7 +167,7 @@ test('星尘与末世优化(2026-10-30 业主):字处在环境里、浅底深色
   assert.deepEqual(fx.dustMod({ style: 'STARDUST', params: {}, legacy: true }), { n: 1, speed: 1, col: null }, '老主题外观不变')
   assert.equal(fx.create({ style: 'STARDUST', params: {}, legacy: true }, 390, 844).kind, 'none')
   assert.match(read('pages/play/utils/play-look.js'), /raw \? \{\} : \{ legacy: true \}/)
-  assert.match(read('pages/play/index.js'), /if \(!near && !lookFx\.dustMod\(that\._look\)\.clean\) that\._paintSceneLight/)
+  assert.ok(!/_paintSceneLight/.test(read('pages/play/index.js')), '2026-11-21:阅读面不再叠场景光(光晕 / 斜光束 / 散景)')
   const ctx = new Proxy({}, { get: (t, k) => (/^create(Radial|Linear)Gradient$/.test(k) ? () => ({ addColorStop() {} }) : () => {}), set: () => true })
   const storm = fx.create({ style: 'SURVIVAL', params: { climate: 'STORM', volatility: 'VIOLENT', edge: 'HP' }, palette: 'WHITE' }, 390, 844)
   assert.equal(storm.light, true)
@@ -218,9 +218,10 @@ test('整流程走查修正(2026-10-30):预览带风格、故事流铺主题底�
   const js = read('pages/play/index.js')
   assert.match(js, /that\._applyLook\(d\.look\); const chapter = that\.buildChapter\(d, nodes\);/, '预览链先落风格再建章节')
 
-  // 故事流根节点:选过风格的主题才带章节 / 主题配色类(老主题保持纯黑故事背景)
+  // 故事流根节点:章节故事流 chfull 一律铺本路线的章节 / 主题配色(2026-11-21 业主:别每条路线都同一种底);自由探索 fx-story 仍只给选过风格的主题
   const wxml = read('pages/play/index.wxml')
-  assert.equal((wxml.match(/\{\{lookOn \? chapter\.atmosphereClass : ''\}\}/g) || []).length, 2, '城市定向 chfull 与自由探索 fx-story 两处')
+  assert.equal((wxml.match(/\{\{lookOn \? chapter\.atmosphereClass : ''\}\}/g) || []).length, 1, '自由探索 fx-story 一处')
+  assert.match(wxml, /<view class="chfull [^"]*\{\{chapter\.atmosphereClass\}\}" wx:if="\{\{chapterFull\}\}"/)
   const look = read('pages/play/utils/play-look.js')
   assert.match(look, /lookOn: !look\.legacy/)
   assert.match(read('pages/play/index.wxss'), /\.fx-story\[class\*="atmosphere--"\]\{ background:var\(--atmo-bg\);/)

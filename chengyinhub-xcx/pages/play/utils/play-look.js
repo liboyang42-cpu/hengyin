@@ -109,6 +109,9 @@ function methods() {
     },
     /** 故事流开 / 关时调:浅底主题开着故事流用黑字状态栏,关掉回白字(封面、卡包页仍是深底)。 */
     _storyStatusBar(on) {
+      // 老主题(没配风格)的章节故事流也铺本章配色(2026-11-21):本章是白底时同样换黑字;自由探索 fx-story 仍是纯黑底,不换
+      const d = this.data || {};
+      if (this._look && this._look.legacy) this._storyLight = !!d.chapterFull && (d.chapter || {}).atmospherePreset === 'WHITE';
       if (!this._storyLight || typeof wx.setNavigationBarColor !== 'function') return;
       wx.setNavigationBarColor({ frontColor: on ? '#000000' : '#ffffff', backgroundColor: on ? '#ffffff' : '#000000' }); /* ds-ok 微信 API 只收这两个字面色 */
     },

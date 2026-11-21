@@ -1963,11 +1963,6 @@ Page({
         shape: i % 3, vx: (Math.random() - 0.5) * 0.6, vy: (Math.random() - 0.5) * 0.4,
         k: Math.random() });   // k < 当前场景密度 n 才画:同一批星点,场景稀了就隐掉一部分
     }
-    // 原型的散景:12 团大光斑,只在「城市」那一景出现
-    this._bokeh = [];
-    for (let i = 0; i < 12; i++) {
-      this._bokeh.push({ x: Math.random(), y: Math.random(), r: 30 + Math.random() * 60, warm: Math.random() > 0.5, v: (Math.random() - 0.5) * 0.04 });
-    }
     this._dust = seed;
     const paint = (id, near) => wx.createSelectorQuery().in(this).select('#' + id)
       .fields({ node: true, size: true }).exec((res) => {
@@ -1987,7 +1982,7 @@ Page({
           if (!near) that._sceneCur = storyScene.step(that._sceneCur || storyScene.initial(that._sceneTarget || 'city'),
             that._sceneTarget || 'city', 0.025);
           const cu = that._sceneCur || storyScene.initial('city');
-          if (!near && !lookFx.dustMod(that._look).clean) that._paintSceneLight(ctx, W, H, cu); /* 星尘:背景干净,不叠场景光 */
+          /* 2026-11-21 业主「别用这种光」:阅读面不再叠场景光(径向光晕 / 斜光束 / 散景),底色只由主题配色给 */
           const lm = lookFx.dustMod(that._look); /* 主题画面风格对浮尘的修正(星尘调密度/速度/光色,其它风格收掉大半) */ const rgb = 'rgb(' + (lm.col || cu.col).map(Math.round).join(',') + ')';
           for (const p of that._dust) {
             if ((p.z > 1.2) !== near) continue;
@@ -2056,31 +2051,6 @@ Page({
           || sessionKey !== this._sessionKey()
           || chapterId !== String((this.data.chapter || {}).id || '')) return;
       this.setData({ chapterGameAnchor: anchor });
-    });
-  },
-
-  /** 场景的光:径向光晕 / 斜光束 / 散景(原型 cosmos 引擎的前三层,底色交给章节氛围的 CSS)。 */
-  _paintSceneLight(ctx, W, H, cu) {
-    ctx.globalAlpha = 1;
-    if (cu.glow > 0.005) {
-      const g = ctx.createRadialGradient(cu.gx * W, cu.gy * H, 0, cu.gx * W, cu.gy * H, Math.max(W, H) * 0.75);
-      g.addColorStop(0, 'rgba(' + cu.gcol.map(Math.round).join(',') + ',' + cu.glow + ')');
-      g.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-    }
-    if (cu.beam > 0.005) {
-      const g = ctx.createLinearGradient(W, 0, 0, H);
-      g.addColorStop(0, 'rgba(255,250,235,' + cu.beam + ')');
-      g.addColorStop(0.6, 'rgba(255,250,235,' + cu.beam * 0.25 + ')');
-      g.addColorStop(1, 'rgba(255,250,235,0)');
-      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(W * 0.55, 0); ctx.lineTo(W, 0); ctx.lineTo(W * 0.35, H); ctx.lineTo(-W * 0.15, H); ctx.closePath(); ctx.fill();
-    }
-    if (cu.bokeh > 0.01) (this._bokeh || []).forEach((b) => {
-      b.x += b.v / 60; if (b.x < -0.1) b.x = 1.1; if (b.x > 1.1) b.x = -0.1;
-      const g = ctx.createRadialGradient(b.x * W, b.y * H, 0, b.x * W, b.y * H, b.r);
-      const col = b.warm ? '255,190,120' : '140,180,255';
-      g.addColorStop(0, 'rgba(' + col + ',' + 0.13 * cu.bokeh + ')'); g.addColorStop(1, 'rgba(' + col + ',0)');
-      ctx.fillStyle = g; ctx.fillRect(b.x * W - b.r, b.y * H - b.r, b.r * 2, b.r * 2);
     });
   },
 
