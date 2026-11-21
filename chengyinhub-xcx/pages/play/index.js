@@ -1369,7 +1369,7 @@ Page({
       chapterCount: Array.isArray(chapters) ? chapters.length : 0,
     });
   },
-  /** 中键:未开始→开始(起时钟+开定位),进行中→暂停,已暂停→继续。三态一个键,与设计稿一致。 */
+  /** 中键:未开始→开始(起时钟),进行中→暂停,已暂停→继续。三态一个键;定位等到点「我已到达」/ 首站开局时才问。 */
   onRunToggle() {
     // 长按满 3 秒已经走了结束链路,松手时还会补一记 tap —— 不吞掉它，结束完会紧接着又开始一局
     if (this._runHoldTriggered) { this._runHoldTriggered = false; return; }
@@ -1382,8 +1382,8 @@ Page({
       this._ensureSessionClock();
       // 时钟在数据加载时就建好了,若不重置,「开始」那一刻的用时已经跑了十几秒
       if (this._sessionClock) this._sessionClock.start();
-      // requestPlayLocation 自己带了预览/演示/已开启/请求中四道前置判断,这里不重复挡;已开局(续玩)不再问
-      if (this._startLocationNeeded()) this.requestPlayLocation();
+      // N3(2026-11-21):开始计时不问定位 ——
+      // 定位只在点「我已到达」(onArriveTap)/ 首站开局闸(_startGate)那一刻经 _locateThen 问
       this._syncRunState();
       return;
     }
@@ -2543,7 +2543,7 @@ Page({
   openHeroNav() {
     const node = (this.data.nodes || []).find((n) => String(n.nodeId) === String(this.data.hero.node.nodeId));
     const lng = node && Number(node.lng), lat = node && Number(node.lat);
-    if (!lng || !lat) { cyToast('这家还没标坐标'); return; }
+    if (!lng || !lat) { cyToast('这家还没标位置'); return; }
     wx.openLocation({ longitude: lng, latitude: lat, name: node.name || '', address: node.address || '', scale: 18 });
   },
 
@@ -4203,9 +4203,9 @@ Page({
     if (!this.data.storyIntro.show || this.data.storyIntro.out) return;
     storyResume.patch(this._runSessionScope(), { intro: true });
     this._startThemeBgm();
-    // P-26:城市定向有带坐标的站时,在「开始游戏」这一刻问一次定位,而不是等到第一道题交卷
-    const located = Number(this.data.mode) === 1 && (this.data.nodes || []).some((n) => n && n.lat && n.lng);
-    const open = () => { this.openChapterFull(); if (located && this._startLocationNeeded()) this.requestPlayLocation(); };
+    // N3(2026-11-21):故事开场不问定位;到点「我已到达」/ 首站开局闸时才问(_locateThen),原 P-26 进场即问已撤
+    // 玩家先看封面与故事,定位弹窗不再压在开场上
+    const open = () => { this.openChapterFull(); };
     const go = () => { this.setData({ 'storyIntro.show': false }); if (this._castGate(open)) return; open(); };
     if (this.data.reducedMotion) { go(); return; }
     this.setData({ 'storyIntro.out': true });
@@ -4666,11 +4666,11 @@ Page({
         } else if (!first && that.data.chapterFull) that.openChapterFull();
         // R9-21:服务端态允许继续时,把上次暂停的会话恢复成 paused(不重开、不丢用时)
         that._restoreRunSession(d, routeState, nodes);
-        if (that._startLocationNeeded() && !that._entryLocationOffered && d.registered !== false && that._playable && !that.data.allDone
-            && that.data.runState !== 'paused' && nodes.some(node => !node.done && node.lat && node.lng)) {
-          that._entryLocationOffered = true;
-          that.requestPlayLocation();
-        }
+        // N3(2026-11-21 新玩家走查):进页不再弹定位说明 —— 那一刻玩家还没看到封面与故事。
+        // 定位只在真正需要时问:点「我已到达」(onArriveTap)或首站开局闸(_startGate),都经 _locateThen;
+        // 到达规则(开局 300 米 / 精度放宽 / 扫码)一条不变。
+        // (原 a1-v3-21 进页即问一次的入口在此撤掉)
+        // 系统授权框在真正取位置那一刻由系统自己弹,这里不预先拉起
         that.loadTeamProgress();   // P1 带领场探测(club 场次才 exists,内部自管轮询)
         that._loadPlayerGameModule();
         // P-10/P-11 第四轮 rig 实测:个人局主题运行时(任务 / 背包)原来只在第一次到达的回包里带回来,
@@ -5311,16 +5311,16 @@ Page({
     this.setData({ gpsHint: '正在请求定位…' });
     cyModal.show({
       title: '开启定位',
-      content: '只在开局时检查你是否在第一站 300 米内，之后各站不再要求定位。开启后可记录走过的路线；选择先用扫码可扫码到达。位置只在本游玩页前台使用，锁屏、切到后台、暂停、结束或离开后停止。',
+      content: '确认你在第一站附近，只在本页前台使用。',   // N3:一句理由,其余交给系统授权框
       confirmText: '开启定位',
-      cancelText: '先用扫码',
+      cancelText: '扫站点码',
       success(result) {
         if (!current()) return;
         if (!result.confirm) {
           unavailable('定位未开启 · 可扫码完成到达');
           that._playLocationDeclined = true; that._loc = null;
           storyResume.patch(that._runSessionScope(), { locationDeclined: true });
-          that._stopTracking();
+          that._stopTracking(); that._scanInstead();   // 「扫站点码」:接着打开扫码到达
           return;
         }
         that._playLocationDeclined = false;
@@ -9588,7 +9588,7 @@ Page({
       const stats = [
         // 与通关卡同一处修正:标签是"点亮坐标"就得给已点亮数,不是总数。
         // 这份是**分享卡**,错数字会被烤进图片传播出去,比页面上错得更久。
-        [String(artwork.doneCount || 0), '点亮坐标'],
+        [String(artwork.doneCount || 0), '点亮站点'],
         [String(artwork.finishScore || 0), '探索值'],
         [String(artwork.medals || 0), '获得徽章']
       ];

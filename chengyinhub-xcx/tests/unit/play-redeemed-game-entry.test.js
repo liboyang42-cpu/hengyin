@@ -220,5 +220,5 @@ test('FREE finale waits for the final game receipt; expired FREE keeps the origi
 test('FREE summary reports visits and keeps CITY presentation unchanged', () => {
   const label = wxml.match(/{{doneCount}}\/{{total}}<\/text><text class="fst__l">([^<]+)<\/text>/)[1];
   assert.equal(label, '到访完成');
-  assert.match(wxml, /mode!=2[\s\S]*?点亮坐标/);
+  assert.match(wxml, /mode!=2[\s\S]*?点亮站点/);
 });

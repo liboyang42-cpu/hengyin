@@ -220,7 +220,7 @@ test('PENDING/BLOCKED_COST and wrong-attempt settled receipts cannot settle curr
     { activeOperation: { operationKey: 'tool:29', verified: true } },
   ]) {
     const pending = runtime.outcomeReply({ sessionId: 99, ...active, lastOutcome: receipt });
-    assert.equal(pending.settled, false); assert.equal(pending.reply, ''); assert.equal(pending.statusText, '待确认结算');
+    assert.equal(pending.settled, false); assert.equal(pending.reply, ''); assert.equal(pending.statusText, '待确认结果');
   }
 });
 

@@ -17,7 +17,7 @@ async function readPlace(app, id) {
   const row = res && Number(res.code) === 200 && res.data
   if (!row || exactSessionId(row.poiId) !== key || !PM.hasSeedTag(row)) throw new Error('地点未开放或暂时无法读取')
   const point = normalizeTrack([row])[0]
-  if (!point) throw new Error('地点坐标暂时无法读取')
+  if (!point) throw new Error('地点位置暂时无法读取')
   const rows = await resolvePlaceMedia(app, [Object.assign({}, row, point, { id: row.poiId, type: 1 })])
   return rows[0]
 }

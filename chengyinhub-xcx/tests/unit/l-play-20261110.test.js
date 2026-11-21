@@ -20,7 +20,7 @@ test('章节门数据:开场屏带方块章节号,完成屏带本章照片(第�
   assert.equal(g.info.number, '02')
   assert.equal(g.endInfo.number, '01')
   assert.equal(g.endInfo.cover, 'https://x/a.jpg', '完成屏顶部照片 = 上一章封面的第一张')
-  assert.deepEqual(g.endInfo.rows.map((r) => r.k), ['用时', '本章得分', '坐标'])
+  assert.deepEqual(g.endInfo.rows.map((r) => r.k), ['用时', '本章得分', '站'])
   const first = buildGateFlip({ cards, chapterId: 1, nodes })
   assert.equal(first.info.number, '01')
   assert.equal(first.endInfo, null)

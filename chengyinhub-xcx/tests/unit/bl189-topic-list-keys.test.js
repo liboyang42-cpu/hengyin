@@ -9,7 +9,7 @@ const read = (rel) => fs.readFileSync(path.join(__dirname, '../..', rel), 'utf8'
 
 const CASES = [
   ['pages/topic/index/index.wxml', /<swiper-item[^>]*wx:for="\{\{img\.list\(info\.imgArr\)\}\}"[^>]*>/g, 1],
-  ['pages/topic/index/index.wxml', /<view[^>]*wx:for="\{\{info\.contentIncludes\}\}"[^>]*>/g, 1],
+  ['pages/topic/index/index.wxml', /<view[^>]*wx:for="\{\{info\.departNotes\}\}"[^>]*>/g, 1],
   ['pages/topic/index/index.wxml', /<view[^>]*wx:for="\{\{ uploadImages \}\}"[^>]*>/g, 1],
   ['pages/topic/merchantapply/index.wxml', /<view[^>]*wx:for="\{\{picUrl\.split\(','\)\}\}"[^>]*>/g, 1],
   ['pages/topic/components/project-join/index.wxml', /<view[^>]*wx:for="\{\{ (?:nodeSheet\.)?play\.chips \}\}"[^>]*>/g, 2],

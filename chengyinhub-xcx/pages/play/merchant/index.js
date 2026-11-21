@@ -330,7 +330,7 @@ Page({
   openMap() {
     const node = this.data.node
     if (!node || !node.lat || !node.lng) {
-      this.setData({ feedback: '这家还没填坐标，暂时不能导航' })
+      this.setData({ feedback: '这家还没填位置，暂时不能导航' })
       return
     }
     wx.openLocation({

@@ -1,6 +1,6 @@
 // a1-v3-21(2026-11-10 业主「开启定位最好进入游戏就提示 后面就不需要提示了 而且最好有提示怎么打开」):
-//   · 定位说明只在进入这一局时弹一次(index.js 进页那一处 requestPlayLocation);之后任何入口再调都不再弹,
-//     拒绝后只走扫码，点「开启定位」后才可恢复读取。
+//   · 定位说明一局只弹一次。N3(2026-11-21)起不在进页 / 开场时弹,只在点「我已到达」或首站开局闸(_locateThen)时弹;
+//     之后任何入口再调都不再弹,拒绝后只走扫码，点「开启定位」后才可恢复读取。
 //   · 系统拒绝(微信不会再弹授权框)时给一张「怎么打开」:去设置 → 位置信息;打开后回来静默开始定位。
 //   · 问过且没开定位时,站点卡的主按钮是「扫码到达」(直接绑原有 onScanArrive);别的入口点到达只给一句轻提示,不再回到定位说明。
 // index.js 的 UI 门禁基线按行号登记,这里放方法,index.js 只在原行上挂钩(不增删行)。
@@ -34,7 +34,7 @@ function isStaleFix(loc, now, failedAt) {
 /** 跳过说明弹窗、按「已同意」继续:只给静默重取位置用 */
 function confirmNow(opts) { if (opts && typeof opts.success === 'function') opts.success({ confirm: true, cancel: false }); }
 
-/** 系统层拒绝(而不是玩家点了「先用扫码」)的 errMsg */
+/** 系统层拒绝(而不是玩家点了「扫站点码」)的 errMsg */
 function deniedBySystem(err) {
   const msg = String((err && err.errMsg) || '');
   return /auth|deny|denied|authorize|permission/i.test(msg);
@@ -44,7 +44,7 @@ const GUIDE = {
   title: '打开定位',
   content: '点右上角「···」→「设置」→「位置信息」，选「仅在使用小程序期间」。',
   confirmText: '去设置',
-  cancelText: '先用扫码',
+  cancelText: '扫站点码',
 };
 
 function methods() {
@@ -165,6 +165,12 @@ function methods() {
       if (typeof this._offerStartModes === 'function' && this._offerStartModes()) return;
       cyToast('定位未开启，可扫码到达');
     },
+    /** 定位说明里点「扫站点码」:有要到的站就直接打开扫码到达(扫的是站点码);到达规则不变 */
+    _scanInstead() {
+      if (this._locSilent || this._playDisposed || this._themeHidden || typeof this.onScanArrive !== 'function') return;
+      const node = typeof this._arriveTarget === 'function' ? this._arriveTarget() : null;
+      if (node && !node.done) this.onScanArrive();
+    },
     /** 取位置失败:系统拒绝时给「怎么打开」,去设置打开后回来静默开始定位 */
     _locationGuide(err) {
       if (!deniedBySystem(err) || this._locGuideShown) return false;
@@ -172,6 +178,7 @@ function methods() {
       const that = this;
       cyModal.show(Object.assign({}, GUIDE, {
         success(r) {
+          if (r && r.cancel) { that._scanInstead(); return; }
           if (!r || !r.confirm || typeof wx.openSetting !== 'function') return;
           wx.openSetting({
             success(s) { if (s && s.authSetting && s.authSetting['scope.userLocation']) that._relocateSilently(); },

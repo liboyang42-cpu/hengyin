@@ -11,7 +11,7 @@ function outcomeReply(view) {
   if (view && (quest && quest.trustedPass === true || view.activeOperation && view.activeOperation.verified === true)
     && (!receipt || receipt.settled === true)) {
     return { id: 'pending:' + view.sessionId + ':' + (active || view.activeOperation.operationKey),
-      settled: false, outcome: '', reply: '', statusText: '待确认结算' };
+      settled: false, outcome: '', reply: '', statusText: '待确认结果' };
   }
   if (!receipt || !(receipt.attemptId || receipt.receiptId)) return null;
   const settled = receipt.settled === true && receipt.status === 'SETTLED';
@@ -19,7 +19,7 @@ function outcomeReply(view) {
     outcome: settled ? receipt.outcome : '', reply: settled ? receipt.reply || '' : '',
     images: settled && Array.isArray(receipt.images) ? receipt.images.filter(url => typeof url === 'string' && url).slice(0, 3) : [],
     statusText: settled ? receipt.outcome === 'PASS' ? '通过' : '未通过'
-      : receipt.status === 'BLOCKED_COST' ? '费用不足，待结算' : '待结算' };
+      : receipt.status === 'BLOCKED_COST' ? '费用不足，待判定' : '待判定' };
 }
 
 function checkView(view, theme) {

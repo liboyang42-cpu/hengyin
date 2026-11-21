@@ -1002,7 +1002,7 @@
     <view class="settle__meta">{{finish.dateLine}}</view>
     <view class="settle__headrow">
       <text class="settle__title">{{finish.zone}} · 自由漫游</text>
-      <view class="settle__x" bindtap="closeSettle" aria-role="button" aria-label="关闭结算页" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="44" /></view>
+      <view class="settle__x" bindtap="closeSettle" aria-role="button" aria-label="关闭本次结果" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="44" /></view>
     </view>
     <view class="settle__hr"></view>
     <!-- 到达数与分享、记录共用本次足迹，距离与用时保留可核对的行程事实。 -->
@@ -1032,9 +1032,9 @@
       </view>
     </scroll-view>
     <view class="settle__err" wx:if="{{finish.settleErr}}">
-      <cy-error title="{{finish.settleErr === 'reveal' ? '探索记录尚未确认，暂未结算' : '漫游结算需要确认'}}"
-                sub="{{recoveryError || '结算未完成，请重试'}}"
-                retry="{{finish.settleErr === 'unknown' || finish.settleErr === 'bootstrap' || finish.settleErr === 'recovery' ? '确认结算结果' : '重新结算'}}" bind:retry="retrySettle" />
+      <cy-error title="{{finish.settleErr === 'reveal' ? '探索记录尚未确认，暂未结束' : '漫游结果需要确认'}}"
+                sub="{{recoveryError || '结果未保存，请重试'}}"
+                retry="{{finish.settleErr === 'unknown' || finish.settleErr === 'bootstrap' || finish.settleErr === 'recovery' ? '确认漫游结果' : '重新提交'}}" bind:retry="retrySettle" />
     </view>
     <view wx:if="{{recoveryCanContinue}}" class="settle__minor-act" bindtap="continueUnstartedRoam" aria-role="button" aria-label="继续本次探索" hover-class="cy-pressed" hover-stay-time="80">继续本次探索</view>
     <view class="settle__err" wx:if="{{finish.resultIncomplete}}">已确认本次探索值；历史记录不完整，无法显示当次勋章与回顾</view>

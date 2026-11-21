@@ -3,13 +3,13 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 function harness() {
-  const requests = [], dialogs = [], locations = [];
+  const requests = [], dialogs = [], locations = [], scans = [];
   let definition;
   const app = { getUserID: () => 7, sendRequest: request => requests.push(request) };
   global.getApp = () => app;
   global.Page = page => { definition = page; };
   global.wx = { getStorageSync: () => '', setStorageSync() {}, removeStorageSync() {},
-    showToast() {}, showModal: options => dialogs.push(options), getLocation: options => locations.push(options) };
+    showToast() {}, showModal: options => dialogs.push(options), getLocation: options => locations.push(options), scanCode: options => scans.push(options) };
   const file = require.resolve('../../pages/play/index.js');
   delete require.cache[file]; require(file);
   const page = Object.assign({}, definition, { data: structuredClone(definition.data) });
@@ -39,21 +39,29 @@ function harness() {
     pending[0].success(result);
     await new Promise(resolve => setImmediate(resolve));
   }
-  return { page, dialogs, locations, requests, load, response };
+  return { page, dialogs, locations, requests, scans, load, response };
 }
 
-for (const mode of [1, 2]) test('entering a playable located game offers consent before a task, mode ' + mode, async () => {
+// N3(2026-11-21 新玩家走查):进页 / 开场一律不弹定位;只在点「我已到达」/ 首站开局闸(_locateThen)时问,一句理由。
+for (const mode of [1, 2]) test('entering a playable located game never asks for location before the story, mode ' + mode, async () => {
   const h = harness(); await h.load(h.response({ mode }));
-  assert.equal(h.dialogs.length, 1); assert.equal(h.dialogs[0].title, '开启定位');
-  assert.equal(h.locations.length, 0, 'no SDK location before explicit consent');
+  assert.equal(h.dialogs.length, 0, 'no location modal on entry');
+  assert.equal(h.locations.length, 0, 'no SDK location on entry');
   assert.equal(h.page._runStarted, undefined, 'entry must not start the game or its clock');
+  // 点「我已到达」→ _locateThen:这时才问,一句理由,取消键说明扫的是站点码
+  h.page._locateThen(() => {});
+  assert.equal(h.dialogs.length, 1); assert.equal(h.dialogs[0].title, '开启定位');
+  assert.doesNotMatch(h.dialogs[0].content, /\n/); assert.ok(h.dialogs[0].content.length <= 24, h.dialogs[0].content);
+  assert.equal(h.dialogs[0].cancelText, '扫站点码');
+  assert.equal(h.locations.length, 0, 'no SDK location before explicit consent');
+  h.page.data.nextNode = { nodeId: 11 };
   h.dialogs[0].success({ confirm: false });
+  assert.equal(h.scans.length, 1, '「扫站点码」接着打开扫码到达');
   await h.load(h.response({ mode }), false);
   assert.equal(h.dialogs.length, 1, 'poll/reload must not repeat a declined offer');
-  // r2-play a1-v3-21(2026-11-10 业主「开启定位最好进入游戏就提示 后面就不需要提示了」):进页问过一次后,
-  // 后续自动读取仍尊重本局拒绝；只有明确点「开启定位」才可恢复读取。
+  // 问过一次后,后续自动读取仍尊重本局拒绝；只有明确点「开启定位」才可恢复读取。
   h.page.requestPlayLocation();
-  assert.equal(h.dialogs.length, 1, 'a declined entry offer is never repeated by later controls');
+  assert.equal(h.dialogs.length, 1, 'a declined offer is never repeated by later controls');
   assert.equal(h.locations.length, 0, 'no SDK location without consent');
   global.wx.getSetting = options => options.success({ authSetting: { 'scope.userLocation': true } });
   h.page.requestPlayLocation();
@@ -69,6 +77,18 @@ for (const mode of [1, 2]) test('entering a playable located game offers consent
   h.dialogs.at(-1).success({ confirm: true });
   assert.equal(h.locations.length, 1, 'only explicit enable may resume location');
   h.page._stopTracking();
+});
+
+test('starting the run clock or the story intro does not ask for location', async () => {
+  const h = harness(); await h.load(h.response());
+  h.page._teamConsentGate = () => false; h.page._clearRunSessionEverywhere = () => {};
+  h.page.data.runState = 'idle';
+  h.page.onRunToggle();
+  assert.equal(h.dialogs.length, 0); assert.equal(h.locations.length, 0);
+  h.page._castGate = () => false;
+  Object.assign(h.page.data, { storyIntro: { show: true, out: false }, reducedMotion: true });
+  h.page.startStoryIntro();
+  assert.equal(h.dialogs.length, 0); assert.equal(h.locations.length, 0);
 });
 
 for (const state of ['unregistered', 'spectator', 'unplayable', 'completed', 'story-only', 'paused', 'need-pass', 'malformed']) {

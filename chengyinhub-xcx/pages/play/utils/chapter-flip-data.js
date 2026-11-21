@@ -47,11 +47,11 @@ function buildGateFlip({ cards, chapterId, nodes, topicCover, topicName, desc, e
       title: prev.title || '',
       cover: firstImg(prev.cover),   // l-play:完成整屏顶部的本章照片(没有就只留底色)
       desc: '',
-      stats: [{ v: prevDone + '/' + prevNodes.length, k: '坐标' }].concat(puzzle.count ? [{ v: String(puzzle.score), k: '解谜分' }] : []),
+      stats: [{ v: prevDone + '/' + prevNodes.length, k: '站' }].concat(puzzle.count ? [{ v: String(puzzle.score), k: '解谜分' }] : []),
       rows: [
         elapsed ? { k: '用时', v: String(elapsed) } : null,
         puzzle.count ? { k: '本章得分', v: String(puzzle.score) } : null,
-        { k: '坐标', v: prevDone + '/' + prevNodes.length },
+        { k: '站', v: prevDone + '/' + prevNodes.length },
       ].filter(Boolean),
       next: nextNode && nextNode.name ? String(nextNode.name) : '',
       reward: prev.reward || '',   // D-82 章节级奖励:没设就不出那一行
@@ -64,7 +64,7 @@ function buildGateFlip({ cards, chapterId, nodes, topicCover, topicName, desc, e
     title: (cur && cur.title) || '',
     desc: desc || '',
     stats: [
-      n ? { v: String(n), k: '坐标' } : null,
+      n ? { v: String(n), k: '站' } : null,
       cur && cur.mileage ? { v: String(cur.mileage).replace(/km$/, ' km'), k: '距离' } : null,
       cur && cur.timeText ? { v: String(cur.timeText).replace(/\s*分钟$/, ' 分'), k: '预计' } : null,
     ].filter(Boolean),
@@ -80,7 +80,7 @@ function buildFinale({ cards, nodes, topicCover, topicName, doneCount, elapsed, 
   const a = last > 0 ? face(list[last - 1], last - 1, nodes) : face(list[0], 1, nodes);
   const b = last >= 0 ? face(list[last], last, nodes) : face(null, 0, nodes);
   const stats = [
-    doneCount ? { v: String(doneCount), k: '坐标' } : null,
+    doneCount ? { v: String(doneCount), k: '站' } : null,
     elapsed ? { v: elapsed, k: '用时' } : null,
     score ? { v: String(Math.round(Number(score))).replace(/\B(?=(\d{3})+(?!\d))/g, ','), k: '探索值' } : (puzzle && puzzle.count ? { v: String(puzzle.score), k: '解谜分' } : null),
   ].filter(Boolean);
