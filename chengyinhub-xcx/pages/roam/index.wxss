@@ -1000,7 +1000,7 @@ cy-proto-cam{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:58; poin
 .entry-place__tags { display: flex; flex-wrap: wrap; gap: var(--cy-space-2); margin-bottom: var(--cy-space-3); }
 .entry-place__tag { padding: 4rpx var(--cy-space-2); border-radius: var(--cy-radius-pill); background: var(--cy-color-play-surface); color: var(--cy-comp-sheet-player-text-secondary); font-size: var(--cy-type-caption); }
 .entry-place__src { min-height: 88rpx; display: flex; align-items: center; justify-content: space-between; color: var(--cy-comp-sheet-player-text-secondary); font-size: var(--cy-type-caption); }
-.entry-place__link { display: block; min-height: 64rpx; color: var(--cy-comp-sheet-player-text-secondary); font-size: var(--cy-type-caption); word-break: break-all; }
+.entry-place__link { display: flex; align-items: center; min-height: 88rpx; color: var(--cy-comp-sheet-player-text-secondary); font-size: var(--cy-type-caption); word-break: break-all; }
 .entry-place__credit { display: block; margin-bottom: var(--cy-space-3); color: var(--cy-comp-sheet-player-text-secondary); font-size: var(--cy-type-caption); }
 
 /* 地点卡半屏(不占共用提示位):宿主不拦截地图手势,只有半屏本身接收触摸 */
@@ -1013,7 +1013,7 @@ cy-proto-cam{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:58; poin
 .pc-cover { display: block; width: 100%; height: 300rpx; margin-bottom: var(--cy-space-2); border-radius: var(--cy-radius-xl); }
 .pc-quote { display: block; margin: var(--cy-space-2) 0; padding-left: var(--cy-space-3); border-left: 6rpx solid var(--cy-color-play-accent); font-size: var(--cy-type-body); line-height: 1.7; color: var(--cy-color-text-primary); }
 .pc-src { min-height: 88rpx; display: flex; align-items: center; justify-content: space-between; font-size: var(--cy-type-caption); color: var(--cy-color-text-tertiary); }
-.pc-link { word-break: break-all; min-height: 64rpx; }
+.pc-link { display: flex; align-items: center; word-break: break-all; min-height: 88rpx; }
 .pc-action--nav { margin-left: var(--cy-space-2); background: var(--cy-color-play-surface); color: var(--cy-color-text-primary); }
 /* 2026-11-14 地图样式四选一(设置页) */
 .drow--kind{ flex-wrap:wrap; }

@@ -236,8 +236,6 @@ function giftRow(gift, side) {
 
 // §17.2 领取失败按原因分别说,不泄露他人订单
 const CLAIM_REASON_TEXT = {
-  TOKEN_REQUIRED: '缺少领取码',
-  GIFT_TOKEN_INVALID: '领取码无效',
   GIFT_CLAIM_EXPIRED: '礼品领取码已过期',
   GIFT_NOT_FOUND: '礼品不存在',
   GIFT_NOT_FOR_YOU: '这份礼品不是给你的',

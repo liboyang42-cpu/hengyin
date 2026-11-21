@@ -4,6 +4,7 @@
   "navigationBarTextStyle": "white",
   "backgroundColor": "#000000",
   "usingComponents": {
+    "cy-btn": "/components/cy/btn/index",
     "cy-nav-bar": "/components/cy/nav-bar/index",
     "cy-page-title": "/components/cy/page-title/index",
     "cy-skeleton": "/components/cy/skeleton/index",

@@ -152,8 +152,9 @@ page { background: var(--cy-comp-sheet-player-page); }
 .pc__tail { position: absolute; left: 50%; bottom: -21rpx; z-index: -1; width: 42rpx; height: 42rpx; margin-left: -21rpx; background: #1C1C1E; transform: rotate(45deg); border-radius: 6rpx; } /* ds-ok */
 .pb__hd { display: flex; align-items: flex-start; gap: 19rpx; }
 .pb__t { flex: 1; font-size: 40rpx; line-height: 1.2; font-weight: 700; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
-.pb__x { flex: none; width: 58rpx; height: 58rpx; border-radius: 50%; background: #2C2C2E; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .2s; } /* ds-ok */
+.pb__x { position: relative; flex: none; width: 58rpx; height: 58rpx; border-radius: 50%; background: #2C2C2E; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .2s; } /* ds-ok */
 .pc.is-x .pb__x { opacity: 1; }
+.pb__x::after { content: ''; position: absolute; left: 50%; top: 50%; width: 88rpx; height: 88rpx; transform: translate(-50%, -50%); } /* 关闭钮视觉 58rpx,命中区 88rpx */
 .pb__xi { width: 14rpx; height: 14rpx; border-right: 4rpx solid #fff; border-bottom: 4rpx solid #fff; transform: translateY(-4rpx) rotate(45deg); } /* ds-ok */
 .pb__sub, .pb__rt { margin-top: 8rpx; font-size: 23rpx; color: #8E8E93; } /* ds-ok */
 .pb__rt { color: #fff; } /* ds-ok */
@@ -208,7 +209,7 @@ page { background: var(--cy-comp-sheet-player-page); }
 .pb__star.on { color: #FF9F0A; } /* ds-ok */
 .pb__ta { width: 100%; min-height: 96rpx; margin-top: 12rpx; font-size: 27rpx; line-height: 1.5; color: #fff; } /* ds-ok */
 .pb__ph { color: #8E8E93; } /* ds-ok */
-.pb__send { margin-top: 12rpx; height: 72rpx; border-radius: 36rpx; display: flex; align-items: center; justify-content: center; background: #fff; color: #000; font-size: 27rpx; font-weight: 600; } /* ds-ok 同 .pb__btn--w */
+.pb__send { margin-top: 12rpx; height: 88rpx; border-radius: 44rpx; display: flex; align-items: center; justify-content: center; background: #fff; color: #000; font-size: 29rpx; font-weight: 600; } /* ds-ok 同 .pb__btn--w */
 .pb__send.is-off { opacity: .5; }
 .pb__hint2 { display: block; margin-top: 15rpx; font-size: 23rpx; color: #FF9F0A; text-align: center; } /* ds-ok */
 .pb__hint { display: flex; align-items: center; gap: 8rpx; }

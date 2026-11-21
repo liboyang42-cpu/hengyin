@@ -29,7 +29,7 @@
   </block>
   <block wx:elif="{{tab === 'mine'}}">
     <cy-skeleton wx:if="{{loading && !groups.length}}" type="list" count="2" />
-    <view class="mt-err cy-fade-in" wx:elif="{{mineError}}" bindtap="retryReload" aria-role="button" aria-label="队伍获取失败，点按重试" hover-class="cy-pressed" hover-stay-time="80">队伍获取失败 · 点按重试</view>
+    <view class="mt-err cy-fade-in" wx:elif="{{mineError}}" bindtap="retryReload" aria-role="button" aria-label="队伍获取失败，轻点重试" hover-class="cy-pressed" hover-stay-time="80">队伍获取失败 · 轻点重试</view>
     <block wx:elif="{{groups.length}}">
       <block wx:for="{{groups}}" wx:for-item="g" wx:key="key">
         <view class="mt-sec cy-fade-in">{{g.title}}</view>
@@ -51,7 +51,7 @@
     </block>
     <view class="mt-empty cy-rise-in" wx:else>
       <text class="mt-empty__t">还没有队伍</text>
-      <view class="mt-btn" bindtap="openMap" aria-role="button" aria-label="去地图找队伍" hover-class="cy-pressed" hover-stay-time="80">去地图找队伍</view>
+      <cy-btn class="mt-btn" bindtap="openMap">去地图找队伍</cy-btn>
     </view>
   </block>
 
@@ -74,7 +74,7 @@
   <block wx:elif="{{tab === 'open' || (!guest && !loading && !groups.length && !mineError)}}">
     <view class="mt-sec" wx:if="{{tab === 'mine'}}">附近在招募</view>
     <view class="mt-state" wx:if="{{openLoading}}">正在找附近的队伍…</view>
-    <view class="mt-err" wx:elif="{{openError}}" bindtap="loadOpen" aria-role="button" aria-label="{{openError}}，点按重试" hover-class="cy-pressed" hover-stay-time="80">{{openError}} · 点按重试</view>
+    <view class="mt-err" wx:elif="{{openError}}" bindtap="loadOpen" aria-role="button" aria-label="{{openError}}，轻点重试" hover-class="cy-pressed" hover-stay-time="80">{{openError}} · 轻点重试</view>
     <view class="mt-card cy-rise-in" style="animation-delay: {{index < 8 ? index * 60 : 480}}ms" wx:for="{{openRows}}" wx:key="key" data-index="{{index}}" bindtap="openNearbyTeam" aria-role="button" aria-label="{{item.name}}，{{item.badge}}" hover-class="cy-pressed" hover-stay-time="80">
       <view class="mt-card__top">
         <view class="mt-av mt-av--{{item.avatars.length}}"><image wx:for="{{item.avatars}}" wx:for-item="face" wx:key="k" class="mt-av__i" src="{{face.src}}" mode="aspectFill" /></view>
