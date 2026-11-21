@@ -231,7 +231,7 @@ test('岔路:分支剧情在流里是入口卡(钥匙插图),点开是居中弹�
   assert.match(wxml, /\(playKit\.show && !playKit\.pop\)/, '故事流只在非弹窗整屏时隐去')
   assert.match(wxml, /<cy-playkit id="playKit" class="pk-lookhost \{\{lookClass\}\}" kit="\{\{playKit\.kit\}\}" show="\{\{playKit\.show && !playKit\.pop\}\}"/)
   assert.match(wxml, /class="chfull__kitcard" data-origin="card" bindtap="openKitStart"/)
-  assert.match(wxml, /<cy-illus name="\{\{playKit\.cardIllus \|\| 'clue'\}\}" size="110"/)
+  assert.match(wxml, /<view class="chfull__kitcard-cover"><image wx:if="\{\{advancedPlay\.node\.gamePhoto\}\}"/, '入口卡封面走配图兜底链(2026-11-21)')
   const stage = read('pages/play/play-stage.wxml')
   assert.match(stage, /<view class="lk-popwrap lk-popwrap--branch" wx:if="\{\{playKit\.show && playKit\.pop\}\}"/)
   assert.match(stage, /<view class="bp__b chfull__kit"><cy-playkit kit="\{\{playKit\.kit\}\}" show="\{\{true\}\}" inline="\{\{true\}\}" bind:kitaction="onPlayKitAction" \/>/)

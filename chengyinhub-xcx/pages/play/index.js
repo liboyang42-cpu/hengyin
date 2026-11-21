@@ -3,6 +3,7 @@
 // 数据:GET /api/play/nodes(现网) — 缺坐标/章节/模板呈现字段时做降级;扫码 /checkin、答题 /answer、到达 /arrive。
 const { stationLabel, playerTitle } = require('./utils/play-stage-pops.js'); const cyModal = require('../../utils/modal.js'); const { keepNumerals, keepMeasure } = require('./utils/keep-numerals.js');
 const cyLoading = require('../../utils/loading.js');
+const stationImage = require('../../utils/station-image.js');
 const cyToast = require('../../utils/toast.js');
 const motion = require('../../utils/motion.js');
 const app = getApp();
@@ -2570,7 +2571,7 @@ Page({
       chapterId: node.chapterId, isMerchant: Number(node.merchantId) > 0,
       // FE-G1:没有玩法的店(heroEnter 直进权益页)主按钮写「我已到店 / 查看权益」,不写「到店打卡 / 继续互动」
       perkOnly: Number(this.data.mode) === 2 && Number(node.merchantId) > 0 && !node.hasGame && !node.hasAdvanced,
-      name: node.name, imgUrl: String(node.imgUrl || '').split(',')[0], imgHidden: !!node.imgHidden, done: !!node.done,
+      name: node.name, imgUrl: String(node.imgUrl || '').split(',')[0], imgHidden: !!node.imgHidden, photo: node.photo || '', done: !!node.done,
       entryDisabled: this._heroEntryDisabled(node),
       // ① 章节
       chapMeta: chap ? ('本章 · ' + (chap.meta || '')) : '',
@@ -4584,6 +4585,7 @@ Page({
       that._applyStoryVars(d); that._applyLook(d.look); that._probeCasebook(d.routeState); that._applyCast(d);
       that._puzzlePersonalBest = Number(d.puzzlePersonalBest) || 0;
       // 原局历史只认 /history 的冻结快照；/nodes 的当前作者投影不能冒充旧剧情。
+      that._noteStationImageContext(d);
       const catalog = raw.map((n, i) => that.normNode(n, i, mode));
       const routeInput = d.routeState || { routeMode: d.routeMode };
       const acceptProjection = that._acceptRouteStateProjection(routeInput);
@@ -4700,6 +4702,7 @@ Page({
     this._previewStartRows = d.startState || [];
     if (this.data.isPreview) { this._previewChapters = d.chapters || []; this._previewChapterIndex = 0; this._previewThoughts = d.thoughts || []; this._previewEndings = d.endings || []; }
     const mode = Number(d.mode) || 1, skipPack = d.productType !== undefined && d.productType !== 2;
+    that._noteStationImageContext(d);
     const catalog = raw.map((n, i) => that.normNode(n, i, mode));
     const routeState = normalizeRouteState(d.routeState || { routeMode: d.routeMode });
     const nodes = applyRouteStateToNodes(catalog, routeState);
@@ -4734,6 +4737,18 @@ Page({
     });
   },
 
+  /** 站点配图兜底链的上下文:章节图按 chapterId 查,路线封面取主题 imgUrl。/nodes 每次回包都刷新。 */
+  _noteStationImageContext(d) {
+    this._stationImageCtx = { chapters: stationImage.chapterImagesById(d && d.chapters), topicCover: (d && d.topicCover) || '' };
+  },
+
+  /** photo:站点图链首个可用图(空串 = 纹理底);gamePhoto:玩法封面(模板 storyImg)→ 同一条站点链。 */
+  _stationPhotos(n) {
+    const ctx = this._stationImageCtx || { chapters: {}, topicCover: this.data.topicCover || '' };
+    const input = { stationImg: n.imgUrl, chapterImgArr: n.chapterId != null ? ctx.chapters[String(n.chapterId)] : '', topicCover: ctx.topicCover };
+    return { photo: stationImage.resolveStationImage(input).src, gamePhoto: stationImage.resolveGameImage(Object.assign({ gameCover: n.storyImg }, input)).src };
+  },
+
   normNode(n, i, mode) {
     // 后端 validationMethod:0/null 到点即完成 · 1 文字 · 2 拍照 · 3 选项 · 4 扫码 · 5 GPS到达 · 6偏好题组
     const vm = Number(n.validationMethod) || 0;
@@ -4755,6 +4770,7 @@ Page({
       description: n.description || n.question || '',
       imgUrl: n.imgUrl || '',
       imgHidden: !n.imgUrl && n.imgHidden === true,          // F07:服务端遮掉的后续站照片,展示点改放剪影占位
+      ...this._stationPhotos(n),                             // 站点 / 玩法配图兜底链(utils/station-image.js):无图时退章节图 → 路线封面 → 纹理底
       businessTime: n.businessTime || '',
       openStatus: n.openStatus || '',                       // S4 服务端营业态三态(营业中/即将打烊/已打烊);空则大卡回退客户端 inBizWindow
       lng: Number(n.longitude) || 0, lat: Number(n.latitude) || 0,
@@ -5000,6 +5016,7 @@ Page({
       })(),
       imgUrl: String(x.imgUrl || '').split(',')[0],
       imgHidden: !!x.imgHidden,
+      photo: x.photo || '',
       ...(this.data.storyGate ? Object.assign(feVisit.tileView(x, this._loc ? this._distText(x) : ''),
         { chapterName: (chapById[String(x.chapterId)] || {}).title || '' }) : {}),
       playName: x.gameTitle || '',

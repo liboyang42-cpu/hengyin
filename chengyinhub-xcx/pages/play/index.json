@@ -52,7 +52,6 @@
     "cy-back-guard": "/components/cy/back-guard/index",
     "cy-look-transition": "/pages/play/components/look-transition/index",
     "cy-illus": "/pages/play/components/cy-illus/index",
-    "cy-station-silhouette": "/pages/play/components/station-silhouette/index",
     "cy-frames": "/pages/play/components/cy-frames/index"
   },
   "componentPlaceholder": {

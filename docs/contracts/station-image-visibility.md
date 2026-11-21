@@ -8,7 +8,7 @@
 | 城市定向（mode / product_type 1，缺省按 1） | 只下发第一站（sort_id 最小）和本局已到达（扫码或点「我已到达」，checkin_time 不为空）或已完成的站的 `imgUrl` |
 | 自由探索（mode 2） | 店铺照片用来找店，不遮 |
 
-- 被遮的站：`imgUrl: null`，同时下发 `imgHidden: true`。小程序用 `cy-station-silhouette` 剪影占位，iOS 解析 `imgHidden`。
+- 被遮的站：`imgUrl: null`，同时下发 `imgHidden: true`。两端改走配图兜底链（小程序 `chengyinhub-xcx/utils/station-image.js`，iOS `PlayStationImageResolver`）：章节首图 → 路线封面 → 深色纹理；这两张图本来就公开，不会露出被遮的站点照片。2026-11-21 起不再用人形剪影。
 - 已接入：`/api/play/nodes`（`PlayNodeQueryApplication`）、`/api/topic/info-to-user`（`ApiTopicController.hideLaterStationImages`；主题作者本人看全部，承接商家看自己那一站）。
 - 主题封面、章节封面照常下发；封面本身不能露答案，由内容侧 PHOTO BRIEF 保证。
 - 任何新接口返回站点图都必须经过 `StationImageVisibility`。

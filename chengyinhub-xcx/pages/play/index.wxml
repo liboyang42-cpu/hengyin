@@ -246,7 +246,7 @@
         </view>
         <view wx:elif="{{item.kind === 'kit'}}" class="chfull__kit" style="--pk-es-reel-h:860rpx;--pk-es-q-display:none">
           <view class="chfull__kit-anchor" id="{{'chapter-kit-' + item.nodeId}}" style="top:calc(0px - max(var(--chfull-fade-end), calc({{chrome.contentTop}}px + var(--cy-btn-h) + var(--cy-space-3))))"></view>
-          <view wx:if="{{playKit.card}}" class="chfull__kitcard" data-origin="card" bindtap="openKitStart" aria-role="button" aria-label="打开{{playKit.cardLabel ? playKit.cardLabel + '，' : ''}}{{advancedPlay.node.name || playKit.kit.title || playKit.kit.kicker || '玩法'}}" hover-class="chfull__kitcard--press" hover-stay-time="80"><view class="chfull__kitcard-cover"><image wx:if="{{advancedPlay.node.imgUrl}}" class="chfull__kitcard-img" src="{{img.first(advancedPlay.node.imgUrl)}}" mode="aspectFill" lazy-load="true" /><cy-station-silhouette wx:elif="{{advancedPlay.node.imgHidden}}" class="chfull__kitcard-img" size="sm" num="{{advancedPlay.node.placeNum || advancedPlay.node.num}}" /><view wx:else class="chfull__kitcard-illus"><cy-illus name="{{playKit.cardIllus || 'clue'}}" size="110" reduced-motion="{{reducedMotion}}" /></view></view>
+          <view wx:if="{{playKit.card}}" class="chfull__kitcard" data-origin="card" bindtap="openKitStart" aria-role="button" aria-label="打开{{playKit.cardLabel ? playKit.cardLabel + '，' : ''}}{{advancedPlay.node.name || playKit.kit.title || playKit.kit.kicker || '玩法'}}" hover-class="chfull__kitcard--press" hover-stay-time="80"><view class="chfull__kitcard-cover"><image wx:if="{{advancedPlay.node.gamePhoto}}" class="chfull__kitcard-img" src="{{img.one(advancedPlay.node.gamePhoto)}}" mode="aspectFill" lazy-load="true" /><view wx:else class="chfull__kitcard-img photo-tex" aria-hidden="true"></view></view>
             <view class="chfull__kitcard-copy"><text class="chfull__kitcard-type" wx:if="{{playKit.cardLabel}}">{{playKit.cardLabel}}</text><text class="chfull__kitcard-title">{{advancedPlay.node.name || playKit.kit.title || playKit.kit.kicker || '玩法'}}</text></view>
             <view class="chfull__kitcard-play" aria-hidden="true"><view class="chfull__kitcard-tri"></view></view>
           </view>
@@ -666,10 +666,9 @@
             wx:for="{{seatTiles}}" wx:key="nodeId" data-id="{{item.nodeId}}" data-idx="{{index}}" bindtap="onSeatTap"
             style="{{tileH ? 'height:' + tileH + 'px;' : ''}}--tx0:{{item.tx0 || '0px'}};--ty0:{{item.ty0 || '0px'}};--tx1:{{item.tx1 || '0px'}};--ty1:{{item.ty1 || '0px'}};--rot:{{item.rot || '0deg'}}"
             aria-role="button" aria-label="{{item.chapterLabel ? item.chapterLabel + '，' : ''}}{{item.name}}{{item.done ? '，已体验' : ''}}{{item.storyLocked ? '，未解锁' : ''}}" hover-class="cy-pressed" hover-stay-time="80">
-        <image class="fx-tile__im" wx:if="{{item.imgUrl}}" src="{{img.first(item.imgUrl)}}" mode="aspectFill" />
-        <cy-station-silhouette class="fx-tile__ph" wx:elif="{{item.imgHidden}}" num="{{index + 1}}" />
-        <!-- 无图兜底:商家没传封面时上半部会整片空,给一个可辨认的占位而不是留白 -->
-        <view class="fx-tile__ph" wx:else><cy-icon name="pin" size="52" /></view>
+        <!-- 配图兜底链(utils/station-image.js):站点图 → 章节图 → 路线封面 → 深色纹理底,不再留白或放人形剪影 -->
+        <image class="fx-tile__im" wx:if="{{item.photo}}" src="{{img.one(item.photo)}}" mode="aspectFill" lazy-load="true" />
+        <view class="fx-tile__ph photo-tex" wx:else aria-hidden="true"></view>
         <view class="fx-tile__shade"></view>
         <view class="fx-tile__lock" wx:if="{{item.locked}}"><cy-icon name="lock" size="28" /><text>前路未知</text></view>
         <!-- 一章一商家:章节名是这张卡的身份,压在营业态之上。两个小标竖着排,不抢同一个角。 -->
@@ -774,11 +773,11 @@
         aria-role="dialog" aria-modal="true" aria-label="{{hero.node.name}}">
     <!-- 背景不接 tap:关闭走左上返回钮和物理返回。整屏背景挂 hover-class 会在按下时闪一下,不挂又是裸可点元素 -->
     <view class="fx-hero__bg">
-      <image class="fx-hero__bgim" wx:if="{{hero.node.imgUrl}}" src="{{img.first(hero.node.imgUrl)}}" mode="aspectFill" />
+      <image class="fx-hero__bgim" wx:if="{{hero.node.photo}}" src="{{img.one(hero.node.photo)}}" mode="aspectFill" />
       <view class="fx-hero__veil"></view>
     </view>
     <view class="fx-hero__hdr {{hero.collapsed ? 'is-on' : ''}}" style="top:{{chrome.actionTop}}px">
-      <image class="fx-hero__hdr-th" wx:if="{{hero.node.imgUrl}}" src="{{img.first(hero.node.imgUrl)}}" mode="aspectFill" />
+      <image class="fx-hero__hdr-th" wx:if="{{hero.node.photo}}" src="{{img.one(hero.node.photo)}}" mode="aspectFill" />
       <view class="fx-hero__hdr-c">
         <view class="fx-hero__hdr-n">{{hero.node.name}}</view>
         <view class="fx-hero__hdr-m">{{hero.node.chapNo}}{{hero.node.chapNo && hero.node.chapName ? ' · ' : ''}}{{hero.node.chapName}}</view>
@@ -795,8 +794,7 @@
             aria-role="button" aria-label="读这一章的剧情；左右拖可以转动卡片"
             hover-class="cy-pressed" hover-stay-time="80">
         <view class="fx-card3d__face fx-card3d__front">
-          <image class="fx-hero__im" wx:if="{{hero.node.imgUrl}}" src="{{img.first(hero.node.imgUrl)}}" mode="aspectFill" />
-          <cy-station-silhouette class="fx-hero__im" wx:elif="{{hero.node.imgHidden}}" />
+          <image class="fx-hero__im" wx:if="{{hero.node.photo}}" src="{{img.one(hero.node.photo)}}" mode="aspectFill" />
           <view class="fx-hero__ph cy-cover-fb" wx:else aria-hidden="true"><image class="cy-cover-fb__art" src="/images/cover-route.svg" mode="aspectFit" /></view>
         </view>
         <!-- 背面只写章节介绍:玩法归游戏、核销与权益归下面的正文 -->
@@ -1077,9 +1075,10 @@
 <!-- ===================== C. 节点详情卡 ===================== a1-v3-21(业主「节点游戏进入不是弹窗」):城市定向的站点整屏打开,关闭在右上角(胶囊下方);自由探索的店卡不变 -->
 <view class="mask {{chapterFull ? 'mask--story' : ''}} {{sheetOut ? 'is-out' : ''}}" wx:if="{{sheet.show}}" bindtap="closeSheet" aria-role="button" aria-label="关闭面板" hover-class="cy-pressed" hover-stay-time="80"></view>
 <view class="sheet {{chapterFull ? 'sheet--story' : ''}} {{mode!=2 ? 'sheet--game' : ''}} {{sheetOut ? 'is-out' : ''}}" wx:if="{{sheet.show}}"><view class="sheet-x" wx:if="{{mode!=2}}" style="top:{{chrome.contentTop}}px" bindtap="closeSheet" aria-role="button" aria-label="返回，关闭{{sheet.node.name}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="back" size="32" /></view>
-  <view class="sheet-cover {{sheet.node.imgUrl || sheet.node.imgHidden ? '' : 'sheet-cover--bare'}}" bindtap="previewNodeImages" data-imgs="{{sheet.node.imgUrl}}" hover-class="cy-pressed" hover-stay-time="80">
-    <image wx:if="{{sheet.node.imgUrl}}" src="{{img.first(sheet.node.imgUrl)}}" mode="aspectFill"></image>
-    <cy-station-silhouette wx:elif="{{sheet.node.imgHidden}}" class="sheet-cover__ss" num="{{sheet.node.placeNum || sheet.node.num}}" />
+  <!-- 配图兜底链(utils/station-image.js):站点图 → 章节图 → 路线封面 → 深色纹理底;封面区高度固定,不随图收起 -->
+  <view class="sheet-cover" bindtap="previewNodeImages" data-imgs="{{sheet.node.imgUrl}}" hover-class="cy-pressed" hover-stay-time="80">
+    <image wx:if="{{sheet.node.photo}}" src="{{img.one(sheet.node.photo)}}" mode="aspectFill" lazy-load="true"></image>
+    <view wx:else class="sheet-cover__ss photo-tex" aria-hidden="true"></view>
     
     <view class="cover-photos" wx:if="{{img.list(sheet.node.imgUrl).length > 1}}"><cy-icon name="image" size="22" />{{img.list(sheet.node.imgUrl).length}} 图 · 点击查看</view>
     <!-- 「第 N 站」是城市定向的顺序语义;自由探索没有顺序,这里只说它是哪一家的什么 -->
@@ -1120,9 +1119,8 @@
       <!-- l-play 城市定向:这一站绑定的那一个玩法是一张横卡(封面 · 名字 · 类型),点开先看玩法开始弹窗;底部「导航」「开始任务」一排 -->
       <block wx:if="{{mode!=2}}">
         <view class="sheet-kit lk-card" data-origin="sheet" bindtap="openKitStart" aria-role="button" aria-label="玩法 {{sheet.node.gameTitle}}" hover-class="sheet-kit--press" hover-stay-time="80">
-          <image wx:if="{{sheet.node.imgUrl}}" class="sheet-kit__img" src="{{img.first(sheet.node.imgUrl)}}" mode="aspectFill" />
-          <cy-station-silhouette wx:elif="{{sheet.node.imgHidden}}" class="sheet-kit__img" size="sm" num="{{sheet.node.placeNum || sheet.node.num}}" />
-          <view wx:else class="sheet-kit__img sheet-kit__img--illus"><cy-illus name="clue" size="96" reduced-motion="{{reducedMotion}}" /></view>
+          <image wx:if="{{sheet.node.gamePhoto}}" class="sheet-kit__img" src="{{img.one(sheet.node.gamePhoto)}}" mode="aspectFill" lazy-load="true" />
+          <view wx:else class="sheet-kit__img photo-tex" aria-hidden="true"></view>
           <view class="sheet-kit__copy"><text class="sheet-kit__t">{{sheet.node.gameTitle}}</text><text class="sheet-kit__s" wx:if="{{sheet.node.gameLede}}">{{sheet.node.gameLede}}</text></view>
           <cy-illus name="key" size="80" bare="{{true}}" reduced-motion="{{reducedMotion}}" />
         </view>

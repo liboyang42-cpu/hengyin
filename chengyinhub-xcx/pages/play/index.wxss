@@ -199,8 +199,7 @@ page { background: var(--cy-color-bg-page); }
 .sheet.is-out{ animation:none; transform:translateY(105%); transition:transform var(--cy-motion-sheet-full-out) var(--cy-ease-standard); pointer-events:none; }
 .play--reduced-motion .mask, .play--reduced-motion .sheet{ animation:none; }
 .sheet-cover{ position:relative; height:364rpx; background:transparent; display:flex; align-items:center; justify-content:center; }
-.sheet-cover--bare{ height:calc(var(--cy-space-8) + var(--cy-space-6)); } /* 没配图(故事站)只留角标那一条,不再空出一大块黑底;V3-21 封面不再垫一块灰底 */
-.sheet-cover image{ width:100%; height:100%; position:absolute; inset:0; } /* ds-ok Figma 实测(用户裁决字面值) */
+.sheet-cover image{ width:100%; height:100%; position:absolute; inset:0; background:var(--cy-color-play-surface-subtle); } /* ds-ok Figma 实测(用户裁决字面值) */
 /* 原占位字在封面底上实测 3.68:1,不达 4.5 ⇒ 收编 text-tertiary(4.72:1) */
 .cover-tip{ font-size: var(--cy-type-caption); color: var(--cy-color-text-tertiary); } /* ds-ok Figma 实测(用户裁决字面值) */
 .cover-tag{ position:absolute; top:var(--cy-space-3-5); left:var(--cy-space-4); background: var(--cy-color-bg-glass); border:1rpx solid var(--cy-color-border-subtle);
@@ -2148,7 +2147,6 @@ page { background: var(--cy-color-bg-page); }
 /* a1-v3-21 城市定向站点 = 整屏游戏画面:顶到屏顶、无圆角、无抓手;封面放大成主视觉,没配图时是一块带站号的深色主视觉;关闭在右上角胶囊下方 */
 .sheet.sheet--game{ top:0; border-radius:0; min-height:100vh; max-height:none; display:flex; flex-direction:column; }
 .sheet--game .sheet-cover{ flex:none; height:56vh; }
-.sheet--game .sheet-cover--bare{ height:38vh; background:var(--cy-comp-sheet-player-elevated); }
 .sheet--game .cover-tag{ top:auto; bottom:var(--cy-space-5); }
 .sheet--game .cover-open{ top:auto; bottom:var(--cy-space-5); }
 .sheet--game .cover-fade{ height:240rpx; background:linear-gradient(to top,var(--cy-comp-sheet-player-glass),transparent); }
@@ -2288,3 +2286,7 @@ page { background: var(--cy-color-bg-page); }
 .fx-tile__expired { display: block; margin-top: var(--cy-space-2); font-size: var(--cy-type-caption); color: var(--cy-color-text-tertiary); }
 .fx-hero__expired { display: block; text-align: center; font-size: var(--cy-type-body); color: var(--cy-color-text-tertiary); }
 .chpick__row.is-visit .chpick__cover { opacity: .5; }
+
+/* 站点 / 玩法配图兜底链的最后一级(utils/station-image.js):没有任何图时铺一层深色纹理底,只用玩家域 token,不放人形剪影 */
+.photo-tex { background: radial-gradient(ellipse 90% 80% at 30% 20%, var(--cy-color-bg-raised), transparent 70%), linear-gradient(160deg, var(--cy-color-play-surface-subtle), var(--cy-color-play-surface-solid)); }
+.fx-tile__im, .fx-hero__im, .chfull__kitcard-img { background: var(--cy-color-play-surface-subtle); }

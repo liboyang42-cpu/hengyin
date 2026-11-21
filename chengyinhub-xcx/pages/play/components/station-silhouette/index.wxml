@@ -1,4 +1,0 @@
-<view class="ss ss--{{size}}" aria-role="img" aria-label="{{num ? '第 ' + num + ' 站' : '站点'}}">
-  <view class="ss__shape" aria-hidden="true"><view class="ss__head"></view><view class="ss__body"></view></view>
-  <text class="ss__n" wx:if="{{num}}">{{num}}</text>
-</view>
