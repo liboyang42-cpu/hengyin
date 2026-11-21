@@ -371,7 +371,7 @@
                        长按 = 起拖换顺序。两个手势分开,不和下面的照片/地点点击撞车。 -->
                   <view
                     class="slopes-node-rail slopes-node-rail--handle {{selectedNodeLid === node._localId ? 'is-selected' : ''}}"
-                    catchtap="selectNode" aria-role="button" aria-label="第 {{nodeIndex + 1}} 个节点"
+                    catchtap="selectNode" aria-role="button" aria-label="第 {{(nodeIndex + 1) || 1}} 个节点"
                     catchlongpress="onNodeDragStart"
                     data-nodelid="{{node._localId}}"
                     data-chapterindex="{{chapterIndex}}"
