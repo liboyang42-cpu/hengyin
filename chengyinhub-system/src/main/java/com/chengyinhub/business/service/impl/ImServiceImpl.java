@@ -272,7 +272,8 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         if (c.getType() != null && c.getType() == ImConversation.TYPE_SYSTEM)
         {
             cp.put("id", 0);
-            cp.put("nickname", "系统通知");
+            // OR-023：系统会话(type=2)对玩家统一署名「城瘾小助手」,与站内信卡片署名一致。
+            cp.put("nickname", "城瘾小助手");
             cp.put("avatar", "");
             return cp;
         }

@@ -106,6 +106,10 @@ public class FreeExploreBundleServiceImpl implements IFreeExploreBundleService {
             c.put("perkId", offer.getPerkId());
             c.put("payerClubId", offer.getPayerClubId());
             c.put("validEnd", offer.getValidEnd() == null ? null : offer.getValidEnd().getTime());
+            // FE-G5:把建单时玩家看到的展示条款一并冻结(未声明的不写,只做展示,不参与容量/核销/结算)。
+            if (offer.getIncluded() != null) c.put("included", offer.getIncluded() == 1);
+            if (offer.getExtraSpendText() != null) c.put("extraSpendText", offer.getExtraSpendText());
+            if (offer.getReserveRequired() != null) c.put("reserveRequired", offer.getReserveRequired() == 1);
             contract.add(c);
         }
         Map<String, Object> policy = new LinkedHashMap<>();
