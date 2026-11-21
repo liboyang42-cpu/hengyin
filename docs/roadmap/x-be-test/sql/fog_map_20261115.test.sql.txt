@@ -2,6 +2,7 @@
 -- the ledger pins its checksum). Only change: the backfill also groups by LEFT(LOWER(geohash7), 5), which is a
 -- function of LOWER(geohash7), so the rows are identical; the original fails with error 1055 under MySQL 8's
 -- default sql_mode (ONLY_FULL_GROUP_BY). Idempotent like the original. Used by docs/roadmap/x-be-test/deploy-test.sh.
+-- Stored as .sql.txt so no ledger, gate or runner treats it as a managed migration.
 -- P3 fog-map (2026-11-15): per-member revealed fog cells, kept for good with consent (roam.fog.retainRevealedCells).
 -- One row per member and geohash-7 cell with its first and latest reveal time. No session, no travel order, no
 -- coordinates: a raw track cannot be rebuilt from it. Raw tracks and roam_fog_tile keep their 30-day retention.

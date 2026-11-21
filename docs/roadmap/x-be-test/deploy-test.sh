@@ -181,7 +181,7 @@ local PRE=(
   migration_20261115_links_push.sql
   # TEST copy (docs/roadmap/x-be-test/sql/): the original's backfill fails with error 1055 under MySQL 8's default
   # ONLY_FULL_GROUP_BY; the copy groups by one more derived column and writes the same rows.
-  migration_20261115_fog_map.test.sql
+  fog_map_20261115.test.sql.txt
   migration_20261115_privacy_erasure.sql
   migration_20261115_seed_tools.sql
   migration_20261115_maps_backend.sql
@@ -233,7 +233,7 @@ local POST=(
 )
 local f
 local TESTSQL=$SRC/docs/roadmap/x-be-test/sql
-sqlpath() { case "$1" in *.test.sql) echo "$TESTSQL/$1" ;; *) echo "$SQL/$1" ;; esac; }
+sqlpath() { case "$1" in *.test.sql.txt) echo "$TESTSQL/$1" ;; *) echo "$SQL/$1" ;; esac; }
 for f in "${PRE[@]}" "${POST[@]}"; do [ -f "$(sqlpath "$f")" ] || die "migration file missing in the clone: $f"; done
 
 apply() { # file
