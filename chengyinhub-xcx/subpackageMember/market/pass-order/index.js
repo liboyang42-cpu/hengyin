@@ -1,6 +1,7 @@
 // 通行证订单详情(我的订单 → 通行证订单):待支付可回查 / 继续支付,已开通可申请退款并看进度。
 // 状态文案只来自服务端订单;退款走 POST /api/platform-pass/orders/{orderNo}/refund-apply {reason}(后端 fix/pass-backend-20261113),进度读订单 refund.reviewStatus。
 const app = getApp()
+const { safeDecode } = require('../../../utils/safe-decode.js')
 const cyToast = require('../../../utils/toast.js')
 const modal = require('../../../utils/modal.js')
 const subscribe = require('../../../utils/subscribe.js')
@@ -32,7 +33,7 @@ Page({
     terms: []
   },
   onLoad(options) {
-    this._orderNo = options && options.orderNo ? decodeURIComponent(options.orderNo) : ''
+    this._orderNo = options && options.orderNo ? safeDecode(options.orderNo) : ''
     try { this._canVirtual = !!(wx.canIUse && wx.canIUse('requestVirtualPayment')) } catch (e) { this._canVirtual = false }
     if (!this._orderNo) { this.setData({ state: 'missing' }); return }   // PG-041:缺单号落缺参态,不给「重试」空单号请求
     this.load()

@@ -78,7 +78,7 @@ function decorateReg(it) {
     logo: it.merchantLogo || '',
     meta: it.merchantMeta || '商家候选',
     placeText: it.addressName || it.address || '',
-    topicTitle: it.topicName || ('主题 #' + it.topicId),
+    topicTitle: it.topicName || '未命名主题',
     dim: audit === 2,
   });
 }
@@ -167,7 +167,7 @@ Page({
       // 与下面 tab 的处理同因:onLoad 里同步写会当场记进未收口的创建流程(渲染层会报
       // expect FLOW_INITIAL_CREATION end but get FLOW_DATA_OBSERVER)。文案先算好,
       // nextTick 里只留一句纯赋值 —— render-flow 源码合同只认那一种形状。
-      const scopeText = '只看「' + (this._topicFilterName || '#' + this._topicFilter) + '」的协作';
+      const scopeText = '只看「' + (this._topicFilterName || '未命名主题') + '」的协作';
       wx.nextTick(() => this.setData({ topicScopeText: scopeText }));
     }
     if (options && options.tab === 'sent') {

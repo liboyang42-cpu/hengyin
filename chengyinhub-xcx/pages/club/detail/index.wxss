@@ -11,7 +11,7 @@ page { background: var(--cy-bg-page); }
   --club-surface-2: var(--cy-bg-card);
   --club-text: var(--cy-text-title);
   --club-text-muted: var(--cy-color-text-tertiary);
-  --club-glass: rgba(255, 255, 255, 0.12);
+  --club-glass: var(--cy-color-border-subtle);
   --club-glass-border: var(--cy-border-card);
 }
 /* 2026-10-27 M-24:商家浅色版 —— 本页几处写死的暗色字面量在浅色根下换回语义色 */
@@ -297,7 +297,7 @@ page { background: var(--cy-bg-page); }
 
 .feed-divider {
   height: 2rpx;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--cy-color-border-subtle);
   margin: 0;
 }
 

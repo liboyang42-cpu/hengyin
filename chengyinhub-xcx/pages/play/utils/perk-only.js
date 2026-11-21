@@ -8,4 +8,16 @@ function perkOnlyOf(mode, nodes, serverFlag) {
   return shops.length > 0 && shops.every((n) => !n.hasGame && !n.hasAdvanced);
 }
 
-module.exports = { perkOnlyOf };
+// FE-G5:本店权益的展示条款,来自 /api/play/nodes 每个节点 perk 上的 included / extraSpendText / reserveRequired
+// (PerkDisplayTerms.put)。与主题页参与商家卡同一说法;哪项没下发就不写哪项,全缺返回空串。
+function perkTermsText(perk) {
+  const p = perk || {};
+  const extra = typeof p.extraSpendText === 'string' ? p.extraSpendText.trim() : '';
+  const parts = [];
+  if (p.included === true) parts.push('已含');
+  else if (extra) parts.push('需消费 ' + extra);
+  if (p.reserveRequired === true) parts.push('需预约');
+  return parts.join(' · ');
+}
+
+module.exports = { perkOnlyOf, perkTermsText };

@@ -420,9 +420,6 @@
   <cy-sheet variant="full" show="{{davidShow}}" title="路线模式介绍" style="--cy-comp-sheet-max-h:calc(100vh - {{chrome.sheetTop}}px)" bind:close="davidClose">
   <view class="pop pop-topic2">
     <view class="davidbmtk">
-      <view class="davidbmtk_top">
-        <view class="davidbmtk_top_txt">选择最适合你的品牌参与方式，根据你的时间安排和社交偏好选择最适合的方式</view>
-      </view>
       <view class="davidbmtk_box">
         <view class="davidbmtk_box_top">
           <view class="davidbmtk_box_top_left"><image lazy-load="true" src="/pages/topic/images/d_bmtk1.png" mode="widthFix" /></view>

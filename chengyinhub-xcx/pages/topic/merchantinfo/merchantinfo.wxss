@@ -222,7 +222,7 @@ page {
 .topic .topbar .titBar .back button {
   width: 66rpx;
   height: 66rpx;
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--cy-comp-publish-merchant-glass);
   border-radius: 50%;
   transition: background-color var(--cy-dur) var(--cy-ease);
 }

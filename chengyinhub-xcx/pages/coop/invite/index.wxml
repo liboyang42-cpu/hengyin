@@ -117,7 +117,6 @@
       <cy-skeleton wx:if="{{supplyTopicState === 'loading'}}" />
       <cy-error wx:elif="{{supplyTopicState === 'error'}}" title="无法确认主题" sub="{{supplyTopicError}}" retry="重新读取" bind:retry="retrySupplyTopic" class="cy-fade-in" />
       <block wx:elif="{{supplyStationRequired}}">
-        <view class="card-hint cy-fade-in" wx:if="{{!selected.length}}">先选择合作商家，再选择该商家的已确定据点。</view>
         <view wx:for="{{selected}}" wx:key="toId" class="target-main cy-fade-in">
           <view class="target-name">{{item.name}}</view>
           <cy-skeleton wx:if="{{item.supplyState === 'loading'}}" />
@@ -150,11 +149,10 @@
       <view class="iv-terms"><view><text class="iv-terms-label">拟议条款 · 对方接受并成单后锁定</text><text class="iv-terms-value">{{inviteModal.termsText}}</text></view><cy-icon name="check" size="28" /></view>
       <view wx:if="{{supplyStationRequired}}" class="iv-terms" wx:for="{{selected}}" wx:key="toId"><view><text class="iv-terms-label">{{item.name}} · 接受后冻结</text><text class="iv-terms-value">核销据点：{{item.supplyStationName}}</text></view></view>
       <view class="iv-hero"><text class="iv-type">协作邀请</text><text class="iv-topic">{{topicName ? ('关联主题 · ' + topicName) : '整主题合作邀请'}}</text></view>
-      <view class="iv-copy">对方会在「收到的」中确认本次协作。</view>
       <view class="iv-message"><text class="iv-message-title">邀请语</text><textarea class="iv-message-input" value="{{message}}" bindinput="onMessageInput" placeholder="写下想对对方说的话" placeholder-class="iv-message-placeholder" maxlength="100" /></view>
       <view class="iv-result" wx:if="{{sendResult}}" aria-role="alert">{{sendResult}}</view>
       <!-- 发送被驳(条款/主题没配好)时给出路:去专业编辑器改主题票价与内容,保存后回工作台重发 -->
-      <view class="iv-edit-exit" wx:if="{{sendResult && topicId && !sendRecruitClosed}}" bindtap="goEditTopic" aria-role="button" aria-label="去编辑主题的票价与内容" hover-class="cy-pressed" hover-stay-time="80"><text>主题条款没配好？去编辑主题(票价/内容)</text><cy-icon name="arrow-right" size="28" /></view>
+      <view class="iv-edit-exit" wx:if="{{sendResult && topicId && !sendRecruitClosed}}" bindtap="goEditTopic" aria-role="button" aria-label="去编辑主题的票价与内容" hover-class="cy-pressed" hover-stay-time="80"><text>主题条款没配好？去编辑主题（票价、内容）</text><cy-icon name="arrow-right" size="28" /></view>
       <view class="iv-send {{submitting ? 'disabled' : ''}}" bindtap="confirmInvite" aria-role="button" aria-label="确认发送协作邀约" aria-disabled="{{submitting}}" hover-class="{{submitting ? 'none' : 'cy-pressed'}}" hover-stay-time="80">{{submitting ? '发送中…' : '发送邀约(' + selected.length + ')'}}</view>
     </view>
   </cy-sheet>

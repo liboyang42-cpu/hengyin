@@ -871,6 +871,7 @@
             <view class="fx-perk__m">
               <view class="fx-perk__m-i"><cy-icon name="check" size="26" /><text>{{hero.node.perkRule}}</text></view>
               <view class="fx-perk__m-i" wx:if="{{hero.node.perkValid}}"><cy-icon name="clock" size="26" /><text>{{hero.node.perkValid}}</text></view>
+              <view class="fx-perk__m-i" wx:if="{{hero.node.perkTerms}}"><cy-icon name="info" size="26" /><text>{{hero.node.perkTerms}}</text></view>
             </view>
           </view>
         </view>
@@ -1162,7 +1163,7 @@
          路线走故事流左上角的地图;自由探索站内没有地图,保留导航这一行。 -->
     <view class="sheet-nav" wx:if="{{mode==2 && !sheet.node.done && sheet.node.lat && !isPreview && !isMock}}" bindtap="sheetNav" hover-class="cy-pressed" hover-stay-time="80">
       <cy-icon name="route" size="28" />
-      <text>导航去这里(打开地图 App)</text>
+      <text>导航去这里</text>
     </view>
     <!-- 核销码只在到店这一步出现(底栏已撤):核销是商家扫玩家的码,所以是「出示」不是「去扫」 -->
     <view class="sheet-nav sheet-nav--verify" wx:if="{{mode==2 && regId && !isPreview && !isMock}}"

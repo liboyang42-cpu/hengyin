@@ -712,12 +712,12 @@
     <text class="psub">{{checkinView.sub}}</text>
     <view class="drow" bindtap="onCheckinStamp" aria-role="button" aria-label="城市贴纸" hover-class="cy-pressed" hover-stay-time="80">
       <view class="dic pic pic--stamp"></view>
-      <view class="dcopy"><text class="dt">城市贴纸</text><text class="ds">拍一张，传上去，再看别人在此地拍的</text></view>
+      <view class="dcopy"><text class="dt">城市贴纸</text></view>
       <view class="darr"></view>
     </view>
     <view class="drow" bindtap="onCheckinSign" aria-role="button" aria-label="今日城市签" hover-class="cy-pressed" hover-stay-time="80">
       <view class="dic pic pic--journal"></view>
-      <view class="dcopy"><text class="dt">今日城市签</text><text class="ds">先写再看：写一句，才换来上一个人那张</text></view>
+      <view class="dcopy"><text class="dt">今日城市签</text></view>
       <view class="darr"></view>
     </view>
   </view>
@@ -1196,7 +1196,7 @@
     <cy-tabs variant="chip" tabs="{{poiFilterTabs}}" active="{{poiFilter.radiusM + ''}}" bind:change="onPoiFilterRadius" />
     <view class="drow">
       <view class="dic pic pic--route"></view>
-      <view class="dcopy"><text class="dt">只看未到过</text><text class="ds">已到过、已打卡的节点先不显示</text></view>
+      <view class="dcopy"><text class="dt">只看未到过</text></view>
       <view class="dsw {{poiFilter.unvisitedOnly ? 'is-on' : ''}}" catchtap="togglePoiFilterUnvisited" aria-role="switch" aria-checked="{{poiFilter.unvisitedOnly}}" aria-label="只看未到过" hover-class="cy-pressed" hover-stay-time="80"><view class="dsw-i"></view></view>
     </view>
     <text class="roam-rules__lede">范围只影响漫游节点；筛选按账号保存在本机。</text>

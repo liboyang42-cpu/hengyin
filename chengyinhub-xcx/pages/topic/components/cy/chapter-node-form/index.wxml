@@ -113,6 +113,19 @@
       <input class="cnf-input" value="{{form.familyPerkText}}" placeholder="例如：儿童份小杯" maxlength="200"
         disabled="{{submitting}}" placeholder-class="cnf-placeholder" data-key="familyPerkText" bindinput="onInput" />
     </view>
+    <view class="cnf-field" wx:if="{{termsMode === 'PERK'}}">
+      <view class="cnf-label cnf-label--row"><text>权益已含在票内</text>
+        <cy-switch checked="{{form.included}}" disabled="{{submitting}}" accessibilityLabel="权益已含在票内" bind:change="onIncludedChange" /></view>
+    </view>
+    <view class="cnf-field" wx:if="{{termsMode === 'PERK' && !form.included}}">
+      <view class="cnf-label"><text>需另付</text><text class="cnf-optional">选填</text></view>
+      <input class="cnf-input" value="{{form.extraSpendText}}" placeholder="例如：任意饮品一杯" maxlength="100"
+        disabled="{{submitting}}" placeholder-class="cnf-placeholder" data-key="extraSpendText" bindinput="onInput" />
+    </view>
+    <view class="cnf-field" wx:if="{{termsMode === 'PERK'}}">
+      <view class="cnf-label cnf-label--row"><text>需预约</text>
+        <cy-switch checked="{{form.reserveRequired}}" disabled="{{submitting}}" accessibilityLabel="需预约" bind:change="onReserveRequiredChange" /></view>
+    </view>
   </view>
 
   <block wx:if="{{formMode !== 'offer'}}">
