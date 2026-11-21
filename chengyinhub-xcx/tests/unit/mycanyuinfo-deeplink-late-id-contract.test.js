@@ -1,5 +1,5 @@
 // 2026-09-16 截图冒烟:参与详情深链页 subpackageMember/mycanyuinfo/mycanyuinfo?id=<报名id> 打开后
-// 恒显示「缺少参与记录 · 请返回列表重新进入」,而且全程一个请求都不发(拦截 app.sendRequest 为空)。
+// 恒显示缺参态(现为「链接已失效 · 返回」),而且全程一个请求都不发(拦截 app.sendRequest 为空)。
 //
 // 根因:深链壳的 id 是在页面 onLoad 里 setData 进去的 —— 组件 attached 那一刻属性值还是初始空串,
 // 旧实现只在 attached 读一次 recordId,后到的属性没有观察器接手,于是永远停在缺参态。

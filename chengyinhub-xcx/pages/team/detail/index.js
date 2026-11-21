@@ -72,10 +72,10 @@ Page({
       this.setData({
         loading: false,
         refreshing: false,
-        error: '队伍链接不完整',
+        error: '链接已失效',
         errorKind: 'missing-param',
         errorSub: '',
-        errorAction: '返回上一页'
+        errorAction: '返回'
       });
     }
   },
@@ -228,7 +228,7 @@ Page({
             errorSub: authDenied ? '' : refused ? '' : app.getRequestErrorMessage(res, hasTeam ? '已保留上次确认的队伍信息' : '请稍后重新加载'),
             boardState: 'error',
             boardMessage: '队伍成员资格暂未确认，请重新加载',
-            errorAction: refused ? '返回上一页' : '重新加载'
+            errorAction: refused ? '返回' : '重新加载'
           });
         }
       },

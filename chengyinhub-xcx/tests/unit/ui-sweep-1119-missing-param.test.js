@@ -92,3 +92,52 @@ test('U2 journey 四页缺参态都有「返回」出口', () => {
   }
   assert.match(read('subpackageJourney/pages/seats/index.wxml'), /bind:cta="onStateCta"/);
 });
+
+// U2 第二批(1120 复核 master 残留):这些缺参态还在用「缺少…信息 / …链接不完整」和「返回上一页 / 返回活动列表」。
+const U2_BATCH2 = [
+  'pages/merchant/ledger/order-detail/index.wxml',
+  'pages/merchant/ledger/batch-detail/index.wxml',
+  'pages/square/detail/index.wxml',
+  'pages/topic/merchantinfo/merchantinfo.wxml',
+  'pages/club/group-code/index.wxml',
+  'pages/club/payout-receiver/index.wxml',
+  'subpackageMember/components/cy/scene-roam-poi-detail/index.wxml',
+];
+
+test('U2 第二批 wxml:缺参态默认文案 + 唯一「返回」', () => {
+  for (const rel of U2_BATCH2) {
+    const tags = read(rel).match(/<cy-empty\b[^>]*kind="missing-param"[^>]*>/g) || [];
+    assert.ok(tags.length, rel + ' 必须有 missing-param 缺参态');
+    for (const tag of tags) {
+      assert.match(tag, /cta="返回"/, rel);
+      const title = tag.match(/\btitle="([^"]*)"/);
+      assert.ok(!title || title[1] === '链接已失效', rel + ' 缺参态只用「链接已失效」');
+      assert.doesNotMatch(tag, /\bsub="/, rel + ' 缺参态不加副文案');
+    }
+  }
+  const partner = read('pages/topic/pricing/partner/index.wxml').match(/<cy-empty wx:if="\{\{invalidLink\}\}"[^>]*>/);
+  assert.ok(partner, '合作页缺参态');
+  assert.match(partner[0], /kind="missing-param"[\s\S]*cta="返回"/);
+  assert.doesNotMatch(partner[0], /\btitle="/);
+  assert.doesNotMatch(read('pages/crop/index.wxml'), /没有可裁剪的图片/);
+  // 俱乐部团码缺参不再是 cy-error + 第二个「进入俱乐部管理」出口
+  assert.doesNotMatch(read('pages/club/group-code/index.wxml'), /缺少路线或场次信息/);
+  assert.match(read('pages/club/group-code/index.js'), /goBack\(\) \{\s*if \(getCurrentPages\(\)\.length > 1\)/);
+  // 个人收款缺俱乐部参数不再给假「重新加载」
+  assert.match(read('pages/club/payout-receiver/index.js'), /if \(!this\._mine\) \{ done\(\); this\.setData\(\{ state: 'missing-param'/);
+});
+
+test('U2 第二批 js:缺参标题统一「链接已失效」,动作统一「返回」', () => {
+  const team = read('pages/team/detail/index.js');
+  assert.match(team, /error: '链接已失效',\s*errorKind: 'missing-param',\s*errorSub: '',\s*errorAction: '返回'/);
+  assert.match(team, /errorAction: refused \? '返回' : '重新加载'/);
+  const join = read('pages/team/join/index.js');
+  assert.match(join, /'邀请链接已升级' : '链接已失效'/);
+  assert.doesNotMatch(join, /邀请链接不完整|请从队长分享的邀请重新进入|返回上一页/);
+  const circle = read('pages/play/circle/index.js');
+  assert.match(circle, /errorText: '链接已失效',\s*errorKind: 'missing-param',\s*errorSub: '',\s*errorAction: '返回'/);
+  assert.match(read('pages/activity/official-detail/index.js'), /loadErrTitle: '链接已失效', loadErrSub: '',\s*loadErrAction: '返回' \}\)/);
+  const part = read('subpackageMember/components/scene-member-participation-detail/index.js');
+  assert.match(part, /missingTitle: '链接已失效'/);
+  assert.match(part, /loadState: 'missing-param',\s*loadErrorText: '',\s*errorActionText: '返回',/);
+});

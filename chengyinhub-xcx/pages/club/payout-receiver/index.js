@@ -43,7 +43,7 @@ Page({
     if (!fromPull) this.setData({ state: 'loading', errorText: '' });
     const done = () => { if (fromPull) wx.stopPullDownRefresh(); };
     if (!this._clubId) {
-      if (!this._mine) { done(); this.setData({ state: 'error', errorText: '缺少俱乐部信息' }); return; }
+      if (!this._mine) { done(); this.setData({ state: 'missing-param', errorText: '' }); return; }
       this.resolveClub(seq, done);
       return;
     }

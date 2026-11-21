@@ -100,10 +100,10 @@ Page({
       this.setData({
         loading: false,
         refreshing: false,
-        error: this.legacyTeamId ? '邀请链接已升级' : '邀请链接不完整',
+        error: this.legacyTeamId ? '邀请链接已升级' : '链接已失效',
         errorKind: 'missing-param',
-        errorSub: this.legacyTeamId ? '请让队长重新分享新的邀请链接' : '请从队长分享的邀请重新进入',
-        errorAction: '返回上一页'
+        errorSub: this.legacyTeamId ? '请让队长重新分享新的邀请链接' : '',
+        errorAction: '返回'
       });
       return;
     }
@@ -160,7 +160,7 @@ Page({
             error: authDenied ? '当前邀请无法查看' : refused ? app.getRequestErrorMessage(res, '邀请已失效') : hasTeam ? '邀请状态暂未更新' : '邀请暂时不可用',
             errorKind: authDenied ? 'no-permission' : refused ? 'missing-param' : 'data',
             errorSub: authDenied ? '' : refused ? '请让队长重新分享' : app.getRequestErrorMessage(res, hasTeam ? '已保留上次确认的邀请信息' : '请让队长重新分享后再试'),
-            errorAction: refused ? '返回上一页' : '重新加载'
+            errorAction: refused ? '返回' : '重新加载'
           });
         }
       },

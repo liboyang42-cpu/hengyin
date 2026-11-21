@@ -266,7 +266,7 @@ Page({
       this.data.loadErrActionType = 'back';
       this.setData({ loading: false, e: null, organizerEntry: false,
         loadErrKind: 'missing-param', loadErrTitle: '链接已失效', loadErrSub: '',
-        loadErrAction: '返回活动列表' });
+        loadErrAction: '返回' });
       return;
     }
     if (this._reader && !sameReader(app, this._reader)) {
