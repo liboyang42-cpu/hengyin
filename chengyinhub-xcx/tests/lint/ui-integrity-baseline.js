@@ -1006,7 +1006,8 @@ module.exports = {
 // 2026-11-02 走查修复 l4-counter(M-12/M-21/M-24 在 merchantinfo.js 前段 +8 行):2 条 U4-DYNAMIC 锚点仅行号位移(2433→2441、2465→2473),调用行逐字相同、理由与条数不变;digest 按门禁 baselineKeyDigest 重算。
 // 2026-11-03 集成 l4-counter 合 pay-gate/l1/l2/l3:两侧登记取并集,不新增登记;u4Dynamic digest 按门禁 baselineKeyDigest 在合并树重算。
 // 2026-11-03 Round5 l7-launch:club/apply 游客登录入口(+11 行),onInput 233→244、toggleBool 244→255 仅行号位移,调用行逐字相同、理由与条数不变;digest 按门禁同一算法重算。
-"f76318e3be4f452384cb6f357ac0086c3ed2a1b5d49a262248dfacad5f381420",
+// 2026-11-21 startup-perf:fabu _storyCommand 改为只回传当前章 formData.chapters[i](不再整表回传章节数组),调用文本变化致 U4-DYNAMIC 等量换 key(9c06b486…→6e323db8…),条数 59 不变、不新增登记;理由同步改写,digest 按门禁 baselineKeyDigest 重算。
+"ed2235820f6cb885c5c26f6c52b177037955bb34de3253fbc07740cf1260e6eb",
 // 2026-10-28 模板页货架改版(#652)合 master(#610):本线删 template/index 两条 + master play 1621→1624 重锚，合并树 60 条，digest 按同一算法重算。
 // 2026-10-20 R5 尾段(#327,owner 批准 12 条重锚):fabu 729→731、898→900、2524→2530、3570→3588、3951→3969、4957→4990、5215→5248、5866→5899、5876→5909、5929→5962、6270→6303、7936→8060,逐行比对 master 原行一字未改,理由与条数 58 不变;digest 按同一算法显式重算。
       // 2026-08-20 开卡包四拍动效:u5Silent 条数不变(12),只是 play/index.js 的调用点
@@ -1433,7 +1434,7 @@ module.exports = {
   // (本支) "chengyinhub-xcx/pages/index/index.js:1228": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
   // (本支) "chengyinhub-xcx/pages/merchant/apply/index.js:324": "动态 setData 需精确登记：[f]: e.detail.value；owner=小程序，复核=2026-09-30",
   // (本支) "chengyinhub-xcx/pages/publish/fabu/index.js:690": "草稿恢复 patch 只含固定 formData/pendingMaterials，并按本地信封是否存在追加固定的分类与起止时间字段；信封值不会成为 setData 字段名；owner=小程序，复核=2026-09-30",
-  // (本支) "chengyinhub-xcx/pages/publish/fabu/index.js:910": "_storyCommand 固定写 formData.chapters 与 pendingMaterials，uiPatch 的全部调用点都在本文件且传对象字面量/空值，只补 storyEditor、节点抽屉与撤销态等固定键；owner=小程序，复核=2026-09-30",
+  // (本支) "chengyinhub-xcx/pages/publish/fabu/index.js:910": "_storyCommand 固定写当前章 formData.chapters[章节下标](2026-11-21 startup-perf:不再整表回传章节数组)与 pendingMaterials，uiPatch 的全部调用点都在本文件且传对象字面量/空值，只补 storyEditor、节点抽屉与撤销态等固定键；owner=小程序，复核=2026-09-30",
   // (本支) "chengyinhub-xcx/pages/publish/fabu/index.js:2325": "资格同步 patch 固定含 merchantPoolEditable，仅在确证无资格时追加 formData.openMerchantPool=false，不接收动态字段名；owner=小程序，复核=2026-09-30",
   // (本支) "chengyinhub-xcx/pages/publish/fabu/index.js:3294": "我的俱乐部响应只写固定 myClubs，并按锁定/唯一俱乐部追加固定 clubIndex 与 formData.clubId；服务端对象不会展开为页面键；owner=小程序，复核=2026-09-30",
   // (本支) "chengyinhub-xcx/pages/publish/fabu/index.js:3662": "节点定位 patch 固定写 selectedNodeLid，坐标有效时只追加 mapCenter 与 mapScale，字段集合由本方法写死；owner=小程序，复核=2026-09-30",
@@ -1457,7 +1458,7 @@ module.exports = {
     // (本支) 2026-09-19 用户改判摘除首页搜索入口(goSearch 及其注释 -6 行),锚点 1274→1268 等量换 key,调用点与理由一字未改,digest 显式重算。
     "chengyinhub-xcx/pages/index/index.js#site:24e1efab5e0ca1a6a4829cea880778b64709e9b7fbc9324beadfa9ed521d9a97:1": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/merchant/apply/index.js#site:0cd32458131f4bcf599a3dbb88f9d785566cbc5fb07eb223f6ab61936bf48c4d:1": "动态 setData 需精确登记：[f]: e.detail.value；owner=小程序，复核=2026-09-30",
-    "chengyinhub-xcx/pages/publish/fabu/index.js#site:9c06b48676d09ed596054692466e3f963ef4a27b4b58ee168ca5d662e07c959b:1": "_storyCommand 固定写 formData.chapters 与 pendingMaterials，并由 _storyDerived 固定补 storySegs/storyListNo/storyCover/storyCaps/storyGalleryCells/storyBranchToLabel 六键(2026-11-10 r2-create;l-editor 撤 storyWordCount、加章节卡 / 图片组 / 分支三键)，uiPatch 的全部调用点都在本文件且传对象字面量/空值，只补 storyEditor、节点抽屉与撤销态等固定键；owner=小程序，复核=2026-09-30",
+    "chengyinhub-xcx/pages/publish/fabu/index.js#site:6e323db84beabb20561151f743b55ced84ed601892c2130d1644fd866f3b7b27:1": "_storyCommand 固定写 formData.chapters 与 pendingMaterials，并由 _storyDerived 固定补 storySegs/storyListNo/storyCover/storyCaps/storyGalleryCells/storyBranchToLabel 六键(2026-11-10 r2-create;l-editor 撤 storyWordCount、加章节卡 / 图片组 / 分支三键)，uiPatch 的全部调用点都在本文件且传对象字面量/空值，只补 storyEditor、节点抽屉与撤销态等固定键；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/publish/fabu/index.js#site:9f3dff5e58a6bfce503a0ab3e03dd6b50c9b19f2ad6ebbe3e27fdba20d93867a:1": "资格同步 patch 固定含 merchantPoolEditable，仅在确证无资格时追加 formData.openMerchantPool=false，不接收动态字段名；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/publish/fabu/index.js#site:3b228f45b97e2dadc2f5e261c179f4faa070ab5bc93e12ee530e0f10616d8f90:1": "我的俱乐部响应只写固定 myClubs，并按锁定/唯一俱乐部追加固定 clubIndex 与 formData.clubId；服务端对象不会展开为页面键；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/publish/fabu/index.js#site:2af42c2d5f69dc130c8099759d201893d7940f0ffe3e64b424fd24253953021d:1": "节点定位 patch 固定写 selectedNodeLid，坐标有效时只追加 mapCenter 与 mapScale，字段集合由本方法写死；owner=小程序，复核=2026-09-30",

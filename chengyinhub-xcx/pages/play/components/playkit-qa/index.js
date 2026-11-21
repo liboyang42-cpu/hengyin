@@ -36,7 +36,7 @@ const RETRY_TEXT = '还不对，再看看题面';
 /* 一进来题目占满一屏,一秒后选项才淡进来 */
 
 /* 打字题的判定在服务端(AnswerNormalizer);客户端不再留一份本地比对,避免两边规则漂移。
-   多答案分隔符与向量见 utils/answer-text.js、tests/unit/answer-text-vectors.test.js。 */
+   多答案分隔符与向量见 pages/publish/utils/answer-text.js、tests/unit/answer-text-vectors.test.js。 */
 
 /** 次数封顶:选项题最多只能错「选项数 - 1」次。0 表示不限。 */
 function cappedTries(maxTries, optionCount) {
