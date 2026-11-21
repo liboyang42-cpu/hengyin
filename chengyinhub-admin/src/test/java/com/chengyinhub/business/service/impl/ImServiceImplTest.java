@@ -647,6 +647,22 @@ class ImServiceImplTest {
         assertEquals(Integer.valueOf(1), rows.get(0).get("muted"));
     }
 
+    @Test
+    void systemConversationIsTitledAssistant() {
+        ImServiceImpl service = service();
+        ImConversation c = new ImConversation();
+        c.setId(100L);
+        c.setType(ImConversation.TYPE_SYSTEM);
+        when(memberMapper.selectMyConversationSummaries(1L))
+                .thenReturn(Collections.singletonList(summary(member(1L), c)));
+
+        java.util.List<java.util.Map<String, Object>> rows = service.listConversations(1L);
+
+        @SuppressWarnings("unchecked")
+        java.util.Map<String, Object> cp = (java.util.Map<String, Object>) rows.get(0).get("counterparty");
+        assertEquals("城瘾小助手", cp.get("nickname"));
+    }
+
     // ===== 卡片封洞 =====
 
     private void stubSendableConversation() {

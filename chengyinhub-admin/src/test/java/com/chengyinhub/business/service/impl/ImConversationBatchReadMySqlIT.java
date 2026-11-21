@@ -236,7 +236,7 @@ class ImConversationBatchReadMySqlIT
             row.put("muted", membership.getMuted() == null ? 0 : membership.getMuted());
             Map<String, Object> cp = new HashMap<>();
             cp.put("id", 0); cp.put("nickname", ""); cp.put("avatar", "");
-            if (conversation.getType() == ImConversation.TYPE_SYSTEM) cp.put("nickname", "系统通知");
+            if (conversation.getType() == ImConversation.TYPE_SYSTEM) cp.put("nickname", "城瘾小助手");
             else if (conversation.getType() == ImConversation.TYPE_MERCHANT) cp.put("nickname", "官方客服");
             else
             {
