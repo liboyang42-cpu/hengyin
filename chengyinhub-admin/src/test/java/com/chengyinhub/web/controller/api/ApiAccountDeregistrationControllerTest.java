@@ -192,7 +192,8 @@ class ApiAccountDeregistrationControllerTest {
         Fixture f = appleOnly();
         f.member.setPhone("13800138000");
         when(f.smsVerificationService.verify("13800138000", null, "198.51.100.20")).thenReturn(false);
-        assertEquals(HttpStatus.ERROR, f.controller.apply(null, null, "id-token", "auth-code", "request-1", request()).get(AjaxResult.CODE_TAG));
+        // r3 SMOKE-500-R4: a wrong SMS code is a 400 business refusal (was 500); still refused, still never applied.
+        assertEquals(HttpStatus.BAD_REQUEST, f.controller.apply(null, null, "id-token", "auth-code", "request-1", request()).get(AjaxResult.CODE_TAG));
         f.member.setPhone(null); f.member.setWxOpenId("owner-seven");
         assertEquals(HttpStatus.ERROR, f.controller.apply(null, null, "id-token", "auth-code", "request-1", request()).get(AjaxResult.CODE_TAG));
         verify(f.wechat).verify(1001L, "owner-seven", null, "198.51.100.20");
