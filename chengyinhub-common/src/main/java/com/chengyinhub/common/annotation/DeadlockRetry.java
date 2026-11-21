@@ -21,4 +21,6 @@ import java.lang.annotation.Target;
 @Documented
 public @interface DeadlockRetry
 {
+    /** 最大尝试次数（含首次调用，默认 2 次）。 */
+    int maxAttempts() default 2;
 }

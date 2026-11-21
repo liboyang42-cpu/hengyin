@@ -237,7 +237,7 @@ class ApiCouponControllerMerchantAccessTest {
         when(historyService.redeemCoupon(any(), any(), any(), any(), anyString()))
                 .thenReturn(ISmsCouponHistoryService.RedemptionResult.DISABLED);
         AjaxResult result = controller.couponVerification(null, "dyn", "MERCHANT");
-        assertEquals(500, result.get("code"));
+        assertEquals(409, result.get("code"));
         assertEquals("该优惠券已停用", result.get("msg"));
     }
 
@@ -268,7 +268,7 @@ class ApiCouponControllerMerchantAccessTest {
 
         AjaxResult result = controller.couponVerification(null, "collision-token", "MERCHANT");
 
-        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        assertEquals(403, result.get(AjaxResult.CODE_TAG));
         assertEquals("无权核销该优惠券", result.get(AjaxResult.MSG_TAG));
         verify(historyService, never()).redeemCoupon(any(), any(), any(), any(), anyString());
     }
@@ -539,7 +539,7 @@ class ApiCouponControllerMerchantAccessTest {
 
         AjaxResult result = controller.couponVerification(null, "club-token", null);
 
-        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        assertEquals(403, result.get(AjaxResult.CODE_TAG));
         assertEquals("当前身份不支持核销优惠券", result.get(AjaxResult.MSG_TAG));
         verify(merchantAccessService, never()).require(any(), anyString());
         verify(historyService, never()).redeemCoupon(any(), any(), any(), any(), anyString());
@@ -632,7 +632,7 @@ class ApiCouponControllerMerchantAccessTest {
         when(historyService.redeemCoupon(any(), any(), any(), any(), anyString()))
                 .thenReturn(ISmsCouponHistoryService.RedemptionResult.REDEEMED);
         AjaxResult result = controller.couponVerification("COU1726000000000ABCDEF", null, "MERCHANT");
-        assertEquals(500, result.get("code"));
+        assertEquals(400, result.get("code"));
         assertEquals("二维码已过期或无效，请让顾客刷新券码后重试", result.get("msg"));
         verify(historyService, never()).redeemCoupon(any(), any(), any(), any(), anyString());
     }
@@ -651,7 +651,7 @@ class ApiCouponControllerMerchantAccessTest {
     @Test
     void expiredExplicitDynamicTokenNeverFallsBackToStaticRedemption() {
         when(couponService.verifyCouponQrToken("expired-token")).thenReturn(null);
-        assertEquals(500, controller.couponVerification(null, "expired-token", "MERCHANT").get("code"));
+        assertEquals(400, controller.couponVerification(null, "expired-token", "MERCHANT").get("code"));
         verify(historyService, never()).selectSmsCouponHistoryList(any());
         verify(historyService, never()).redeemCoupon(any(), any(), any(), any(), anyString());
     }

@@ -78,6 +78,24 @@ class DeadlockRetryInterceptorTest {
     }
 
     @Test
+    void customMaxAttemptsThreeRetriesTwiceBeforeSucceedingAndGivesUpAfterThree() {
+        assertEquals("ok", worker.failTwice(new DeadlockLoserDataAccessException("1213", null)));
+        assertEquals(Arrays.asList(
+                "attempt1:tx", "rolled_back",
+                "attempt2:tx", "rolled_back",
+                "attempt3:tx", "committed"), worker.events());
+    }
+
+    @Test
+    void customMaxAttemptsThreeGivesUpAfterThreeAttempts() {
+        assertThrows(CannotAcquireLockException.class, worker::alwaysDeadlockThree);
+        assertEquals(Arrays.asList(
+                "attempt1:tx", "rolled_back",
+                "attempt2:tx", "rolled_back",
+                "attempt3:tx", "rolled_back"), worker.events());
+    }
+
+    @Test
     void otherFailuresAreNotRetried() {
         assertThrows(DataIntegrityViolationException.class,
                 () -> worker.failFirst(new DataIntegrityViolationException("dup")));
@@ -173,6 +191,20 @@ class DeadlockRetryInterceptorTest {
         public void alwaysDeadlock() {
             begin();
             throw new DeadlockLoserDataAccessException("1213", null);
+        }
+
+        @DeadlockRetry(maxAttempts = 3)
+        @Transactional(rollbackFor = Exception.class)
+        public String failTwice(RuntimeException failure) {
+            if (begin() <= 2) throw failure;
+            return "ok";
+        }
+
+        @DeadlockRetry(maxAttempts = 3)
+        @Transactional(rollbackFor = Exception.class)
+        public void alwaysDeadlockThree() {
+            begin();
+            throw new CannotAcquireLockException("1205");
         }
 
         @RateLimiter(time = 10, count = 120)

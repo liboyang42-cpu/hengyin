@@ -142,7 +142,7 @@ class ApiVerifyControllerTest {
     @Test
     void rejects_missing_param() {
         AjaxResult r = controller.issueDynCode(null);
-        assertEquals(500, r.get(AjaxResult.CODE_TAG));
+        assertEquals(400, r.get(AjaxResult.CODE_TAG));
         assertEquals("参数缺失", r.get(AjaxResult.MSG_TAG));
     }
 
@@ -150,7 +150,7 @@ class ApiVerifyControllerTest {
     void rejects_registration_not_found() {
         when(registrationService.selectCmsRegistrationById(9L)).thenReturn(null);
         AjaxResult r = controller.issueDynCode(9L);
-        assertEquals(500, r.get(AjaxResult.CODE_TAG));
+        assertEquals(404, r.get(AjaxResult.CODE_TAG));
         assertEquals("报名单不存在", r.get(AjaxResult.MSG_TAG));
     }
 
@@ -158,7 +158,7 @@ class ApiVerifyControllerTest {
     void rejects_other_members_registration() {
         when(registrationService.selectCmsRegistrationById(9L)).thenReturn(reg(9L, 2002L, 2, 0, 2L));
         AjaxResult r = controller.issueDynCode(9L);
-        assertEquals(500, r.get(AjaxResult.CODE_TAG));
+        assertEquals(403, r.get(AjaxResult.CODE_TAG));
         assertEquals("无权操作该报名单", r.get(AjaxResult.MSG_TAG));
     }
 
@@ -167,7 +167,7 @@ class ApiVerifyControllerTest {
         // registrationStatus=1(待支付) => 拒
         when(registrationService.selectCmsRegistrationById(9L)).thenReturn(reg(9L, ME, 1, 0, 2L));
         AjaxResult r = controller.issueDynCode(9L);
-        assertEquals(500, r.get(AjaxResult.CODE_TAG));
+        assertEquals(409, r.get(AjaxResult.CODE_TAG));
         assertEquals("订单未完成支付或已结束,无法生成核销码", r.get(AjaxResult.MSG_TAG));
     }
 
@@ -175,7 +175,7 @@ class ApiVerifyControllerTest {
     void rejects_already_verified() {
         when(registrationService.selectCmsRegistrationById(9L)).thenReturn(reg(9L, ME, 2, 1, 2L));
         AjaxResult r = controller.issueDynCode(9L);
-        assertEquals(500, r.get(AjaxResult.CODE_TAG));
+        assertEquals(409, r.get(AjaxResult.CODE_TAG));
         assertEquals("该票已核销", r.get(AjaxResult.MSG_TAG));
     }
 

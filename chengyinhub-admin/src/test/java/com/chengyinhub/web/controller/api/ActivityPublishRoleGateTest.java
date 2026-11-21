@@ -131,7 +131,7 @@ class ActivityPublishRoleGateTest
 
         AjaxResult result = controller.publish(new CmsActivityPublishRequest());
 
-        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        assertEquals(403, result.get(AjaxResult.CODE_TAG));
         assertEquals("仅俱乐部主理人或商家可发布活动", result.get(AjaxResult.MSG_TAG));
         verify(quotaService, never()).checkCreate(MEMBER_ID, IQuotaService.TYPE_EVENT);
     }
@@ -144,7 +144,7 @@ class ActivityPublishRoleGateTest
 
         AjaxResult result = controller.publish(new CmsActivityPublishRequest());
 
-        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        assertEquals(409, result.get(AjaxResult.CODE_TAG));
         assertEquals("活动配额已满", result.get(AjaxResult.MSG_TAG));
         verify(quotaService).checkCreate(MEMBER_ID, IQuotaService.TYPE_EVENT);
     }
@@ -391,7 +391,7 @@ class ActivityPublishRoleGateTest
 
         AjaxResult result = controller.publish(merchantRequest());
 
-        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        assertEquals(403, result.get(AjaxResult.CODE_TAG));
         assertEquals("商家身份无效或权限不足", result.get(AjaxResult.MSG_TAG));
         verify(quotaService, never()).checkCreate(anyLong(), anyString());
         verify(cmsActivityService, never()).publishActivity(any(), anyLong(), anyString(), anyBoolean());
@@ -458,7 +458,7 @@ class ActivityPublishRoleGateTest
 
         AjaxResult result = controller.publish(request);
 
-        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        assertEquals(400, result.get(AjaxResult.CODE_TAG));
         assertEquals("商家主办活动不能挂到俱乐部", result.get(AjaxResult.MSG_TAG));
         verify(cmsActivityService, never()).publishActivity(any(), anyLong(), anyString(), anyBoolean());
     }
@@ -623,7 +623,7 @@ class ActivityPublishRoleGateTest
 
         AjaxResult result = controller.publish(request);
 
-        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        assertEquals(400, result.get(AjaxResult.CODE_TAG));
         assertEquals("业务作用域参数不合法", result.get(AjaxResult.MSG_TAG));
         verify(cmsActivityService, never()).publishActivity(any(), anyLong(), anyString(), anyBoolean());
     }

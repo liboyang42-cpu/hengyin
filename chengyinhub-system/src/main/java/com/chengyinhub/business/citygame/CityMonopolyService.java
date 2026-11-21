@@ -584,6 +584,7 @@ public class CityMonopolyService {
         return p;
     }
 
+    @com.chengyinhub.common.annotation.DeadlockRetry(maxAttempts = 3)
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> claimCommand(Long memberId, Map<String, Object> body) {
         CityGameSupport.requireMember(memberId);

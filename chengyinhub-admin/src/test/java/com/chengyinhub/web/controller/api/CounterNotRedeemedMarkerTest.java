@@ -126,7 +126,7 @@ class CounterNotRedeemedMarkerTest {
     void wrongShopIsMarkedNotRedeemed() {
         when(perkSvc.resolveScannableChapters(REG, TOPIC, MERCHANT)).thenReturn(Collections.emptyMap());
         AjaxResult r = controller.scanDynamicCode(validCode());
-        assertTrue(r.isError());
+        assertEquals(403, r.get(AjaxResult.CODE_TAG));
         assertTrue(marked(r));
         verify(regSvc, never()).redeemExploreChapterAndRecord(any(), any(), any(), any(), any(), any());
         verifyNoInteractions(pointsSvc);

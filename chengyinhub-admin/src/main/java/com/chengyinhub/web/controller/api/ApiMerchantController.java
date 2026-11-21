@@ -2107,16 +2107,17 @@ public class ApiMerchantController extends BaseController {
             submissionSafety.requireText(member_id, true, request.getName(), request.getDescription(),
                     request.getDerivatives(), request.getPreference(), request.getAddress(), request.getBusinessTime());
         } catch (com.chengyinhub.common.exception.ServiceException unsafe) {
-            return error(unsafe.getMessage());
+            return unsafe.getCode() != null ? AjaxResult.refusal(unsafe)
+                    : AjaxResult.error(HttpStatus.BAD_REQUEST, unsafe.getMessage());
         }
 
         // 新入驻与接受员工邀请统一先锁会员行，避免并发把同一账号写成“商家 Owner + 其他店员工”。
         if (request.getId() == null) {
             if (umsMemberMapper.lockMemberById(member_id) == null) {
-                return error("当前会员不可用");
+                return AjaxResult.error(HttpStatus.NOT_FOUND, "当前会员不可用");
             }
             if (merchantOperatorMapper.selectActiveByMemberId(member_id) != null) {
-                return error("您已加入商家经营团队，不能再申请自己的商家");
+                return AjaxResult.error(HttpStatus.CONFLICT, "您已加入商家经营团队，不能再申请自己的商家");
             }
             // 主理人可以先提交待审申请；商家正式生效前由服务端收口校验全部俱乐部移交。
             // RUN-52 发布者实名:商家是要收钱的发布者,新入驻必须先把姓名与身份证号交给平台。
@@ -2126,7 +2127,7 @@ public class ApiMerchantController extends BaseController {
             // 真正登记放到下面「重复申请」判定之后、建商家之前,跟商家行同一个事务;
             // 没带则沿用小程序口径 —— 之前在 /api/publisher/identity 登记过的放行,没登记过的拒。
             String identityErr = prepareRegistrationIdentity(member_id, request);
-            if (identityErr != null) return error(identityErr);
+            if (identityErr != null) return AjaxResult.error(HttpStatus.BAD_REQUEST, identityErr);
         }
 
         MmsMerchant mmsMerchant = new MmsMerchant();
@@ -2136,7 +2137,7 @@ public class ApiMerchantController extends BaseController {
         if (request.getCategoryIds() != null) {
             // M-16:入驻时就用门店信息同一份行业类型胶囊问一次;只认在用的 type=1 记录,第一个为主行业
             String[] picked = registrationCategoryIds(request.getCategoryIds());
-            if (picked == null) return error("行业类型无效，请重新选择");
+            if (picked == null) return AjaxResult.error(HttpStatus.BAD_REQUEST, "行业类型无效，请重新选择");
             if (picked.length > 0) {
                 mmsMerchant.setCategoryIds(String.join(",", picked));
                 mmsMerchant.setCategoryId(Integer.valueOf(picked[0]));
@@ -2156,19 +2157,19 @@ public class ApiMerchantController extends BaseController {
         if (request.getId() != null) {
             MmsMerchant existing = mmsMerchantService.selectMmsMerchantById(request.getId());
             if (existing == null) {
-                return error("商家信息不存在");
+                return AjaxResult.error(HttpStatus.NOT_FOUND, "商家信息不存在");
             }
             if (OwnershipUtils.notOwner(existing.getMemberId(), member_id)) {
-                return error("无权修改该商家信息");
+                return AjaxResult.error(HttpStatus.FORBIDDEN, "无权修改该商家信息");
             }
             if (!Integer.valueOf(0).equals(existing.getDelFlag())
                     || existing.getAccountStatus() == null
                     || Long.valueOf(2L).equals(existing.getAccountStatus())) {
-                return error("该商家账号已停用或不可用，无法修改入驻申请");
+                return AjaxResult.error(HttpStatus.CONFLICT, "该商家账号已停用或不可用，无法修改入驻申请");
             }
             if (!Long.valueOf(0L).equals(existing.getStatus())
                     && !Long.valueOf(2L).equals(existing.getStatus())) {
-                return error("已审核商家请使用店铺资料编辑，不能重新打开入驻申请");
+                return AjaxResult.error(HttpStatus.CONFLICT, "已审核商家请使用店铺资料编辑，不能重新打开入驻申请");
             }
             mmsMerchant.setId(request.getId());
             mmsMerchant.setReson("");

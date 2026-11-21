@@ -23,6 +23,7 @@ import com.chengyinhub.business.service.ISmsCouponService;
 import com.chengyinhub.business.service.ISettlementEntryService;
 import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.common.annotation.Log;
+import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.core.text.Convert;
@@ -627,7 +628,7 @@ public class ApiCouponController extends BaseController {
             UmsMember verifier = umsMemberService.selectUmsMemberById(member_id);
             UserPermission permission = roleService.getPermission(verifier);
             if (permission == null || !Boolean.TRUE.equals(permission.getCanRedeemCoupon())) {
-                return error("当前身份不支持核销优惠券");
+                return AjaxResult.error(HttpStatus.FORBIDDEN, "当前身份不支持核销优惠券");
             }
         }
         Long ownerMemberId = operation.ownerMemberId;
@@ -636,23 +637,23 @@ public class ApiCouponController extends BaseController {
         // F6:不再回落静态 couponCode —— 静态码是永久凭据,截图即可复用,会绕过 60s 时效。
         String credential = StringUtils.isNotBlank(token) ? token : code;
         if (StringUtils.isBlank(credential)) {
-            return error("请输入核销码");
+            return AjaxResult.error(HttpStatus.BAD_REQUEST, "请输入核销码");
         }
         Long hid = smsCouponService.verifyCouponQrToken(credential);
         if (hid == null) {
-            return error("二维码已过期或无效，请让顾客刷新券码后重试");
+            return AjaxResult.error(HttpStatus.BAD_REQUEST, "二维码已过期或无效，请让顾客刷新券码后重试");
         }
         SmsCouponHistory target = smsCouponHistoryService.selectSmsCouponHistoryById(hid);
         if (target == null) {
-            return error("该优惠券不存在");
+            return AjaxResult.error(HttpStatus.NOT_FOUND, "该优惠券不存在");
         }
 
         SmsCoupon coupon = smsCouponService.selectSmsCouponById(target.getCouponId());
         if (coupon == null) {
-            return error("该优惠券不存在");
+            return AjaxResult.error(HttpStatus.NOT_FOUND, "该优惠券不存在");
         }
         if (OwnershipUtils.notOwner(coupon.getMemberId(), ownerMemberId)) {
-            return error("无权核销该优惠券");
+            return AjaxResult.error(HttpStatus.FORBIDDEN, "无权核销该优惠券");
         }
 
         ISmsCouponHistoryService.RedemptionResult result =
@@ -668,19 +669,19 @@ public class ApiCouponController extends BaseController {
                 data.put("useTime", current == null ? null : current.getUseTime());
                 return AjaxResult.success("该优惠券已核销", data);
             case FORBIDDEN:
-                return error("无权核销该优惠券");
+                return AjaxResult.error(HttpStatus.FORBIDDEN, "无权核销该优惠券");
             case EXPIRED:
-                return error("该优惠券已过期");
+                return AjaxResult.error(HttpStatus.CONFLICT, "该优惠券已过期");
             case DISABLED:
-                return error("该优惠券已停用");
+                return AjaxResult.error(HttpStatus.CONFLICT, "该优惠券已停用");
             case NOT_STARTED:
                 // 使用期承诺:start 前拒核销,并明确告知可用日期(不是「已过期」)。
                 String usableFrom = target.getStartTime() == null ? null
                         : DateUtils.parseDateToStr(DateUtils.YYYY_MM_DD_HH_MM_SS, target.getStartTime());
-                return error(usableFrom == null ? "该优惠券尚未到可用时间"
+                return AjaxResult.error(HttpStatus.CONFLICT, usableFrom == null ? "该优惠券尚未到可用时间"
                         : "该优惠券于 " + usableFrom + " 起可使用");
             default:
-                return error("该优惠券不存在");
+                return AjaxResult.error(HttpStatus.NOT_FOUND, "该优惠券不存在");
         }
     }
 

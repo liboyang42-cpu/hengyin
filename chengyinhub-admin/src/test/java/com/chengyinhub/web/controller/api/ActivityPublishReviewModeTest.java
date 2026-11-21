@@ -197,7 +197,7 @@ class ActivityPublishReviewModeTest {
 
         AjaxResult result = controller.publish(activity("3"));
 
-        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        assertEquals(400, result.get(AjaxResult.CODE_TAG));
         assertEquals("活动内容包含违规信息，请修改后重试", result.get(AjaxResult.MSG_TAG));
         verify(cmsActivityService, never()).publishActivity(any(), anyLong(), anyString(), anyBoolean());
     }
@@ -236,7 +236,7 @@ class ActivityPublishReviewModeTest {
 
         AjaxResult result = controller.publish(r);
 
-        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        assertEquals(403, result.get(AjaxResult.CODE_TAG));
         verify(cmsActivityService, never()).publishActivity(any(), anyLong(), anyString(), anyBoolean());
     }
 
@@ -250,7 +250,7 @@ class ActivityPublishReviewModeTest {
 
         AjaxResult result = controller.publish(r);
 
-        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        assertEquals(403, result.get(AjaxResult.CODE_TAG));
         assertEquals("商家未通过入驻审核，暂不能发布活动", result.get(AjaxResult.MSG_TAG));
         verify(cmsActivityService, never()).publishActivity(any(), anyLong(), anyString(), anyBoolean());
     }

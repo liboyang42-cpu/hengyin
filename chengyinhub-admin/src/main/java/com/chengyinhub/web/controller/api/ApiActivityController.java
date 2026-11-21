@@ -24,6 +24,7 @@ import com.chengyinhub.business.service.*;
 import com.chengyinhub.business.util.ActivityLifecycle;
 import com.chengyinhub.common.annotation.Anonymous;
 import com.chengyinhub.common.annotation.Log;
+import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.core.page.TableDataInfo;
@@ -906,24 +907,24 @@ public class ApiActivityController extends BaseController {
             try {
                 publisher = resolveActivityPublisher(member_id, request == null ? null : request.getScope());
             } catch (ServiceException se) {
-                return error(se.getMessage());
+                return AjaxResult.refusal(se);
             }
             if (publisher == null) {
-                return error("仅俱乐部主理人或商家可发布活动");
+                return AjaxResult.error(HttpStatus.FORBIDDEN, "仅俱乐部主理人或商家可发布活动");
             }
             // 分级审核资质闸:未通过入驻审核的商家不能发布(先审后发也不行)
             if (publisher.isMerchant() && !publisher.isMerchantApproved()) {
-                return error("商家未通过入驻审核，暂不能发布活动");
+                return AjaxResult.error(HttpStatus.FORBIDDEN, "商家未通过入驻审核，暂不能发布活动");
             }
             String hostViolation = merchantHostViolation(publisher, request);
             if (hostViolation != null) {
-                return error(hostViolation);
+                return AjaxResult.error(HttpStatus.BAD_REQUEST, hostViolation);
             }
 
             // RBAC R3：按角色配额校验活动「同时存在」数量(按主办主体,不按操作人)
             String quotaErr = quotaService.checkCreate(publisher.ownerMemberId(), com.chengyinhub.business.service.IQuotaService.TYPE_EVENT);
             if (quotaErr != null) {
-                return error(quotaErr);
+                return AjaxResult.error(HttpStatus.CONFLICT, quotaErr);
             }
 
             // UGC 内容安全门禁(2026-10-20 分级审核):活动按内容先发后审;高风险类目 / 未审核商家 / 总闸 → 先审后发。
@@ -942,7 +943,7 @@ public class ApiActivityController extends BaseController {
             safety.setReviewMode(activityReviewPolicy.modeOf(request, publisher.reviewSubject()).name());
             SafetyDecision decision = contentSafetyGate.decide(safety);
             if (decision == null || decision.isBlock()) {
-                return error("活动内容包含违规信息，请修改后重试");
+                return AjaxResult.error(HttpStatus.BAD_REQUEST, "活动内容包含违规信息，请修改后重试");
             }
             final boolean preReview = decision.isHold();
 
@@ -974,7 +975,7 @@ public class ApiActivityController extends BaseController {
             // 配额上限/欠款/内容安全这类业务拒绝的文案本就是写给发布者看的,兜底 catch 会把它压成
             // 「发布活动失败,请稍后重试」—— 商家卡在 max_events 上时那就是静默失败。
             logger.warn("发布活动被业务拒绝：{}", se.getMessage());
-            return error(se.getMessage());
+            return AjaxResult.refusal(se);
         } catch (Exception e) {
             logger.error("发布活动失败：", e);
             return AjaxResult.error("发布活动失败，请稍后重试");
@@ -1361,7 +1362,7 @@ public class ApiActivityController extends BaseController {
         if (activityId > 0) {
             cmsActivity.setId(activityId);
         } else {
-            return error("参数不合规");
+            return AjaxResult.error(HttpStatus.BAD_REQUEST, "参数不合规");
         }
 
         Long member_id = 0L;
@@ -1600,14 +1601,14 @@ public class ApiActivityController extends BaseController {
                     List<ViewRegistration> tickets = viewRegistrationService.selectRegistrationSummaries(ownTicket);
                     if (OwnershipUtils.isOwner(cancelled.getMemberId(), member_id)
                             || (tickets != null && !tickets.isEmpty())) {
-                        AjaxResult result = error("活动已取消，请在订单中查看退款或售后进度");
+                        AjaxResult result = AjaxResult.error(HttpStatus.CONFLICT, "活动已取消，请在订单中查看退款或售后进度");
                         result.put("errorCode", "ACTIVITY_CANCELLED");
                         result.put("canViewOwnOrders", tickets != null && !tickets.isEmpty());
                         return result;
                     }
                 }
             }
-            return error("活动不存在");
+            return AjaxResult.error(HttpStatus.NOT_FOUND, "活动不存在");
         }
 
     }

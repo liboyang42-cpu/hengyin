@@ -86,7 +86,7 @@ class RegistrationDynCodeLedgerTest {
         assertFalse(old.valid);
         assertEquals(RegistrationDynCodeLedger.SUPERSEDED, old.reason);
         AjaxResult scanned = scanner.scanDynamicCode(new RegistrationRedemptionApplication.Actor(71L, false), first);
-        assertEquals(500, scanned.get("code"));
+        assertEquals(409, scanned.get("code"));
         assertEquals(RegistrationDynCodeLedger.SUPERSEDED, scanned.get("msg"));
         assertTrue(VerifyDynCodeUtil.verifyForReceipt(first, SECRET).valid, "只读回执仍能认出旧码身份");
     }

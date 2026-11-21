@@ -95,7 +95,7 @@ class RegistrationRedemptionApplicationTest {
 
         assertEquals("核销成功", controller.scanQrCode("activity", "original-static").get("msg"));
         AjaxResult duplicate = controller.scanQrCode("activity", "original-static");
-        assertEquals(500, duplicate.get("code"));
+        assertEquals(409, duplicate.get("code"));
         assertEquals("该订单已核销", duplicate.get("msg"));
         assertEquals(true, ((Map<?, ?>) duplicate.get("data")).get("alreadyVerified"));
         InOrder order = inOrder(registrations, points, growth);

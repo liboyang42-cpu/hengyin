@@ -242,7 +242,7 @@ class ApiRegistrationCompletionCouponTest
 
         AjaxResult result = controller.scanQrCode("activity", CODE);
 
-        assertEquals(500, result.get("code"));
+        assertEquals(409, result.get("code"));
         assertTrue(String.valueOf(result.get("msg")).contains("退款"));
         verify(perkLedgerService, never()).resolveRedeemableChapters(anyLong(), anyLong(), anyLong());
         verify(perkLedgerService, never()).resolveScannableChapters(anyLong(), anyLong(), anyLong());
@@ -258,7 +258,7 @@ class ApiRegistrationCompletionCouponTest
 
         AjaxResult result = controller.scanQrCode("activity", CODE);
 
-        assertEquals(500, result.get("code"));
+        assertEquals(403, result.get("code"));
         verify(registrationService, never()).redeemExploreChapterAndRecord(
                 any(), anyLong(), anyLong(), anyLong(), anyLong(), any());
         verify(perkLedgerService, never()).isExploreCompleted(anyLong(), anyLong());

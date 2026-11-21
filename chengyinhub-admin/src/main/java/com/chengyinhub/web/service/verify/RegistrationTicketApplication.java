@@ -8,6 +8,7 @@ import com.chengyinhub.business.service.IPerkLedgerService;
 import com.chengyinhub.business.service.RegistrationSeatService;
 import com.chengyinhub.business.service.impl.QrcodeServiceImpl;
 import com.chengyinhub.business.service.support.ExploreTicketUsePolicy;
+import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.utils.OwnershipUtils;
 import com.chengyinhub.common.utils.VerifyDynCodeUtil;
@@ -57,21 +58,21 @@ public class RegistrationTicketApplication {
             return AjaxResult.error("请先登录");
         }
         if (registrationId == null) {
-            return AjaxResult.error("参数缺失");
+            return AjaxResult.error(HttpStatus.BAD_REQUEST, "参数缺失");
         }
         CmsRegistration reg = registrationService.selectCmsRegistrationById(registrationId);
         if (reg == null) {
-            return AjaxResult.error("报名单不存在");
+            return AjaxResult.error(HttpStatus.NOT_FOUND, "报名单不存在");
         }
         // 归属校验:只能给自己的报名单出码
         if (OwnershipUtils.notOwner(reg.getMemberId(), memberId)) {
-            return AjaxResult.error("无权操作该报名单");
+            return AjaxResult.error(HttpStatus.FORBIDDEN, "无权操作该报名单");
         }
         // 只给"已支付/报名成功"(registrationStatus==2)的报名单出核销码;待支付/已取消/已退款一律拒
         Integer regStatus = reg.getRegistrationStatus();
         if (regStatus == null || regStatus.intValue() != 2
                 || !Integer.valueOf(2).equals(reg.getPaymentStatus())) {
-            return AjaxResult.error("订单未完成支付或已结束,无法生成核销码");
+            return AjaxResult.error(HttpStatus.CONFLICT, "订单未完成支付或已结束,无法生成核销码");
         }
         // 消费完了的不再出码。
         //
@@ -92,22 +93,22 @@ public class RegistrationTicketApplication {
         com.chengyinhub.business.domain.RegistrationSeat selectedSeat = multiTopicSeat
                 ? registrationSeatService.prepareOwnedSeat(registrationId, memberId, seatNo) : null;
         if (!multiTopicSeat && perkLedgerService.isTicketFullyConsumed(reg.getVerificationStatus(), reg.getId())) {
-            return AjaxResult.error("该票已核销");
+            return AjaxResult.error(HttpStatus.CONFLICT, "该票已核销");
         }
 
         Long ownerType = reg.getOwnerType();
         if (Long.valueOf(2L).equals(ownerType)) {
             CmsActivity activity = activityService.selectCmsActivityById(reg.getOwnerId());
             if (activity == null || Integer.valueOf(2).equals(activity.getDelFlag())) {
-                return AjaxResult.error("活动不存在");
+                return AjaxResult.error(HttpStatus.NOT_FOUND, "活动不存在");
             }
             if (activity.getCancelTime() != null) {
-                return AjaxResult.error("活动已取消，无法生成核销码");
+                return AjaxResult.error(HttpStatus.CONFLICT, "活动已取消，无法生成核销码");
             }
             String rejection = ExploreTicketUsePolicy.rejection(reg.getPurchaseKind(), activity.getEndDate(), new Date());
-            if (rejection != null) return AjaxResult.error(rejection);
+            if (rejection != null) return AjaxResult.error(HttpStatus.CONFLICT, rejection);
         } else if (Integer.valueOf(3).equals(reg.getPurchaseKind())) {
-            return AjaxResult.error("探索票所属活动不可用");
+            return AjaxResult.error(HttpStatus.CONFLICT, "探索票所属活动不可用");
         }
         String type = selectedSeat == null
                 ? ((ownerType != null && ownerType.longValue() == 2L) ? "activity" : "topic")

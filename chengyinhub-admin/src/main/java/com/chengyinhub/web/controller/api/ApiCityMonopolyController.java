@@ -67,6 +67,7 @@ public class ApiCityMonopolyController extends BaseController {
 
     @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 30, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
     @PostMapping("/territory/claim/command")
+    @com.chengyinhub.common.annotation.DeadlockRetry(maxAttempts = 3)
     @Transactional(rollbackFor = Exception.class)
     public AjaxResult claimCommand(@RequestBody Map<String, Object> body) {
         return success(service.claimCommand(consentedMember(), body));

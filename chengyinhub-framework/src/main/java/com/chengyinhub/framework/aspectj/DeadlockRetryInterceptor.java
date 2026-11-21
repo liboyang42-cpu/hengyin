@@ -9,8 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.aop.ProxyMethodInvocation;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.core.annotation.AnnotatedElementUtils;
-import org.springframework.dao.CannotAcquireLockException;
-import org.springframework.dao.DeadlockLoserDataAccessException;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import com.chengyinhub.common.annotation.DeadlockRetry;
 
@@ -32,10 +31,12 @@ public class DeadlockRetryInterceptor implements MethodInterceptor
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable
     {
-        if (!isAnnotated(invocation) || TransactionSynchronizationManager.isActualTransactionActive())
+        DeadlockRetry retry = findAnnotation(invocation);
+        if (retry == null || TransactionSynchronizationManager.isActualTransactionActive())
         {
             return invocation.proceed();
         }
+        int maxAttempts = Math.max(1, retry.maxAttempts());
         for (int attempt = 1; ; attempt++)
         {
             // 每次都从拦截链的副本重新进入，下一跳就是事务拦截器 → 新事务。
@@ -45,33 +46,34 @@ public class DeadlockRetryInterceptor implements MethodInterceptor
             {
                 return call.proceed();
             }
-            catch (DeadlockLoserDataAccessException | CannotAcquireLockException lockFailure)
+            catch (PessimisticLockingFailureException lockFailure)
             {
-                if (attempt >= MAX_ATTEMPTS)
+                if (attempt >= maxAttempts)
                 {
                     throw lockFailure;
                 }
-                log.warn("事务因锁冲突回滚，整笔重试一次 method={} attempt={} cause={}",
-                        invocation.getMethod().getName(), attempt, lockFailure.getClass().getSimpleName());
+                log.warn("事务因锁冲突回滚，整笔重试 method={} attempt={}/{} cause={}",
+                        invocation.getMethod().getName(), attempt, maxAttempts, lockFailure.getClass().getSimpleName());
                 backoff(lockFailure);
             }
         }
     }
 
-    private static boolean isAnnotated(MethodInvocation invocation)
+    private static DeadlockRetry findAnnotation(MethodInvocation invocation)
     {
         Method method = invocation.getMethod();
-        if (AnnotatedElementUtils.hasAnnotation(method, DeadlockRetry.class))
+        DeadlockRetry direct = AnnotatedElementUtils.findMergedAnnotation(method, DeadlockRetry.class);
+        if (direct != null)
         {
-            return true;
+            return direct;
         }
         Object target = invocation.getThis();
         if (target == null)
         {
-            return false;
+            return null;
         }
         Method specific = AopUtils.getMostSpecificMethod(method, AopUtils.getTargetClass(target));
-        return AnnotatedElementUtils.hasAnnotation(specific, DeadlockRetry.class);
+        return AnnotatedElementUtils.findMergedAnnotation(specific, DeadlockRetry.class);
     }
 
     private static void backoff(RuntimeException lockFailure)

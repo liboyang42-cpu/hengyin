@@ -550,14 +550,14 @@ public class ApiLoginController extends BaseController {
     })
     public AjaxResult loginPhone(String phone, String code, HttpServletRequest request) {
         if (StringUtils.isEmpty(phone) || !phone.matches("^1\\d{10}$")) {
-            return error("手机号格式不正确");
+            return AjaxResult.error(HttpStatus.BAD_REQUEST, "手机号格式不正确");
         }
         if (StringUtils.isEmpty(code)) {
-            return error("请输入验证码");
+            return AjaxResult.error(HttpStatus.BAD_REQUEST, "请输入验证码");
         }
 
         if (!checkMscode(phone, code, request)) {
-            return error("验证码错误或已过期");
+            return AjaxResult.error(HttpStatus.BAD_REQUEST, "验证码错误或已过期");
         }
 
         UmsMember umsMember = new UmsMember();
@@ -567,10 +567,10 @@ public class ApiLoginController extends BaseController {
         if (list.size() > 0) {
             UmsMember member = list.get(0);
             if (member.getStatus() != null && member.getStatus() == 2) {
-                return AjaxResult.error("账号已被冻结");
+                return AjaxResult.error(HttpStatus.FORBIDDEN, "账号已被冻结");
             }
             if (member.getDelFlag() != null && member.getDelFlag() == 2) {
-                return AjaxResult.error("账号已删除");
+                return AjaxResult.error(HttpStatus.FORBIDDEN, "账号已删除");
             }
 
             // 生成令牌

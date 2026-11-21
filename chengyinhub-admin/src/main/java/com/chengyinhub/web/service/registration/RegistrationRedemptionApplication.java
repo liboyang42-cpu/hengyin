@@ -9,6 +9,7 @@ import com.chengyinhub.business.service.*;
 import com.chengyinhub.business.service.support.ExploreTicketUsePolicy;
 import com.chengyinhub.common.constant.ProductType;
 import com.chengyinhub.common.constant.PurchaseKind;
+import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.utils.StringUtils;
@@ -103,7 +104,7 @@ public class RegistrationRedemptionApplication {
             return registrationService.selectCmsRegistrationById(r.regId);
         }
         if (code != null && code.startsWith("v1.")) {
-            throw new ServiceException(r.reason);
+            throw new ServiceException(r.reason, verifyReasonCode(r.reason));
         }
         return registrationService.selectByverificationCode(code);
     }
@@ -116,7 +117,7 @@ public class RegistrationRedemptionApplication {
      */
     public static AjaxResult clubSessionVerificationTooEarly(CmsActivity activity, Date now) {
         String refusal = com.chengyinhub.business.service.RegistrationSeatService.activityVerificationTooEarly(activity, now);
-        return refusal == null ? null : AjaxResult.error(refusal);
+        return refusal == null ? null : AjaxResult.error(HttpStatus.CONFLICT, refusal);
     }
 
     /**
@@ -147,11 +148,11 @@ public class RegistrationRedemptionApplication {
     private AjaxResult assertScanTypeMatchesOwner(String type, CmsRegistration registration) {
         Long ownerType = registration.getOwnerType();
         if (ownerType == null) {
-            return AjaxResult.error("订单数据异常,无法核销");   // fail-closed:判不出归属就别让它进任一分支
+            return AjaxResult.error(HttpStatus.BAD_REQUEST, "订单数据异常,无法核销");   // fail-closed:判不出归属就别让它进任一分支
         }
         boolean isActivityOrder = ownerType.longValue() == 2L;
         if (isActivityOrder != "activity".equals(type)) {
-            return AjaxResult.error("核销类型与订单不匹配");
+            return AjaxResult.error(HttpStatus.BAD_REQUEST, "核销类型与订单不匹配");
         }
         return null;
     }
@@ -217,13 +218,13 @@ public class RegistrationRedemptionApplication {
                                              String actorRoleCode) {
         if (topicId == null) {
             // 独立活动(无主题真源)不可能有 ③ 票 —— 走到这儿说明数据不一致,别静默当成「没供给」。
-            return AjaxResult.error("该活动未关联路线,无法按章核销");
+            return AjaxResult.error(HttpStatus.CONFLICT, "该活动未关联路线,无法按章核销");
         }
         Map<Long, Long> scannable = perkLedgerService.resolveScannableChapters(
                 registration.getId(), topicId, merchantOwnerMemberId);
         List<Long> candidates = new ArrayList<>(scannable.keySet());
         if (candidates.isEmpty()) {
-            return notRedeemed("您在本路线没有可核销权益或有效核销回执");
+            return notRedeemed(HttpStatus.FORBIDDEN, "您在本路线没有可核销权益或有效核销回执");
         }
         if (candidates.size() > 1) {
             Map<String, Object> d = new HashMap<>();
@@ -475,7 +476,7 @@ public class RegistrationRedemptionApplication {
     private ScanContext resolveScanContext(String type, String code) {
         CmsRegistration reg = resolveRegistrationByScanCode(code);
         if (reg == null) {
-            return ScanContext.fail(notRedeemed("核销码无效"));
+            return ScanContext.fail(notRedeemed(HttpStatus.BAD_REQUEST, "核销码无效"));
         }
         // ① type 必须与 ownerType 一致 —— 详见 assertScanTypeMatchesOwner
         AjaxResult mismatch = assertScanTypeMatchesOwner(type, reg);
@@ -485,14 +486,14 @@ public class RegistrationRedemptionApplication {
         // ② 资损闸:仅已支付单可核销
         Integer ps = reg.getPaymentStatus();
         if (ps == null || ps != 2) {
-            return ScanContext.fail(notRedeemed("订单未完成支付或已退款,无法核销"));
+            return ScanContext.fail(notRedeemed(HttpStatus.CONFLICT, "订单未完成支付或已退款,无法核销"));
         }
         CmsActivity act = cmsActivityService.selectCmsActivityById(reg.getOwnerId());
         if (act == null) {
-            return ScanContext.fail(notRedeemed("活动不存在"));
+            return ScanContext.fail(notRedeemed(HttpStatus.NOT_FOUND, "活动不存在"));
         }
         String rejection = ExploreTicketUsePolicy.rejection(reg.getPurchaseKind(), act.getEndDate(), new Date());
-        if (rejection != null) return ScanContext.fail(notRedeemed(rejection));
+        if (rejection != null) return ScanContext.fail(notRedeemed(HttpStatus.CONFLICT, rejection));
         return ScanContext.ok(reg, act);
     }
 
@@ -509,7 +510,7 @@ public class RegistrationRedemptionApplication {
         }
         // ③ 必须真是 ③ —— ①② 走整单核销那条路,别让它们进按章核销
         if (!isExplorePass(ctx.registration, ctx.activity)) {
-            return ScanContext.fail(notRedeemed("该订单不是探索票,请走普通核销"));
+            return ScanContext.fail(notRedeemed(HttpStatus.BAD_REQUEST, "该订单不是探索票,请走普通核销"));
         }
         return ctx;
     }
@@ -587,13 +588,14 @@ public class RegistrationRedemptionApplication {
      */
     public AjaxResult scanDynamicCode(Actor actorContext, String code) {
         if (StringUtils.isEmpty(code)) {
-            return notRedeemed("核销码无效");
+            return notRedeemed(HttpStatus.BAD_REQUEST, "核销码无效");
         }
         VerifyDynCodeUtil.Result result = rejectSuperseded(VerifyDynCodeUtil.verify(code, System.currentTimeMillis(), dynSecret), code);
         if (!result.valid) {
             AjaxResult original = replayOriginalSeat(actorContext, "activity", code, null, false);
             if (original != null) return original;
-            return notRedeemed(result.reason == null ? "核销码无效" : result.reason);
+            String reason = result.reason == null ? "核销码无效" : result.reason;
+            return notRedeemed(verifyReasonCode(reason), reason);
         }
         // The existing activity path retains its real permission/time-window gates before seat verification.
         if (result.type != null && result.type.startsWith("activity_seat_")
@@ -602,7 +604,7 @@ public class RegistrationRedemptionApplication {
         }
         // type 来自 HMAC 已验签的码，不能再收小程序回传的 type；团码/据点码各走自己的专用端点。
         if (!"activity".equals(result.type) && !"topic".equals(result.type)) {
-            return notRedeemed("非玩家动态核销码");
+            return notRedeemed(HttpStatus.BAD_REQUEST, "非玩家动态核销码");
         }
         return scanQrCode(actorContext, result.type, code);
     }
@@ -692,7 +694,7 @@ public class RegistrationRedemptionApplication {
             if ("coupon".equals(type)) {
                 // 优惠券已有 /api/coupon/verification 唯一入口，那里统一校验动态码/静态码、
                 // canRedeemCoupon 能力与事务核销；此旧入口不得再复制一条可漂移的资金写链。
-                return AjaxResult.error("请使用专用优惠券核销入口");
+                return AjaxResult.error(HttpStatus.BAD_REQUEST, "请使用专用优惠券核销入口");
             } else if (type.equals("activity")) {
                 // ★ [F2] 前置闸(解析 + type/ownerType 一致 + 仅已支付 + 载入活动)全在 resolveScanContext 里,
                 //   与 scan_qr_code_chapter **共用同一份**。这里曾经内联过第二份逐字重复的闸 ——
@@ -729,14 +731,14 @@ public class RegistrationRedemptionApplication {
                 }
                 Long activityOwnerMemberId = cmsActivity.getMemberId();
                 if (activityOwnerMemberId == null) {
-                    return AjaxResult.error("活动主办方数据异常");
+                    return AjaxResult.error(HttpStatus.CONFLICT, "活动主办方数据异常");
                 }
                 String actorRoleCode = "ACTIVITY_OWNER";
                 if (!activityOwnerMemberId.equals(memberId)) {
                     MerchantAccessContext access = merchantAccessService.require(
                             memberId, MerchantPermission.VERIFY);
                     if (!activityOwnerMemberId.equals(access.getOwnerMemberId())) {
-                        return notRedeemed("该店无权核销本场玩家票；俱乐部带队请扫描领队团码");
+                        return notRedeemed(HttpStatus.FORBIDDEN, "该店无权核销本场玩家票；俱乐部带队请扫描领队团码");
                     }
                     actorRoleCode = access.getRoleCode();
                 }
@@ -751,7 +753,7 @@ public class RegistrationRedemptionApplication {
                     VerifyDynCodeUtil.Result explicitSeat = rejectSuperseded(VerifyDynCodeUtil.verify(code, System.currentTimeMillis(), dynSecret), code);
                     Integer seatNo = explicitSeat.valid && explicitSeat.type != null && explicitSeat.type.startsWith("activity_seat_")
                             ? com.chengyinhub.business.service.RegistrationSeatService.seatNumber(explicitSeat.type) : null;
-                    if (seatNo == null) return notRedeemed("多人订单请逐席位出示核销码，整单码不能代替逐人核销");
+                    if (seatNo == null) return notRedeemed(HttpStatus.BAD_REQUEST, "多人订单请逐席位出示核销码，整单码不能代替逐人核销");
                     try {
                         var receipt = registrationSeatService.redeemActivitySeat(cmsRegistration.getId(), seatNo, memberId);
                         applyOriginalSeatRewards(cmsRegistration, receipt);
@@ -834,7 +836,7 @@ public class RegistrationRedemptionApplication {
                     // [资损闸] 同 activity 分支:仅已支付单可核销,拒已退款/未支付。
                     Integer ps = cmsRegistration.getPaymentStatus();
                     if (ps == null || ps != 2) {
-                        return notRedeemed("订单未完成支付或已退款,无法核销");
+                        return notRedeemed(HttpStatus.CONFLICT, "订单未完成支付或已退款,无法核销");
                     }
                     // 闸过了 ⇒ 这里保证是 owner_type=1 的主题单 ⇒ 下面把 ownerId 当 topicId 用是安全的。
                     Long topicId = cmsRegistration.getOwnerId();
@@ -842,7 +844,7 @@ public class RegistrationRedemptionApplication {
                     boolean isOrganizerMember = hasOrganizer && isTopicOrganizer(topicId, memberId);
                     boolean isOrganizer = hasOrganizer && clubMemberService.isTopicOwner(topicId, memberId);
                     if (isOrganizerMember && !isOrganizer) {
-                        return notRedeemed("仅俱乐部主理人可核销玩家票");
+                        return notRedeemed(HttpStatus.FORBIDDEN, "仅俱乐部主理人可核销玩家票");
                     }
 
                     Long merchantOwnerMemberId = null;
@@ -905,16 +907,16 @@ public class RegistrationRedemptionApplication {
                         boolean verified;
                         if (isOrganizer) {
                             if (activityId == null || activityId <= 0) {
-                                return AjaxResult.error("请选择带队场次后再核销");
+                                return AjaxResult.error(HttpStatus.BAD_REQUEST, "请选择带队场次后再核销");
                             }
                             CmsActivity groupActivity = activityService.selectCmsActivityById(activityId);
                             if (!isActiveOrganizerActivity(groupActivity, topicId)
                                     || !clubMemberService.isTopicOwner(topicId,
                                     groupActivity.getClubId(), memberId)) {
-                                return AjaxResult.error("该带队场次不可核销");
+                                return AjaxResult.error(HttpStatus.FORBIDDEN, "该带队场次不可核销");
                             }
                             if (cmsRegistration.getOrderNum() != null && cmsRegistration.getOrderNum() > 1) {
-                                return AjaxResult.error("多人订单请逐席位出示核销码，整单码不能代替逐人核销");
+                                return AjaxResult.error(HttpStatus.BAD_REQUEST, "多人订单请逐席位出示核销码，整单码不能代替逐人核销");
                             }
                             // 规则 1：同主题不同 activity 是不同团。核销事务里必须把报名单绑定当前场次，
                             // 结算只认这条事实，绝不再从 topic + 核销人猜归属。
@@ -954,11 +956,11 @@ public class RegistrationRedemptionApplication {
                         return AjaxResult.success("核销成功");
                     }
                     if (hasOrganizer) {
-                        return notRedeemed("本主题由俱乐部带团，请扫领队出示的团码");
+                        return notRedeemed(HttpStatus.FORBIDDEN, "本主题由俱乐部带团，请扫领队出示的团码");
                     }
-                    return notRedeemed("本店不是这张票的核销店铺");
+                    return notRedeemed(HttpStatus.FORBIDDEN, "本店不是这张票的核销店铺");
                 } else {
-                    return notRedeemed("核销码无效");
+                    return notRedeemed(HttpStatus.BAD_REQUEST, "核销码无效");
                 }
             }
             return AjaxResult.error("查询失败");
@@ -981,14 +983,28 @@ public class RegistrationRedemptionApplication {
      * 只在确知未进入核销事务的分支使用;事务内或事务后的异常不得带此标记 —— 客户端仍按「待确认」处理。
      */
     static AjaxResult notRedeemed(String message) {
+        return notRedeemed(HttpStatus.BAD_REQUEST, message);
+    }
+
+    static AjaxResult notRedeemed(int code, String message) {
         Map<String, Object> data = new HashMap<>();
         data.put("notRedeemed", true);
-        return AjaxResult.error(message, data);
+        return new AjaxResult(code, message, data);
     }
 
     private static AjaxResult notRedeemed(AjaxResult refusal) {
         Object msg = refusal == null ? null : refusal.get(AjaxResult.MSG_TAG);
-        return notRedeemed(msg == null ? "核销码无效" : String.valueOf(msg));
+        Object rawCode = refusal == null ? null : refusal.get(AjaxResult.CODE_TAG);
+        int code = rawCode instanceof Integer c && c != HttpStatus.SUCCESS && c != HttpStatus.ERROR
+                ? c : HttpStatus.BAD_REQUEST;
+        return notRedeemed(code, msg == null ? "核销码无效" : String.valueOf(msg));
+    }
+
+    private static int verifyReasonCode(String reason) {
+        if ("已过期".equals(reason) || com.chengyinhub.web.service.verify.RegistrationDynCodeLedger.SUPERSEDED.equals(reason)) {
+            return HttpStatus.CONFLICT;
+        }
+        return HttpStatus.BAD_REQUEST;
     }
 
     /**
@@ -1012,7 +1028,7 @@ public class RegistrationRedemptionApplication {
     private AjaxResult duplicateVerificationResult() {
         Map<String, Object> data = new HashMap<>();
         data.put("alreadyVerified", true);
-        return AjaxResult.error("该订单已核销", data);
+        return new AjaxResult(HttpStatus.CONFLICT, "该订单已核销", data);
     }
 
     /** Retains the original post-commit registration reward behavior; never multiplies by seats. */

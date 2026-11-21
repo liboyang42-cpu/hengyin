@@ -25,6 +25,7 @@ import com.chengyinhub.business.service.IRoamHangoutService;
 import com.chengyinhub.business.service.RoamAiContentService;
 import com.chengyinhub.business.service.impl.RoamSessionWriteService;
 import com.chengyinhub.common.exception.ServiceException;
+import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.core.text.Convert;
@@ -286,8 +287,8 @@ public class ApiRoamController extends BaseController {
         locationConsent.requireCurrentAgreement(memberId);
         Long sid = Convert.toLong(sessionId, 0L);
         RoamSession session = sid > 0 ? roamMapper.selectOwnedSessionForUpdate(sid, memberId) : null;
-        if (session == null || !memberId.equals(session.getMemberId())) return error("会话不存在");
-        if (!Integer.valueOf(0).equals(session.getStatus())) return error("本次漫游已结算");
+        if (session == null || !memberId.equals(session.getMemberId())) return AjaxResult.error(HttpStatus.NOT_FOUND, "会话不存在");
+        if (!Integer.valueOf(0).equals(session.getStatus())) return AjaxResult.error(HttpStatus.CONFLICT, "本次漫游已结算");
 
         // ★ 店名与坐标一律从来源表读,不采信客户端:
         //   坐标必须用库里的真坐标,否则伪造坐标可绕过到点校验;
@@ -828,8 +829,8 @@ public class ApiRoamController extends BaseController {
         roamMapper.lockClaimOwner(memberId);
         Long sid = Convert.toLong(sessionId, 0L);
         RoamSession session = sid > 0 ? roamMapper.selectOwnedSessionForUpdate(sid, memberId) : null;
-        if (session == null || !memberId.equals(session.getMemberId())) return error("会话不存在");
-        if (!Integer.valueOf(0).equals(session.getStatus())) return error("本次漫游已结算");
+        if (session == null || !memberId.equals(session.getMemberId())) return AjaxResult.error(HttpStatus.NOT_FOUND, "会话不存在");
+        if (!Integer.valueOf(0).equals(session.getStatus())) return AjaxResult.error(HttpStatus.CONFLICT, "本次漫游已结算");
 
         // ① POI:R6 只认服务端 /poi/discover 已校验到点的记录,不再采信客户端 poiIds(防伪造 poiId 刷 XP)
         List<RoamPoi> foundPois = roamMapper.selectFoundPoisBySession(sid);
@@ -852,7 +853,7 @@ public class ApiRoamController extends BaseController {
         session.setTilesRevealed(sessionTiles);
         session.setPoisFound(newPois);
         session.setXpAwarded(totalXp);
-        if (roamMapper.updateSessionFinish(session) == 0) return error("本次漫游已结算");
+        if (roamMapper.updateSessionFinish(session) == 0) return AjaxResult.error(HttpStatus.CONFLICT, "本次漫游已结算");
         session.setStatus(1);
         // 2026-10-31 P-7:简化轨迹给漫游记录卡片画图。只做展示,不参与结算;无效轨迹不存(卡片按没有轨迹画)。
         String trackJson = com.chengyinhub.business.service.support.RoamTrackSimplifier.simplify(track);
