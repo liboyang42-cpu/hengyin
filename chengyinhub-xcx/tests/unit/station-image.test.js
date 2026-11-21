@@ -40,8 +40,10 @@ test('坏 img_arr 不抛、不产出假地址,退到下一级', () => {
   assert.deepEqual(si.resolveStationImage({ chapterImgArr: { a: 1 } }), { src: '', source: 'texture' })
 })
 
-test('chapterImagesById:chapterId / id 都认,非数组返回空表', () => {
-  assert.deepEqual(si.chapterImagesById([{ chapterId: 1, imgArr: 'a.jpg' }, { id: 2, cover: 'b.jpg' }, null, { imgArr: 'x' }]), { 1: 'a.jpg', 2: 'b.jpg' })
+test('chapterImagesById:chapterId / id 都认,候选按 img_arr → cover → 故事块首图排,非数组返回空表', () => {
+  assert.deepEqual(si.chapterImagesById([{ chapterId: 1, imgArr: 'a.jpg' }, { id: 2, cover: 'b.jpg' }, null, { imgArr: 'x' }]), { 1: ['a.jpg'], 2: ['b.jpg'] })
+  assert.deepEqual(si.chapterImagesById([{ chapterId: 3, imgArr: 'media-asset:8', cover: 'c.jpg', blocks: [{ type: 'image', url: 'd.jpg' }] }]), { 3: ['media-asset:8', 'c.jpg', 'd.jpg'] })
+  assert.equal(si.resolveStationImage({ chapterImgArr: si.chapterImagesById([{ chapterId: 3, imgArr: 'media-asset:8', cover: 'c.jpg' }])[3] }).src, 'c.jpg')
   assert.deepEqual(si.chapterImagesById(null), {})
   assert.deepEqual(si.chapterImagesById('x'), {})
 })

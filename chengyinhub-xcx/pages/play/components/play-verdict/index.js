@@ -28,6 +28,7 @@ function makeBubbles(n) {
 
 const { tidyText } = require('../../utils/keep-numerals.js');
 const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js');
+const { FADE_SWAP_MS } = require('../../../../utils/motion.js');
 
 Component({
   behaviors: [reducedMotionBehavior],
@@ -44,18 +45,24 @@ Component({
     images: { type: Array, value: [] },
     // 独立弹出(编辑页预览、玩家端结果反馈)时给一个「继续」收起;挂在玩法台面里时由台面自己管
     closable: { type: Boolean, value: false },
+    // 角色信任那一句(「X会记住这件事」);空 = 不出
+    remember: { type: String, value: '' },
+    // 收尾钮的字:回故事流时页面给「继续故事」(utils/game-shell.js verdictCta);空 = 「继续」
+    ctaLabel: { type: String, value: '' },
   },
   data: {
     rising: false,
     word: '失败',
     bubbles: makeBubbles(9),
     shownText: '',
+    leaving: false,
   },
   observers: {
     text(text) { this.setData({ shownText: tidyText(text) }); },
     'show, kind, timedOut': function (show, kind, timedOut) {
       this.setData({ word: failWord(timedOut) });
-      if (!show) { this._clear(); this.setData({ rising: false }); return; }
+      if (!show) { this._clear(); this.setData({ rising: false, leaving: false }); return; }
+      if (this.data.leaving) this.setData({ leaving: false });
       // 先挂上再涨:同一帧里设 true 的话过渡没有起点,会直接就位、看不见涌上来那一下
       this._clear();
       this._raf = setTimeout(() => this.setData({ rising: true }), 20);
@@ -65,7 +72,17 @@ Component({
   methods: {
     _failWord: failWord,        // 纯算法出口,供单测
     _makeBubbles: makeBubbles,
-    _clear() { if (this._raf) { clearTimeout(this._raf); this._raf = null; } },
-    onClose() { this.triggerEvent('close'); },
+    _clear() {
+      if (this._raf) { clearTimeout(this._raf); this._raf = null; }
+      if (this._leaveT) { clearTimeout(this._leaveT); this._leaveT = null; }
+    },
+    /* 一下回到故事:先淡出(FADE_SWAP_MS,与 --cy-motion-fade-swap 同值),淡完才抛 close —— 页面收起时已经看不见它,
+       不会「啪」地一下换屏。减弱动态 / 连点:直接抛,只抛一次。 */
+    onClose() {
+      if (this.data.leaving) return;
+      if (this.data.reducedMotion) { this.triggerEvent('close'); return; }
+      this.setData({ leaving: true });
+      this._leaveT = setTimeout(() => { this._leaveT = null; this.triggerEvent('close'); }, FADE_SWAP_MS);
+    },
   },
 });

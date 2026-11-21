@@ -45,7 +45,7 @@ test('玩家端:亲眼等到结算才弹判定屏;进页时已结过的、同一
   assert.equal(host.data.r5Verdict.show, false, '进页第一份视图只记下来');
   host._applyR5OutcomeView(receipt('a1', false, '', '', []));
   host._applyR5OutcomeView(receipt('a1', true, 'FAIL', '再找找门牌', ['https://cdn.example.com/1.jpg']));
-  assert.deepEqual(host.data.r5Verdict, { show: true, kind: 'fail', text: '再找找门牌', images: ['https://cdn.example.com/1.jpg'] });
+  assert.deepEqual(host.data.r5Verdict, { show: true, kind: 'fail', text: '再找找门牌', images: ['https://cdn.example.com/1.jpg'], remember: '', cta: '继续' });   // 外壳 1121:带角色信任句与收尾钮字(不在故事流 = 「继续」)
   host.setData({ 'r5Verdict.show': false });   // 页面上的 closeR5Verdict 就是这一句
   host._applyR5OutcomeView(receipt('a1', true, 'FAIL', '再找找门牌', ['https://cdn.example.com/1.jpg']));
   assert.equal(host.data.r5Verdict.show, false, '轮询回来同一张回执不重弹');

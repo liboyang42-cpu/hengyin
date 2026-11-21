@@ -18,7 +18,9 @@ Component({
     activityId: { type: null, value: '' },
     topicId: { type: null, value: '' },
     preview: { type: Boolean, value: false },
-    mock: { type: Boolean, value: false }
+    mock: { type: Boolean, value: false },
+    continueLabel: { type: String, value: '' },   // 玩完后底栏那颗钮的字;空 = 「继续基础任务」
+    reducedMotion: { type: Boolean, value: false }   // 页面传:外壳底栏升起的过渡在减弱动态下直接出现
   },
   data: {
     loading: false,
