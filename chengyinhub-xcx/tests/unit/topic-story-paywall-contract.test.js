@@ -67,5 +67,7 @@ test('路线：有坐标默认真地图，无坐标才用示意图；站点无�
   assert.match(wxml, /<cy-route-sketch wx:if="\{\{!routeReal && !sketchPoints\.length\}\}"/)
   assert.match(js, /routeReal: sketchPoints\.length > 0/)
   assert.doesNotMatch(wxml, /icon_line\.jpg/)
-  assert.match(wxml, /img\.first\(node\.imgUrl\) \|\| img\.first\(info\.imgUrl\)/)
+  // N2(2026-11-21):站点缩略图走共用兜底链(站点图 → 本章图 → 路线封面 → 纹理底)
+  assert.match(wxml, /src="\{\{ img\.fit\(node\.photo, imgCtx, 'thumb', true\) \}\}"/)
+  assert.match(js, /stationImage\.resolveStationImage\(\{[\s\S]{0,300}?topicCover \}\)/)
 })

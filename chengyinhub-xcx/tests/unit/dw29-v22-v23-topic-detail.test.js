@@ -100,15 +100,17 @@ test('V-23d 数据条各格等分屏宽，不横向溢出', () => {
   }
 })
 
-test('V-23 玩家详情数据条:总里程右边照常出参与商家与已参加，真实为 0 就写 0', () => {
-  const cells = buildTopicStatBar({ productType: 1, totalTime: 3600, totalMileage: 0.6, registrationMerchantCount: 0, playerCount: 0 }, { keepZeroCounts: true })
-  assert.deepEqual(cells.map(c => c.key), ['hour', 'mileage', 'merchant', 'players'])
-  assert.equal(cells[2].value, '0'); assert.equal(cells[3].value, '0')
-  const rich = buildTopicStatBar({ productType: 1, totalMileage: 3, registrationMerchantCount: 4, playerCount: 1280 }, { keepZeroCounts: true })
+test('V-23 玩家详情数据条:总里程右边出参与商家与已参加;值为 0 整格不出(2026-11-21 不要假 0)', () => {
+  const cells = buildTopicStatBar({ productType: 1, totalTime: 3600, totalMileage: 0.6, registrationMerchantCount: 0, playerCount: 0 }, { withPlayers: true })
+  assert.deepEqual(cells.map(c => c.key), ['hour', 'mileage'])
+  assert.ok(!cells.some(c => c.value === '0'), '不出「参与商家 0 家」这类假 0')
+  const rich = buildTopicStatBar({ productType: 1, totalMileage: 3, registrationMerchantCount: 4, playerCount: 1280 }, { withPlayers: true })
   assert.deepEqual(rich.slice(-2).map(c => c.value), ['4', '1,280'])
+  const explore = buildTopicStatBar({ productType: 2, endDate: '2099-12-31', registrationMerchantCount: 0, playerCount: 0 }, { withPlayers: true })
+  assert.deepEqual(explore.map(c => c.key), ['valid', 'route'])
   // 商家页不传选项，口径不变
   assert.deepEqual(buildTopicStatBar({ productType: 1, totalMileage: 3 }).map(c => c.key), ['mileage'])
-  assert.match(read('pages/topic/index/index.js'), /buildTopicStatBar\(res\.data, \{ keepZeroCounts: true \}\)/)
+  assert.match(read('pages/topic/index/index.js'), /buildTopicStatBar\(res\.data, \{ withPlayers: true \}\)/)
 })
 
 test('V-22b R2 节点介绍卡先用站点自己的图，站点图不可用再退回玩法图', () => {

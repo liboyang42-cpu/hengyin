@@ -40,10 +40,11 @@ test('P-24:普通拍照审核上传失败,屏上写「上传失败，请重拍�
   assert.match(read('pages/play/components/playkit/index.wxml'), /photo-fail-seq="\{\{kit\.photoFailSeq\}\}" photo-fail-kind="\{\{kit\.photoFailKind\}\}"[^>]*bind:shoot="onShoot"[^>]*bind:close="onClose" \/>/);
 });
 
-test('P-26:开始游戏时问定位(每次游玩仍逐次明示用途,不跨次记住同意)', () => {
+test('P-26 → N3(2026-11-21):开始游戏 / 故事开场不问定位,到点「我已到达」时才问', () => {
   const js = read('pages/play/index.js');
-  // 业主 2026-11-13:定位只在开局问一次;已有完成站(续玩)不再问
-  assert.match(js, /if \(located && this\._startLocationNeeded\(\)\) this\.requestPlayLocation\(\);/);
+  const intro = js.slice(js.indexOf('  startStoryIntro() {'), js.indexOf('  startStoryIntro() {') + 900);
+  assert.doesNotMatch(intro, /requestPlayLocation\(/);
+  assert.match(js, /this\._locateThen\(\(\) => this\.onArriveTap\(\)\)/);
   assert.doesNotMatch(js, /locationConsent/);
 });
 

@@ -76,7 +76,7 @@
       <view class="cover-brief" wx:if="{{ !info.imgUrl }}">
         <text class="cover-brief-type">{{ info.productType == 2 ? '自由探索' : '城市定向' }}</text>
         <view class="cover-brief-title">{{ info.name || '主题详情' }}</view>
-        <text class="cover-brief-value" wx:if="{{ info.subtitle || info.description }}">{{ info.subtitle || info.description }}</text>
+        <text class="cover-brief-value" wx:if="{{ info.subtitle || info.storyText }}">{{ info.subtitle || info.storyText }}</text>
       </view>
       <block wx:else>
         <text class="cv-type">{{ info.productType == 2 ? '自由探索' : '城市定向' }}</text>
@@ -225,22 +225,18 @@
         <view class="davidxian"></view>
         <view class="det3">
           <view class="wp">
-            <!-- CU-M-39:没填介绍时后端给 null(或历史脏数据字面量 'null'),整块不出,不渲染出「null」。 -->
-            <block wx:if="{{info.description && info.description !== 'null'}}">
+            <!-- CU-M-39:没填介绍时后端给 null(或历史脏数据字面量 'null'),整块不出,不渲染出「null」。
+                 2026-11-21:正文里的安全 / 营业 / 路线这类实用话拆进下面「出发前」,这里只留故事引子。 -->
+            <block wx:if="{{info.storyText}}">
             <view class="det-type">活动内容</view>
             <view class="cont1">
-              <text class="txt1 para">
-                {{info.description}}
-              </text>
+              <text class="txt1 para">{{info.storyText}}</text>
             </view>
             </block>
-            <!-- 稿 214:499 的「活动内容」。稿上那六条是 Udemy 占位(5 articles /
-                 12 downloadable resources / …),一条都不抄;位置留着,装我们自己真有的东西:
-                 章节 / 站点 / 玩法数、语音导览、通关勋章、通关券 —— 全是后端已下发、
-                 却从来没在详情页露过面的字段。一条都没有整块不出。 -->
-            <view class="topic-includes" wx:if="{{info.contentIncludes.length && !(info.description && info.description !== 'null')}}">
-              <view class="topic-includes__t">活动内容</view>
-              <view class="topic-includes__li" wx:for="{{info.contentIncludes}}" wx:key="index">{{item}}</view>
+            <!-- 出发前:价格与包含 / 同票人数 / 暂停续玩 / 通关所得 / 正文里的实用话,一行一条;全是已有字段,缺就少一条 -->
+            <view class="topic-includes" wx:if="{{info.departNotes.length}}">
+              <view class="topic-includes__t">出发前</view>
+              <view class="topic-includes__li" wx:for="{{info.departNotes}}" wx:key="index">{{item}}</view>
             </view>
             <!--<view class="cont2 flex-cb" bindtap="goPoint">
               <view class="fl flex-ac">
@@ -349,8 +345,6 @@
               </view>
             </view>
           </block>
-          <!-- 积分口径(合规文案,原 det7 那条):评价下面常驻一行,点进积分规则 -->
-          <view class="det6-rule" bindtap="goPoint" aria-role="link" aria-label="查看积分规则" hover-class="cy-pressed" hover-stay-time="80">评论积分须符合参与及首评条件，以实际积分记录为准</view>
         </view>
         <!-- 业主 2026-10-22:详情页没有底栏(v13);价格按钮滚出顶栏后停到右下角。
              自玩主题另有拼场场次时,留一行进场次选择,不让这条路断掉。 -->
@@ -445,9 +439,8 @@
               <view class="li item" bindtap="goLocation" data-address="{{ node.address }}" data-name="{{ node.name }}"
                 data-latitude="{{ node.latitude }}" data-longitude="{{ node.longitude }}" hover-class="cy-pressed" hover-stay-time="80">
                 <view class="xh">{{ node.seq || nodeIndex+1 }}</view>
-                <image class="item-pic" lazy-load="true"
-                  src="{{ img.fit(node.registrationMerchantList && node.registrationMerchantList.length > 0 ? img.first(node.registrationMerchantList[0].picUrl) : (img.first(node.imgUrl) || img.first(info.imgUrl)), imgCtx, 'thumb', true) }}" data-raw="{{node.registrationMerchantList && node.registrationMerchantList.length > 0 ? img.first(node.registrationMerchantList[0].picUrl) : (img.first(node.imgUrl) || img.first(info.imgUrl))}}" binderror="onImgRenditionError" webp="{{true}}"
-                  mode="aspectFill" wx:if="{{ (node.registrationMerchantList && node.registrationMerchantList.length > 0) || img.first(node.imgUrl) || img.first(info.imgUrl) }}" />
+                <image class="item-pic" lazy-load="true" src="{{ img.fit(node.photo, imgCtx, 'thumb', true) }}" data-raw="{{node.photo}}" binderror="onImgRenditionError" webp="{{true}}"
+                  mode="aspectFill" wx:if="{{ node.photo }}" />
                 <view class="item-pic item-pic--blank" wx:else></view>
                 <view class="node-card-foot">
                   <view class="david_hp_con_txt"><text class="node-card-name" wx:if="{{node.registrationMerchantList[0].mmsMerchant.name}}">{{stationTitle.text(node.registrationMerchantList[0].mmsMerchant.name)}}</text><text class="node-card-name" wx:elif="{{node.name}}">{{stationTitle.text(node.name)}}</text></view>

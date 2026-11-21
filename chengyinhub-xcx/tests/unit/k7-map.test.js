@@ -149,7 +149,7 @@ test('N8:队伍确认框全角标点,解散框不再复述第一条后果', () =
   assert.equal(DANGER_ACTIONS['team.reject'].title, '拒绝「{name}」的申请？');
 });
 
-test('N9:整行大数字只给「点亮坐标」/「玩法完成」,用时不再是被「继续」压住的巨字', () => {
+test('N9:整行大数字只给「点亮站点」/「玩法完成」,用时不再是被「继续」压住的巨字', () => {
   const css = read('pages/play/index.wxss');
   assert.doesNotMatch(css, /\.finsheet \.fst:first-child/);
   assert.match(css, /\.finsheet \.fst--hero \.fst__v\{ font-size:216rpx;/);

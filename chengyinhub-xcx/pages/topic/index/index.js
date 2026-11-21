@@ -38,7 +38,7 @@ const contentReport = require('../utils/content-report.js');
 const reportSheet = require('../../../utils/community-report-sheet.js');
 const mediaPreview = require('../../../utils/media-preview.js');
 const motion = require('../utils/topic-motion.js');
-const chapterCards = require('../utils/chapter-cards.js');
+const chapterCards = require('../utils/chapter-cards.js'); const departNotes = require('../utils/depart-notes.js'); const stationImage = require('../../../utils/station-image.js');
 const { checkoutView } = require('../utils/checkout-view.js');
 const money = require('../../../utils/money-format.js');
 const KB_MS = 3600;          // 封面每张停留时长
@@ -1009,12 +1009,6 @@ Page({
     })
   },
   
-  goPoint() {
-    if (this._navigating) return; this._navigating = true; wx.navigateTo({ complete: () => { this._navigating = false; },
-      url: '/subpackageP3/pages/growthcenter/index/index',
-    })
-  },
-
   /**
    * 触摸开始事件
    */
@@ -2317,6 +2311,10 @@ Page({
           // 放在 if 外面:没有章节的主题也可能有俱乐部,阵容不该跟着章节一起消失
           res.data['lineup'] = that.buildLineup(res.data);
           res.data['contentIncludes'] = that.buildContentIncludes(res.data);
+          // 2026-11-21:「活动内容」只放故事引子;安全 / 营业 / 路线这类实用话与价格、续玩、同票人数、通关所得收进「出发前」
+          const split = departNotes.splitDescription(res.data.description);
+          res.data['storyText'] = split.story;
+          res.data['departNotes'] = departNotes.buildDepartNotes(res.data, { buyOpts: motion.buyOptions(res.data), includes: res.data['contentIncludes'], notes: split.notes });
 
           res.data['venue'] = that.buildVenue(res.data);
           res.data['heroIntro'] = heroIntro(res.data.subtitle);
@@ -2334,7 +2332,7 @@ Page({
             // registrationStatus=2 回填 isSignUp,与自玩通行证的建单口径同源,直接用它。
             is_join: (String(that.data.is_join) === '1' || Number(res.data.isSignUp) === 1) ? 1 : 0,
             // 稿 214:384 的数据条:与商家版 181:575 同一份格子(utils 里只有一份实现)
-            statBar: buildTopicStatBar(res.data, { keepZeroCounts: true }),
+            statBar: buildTopicStatBar(res.data, { withPlayers: true }),
             ratingStars,
             // 探店日/自由探索(productType=2):场次块换真场次卡,不再当「阵容」花名册渲染
             isExplore: Number(res.data.productType) === 2,
@@ -2484,6 +2482,8 @@ Page({
         }
         // V-22b:节点介绍卡先用站点自己的图,再用玩法图;相对路径/http 签名链接/逗号多图在真机上都出不来,卡上一块空白。
         if (ns[n].cmsMemberTemplate) ns[n].cmsMemberTemplate.imgUrl = templateCover(ns[n].cmsMemberTemplate, ns[n], topicCover);
+        // 站点缩略图走共用兜底链(utils/station-image):商家图 / 站点图 → 本章图 → 路线封面 → 纹理底
+        ns[n].photo = stationImage.resolveStationImage({ stationImg: stationImage.firstImage(firstMerchant && firstMerchant.picUrl) || ns[n].imgUrl, chapterImgArr: stationImage.firstImage(chapter.imgArr != null ? chapter.imgArr : chapter.img_arr) || chapter.cover, topicCover }).src;
         ns[n].walkText = prevNode ? walkText(prevNode, ns[n]) : '';
         seq += 1; ns[n].seq = seq; prevNode = ns[n];
         ns[n].giftText = firstMerchant && firstMerchant.mmsMerchant ? nodeText(firstMerchant.mmsMerchant.derivativeBenefits) : '';

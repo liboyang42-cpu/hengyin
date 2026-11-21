@@ -337,7 +337,7 @@ test('三模式完成卡继续使用真实腾讯地图展示完整路径', () =>
   assert.match(roamWxml, /template name="archRoute"[\s\S]*?archSegs/)
 })
 
-test('主题游玩进页先说明定位用途，确认前不采集，并保留扫码降级', () => {
+test('主题游玩进页不问定位(N3),到点才用一句话说明用途，确认前不采集，并保留扫码降级', () => {
   const playJs = readXcx('pages/play/index.js')
   const playWxml = readXcx('pages/play/index.wxml')
   const loadData = playJs.slice(playJs.indexOf('  loadData(first) {'), playJs.indexOf('  applyPreviewData(data) {'))
@@ -345,12 +345,13 @@ test('主题游玩进页先说明定位用途，确认前不采集，并保留�
 
   // V3-11 进游戏先说明用途；真正的 SDK 采集仍只能从明确确认回调进入。
   assert.doesNotMatch(loadData, /initLocation\(|wx\.getLocation/)
-  assert.match(loadData, /if \(that\._startLocationNeeded\(\) && !that\._entryLocationOffered && d\.registered !== false && that\._playable && !that\.data\.allDone\s*&& that\.data\.runState !== 'paused' && nodes\.some\(node => !node\.done && node\.lat && node\.lng\)\) \{\s*that\._entryLocationOffered = true;\s*that\.requestPlayLocation\(\)/)
+  assert.doesNotMatch(loadData, /requestPlayLocation\(/)
   assert.doesNotMatch(previewData, /initLocation\(|requestPlayLocation\(|wx\.getLocation/)
   // 业主 2026-11-13:导航到某一站不再逐站申请定位
   assert.doesNotMatch(playJs.slice(playJs.indexOf('  startNav(node) {'), playJs.indexOf('  stopNav() {')), /requestPlayLocation\(\)/)
   assert.match(playJs, /onScanArrive\(\)\s*\{[\s\S]*?this\.scanArrive\(node\)/)
-  assert.match(playJs, /content:\s*'只在开局时检查你是否在第一站 300 米内，之后各站不再要求定位[^']*锁屏、切到后台、暂停、结束或离开后停止/)
+  assert.match(playJs, /content:\s*'确认你在第一站附近，只在本页前台使用。'/)
+  assert.match(playJs, /cancelText:\s*'扫站点码'/)
   assert.match(playWxml, /bindtap="onScanArriveFromTools"[^>]*aria-label="扫码到达"/)
 })
 
@@ -599,24 +600,24 @@ test('自由漫游的演示地标也明确为仅浏览，不伪装成真实地�
   assert.match(roamWxml, /paceCard\.demo[\s\S]*?演示点 · 仅浏览（非真实地点）/)
 })
 
-// 「点亮坐标」是已点亮数,不是总数 —— 2026-08-01 修:原来两处都绑 total,
+// 「点亮站点」是已点亮数,不是总数 —— 2026-08-01 修:原来两处都绑 total,
 // 只完成 2/4 时显示 4,用户会以为自己全点亮了。通关卡和分享卡是同一个 bug 的两个出口,
 // 分享卡那份还会被烤进图片传播出去,所以两处一起锁。
-test('「点亮坐标」必须取已完成数(doneCount),部分完成时不得显示总数', () => {
+test('「点亮站点」必须取已完成数(doneCount),部分完成时不得显示总数', () => {
   const wxml = readXcx('pages/play/index.wxml')
   const js = readXcx('pages/play/index.js')
 
   // ① 通关卡统计格:该格的数字必须是 doneCount(2026-10-22 起格首可带一枚字形图标)
-  const cell = wxml.match(/<view class="fst(?: fst--hero)?"(?: wx:if="\{\{doneCount > 0\}\}")?>(?:<cy-icon class="fst__ic"[^>]*\/>)?<text class="fst__v">\{\{([a-zA-Z]+)\}\}<\/text><text class="fst__l">点亮坐标<\/text><\/view>/)
-  assert.ok(cell, '找不到「点亮坐标」统计格')
-  assert.equal(cell[1], 'doneCount', '「点亮坐标」绑的必须是 doneCount,不能是 total')
+  const cell = wxml.match(/<view class="fst(?: fst--hero)?"(?: wx:if="\{\{doneCount > 0\}\}")?>(?:<cy-icon class="fst__ic"[^>]*\/>)?<text class="fst__v">\{\{([a-zA-Z]+)\}\}<\/text><text class="fst__l">点亮站点<\/text><\/view>/)
+  assert.ok(cell, '找不到「点亮站点」统计格')
+  assert.equal(cell[1], 'doneCount', '「点亮站点」绑的必须是 doneCount,不能是 total')
 
   // ② 分享卡 canvas:同一标签的同一口径
   // 分享卡画的是点开时捕获的 artwork 快照,快照里的 doneCount 取自页面 doneCount。
-  assert.match(js, /\[String\(artwork\.doneCount \|\| 0\), '点亮坐标'\]/,
-    '分享卡的「点亮坐标」也必须取 doneCount —— 错数字会被烤进分享图')
+  assert.match(js, /\[String\(artwork\.doneCount \|\| 0\), '点亮站点'\]/,
+    '分享卡的「点亮站点」也必须取 doneCount —— 错数字会被烤进分享图')
   assert.match(js, /doneCount: this\.data\.doneCount/, 'artwork 快照的 doneCount 必须来自页面 doneCount')
-  assert.doesNotMatch(js, /\[String\((that\.data|artwork)\.total \|\| 0\), '点亮坐标'\]/)
+  assert.doesNotMatch(js, /\[String\((that\.data|artwork)\.total \|\| 0\), '点亮站点'\]/)
 
   // ③ 行为口径:doneCount 只数 done 的节点(部分完成时必然 < total)
   assert.match(js, /doneCount: nodes\.filter\(\(n\) => n\.done\)\.length/)
@@ -627,13 +628,13 @@ test('「点亮坐标」必须取已完成数(doneCount),部分完成时不得�
   assert.match(readXcx('utils/wxs/hud-slots.wxs'), /banner:\s*!screen && !!allDone/)
 })
 
-test('负控:「点亮坐标」退回 total 时上面那条契约必须判红', () => {
+test('负控:「点亮站点」退回 total 时上面那条契约必须判红', () => {
   const wxml = readXcx('pages/play/index.wxml')
   const mutated = wxml.replace(
-    '<text class="fst__v">{{doneCount}}</text><text class="fst__l">点亮坐标</text></view>',
-    '<text class="fst__v">{{total}}</text><text class="fst__l">点亮坐标</text></view>')
+    '<text class="fst__v">{{doneCount}}</text><text class="fst__l">点亮站点</text></view>',
+    '<text class="fst__v">{{total}}</text><text class="fst__l">点亮站点</text></view>')
   assert.notEqual(mutated, wxml, '负控必须真的把绑定改回 total')
-  const cell = mutated.match(/<view class="fst(?: fst--hero)?"(?: wx:if="\{\{doneCount > 0\}\}")?>(?:<cy-icon class="fst__ic"[^>]*\/>)?<text class="fst__v">\{\{([a-zA-Z]+)\}\}<\/text><text class="fst__l">点亮坐标<\/text><\/view>/)
+  const cell = mutated.match(/<view class="fst(?: fst--hero)?"(?: wx:if="\{\{doneCount > 0\}\}")?>(?:<cy-icon class="fst__ic"[^>]*\/>)?<text class="fst__v">\{\{([a-zA-Z]+)\}\}<\/text><text class="fst__l">点亮站点<\/text><\/view>/)
   assert.ok(cell)
   // 断言「上面那条契约会判红」，判据是抛出 AssertionError 本身，不是它的消息文案。
   // 2026-08-27:原来写的是 /doneCount|total/ 去匹配 Node 内部的错误消息 —— 那串文案

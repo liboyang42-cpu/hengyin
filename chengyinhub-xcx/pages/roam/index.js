@@ -1833,7 +1833,7 @@ Page({
         this._finishRequested = true;
         const result = fact.result;
         if (!result || typeof result.totalXp !== 'number' || !Number.isFinite(result.totalXp))
-          return this._recoveryFailure('结算事实暂时无法读取，请重新确认');
+          return this._recoveryFailure('本次结果暂时无法读取，请重新确认');
         if (fact.locationExpired === true) {
           this._track = []; this._pendingTiles = []; this._pendingCollectedAt = {}; this._sessionTiles = {}; this._foundRoamPois = {}; this._pois = [];
           const { stripGeometry } = require('../../utils/roam-location-retention.js');
@@ -2071,7 +2071,7 @@ Page({
       MOVE_TOO_FAST: '位置变化异常快，本次验证已被风控拦截。',
       ROAM_CONTEXT_REQUIRED: '缺少本次漫游会话，先开始漫游再验证。',
       SESSION_NOT_OWNED: '本次漫游会话不属于当前账号。',
-      SESSION_NOT_ACTIVE: '本次漫游已结算，重新开始漫游后再验证。',
+      SESSION_NOT_ACTIVE: '本次漫游已结束，重新开始漫游后再验证。',
       ARRIVAL_TOO_FREQUENT: '验证太频繁了，请在原地稍等片刻再试。',
       MISSION_ALREADY_COMPLETED: '该任务已经完成过了，无需重复验证。',
       ROAM_POI_ADAPTER_DISABLED: '漫游到达验证当前已暂停，请稍后再试。',
@@ -2153,7 +2153,7 @@ Page({
 
   _applyRoamFinishResult(result, complete, badgeDelivery) {
     if (typeof result.totalXp !== 'number' || !Number.isFinite(result.totalXp))
-      return this._recoveryFailure('结算事实暂时无法读取，请重新确认');
+      return this._recoveryFailure('本次结果暂时无法读取，请重新确认');
     this._finishedAt = result.finishedAt || this._finishedAt || 0;
     const moment = formatRoamMoment(this._finishedAt);
     const zone = typeof result.zone === 'string' ? result.zone.trim() : '';
@@ -2177,7 +2177,7 @@ Page({
     this._shopMedalFromServer = !!shopMedal;
     const memory = roamMemory(this);
     const archiveState = memory.readSessionState();
-    if (!archiveState.ok) return this._recoveryFailure('结算已确认，足迹存档暂时无法读取，请重试确认');
+    if (!archiveState.ok) return this._recoveryFailure('结果已确认，足迹存档暂时无法读取，请重试确认');
     if (this._recoveryArchiveTs && !archiveState.sessions.some(row => row.ts === this._recoveryArchiveTs)) {
       if (!this._saveSession(this.data.finish)) return false;
     }
@@ -2188,12 +2188,12 @@ Page({
       archived.sessionId = exactSessionId(this._roamSid);
       archived.xpAwarded = result.totalXp;
       archived.medal = medal; archived.shopMedalName = shopMedal ? shopMedal.name : '';
-      if (!memory.writeSessions(arr)) return this._recoveryFailure('结算已确认，足迹存档更新失败，请重试确认');
+      if (!memory.writeSessions(arr)) return this._recoveryFailure('结果已确认，足迹存档更新失败，请重试确认');
     }
     this._roamBadgePending = !!exactSessionId(this._roamSid) && !!((result.medal && !medal) || (result.shopMedal && !shopMedal));
     if (this._roamBadgePending) {
       if (!this._saveRoamRecovery()) return false;
-    } else if (!memory.writeRecovery(null)) return this._recoveryFailure('结算已确认，本机恢复记录更新失败，请重试确认');
+    } else if (!memory.writeRecovery(null)) return this._recoveryFailure('结果已确认，本机恢复记录更新失败，请重试确认');
     if (!this._roamCompleted) {
       if (medal || shopMedal) this._triggerCelebration('medal-earned');
       if (result.routeStory) analytics.track('roam_route_story_shown', { bizType: 'roam' });
@@ -5189,13 +5189,13 @@ Page({
         if (generation !== this._roamWriteGeneration) return;
         if (ok) return this._arrive();
         this._roamPoiFinishBlocked = true;
-        cyToast('暂未结算，请先处理地点卡');
+        cyToast('还不能结束，请先处理地点卡');
       });
       this._arrivalWait = pending;
       return pending;
     }
     if (this._roamPoiFinishBlocked) {
-      cyToast('暂未结算，请先处理地点卡');
+      cyToast('还不能结束，请先处理地点卡');
       return;
     }
     if (this.data.screen === 'arrive') return;

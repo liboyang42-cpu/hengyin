@@ -692,9 +692,9 @@ test('漫游模板只在结果确定可重试时显示写请求重试入口', ()
   // 拍板 9-16:探店打卡不存在失败态 —— 失败浮卡与重试入口已删除(人不在店内时按钮不可用只提示)。
   assert.doesNotMatch(ROAM_WXML, /visit\.checkinRetryable/)
   assert.doesNotMatch(ROAM_WXML, /retryCheckin/)
-  // 结果未知/首写未知/恢复确认态:按钮文案与路由都必须是「确认结算结果」(retrySettle 只走权威刷新);
-  // 只有结果已确定(server/reveal 等)才允许露出写请求重发「重新结算」。
-  assert.match(ROAM_WXML, /retry="\{\{finish\.settleErr === 'unknown' \|\| finish\.settleErr === 'bootstrap' \|\| finish\.settleErr === 'recovery' \? '确认结算结果' : '重新结算'\}\}"/)
+  // 结果未知/首写未知/恢复确认态:按钮文案与路由都必须是「确认漫游结果」(retrySettle 只走权威刷新);
+  // 只有结果已确定(server/reveal 等)才允许露出写请求重发「重新提交」。
+  assert.match(ROAM_WXML, /retry="\{\{finish\.settleErr === 'unknown' \|\| finish\.settleErr === 'bootstrap' \|\| finish\.settleErr === 'recovery' \? '确认漫游结果' : '重新提交'\}\}"/)
   assert.match(ROAM_WXML, /retry="\{\{finish\.eventErr === 'unknown' \? '' : '重新上报'\}\}"/)
   assert.match(ROAM_WXML, /share\.squarePostUnknown/)
   assert.match(ROAM_WXML, /revealWriteUnknown/)

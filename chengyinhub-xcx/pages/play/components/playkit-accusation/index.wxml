@@ -10,7 +10,7 @@
         <view class="ac__glow" wx:if="{{illus === 'success'}}" aria-hidden="true"></view>
         <cy-illus wx:if="{{illus}}" name="{{illus}}" size="{{300}}" reduced-motion="{{reducedMotion}}" />
       </view>
-      <view class="ac__vt" aria-live="polite">{{pending ? '结算确认中' : outcomeLabel}}</view>
+      <view class="ac__vt" aria-live="polite">{{pending ? '结果确认中' : outcomeLabel}}</view>
       <block wx:for="{{screen}}" wx:key="index">
         <image wx:if="{{item.kind === 'img'}}" class="ac__end-img" src="{{item.img}}" mode="aspectFill" aria-role="img" aria-label="{{item.alt || '结局配图'}}" />
         <view wx:else class="ac__vs">{{item.text}}</view>

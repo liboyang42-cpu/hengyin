@@ -2147,7 +2147,6 @@ button::after {
 .btotal__k { font-size: 25rpx; color: #8E8E93; } /* ds-ok */
 .btotal__v { font-size: 54rpx; font-weight: 800; font-style: italic; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .bsheet__go { height: 96rpx; border-radius: 48rpx; display: flex; align-items: center; justify-content: center; background: #fff; color: #000; font-size: 31rpx; font-weight: 600; } /* ds-ok */
-.det6-rule { margin-top: 19rpx; font-size: 21rpx; line-height: 1.5; color: #8E8E93; } /* ds-ok 积分口径小字 */
 /* v13 路线站点:全局 style/common.wxss 里旧时间轴(竖线 / 灰圈编号 / 左缩进)选择器更具体,这里按同级再压一层 */
 .topic .topic-list .davidxfxi .list { margin-top: 0; overflow: visible; }
 .topic .topic-list .davidxfxi .list::before, .topic .topic-list .davidxfxi .list::after { display: none; }
@@ -2194,7 +2193,6 @@ button::after {
 .topic-audio { transition: var(--cy-tr-press); }
 .sess { transition: var(--cy-tr-press); }
 .det6-empty { transition: var(--cy-tr-press); }
-.det6-rule { transition: var(--cy-tr-press); }
 .topic-story-paywall__orders { transition: var(--cy-tr-press); }
 .delete-btn { transition: var(--cy-tr-press); }
 .bsheet__x { transition: var(--cy-tr-press); }
@@ -2207,8 +2205,12 @@ button::after {
 
 /* D3:无封面头图 = look 渐变 + 小路线标(同主题卡),不再铺满黑白线稿 */
 
-/* 路线站点无图且主题也无封面:深色中性块,不再铺白底线稿 */
-.topic .davidxfxi .item-pic--blank { background: var(--cy-color-play-surface-solid); }
+/* 站点图兜底链的最后一级(utils/station-image.js 的 texture)与封面加载 / 失败时的垫底:
+   与游玩页同一层深色纹理(play .photo-tex),不是一块死黑 */
+.topic .davidxfxi .item-pic--blank,
+.topic .davidxfxi .item-pic,
+.topic .slide1.cy-img-ph,
+.topic .det1 .bgt-swiper.cy-img-ph { background: radial-gradient(ellipse 90% 80% at 30% 20%, var(--cy-color-bg-raised), transparent 70%), linear-gradient(160deg, var(--cy-color-play-surface-subtle), var(--cy-color-play-surface-solid)); }
 /* 未解锁章节预告:介绍可读,封面压暗,右上锁标 */
 .topic .story-cc.is-locked .story-cc__img { filter: brightness(.72); }
 
