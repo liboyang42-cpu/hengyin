@@ -196,19 +196,34 @@ function registeredRoutes() {
   )))
 }
 
+// 同一页面源码里的方法体与去注释结果按需缓存：全页面审计会对每个绑定的处理函数重走一遍调用闭包，
+// 不缓存时大页面（如 pages/play）被反复整段扫描，CI 机器上整文件逼近 60s 超时。判定逻辑不变。
+const bodyCache = new Map()
+function cachedBody(source, name) {
+  let perSource = bodyCache.get(source)
+  if (!perSource) { perSource = new Map(); bodyCache.set(source, perSource) }
+  if (!perSource.has(name)) perSource.set(name, methodBody(source, name))
+  return perSource.get(name)
+}
+const maskCache = new Map()
+function maskedBody(body) {
+  if (!maskCache.has(body)) maskCache.set(body, maskNonCode(body))
+  return maskCache.get(body)
+}
+
 function reachableBodies(source, entry) {
   const seen = new Set()
   const bodies = []
   const visit = (name) => {
     if (seen.has(name)) return
     seen.add(name)
-    const body = methodBody(source, name)
+    const body = cachedBody(source, name)
     if (!body) return
     bodies.push(body)
     for (const call of body.matchAll(/this\.([A-Za-z_$][\w$]*)\s*\(/g)) visit(call[1])
   }
   visit(entry)
-  return bodies.join('\n')
+  return bodies
 }
 
 function hasAlternativeRootExit(route, handler, wxml) {
@@ -231,8 +246,7 @@ function findUnsafePageBacks(overrides = {}) {
     const handlers = boundHandlers(wxml)
 
     for (const handler of handlers) {
-      const closure = reachableBodies(source, handler)
-      const executable = maskNonCode(closure)
+      const executable = reachableBodies(source, handler).map(maskedBody).join('\n')
       if (!/wx\.navigateBack\s*\(/.test(executable)) continue
       if (/wx\.(switchTab|reLaunch|redirectTo)\s*\(/.test(executable)) continue
       if (hasAlternativeRootExit(route, handler, wxml)) continue
