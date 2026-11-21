@@ -18,6 +18,3 @@ page { background: var(--cy-color-bg-page); }
 .mk-row__title { font-size: var(--cy-type-body); }
 .mk-row__sub { font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); font-variant-numeric: tabular-nums; }
 .mk-row__amt { font-size: var(--cy-type-body); font-weight: 700; font-variant-numeric: tabular-nums; }
-.mk-btn { min-height: 88rpx; display: flex; align-items: center; justify-content: center; border-radius: var(--cy-radius-pill); background: var(--cy-color-text-primary); color: var(--cy-color-bg-page); font-size: var(--cy-type-button); font-weight: 600; transition: var(--cy-tr-press); }
-.mk-btn--ghost { background: transparent; color: var(--cy-color-text-primary); border: 1px solid var(--cy-color-border-default); }
-.mk-btn.is-off { opacity: .45; }

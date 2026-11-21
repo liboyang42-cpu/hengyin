@@ -28,7 +28,7 @@ test('没有通用局的主题:判完那一次摆作者写的反馈;进页时已
   assert.equal(p.data.r5Verdict.show, false, '进页第一份视图只记下')
   p._applyR5PlainOutcome(view(2, null))
   p._applyR5PlainOutcome(view(3, { outcome: 'FAIL', reply: '再看看，换个方向想想。', images: [] }))
-  assert.deepEqual(p.data.r5Verdict, { show: true, kind: 'fail', text: '再看看，换个方向想想。', images: [] })
+  assert.deepEqual(p.data.r5Verdict, { show: true, kind: 'fail', text: '再看看，换个方向想想。', images: [], remember: '', cta: '继续' })   // 外壳 1121:角色信任句 + 收尾钮字
   p.data.r5Verdict = { show: false, kind: 'win', text: '', images: [] }
   p._applyR5PlainOutcome(view(3, { outcome: 'FAIL', reply: '再看看，换个方向想想。', images: [] }))
   assert.equal(p.data.r5Verdict.show, false)

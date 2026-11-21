@@ -57,3 +57,8 @@
 .ag-option { transition: var(--cy-tr-press); }
 .ag-role__option { transition: var(--cy-tr-press); }
 .ag-refresh { transition: var(--cy-tr-press); }
+
+/* 外壳:底栏只在玩完时升起(过渡,不加 keyframes);没玩完时移出屏外、不可点。减弱动态直接出现。 */
+.ag__footer { transition: transform var(--cy-motion-standard) var(--cy-ease-out), opacity var(--cy-motion-standard) var(--cy-ease-out); }
+.ag__footer:not(.is-ready) { transform: translateY(100%); opacity: 0; pointer-events: none; }
+.ag__footer--still { transition: none; }

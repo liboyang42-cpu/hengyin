@@ -20,6 +20,19 @@ function limitPercent(leftSeconds, totalSeconds) {
   return Math.max(0, Math.min(100, Math.round((left / totalSeconds) * 100)));
 }
 
+/** 玩法外壳抬头:沿组件宿主往上找玩家页 cy-playkit 给的 shellHead(台面 → 某个 playkit-* → cy-playkit,最多看三层)。
+ *  编辑页试玩、故事流内嵌、分支弹窗的宿主都不带 shellHead ⇒ null,台面照旧。 */
+function shellHeadOf(comp) {
+  let owner = comp;
+  for (let i = 0; i < 3; i++) {
+    owner = owner && typeof owner.selectOwnerComponent === 'function' ? owner.selectOwnerComponent() : null;
+    if (!owner || !owner.data) return null;
+    const head = owner.data.shellHead;
+    if (head && typeof head === 'object' && (head.station || head.chapter || head.lead)) return head;
+  }
+  return null;
+}
+
 /* 烧穿那一下的时长,与 WXSS 里 burnaway 同值;两边错开会出现「烧完了还停在黑屏上」 */
 const BURN_MS = 1500;
 
@@ -66,9 +79,14 @@ Component({
     // peOn 只在入场那两秒为 1,之后各零件的延时归零,别的交互不再被拖慢。
     peGo: 1,
     peOn: 0,
+    // 玩法外壳抬头(utils/game-shell.js shellHead):{ station, chapter, lead, label } 或 null
+    head: null,
   },
   observers: {
     show: function (show) {
+      /* 外壳抬头与 show 同一拍写进 data:第一帧就带着站名 / 引子画出来,不先空一帧再补(补的那一下就是跳动) */
+      const head = show ? shellHeadOf(this) : null;
+      if (head !== this.data.head) this.setData({ head });
       this._clearEnter();
       if (!show || this.data.reducedMotion) { if (this.data.peGo !== 1 || this.data.peOn) this.setData({ peGo: 1, peOn: 0 }); return; }
       this.setData({ peGo: 0, peOn: 1 });
@@ -134,6 +152,7 @@ Component({
     },
 
     _limitPercent: limitPercent,        // 纯算法出口,供单测
+    _shellHeadOf: shellHeadOf,
 
     _stopServerDeadline() { if (this._serverTick) clearInterval(this._serverTick); this._serverTick = null; },
     _syncServerDeadline() {

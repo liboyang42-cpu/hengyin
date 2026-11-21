@@ -292,7 +292,7 @@
 
   <view class="tkbg" wx:if="{{showPhoneModal}}" bindtap="closePhoneModal" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="关闭手机号授权"></view>
   <view class="tkbox" wx:if="{{showPhoneModal}}">
-    <view class="tkbox_tpis">请点击按钮获取您的手机号码，完善账户信息</view>
+    <view class="tkbox_tpis">绑定手机号，订单和票券找得回</view>
     <button class="tkbox_but" open-type="getPhoneNumber" bindgetphonenumber="getPhoneNumber">获取</button>
     <view class="tkbox_skip" bindtap="closePhoneModal" hover-class="cy-pressed" hover-stay-time="80">稍后再说</view>
   </view>

@@ -5,6 +5,7 @@
   "backgroundTextStyle": "light",
   "enablePullDownRefresh": true,
   "usingComponents": {
+    "cy-btn": "/components/cy/btn/index",
     "cy-nav-bar": "/components/cy/nav-bar/index",
     "cy-page-title": "/components/cy/page-title/index",
     "cy-celebrate": "/components/cy/celebrate/index",

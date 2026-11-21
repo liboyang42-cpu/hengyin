@@ -544,7 +544,8 @@ test('漫游节点读失败留白，写结果未知仍提供真实核对入口',
   assert.doesNotMatch(wxml, /poiOffline \|\| merchantOffline/);
   assert.doesNotMatch(wxml, /节点加载失败|系统离线|当前离线|网络已断开/);
   assert.match(wxml, /revealWriteUnknown \|\| recoveryError/);
-  assert.match(wxml, /bindtap="recoverRoam"[\s\S]*点击确认/);
+  assert.match(wxml, /bindtap="recoverRoam"[\s\S]*点亮的格子还没确认 · 确认/);
+  assert.doesNotMatch(wxml, /点击确认|点击重试/);
   assert.match(js, /merchantOffline: true/);
   assert.doesNotMatch(js, /poiOffline: true/);
 });

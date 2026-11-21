@@ -42,6 +42,9 @@ Component({
        用户点名两种写法都保留,它按这个属性演**另一套构图**(故事流里直接掷),
        不是把整屏那版缩小。 */
     inline: { type: Boolean, value: false },
+    /* 玩法外壳抬头(utils/game-shell.js shellHead):{ station, chapter, lead, label }。只有玩家页整屏那一份给;
+       分发器自己不画,台面 cy-play-stage 沿宿主往上读它(不用 24 个 kit 各传一遍) */
+    shellHead: { type: Object, value: null },
   },
   /* 浅底整屏玩法:状态栏字跟着换黑,收起换回白(2026-10-27 实测:猜数字 / 倒计时屏的时间电量白字压白底看不见)。
      页面自绘导航,这里只动前景色,和页面 _albumStatusBar 同一套写法。 */
