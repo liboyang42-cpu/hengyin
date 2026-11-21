@@ -314,7 +314,8 @@ test('PG-062/PG-086/PG-092:设置页删未绑定函数;编号不上屏;协议页
 });
 
 test('PG-072..PG-094:文案、编号与私人页转发收口', () => {
-  assert.match(read('pages/index/index.wxml'), /你好，\{\{userInfo\.nickname \|\| '旅人'\}\}！/);
+  // 1121 N1:问候改由 utils/index/home-greeting.js 判默认昵称(见 home-player-first-1121.test.js)
+  assert.match(read('pages/index/index.wxml'), /<text class="v3-hero-hi">\{\{heroGreeting\}\}<\/text>/);
   assert.match(read('pages/play/merchant/index.wxml'), /预计等待（分）/);
   assert.doesNotMatch(read('pages/topic/merchantinfo/merchantinfo.js'), /中\.\.\.'/);
   assert.equal(require('../../subpackageRoam/utils/official-route.js').distanceText(2), '2 公里');

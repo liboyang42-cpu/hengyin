@@ -15,33 +15,33 @@ function loadBannerContract() {
   return require(target)
 }
 
-test('首页只展示俱乐部、商家、活动三条行动 Banner', () => {
+test('首页只展示活动、俱乐部、商家三条行动 Banner,玩家入口打头', () => {
   const { buildHomeActionBanners } = loadBannerContract()
   const banners = buildHomeActionBanners()
 
   assert.equal(banners.length, 3)
-  assert.equal(banners[0].id, 'home-action-club')
+  assert.equal(banners[0].id, 'home-action-activity')
   const actions = banners
   assert.deepEqual(actions.map((item) => item.title), [
+    '和朋友报名活动',
     '成为俱乐部',
     '成为商家',
-    '和朋友报名活动',
   ])
   assert.deepEqual(actions.map((item) => item.route), [
+    '/pages/activity/list/index',
     '/pages/club/apply/index',
     '/pages/merchant/apply/index',
-    '/pages/activity/list/index',
   ])
   assert.deepEqual(actions.map((item) => item.motionSrc), [
+    'https://www.chengyinhub.com/prod-api/profile/home-banners/home-banner-friends.gif',
     'https://www.chengyinhub.com/prod-api/profile/home-banners/home-banner-club.gif',
     'https://www.chengyinhub.com/prod-api/profile/home-banners/home-banner-merchant.gif',
-    'https://www.chengyinhub.com/prod-api/profile/home-banners/home-banner-friends.gif',
   ])
   assert.equal(new Set(actions.map((item) => item.motionSrc)).size, 3, '三张 Banner 必须使用三段不同动图')
   assert.deepEqual(actions.map((item) => item.poster), [
+    '/images/home-banner-friends.jpg',
     '/images/home-banner-club.jpg',
     '/images/home-banner-merchant.jpg',
-    '/images/home-banner-friends.jpg',
   ])
 })
 
@@ -71,9 +71,9 @@ test('整张 Banner 点击调用真实 navigateTo，不引入 Banner 内按钮',
     assert.equal(openHomeActionBanner(wxApi, item), true)
   })
   assert.deepEqual(calls, [
+    '/pages/activity/list/index',
     '/pages/club/apply/index',
     '/pages/merchant/apply/index',
-    '/pages/activity/list/index',
   ])
 
   const wxml = read('pages/index/index.wxml')
@@ -307,7 +307,7 @@ test('负控：任一行动路由被改坏时契约必须判红', () => {
   const { buildHomeActionBanners, validateHomeActionBanners } = loadBannerContract()
   const mutated = buildHomeActionBanners()
   mutated[0].route = '/pages/index/index'
-  assert.throws(() => validateHomeActionBanners(mutated), /home-action-club/)
+  assert.throws(() => validateHomeActionBanners(mutated), /home-action-activity/)
 
   const covered = buildHomeActionBanners()
   covered.unshift({ id: 'home-cover', name: '城瘾', poster: '/images/home-banner-cover.png' })

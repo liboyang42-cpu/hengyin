@@ -56,6 +56,8 @@ const MATRIX = [
   ['subpackageA/components/revenue-allocations/index.js', "url: '/api/marketing/revenue/author/mine'", 'required', 'member', 'self-account'],
   //   视频悬赏 get() 只服务 /submission/mine 与 /accrual/mine,ApiVideoBountyController 均按 requireAppMemberId 本人过滤。
   ['subpackageA/pages/video-bounty/index.js', "url, method: 'GET', data: data || {}", 'required', 'member', 'self-account'],
+  // 2026-11-21 1121 N5:我的页只取本人投稿条数决定「视频悬赏」入口是否收起(同 /submission/mine 端点与权限档)。
+  ['subpackageMember/components/cy/profile/index.js', "url: '/api/video-bounty/submission/mine', method: 'GET'", 'required', 'member', 'self-account'],
   //   通行证详情 ApiMarketingProductController /{productId}:catalogService.detail,无会员维度;/orders 按 requireAppMemberId 本人。
   ['subpackageMember/market/pass/index.js', "url: '/api/marketing/product/' + encodeURIComponent(this._id)", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
   ['subpackageMember/market/pass/index.js', "url: '/api/marketing/product/orders'", 'required', 'member', 'self-account'],
@@ -537,7 +539,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-11-19 PG-021:简易发布页删除,其 AI 草稿 request / recovery 两处直接 GET 随页删除,140 → 138。
   // 2026-11-19 三线合流:142 − 2 = 140。
   // 2026-11-19 cast-contract-1119:角色弹窗试听 GET /api/topic/cast/voice 一处(已入 MATRIX),140 → 141。
-  assert.equal(directCount, 141, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-11-21 1121 N5:我的页读本人视频悬赏投稿条数一处(同 /submission/mine,已入 MATRIX),141 → 142。
+  assert.equal(directCount, 142, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。

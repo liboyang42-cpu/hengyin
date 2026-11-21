@@ -9,6 +9,14 @@ const EXPECTED_ROUTES = {
 
 // R11 p1 F-12:横幅标题就是动作,不再配一行说明
 const HOME_ACTION_BANNERS = [
+  // 1121 N1:来玩的人先看到报名活动;成为俱乐部 / 成为商家排到轮播末尾。
+  {
+    id: 'home-action-activity',
+    title: '和朋友报名活动',
+    route: EXPECTED_ROUTES['home-action-activity'],
+    motionSrc: 'https://www.chengyinhub.com/prod-api/profile/home-banners/home-banner-friends.gif',
+    poster: '/images/home-banner-friends.jpg',
+  },
   {
     id: 'home-action-club',
     title: '成为俱乐部',
@@ -22,13 +30,6 @@ const HOME_ACTION_BANNERS = [
     route: EXPECTED_ROUTES['home-action-merchant'],
     motionSrc: 'https://www.chengyinhub.com/prod-api/profile/home-banners/home-banner-merchant.gif',
     poster: '/images/home-banner-merchant.jpg',
-  },
-  {
-    id: 'home-action-activity',
-    title: '和朋友报名活动',
-    route: EXPECTED_ROUTES['home-action-activity'],
-    motionSrc: 'https://www.chengyinhub.com/prod-api/profile/home-banners/home-banner-friends.gif',
-    poster: '/images/home-banner-friends.jpg',
   },
 ].map(function (item) {
   return Object.assign({}, item, {

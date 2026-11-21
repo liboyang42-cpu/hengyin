@@ -4,10 +4,10 @@
   <!-- 左侧立体图标 tab + 搜索 -->
   <view class="sh-top">
     <cy-tabs class="sh-tabs" variant="icon" tabs="{{ tabItems }}" active="{{ tab }}" bind:change="switchTab" />
-    <view class="sh-search" bindtap="goSearch" aria-role="button" aria-label="搜索主题与玩法模板" hover-class="cy-pressed" hover-stay-time="80">
+    <view class="sh-search" bindtap="goSearch" aria-role="button" aria-label="{{ light ? '搜索主题与玩法模板' : '搜索主题与玩法' }}" hover-class="cy-pressed" hover-stay-time="80">
       <view class="sh-search__pill">
         <image class="sh-search__ic" src="/pages/templatedetail/images/icon_search.svg" mode="aspectFit" />
-        <text class="sh-search__ph">搜索主题与玩法模板</text>
+        <text class="sh-search__ph">{{ light ? '搜索主题与玩法模板' : '搜索主题与玩法' }}</text>
       </view>
     </view>
   </view>
@@ -16,7 +16,7 @@
   <block wx:if="{{ tab === 'topic' }}">
     <cy-skeleton wx:if="{{ !topicLoaded && !topicError }}" class="sh-state" type="list" count="3" />
     <cy-error wx:elif="{{ topicError && !topicLoaded }}" class="sh-state cy-fade-in" load-failure size="lg" title="{{ topicError }}" sub="" bindretry="retry" />
-    <cy-empty wx:elif="{{ !featTopics.length }}" class="sh-state cy-fade-in" size="lg" kind="empty" title="还没有可复用的主题模板" sub="" />
+    <cy-empty wx:elif="{{ !featTopics.length }}" class="sh-state cy-fade-in" size="lg" kind="empty" title="{{ light ? '还没有可复用的主题模板' : '还没有主题' }}" sub="" />
     <block wx:else>
       <scroll-view class="sh-rail cy-fade-in" scroll-x enhanced show-scrollbar="{{ false }}" paging-enabled bindscroll="onRailScroll">
         <view class="sh-rail__in">
@@ -97,7 +97,7 @@
   <block wx:else>
     <cy-skeleton wx:if="{{ !gameLoaded && !gameError }}" class="sh-state" type="list" count="3" />
     <cy-error wx:elif="{{ gameError && !gameLoaded }}" class="sh-state cy-fade-in" load-failure size="lg" title="{{ gameError }}" sub="" bindretry="retry" />
-    <cy-empty wx:elif="{{ !featGames.length && !gameShelves.length }}" class="sh-state cy-fade-in" size="lg" kind="empty" title="还没有玩法模板" sub="" />
+    <cy-empty wx:elif="{{ !featGames.length && !gameShelves.length }}" class="sh-state cy-fade-in" size="lg" kind="empty" title="{{ light ? '还没有玩法模板' : '还没有玩法' }}" sub="" />
     <block wx:else>
       <scroll-view class="sh-rail cy-fade-in" scroll-x enhanced show-scrollbar="{{ false }}" paging-enabled>
         <view class="sh-rail__in sh-rail__in--g">

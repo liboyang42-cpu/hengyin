@@ -87,7 +87,8 @@ Page({
   runSearch() {
     if (this._hidden || this._unloaded) return;
     const { keyword, categoryId } = this.data;
-    const filters = this._filters || {};
+    // 1121 N6:playerView 只给 decorateRows 选名字(主题/玩法 vs 主题模板/玩法模板),不进请求
+    const filters = Object.assign({}, this._filters, { playerView: !this.data.merchantView });
     const owner = memberId(app);
     const unifiedOpen = unifiedAvailable();
     const useUnified = unifiedOpen && discoverSearch.unifiedCompatible(keyword, categoryId, filters);
@@ -141,7 +142,7 @@ Page({
       if (this._searchSkeletonTimer) clearTimeout(this._searchSkeletonTimer);
       const resultGroups = (this._contentGroups || []).concat(requests.map((request) => ({
         type: request.type,
-        label: discoverSearch.TYPE_META[request.type].label,
+        label: discoverSearch.labelOf(request.type, !this.data.merchantView),
         items: Object.prototype.hasOwnProperty.call(groupsByType, request.type) ? groupsByType[request.type] : (previousGroups[request.type] || [])
       })));
       const hasResults = resultGroups.some((group) => group.items.length > 0), allFailed = failed === requests.length; this._resultQueryKey = hasResults || failed === 0 ? queryKey : this._resultQueryKey;
@@ -153,10 +154,7 @@ Page({
           ? (allFailed ? '搜索服务暂不可用，请重试' : '部分搜索没有完成，请重试后再确认结果')
           : '',
         resultGroups: resultGroups,
-        resultTabs: DEFAULT_RESULT_TABS.concat(resultGroups.map((group) => ({
-          key: group.type,
-          label: group.label + ' ' + group.items.length
-        })))
+        resultTabs: DEFAULT_RESULT_TABS.concat(discoverSearch.resultTabs(resultGroups, !this.data.merchantView))
       });
       this.updateVisibleResults();
       if (failed > 0 && hasResults) toast('部分搜索没有完成，结果可能不全');
@@ -262,7 +260,7 @@ Page({
         this.setData({ resultGroups: this.data.resultGroups.filter(g => !['topic', 'activity', 'post'].includes(g.type)) });
         this.updateVisibleResults();
       }
-      this.setData({ resultTabs: DEFAULT_RESULT_TABS.concat(this.data.resultGroups.map(g => ({ key: g.type, label: g.label + ' ' + g.items.length }))),
+      this.setData({ resultTabs: DEFAULT_RESULT_TABS.concat(discoverSearch.resultTabs(this.data.resultGroups, !this.data.merchantView)),
         contentLoading: false, contentError: code === 503 ? '内容搜索暂未开放，可稍后重试'
         : code === 403 ? '当前身份不能查看这些内容' : '内容搜索未完成，重试本页' });
     };
@@ -278,13 +276,13 @@ Page({
         settled = true; state.loading = false; state.page = page;
         result.items.forEach(item => { item.cover = app.getImgUrl(item.cover); });
         state.items = discoverSearch.mergeResults(state.items, result.items);
-        this._contentGroups = state.types.map(type => ({ type, label: discoverSearch.TYPE_META[type].label,
+        this._contentGroups = state.types.map(type => ({ type, label: discoverSearch.labelOf(type, !this.data.merchantView),
           items: state.items.filter(item => item.type === type) }));
         const groups = this._contentGroups.concat(this.data.resultGroups.filter(g => !['topic', 'activity', 'post'].includes(g.type)));
         this.setData({ resultGroups: groups, contentLoading: false, contentError: '',
           contentHasMore: result.count > 0 && page * 12 < result.total,
           everLoaded: this.data.everLoaded || state.items.length > 0,
-          resultTabs: DEFAULT_RESULT_TABS.concat(groups.map(g => ({ key: g.type, label: g.label + ' ' + g.items.length }))) });
+          resultTabs: DEFAULT_RESULT_TABS.concat(discoverSearch.resultTabs(groups, !this.data.merchantView)) });
         this.updateVisibleResults();
       }, fail: failed, successStatusAbnormal: failed
     });
@@ -294,7 +292,7 @@ Page({
     const type = this.data.activeResultType;
     const groups = this.data.resultGroups || [];
     const visibleResults = groups.reduce((all, group) => {
-      return type === 'all' || group.type === type ? all.concat(group.items) : all;
+      return type === 'all' || discoverSearch.tabKeyOf(group.type, !this.data.merchantView) === type ? all.concat(group.items) : all;
     }, []);
     this.setData({ visibleResults: visibleResults }); // 卡片入场只走 cy-fly-in(新挂上的卡才飞),不再叠一层整表重播
   },

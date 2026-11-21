@@ -170,7 +170,8 @@ test('主题货架玩法数使用去重 gameCount，不把节点引用数当成�
 });
 
 test('主题时长按秒换算(不再把 14400 秒写成「14400分钟」),只有明确实验状态才标「实验模板」', async () => {
-  const { vm, requests } = mountShelf();
+  // 1121 N6:「实验模板」是商家创作视角的内部标,只在 light(商家)货架出;玩家货架见下一条
+  const { vm, requests } = mountShelf({ light: true });
   await respond(requests.find((r) => r.url === '/api/template/topic-template/list'), ok([
     topic(1, '风味巡游', { totalTime: 14400, templateStatus: 'EXPERIMENTAL' }),
     topic(2, '不惑之年', { totalTime: 7800, templateStatus: 'VERIFIED' })
@@ -179,6 +180,18 @@ test('主题时长按秒换算(不再把 14400 秒写成「14400分钟」),只�
   assert.equal(a.meta, '实验模板 · 5 个玩法 · 4 小时');
   assert.equal(b.meta, '5 个玩法 · 2 小时10 分');
   assert.equal(a.cover, '/pages/templatedetail/art/covers/topic/flavor-tour.jpg', '已知主题用包内封面');
+});
+
+test('1121 N6:玩家货架不出「实验模板」与「模板」字样,商家货架保留原词', async () => {
+  const { vm, requests } = mountShelf();
+  await respond(requests.find((r) => r.url === '/api/template/topic-template/list'), ok([
+    topic(1, '风味巡游', { totalTime: 14400, templateStatus: 'EXPERIMENTAL' })
+  ]));
+  assert.equal(vm._topics[0].meta, '5 个玩法 · 4 小时');
+  const wxml = read('pages/templatedetail/shelf/index.wxml');
+  assert.match(wxml, /\{\{ light \? '搜索主题与玩法模板' : '搜索主题与玩法' \}\}/);
+  assert.match(wxml, /title="\{\{ light \? '还没有可复用的主题模板' : '还没有主题' \}\}"/);
+  assert.match(wxml, /title="\{\{ light \? '还没有玩法模板' : '还没有玩法' \}\}"/);
 });
 
 test('不在包内的主题用接口封面，拉不动时按稳定 id 换成既有失败态', async () => {

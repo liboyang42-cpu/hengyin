@@ -19,6 +19,35 @@ const TYPE_META = {
   gameTemplate: { label: '玩法模板', path: '/pages/templatedetail/templatedetail?id=' },
 };
 
+// 1121 N6:玩家只看「主题」「玩法」一个名字 —— 主题模板落地就是公开主题页,对玩家它就是主题;
+// 同名的两组结果在玩家这边合成一个页签。商家(创作视角)保留「主题模板 / 玩法模板」。
+const PLAYER_LABEL = { topicTemplate: '主题', gameTemplate: '玩法' };
+const PLAYER_TAB_KEY = { topicTemplate: 'topic' };
+
+function labelOf(type, playerView) {
+  const meta = TYPE_META[type];
+  if (!meta) return '';
+  return playerView && PLAYER_LABEL[type] ? PLAYER_LABEL[type] : meta.label;
+}
+
+function tabKeyOf(type, playerView) {
+  return playerView && PLAYER_TAB_KEY[type] ? PLAYER_TAB_KEY[type] : type;
+}
+
+// groups: [{ type, label, items }] → 页签 [{ key, label: '名字 条数' }],玩家视角同名合并、条数相加
+function resultTabs(groups, playerView) {
+  const tabs = [];
+  const byKey = {};
+  (groups || []).forEach(function (group) {
+    const key = tabKeyOf(group.type, playerView);
+    const count = (group.items || []).length;
+    if (byKey[key]) { byKey[key].count += count; return; }
+    byKey[key] = { key: key, name: labelOf(group.type, playerView) || group.label, count: count };
+    tabs.push(byKey[key]);
+  });
+  return tabs.map(function (tab) { return { key: tab.key, label: tab.name + ' ' + tab.count }; });
+}
+
 function firstImage(value) {
   return String(value || '').split(/[,;]/).map(function (item) { return item.trim(); }).filter(Boolean)[0] || '';
 }
@@ -55,9 +84,10 @@ function firstCategoryName(item) {
   return '';
 }
 
-function decorateItem(type, item) {
+function decorateItem(type, item, playerView) {
   const meta = TYPE_META[type];
   if (!meta || !item || item.id == null) return null;
+  const label = labelOf(type, playerView);
 
   const detail = {
     post: '公开帖文',
@@ -65,9 +95,9 @@ function decorateItem(type, item) {
     activity: item.topicId ? '关联主题节点' : (item.addressName || item.address || '活动地点待公布'),
     club: item.city || item.description || '城市俱乐部',
     merchant: item.cityRole || item.address || item.slogan || item.description || '合作商家',
-    topicTemplate: item.subtitle || item.description || '主题模板',
+    topicTemplate: item.subtitle || item.description || label,
     // 与模板页玩法行同一条 meta:人数 · 时长
-    gameTemplate: [item.players, formatDurationMinutes(item.duration)].filter(Boolean).join(' · ') || item.description || '玩法模板',
+    gameTemplate: [item.players, formatDurationMinutes(item.duration)].filter(Boolean).join(' · ') || item.description || label,
   }[type];
   const image = {
     post: firstImage(item.imgUrl),
@@ -84,8 +114,8 @@ function decorateItem(type, item) {
     key: type + ':' + item.id,
     type: type,
     cityCode: item.cityCode == null ? null : String(item.cityCode),
-    typeLabel: meta.label,
-    title: item.name || item.title || meta.label,
+    typeLabel: label,
+    title: item.name || item.title || label,
     detail: detail,
     cover: image,
     icon: type === 'club' ? 'users' : (type === 'merchant' ? 'poi-shop' : (type === 'topicTemplate' || type === 'gameTemplate' ? 'route' : 'map')),
@@ -172,7 +202,8 @@ function filterRows(type, data, filters) {
 }
 
 function decorateRows(type, data, filters) {
-  return filterRows(type, data, filters).map(function (item) { return decorateItem(type, item); }).filter(Boolean);
+  const playerView = !!(filters && filters.playerView);
+  return filterRows(type, data, filters).map(function (item) { return decorateItem(type, item, playerView); }).filter(Boolean);
 }
 
 function buildRequests(keyword, categoryId, filters) {
@@ -235,6 +266,9 @@ function mapPointKind(activity) {
 module.exports = {
   unifiedCompatible, unifiedPage, mergeResults,
   TYPE_META: TYPE_META,
+  labelOf: labelOf,
+  tabKeyOf: tabKeyOf,
+  resultTabs: resultTabs,
   firstImage: firstImage,
   rowsOf: rowsOf,
   decorateItem: decorateItem,
