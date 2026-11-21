@@ -164,15 +164,32 @@ test('三模式游玩主路径保持中性色，只放行已裁决的 Figma 路�
   assert.deepEqual(failures, [])
 })
 
-test('完赛路线缩略图与保存卡保持 Figma 白底浅灰面紫色路线，不回退黑色 Canvas', () => {
+// 2026-11-21:完成页 2026-10-28 起整屏深色(.finsheet 作用域把 play-story 色板换成深色),
+// 画在上面的路线缩略图 / 保存卡逐字跟这组作用域色值,不再是浅底白卡。
+test('完赛路线缩略图与保存卡跟完成页 .finsheet 深色作用域同值，不回退浅底白卡', () => {
   const source = sourceWithoutComments('pages/play/index.js')
   const finishCanvas = methodSource(source, 'paintRouteThumb()', 'saveFinishCard()')
-
-  assert.match(source, /const PLAY_STORY_CARD\s*=\s*Object\.freeze\(\{[\s\S]*?page:\s*'#FFFFFF'[\s\S]*?surface:\s*'#F6F7FA'[\s\S]*?accent:\s*'#4B46F5'/)
-  assert.equal(routeUsesAccent(source), true, '路线本体的线段与节点必须直接消费紫色 accent')
+  const wxss = sourceWithoutComments('pages/play/index.wxss')
+  const scope = wxss.slice(wxss.indexOf('.finsheet{ position:fixed;'))
+  const token = (name) => {
+    const m = scope.match(new RegExp('--cy-color-play-story-' + name + ':([^;]+);'))
+    assert.ok(m, name + ' 必须在 .finsheet 深色作用域里')
+    return m[1].trim()
+  }
+  const card = source.match(/const PLAY_STORY_CARD\s*=\s*Object\.freeze\((\{[\s\S]*?\})\);/)
+  assert.ok(card, 'PLAY_STORY_CARD 色表可定位')
+  const C = Function('return ' + card[1])()
+  assert.equal(C.page, token('page'))
+  assert.equal(C.surface, token('surface'))
+  assert.equal(C.text, token('text'))
+  assert.equal(C.muted, token('muted'))
+  assert.equal(C.accent, token('accent'))
+  assert.equal(C.line, token('accent-soft'))
+  assert.equal(C.ring, token('cta-fg'))
+  assert.doesNotMatch(card[1], /#FFFFFF'[\s\S]*surface:\s*'#F6F7FA'|#4B46F5/i, '不回退浅色 Figma 220:1415 色板')
+  assert.equal(routeUsesAccent(source), true, '路线本体的线段与节点必须直接消费 accent')
   assert.match(finishCanvas, /PLAY_STORY_CARD\.page/)
   assert.match(finishCanvas, /PLAY_STORY_CARD\.surface/)
-  assert.doesNotMatch(finishCanvas, /#(?:0A0A0A|141414|2A2A2A)\b/i)
 })
 
 test('负控：路线本体退回黑灰色时，紫色路线合同必须判红', () => {

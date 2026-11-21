@@ -1,6 +1,6 @@
 const modal = require('../../../utils/modal.js'); const { safeUserMessage } = require('../../../utils/transport/safe-user-message.js'); const referral = require('../../../utils/commerce/referral.js'); const parallax = require('../utils/parallax.js'); const pageMotion = require('../../../utils/page-motion.js');
 const loading = require('../../../utils/loading.js');
-const imgFade = require('../../../utils/img-fade.js'); const castPlay = require('../../../utils/cast-config.js'); // motion-1118 v2:封面 / 头图在占位色上淡入;角色 Cast v1 · E5「人物」(配置顺手缓存给游玩页)
+const imgFade = require('../../../utils/img-fade.js'); const imageUrl = require('../../../utils/image-url.js'); /* 2026-11-21:封面/章节/站点图按槽位出缩略图(img.wxs fit) */ const castPlay = require('../../../utils/cast-config.js'); // motion-1118 v2:封面 / 头图在占位色上淡入;角色 Cast v1 · E5「人物」(配置顺手缓存给游玩页)
 const toast = require('../../../utils/toast.js');
 const app = getApp();
 const { chinaParts } = require('../../../utils/datetime.js');
@@ -134,7 +134,7 @@ Page({
     // 2026-10-22 业主:三个标签 = 详情 / 故事 / 路线(自由探索没有固定路线,第三个叫「地点」)
     topicTabs: [{ key: '0', label: '详情' }, { key: '1', label: '故事' }, { key: '2', label: '路线' }],
     // ===== 2026-10-22 动效与新增块(docs/design/动效界面落地_20261022) =====
-    imgOn: {}, coverImages: [], kbIdx: 0, coverLeaving: false, detailEnter: false, heroIdx: 0, navSolid: false, storyChars: [], castRow: [], routeNote: '', sketchPoints: [], routeReal: false, tabPre: false, tabRun: false, buyOpts: [], buySel: 0, sessionPreferName: '',
+    imgOn: {}, imgCtx: null, coverImages: [], kbIdx: 0, coverLeaving: false, detailEnter: false, heroIdx: 0, navSolid: false, storyChars: [], castRow: [], routeNote: '', sketchPoints: [], routeReal: false, tabPre: false, tabRun: false, buyOpts: [], buySel: 0, sessionPreferName: '',
     publisher: { name: '', avatar: '' }, heroCta: { kind: '', text: '' }, faved: false,
     docked: false, dockCtaStyle: '', dockFavStyle: '',
     shareCard: { show: false, card: {} },
@@ -208,6 +208,7 @@ Page({
   },
 
   onLoad(options) { referral.capture(options); // §18 I 落地只存来源凭据
+    this.setData({ imgCtx: imageUrl.wxsContext() });
     const that = this;
     const topicId = Number(options.id);
     const validTopicId = Number.isFinite(topicId) && Number.isInteger(topicId) && topicId > 0;
@@ -2074,6 +2075,7 @@ Page({
   
   // 预览图片
   onImgFadeLoad(e) { imgFade.onImgFadeLoad.call(this, e) },
+  onImgRenditionError(e) { imageUrl.onImgRenditionError.call(this, e) }, // 缩略图出错退回原图一次 + 会话熔断(utils/image-url.js)
 
   previewImage(e) {
     const src = e.currentTarget.dataset.src;

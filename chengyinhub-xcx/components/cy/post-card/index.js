@@ -9,6 +9,11 @@ function readReducedMotion() {
   } catch (e) { return false; }
 }
 
+// 2026-11-21 配图按槽位出缩略图(utils/image-url.js);单测沙箱没有 require 时不改写图片地址。
+let imageUrl = null;
+try { imageUrl = require('../../../utils/image-url.js'); } catch (e) { imageUrl = null; }
+function imgCtx() { return imageUrl ? imageUrl.wxsContext() : null; }
+
 // 2026-10-30 走查:同一张帖文卡在发现 / 俱乐部 / 我的三处各写一种时间(09-30 04:13 / 2026年10月26日 于 13:53 / 30天前)。
 // 卡片自己按 createTime 统一成一种:一分钟内「刚刚」、一小时内「N 分钟前」、一天内「N 小时前」、七天内「N 天前」、
 // 今年「M月D日」、往年「YYYY年M月D日」。拿不到 createTime 才用页面给的文字。
@@ -48,11 +53,11 @@ Component({
   },
   data: {
     textExpanded: false, textLong: false, likePop: false, likeRoll: '', burst: '', reducedMotion: false,
-    followDone: false, followGone: false, bigHeart: '', refLabel: '', refIcon: 'route', timeLabel: '',
+    followDone: false, followGone: false, bigHeart: '', refLabel: '', refIcon: 'route', timeLabel: '', imgCtx: null,
   },
   lifetimes: {
     // 减少动态效果:根节点挂 post-card--reduced,点亮弹跳等位移动画整段不播
-    attached() { const reducedMotion = readReducedMotion(); if (reducedMotion) this.setData({ reducedMotion }); },
+    attached() { const reducedMotion = readReducedMotion(); this.setData({ reducedMotion: reducedMotion, imgCtx: imgCtx() }); }, // 2026-11-21:帖文配图按槽位出缩略图,点开大图仍是原图
     detached() { [this._likePopTimer, this._likeGoTimer, this._tapTimer, this._heartTimer, this._heartInTimer, this._heartOutTimer, this._followTimer].forEach(clearTimeout); },
   },
   observers: {
@@ -74,6 +79,7 @@ Component({
     },
   },
   methods: {
+    onImgRenditionError(e) { if (imageUrl) imageUrl.onImgRenditionError.call(this, e); }, // 缩略图出错退回原图一次 + 会话熔断
     toggleText() { this.setData({ textExpanded: !this.data.textExpanded }); },
     eventDetail() {
       const post = this.data.post || {};
