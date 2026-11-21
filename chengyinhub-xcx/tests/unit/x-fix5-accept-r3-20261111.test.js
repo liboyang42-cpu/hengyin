@@ -29,7 +29,7 @@ test('R3-2 相册查看器 / 抽卡 / 弹球 / 抛硬币 / 主按钮读外观 to
   const bl = read('pages/play/components/playkit-ballshake/index.wxss')
   assert.match(bl, /background: var\(--pk-embed-bg, #0a0a0b\)/)
   assert.match(read('pages/play/components/playkit-coinflip/index.wxss'), /var\(--pk-card-bg, var\(--pk-embed-bg, #000\)\)/)
-  assert.match(read('pages/play/style/play-surface.wxss'), /background: var\(--lk-a, #FFF\);/)
+  assert.match(read('pages/play/style/play-surface.wxss'), /background: var\(--lk-a, var\(--cy-comp-btn-primary-bg, #FFF\)\);/)
 })
 
 test('R3-1 开始准备被拒时把后端原因原话回给队长', () => {

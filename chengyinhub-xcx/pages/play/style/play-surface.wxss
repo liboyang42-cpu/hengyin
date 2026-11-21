@@ -79,8 +79,8 @@
   align-items: center;
   justify-content: center;
   border-radius: 56rpx;                               /* ds-ok 原型 28px:正好是这个高度的胶囊 */
-  background: var(--lk-a, #FFF);                      /* ds-ok 玩法屏主按钮:无外观时六个皮肤上都是白;R3-2 主题内取外观强调色 */
-  color: var(--lk-bg, #111114);                       /* ds-ok 同上,字取外观底色 */
+  background: var(--lk-a, var(--cy-comp-btn-primary-bg, #FFF));   /* ds-ok 玩法屏主按钮:无外观时走 cy 主按钮 token;R3-2 主题内取外观强调色。所有玩法只认这一颗主按钮(2026-11-21) */
+  color: var(--lk-bg, var(--cy-comp-btn-primary-fg, #111114));    /* ds-ok 同上;绝不读 --bg / --pk-embed-bg —— 内嵌时它们可能是透明,字会消失 */
   font-size: var(--cy-type-button);
   font-weight: 800;
   /* 浅色皮肤上白底会糊进背景 —— 内描边和投影一起把它托起来。
@@ -118,10 +118,9 @@
  * 放在这里是为了**五屏共用一条**,不让每屏各加一条把 motion 棘轮顶上去。
  */
 .pk-in {
-  animation: pk-in .34s cubic-bezier(.2, .9, .3, 1) both;   /* ds-ok 逐值照原型 rise */
+  animation: pk-in var(--cy-motion-fade-swap, 200ms) cubic-bezier(.2, .9, .3, 1) both;   /* 2026-11-21 收进 200ms 档 */
 }
-.pk-in--2 { animation-delay: .08s; }                        /* ds-ok */
-.pk-in--3 { animation-delay: .16s; }                        /* ds-ok */
+.pk-in--2, .pk-in--3 { animation-delay: 0s; }               /* 2026-11-21 不再错峰:内容一起到 */
 /* 减弱动效的开关挂在**每个 kit 组件自己的外层 view** 上(.pk--reduced),不是页面根。
  * 组件都是 styleIsolation:isolated,页面根上的 .cy-motion-reduced 根本选不到组件内部 ——
  * 写成那样是条永不命中的死规则(2026-09-22 实测,已改)。同 playkit-random 的 .dk--reduced 做法。 */
@@ -134,19 +133,21 @@
   to { transform: none; opacity: 1; }
 }
 
-/* ============ 入场(2026-10-23 主人定稿「玩法入场动效」原型) ============
+/* ============ 入场(2026-10-23 主人定稿「玩法入场动效」原型;2026-11-21 收短) ============
    每个玩法屏挑自己那几个零件挂 .pe + 一种 .pe--x;cy-play-stage 每次打开把 --pe-go 从 0 翻到 1,
-   零件就从「起点」过渡回原位。--pe-i 是第几个(错峰),--pe-d 是起步延时。
+   零件就从「起点」过渡回原位。
+   ★ 2026-11-21 主人「游戏要顺」:首屏必须立刻可读 —— 不再错峰、不再起步延时,也不再等故事流台面展开;
+     各屏写在零件上的 --pe-d / --pe-i / --pe-dur 一律不再生效,统一一档 --cy-motion-fade-swap(200ms)。
+     原来选项要等 1.5s+ 才露面,选项问答实测近 3 秒黑屏。
    ★ 只用 transition(opacity / transform / filter / clip-path),不加关键帧、不动布局属性(两条动效棘轮)。
-   ★ 内嵌在故事里(--pe-unfold:1)时台面先展开,零件整体再晚 .45s。
-   ★ 入场以外 --pe-on = 0:延时归零,零件自己的交互不被拖慢。减少动态时 --pe-go 恒为 1,原样显示。 */
+   ★ 减少动态时 --pe-go 恒为 1,原样显示。 */
 .pe.pe {
   --pe-t: calc(1 - var(--pe-go, 1));
-  --pe-delay: calc(var(--pe-on, 0) * (var(--pe-unfold, 0) * .45s + var(--pe-d, .12s) + var(--pe-i, 0) * var(--pe-s, .08s)));
-  transition: opacity var(--pe-dur, .5s) var(--pe-ease, cubic-bezier(.2, 1, .3, 1)) var(--pe-delay),
-    transform var(--pe-dur, .5s) var(--pe-ease, cubic-bezier(.2, 1, .3, 1)) var(--pe-delay),
-    filter var(--pe-dur, .5s) ease-out var(--pe-delay),
-    clip-path var(--pe-dur, .5s) cubic-bezier(.6, 0, .3, 1) var(--pe-delay);
+  --pe-run: var(--cy-motion-fade-swap, 200ms);
+  transition: opacity var(--pe-run) var(--cy-ease-out, ease-out),
+    transform var(--pe-run) var(--cy-ease-out, ease-out),
+    filter var(--pe-run) ease-out,
+    clip-path var(--pe-run) ease-out;
 }
 /* 不透明度单独放在低一档:各屏按下态(xx--press)是同一档、写在后面,按下变淡不能被入场盖掉 */
 .pe { opacity: var(--pe-go, 1); }
@@ -154,18 +155,18 @@
 .pe.pe--up     { transform: translateY(calc(var(--pe-t) * 70rpx)) scale(calc(1 - var(--pe-t) * .06)); }
 .pe.pe--left   { transform: translateX(calc(var(--pe-t) * -140rpx)) rotate(calc(var(--pe-t) * -6deg)); }
 .pe.pe--right  { transform: translateX(calc(var(--pe-t) * 160rpx)) rotate(calc(var(--pe-t) * 5deg)); }
-.pe.pe--pop    { transform: scale(calc(1 - var(--pe-t) * .7)); --pe-ease: cubic-bezier(.3, 1.6, .5, 1); }
-.pe.pe--blur   { filter: blur(calc(var(--pe-t) * 10px)); transform: translateY(calc(var(--pe-t) * 12rpx)); --pe-dur: .6s; }
-.pe.pe--flipy  { transform: perspective(1200rpx) rotateY(calc(var(--pe-t) * 95deg)); --pe-dur: .7s; }
-.pe.pe--flipx  { transform-origin: 50% 0; transform: perspective(1400rpx) rotateX(calc(var(--pe-t) * -95deg)); --pe-dur: .75s; }
-.pe.pe--drop   { transform: translateY(calc(var(--pe-t) * -640rpx)); --pe-dur: .85s; --pe-ease: cubic-bezier(.34, 1.56, .64, 1); }
-.pe.pe--spin   { transform: rotate(calc(var(--pe-t) * -540deg)) scale(calc(1 - var(--pe-t) * .4)); --pe-dur: 1.3s; --pe-ease: cubic-bezier(.15, .8, .2, 1); }
-.pe.pe--zoom   { transform: scale(calc(1 + var(--pe-t) * .3)); filter: blur(calc(var(--pe-t) * 12px)); --pe-dur: 1.1s; --pe-ease: cubic-bezier(.2, .8, .2, 1); }
-.pe.pe--draw   { opacity: 1; transform-origin: 0 50%; transform: scaleX(var(--pe-go, 1)); --pe-dur: .7s; }
-.pe.pe--grow   { opacity: 1; transform-origin: 50% 100%; transform: scaleY(var(--pe-go, 1)); --pe-ease: cubic-bezier(.3, 1.5, .5, 1); }
+.pe.pe--pop    { transform: scale(calc(1 - var(--pe-t) * .7)); }
+.pe.pe--blur   { filter: blur(calc(var(--pe-t) * 10px)); transform: translateY(calc(var(--pe-t) * 12rpx)); }
+.pe.pe--flipy  { transform: perspective(1200rpx) rotateY(calc(var(--pe-t) * 95deg)); }
+.pe.pe--flipx  { transform-origin: 50% 0; transform: perspective(1400rpx) rotateX(calc(var(--pe-t) * -95deg)); }
+.pe.pe--drop   { transform: translateY(calc(var(--pe-t) * -120rpx)); }
+.pe.pe--spin   { transform: rotate(calc(var(--pe-t) * -90deg)) scale(calc(1 - var(--pe-t) * .2)); }
+.pe.pe--zoom   { transform: scale(calc(1 + var(--pe-t) * .3)); filter: blur(calc(var(--pe-t) * 12px)); }
+.pe.pe--draw   { opacity: 1; transform-origin: 0 50%; transform: scaleX(var(--pe-go, 1)); }
+.pe.pe--grow   { opacity: 1; transform-origin: 50% 100%; transform: scaleY(var(--pe-go, 1)); }
 .pe.pe--corner { transform: translate(calc(var(--pe-t) * var(--pe-cx, 0rpx)), calc(var(--pe-t) * var(--pe-cy, 0rpx))) scale(calc(1 + var(--pe-t) * .4)); }
-.pe.pe--circle { opacity: 1; clip-path: circle(calc(var(--pe-go, 1) * 150%) at 50% 50%); --pe-dur: .8s; }
-.pe.pe--flap   { transform-origin: 50% 100%; transform: perspective(800rpx) rotateX(calc(var(--pe-t) * 90deg)); --pe-dur: .45s; --pe-ease: cubic-bezier(.5, 0, .4, 1.4); }
-.pe.pe--roll   { transform: translateY(calc(var(--pe-t) * 100%)); --pe-dur: 1.1s; --pe-ease: cubic-bezier(.1, .9, .2, 1); }
-.pe.pe--tumble { transform: translateX(calc(var(--pe-t) * 520rpx)) rotate(calc(var(--pe-t) * 540deg)); --pe-dur: 1.1s; --pe-ease: cubic-bezier(.2, .7, .3, 1.15); }
-.pe.pe--coin   { transform: translateY(calc(var(--pe-t) * 520rpx)) rotateY(calc(var(--pe-t) * 1080deg)) scale(calc(1 - var(--pe-t) * .4)); --pe-dur: 1.4s; --pe-ease: cubic-bezier(.2, .7, .3, 1); }
+.pe.pe--circle { opacity: 1; clip-path: circle(calc(var(--pe-go, 1) * 150%) at 50% 50%); }
+.pe.pe--flap   { transform-origin: 50% 100%; transform: perspective(800rpx) rotateX(calc(var(--pe-t) * 90deg)); }
+.pe.pe--roll   { transform: translateY(calc(var(--pe-t) * 100%)); }
+.pe.pe--tumble { transform: translateX(calc(var(--pe-t) * 160rpx)) rotate(calc(var(--pe-t) * 90deg)); }
+.pe.pe--coin   { transform: translateY(calc(var(--pe-t) * 120rpx)) rotateY(calc(var(--pe-t) * 180deg)) scale(calc(1 - var(--pe-t) * .2)); }

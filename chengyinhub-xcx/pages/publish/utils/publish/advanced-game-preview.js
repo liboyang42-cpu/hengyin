@@ -305,7 +305,9 @@ const BUILDERS = {
   photoCheck: (c) => ({
     type: 'photocheck', title: txt(c.title), shotNote: txt(c.shotNote),
     maxTries: num(c.maxTries, 0), fallback: txt(c.fallback) || 'retake',
-    tries: 0, passed: false, flagged: false, degraded: false, lastReason: '', lastUrl: '',
+    tries: 0, passed: false, flagged: false, degraded: false, lastReason: '',
+    // 先看再选的范例里带一张「已经拍好」的照片(模拟输入,只在本机演);作者自己的配置没有这个字段,仍是空
+    lastUrl: /^\/[^/]/.test(txt(c.sampleShot)) ? txt(c.sampleShot) : '',
     frameUrl: txt(c.frameUrl), frameOpacity: Math.max(0, Math.min(100, num(c.frameOpacity, 40))),
     mode: txt(c.mode), cardTitle: txt(c.cardTitle), cardStyle: txt(c.cardStyle) || 'foil',
     card: null, place: '', photoFailSeq: 0,
@@ -440,6 +442,14 @@ function buildSampleKit(gameKey) {
   return make ? make({}) : null;
 }
 
+/* 要拍照 / 要传感器的玩法:试玩里没有真的会话,输入是模拟的(范例照片、半程步数),结果也不判。
+   预览外框据此挂一枚「试玩 · 不计成绩」,一眼看出这不是正式成绩(2026-11-21)。 */
+const SIMULATED_TYPES = ['photocheck', 'walk', 'compass', 'shout', 'quiethold', 'ballshake', 'reaction', 'stopwatch'];
+function isSimulatedKit(kit) {
+  return !!kit && (SIMULATED_TYPES.indexOf(kit.type) >= 0 || (kit.type === 'qa' && kit.mode === 'shot'));
+}
+
 module.exports = {
+  isSimulatedKit, SIMULATED_TYPES,
   previewD20Result,
   buildSampleKit, buildPreviewKit, hasPreviewKit, PREVIEW_PRIORITY, _builders: BUILDERS };

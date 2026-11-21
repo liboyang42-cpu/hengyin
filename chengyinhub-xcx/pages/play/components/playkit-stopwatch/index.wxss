@@ -110,20 +110,6 @@
   align-items: center;
   gap: 20rpx;                                                   /* ds-ok 原型 10px */
 }
-.sw__btn {
-  width: 100%;
-  max-width: 640rpx;                                            /* ds-ok 原型 320px */
-  padding: 32rpx;                                               /* ds-ok 原型 16px */
-  box-sizing: border-box;
-  border-radius: 60rpx;                                         /* ds-ok 原型 30px */
-  font-size: var(--cy-type-button);
-  font-weight: 700;
-  text-align: center;
-  background: #111111;                                          /* ds-ok 原型 .btn--primary */
-  color: #FFFFFF;                                               /* ds-ok */
-  box-shadow: 0 20rpx 56rpx rgba(17, 17, 17, .26);  /* ds-ok 表盘的柔光,逐值照原型 */
-}
-.sw__btn--press { transform: scale(.985); }
 
 /* ── 计时中 ── */
 .sw__chip {

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800">
+  <rect width="600" height="800" fill="#2b2a33"/>
+  <rect x="60" y="60" width="480" height="460" rx="10" fill="#f3c98b"/>
+  <rect x="60" y="300" width="480" height="220" fill="#e8a76a"/>
+  <circle cx="420" cy="190" r="56" fill="#fff1d6"/>
+  <path d="M60 420 L170 330 L260 400 L360 310 L540 440 L540 520 L60 520Z" fill="#b36a4a"/>
+  <path d="M60 470 L210 400 L330 470 L450 410 L540 470 L540 520 L60 520Z" fill="#7f4a3c"/>
+  <rect x="290" y="60" width="20" height="460" fill="#3b3440"/>
+  <rect x="60" y="280" width="480" height="18" fill="#3b3440"/>
+  <rect x="40" y="40" width="520" height="500" rx="16" fill="none" stroke="#4a4150" stroke-width="40"/>
+  <path d="M60 60 Q120 260 90 520 L60 520Z" fill="#9c3f3f"/>
+  <path d="M540 60 Q470 280 520 520 L540 520Z" fill="#9c3f3f"/>
+  <rect x="0" y="540" width="600" height="40" fill="#6b4b3a"/>
+  <rect x="0" y="580" width="600" height="220" fill="#3a2c28"/>
+  <path d="M110 130 L130 130 L130 170 L110 170Z" fill="#4a4150"/>
+  <circle cx="120" cy="120" r="6" fill="#d9b25a"/>
+  <path d="M120 126 L120 176" stroke="#d9b25a" stroke-width="6"/>
+  <circle cx="120" cy="188" r="14" fill="none" stroke="#d9b25a" stroke-width="6"/>
+  <rect x="80" y="470" width="80" height="72" rx="8" fill="#c96f4a"/>
+  <path d="M120 470 C90 420 70 400 84 370 C110 390 118 430 120 470 C122 420 140 380 168 372 C176 410 150 440 120 470Z" fill="#4f8a5b"/>
+  <rect x="236" y="500" width="70" height="44" rx="6" fill="#efe6da"/>
+  <path d="M306 510 C330 510 330 536 306 534" fill="none" stroke="#efe6da" stroke-width="7"/>
+  <path d="M256 490 C250 476 266 470 260 456 M282 490 C276 476 292 470 286 456" fill="none" stroke="#efe6da" stroke-width="4" stroke-linecap="round" opacity=".7"/>
+  <rect x="330" y="514" width="110" height="28" rx="3" fill="#5a7ea8"/>
+  <rect x="340" y="490" width="96" height="26" rx="3" fill="#d6b45f"/>
+  <path d="M440 542 C440 500 452 474 476 466 L470 444 L486 458 L500 458 L516 444 L512 468 C532 478 540 504 540 542Z" fill="#1d1a22"/>
+  <circle cx="486" cy="480" r="4" fill="#f3c98b"/>
+  <circle cx="504" cy="480" r="4" fill="#f3c98b"/>
+  <path d="M540 530 C566 530 572 506 560 492" fill="none" stroke="#1d1a22" stroke-width="10" stroke-linecap="round"/>
+  <rect x="380" y="620" width="160" height="110" rx="10" fill="#4a3a34"/>
+  <rect x="60" y="640" width="220" height="16" rx="8" fill="#4a3a34"/>
+</svg>

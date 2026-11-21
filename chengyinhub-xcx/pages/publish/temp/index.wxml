@@ -424,7 +424,7 @@
     <view class="cg-cfg-label">正面</view>
     <view class="cg-adv-grid">
     <view><input class="cg-cfg-input" value="{{advanced.coinFlip.heads.label}}" placeholder="叫什么，如 正面" data-section="coinFlip.heads" data-field="label" bindinput="onAdvancedField" /></view>
-    <view><input class="cg-cfg-input" value="{{advanced.coinFlip.heads.action}}" placeholder="那就做什么，如 这杯店家请" data-section="coinFlip.heads" data-field="action" bindinput="onAdvancedField" /></view>
+    <view><input class="cg-cfg-input" value="{{advanced.coinFlip.heads.action}}" placeholder="那就做什么，如 向左走一条街" data-section="coinFlip.heads" data-field="action" bindinput="onAdvancedField" /></view>
     </view>
     <view class="cg-cfg-label">反面</view>
     <view class="cg-adv-grid">
@@ -1509,15 +1509,23 @@
       <!-- 照玩家故事流的样子排:故事底色 → 流里这张玩法卡 → 「继续故事」。
            不再在外面另印一行标题 —— 作者没起名时它回落成题目,和玩法自己的题目印两遍。 -->
       <view class="cg-pv-inline-kit theme-dark">
-        <cy-playkit class="{{ pvKit.mode === 'CARD' ? 'theme-dark' : '' }}" kit="{{pvKit}}" show="{{true}}" inline="{{true}}" bind:kitaction="onPvKitAction" />
+        <!-- 玩法和「继续故事」作为一块居中:按钮紧跟玩法内容,不再钉在屏幕下沿 -->
+        <view class="cg-pv-inline-body">
+          <!-- 拍照 / 传感器玩法的试玩输入是模拟的,结果不判:一枚小标排在玩法内容最上面(导航行之下,不进胶囊区) -->
+          <view class="cg-pv-sim" wx:if="{{ pvSimulated }}" aria-role="text">试玩 · 不计成绩</view>
+          <cy-playkit class="{{ pvKit.mode === 'CARD' ? 'theme-dark' : '' }}" kit="{{pvKit}}" show="{{true}}" inline="{{true}}" bind:kitaction="onPvKitAction" />
+          <!-- 玩完才出「继续故事」(玩家故事流也是玩完才放行);玩的过程中不挂一颗灰按钮 -->
+          <view class="cg-pv-inline-end" wx:if="{{ pvDone }}"><cy-btn variant="primary" bindtap="onPvContinue">继续故事</cy-btn></view>
+        </view>
       </view>
-      <view class="cg-pv-inline-end"><view class="cg-pv-inline-continue">继续故事</view></view>
     </scroll-view>
     <cy-playkit class="{{ pvKit.mode === 'CARD' ? 'theme-dark' : '' }}" wx:elif="{{pvStepKey === 'challenge' && pvKit}}" kit="{{pvKit}}" show="{{true}}" bind:kitaction="onPvKitAction" />
     <!-- 左上角一颗「退出」,玩到一半也能走。内嵌的玩法没有自己的退出键,全屏的那颗在预览里藏掉(--pk-back-display),
          两种玩法都只认这一颗,位置和样子照玩法台面的 .st__back -->
     <view class="cg-pv-exit" wx:if="{{ pvStepKey === 'challenge' && pvKit }}" style="top:{{statusBarHeight + 12}}px" bindtap="closePreview"
           aria-role="button" aria-label="退出试玩" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="back" size="40" /></view>
+    <!-- 整屏玩法同一枚小标:左对齐,排在退出键与微信胶囊两者下沿之下(pvSimTop),不与胶囊重叠 -->
+    <view class="cg-pv-sim cg-pv-sim--float" wx:if="{{ pvStepKey === 'challenge' && pvKit && pvSimulated && !(pvKit.present === 'inline' || pvKit.type === 'journeycheck') }}" style="top:{{pvSimTop}}px" aria-role="text">试玩 · 不计成绩</view>
     <!-- 照「城瘾玩法试玩台」:玩法铺满整屏,不压翻页点和箭头;
          玩完由判定屏整屏涌上来,作者配的成功 / 失败反馈就写在这一屏。 -->
     <cy-play-verdict wx:if="{{ pvStepKey === 'challenge' && pvKit }}" show="{{ pvVerdict.show }}" kind="{{ pvVerdict.kind }}"
@@ -1681,7 +1689,7 @@
     </scroll-view>
     <view class="cg-tsheet__foot">
       <view class="cg-tsheet__sub"><text class="cg-tsheet__name" wx:if="{{ sheetPickItem }}">{{ sheetPickItem.label }}</text>{{ sheetPickItem ? (sheetPickItem.reason || sheetPickItem.sub) : '选一个玩法' }}</view>
-      <view class="cg-r5-pill" wx:if="{{ sheetPickItem && !sheetPickItem.reason }}" data-key="{{ sheetPickItem.pickKey }}" bindtap="previewGameFromSheet" aria-role="button" aria-label="预览{{ sheetPickItem.label }}" hover-class="cy-pressed" hover-stay-time="80">预览</view>
+      <view class="cg-r5-pill" wx:if="{{ sheetPickItem }}" data-key="{{ sheetPickItem.pickKey || sheetPickItem.key }}" bindtap="previewGameFromSheet" aria-role="button" aria-label="预览{{ sheetPickItem.label }}" hover-class="cy-pressed" hover-stay-time="80">预览</view>
     </view>
   </view>
 

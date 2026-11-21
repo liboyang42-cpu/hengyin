@@ -24,7 +24,7 @@
 }
 .bt__step-l { font-size: var(--cy-type-caption); }
 .bt__step.is-on { color: var(--ink); }
-.bt__step.is-on .bt__step-no { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.bt__step.is-on .bt__step-no { border-color: var(--ink); color: var(--ink); font-weight: 800; }
 
 /* 小样杯:杯子挨个抬一下,像店员刚摆上桌 */
 .bt__cups { margin-top: 80rpx; display: flex; justify-content: center; align-items: flex-end; gap: var(--cy-space-5); }
