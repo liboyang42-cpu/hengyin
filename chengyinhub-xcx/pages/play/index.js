@@ -4608,6 +4608,11 @@ Page({
       that._passExpiresAt = d.expiresAt || '';
       const topicName = d.topicName || that._entryTopicName || '';
       that._vitalsOn = d.vitalsOn || null;
+      const chapterCards = that.buildChapterCards(d, chapter).map((c) => ({
+        ...c,
+        nodeCount: c.id != null ? nodes.filter((n) => String(n.chapterId) === String(c.id)).length || nodes.length : nodes.length,
+      }));
+      that._fillStationPhotos([catalog, nodes], { chapter, chapterCards, topicCover: d.topicCover });
       // 2026-09-22 拆除:此处原先按主题名正则 /^预制人生/ 把整局 redirectTo 到硬编码分包
       // subpackagePrefab。那条换轨让「用玩法模板 + 主题配置做出《预制人生》」永远无法验收 ——
       // 作者配得再对,一取这个名字就被顶掉,看到的仍是写死在 JS 里的那份。
@@ -4625,10 +4630,7 @@ Page({
         selfPlay: !!d.selfPlay,
         selfPlayBanner: d.selfPlay ? ('自由探索中 · 有效期至 ' + that._fmtMD(d.expiresAt)) : '',
         chapter, nodes, total: nodes.length,
-        chapterCards: that.buildChapterCards(d, chapter).map((c) => ({
-          ...c,
-          nodeCount: c.id != null ? nodes.filter((n) => String(n.chapterId) === String(c.id)).length || nodes.length : nodes.length,
-        })),
+        chapterCards,
         doneCount: nodes.filter((n) => n.done).length,
         myRole: null, 'roleCard.show': false,
         // 首屏成功态与数据同一次 setData 落地:原来放在 setData 回调里,回调里任一处理抛错
@@ -4710,6 +4712,8 @@ Page({
     that._versionedRouteState = that._routeStateVersionKnown(d.routeState) ? routeState : null;
     that._routeNodeCatalog = catalog;
     that._applyLook(d.look); const chapter = that.buildChapter(d, nodes); /* 画面风格先落,章节配色 / 时间段才取得到 */
+    const chapterCards = that.buildChapterCards(d, chapter);
+    that._fillStationPhotos([catalog, nodes], { chapter, chapterCards, topicCover: d.topicCover });
     that._serverPerkOnly = d.perkOnly === true; that._noteRunStart(d);   // FE-G7(#866):perkOnly 只在为真时下发,没下发 = 不是;CG-ALL-11 altStations / runStartMode
     this._historyNodes = [];
     that._passExpiresAt = d.expiresAt || '';
@@ -4723,7 +4727,7 @@ Page({
       selfPlay: !!d.selfPlay,
       selfPlayBanner: d.selfPlay ? ('自由探索中 · 有效期至 ' + that._fmtMD(d.expiresAt)) : '',
       chapter, nodes, total: nodes.length,
-      chapterCards: that.buildChapterCards(d, chapter),
+      chapterCards,
       doneCount: nodes.filter((n) => n.done).length
     }, () => {
       that.rebuild();
@@ -4747,6 +4751,12 @@ Page({
     const ctx = this._stationImageCtx || { chapters: {}, topicCover: this.data.topicCover || '' };
     const input = { stationImg: n.imgUrl, chapterImgArr: n.chapterId != null ? ctx.chapters[String(n.chapterId)] : '', topicCover: ctx.topicCover };
     return { photo: stationImage.resolveStationImage(input).src, gamePhoto: stationImage.resolveGameImage(Object.assign({ gameCover: n.storyImg }, input)).src };
+  },
+
+  /** 兜底链第二段:用已签名的章节封面 / 章节故事块图 / topicCover 补还空着的 photo、gamePhoto(media-asset: 引用不算图)。 */
+  _fillStationPhotos(lists, view) {
+    const v = Object.assign({ chapterImgs: (this._stationImageCtx && this._stationImageCtx.chapters) || {} }, view);
+    (lists || []).forEach((list) => stationImage.fillStationPhotos(list, v));
   },
 
   normNode(n, i, mode) {

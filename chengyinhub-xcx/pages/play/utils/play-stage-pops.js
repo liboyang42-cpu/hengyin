@@ -21,7 +21,7 @@ const countUp = require('./count-roll.js');
 const { distanceText } = require('../../../utils/geo.js');
 const entryRhythm = require('../../../utils/entry-rhythm.js');
 
-function firstImg(v) { return v ? String(v).split(/[,;]/)[0].trim() : ''; }
+const stationImage = require('../../../utils/station-image.js');
 /** 这一站玩法的类型名:试玩读草稿预览 kit,真实游玩读节点配置里启用的那一段;认不出就不写(不写「玩法」凑数) */
 function kitTypeLabel(node) {
   if (!node) return '';
@@ -61,16 +61,17 @@ function sheetFacts(node, distText) {
   if (!/^\d{1,2}(:\d{2})?–\d{1,2}(:\d{2})?$/.test(out.hoursText.trim())) out.hoursText = '';
   return out;
 }
-/** 玩法开始弹窗的封面走站点配图兜底链(utils/station-image.js,#883):站点图 → 章节第一张图 → 路线封面;
- *  节点上 normNode 已算好 photo 就直接用;故事玩法自己没图时借它绑定的地点。都没有 = '' → 模板回插图。 */
+/** 玩法开始弹窗的封面走站点配图兜底链(utils/station-image.js,#883):站点图 → 章节封面 → 章节第一张故事块图 → 路线封面;
+ *  只用页面上已解析的地址,media-asset: 引用一律跳过。故事玩法自己没图时先借它绑定的地点。都没有 = '' → 模板回插图。 */
 function kitStartCover(page, node, place) {
+  const data = (page && page.data) || {};
   const viaChain = (n) => {
     if (!n) return '';
-    if (n.photo) return n.photo;
-    if (page && typeof page._stationPhotos === 'function') return page._stationPhotos(n).photo || '';
-    return firstImg(n.imgUrl);
+    if (stationImage.isDisplayable(n.photo)) return n.photo;
+    const viaCtx = page && typeof page._stationPhotos === 'function' ? page._stationPhotos(n).photo : '';
+    return stationImage.isDisplayable(viaCtx) ? viaCtx : stationImage.resolvePageStationImage(data, n);
   };
-  return firstImg(node && node.imgUrl) || viaChain(place) || viaChain(node);
+  return stationImage.firstImage(node && node.imgUrl) || viaChain(place) || viaChain(node);
 }
 /** 翻页卡组:当前下标 + 下一张(循环) */
 function nextIndex(i, n) { return n ? (((i || 0) + 1) % n) : 0; }
