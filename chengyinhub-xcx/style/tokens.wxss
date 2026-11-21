@@ -443,6 +443,17 @@ page {
                                       语义梯子上的一档,改它会牵动全站控件;本档只服务
                                       cross-fade 这一个手势。 */
   --cy-motion-check-fill: 120ms;   /* 勾选框方框填充(Hevy「Set check」);整行 wash 走 crossfade */
+  /* —— 阅读面动效档(2026-11-21 业主「动画和间距可以快一点、小一点,读得快的人会着急」) ——
+   * 故事流正文 / 章节门 / 登场人物 / 角色卡 / 结局 / 完成页这些「读者在等它」的地方只读本组,
+   * 不借上面的通用档(那是操作反馈的梯子)。上限见 utils/reading-motion.js(JS 镜像,
+   * reading-pace-1121 契约判漂移与超限);点一下即走完,减弱动态 = 立即。 */
+  --cy-motion-read-fade:       160ms;   /* 一段 / 一块淡入、由虚到实 */
+  --cy-motion-read-rise:       180ms;   /* 一段上浮落位、弹层 / 整屏浮现 */
+  --cy-motion-read-stagger:     40ms;   /* 同一批逐条错开(每条) */
+  --cy-motion-read-char:        12ms;   /* 逐字类每字错开(打字机 / 墨晕 / 落定 / 风吹) */
+  --cy-motion-read-scatter:    240ms;   /* 随机错开类(聚星 / 信号)整段最长起跑差 */
+  --cy-motion-read-sweep:      300ms;   /* 擦出 / 扫描:整段扫过一遍 */
+  --cy-motion-read-transition: 320ms;   /* 章节转场 / 整屏换场(≤350) */
 
   /* —— 缓动家族(收编全站事实标准,原字面散落各页) —— */
   --cy-ease-out:    cubic-bezier(.22,.61,.36,1);  /* 减速收尾:入场 / 上滑 / 浮层(原 roam/play 事实标准) */

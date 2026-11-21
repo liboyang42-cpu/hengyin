@@ -1,3 +1,4 @@
+const FLY_MS = 320;   // 碎片收进背包的飞走时长(= --cy-motion-read-transition;原 520,2026-11-21 阅读面提速)
 const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js');
 
 Component({
@@ -19,7 +20,7 @@ Component({
         return;
       }
       this.setData({ fly: true });
-      setTimeout(() => { this.triggerEvent('done'); this.setData({ fly: false }); }, 520);
+      setTimeout(() => { this.triggerEvent('done'); this.setData({ fly: false }); }, FLY_MS);
     }
   }
 });

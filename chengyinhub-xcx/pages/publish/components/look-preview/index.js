@@ -75,7 +75,7 @@ Component({
       this.setData({ fx, chars, fxIn: false });
       this._fxT = setTimeout(() => {
         this.setData({ fxIn: true });
-        if (fx === 'decode' && chars) for (let k = 0; k <= 6; k++) this._fxD.push(setTimeout(() => this.setData({ chars: chars.map((c, j) => Object.assign({}, c, { ch: j < (chars.length * k) / 6 ? c.ch : GLYPH[(Math.random() * GLYPH.length) | 0], raw: j >= (chars.length * k) / 6 })) }), k * 80));
+        if (fx === 'decode' && chars) for (let k = 0; k <= 6; k++) this._fxD.push(setTimeout(() => this.setData({ chars: chars.map((c, j) => Object.assign({}, c, { ch: j < (chars.length * k) / 6 ? c.ch : GLYPH[(Math.random() * GLYPH.length) | 0], raw: j >= (chars.length * k) / 6 })) }), k * 30));   // 与玩家页解码同拍(reading-motion READ_DECODE_TICK_MS)
       }, 420);
     },
     onPlayTransition() {

@@ -49,7 +49,8 @@ Component({
       });
       clearTimeout(this._onTimer); clearTimeout(this._dropTimer);
       this._dropTimer = setTimeout(() => this.setData({ dropped: true }), 40);
-      const wait = this.data.reducedMotion ? 0 : 500 + (list || []).length * 300;
+      // 2026-11-21 阅读面提速:原 500 + 每枚 300ms(3 枚 = 1.4s 才出字和按钮),现 180 + 每枚 40ms、封顶 600;点一下立即落定(onTap)
+      const wait = this.data.reducedMotion ? 0 : Math.min(600, 180 + (list || []).length * 40);
       this._onTimer = setTimeout(() => { this.setData({ on: true }); this._countUp(); }, wait);
     },
   },
@@ -72,14 +73,23 @@ Component({
       clearInterval(this._countTimer);
       const stats = this.data.stats || [];
       if (this.data.reducedMotion || !stats.length) { this.setData({ shown: stats.map((s) => String(s.v)) }); return; }
-      const t0 = Date.now(), dur = 1400;
+      const t0 = Date.now(), dur = 600;   // 原 1400
       this._countTimer = setInterval(() => {
         const k0 = Math.min(1, (Date.now() - t0) / dur), k = k0 < 0.5 ? 2 * k0 * k0 : 1 - Math.pow(-2 * k0 + 2, 2) / 2;
         this.setData({ shown: stats.map((s) => frame(s.v, k)) });
         if (k0 >= 1) clearInterval(this._countTimer);
       }, 40);
     },
-    onTap() { if (!this._moved) this._next(); },
+    onTap() {
+      if (this._moved) return;
+      if (!this.data.on) { this._settle(); return; }   // 勋章还在落 / 字还没出:点一下直接落定,不切下一枚
+      this._next();
+    },
+    /** 点一下即走完:勋章落位、文字与按钮出现、读数直接给终值。 */
+    _settle() {
+      clearTimeout(this._onTimer); clearTimeout(this._dropTimer); clearInterval(this._countTimer);
+      this.setData({ dropped: true, on: true, shown: (this.data.stats || []).map((s) => String(s.v)) });
+    },
     onStart(e) { const t = e.touches && e.touches[0]; this._x0 = t ? t.clientX : 0; this._dx = 0; this._moved = false; },
     onMove(e) {
       const t = e.touches && e.touches[0];
