@@ -108,7 +108,10 @@
   font-size: var(--cy-type-body);
   line-height: 1.75;
   color: rgba(255, 255, 255, .92);        /* ds-ok 同上 */
+  /* 结果反馈是作者写的故事话,用故事流同一个字(主题选的宋 / 楷 / 黑走 --cy-story-font,否则手写 CyStoryHand) */
+  font-family: var(--cy-story-font, 'CyStoryHand', -apple-system, "PingFang SC", "Noto Sans SC", sans-serif); /* ds-ok 字族名同 story-font.js */
 }
+.pv__remember { margin-top: var(--cy-space-3); font-size: var(--cy-type-caption); color: rgba(255, 255, 255, .72); letter-spacing: .04em; } /* ds-ok 整屏色块上的弱白字 */
 
 /* 减动效:不涌、不冒泡、不画勾,直接是结果那一屏。
    ⚠️ 用类兜底不用 @media (prefers-reduced-motion):小程序里那条媒体查询不生效,
@@ -133,11 +136,16 @@
 
 /* 第十二轮 k8 N7:独立弹出的结果反馈(玩家端作者回话、编辑页预览)走玩家端暗底,不再整屏饱和红 / 绿。
    判定只落在对勾、两个字的颜色上;作者的话用正文色。台面里嵌着的判定屏不受影响。 */
-.pv--closable .pv__fill { background: var(--cy-color-bg-page); }
-.pv--closable .pv__wave--a, .pv--closable.pv--fail .pv__wave--a { background-image: radial-gradient(circle at 50% 100%, var(--cy-color-bg-page) 30rpx, transparent 31rpx); }
-.pv--closable .pv__wave--b, .pv--closable.pv--fail .pv__wave--b { background-image: radial-gradient(circle at 50% 100%, var(--cy-color-bg-page) 22rpx, transparent 23rpx); }
+/* 外壳(2026-11-21):底色跟主题外观(--pk-embed-*,宿主 .pk-lookhost 上由 look-tokens.wxss 给);没有外观 = 玩家端暗底,与原来一致 */
+.pv--closable .pv__fill { background: var(--pk-embed-bg, var(--cy-color-bg-page)); }
+.pv--closable .pv__wave--a, .pv--closable.pv--fail .pv__wave--a { background-image: radial-gradient(circle at 50% 100%, var(--pk-embed-bg, var(--cy-color-bg-page)) 30rpx, transparent 31rpx); }
+.pv--closable .pv__wave--b, .pv--closable.pv--fail .pv__wave--b { background-image: radial-gradient(circle at 50% 100%, var(--pk-embed-bg, var(--cy-color-bg-page)) 22rpx, transparent 23rpx); }
 .pv--closable .pv__bubble { display: none; }
 .pv--closable .pv__word { color: var(--cy-color-status-danger); }
-.pv--closable .pv__text { color: var(--cy-color-text-primary); }
+.pv--closable .pv__text { color: var(--pk-embed-ink, var(--cy-color-text-primary)); }
+.pv--closable .pv__remember { color: var(--pk-embed-sub, var(--cy-color-text-secondary)); }
 .pv--closable .pv__img { background: var(--cy-color-bg-surface); }
-.pv--closable .pv__cta { background: var(--cy-color-bg-elevated); color: var(--cy-color-text-primary); }
+.pv--closable .pv__cta { background: var(--pk-embed-ink, var(--cy-color-bg-elevated)); color: var(--pk-embed-bg, var(--cy-color-text-primary)); }
+/* 淡出回到故事:只动透明度(过渡,不加 keyframes);减弱动态在 JS 里直接收起,不走这条 */
+.pv { transition: opacity var(--cy-motion-fade-swap) var(--cy-ease-out); }
+.pv--leaving { opacity: 0; pointer-events: none; }

@@ -21,7 +21,7 @@ const countUp = require('./count-roll.js');
 const { distanceText } = require('../../../utils/geo.js');
 const entryRhythm = require('../../../utils/entry-rhythm.js');
 
-function firstImg(v) { return v ? String(v).split(/[,;]/)[0].trim() : ''; }
+const stationImage = require('../../../utils/station-image.js');
 /** 这一站玩法的类型名:试玩读草稿预览 kit,真实游玩读节点配置里启用的那一段;认不出就不写(不写「玩法」凑数) */
 function kitTypeLabel(node) {
   if (!node) return '';
@@ -35,10 +35,13 @@ function kitTypeLabel(node) {
   }
   return '';
 }
-/** 玩家只看站名和任务:去掉编辑器里的「第04关」「问答：」「模板 ·」这类制作用前缀 */
+/** 玩家只看站名和任务:去掉编辑器里的「第04关」「问答：」「模板 ·」这类制作用前缀;
+ *  「路线名 · 第4关 站名」这种连路线名带关号的,路线名一起去掉(路线名在页头已有,关号不是玩家口径) */
 function playerTitle(t) {
-  const s = String(t == null ? '' : t).replace(/^\s*(?:第\s*\d+\s*关|模板|问答)\s*[:：·\-－—\s]\s*/, '').trim();
-  return s;
+  const raw = String(t == null ? '' : t);
+  const s = raw.replace(/^\s*(?:[^·:：]{1,40}?\s*[·:：]\s*)?第\s*\d+\s*关\s*[:：·\-－—\s]\s*/, '')
+    .replace(/^\s*(?:第\s*\d+\s*关|模板|问答)\s*[:：·\-－—\s]\s*/, '').trim();
+  return s || raw.trim();
 }
 /** 站名开头的序号(「1 · 老门」「2. 老门」)去掉,只留站名;去完为空则保留原样 */
 function stationLabel(t) {
@@ -58,11 +61,23 @@ function sheetFacts(node, distText) {
   if (!/^\d{1,2}(:\d{2})?–\d{1,2}(:\d{2})?$/.test(out.hoursText.trim())) out.hoursText = '';
   return out;
 }
+/** 玩法开始弹窗的封面走站点配图兜底链(utils/station-image.js,#883):站点图 → 章节封面 → 章节第一张故事块图 → 路线封面;
+ *  只用页面上已解析的地址,media-asset: 引用一律跳过。故事玩法自己没图时先借它绑定的地点。都没有 = '' → 模板回插图。 */
+function kitStartCover(page, node, place) {
+  const data = (page && page.data) || {};
+  const viaChain = (n) => {
+    if (!n) return '';
+    if (stationImage.isDisplayable(n.photo)) return n.photo;
+    const viaCtx = page && typeof page._stationPhotos === 'function' ? page._stationPhotos(n).photo : '';
+    return stationImage.isDisplayable(viaCtx) ? viaCtx : stationImage.resolvePageStationImage(data, n);
+  };
+  return stationImage.firstImage(node && node.imgUrl) || viaChain(place) || viaChain(node);
+}
 /** 翻页卡组:当前下标 + 下一张(循环) */
 function nextIndex(i, n) { return n ? (((i || 0) + 1) % n) : 0; }
 
 const data = {
-  kitStart: { show: false, nodeId: '', origin: 'story', cover: '', title: '', type: '', place: '', arrived: false, lede: '', mode: 'embed', modes: true },
+  kitStart: { show: false, nodeId: '', origin: 'story', cover: '', title: '', type: '', place: '', arrived: false, lede: '', station: '', chapter: '', coverIn: false, mode: 'embed', modes: true },
   extDeck: { idx: 0, flipping: false },
 };
 
@@ -87,16 +102,25 @@ function methods() {
         if (!entry || !this._isStoryGame(node) || node.done) { this.startStoryGame(e); return; }
       }
       const place = origin === 'story' ? ((this.data.nodes || []).find((n) => String(n.nodeId) === String(node.placeNodeId)) || null) : null;
-      const story = String(node.story || node.hookText || '');
-      const sentence = story.match(/^[^。！？!?]*[。！？!?]?/)[0];
+      // 外壳(2026-11-21):弹窗抬头写「第N站」(路线全程站序,与地点卡角标同号)+ 章名小字;站名 / 玩法名只在大标题写一次;
+      //   说明用这一站的引子 —— 与开始后整屏台面左上那一行同一份(utils/game-shell.js)
+      const shell = require('./game-shell.js');
+      const head = shell.stationHead(node, this.data.chapter, this.data.nodes);
+      const title = shell.stationTitle(node, pk.kit) || '玩法';
+      const placeName = origin === 'sheet' ? (node.lat ? node.name || '' : '') : (place ? place.name || '' : '');
       this.setData({ kitStart: {
         show: true, nodeId: String(node.nodeId), origin,
-        cover: firstImg(node.imgUrl), title: playerTitle(node.gameTitle || node.name || (pk.kit && pk.kit.title)) || '玩法', type: origin === 'card' ? (pk.cardLabel || kitTypeLabel(node)) : kitTypeLabel(node),
-        place: origin === 'sheet' ? (node.lat ? node.name || '' : '') : (place ? place.name || '' : ''), arrived: !!(place ? place.arrived || place.done : node.arrived),
-        lede: sentence.length <= 40 ? sentence : sentence.slice(0, 38) + '…',
+        cover: kitStartCover(this, node, place), coverIn: false,
+        title, type: origin === 'card' ? (pk.cardLabel || kitTypeLabel(node)) : kitTypeLabel(node),
+        place: placeName && !shell.sameStation(placeName, title) ? placeName : '', arrived: !!(place ? place.arrived || place.done : node.arrived),
+        lede: shell.storyLead(node, pk.kit), station: head.station, chapter: head.chapter,
         mode: 'embed', modes: origin === 'story',
       } });
     },
+    /** 封面图加载完再淡入(占位底色先在;减弱动态在 wxss 里不走过渡) */
+    onKitCoverLoad() { if (this.data.kitStart && this.data.kitStart.show) this.setData({ 'kitStart.coverIn': true }); },
+    /** 封面图挂了:不留破图,回插图 */
+    onKitCoverError() { if (this.data.kitStart && this.data.kitStart.show) this.setData({ 'kitStart.cover': '' }); },
     closeKitStart() { this.setData({ 'kitStart.show': false }); },
     pickKitMode(e) { this.setData({ 'kitStart.mode': (e.currentTarget.dataset.mode === 'full') ? 'full' : 'embed' }); },
     /** 「开始」:故事流入口按所选方式开(全屏 = 同一个 kit 盖整屏,退出回到流里);地点卡入口照旧 startGame(本就是整屏) */
@@ -198,4 +222,4 @@ function methods() {
   return api;
 }
 
-module.exports = { KIT_LABELS, kitTypeLabel, playerTitle, stationLabel, sheetFacts, nextIndex, data, methods };
+module.exports = { KIT_LABELS, kitTypeLabel, kitStartCover, playerTitle, stationLabel, sheetFacts, nextIndex, data, methods };

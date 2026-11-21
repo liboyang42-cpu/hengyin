@@ -142,3 +142,37 @@
   clip-path: inset(-100vh -100vw calc((1 - var(--pe-go, 1)) * var(--pe-unfold, 0) * 100% - (1 - (1 - var(--pe-go, 1)) * var(--pe-unfold, 0)) * 100vh) -100vw);
   transition: clip-path .7s cubic-bezier(.2, .9, .25, 1);
 }
+
+/* 玩法外壳(2026-11-21 业主「游戏主题要一致自然」):整屏玩法不再是一张和故事无关的纯色页。
+   ① 纸纹 / 暗角:主题外观给的 --lk-tex(look-tokens.wxss,与故事流 .look-tex 同一份),没有外观 = none,台面原样;
+   ② 抬头 + 引子:占返回钮那一行本来空着的位置(返回钮右侧、胶囊左侧),内容起点 --pk-top 不变 = 不挪版;
+   内嵌在故事流里时(--pk-back-display:none)与返回钮一起收起 —— 故事就在上面。
+   颜色只读皮肤的 --ink / --sub(皮肤又读外观 --pk-embed-*),不新造颜色。 */
+.st__tex {
+  position: absolute;
+  left: 0; right: 0; top: 0; bottom: 0;
+  z-index: 0;
+  pointer-events: none;
+  display: var(--pk-back-display, block);
+  background: var(--lk-tex, none);
+  mix-blend-mode: var(--lk-tex-blend, normal);
+}
+.st__head {
+  position: absolute;
+  left: calc(var(--cy-page-x) + 88rpx + var(--cy-space-3)); /* ds-ok 88rpx = 返回钮宽 */
+  right: 200rpx; /* ds-ok 让出微信胶囊(87px + 右边距) */
+  height: 88rpx; /* ds-ok 与返回钮同高同一行 */
+  z-index: 12;
+  display: var(--pk-back-display, flex);
+  flex-direction: column;
+  justify-content: center;
+  pointer-events: none;
+  min-width: 0;
+}
+.st__head-k { display: flex; align-items: baseline; gap: var(--cy-space-2); min-width: 0; }
+.st__head-s, .st__head-c, .st__head-l { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.st__head-s { flex: none; max-width: 100%; font-size: var(--cy-type-caption); font-weight: 700; color: var(--ink); letter-spacing: .02em; }
+.st__head-c { flex: 1; min-width: 0; font-size: var(--cy-type-caption); color: var(--sub); }
+.st__head-l { margin-top: 4rpx; font-size: var(--cy-type-label); line-height: 1.35; color: var(--sub);
+  font-family: var(--cy-story-font, 'CyStoryHand', -apple-system, "PingFang SC", "Noto Sans SC", sans-serif); } /* ds-ok 主题选了宋 / 楷 / 黑读 --cy-story-font(index.wxss story-font--*),否则手写 CyStoryHand,与故事流 .cy-story-hand 同字 */
+.st--verdict .st__head { display: none; }

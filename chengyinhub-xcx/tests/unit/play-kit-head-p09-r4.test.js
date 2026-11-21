@@ -47,5 +47,5 @@ test('交过之后不再留「这一关结束了」灰钮;「继续故事」仍�
   const w = read('pages/play/components/playkit-estimate/index.wxml')
   assert.doesNotMatch(w, /这一关结束了/)
   assert.match(w, /<view class="g-btn pe pe--up" wx:if="\{\{!locked\}\}"[^>]*bindtap="onSubmit"[\s\S]*?>就这个数<\/view>/)
-  assert.match(read('pages/play/index.wxml'), /bindtap="continueStoryGame"[\s\S]{0,120}>继续故事<\/view>/)
+  assert.match(read('pages/play/index.wxml'), /bindtap="continueStoryGame"[\s\S]{0,320}'继续故事'\}\}<\/view>/)   // 外壳 1121:同一颗钮玩完才淡入,字按玩法类型取
 })

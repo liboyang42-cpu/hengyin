@@ -1,4 +1,5 @@
 const { checkReceiptView } = require('./playkit-view.js');
+const { verdictCta } = require('./game-shell.js');
 
 const CHECK_ACTIONS = { roll: 'ROLL_CHECK', reroll: 'REROLL_CHECK', settle: 'SUBMIT_CHECK' };
 function isR5(view) { return !!view && !!view.config && view.config.outcomeRulesVersion === 1; }
@@ -45,6 +46,11 @@ function checkView(view, theme) {
 
 function methods() {
   return {
+    /** 结果屏的故事口吻(外壳 2026-11-21):角色信任那一句(判完那次回包的 trustChanged)+ 收尾钮的字(回故事流说「继续故事」) */
+    _r5VerdictVoice(view) {
+      const remember = typeof this._castRemember === 'function' ? this._castRemember(view && view.trustChanged) : '';
+      return { remember: remember || '', cta: verdictCta(!!this.data.chapterFull) };
+    },
     _applyR5OutcomeView(view) {
       const reply = outcomeReply(view), prev = this.data.r5OutcomeReply;
       // 单一结果位按回执 ID 替换，轮询与重进不追加消息或重播弹窗。
@@ -56,7 +62,7 @@ function methods() {
       this._r5OutcomeSeeded = true;
       if (fresh) {
         this._r5VerdictShownId = reply.id;
-        this.setData({ r5Verdict: { show: true, kind: reply.outcome === 'PASS' ? 'win' : 'fail', text: reply.reply, images: reply.images } });
+        this.setData({ r5Verdict: Object.assign({ show: true, kind: reply.outcome === 'PASS' ? 'win' : 'fail', text: reply.reply, images: reply.images }, this._r5VerdictVoice(view)) });
       }
       if (this._r5CheckView && this.data.journeyCheck.r5) {
         const receipt = checkView(this._r5CheckView, view).receipt;
@@ -150,7 +156,7 @@ function methods() {
       const id = fb ? key + ':' + view.version : '';
       if (!(key in seen) || !fb || seen[key] === id) { seen[key] = id; return; }
       seen[key] = id;
-      this.setData({ r5Verdict: { show: true, kind: fb.outcome === 'PASS' ? 'win' : 'fail', text: fb.reply || '', images: (fb.images || []).slice(0, 3) } });
+      this.setData({ r5Verdict: Object.assign({ show: true, kind: fb.outcome === 'PASS' ? 'win' : 'fail', text: fb.reply || '', images: (fb.images || []).slice(0, 3) }, this._r5VerdictVoice(view)) });
     },
     _r5CheckAction(action) {
       const kit = this.data.journeyCheck;
@@ -193,4 +199,4 @@ function methods() {
     },
   };
 }
-module.exports = { isR5, outcomeReply, checkView, methods, data: { r5OutcomeReply: null, r5Verdict: { show: false, kind: 'win', text: '', images: [] } } };
+module.exports = { isR5, outcomeReply, checkView, methods, data: { r5OutcomeReply: null, r5Verdict: { show: false, kind: 'win', text: '', images: [], remember: '', cta: '' } } };
