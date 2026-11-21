@@ -14,7 +14,7 @@ test('有揭示或碎片:停住等玩家点继续', () => {
 test('只有「对了」:短停后自动继续', () => {
   const m = rightMoment({ data: { firstTime: true }, node: {}, mode: 1 });
   assert.deepEqual(m, { text: '', reveal: '', fragment: '', hold: false });
-  assert.ok(RIGHT_AUTO_MS >= 800 && RIGHT_AUTO_MS <= 1600);
+  assert.ok(RIGHT_AUTO_MS >= 400 && RIGHT_AUTO_MS <= 600);   // 2026-11-21 阅读面提速:自动前进 ≤600ms
 });
 
 test('探店日碎片另有翻卡,这里不重复', () => {

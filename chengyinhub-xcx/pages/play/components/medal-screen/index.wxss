@@ -1,7 +1,7 @@
 /* v13 通关勋章页 · 尺寸按原型 390 宽换算成 rpx;颜色照原型取值 */
 /* ds-ok: 本组件颜色逐项照 v13 原型取值 */
 .md { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 300; overflow: hidden; background: #0c0b0a; color: #fff; --ray: rgba(255,140,60,.10); } /* ds-ok */
-.md__rays { position: absolute; left: 50%; top: 442rpx; width: 1731rpx; height: 1731rpx; margin: -865rpx 0 0 -865rpx; border-radius: 50%; opacity: 0; transition: opacity .8s;
+.md__rays { position: absolute; left: 50%; top: 442rpx; width: 1731rpx; height: 1731rpx; margin: -865rpx 0 0 -865rpx; border-radius: 50%; opacity: 0; transition: opacity var(--cy-motion-read-transition, 320ms);
   background: repeating-conic-gradient(from 0deg, var(--ray) 0deg 9deg, rgba(0,0,0,0) 9deg 22.5deg); animation: md-rot 40s linear infinite; /* ds-ok */
   -webkit-mask: radial-gradient(circle, #000 0, rgba(0,0,0,.6) 28%, rgba(0,0,0,0) 62%); mask: radial-gradient(circle, #000 0, rgba(0,0,0,.6) 28%, rgba(0,0,0,0) 62%); } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .md.on .md__rays { opacity: 1; }
@@ -11,10 +11,10 @@
 .spark { position: absolute; z-index: 3; opacity: 0; pointer-events: none; animation: md-tw 2.4s ease-in-out infinite; }
 @keyframes md-tw { 0%, 100% { opacity: .15; transform: scale(.6); } 50% { opacity: 1; transform: scale(1); } }
 .mstack { position: absolute; left: 50%; top: 288rpx; width: 288rpx; height: 323rpx; margin-left: -144rpx; z-index: 2; }
-.hexw { position: absolute; top: 0; right: 0; bottom: 0; left: 0; transition: transform .55s cubic-bezier(.34,1.32,.64,1), filter .4s, opacity .3s; }
+.hexw { position: absolute; top: 0; right: 0; bottom: 0; left: 0; transition: transform var(--cy-motion-read-transition, 320ms) cubic-bezier(.34,1.32,.64,1), filter var(--cy-motion-read-rise, 180ms), opacity var(--cy-motion-read-fade, 160ms); }
 .hex { position: absolute; top: 0; right: 0; bottom: 0; left: 0; display: flex; align-items: center; justify-content: center;
   clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); background: linear-gradient(160deg, var(--h1), var(--h2) 55%, var(--h3));
-  opacity: 0; transform: translateY(-308rpx) scale(.3) rotateY(-540deg); transition: transform .9s cubic-bezier(.2,.8,.2,1.25), opacity .5s; }
+  opacity: 0; transform: translateY(-308rpx) scale(.3) rotateY(-540deg); transition: transform var(--cy-motion-read-transition, 320ms) cubic-bezier(.2,.8,.2,1.25), opacity var(--cy-motion-read-fade, 160ms); }
 .md.dropped .hex { opacity: 1; transform: none; }
 .hex--0 { --h1: #FFB067; --h2: #E8590C; --h3: #B8400B; } /* ds-ok v13 勋章橙 */
 .hex--1 { --h1: #9BE7A8; --h2: #22A55A; --h3: #137A3E; } /* ds-ok v13 勋章绿 */
@@ -55,7 +55,7 @@
 .pill--w { background: #fff; color: #000; } /* ds-ok */
 .pill--s { background: #2C2C2E; color: #fff; } /* ds-ok */
 .md-pressed { opacity: .8; }
-.fade { opacity: 0; transform: translateY(27rpx); transition: opacity .5s, transform .6s cubic-bezier(.2,.82,.2,1); }
+.fade { opacity: 0; transform: translateY(27rpx); transition: opacity var(--cy-motion-read-fade, 160ms), transform var(--cy-motion-read-rise, 180ms) cubic-bezier(.2,.82,.2,1); }
 .md.on .fade { opacity: 1; transform: none; }
 .md--reduced .hex { transition: none; }
 .md--reduced .md__rays, .md--reduced .spark, .md--reduced .hex__shine { animation: none; }

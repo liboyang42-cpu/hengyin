@@ -7,7 +7,7 @@
 .frag-card--flip { transform: rotateY(0deg); }
 /* M10 碎片飞入手记:飞向左下 journalfab(left 28rpx/bottom 356rpx),缩小淡出 */
 .frag-mask--fly { background: transparent; }
-.frag-card--fly { animation: fragFly .52s cubic-bezier(.5,0,.8,.4) both; }
+.frag-card--fly { animation: fragFly var(--cy-motion-read-transition, 320ms) cubic-bezier(.5,0,.8,.4) both; } /* 原 .52s;JS 镜像 index.js FLY_MS */
 .frag-mask--reduced-motion,
 .frag-mask--reduced-motion .frag-card { transition: none; animation: none; }
 @keyframes fragFly {
