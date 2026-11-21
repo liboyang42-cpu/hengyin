@@ -424,7 +424,7 @@
     <view class="cg-cfg-label">正面</view>
     <view class="cg-adv-grid">
     <view><input class="cg-cfg-input" value="{{advanced.coinFlip.heads.label}}" placeholder="叫什么，如 正面" data-section="coinFlip.heads" data-field="label" bindinput="onAdvancedField" /></view>
-    <view><input class="cg-cfg-input" value="{{advanced.coinFlip.heads.action}}" placeholder="那就做什么，如 这杯店家请" data-section="coinFlip.heads" data-field="action" bindinput="onAdvancedField" /></view>
+    <view><input class="cg-cfg-input" value="{{advanced.coinFlip.heads.action}}" placeholder="那就做什么，如 向左走一条街" data-section="coinFlip.heads" data-field="action" bindinput="onAdvancedField" /></view>
     </view>
     <view class="cg-cfg-label">反面</view>
     <view class="cg-adv-grid">
@@ -1518,6 +1518,8 @@
          两种玩法都只认这一颗,位置和样子照玩法台面的 .st__back -->
     <view class="cg-pv-exit" wx:if="{{ pvStepKey === 'challenge' && pvKit }}" style="top:{{statusBarHeight + 12}}px" bindtap="closePreview"
           aria-role="button" aria-label="退出试玩" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="back" size="40" /></view>
+    <!-- 拍照 / 传感器玩法的试玩输入是模拟的,结果不判:一枚小标说清,不写说明句 -->
+    <view class="cg-pv-sim" wx:if="{{ pvStepKey === 'challenge' && pvKit && pvSimulated }}" style="top:{{statusBarHeight + 12}}px" aria-role="text">试玩 · 不计成绩</view>
     <!-- 照「城瘾玩法试玩台」:玩法铺满整屏,不压翻页点和箭头;
          玩完由判定屏整屏涌上来,作者配的成功 / 失败反馈就写在这一屏。 -->
     <cy-play-verdict wx:if="{{ pvStepKey === 'challenge' && pvKit }}" show="{{ pvVerdict.show }}" kind="{{ pvVerdict.kind }}"
@@ -1681,7 +1683,7 @@
     </scroll-view>
     <view class="cg-tsheet__foot">
       <view class="cg-tsheet__sub"><text class="cg-tsheet__name" wx:if="{{ sheetPickItem }}">{{ sheetPickItem.label }}</text>{{ sheetPickItem ? (sheetPickItem.reason || sheetPickItem.sub) : '选一个玩法' }}</view>
-      <view class="cg-r5-pill" wx:if="{{ sheetPickItem && !sheetPickItem.reason }}" data-key="{{ sheetPickItem.pickKey }}" bindtap="previewGameFromSheet" aria-role="button" aria-label="预览{{ sheetPickItem.label }}" hover-class="cy-pressed" hover-stay-time="80">预览</view>
+      <view class="cg-r5-pill" wx:if="{{ sheetPickItem }}" data-key="{{ sheetPickItem.pickKey || sheetPickItem.key }}" bindtap="previewGameFromSheet" aria-role="button" aria-label="预览{{ sheetPickItem.label }}" hover-class="cy-pressed" hover-stay-time="80">预览</view>
     </view>
   </view>
 

@@ -90,13 +90,13 @@ test('reusing the same instance resets burning, text, selected options and prior
   pick(mounted.instance, 0); mounted.instance.onCta();
   assert.equal(mounted.events.at(-1).detail.optionId, 'east');
 });
-test('identical content under a different original session/node still invalidates the old intro callback', () => {
-  const factory = componentFactory(), source = FIRST(), mounted = factory.mount(source);
-  const oldIntro = factory.timers.at(-1);
+test('qa paints question and options on the first frame: no intro hold, no deferred reveal timer (2026-11-21)', () => {
+  const factory = componentFactory(), source = FIRST(), before = factory.timers.length, mounted = factory.mount(source);
+  assert.notEqual(mounted.instance.data.intro, true);
+  assert.equal(factory.timers.length, before, 'no timer may gate the first paint');
+  assert.equal(mounted.instance.data.optionList.length, 3);
   mounted.render(Object.assign({}, source, { topicId: 12, sessionId: 103, nodeId: 503 }));
-  const count = mounted.writes.length; oldIntro();
-  assert.equal(mounted.writes.length, count); assert.equal(mounted.instance.data.intro, true);
-  factory.timers.at(-1)(); assert.equal(mounted.instance.data.intro, false);
+  assert.notEqual(mounted.instance.data.intro, true);
 });
 test('hide/detach and switching to another theme discard late media results rather than emitting into the new run', () => {
   for (const invalidate of ['switch', 'hide', 'detach']) {

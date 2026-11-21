@@ -198,13 +198,17 @@ function detectGame(advanced) {
  * 商家还没配任何东西就点「预览」时,拿默认配置直接造屏会是一片空白 —— 玩法本身
  * 没问题,是没东西可显示,但看的人只会以为这个玩法是坏的。这里给每个玩法一句样例,
  * 只在试玩那一瞬间用,不写回配置。 */
+const SAMPLE_SCENE = '/pages/publish/images/sample-window.svg';
 const DEMO = {
   profile: { title: '旅人登记', lead: '留下你的名字，准备出发', avatar: { enabled: true, required: false },
     questions: [{ key: 'name', label: '怎么称呼你', kind: 'text', maxLength: 12, required: true },
       { key: 'destination', label: '想去哪里', kind: 'pick', required: true, options: [
         { key: 'sea', label: '海边', effects: [] }, { key: 'mountain', label: '山间', effects: [] }] }] },
   typeIn: { title: '输入通行口令', target: '今天也要出发', seconds: 20 },
-  photoCheck: { title: '拍下沿途的风景', shotNote: '让街景完整出现在画面里', requirement: '画面包含街景' },
+  /* sampleShot 只在试玩里用:演「已经拍了一张」那一屏(模拟输入,不上传、不判定),不是配置字段 */
+  photoCheck: { title: '拍下沿途的风景', shotNote: '让街景完整出现在画面里', requirement: '画面包含街景', sampleShot: SAMPLE_SCENE },
+  objectCard: { title: '拍下桌上最旧的一样东西', cardTitle: '老物件' },
+  album: { images: [{ url: SAMPLE_SCENE, line: '那天傍晚的窗台' }, { url: '/images/mer1.jpg', line: '天快黑的时候' }] },
   note: { title: '留给下一位旅人', prompt: '写下此刻想说的话', presets: ['慢慢走', '前面有好风景'] },
   qaText: { title: '这座桥建于哪一年？', answerText: '1937' },
   qaPick: { title: '石碑上的图案象征什么？', options: [
@@ -228,7 +232,11 @@ const DEMO = {
     { id: 'pic_2', name: '霓虹灯', imageUrl: '', correct: false },
     { id: 'pic_3', name: '手写纸板', imageUrl: '', correct: false },
   ] },
-  hidden: { title: '找到那只猫', hint: '它在窗台附近' },
+  /* 找东西:范例图 + 三个有名字的目标。坐标与范例图上的钥匙 / 茶杯 / 猫对齐 */
+  hidden: { title: '窗台上藏着三样东西', hint: '都在窗边', imageUrl: SAMPLE_SCENE, hotspots: [
+    { id: 'spot_1', label: '钥匙', x: 0.2, y: 0.2, r: 0.08 },
+    { id: 'spot_2', label: '茶杯', x: 0.45, y: 0.65, r: 0.08 },
+    { id: 'spot_3', label: '黑猫', x: 0.82, y: 0.62, r: 0.08 }] },
   predict: { question: '明天中午哪种豆子卖得更多？', options: [{ key: 'A', label: '耶加雪菲' }, { key: 'B', label: '曼特宁' }] },
   random: { deckName: '今日线索卡', items: [
     { id: 'item_1', label: '线索卡', weight: 1, content: '去吧台问一句今天的手冲是什么。' },
@@ -254,13 +262,13 @@ const DEMO = {
   quiet: { kicker: '安静挑战', sub: '一直安静到时间到' },
   compass: { kicker: '把手机转向钟楼', bearing: 135, hint: '它比你想的更靠右' },
   shout: { kicker: '一起喊，让这儿听见' },
-  countdown: { kicker: '一钟油', doneText: '时间到。' },
+  countdown: { kicker: '等这杯手冲', doneText: '时间到，可以喝了。' },
   stopwatch: { kicker: '盲停在 10 秒' },
-  coin: { kicker: '抛完照做', heads: { label: '正面', action: '这杯店家请' }, tails: { label: '反面', action: '你请下一杯' } },
+  coin: { kicker: '抛完照做', heads: { label: '正面', action: '向左走一条街' }, tails: { label: '反面', action: '向右走一条街' } },
   dice: { kicker: '掷到几就做第几件事', faces: ['和店员说句今天的天气', '换个位置坐', '点一杯没喝过的', '拍一张门口', '把杯子摆正', '写一句留言'] },
   d20: { kicker: '观察暗门', successText: '你发现了门后的线索', failText: '暂时没有发现，沿街继续寻找' },
   scan: { reply: '欢迎来到这家店，今天的手冲是耶加雪菲。' },
-  hangman: { answer: 'ENDLESS', format: ['E', '_', '_', '_', '_', '_', 'S'] },
+  hangman: { answer: '巷口咖啡', format: ['巷', '_', '_', '啡'] },
 };
 
 /**

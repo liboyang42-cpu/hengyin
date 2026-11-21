@@ -479,6 +479,7 @@ Page({
     advancedErrorField: '',
     // 预览要演的那一屏玩法。null = 这个节点没开玩法配置,回落到基础验证那套
     pvKit: null,
+    pvSimulated: false,
     canPublishGame: false,
     audioPreviewPlaying: false,
 
@@ -2906,7 +2907,7 @@ Page({
     }
     this.setData({
       gameSheetOpen: false, previewVisible: true,
-      pvSteps: ['challenge'], pvStep: 0, pvKit
+      pvSteps: ['challenge'], pvStep: 0, pvKit, pvSimulated: advancedGamePreview.isSimulatedKit(pvKit)
     }, () => { this._applyPvStep(0); });
   },
 
@@ -2926,7 +2927,7 @@ Page({
       limitSeconds: (this.data.advanced.timer && this.data.advanced.timer.enabled)
         ? Number(this.data.advanced.timer.durationSeconds) || 0 : 0,
     });
-    this.setData({ previewVisible: true, pvSteps: steps, pvStep: 0, pvKit }, () => {
+    this.setData({ previewVisible: true, pvSteps: steps, pvStep: 0, pvKit, pvSimulated: advancedGamePreview.isSimulatedKit(pvKit) }, () => {
       this._applyPvStep(0);
     });
   },

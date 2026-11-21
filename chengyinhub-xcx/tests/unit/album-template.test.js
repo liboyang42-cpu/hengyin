@@ -42,8 +42,11 @@ test('空相册、过多照片、长配文和本地临时路径不能保存', ()
   }
 });
 
-test('新建空相册不能打开 1/0 的空白预览', () => {
-  const m = catalog.applyToConfig(config.defaultConfig(), 'album', {demo: true});
-  assert.equal(preview.buildPreviewKit(m), null);
+test('作者自己的空相册不能打开 1/0 的空白预览;先看再选的试玩给范例照片(2026-11-21)', () => {
+  const own = catalog.applyToConfig(config.defaultConfig(), 'album');
+  assert.equal(preview.buildPreviewKit(own), null);
   assert.equal(preview.buildSampleKit('album'), null);
+  const demo = preview.buildPreviewKit(catalog.applyToConfig(config.defaultConfig(), 'album', {demo: true}));
+  assert.equal(demo.type, 'album');
+  assert.ok(demo.images.length >= 2 && demo.images.every(image => /^\//.test(image.url)));
 });

@@ -1607,6 +1607,13 @@ page {
   display: flex; align-items: center; justify-content: center;
   background: rgba(127, 127, 127, .24); color: var(--cy-color-text-inverse);  /* ds-ok 叠在深浅两种玩法皮肤上都看得清的中性半透明 */
 }
+.cg-pv-sim {
+  position: fixed; right: var(--cy-page-x); z-index: var(--cy-z-popover);
+  height: 88rpx; padding: 0 var(--cy-space-4); border-radius: var(--cy-radius-pill);
+  display: flex; align-items: center;
+  background: rgba(127, 127, 127, .24); color: var(--cy-color-text-inverse);  /* ds-ok 与 .cg-pv-exit 同一层中性半透明 */
+  font-size: var(--cy-type-label); font-weight: 600;
+}
 
 /* ============ 2026-10-23 主人走查:间距照原型 gameplay-create-proto-20261022(1px = 2rpx) ============
    分区标题 22/4/10、卡片内边距 16、圆角 14、页边 13;开关行上分隔线 + 16 间距;字段之间 16。 */
