@@ -289,7 +289,8 @@ management:
   # Prometheus 不可用。开启:CHENGYIN_MANAGEMENT_PORT=9091(注意:health/info 随之搬到 9091,部署探活要同步改)。
   server:
     port: ${CHENGYIN_MANAGEMENT_PORT:${server.port:8080}}
-    address: ${CHENGYIN_MANAGEMENT_ADDRESS:127.0.0.1}
+    # address: not set here. Spring Boot refuses an address while the management port is the application port.
+    # ManagementAddressDefault binds a separate management port to CHENGYIN_MANAGEMENT_ADDRESS, else 127.0.0.1.
   endpoints:
     web:
       exposure:
