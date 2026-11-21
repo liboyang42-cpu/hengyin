@@ -480,6 +480,10 @@ Page({
     // 预览要演的那一屏玩法。null = 这个节点没开玩法配置,回落到基础验证那套
     pvKit: null,
     pvSimulated: false,
+    // 试玩玩完了没有:玩完才出「继续故事」(2026-11-21 lead 走查:玩的过程中不挂灰按钮)
+    pvDone: false,
+    // 整屏玩法时「试玩 · 不计成绩」小标的 top(px):退出键与微信胶囊两者下沿之下
+    pvSimTop: 0,
     canPublishGame: false,
     audioPreviewPlaying: false,
 
@@ -2907,7 +2911,7 @@ Page({
     }
     this.setData({
       gameSheetOpen: false, previewVisible: true,
-      pvSteps: ['challenge'], pvStep: 0, pvKit, pvSimulated: advancedGamePreview.isSimulatedKit(pvKit)
+      pvSteps: ['challenge'], pvStep: 0, pvKit, pvSimulated: advancedGamePreview.isSimulatedKit(pvKit), pvSimTop: this._pvSimTop()
     }, () => { this._applyPvStep(0); });
   },
 
@@ -2927,9 +2931,21 @@ Page({
       limitSeconds: (this.data.advanced.timer && this.data.advanced.timer.enabled)
         ? Number(this.data.advanced.timer.durationSeconds) || 0 : 0,
     });
-    this.setData({ previewVisible: true, pvSteps: steps, pvStep: 0, pvKit, pvSimulated: advancedGamePreview.isSimulatedKit(pvKit) }, () => {
+    this.setData({ previewVisible: true, pvSteps: steps, pvStep: 0, pvKit, pvSimulated: advancedGamePreview.isSimulatedKit(pvKit), pvSimTop: this._pvSimTop() }, () => {
       this._applyPvStep(0);
     });
+  },
+  /* 「试玩 · 不计成绩」整屏时的 top:退出键(状态栏 + 12px + 88rpx)与微信胶囊两者下沿取大,再空 8px。
+     只用于整屏玩法;内嵌玩法里小标排在内容流最上面,本来就在导航行之下。 */
+  _pvSimTop: function () {
+    let winW = 375;
+    try { const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync(); if (info && info.windowWidth > 0) winW = info.windowWidth; } catch (err) { /* 量不到按 375 算 */ }
+    let bottom = (Number(this.data.statusBarHeight) || 0) + 12 + Math.round(88 * winW / 750);
+    try {
+      const capsule = wx.getMenuButtonBoundingClientRect && wx.getMenuButtonBoundingClientRect();
+      if (capsule && capsule.bottom > bottom) bottom = capsule.bottom;
+    } catch (err) { /* 没有胶囊信息时按退出键下沿 */ }
+    return Math.round(bottom + 8);
   },
   /* 作者试玩仅在本地反馈交互结果；正式游玩的判定与奖励仍由服务端负责。 */
   onPvKitAction: function (e) {
@@ -2937,18 +2953,31 @@ Page({
     if (d.action === 'close') { this.closePreview(); return; }
     const kit = this.data.pvKit;
     if (!kit || !this.data.previewVisible) return;
+    // 找东西:范例图上点一下,按这份配置的热区本地判中没中(坐标只在作者本机,不进 kit)
+    if (kit.type === 'hidden' && d.action === 'submit') { this._pvHiddenTap(kit, d.detail); return; }
     const result = applyPreviewAction(kit, d, this._pvTypeStartedAt);
     if (result) {
       this._pvTypeStartedAt = result.startedAt;
-      this.setData({ pvKit: result.kit });
+      this.setData({ pvKit: result.kit, pvDone: this.data.pvDone || !!result.ready });
       if (!(result.ready && (result.kit.type === 'typein' || result.kit.type === 'journeycheck') && this.showPvVerdict(result.kit, d))) { if (result.message) app.tips(result.message); }
-    } else if (d.action === 'verdict' || d.action === 'drawn' || d.action === 'scanned') { if (!this.showPvVerdict(kit, d)) this.pvNext(); }
+    } else if (d.action === 'verdict' || d.action === 'drawn' || d.action === 'scanned') { this.setData({ pvDone: true }); if (!this.showPvVerdict(kit, d)) this.pvNext(); }
     // CU-C-11:问答类提交在预览里不判定,原来静默吞掉 ⇒ 点「提交」像坏了。明说,别让商家以为答错/没反应。
-    else if (d.action === 'answer' || d.action === 'submit' || d.action === 'shoot') { if (!this.showPvVerdict(kit, d)) app.tips('试玩只看样子，不判对错'); }
+    else if (d.action === 'answer' || d.action === 'submit' || d.action === 'shoot') { this.setData({ pvDone: true }); if (!this.showPvVerdict(kit, d)) app.tips('试玩只看样子，不判对错'); }
+  },
+  _pvHiddenTap: function (kit, point) {
+    const hit = require('./preview-verdict.js').hiddenHit(this._pvAdvanced || this.data.advanced, kit, point);
+    if (!hit) { app.tips('这儿没有'); return; }
+    // 命中的点写回 targets(found + 点的位置),组件据此把点留在图上、清单打勾,全找到由台面自己判赢
+    const targets = (kit.targets || []).map(t => (t.id === hit ? Object.assign({}, t, { found: true, x: point.x, y: point.y }) : t));
+    this.setData({ pvKit: Object.assign({}, kit, { targets }) });
+  },
+  /* 「继续故事」:玩完才出现;与判定屏「继续」同一去向 —— 只演玩法这一屏时回编辑页,分步预览进下一步 */
+  onPvContinue: function () {
+    if (this.data.pvStep >= this.data.pvSteps.length - 1) this.closePreview(); else this.pvNext();
   },
   closePreview: function () {
     this._pvTypeStartedAt = 0;
-    this.setData({ previewVisible: false, pvKit: null, pvVerdict: { show: false, kind: 'win', text: '', images: [] } });
+    this.setData({ previewVisible: false, pvKit: null, pvDone: false, pvVerdict: { show: false, kind: 'win', text: '', images: [] } });
     this.syncNativeTheme();
   },
 
@@ -3003,7 +3032,8 @@ Page({
       pvAnswer: '',
       pvSelected: null,
       pvWrong: false,
-      pvHintShown: false
+      pvHintShown: false,
+      pvDone: false
     };
 
     if (key === 'story') {

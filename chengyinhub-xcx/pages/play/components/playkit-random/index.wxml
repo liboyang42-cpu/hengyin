@@ -15,9 +15,11 @@
         <view class="dk__card {{item.cls}}" wx:for="{{deck}}" wx:key="id"
               style="{{item.style}}">
           <view class="dk__tag">{{item.tag}}</view>
-          <view class="dk__h">{{item.title}}</view>
-          <!-- 图案是这张卡唯一的「脸」:四张摞在一起时,玩家靠它分辨新旧 -->
-          <image class="dk__art" src="{{item.art}}" mode="widthFix" aria-hidden="true" />
+          <view class="dk__h {{item.body ? 'dk__h--tight' : ''}}">{{item.title}}</view>
+          <!-- 翻开的卡有正文就把这句写大在卡面上(2026-11-21 lead 走查:原来只画一块通用图案,读不出这张卡说什么);
+               图案退成右下角一枚小角标,摞在一起时仍靠它分辨新旧。没有正文(盖着的「?」)才整块画图案。 -->
+          <view class="dk__line" wx:if="{{item.body}}">{{item.body}}</view>
+          <image class="dk__art {{item.body ? 'dk__art--corner' : ''}}" src="{{item.art}}" mode="widthFix" aria-hidden="true" />
         </view>
       </view>
     </view>

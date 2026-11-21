@@ -58,7 +58,7 @@ test('拍照 / 传感器玩法的试玩挂「试玩 · 不计成绩」小标,别
     assert.equal(preview.isSimulatedKit(sheetPreview(key)), false, key);
   }
   const wxml = read('pages/publish/temp/index.wxml');
-  assert.match(wxml, /class="cg-pv-sim" wx:if="\{\{ pvStepKey === 'challenge' && pvKit && pvSimulated \}\}"[^>]*>试玩 · 不计成绩</);
+  assert.match(wxml, /class="cg-pv-sim" wx:if="\{\{ pvSimulated \}\}"[^>]*>试玩 · 不计成绩</);
   const js = read('pages/publish/temp/index.js');
   assert.equal((js.match(/pvSimulated: advancedGamePreview\.isSimulatedKit\(pvKit\)/g) || []).length, 2);
 });
