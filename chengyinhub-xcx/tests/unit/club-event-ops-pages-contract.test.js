@@ -606,7 +606,7 @@ test('活动运营成功回包保留管理与本场核销的原能力分流', ()
   }
 })
 
-test('活动运营网络/服务错误原页可重试，真实拒权仍自动返回', () => {
+test('活动运营网络/服务错误原页可重试，真实拒权落统一无权限态(唯一动作返回)', () => {
   const wxml = read('pages/club/event-ops/index.wxml')
   for (const state of ['network-error', 'error']) {
     const tag = (wxml.match(/<cy-error\b[^>]*>/g) || []).find(tag => tag.includes("state === '" + state + "'"))
@@ -615,10 +615,10 @@ test('活动运营网络/服务错误原页可重试，真实拒权仍自动返�
     assert.match(tag, /bind:retry="retryLoad"/)
     assert.doesNotMatch(tag, /\bauto-back\b/, '自动返回会隐藏重试并提前离页')
   }
-  const denied = (wxml.match(/<cy-error\b[^>]*wx:elif="\{\{state === 'no-permission'\}\}"[^>]*>/) || [])[0]
+  const denied = (wxml.match(/<cy-empty\b[^>]*wx:elif="\{\{state === 'no-permission'\}\}"[^>]*>/) || [])[0]
   assert.ok(denied)
-  assert.match(denied, /retry=""/)
-  assert.match(denied, /\bauto-back\b/)
+  assert.match(denied, /kind="no-permission" fill size="lg"/)
+  assert.match(denied, /cta="返回" bind:cta="goBack"/)
   const { page, requests } = loadEventOpsPage()
   page.retryLoad()
   assert.equal(requests.length, 2, '保留原页重试处理器')

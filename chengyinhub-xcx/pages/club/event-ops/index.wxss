@@ -3,6 +3,7 @@
    页边统一用 --cy-page-x(=32rpx,全仓俱乐部页同款)。 */
 page { background: var(--cy-bg-page); }
 .page { min-height: 100vh; background: var(--cy-bg-page); color: var(--cy-color-text-primary); padding-bottom: var(--cy-space-8); }
+.page--fill { display: flex; flex-direction: column; box-sizing: border-box; } /* 无权限 cy-empty fill 在顶栏下方剩余空间居中 */
 .section { margin: var(--cy-space-4) var(--cy-page-x) 0; }
 cy-page-title + .section { margin-top: 0; } /* 2026-11-02 r2:页标题直接接首个区块时不再叠区块间距,标题→首块约 9px(与全站 cy-page-title 口径一致) */
 .section-title { display: block; font-size: var(--cy-font-title); line-height: 1.2; font-weight: 800; }

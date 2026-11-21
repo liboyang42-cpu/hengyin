@@ -25,13 +25,10 @@
 </view>
 <!-- E-12(2026-09-16):无权限是终态 —— 原来自动退化成通用「出码失败」+ 重试,
      重试永远失败且没有出路。这里给跟 invalid 一样的结构化出口。 -->
-<view wx:elif="{{state === 'no-permission'}}" class="session-invalid">
+<view wx:elif="{{state === 'no-permission'}}" class="session-invalid session-invalid--fill">
   <view class="session-picker__nav-spacer" style="height: {{statusBarHeight + navBarHeight}}px;"></view>
   <cy-page-title title="团核销码" safe-top="{{false}}" />
-  <cy-error title="当前身份不能出码" sub="{{errMsg || '仅主理人、管理员或本场领队可出码'}}" retry="" />
-  <view class="session-invalid__manage" bindtap="goManage" aria-role="button" aria-label="进入俱乐部管理" hover-class="cy-pressed" hover-stay-time="80">
-    <text>进入俱乐部管理</text><cy-icon name="arrow-right" size="32" />
-  </view>
+  <cy-empty kind="no-permission" fill size="lg" title="当前身份不能出码" cta="进入俱乐部管理" bind:cta="goManage" />
 </view>
 <!-- 出码态按 Figma s7SEFaoJ3GQUIxJhdqcFUb / 335:1275 改成 T1 底部弹层「出示团码」。
      稿比原来的全屏凭证多一件事:**保存到相册** —— 有些玩法要把码打印出来贴在站点上,

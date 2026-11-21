@@ -1,5 +1,6 @@
 page { background: var(--cy-bg-page); }
 .page { min-height: 100vh; box-sizing: border-box; padding-bottom: calc(var(--cy-space-6) + var(--cy-safe-bottom)); /* PG-054:同 governance/badges 底部安全区 */ background: var(--cy-bg-page); color: var(--cy-text-title); }
+.page--fill { display: flex; flex-direction: column; box-sizing: border-box; } /* 无权限 cy-empty fill 在顶栏下方剩余空间居中 */
 
 /* 区块之间 20px(手册写 32,存量已知不一致,按 20 做);分区标题→本组 16px。 */
 .section { margin: 40rpx var(--cy-page-x) 0; } /* ds-ok: 40rpx = Figma 区块间距 20px，无匹配半步 token 见 style/TOKEN-MAPPING.md */
