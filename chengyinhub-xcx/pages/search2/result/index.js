@@ -87,7 +87,8 @@ Page({
   runSearch() {
     if (this._hidden || this._unloaded) return;
     const { keyword, categoryId } = this.data;
-    const filters = this._filters || {};
+    // 1121 N6:playerView 只给 decorateRows 选名字(主题/玩法 vs 主题模板/玩法模板),不进请求
+    const filters = Object.assign({}, this._filters, { playerView: !this.data.merchantView });
     const owner = memberId(app);
     const unifiedOpen = unifiedAvailable();
     const useUnified = unifiedOpen && discoverSearch.unifiedCompatible(keyword, categoryId, filters);
@@ -196,7 +197,7 @@ Page({
         success: (res) => {
           if (!isCurrent() || settled) return;
           if (res && (res.code == 200 || res.code == '200')) {
-            groupsByType[request.type] = discoverSearch.decorateRows(request.type, res.data, Object.assign({}, filters, { keyword: keyword, playerView: !this.data.merchantView }));
+            groupsByType[request.type] = discoverSearch.decorateRows(request.type, res.data, Object.assign({}, filters, { keyword: keyword }));
             if (request.type === 'topicTemplate' || request.type === 'gameTemplate') {
               groupsByType[request.type].forEach((item) => { item.cover = app.getImgUrl(item.cover); });
             }

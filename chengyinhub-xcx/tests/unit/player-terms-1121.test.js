@@ -40,6 +40,6 @@ test('搜索结果页按视角取名字与页签,不再直接读 TYPE_META 原�
   const js = fs.readFileSync(path.join(ROOT, 'pages/search2/result/index.js'), 'utf8')
   assert.doesNotMatch(js, /TYPE_META\[[^\]]+\]\.label/)
   assert.equal((js.match(/discoverSearch\.resultTabs\(/g) || []).length, 3)
-  assert.match(js, /playerView: !this\.data\.merchantView/)
+  assert.match(js, /const filters = Object\.assign\(\{\}, this\._filters, \{ playerView: !this\.data\.merchantView \}\)/)
   assert.match(js, /discoverSearch\.tabKeyOf\(group\.type, !this\.data\.merchantView\) === type/)
 })
