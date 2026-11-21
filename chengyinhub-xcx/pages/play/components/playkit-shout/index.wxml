@@ -6,22 +6,22 @@
   <!-- 与 quietHold 同一屏骨架,语义反过来:数字是「还差几秒」,过线时整屏烧红。
        不做音量条 —— 条是连续读数,这一屏要的是一句人话:「过线了,别停」。 -->
   <view class="sh {{running && loud ? 'sh--on' : ''}}">
-    <view class="g-kicker sh__k pe pe--blur" style="--pe-d:.05s">{{kicker}}</view>
-    <view class="sh__n g-figure pe pe--zoom" style="--pe-d:.15s">{{left}}</view>
-    <view class="sh__s pe pe--up" style="--pe-d:.55s">{{running ? (loud ? '过线了，保持舒适音量' : '舒适发声，等待声音过线') : '相对音量持续过线 ' + seconds + ' 秒'}}</view>
+    <view class="g-kicker sh__k pe pe--blur" style="--pe-d:.05s;--pe-dur:.2s">{{kicker}}</view>
+    <view class="sh__n g-figure pe pe--up" style="--pe-d:.05s;--pe-dur:.2s">{{left}}</view>
+    <view class="sh__s pe pe--up" style="--pe-d:.1s;--pe-dur:.2s">{{running ? (loud ? '就是这样，别停' : '再大声一点') : '连续喊满 ' + seconds + ' 秒'}}</view>
+    <view class="sh__s pe pe--up" style="--pe-d:.1s;--pe-dur:.2s" wx:if="{{rewardNote}}">{{rewardNote}}</view>
+    <!-- 安全提示只留一句短话(业主:不要说明文字,安全例外) -->
+    <view class="sh__s sh__safe" wx:if="{{!running}}">别对着人喊，嗓子不舒服就停</view>
 
-    <view wx:if="{{running && hasFrame}}" class="sh__s pe pe--up" style="--pe-d:.55s">相对音量 {{levelPct}}%（非分贝）</view>
-    <view class="sh__s pe pe--up" style="--pe-d:.55s">使用舒适音量，不适请停止，勿持续大声喊叫</view>
-    <view class="sh__s pe pe--up" style="--pe-d:.55s" wx:if="{{rewardNote}}">{{rewardNote}}</view>
-
-    <view wx:if="{{!skipped}}" class="sh__b {{running || preparing ? 'sh__b--busy' : ''}} pe pe--up" style="--pe-d:.85s" bindtap="onStart"
-          aria-role="button" aria-label="开始喊一嗓子" hover-class="sh__b--press" hover-stay-time="80">
-      {{preparing ? '准备中' : (running ? '测量中' : '开始')}}
-    </view>
     <view wx:if="{{micDenied && !skipped && !running}}" class="sh__s" aria-live="polite">需要授权麦克风才能开始</view>
     <view wx:if="{{skipped}}" class="sh__s">这一站已跳过</view>
     <view wx:elif="{{canSkip && !running && !preparing}}" class="sh__skip" bindtap="onSkip"
           aria-role="button" aria-label="跳过这一站" hover-class="sh__skip--press" hover-stay-time="80">跳过这一站</view>
+  </view>
+  <!-- 主按钮与其它玩法同一颗 .g-btn(2026-11-21 统一,原先是一颗浅绿胶囊) -->
+  <view wx:if="{{!skipped}}" class="g-btn {{running || preparing ? 'g-btn--disabled' : ''}}" bindtap="onStart"
+        aria-role="button" aria-label="开始喊一嗓子" hover-class="g-btn--press" hover-stay-time="80">
+    {{preparing ? '准备中' : (running ? '喊！' : '开始')}}
   </view>
 </cy-play-stage>
 

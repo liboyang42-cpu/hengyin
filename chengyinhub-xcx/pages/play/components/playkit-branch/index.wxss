@@ -49,23 +49,27 @@
   color: var(--sub);
 }
 
-/* 选项:与问答同一套 —— 一整块反色分组卡,竖排、发丝分隔(2026-09-23 用户)。分支不判对错,选中那行反回深色 */
-.br__opts { width: 100%; border-radius: 24rpx; overflow: hidden; background: var(--ink); color: var(--bg); } /* ds-ok 原型 --r-card 12px */
+/* 选项:与问答(.qa__opt)同一套发丝行 —— 透明底、var(--soft) 分隔、次要色字;选中那行铺软底、墨色加粗。
+   ⚠️ 不能再用「墨色整块 + var(--bg) 字」:内嵌在故事流 / 编辑页预览里 --bg 来自 --pk-embed-bg,
+   没有章节配色时是 transparent,选项字直接透明,只剩几块白框(2026-11-21 走查)。分支不判对错,没有对错色。 */
+.br__opts { width: 100%; }
 .br__opt {
   display: flex;
   align-items: center;
   gap: 24rpx;
   width: 100%;
   min-height: 108rpx;                     /* ds-ok 原型 .opt2 56px */
-  padding: 24rpx 32rpx;
+  padding: 30rpx 4rpx;
   box-sizing: border-box;
   text-align: left;
+  border-bottom: 1rpx solid var(--soft);
   font-size: var(--cy-type-card-title);
   font-weight: 500;
   line-height: 1.4;
+  color: var(--sub);
   transition: background .18s ease, color .18s ease;
 }
-.br__opt + .br__opt { border-top: 1rpx solid rgba(127,127,127,.3); } /* ds-ok 分组列表发丝分隔 */
+.br__opt--first { border-top: 1rpx solid var(--soft); }
 .br__k {
   flex: none;
   width: 44rpx; height: 44rpx;
@@ -81,7 +85,7 @@
 .br__opt.is-on .br__k { opacity: 1; }
 .br__t { flex: 1; min-width: 0; }
 .br__tail { display: none; }
-.br__opt.is-on { background: var(--bg); color: var(--ink); font-weight: 700; }
+.br__opt.is-on { background: var(--soft); color: var(--ink); font-weight: 700; }
 .br__opt.is-off { opacity: .45; }
 .br__press { opacity: .88; }
 

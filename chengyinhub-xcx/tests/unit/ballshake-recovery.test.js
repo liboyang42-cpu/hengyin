@@ -98,7 +98,7 @@ const writes = h => h.events.filter(e => e.name === 'submit' || e.name === 'verd
 
 test('local notice is visible after an interruption, not while awaiting or after authoritative completion', () => {
   const wxml = fs.readFileSync(path.join(ROOT, BALL + '.wxml'), 'utf8');
-  assert.match(wxml, /撞击根据本机动作测量，每次开始前先校准/);
+  assert.doesNotMatch(wxml, /撞击根据本机动作测量/);   // 2026-11-21 业主:不留系统说明行
   assert.match(wxml, /calibrate-label="拿成你打算玩的姿势"/);
   const condition = wxml.match(/wx:if="{{([^}]+)}}"[^>]*>{{localNotice}}/)[1];
   const visible = (state) => vm.runInNewContext(condition, state);

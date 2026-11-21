@@ -163,10 +163,10 @@ test('六个组件里「已核验」只走服务端 photoVerified 那一条，�
   }
 })
 
-test('安静挑战显示校准状态与相对阈值，不是分贝', () => {
+test('安静挑战:校准由台面统一出屏,本屏不再印「已校准 · 本机阈值」读数(2026-11-21 业主:无系统说明);阈值文案仍按相对口径', () => {
   const wxml = read('pages/play/components/playkit-quiethold/index.wxml')
-  assert.match(wxml, /calibration === 'calibrating'/)
-  assert.match(wxml, /calibration === 'calibrated'/)
+  assert.match(wxml, /calibrate-label="先听一下这儿有多吵"/)
+  assert.doesNotMatch(wxml, /thresholdText|已校准|分贝/)
   assert.match(contract.relativeThresholdText(0.27), /^本机阈值 27%（相对满幅振幅，不是分贝）$/)
   assert.equal(contract.relativeThresholdText(0), '')
   assert.equal(contract.relativeThresholdText(NaN), '')

@@ -21,7 +21,9 @@ test('N-6 骰子内嵌块与整屏台面读外观色,不再是暗色外观里的
   assert.match(dzi, /color: var\(--pk-embed-ink, #2a2540\)/)
   assert.match(dzi, /border-radius: var\(--pk-qt-radius, 0\)/)
   assert.match(w.match(/\.dz \{[^}]+\}/)[0], /background: var\(--pk-embed-bg, radial-gradient/)
-  assert.match(w.match(/\.dzi__roll \{[^}]+\}/)[0], /background: var\(--pk-embed-ink, #2a2540\)/)
+  // 2026-11-21 内嵌掷骰按钮并入统一主按钮 .g-btn(原 .dzi__roll 的字色读 --atmo-bg,预览里与底同色看不见)
+  assert.doesNotMatch(w, /\.dzi__roll \{/)
+  assert.match(read('pages/play/components/playkit-diceroll/index.wxml'), /class="g-btn [^"]*" bindtap="onRoll"/)
 })
 
 test('N-7 玩家页根在 look 下给出 --pk-embed-*;抽卡屏/详情读外观色,不再亮蓝/浅灰', () => {

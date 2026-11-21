@@ -224,7 +224,7 @@ Component({
       this._stop(); this._stopMic(a);
       this.setData({ running: false, preparing: false });
       motion.haptic({ reducedMotion: this._rm, type: 'medium' });
-      a.stage.win('本机相对阈值持续过线 ' + this._total() + ' 秒');
+      a.stage.win('连续喊满 ' + this._total() + ' 秒');
       if (!this._current(a)) return;
       a.phase = 'finished';
       this.triggerEvent('submit', withAttempt({ heldMs }, { attemptId: freshAttempt(this.data.attemptId, a.attemptAtRun) }));

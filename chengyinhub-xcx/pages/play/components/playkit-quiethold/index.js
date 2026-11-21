@@ -257,7 +257,7 @@ Component({
       this.setData({ running: false, preparing: false });
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
       attempt.reporting = true;
-      if (won) attempt.stage.win('本机相对振幅保持了 ' + this._total() + ' 秒'); else attempt.stage.fail(false);
+      if (won) attempt.stage.win('安静地撑过了 ' + this._total() + ' 秒'); else attempt.stage.fail(false);
       attempt.reporting = false;
       if (this._current(attempt)) this.triggerEvent('submit', withAttempt({ heldSeconds, passed: !!won },
         { attemptId: freshAttempt(this.data.attemptId, attempt.attemptAtRun) }));
