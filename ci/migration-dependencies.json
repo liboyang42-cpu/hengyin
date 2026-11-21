@@ -1043,7 +1043,7 @@
     "20261116_channel_notify_default": ["20261112_im_channels_platform", "20261115_club_reach"],
     "20261116_channel_membership_backfill": ["20261112_im_channels_platform", "20261116_channel_notify_default"],
     "20261116_stagger_channel_membership_job": ["20261115_stagger_all_sys_jobs", "20261116_channel_membership_backfill"],
-    "20261115_im_conversation_page": ["im"],
+    "20261115_im_conversation_page": ["im", "20261012_im_media_visibility"],
     "20261115_marketplace": [],
     "20261115_sponsored_quests": ["20261115_marketplace"],
     "20261115_discovery": ["community_post_platform_20260909"],
