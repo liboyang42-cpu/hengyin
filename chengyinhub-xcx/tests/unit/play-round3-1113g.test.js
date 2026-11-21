@@ -57,7 +57,7 @@ test('章节门:说明超长补省略号,章节印等文字解码完再量', () 
   assert.equal(introLine('一句话。'), '一句话。')
   const flip = read('pages/play/components/chapter-flip/index.js')
   assert.match(flip, /const decodeEnd = this\._decode\(/)
-  assert.match(flip, /Math\.max\(fromEnd \? 800 : 600, decodeEnd \+ 60\)/)
+  assert.match(flip, /Math\.max\(RM\.READ_TRANSITION_MS, decodeEnd \+ 60\)/)   // 2026-11-21 阅读面提速:原 fromEnd ? 800 : 600
 })
 
 test('浅色纸面:退出叉、打字、答对回执条读外观墨色,暗色外观不变', () => {

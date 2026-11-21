@@ -3,7 +3,12 @@
 const themeLook = require('./theme-look.js');
 const mapStyle = require('../../../utils/map-style.js');
 const storyResume = require('./story-resume.js');
+const readingMotion = require('../../../utils/reading-motion.js');
 const TYPED_MAX = 400;
+/** 同一批显形逐条错开(秒,写进 --d):阅读面 read-stagger 档。 */
+const READ_STAGGER_S = readingMotion.READ_STAGGER_MS / 1000;
+/** 抬手前这么久内还在滚 = 这是一次拖动 / 惯性,不是点。 */
+const READ_TAP_SCROLL_MS = 150;
 
 /** CG-ALL-23:一段正文的「打字身份」= 章 id + 段序 + 文字摘要。文字改了就是另一段,会重新逐字打一遍。 */
 function typedKey(chapterId, i, text) {
@@ -99,13 +104,36 @@ function methods() {
     _decodeLine(i) {
       const key = 'chapterParas[' + i + '].chars', para = (this.data.chapterParas || [])[i];
       if (!para || !para.chars || this.data.reducedMotion) return;
-      const real = para.chars.map((c) => c.ch), steps = 6;
+      this._decodeReal = this._decodeReal || {};
+      // 原文记一份:上一轮还没还原完就又滑进来 / 点一下即走完,都按它落定,不把乱码当原文
+      const kept = this._decodeReal[i], real = kept && kept.text === para.text ? kept.real : para.chars.map((c) => c.ch), steps = 6;
+      this._decodeReal[i] = { text: para.text, real };
       clearTimeout((this._decodeTimers || {})[i]); this._decodeTimers = this._decodeTimers || {};
       const tick = (k) => {
         this.setData({ [key]: para.chars.map((c, j) => Object.assign({}, c, { ch: j < (real.length * k) / steps ? real[j] : GLYPH[(Math.random() * GLYPH.length) | 0], raw: j >= (real.length * k) / steps })) });
-        if (k < steps) this._decodeTimers[i] = setTimeout(() => tick(k + 1), 80);
+        if (k < steps) this._decodeTimers[i] = setTimeout(() => tick(k + 1), readingMotion.READ_DECODE_TICK_MS);
+        else delete this._decodeTimers[i];
       };
       tick(0);
+    },
+    /** 点一下即走完(2026-11-21 业主「读得快的人会着急」):显形 / 逐字 / 解码途中点正文,
+     *  在屏的段直接落定、全文可见(.is-read-skip 去掉过渡);不拦这次点击本身(按钮照常响应)。
+     *  挂在故事流 scroll-view 的 touchend 上(不是 tap:正文面不是按钮,不该有按压态);
+     *  刚滚过(手指拖动 / 惯性)的那次抬手不算点。下一次滚动(_resumeReveal)恢复动效,新滑进来的段照常显形。 */
+    skipReveal() {
+      if (this._storyAt && Date.now() - this._storyAt < READ_TAP_SCROLL_MS) return;
+      const timers = this._decodeTimers || {};
+      Object.keys(timers).forEach((i) => {
+        clearTimeout(timers[i]);
+        const para = (this.data.chapterParas || [])[i];
+        const kept = (this._decodeReal || {})[i], real = kept && para && kept.text === para.text ? kept.real : null;
+        if (para && para.chars && real) this.setData({ ['chapterParas[' + i + '].chars']: para.chars.map((c, j) => Object.assign({}, c, { ch: real[j], raw: false })) });
+      });
+      this._decodeTimers = {};
+      if (!this.data.readSkip) this.setData({ readSkip: true });
+    },
+    _resumeReveal() {
+      if (this.data.readSkip) this.setData({ readSkip: false });
     },
     /** 故事流开 / 关时调:浅底主题开着故事流用黑字状态栏,关掉回白字(封面、卡包页仍是深底)。 */
     _storyStatusBar(on) {
@@ -122,4 +150,4 @@ function methods() {
   return api;
 }
 
-module.exports = { methods, typedKey };
+module.exports = { methods, typedKey, READ_STAGGER_S };

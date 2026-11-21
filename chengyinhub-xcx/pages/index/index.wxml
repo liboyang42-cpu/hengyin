@@ -1,5 +1,6 @@
 <page-meta page-style="{{ fontScaleStyle }}"></page-meta>
 <wxs src="../../utils/wxs/money.wxs" module="money" />
+<wxs src="../../utils/wxs/img.wxs" module="img" />
 <view class="index theme-dark v3 {{reducedMotion ? 'v3--reduced-motion' : ''}}" wx:if="{{!_needsRedirect}}">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
@@ -101,10 +102,10 @@
             <view class="v3-reco-slide">
               <view class="v3-reco-card" style="{{recoCardStyles[index]}}" data-index="{{index}}"
                     bindtap="goRecoHero" hover-class="cy-pressed" hover-stay-time="80">
-                <image class="v3-reco-hero-img" src="{{item.cover || '/images/index-figma/reco-hero.jpg'}}" mode="aspectFill" />
+                <image class="v3-reco-hero-img" webp="{{true}}" src="{{img.fit(item.cover, imgCtx, 'card', true) || '/images/index-figma/reco-hero.jpg'}}" data-raw="{{item.cover}}" binderror="onImgRenditionError" mode="aspectFill" />
                 <view class="v3-reco-hero-mask"></view>
                 <view class="v3-reco-club flex-ac" wx:if="{{item.clubLabel}}">
-                  <image class="v3-reco-club-av" src="{{item.clubAvatar || item.cover}}" mode="aspectFill" />
+                  <image class="v3-reco-club-av" webp="{{true}}" src="{{img.fit(item.clubAvatar || item.cover, imgCtx, 'avatar', true)}}" data-raw="{{item.clubAvatar || item.cover}}" binderror="onImgRenditionError" mode="aspectFill" />
                   <text>{{item.clubLabel}}</text>
                 </view>
                 <view class="v3-reco-body">
@@ -147,7 +148,7 @@
           <view class="v3-nearby-row">
             <view class="v3-nearby-card" wx:for="{{nearbyActivityList}}" wx:key="id"
                   bindtap="goActivity" data-index="{{index}}" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
-              <image class="v3-nearby-bg" src="{{item.cover || item.imgUrl || '/images/route_city_cover.png'}}" mode="aspectFill" lazy-load="true" />
+              <image class="v3-nearby-bg cy-img-fade {{imgOn['n' + item.id] ? 'cy-img-fade--on' : ''}}" webp="{{true}}" src="{{img.fit(item.cover || item.imgUrl, imgCtx, 'half', true) || '/images/route_city_cover.png'}}" data-raw="{{item.cover || item.imgUrl}}" binderror="onImgRenditionError" mode="aspectFill" lazy-load="true" data-fade-key="n{{item.id}}" bindload="onImgFadeLoad" />
               <view class="v3-nearby-mask"></view>
               <view class="v3-nearby-body">
                 <view class="v3-nearby-title ep2">{{item.name}}</view>
@@ -184,7 +185,7 @@
           <view class="v3-upcoming-row">
             <view class="v3-upreview" wx:for="{{upcomingActivityList}}" wx:key="id"
                   bindtap="goActivity" data-index="{{index}}" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
-              <image class="v3-upreview-bg" src="{{item.cover || '/images/route_city_cover.png'}}" mode="aspectFill" lazy-load="true" />
+              <image class="v3-upreview-bg" webp="{{true}}" src="{{img.fit(item.cover, imgCtx, 'card', true) || '/images/route_city_cover.png'}}" data-raw="{{item.cover}}" binderror="onImgRenditionError" mode="aspectFill" lazy-load="true" />
               <view class="v3-upreview-mask"></view>
               <view class="v3-upreview-body">
                 <view class="v3-upreview-txt">
@@ -213,7 +214,7 @@
           <view class="v2-fitem" wx:for="{{bottomTopicList}}" wx:key="id">
             <!-- 2026-10-28 业主:主题必须有图,卡片整张用封面,名字一行压在底部渐变上 -->
             <view class="v2-fcard" bindtap="goTopic" data-index="{{index}}" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
-              <image class="v2-fcover" src="{{item.cover || '/images/home-route-city-placeholder.jpg'}}" mode="aspectFill" lazy-load="true" />
+              <image class="v2-fcover cy-img-fade {{imgOn['t' + item.id] ? 'cy-img-fade--on' : ''}}" webp="{{true}}" src="{{img.fit(item.cover, imgCtx, 'card', true) || '/images/home-route-city-placeholder.jpg'}}" data-raw="{{item.cover}}" binderror="onImgRenditionError" mode="aspectFill" lazy-load="true" data-fade-key="t{{item.id}}" bindload="onImgFadeLoad" />
               <view class="v2-fcard-l">
                 <view class="v2-feyebrow ep1" wx:if="{{item.feedTypeLabel}}">{{item.feedTypeLabel}}</view>
                 <view class="v2-ftitle ep1">{{item.name}}</view>
@@ -250,7 +251,7 @@
         <view class="v2-feed" wx:if="{{activeTab === '1'}}" style="{{pmFeed === 1 ? '--pm-f:1;' : (pmFeed === 2 ? '--pm-f-d:.32s;--pm-f-s:1;' : '')}}">
           <view class="v2-fitem" wx:for="{{bottomActivityList}}" wx:key="id">
             <view class="v2-fcard" bindtap="goActivity" data-index="{{index}}" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
-              <image class="v2-fcover" src="{{item.cover || '/images/home-route-city-placeholder.jpg'}}" mode="aspectFill" lazy-load="true" />
+              <image class="v2-fcover cy-img-fade {{imgOn['a' + item.id] ? 'cy-img-fade--on' : ''}}" webp="{{true}}" src="{{img.fit(item.cover, imgCtx, 'card', true) || '/images/home-route-city-placeholder.jpg'}}" data-raw="{{item.cover}}" binderror="onImgRenditionError" mode="aspectFill" lazy-load="true" data-fade-key="a{{item.id}}" bindload="onImgFadeLoad" />
               <view class="v2-fcard-l">
                 <view class="v2-feyebrow ep1" wx:if="{{item.feedTypeLabel}}">{{item.feedTypeLabel}}</view>
                 <view class="v2-ftitle ep1">{{item.name}}</view>

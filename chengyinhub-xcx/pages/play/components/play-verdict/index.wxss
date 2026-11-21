@@ -18,12 +18,13 @@
   pointer-events: none;
 }
 
-/* 整块液体从底下涌上来。1.05s 是"涌"不是"闪" —— 判定要有落地感 */
+/* 整块液体从底下涌上来。仍是"涌"不是"闪" —— 判定要有落地感;
+   2026-11-21 业主「读得快的人会着急」:1.05s → read-transition(320ms),判定字跟着提前。 */
 .pv__fill {
   position: absolute;
   left: 0; right: 0; top: 0; bottom: 0;
   transform: translateY(102%);
-  transition: transform 1.05s cubic-bezier(.5, .02, .28, 1);
+  transition: transform var(--cy-motion-read-transition, 320ms) cubic-bezier(.5, .02, .28, 1);
 }
 .pv--on .pv__fill { transform: translateY(0); }
 .pv--win .pv__fill { background: var(--cy-color-status-success); }
@@ -87,7 +88,7 @@
   padding: 0 var(--cy-space-6);
   text-align: center;
   opacity: 0;
-  transition: opacity var(--cy-dur) var(--cy-ease) .52s;
+  transition: opacity var(--cy-motion-read-fade, 160ms) var(--cy-ease) var(--cy-motion-read-fade, 160ms);
 }
 .pv--on .pv__body { opacity: 1; }
 

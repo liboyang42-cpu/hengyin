@@ -85,9 +85,9 @@ function assertImmersiveCardContract(files) {
   // 2026-10-30 帖文第三轮(业主定稿 P-1,Threads 版):多图等高 232pt 横滑、按原比例定宽,能滑过头像那一栏到屏幕两边;
   // 单图按原比例放在正文列里;不出「1/3」。
   assert.match(files.postCardWxss, /\.post-card__strip-pic\s*\{[^}]*height:\s*464rpx/s, '多图等高 232pt')
-  assert.match(files.postCardWxml, /class="post-card__strip-pic" src="\{\{pic\}\}" mode="heightFix"/, '多图按原比例定宽')
+  assert.match(files.postCardWxml, /class="post-card__strip-pic" src="\{\{img\.fit\(pic, imgCtx, 'card', true\)\}\}" data-raw="\{\{pic\}\}" binderror="onImgRenditionError" webp="\{\{true\}\}" mode="heightFix"/, '多图按原比例定宽(按卡宽出缩略图)')
   assert.match(files.postCardWxss, /\.post-card__strip-wrap\s*\{[^}]*margin:[^;]*calc\(-1 \* \(var\(--pc-rail\) \+ var\(--cy-page-x\)\)\)/s, '多图滑过头像那一栏')
-  assert.match(files.postCardWxml, /class="post-card__one-img" src="\{\{post\.picList\[0\]\}\}" mode="widthFix"/, '单图按原比例')
+  assert.match(files.postCardWxml, /class="post-card__one-img" src="\{\{img\.fit\(post\.picList\[0\], imgCtx, 'card', true\)\}\}" data-raw="\{\{post\.picList\[0\]\}\}" binderror="onImgRenditionError" webp="\{\{true\}\}" mode="widthFix"/, '单图按原比例(按卡宽出缩略图)')
   assert.doesNotMatch(files.postCardWxml, /post-card__count"/, '不出「1/3」')
   assert.match(files.detailWxml, /<cy-feed-play-card\b[^>]*wx:if="\{\{\s*info\.hasPlayCover\s*&&\s*!info\.isCompletionShare\s*\}\}"/s,
     '详情页模板沉浸卡必须排除完赛分享')

@@ -1288,9 +1288,9 @@ test('开局第一道门先放「开机」,放完自己收掉;第二道门、重
   page.data.chapterCards = [{ id: 1 }, { id: 2 }]
   page.showChapterGate()
   assert.equal(page.data.bootStage, 'on')
-  t.mock.timers.tick(600)
+  t.mock.timers.tick(250)   // 2026-11-21 阅读面提速:开机整段 ≈0.7s(原 2s)
   assert.equal(page.data.bootStage, 'open')
-  t.mock.timers.tick(1500)
+  t.mock.timers.tick(500)
   assert.equal(page.data.bootStage, '', '放完整层卸掉，不挡开场门')
   assert.equal(page.data.chapterGate.show, true, '开机期间开场门不被自动跳过')
   page.continueChapterGate()

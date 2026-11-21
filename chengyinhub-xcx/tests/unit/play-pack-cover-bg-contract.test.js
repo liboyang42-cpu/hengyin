@@ -27,7 +27,7 @@ test('★自由探索首屏(卡包/六宫格)不挂「输入地址」:它不是�
 test('★卡包底图先用主题封面(虚化),没有才退回章节封面链', () => {
   const bg = (wxml.match(/<view class="fx-bg[ "][\s\S]*?<\/view>\s*<\/view>/) || [''])[0]
   assert.match(bg, /wx:if="\{\{topicCover \|\| chapter\.cover\}\}"/, '没有主题封面时整层不渲染的判据要带上主题封面')
-  assert.match(bg, /class="fx-bg__im" src="\{\{topicCover \|\| chapter\.cover\}\}"/, '底图没先用主题封面')
+  assert.match(bg, /class="fx-bg__im" src="\{\{img\.fit\(topicCover \|\| chapter\.cover, imgCtx, 'hero', true\)\}\}"/, '底图没先用主题封面')
   assert.match(js, /topicCover: ''/, 'data 里要有 topicCover 初值')
   assert.equal((js.match(/topicCover: d\.topicCover \|\| ''/g) || []).length, 2, '两条载入路径都要写 topicCover,漏一条就是那条路径上背景不对')
   assert.match(read('pages/play/index.wxss'), /\.fx-bg__im\{[^}]*\n?\s*filter:blur\(/, '底图要虚化')

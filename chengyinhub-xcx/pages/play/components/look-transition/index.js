@@ -2,13 +2,15 @@
 // 全部是两段式：盖上 → 在完全盖住的那一刻换内容（run 的回调）→ 揭开。
 // 只用 CSS transition（仓库 keyframes 有只减不增的棘轮）：is-pre 起点 → is-in 盖住 → is-out 揭开后的终点。
 // 减动效时直接换内容，不出这一层。
-const COVER_MS = 560;   // 含错峰类（像素 / 百叶 / 故障）最长的延迟
-const REVEAL_MS = 660;
+// 2026-11-21 阅读面提速(原 560 / 660):PRE_MS + COVER_MS + REVEAL_MS ≤ reading-motion CAPS.transitionMs(350)
+const PRE_MS = 34;
+const COVER_MS = 140;   // 含错峰类（像素 / 百叶 / 故障）最长的延迟
+const REVEAL_MS = 170;
 
 // 像素块的出现顺序：固定伪随机，避免每次 setData 都重排
-const TILES = Array.from({ length: 48 }, (_, i) => ({ k: i, d: (i * 37) % 48 * 6 }));
-const SLATS = Array.from({ length: 8 }, (_, i) => ({ k: i, d: i * 30 }));
-const BANDS = Array.from({ length: 6 }, (_, i) => ({ k: i, d: ((i * 5) % 6) * 22 }));
+const TILES = Array.from({ length: 48 }, (_, i) => ({ k: i, d: Math.round((i * 37) % 48 * 1.5) }));
+const SLATS = Array.from({ length: 8 }, (_, i) => ({ k: i, d: i * 5 }));
+const BANDS = Array.from({ length: 6 }, (_, i) => ({ k: i, d: ((i * 5) % 6) * 4 }));
 
 Component({
   properties: {
@@ -28,13 +30,13 @@ Component({
       if (this._pending) { this._clear(); const prev = this._pending; this._pending = null; prev(); }
       this._pending = go;
       this.setData({ phase: 'is-pre', k: String(this.properties.kind || 'IRIS').toLowerCase() });
-      this._t0 = setTimeout(() => this.setData({ phase: 'is-in' }), 34);
+      this._t0 = setTimeout(() => this.setData({ phase: 'is-in' }), PRE_MS);
       this._t1 = setTimeout(() => {
         const fn = this._pending; this._pending = null;
         if (fn) fn();
         this.setData({ phase: 'is-out' });
         this._t2 = setTimeout(() => this.setData({ phase: '' }), REVEAL_MS);
-      }, 34 + COVER_MS);
+      }, PRE_MS + COVER_MS);
     },
     noop() {},
   },
