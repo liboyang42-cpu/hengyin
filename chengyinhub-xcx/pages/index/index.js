@@ -9,6 +9,7 @@ const policy = require('../../utils/identity/identity-policy.js');
 const indexFormat = require('../../utils/index/index-format.js');
 const { decorateFeedCards } = require('../../utils/index/feed-card.js');
 const { buildHomeActionBanners, openHomeActionBanner } = require('../../utils/index/home-action-banner.js');
+const { homeGreeting } = require('../../utils/index/home-greeting.js');
 const { readReducedMotion } = require('../../utils/motion-preference.js');
 const { openScene } = require('../../utils/scene-entry.js');
 const { parseDoorScene, parseTopicScene, parseActivityScene, parseShopScene, parseTeamScene, pathForScanEntry } = require('../../utils/game-door-entry.js');
@@ -87,6 +88,7 @@ function normalizeMemberId(memberId) {
 function clearPrivateDisplay(page) {
   page.setData({
     userInfo: { avatar: '', nickname: '', point: '0' },
+    heroGreeting: homeGreeting(null),
     showPhoneModal: false,
   });
 }
@@ -233,6 +235,7 @@ Page({
       nickname: '',
       point: '0',
     },
+    heroGreeting: homeGreeting(null),
 
     // 列表加载失败标记(按 listName 索引)。错误与空态必须分开:
     // 失败时列表停在 [],光判 length 会渲染成「本来就没有」甚至「正在加载」。
@@ -315,7 +318,7 @@ Page({
       const userInfo = Object.assign({}, that.data.userInfo);
       if (evt.patch.avatar) userInfo.avatar = avatarSrc(evt.patch.avatar, app.getImgUrl && app.getImgUrl.bind(app));
       if (evt.patch.nickname) userInfo.nickname = evt.patch.nickname;
-      that.setData({ userInfo: userInfo });
+      that.setData({ userInfo: userInfo, heroGreeting: homeGreeting(userInfo) });
     });
 
     // 门口游戏码优先：没报名去买主题，已报名进游玩。不能先被商家分流吃掉 scene。
@@ -1082,7 +1085,7 @@ Page({
           // F-L5C-04/F-W1-14:首页不再主动弹窗索取手机号,只在确需的业务动作里按需请求或由用户在个人资料页绑定。
           // V-15:头像过 getImgUrl(http 签名链接 / 相对路径真机拒载)
           const userInfo = Object.assign({}, res.data, { avatar: avatarSrc(res.data.avatar, app.getImgUrl && app.getImgUrl.bind(app)) });
-          that.setData({ userInfo: userInfo, isLoading: false });
+          that.setData({ userInfo: userInfo, heroGreeting: homeGreeting(userInfo), isLoading: false });
         } else if (res && res.code == "401") {
           that.firstLogin();
         } else {

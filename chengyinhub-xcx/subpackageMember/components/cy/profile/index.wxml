@@ -78,8 +78,8 @@
         </view>
       </view>
 
-      <!-- 好友 / 关注 / 粉丝 -->
-      <view class="pc-stats">
+      <!-- 好友 / 关注 / 粉丝。1121 N5:自己的主页三项全 0 时整行不出,任一非 0 再出 -->
+      <view class="pc-stats" wx:if="{{!isSelf || friendNum || followNum || fansNum}}">
         <view class="pc-statcol"><text class="pc-stat-n">{{friendNum}}</text><text class="pc-stat-l">好友</text></view>
         <view class="pc-stat-div"></view>
         <view class="pc-statcol"><text class="pc-stat-n">{{followNum}}</text><text class="pc-stat-l">关注</text></view>
@@ -211,18 +211,20 @@
         </block>
 
         <!-- qx-b5 §18 A/B:视频悬赏是创作者作品的推广投稿,跟在「我的项目」之后 -->
-        <view class="pc-team-entry" wx:if="{{!isMerchantView}}">
+        <!-- 1121 N5:确认一条投稿都没有(videoBountyCount === 0)才收起;没拉到照常出 -->
+        <view class="pc-team-entry" wx:if="{{!isMerchantView && videoBountyCount !== 0}}">
           <cy-cell title="视频悬赏" description="" hairline="{{false}}" bind:tap="goVideoBounty" />
         </view>
         <!-- 我的资产(2026-08-08 用户定):与「我的订单」「我的项目」并列的第三段。
              资金相关全部收进这里,详情走账户收益页(余额/收益明细/分润/提现/提现记录都在那)。
              余额直接读 userInfo.balance,零新增请求;整段在 isSelf 分支内,别人主页看不到。 -->
-        <view class="pc-sec-head">
+        <!-- 1121 N5:余额确认为 0 且没有任何流水才收起余额卡;通行证与礼品仍挂在本段下 -->
+        <view class="pc-sec-head" wx:if="{{!isMerchantView || !(balanceText === '0.00' && balanceFlowCount === 0)}}">
           <text class="pc-sec-tit pc-sec-tit--sm">我的资产</text>
           <!-- 2026-10-30 业主:「我的资产」标题旁不要箭头,卡片本身可点 -->
         </view>
         <!-- P-49(2026-10-27,0.3 新口径):没有就是 0,不再用「—」代替 —— 取不到余额也显示 ¥0 -->
-        <view class="pc-asset" bindtap="goEarnings" hover-class="pc-tap" hover-stay-time="80"
+        <view class="pc-asset" wx:if="{{!(balanceText === '0.00' && balanceFlowCount === 0)}}" bindtap="goEarnings" hover-class="pc-tap" hover-stay-time="80"
               aria-role="button" aria-label="我的资产，账户余额{{balanceText || 0}}元">
           <view class="pc-asset__main">
             <text class="pc-asset__label">账户余额</text>

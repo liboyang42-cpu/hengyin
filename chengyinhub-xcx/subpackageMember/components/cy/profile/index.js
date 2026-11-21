@@ -92,6 +92,20 @@ function req(url, data, header) {
   });
 }
 
+// 1121 N5:「我的」只收起玩家从没用过的段。只有接口明确回了「零条」才收;
+// 失败 / 形状不对一律 null(=不知道),段照常出,不拿失败冒充「没有」。
+function recordCount(res) {
+  if (!res || res.code != '200' || res.data == null) return null;
+  var d = res.data;
+  if (Array.isArray(d)) return d.length;
+  if (typeof d === 'object') {
+    var total = Number(d.total);
+    if (d.total != null && isFinite(total)) return total;
+    if (Array.isArray(d.rows)) return d.rows.length;
+  }
+  return null;
+}
+
 function isAuthFailure(res) {
   return !!res && (res.code == 401 || res.code == 2);
 }
@@ -473,6 +487,9 @@ Component({
     friendNum: 0,
     followNum: 0,
     fansNum: 0,
+    // null = 还不知道(未拉到 / 拉失败),段照常显示;只有 0 才收起
+    balanceFlowCount: null,
+    videoBountyCount: null,
     profilePoint: null,
     profileMetricState: 'loading',
     profileMetricAuthError: false,
@@ -626,7 +643,7 @@ Component({
       this.setData({ selfReadAccess: access, userInfo: {}, categoryList: [], casePicsList: [], joinInfo: { id: 0 },
         merchantAccess: inactiveAccess(), merchantAccessState: 'idle', merchantTeamEntryValue: '', isMerchantView: false,
         canCompose: false, composerOpen: false,
-        isClubLeader: false, benefits: buildBenefits({}), balanceText: null,
+        isClubLeader: false, benefits: buildBenefits({}), balanceText: null, balanceFlowCount: null, videoBountyCount: null,
         friendNum: 0, followNum: 0, fansNum: 0, growthLevel: 1, streakDays: 0, exploreValue: 0, profilePoint: null,
         pointsStat: { weekPoints: 0, rankPercentage: 0 }, rankDisplay: { no: 0, delta: '' },
         identityCard: { shops: 0, themes: 0, routes: 0, km: '0', medals: 0, cities: 1 },
@@ -1212,7 +1229,8 @@ Component({
       this.loadPointsStat(),
       this.loadOrderPreview(),
       this.loadProjectPreview(),
-      this.loadProjectPending()
+      this.loadProjectPending(),
+      this.loadUsageCounts()
     ] : [];
     // 返回 Promise:宿主页(我的 tab)要把下拉刷新的收圈绑在真实完成上,而不是定时器。
     return Promise.all(shared.concat(selfOnly)).then(function () {
@@ -2269,6 +2287,32 @@ Component({
       var s = res.data.projectSummary;
       that.setData({ projectPendingCount: (s.pending || 0) + (s.rejected || 0) });
     });
+  },
+  // 1121 N5:余额流水条数与视频悬赏投稿数,都读现成接口(余额明细页 / 视频悬赏页同源),只取条数。
+  loadUsageCounts: function () {
+    const read = this._captureProfileRead(true);
+    if (!read) return Promise.resolve();
+    var that = this;
+    var memberId = app.getUserID();
+    var requestId = that._usageCountRequestId = (that._usageCountRequestId || 0) + 1;
+    var stale = function (res) {
+      return !that._currentProfileRead(read, res) || requestId !== that._usageCountRequestId || memberId !== app.getUserID();
+    };
+    var bountyRead = new Promise(function (resolve) {
+      app.sendRequest({
+        url: '/api/video-bounty/submission/mine', method: 'GET', data: {}, hideLoading: true, silentError: true,
+        success: function (res) { resolve(res || {}); },
+        fail: function (res, status) { resolve({ code: status || (res && res.code) || 'fail' }); }
+      });
+    });
+    return Promise.all([
+      req('/api/user/balance/list', { pageNum: 1, pageSize: 1 }).then(function (res) {
+        if (!stale(res)) that.setData({ balanceFlowCount: recordCount(res) });
+      }),
+      bountyRead.then(function (res) {
+        if (!stale(res)) that.setData({ videoBountyCount: recordCount(res) });
+      })
+    ]);
   },
   reloadMedals: function () { this.loadMedals(); },
   reloadFeed: function () {

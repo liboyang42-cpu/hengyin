@@ -671,7 +671,8 @@ test('字段缺失：积分响应只有 weekPoints 时进入错误态，不能�
 
 function assertFirstRunMarkup(wxml, wxss) {
   assert.match(wxml, /class="pc-gamer-streak" wx:if="\{\{isSelf && profileMetricState === 'ready'\}\}">连续探索：\{\{streakDays \|\| 0\}\}天/)
-  assert.match(wxml, /class="pc-stats">/)
+  // 2026-11-21 1121 N5(lead 新玩家走查):自己的主页好友/关注/粉丝全 0 才收起,任一非 0 即出;他人主页照常
+  assert.match(wxml, /class="pc-stats" wx:if="\{\{!isSelf \|\| friendNum \|\| followNum \|\| fansNum\}\}">/)
   assert.doesNotMatch(wxml, /探索数据没加载出来|订单没加载出来/)
   assert.match(wxml, /<cy-error load-failure wx:elif="\{\{orderErr\}\}"[\s\S]*bind:retry="reloadOrders"/)
   assert.match(wxml, /<cy-error load-failure wx:if="\{\{projectErr\}\}"[\s\S]*bind:retry="reloadProjects"/)
@@ -697,14 +698,14 @@ function assertFirstRunMarkup(wxml, wxss) {
     'cy-error 的重试按钮必须保持 --cy-btn-h 的可点高度')
 }
 
-test('界面契约：主页统计始终展示，订单仅在成功加载后展示空态', () => {
+test('界面契约：主页统计有数即展示(本人全 0 收起)，订单仅在成功加载后展示空态', () => {
   assertFirstRunMarkup(read(PROFILE_WXML), read(PROFILE_WXSS))
 })
 
 test('负控：隐藏未加载统计时，契约必须变红', () => {
   const wxml = read(PROFILE_WXML)
   const mutated = wxml.replace(
-    'class="pc-stats">',
+    'class="pc-stats" wx:if="{{!isSelf || friendNum || followNum || fansNum}}">',
     'class="pc-stats" wx:if="{{false}}">',
   )
   assert.notEqual(mutated, wxml, '负控锚点失效：没有找到首访统计闸')
@@ -925,4 +926,45 @@ test('P-22(2026-11-02 业主):「累计打卡 N 处」照读服务端 checkinPla
   }))
   assert.equal(missing.data.profileMetricState, 'ready')
   assert.equal(missing.data.exploreStat.places, 0)
+})
+
+// 2026-11-21 1121 N5:玩家从没用过的段收起 —— 只认接口明确回的「零条」,失败一律照常显示。
+test('余额流水与视频悬赏条数:零条才收起,失败保持未知(段照常出)', async () => {
+  const component = loadProfile()
+  let pending = component.loadUsageCounts()
+  assert.deepEqual(requests.map((r) => [r.url, r.method]).sort(), [
+    ['/api/user/balance/list', 'POST'],
+    ['/api/video-bounty/submission/mine', 'GET'],
+  ])
+  respond('/api/user/balance/list', { code: 200, data: { total: 0, rows: [] } })
+  respond('/api/video-bounty/submission/mine', { code: 200, data: [] })
+  await pending
+  assert.equal(component.data.balanceFlowCount, 0)
+  assert.equal(component.data.videoBountyCount, 0)
+
+  requests = []
+  pending = component.loadUsageCounts()
+  respond('/api/user/balance/list', { code: 200, data: { total: 3, rows: [{ id: 1 }] } })
+  respond('/api/video-bounty/submission/mine', { code: 200, data: [{ id: 9 }] })
+  await pending
+  assert.equal(component.data.balanceFlowCount, 3)
+  assert.equal(component.data.videoBountyCount, 1)
+
+  requests = []
+  pending = component.loadUsageCounts()
+  respond('/api/user/balance/list', 'fail')
+  respond('/api/video-bounty/submission/mine', { code: 500, msg: 'x' })
+  await pending
+  assert.equal(component.data.balanceFlowCount, null, '失败不能冒充零条')
+  assert.equal(component.data.videoBountyCount, null)
+})
+
+test('我的页收起闸:余额确认 0 且零流水才收余额卡,悬赏零投稿才收入口,票夹与通行证不加闸', () => {
+  const wxml = read(PROFILE_WXML)
+  assert.match(wxml, /class="pc-asset" wx:if="\{\{!\(balanceText === '0\.00' && balanceFlowCount === 0\)\}\}"/)
+  assert.match(wxml, /wx:if="\{\{!isMerchantView && videoBountyCount !== 0\}\}">\s*<cy-cell title="视频悬赏"/)
+  assert.match(wxml, /wx:if="\{\{!isMerchantView\}\}">\s*<cy-cell title="通行证与礼品"/)
+  assert.match(wxml, /class="pc-primary pc-ticket" wx:if="\{\{isSelf && !isMerchantView\}\}"/)
+  const js = read(PROFILE_JS)
+  assert.match(js, /balanceFlowCount: null, videoBountyCount: null/, '换号清空时回到「未知」')
 })

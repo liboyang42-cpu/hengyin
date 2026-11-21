@@ -30,13 +30,17 @@ function columns(list, size) {
   return out;
 }
 
-function decorateTopic(item) {
+// 1121 N6:玩家视角(light=false)一样东西只叫一个名字 ——「主题」「玩法」,不带内部的「模板 / 实验模板」;
+// 商家创作视角保持原词。
+function shelfNoun(base, light) { return light ? base + '模板' : base; }
+
+function decorateTopic(item, light) {
   const a = art.topicArt(item.name);
   const games = Number(item.gameCount || 0);
   const chapters = Number(item.chapterCount || 0);
   const meta = [];
   // 实验标记只认服务端明确状态；缺字段不是实验，也不代表已验证。
-  meta.push(item.previewOnly ? '实验预览' : (item.templateStatus === 'EXPERIMENTAL' ? '实验模板' : ''));
+  meta.push(item.previewOnly ? '实验预览' : (light && item.templateStatus === 'EXPERIMENTAL' ? '实验模板' : ''));
   if (chapters > 1) meta.push(chapters + ' 章');
   if (games) meta.push(games + ' 个玩法');
   const dur = fmtSec(item.totalTime);
@@ -183,17 +187,17 @@ Component({
           if (!current()) return;
           this._topicBusy = false;
           if (res && res.code == '200' && isRecordList(res.data)) {
-            this._topics = res.data.filter((t) => art.HIDDEN_TOPICS.indexOf(art.themeKey(t.name)) < 0).map(decorateTopic);
+            this._topics = res.data.filter((t) => art.HIDDEN_TOPICS.indexOf(art.themeKey(t.name)) < 0).map((t) => decorateTopic(t, this.data.light));
             this.setData({ topicLoaded: true, topicError: '' });
             this.buildTopics();
           } else if (!this.data.topicLoaded) {
-            this.setData({ topicError: app.getRequestErrorMessage(res, '主题模板加载失败') });
+            this.setData({ topicError: app.getRequestErrorMessage(res, shelfNoun('主题', this.data.light) + '加载失败') });
           }
         },
         fail: (res) => {
           if (current()) { this._topicBusy = false; this._topicAt = 0; }
           if (!current() || this.data.topicLoaded) return;
-          this.setData({ topicError: app.getRequestErrorMessage(res, '主题模板加载失败') });
+          this.setData({ topicError: app.getRequestErrorMessage(res, shelfNoun('主题', this.data.light) + '加载失败') });
         }
       });
     },
@@ -210,7 +214,7 @@ Component({
         if (!current()) return;
         this._gameBusy = false; this._gameAt = 0;
         if (this.data.gameLoaded) return;
-        this.setData({ gameError: app.getRequestErrorMessage(res, '玩法模板加载失败') });
+        this.setData({ gameError: app.getRequestErrorMessage(res, shelfNoun('玩法', this.data.light) + '加载失败') });
       };
       const fetchPage = (n, done) => app.sendRequest({
         hideLoading: true,
