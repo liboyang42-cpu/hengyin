@@ -47,8 +47,6 @@ test('依赖图:主包入口可达、本次下沉的模块只在各自分包被�
   assert.ok(g.reach.get('app.js').has('MAIN'));
   assert.ok(g.reach.get('pages/index/index.js').has('MAIN'));
   const moved = {
-    'subpackageTools/lib/exploration-goals.js': 'subpackageTools',
-    'subpackageMember/invoice/user-invoice.js': 'subpackageMember',
     'pages/publish/utils/answer-text.js': 'pages/publish',
     'pages/topic/utils/chapter-count.js': 'pages/topic',
   };
@@ -56,7 +54,7 @@ test('依赖图:主包入口可达、本次下沉的模块只在各自分包被�
     assert.equal(g.files.get(file).owner, pkg, file);
     assert.deepEqual([...(g.reach.get(file) || [])], [pkg], file + ' 应只被 ' + pkg + ' 走到');
   }
-  for (const gone of ['utils/features/exploration-goals.js', 'utils/user-invoice.js', 'utils/answer-text.js',
+  for (const gone of ['utils/answer-text.js',
     'utils/chapter-count.js', 'behaviors/page-scroll-lock.js', 'pages/play/orient-lifecycle.wxml',
     'pages/play/components/mascot/index.js']) {
     assert.equal(fs.existsSync(path.join(ROOT, gone)), false, gone);

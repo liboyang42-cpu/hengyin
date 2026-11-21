@@ -163,7 +163,7 @@ for (const endpoint of ['titles', 'titles/save', 'titles/save-request', 'titles/
   test(`shared invoice guard ${endpoint}: 500 vs 503 keeps definitive feature-off classification`, () => {
     function scenario(code) {
       const h = mount('subpackageMember/invoice/index.js');
-      const invoice = h.load(path.join(ROOT, 'subpackageMember/invoice/user-invoice.js'));
+      const invoice = h.load(path.join(ROOT, 'utils/user-invoice.js'));
       let result;
       invoice.send(h.app, endpoint, { method: 'POST', autoErrorToast: false, hideLoading: true,
         success: res => { result = invoice.classify(res, 200, () => assert.fail('feature-off must not decode')); } });
