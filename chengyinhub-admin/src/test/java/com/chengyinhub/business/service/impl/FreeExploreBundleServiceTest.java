@@ -153,6 +153,31 @@ class FreeExploreBundleServiceTest {
     }
 
     @Test
+    void freezeSnapshotsPlayerVisibleOfferTerms() {
+        MerchantChapterOffer declared = offer(801L, 701L);
+        declared.setIncluded(0);
+        declared.setExtraSpendText("饮品另付");
+        declared.setReserveRequired(1);
+        when(chapterMapper.selectRequiredByTopic(70L)).thenReturn(Arrays.asList(chapter(701L), chapter(702L)));
+        when(offerMapper.selectByTopic(70L)).thenReturn(Collections.singletonList(declared));
+        String json = service(true, true, false)
+                .freezeOnOrderCreated(registration(1L, 11L), topic(), activity()).getSnapshotJson();
+        assertTrue(json.contains("\"included\":false"), json);
+        assertTrue(json.contains("\"extraSpendText\":\"饮品另付\""), json);
+        assertTrue(json.contains("\"reserveRequired\":true"), json);
+    }
+
+    @Test
+    void freezeOmitsUndeclaredOfferTerms() {
+        when(chapterMapper.selectRequiredByTopic(70L)).thenReturn(Arrays.asList(chapter(701L), chapter(702L)));
+        when(offerMapper.selectByTopic(70L)).thenReturn(Collections.singletonList(offer(801L, 701L)));
+        String json = service(true, true, false)
+                .freezeOnOrderCreated(registration(1L, 11L), topic(), activity()).getSnapshotJson();
+        assertFalse(json.contains("\"included\""), json);
+        assertFalse(json.contains("\"extraSpendText\""), json);
+    }
+
+    @Test
     void freezeRefusesBundleWithoutValidity() {
         when(chapterMapper.selectRequiredByTopic(70L)).thenReturn(Collections.singletonList(chapter(701L)));
         CmsActivity noEnd = activity();
