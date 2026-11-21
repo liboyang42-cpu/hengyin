@@ -300,11 +300,14 @@ public class ApiCommonController extends BaseController {
      * 只有本存储签出、未过期的原图签名才换得到缩略版(302 到带 x-oss-process 的新签名),其余一律 404;
      * 不读登录态、不访问 OSS 网络,只做本地 HMAC 重算。随 /api/common/** 匿名放行(image 组件请求不带 token)。
      */
-    @GetMapping("/img/{width:\\d+}/{format:orig|webp}/upload/{file:[0-9a-f]+\\.(?:jpg|jpeg|png)}")
+    @GetMapping("/img/{width:\\d+}/{format:orig|webp}/upload/{file:[0-9a-f]+\\.[a-z]+}")
     public ResponseEntity<Void> imageRendition(@PathVariable("width") int width, @PathVariable("format") String format,
             @PathVariable("file") String file, @RequestParam(value = "Expires", required = false) String expires,
             @RequestParam(value = "OSSAccessKeyId", required = false) String accessKeyId,
             @RequestParam(value = "Signature", required = false) String signature) {
+        if (file == null || !file.matches("[0-9a-f]{32}\\.(?:jpg|jpeg|png)")) {
+            return ResponseEntity.notFound().build();
+        }
         String location;
         try {
             location = FileOssUploadUtils.imageRenditionUrl("upload/" + file, expires, accessKeyId, signature,

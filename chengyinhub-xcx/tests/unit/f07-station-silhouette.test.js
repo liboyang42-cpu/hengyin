@@ -40,7 +40,7 @@ test('normNode:imgHidden 原样带上;有图时不当作隐藏', () => {
 test('每个站图展示点走配图兜底链(photo / gamePhoto),无图落纹理底,不留空白也不放剪影', () => {
   const wxml = read('pages/play/index.wxml')
   assert.doesNotMatch(wxml, /cy-station-silhouette/)
-  assert.match(wxml, /<image wx:if="\{\{sheet\.node\.photo\}\}" src="\{\{img\.one\(sheet\.node\.photo\)\}\}" mode="aspectFill" lazy-load="true"><\/image>\s*<view wx:else class="sheet-cover__ss photo-tex"/, '站点抽屉封面')
+  assert.match(wxml, /<image wx:if="\{\{sheet\.node\.photo\}\}" src="\{\{img\.fit\(sheet\.node\.photo, imgCtx, 'card', true\)\}\}" webp="\{\{true\}\}" mode="aspectFill" lazy-load="true"><\/image>\s*<view wx:else class="sheet-cover__ss photo-tex"/, '站点抽屉封面')
   assert.match(wxml, /<view class="sheet-cover" bindtap="previewNodeImages"/, '封面区高度固定,不再收起')
   assert.match(wxml, /<image wx:if="\{\{sheet\.node\.gamePhoto\}\}" class="sheet-kit__img"[^>]*mode="aspectFill" lazy-load="true" \/>\s*<view wx:else class="sheet-kit__img photo-tex"/, '玩法横卡')
   assert.match(wxml, /<image wx:if="\{\{advancedPlay\.node\.gamePhoto\}\}" class="chfull__kitcard-img"[^>]*\/><view wx:else class="chfull__kitcard-img photo-tex"/, '故事流 kit 卡')

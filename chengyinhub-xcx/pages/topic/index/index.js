@@ -1,6 +1,6 @@
 const modal = require('../../../utils/modal.js'); const { safeUserMessage } = require('../../../utils/transport/safe-user-message.js'); const referral = require('../../../utils/commerce/referral.js'); const parallax = require('../utils/parallax.js'); const pageMotion = require('../../../utils/page-motion.js');
 const loading = require('../../../utils/loading.js');
-const imgFade = require('../../../utils/img-fade.js'); const imageUrl = require('../../../utils/image-url.js'); // 2026-11-21:封面/章节/站点图按槽位出缩略图(img.wxs fit) const castPlay = require('../../../utils/cast-config.js'); // motion-1118 v2:封面 / 头图在占位色上淡入;角色 Cast v1 · E5「人物」(配置顺手缓存给游玩页)
+const imgFade = require('../../../utils/img-fade.js'); const imageUrl = require('../../../utils/image-url.js'); /* 2026-11-21:封面/章节/站点图按槽位出缩略图(img.wxs fit) */ const castPlay = require('../../../utils/cast-config.js'); // motion-1118 v2:封面 / 头图在占位色上淡入;角色 Cast v1 · E5「人物」(配置顺手缓存给游玩页)
 const toast = require('../../../utils/toast.js');
 const app = getApp();
 const { chinaParts } = require('../../../utils/datetime.js');
