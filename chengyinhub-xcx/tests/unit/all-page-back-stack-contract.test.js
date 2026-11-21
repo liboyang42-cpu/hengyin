@@ -35,8 +35,8 @@ function boundHandlers(wxml) {
 function methodBody(source, name) {
   const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   const patterns = [
-    new RegExp(`(?:^|\\n)\\s*${escaped}\\s*\\([^)]*\\)\\s*\\{`, 'm'),
-    new RegExp(`(?:^|\\n)\\s*${escaped}\\s*:\\s*function\\s*\\([^)]*\\)\\s*\\{`, 'm'),
+    new RegExp(`^[^\\S\\r\\n]*${escaped}\\s*\\([^)]*\\)\\s*\\{`, 'm'),
+    new RegExp(`^[^\\S\\r\\n]*${escaped}\\s*:\\s*function\\s*\\([^)]*\\)\\s*\\{`, 'm'),
   ]
   const match = patterns.map((pattern) => pattern.exec(source)).find(Boolean)
   if (!match) return ''
@@ -217,9 +217,8 @@ function hasAlternativeRootExit(route, handler, wxml) {
     && /bindtap="goHome"/.test(wxml)
 }
 
-function findUnsafePageBacks(overrides = {}) {
+function findUnsafePageBacks(overrides = {}, routes = registeredRoutes()) {
   const violations = []
-  const routes = registeredRoutes()
   let scanned = 0
   for (const route of routes) {
     const jsPath = `${route}.js`
@@ -261,7 +260,8 @@ test('负控：全页面审计能抓住新增的裸 navigateBack', () => {
     'fail: () => {}',
   )
   assert.notEqual(mutated, read(file), '负控必须真实移除主题创作页根栈落点')
-  assert.ok(findUnsafePageBacks({ [file]: mutated }).violations.includes('pages/publish/fabu/index#goBack'))
+  const audit = findUnsafePageBacks({ [file]: mutated }, ['pages/publish/fabu/index'])
+  assert.ok(audit.violations.includes('pages/publish/fabu/index#goBack'))
 })
 
 function runDefaultNavBack(stackLength, transform = (source) => source) {
