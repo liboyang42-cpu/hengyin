@@ -4,6 +4,7 @@
 const app = getApp()
 // 2026-09-15 起「提现」不再走银行卡表单:平台不打款,一律弹平台客服微信线下处理。
 const withdrawCs = require('../../../utils/withdraw-cs.js')
+const toast = require('../../../utils/toast.js')
 const { bizFailureMessage } = require('../../../utils/response-shape.js'); const pageMotion = require('../../../utils/page-motion.js')
 
 function identityKey() {
@@ -269,7 +270,7 @@ Page({
     let reason = '可提现余额还在确认'
     if (this.data.withdrawState === 'zero') reason = this.data.complaintWaiting ? '客诉期结束后可提现' : '当前没有可提现余额'
     else if (summary.isOwner === false && !summary.personal) reason = '仅主理人可发起提现'
-    wx.showToast({ title: reason, icon: 'none' })
+    toast(reason)
   },
 
   goWithdraw() {

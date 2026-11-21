@@ -64,8 +64,8 @@ test('结算页提现键:原生 disabled button → cy-btn + disabledtap 说明�
   const fn = /onWithdrawBlockedTap\(\) \{[\s\S]*?\n  \},/.exec(src)
   assert.ok(fn, 'onWithdrawBlockedTap 不见了')
   const toasts = []
+  const run = new Function('toast', `const o = { ${fn[0]} }; return o.onWithdrawBlockedTap`)(t => toasts.push(t))
   const ctx = { data: {} }
-  const run = new Function('wx', `const o = { ${fn[0]} }; return o.onWithdrawBlockedTap`)({ showToast: t => toasts.push(t.title) })
   ctx.data = { withdrawState: 'zero', complaintWaiting: true, summary: { isOwner: true } }; run.call(ctx)
   ctx.data = { withdrawState: 'zero', complaintWaiting: false, summary: { isOwner: true } }; run.call(ctx)
   ctx.data = { withdrawState: 'unknown', summary: { isOwner: false, personal: false } }; run.call(ctx)
