@@ -24,7 +24,7 @@ test('a1-v3-10-53 入口卡:封面 + 类型 + 名字,不写「打开」;类型�
   const wxml = read('pages/play/index.wxml')
   const card = wxml.slice(wxml.indexOf('class="chfull__kitcard"'), wxml.indexOf('<cy-playkit wx:else'))
   assert.doesNotMatch(card, />打开</)
-  assert.match(card, /img\.first\(advancedPlay\.node\.imgUrl\)/)
+  assert.match(card, /img\.one\(advancedPlay\.node\.gamePhoto\)/)   // 2026-11-21 配图兜底链
   assert.match(card, /\{\{playKit\.cardLabel\}\}/)
 })
 

@@ -1,6 +1,7 @@
 'use strict'
 // F07:后面站点的照片到站前不显示。服务端对未到达的后续站下发 imgUrl:null + imgHidden:true,
-// 端上所有原本显示站图的位置改放 cy-station-silhouette(中性剪影 + 站序号),章节封面不再拿站图兜底。
+// 端上原本显示站图的位置走 utils/station-image.js 兜底链(章节图 → 路线封面 → 纹理底),章节封面不再拿站图兜底。
+// 2026-11-21:人形剪影 cy-station-silhouette 退场(业主「这个应该有图片」)。
 const test = require('node:test')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
@@ -18,14 +19,10 @@ function pageMethod(name) {
   return new Function('return ({' + src.slice(start, end + 4) + '})')()[name]
 }
 
-test('剪影组件:注册在游玩页,只用主题 token,不写死颜色', () => {
+test('人形剪影已退场:游玩页不再注册 cy-station-silhouette(2026-11-21 配图兜底链)', () => {
   const json = JSON.parse(read('pages/play/index.json'))
-  assert.equal(json.usingComponents['cy-station-silhouette'], '/pages/play/components/station-silhouette/index')
-  const wxss = read('pages/play/components/station-silhouette/index.wxss')
-  assert.doesNotMatch(wxss, /#[0-9a-fA-F]{3,8}\b|rgba?\(/, '颜色一律走 token')
-  assert.match(wxss, /var\(--cy-color-play-/)
-  const wxml = read('pages/play/components/station-silhouette/index.wxml')
-  assert.match(wxml, /\{\{num\}\}/, '显示站序号')
+  assert.equal(json.usingComponents['cy-station-silhouette'], undefined)
+  assert.equal(fs.existsSync(path.join(root, 'pages/play/components/station-silhouette')), false)
 })
 
 test('normNode:imgHidden 原样带上;有图时不当作隐藏', () => {
@@ -40,17 +37,31 @@ test('normNode:imgHidden 原样带上;有图时不当作隐藏', () => {
   assert.equal(f({ imgUrl: 'https://x/a.jpg' }), false)
 })
 
-test('每个站图展示点在 imgHidden 时放剪影,不留空白', () => {
+test('每个站图展示点走配图兜底链(photo / gamePhoto),无图落纹理底,不留空白也不放剪影', () => {
   const wxml = read('pages/play/index.wxml')
-  assert.match(wxml, /<cy-station-silhouette wx:elif="\{\{sheet\.node\.imgHidden\}\}" class="sheet-cover__ss"/, '站点抽屉封面')
-  assert.match(wxml, /sheet\.node\.imgUrl \|\| sheet\.node\.imgHidden \? '' : 'sheet-cover--bare'/, '隐藏时封面区不收起')
-  assert.match(wxml, /<cy-station-silhouette wx:elif="\{\{sheet\.node\.imgHidden\}\}" class="sheet-kit__img"/, '玩法横卡')
-  assert.match(wxml, /<cy-station-silhouette wx:elif="\{\{advancedPlay\.node\.imgHidden\}\}" class="chfull__kitcard-img"/, '故事流 kit 卡')
-  assert.match(wxml, /<cy-station-silhouette class="fx-tile__ph" wx:elif="\{\{item\.imgHidden\}\}"/, '地点格')
-  assert.match(wxml, /<cy-station-silhouette class="fx-hero__im" wx:elif="\{\{hero\.node\.imgHidden\}\}"/, '地点大卡')
-  assert.match(read('pages/play/play-topbar.wxml'), /<cy-station-silhouette wx:elif="\{\{item\.imgHidden\}\}" class="xd__img" num="\{\{item\.no\}\}"/, '延伸任务卡')
+  assert.doesNotMatch(wxml, /cy-station-silhouette/)
+  assert.match(wxml, /<image wx:if="\{\{sheet\.node\.photo\}\}" src="\{\{img\.one\(sheet\.node\.photo\)\}\}" mode="aspectFill" lazy-load="true"><\/image>\s*<view wx:else class="sheet-cover__ss photo-tex"/, '站点抽屉封面')
+  assert.match(wxml, /<view class="sheet-cover" bindtap="previewNodeImages"/, '封面区高度固定,不再收起')
+  assert.match(wxml, /<image wx:if="\{\{sheet\.node\.gamePhoto\}\}" class="sheet-kit__img"[^>]*mode="aspectFill" lazy-load="true" \/>\s*<view wx:else class="sheet-kit__img photo-tex"/, '玩法横卡')
+  assert.match(wxml, /<image wx:if="\{\{advancedPlay\.node\.gamePhoto\}\}" class="chfull__kitcard-img"[^>]*\/><view wx:else class="chfull__kitcard-img photo-tex"/, '故事流 kit 卡')
+  assert.match(wxml, /<image class="fx-tile__im" wx:if="\{\{item\.photo\}\}"[^>]*lazy-load="true" \/>\s*<view class="fx-tile__ph photo-tex" wx:else/, '地点格')
+  assert.match(wxml, /<image class="fx-hero__im" wx:if="\{\{hero\.node\.photo\}\}"/, '地点大卡')
+  assert.match(read('pages/play/play-topbar.wxml'), /<image wx:if="\{\{item\.photo\}\}" class="xd__img"/, '延伸任务卡')
   const storyKit = read('pages/play/utils/story-kit-card.js')
-  assert.match(storyKit, /imgHidden: !n\.imgUrl && !!n\.imgHidden/)
+  assert.match(storyKit, /imgHidden: !n\.imgUrl && !!n\.imgHidden, photo: n\.photo \|\| ''/)
+})
+
+test('F07:被遮的站(imgUrl 已置空)只会落到章节图 / 路线封面,拿不到站点照片', () => {
+  const page = { data: { topicCover: '' } }
+  Object.assign(page, (function () {
+    const src = read('pages/play/index.js')
+    const pick = (name) => { const s = src.indexOf('  ' + name + '('); return src.slice(s, src.indexOf('\n  },', s) + 4) }
+    return new Function('stationImage', 'return ({' + pick('_noteStationImageContext') + ',' + pick('_stationPhotos') + '})')(require('../../utils/station-image.js'))
+  })())
+  page._noteStationImageContext({ chapters: [{ chapterId: 2, imgArr: 'https://x/ch2.jpg' }], topicCover: 'https://x/topic.jpg' })
+  assert.deepEqual(page._stationPhotos({ imgUrl: null, imgHidden: true, chapterId: 2 }), { photo: 'https://x/ch2.jpg', gamePhoto: 'https://x/ch2.jpg' })
+  assert.deepEqual(page._stationPhotos({ imgUrl: null, imgHidden: true, chapterId: 9 }), { photo: 'https://x/topic.jpg', gamePhoto: 'https://x/topic.jpg' })
+  assert.deepEqual(page._stationPhotos({ imgUrl: 'https://x/s.jpg,https://x/s2.jpg', chapterId: 2, storyImg: 'https://x/g.jpg' }), { photo: 'https://x/s.jpg', gamePhoto: 'https://x/g.jpg' })
 })
 
 test('_coverOf:章节没封面时用主题封面,不再拿站点图兜底', () => {

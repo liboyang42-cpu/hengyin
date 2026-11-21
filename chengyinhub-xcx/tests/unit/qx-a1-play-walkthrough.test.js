@@ -68,7 +68,7 @@ test('V3-15:延伸任务收进一行入口 + 半屏,点一行打开那一站;正
   page._pushStoryTasks(items, nodes, [{ type: 'node', nodeId: 1 }], false, '')
   assert.deepEqual(items, [{ kind: 'tasks', count: 1, mood: '' }])
   // r2-play a1-v3-15:任务卡多带序号、站点配图与地址(服务端节点字段,没有就是空串)
-  assert.deepEqual(page.data.storyTasks.rows, [{ nodeId: 101, name: '旧书摊', no: 1, img: '', imgHidden: false, address: '', desc: '' }])   // l-play:翻页卡多一句说明(节点字段原样,没有为空)
+  assert.deepEqual(page.data.storyTasks.rows, [{ nodeId: 101, name: '旧书摊', no: 1, img: '', imgHidden: false, photo: '', address: '', desc: '' }])   // l-play:翻页卡多一句说明(节点字段原样,没有为空)
   page.openStoryTasks()
   assert.equal(page.data.storyTasks.show, true)
   page.openStoryTask({ currentTarget: { dataset: { nodeid: 101 } } })
