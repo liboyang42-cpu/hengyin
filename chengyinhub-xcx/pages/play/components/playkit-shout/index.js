@@ -33,7 +33,7 @@ Component({
     canSkip: { type: Boolean, value: false },
     skipped: { type: Boolean, value: false },
   },
-  data: { left: '5.0', loud: false, running: false, preparing: false, hasFrame: false, levelPct: 0, stageKeys: [0], rewardNote: '', micDenied: false },
+  data: { left: '5.0', loud: false, running: false, preparing: false, stageKeys: [0], rewardNote: '', micDenied: false },
   observers: {
     rewardCeiling(value) { this.setData({ rewardNote: rewardNote(value) }); },
     'show, seconds': function (show, seconds) {
@@ -86,7 +86,7 @@ Component({
       if (stage) stage._stopAll();
       this._retiredStage = stage;
       const key = this.data.stageKeys[0] + 1;
-      this.setData({ running: false, preparing: false, loud: false, hasFrame: false, levelPct: 0,
+      this.setData({ running: false, preparing: false, loud: false,
         left: this._total().toFixed(1), stageKeys: [key] }, () => {
         if (after && this.data.stageKeys[0] === key && this.data.show && !this._hidden && !this._closed && !this._detached) after();
       });
@@ -137,7 +137,7 @@ Component({
         started: false, returned: false, frameAt: null, frameSeq: 0, sampledSeq: 0,
         runAt: null, runLoud: false, samples: 0, listeners: [] };
       this._samples = []; this._peak = null; this._held = 0;
-      this.setData({ preparing: true, running: false, loud: false, hasFrame: false, levelPct: 0 });
+      this.setData({ preparing: true, running: false, loud: false });
       this._startMic(a);
     },
     _startMic(a) {
@@ -154,7 +154,7 @@ Component({
           if (peak === null) {
             if (a.phase === 'running') {
               a.runAt = null; a.runLoud = false; this._held = 0;
-              this.setData({ loud: false, hasFrame: false, levelPct: 0, left: this._total().toFixed(1) });
+              this.setData({ loud: false, left: this._total().toFixed(1) });
             }
             return;
           }
@@ -167,8 +167,7 @@ Component({
           if (a.runAt !== null && a.runLoud && loud) this._held += Math.min(0.1, Math.max(0, (now - a.runAt) / 1000));
           else this._held = 0; // 掉线清零，不能攒着喊。
           a.runAt = now; a.runLoud = loud; a.samples += 1;
-          const levelPct = loud ? Math.min(999, Math.floor(peak / this._hot * 100)) : Math.min(99, Math.floor(peak / this._hot * 100));
-          this.setData({ loud, hasFrame: true, levelPct, left: Math.max(0, this._total() - this._held).toFixed(1) });
+          this.setData({ loud, left: Math.max(0, this._total() - this._held).toFixed(1) });
           if (this._held >= this._total()) this._finish();
         };
         const onError = error => this._failure(a, error);
@@ -205,7 +204,7 @@ Component({
       // 开局那一刻手里的号是上一次的;只有这一局开表后服务端新发的号才随成绩交
       a.attemptAtRun = this.data.attemptId;
       this._held = 0; this._last = Date.now();
-      this.setData({ preparing: false, running: true, left: this._total().toFixed(1), loud: false, hasFrame: false, levelPct: 0 });
+      this.setData({ preparing: false, running: true, left: this._total().toFixed(1), loud: false });
       this.triggerEvent('start');
       if (!this._current(a)) return;
       this._timer = setInterval(() => {

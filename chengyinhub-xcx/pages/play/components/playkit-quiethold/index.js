@@ -7,7 +7,7 @@ const motion = require('../../../../utils/motion.js');
 const cyToast = require('../../../../utils/toast.js');
 const { baseline, thresholds, bandOf, peakOf } = require('../../utils/play-audio-level.js');
 // C1:挑战身份与奖励上限只搬服务端的;阈值说的是相对振幅,不是分贝
-const { withAttempt, freshAttempt, rewardNote, relativeThresholdText } = require('../../utils/sensor-contract.js');
+const { withAttempt, freshAttempt, rewardNote } = require('../../utils/sensor-contract.js');
 
 function pcmPeak(buffer) {
   try {
@@ -37,7 +37,7 @@ Component({
   },
   data: { left: '15.0', band: 'ok', running: false, preparing: false, stageKeys: [0],
     // calibration: '' 未校准 / 'calibrating' 正在听环境音 / 'calibrated' 已校准(切走、重开即作废)
-    calibration: '', thresholdText: '', rewardNote: '', micDenied: false },
+    calibration: '', rewardNote: '', micDenied: false },
   observers: {
     rewardCeiling(value) { this.setData({ rewardNote: rewardNote(value) }); },
     'show, seconds': function (show, seconds) {
@@ -100,7 +100,7 @@ Component({
       this._retiredStage = stage;
       const key = this.data.stageKeys[0] + 1;
       this.setData({ running: false, preparing: false, band: 'ok', left: this._total().toFixed(1),
-        calibration: '', thresholdText: '',
+        calibration: '',
         stageKeys: [key] }, () => { if (after && this.data.stageKeys[0] === key && !this._detached) after(); });
     },
     /** 第十二轮 k8(k2 第 5 项遗留):麦克风被拒时屏上写出原因(与计步「需要授权微信运动才能计步」同口径),
@@ -185,7 +185,7 @@ Component({
     _beginStage(attempt) {
       if (!this._current(attempt) || attempt.phase !== 'starting' || !attempt.started || !attempt.startReturned) return;
       attempt.phase = 'calibrating';
-      this.setData({ calibration: 'calibrating', thresholdText: '' });
+      this.setData({ calibration: 'calibrating' });
       this._watch(attempt, attempt.lastFrame === null ? FIRST_FRAME_MS : FRAME_GAP_MS);
       attempt.stage.begin();
     },
@@ -229,7 +229,7 @@ Component({
       const t = thresholds(baseline(this._samples));
       this._mid = t.mid; this._hot = t.hot;
       attempt.phase = 'ready';
-      this.setData({ calibration: 'calibrated', thresholdText: relativeThresholdText(t.hot) });
+      this.setData({ calibration: 'calibrated' });
     },
     onRun(e) {
       const attempt = this._eventAttempt(e);

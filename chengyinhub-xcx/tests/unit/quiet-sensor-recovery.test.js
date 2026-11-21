@@ -88,12 +88,12 @@ test('quiet one fresh frame cannot bypass required measured duration through fin
 test('quiet ambiguous device error mentioning permission is not authoritative denial',()=>{const h=host();h.c.onStart();h.emit('Error',{errMsg:'device busy; previous auth deny?'});assert.equal(count(h,'micdenied'),0);assert.ok(h.messages.length);});
 test('quiet duplicate start while waiting for native start or calibrating remains single-flight',()=>{const h=host();h.c.onStart();h.c.onStart();assert.equal(h.rec.startCalls,1);h.emit('Start');h.c.onStart();assert.equal(h.rec.startCalls,1);assert.equal(h.begins,1);});
 test('quiet malformed runtime frame breaks consecutive sample duration instead of bridging the gap',()=>{const h=host();h.run();h.frame(0);h.tick(100);h.frame(0);assert.ok(h.c._held>0);h.tick(100);h.raw(new ArrayBuffer(3));h.tick(100);h.frame(0);assert.equal(h.c._held,0);assert.equal(count(h,'submit'),0);});
-// C1:校准状态与相对阈值可见;只有开局后服务端新发的挑战身份才随成绩交
-test('quiet shows calibrating then calibrated relative threshold, never decibels',()=>{
-  const h=host();h.c.onStart();h.emit('Start');assert.equal(h.c.data.calibration,'calibrating');assert.equal(h.c.data.thresholdText,'');
+// C1:校准状态照旧(读屏 aria-busy);2026-11-21 起不再给玩家看相对阈值读数(主人:不要系统说明句)
+test('quiet tracks calibrating then calibrated, and never exposes a threshold or decibel readout',()=>{
+  const h=host();h.c.onStart();h.emit('Start');assert.equal(h.c.data.calibration,'calibrating');
   h.frame(0);h.stage.onCalibrateTick();h.stage.onCalibrated();assert.equal(h.c.data.calibration,'calibrated');
-  assert.match(h.c.data.thresholdText,/相对.*不是分贝/);assert.doesNotMatch(h.c.data.thresholdText,/\bdB\b/);
-  h.interrupt('hide');assert.equal(h.c.data.calibration,'');assert.equal(h.c.data.thresholdText,'');
+  assert.equal('thresholdText' in h.c.data,false);
+  h.interrupt('hide');assert.equal(h.c.data.calibration,'');
 });
 test('quiet submits the server attempt issued after this run started, never the one held at start',()=>{
   const fresh=host({props:{attemptId:11}});fresh.run();fresh.c.data.attemptId=22;fresh.frame(0);for(let i=0;i<12&&fresh.c.data.running;i++){fresh.tick(100);fresh.frame(0);}
